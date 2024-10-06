@@ -38,7 +38,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -131,7 +131,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -171,7 +171,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -198,7 +198,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -213,7 +213,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -222,7 +222,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^2.0.2
         version: 2.0.2
@@ -231,7 +231,7 @@ importers:
         version: 4.2.19
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -243,7 +243,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^2.0.2
         version: 2.0.2
@@ -252,7 +252,7 @@ importers:
         version: 4.2.19
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-vercel:
     dependencies:
@@ -268,7 +268,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -348,7 +348,7 @@ importers:
         version: link:../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.0
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -357,7 +357,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -397,7 +397,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -446,7 +446,7 @@ importers:
         version: 1.44.1
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/connect':
         specifier: ^3.4.38
         version: 3.4.38
@@ -473,7 +473,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -488,7 +488,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -506,7 +506,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -515,7 +515,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -533,7 +533,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -542,7 +542,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -587,7 +587,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -596,7 +596,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -611,7 +611,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/no-ssr:
     devDependencies:
@@ -620,7 +620,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -635,7 +635,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -644,7 +644,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -659,7 +659,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -671,7 +671,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -686,7 +686,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -695,7 +695,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -710,7 +710,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -728,7 +728,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -740,7 +740,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -752,7 +752,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -764,7 +764,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -776,7 +776,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -788,7 +788,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -797,7 +797,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -809,7 +809,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -818,7 +818,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -830,7 +830,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -839,7 +839,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -854,7 +854,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -863,7 +863,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -875,7 +875,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -884,7 +884,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -896,7 +896,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -905,7 +905,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -917,7 +917,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -926,7 +926,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -938,7 +938,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -947,7 +947,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -959,7 +959,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-dynamic-public-env:
     devDependencies:
@@ -968,7 +968,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -980,7 +980,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-private-env:
     devDependencies:
@@ -989,7 +989,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -1001,7 +1001,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -1010,7 +1010,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -1022,7 +1022,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -1031,7 +1031,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -1043,7 +1043,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1055,7 +1055,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -1067,7 +1067,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1079,7 +1079,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -1091,7 +1091,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1165,7 +1165,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -1222,7 +1222,7 @@ importers:
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       publint:
         specifier: ^0.2.0
         version: 0.2.7
@@ -1237,7 +1237,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   sites/kit.svelte.dev:
     dependencies:
@@ -1268,7 +1268,7 @@ importers:
         version: 6.0.0-next.64(@sveltejs/kit@packages+kit)(svelte@4.2.19)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/d3-geo':
         specifier: ^3.1.0
         version: 3.1.0
@@ -1313,7 +1313,7 @@ importers:
         version: 5.0.4
       vite:
         specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -2009,8 +2009,18 @@ packages:
     cpu: [arm]
     os: [android]
 
+  '@rollup/rollup-android-arm-eabi@4.24.0':
+    resolution: {integrity: sha512-Q6HJd7Y6xdB48x8ZNVDOqsbh2uByBhgK8PiQgPhwkIw/HC/YX5Ghq2mQY5sRMZWHb3VsFkWooUVOZHKr7DmDIA==}
+    cpu: [arm]
+    os: [android]
+
   '@rollup/rollup-android-arm64@4.18.0':
     resolution: {integrity: sha512-avCea0RAP03lTsDhEyfy+hpfr85KfyTctMADqHVhLAF3MlIkq83CP8UfAHUssgXTYd+6er6PaAhx/QGv4L1EiA==}
+    cpu: [arm64]
+    os: [android]
+
+  '@rollup/rollup-android-arm64@4.24.0':
+    resolution: {integrity: sha512-ijLnS1qFId8xhKjT81uBHuuJp2lU4x2yxa4ctFPtG+MqEE6+C5f/+X/bStmxapgmwLwiL3ih122xv8kVARNAZA==}
     cpu: [arm64]
     os: [android]
 
@@ -2019,8 +2029,18 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@rollup/rollup-darwin-arm64@4.24.0':
+    resolution: {integrity: sha512-bIv+X9xeSs1XCk6DVvkO+S/z8/2AMt/2lMqdQbMrmVpgFvXlmde9mLcbQpztXm1tajC3raFDqegsH18HQPMYtA==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@rollup/rollup-darwin-x64@4.18.0':
     resolution: {integrity: sha512-n2LMsUz7Ynu7DoQrSQkBf8iNrjOGyPLrdSg802vk6XT3FtsgX6JbE8IHRvposskFm9SNxzkLYGSq9QdpLYpRNA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@rollup/rollup-darwin-x64@4.24.0':
+    resolution: {integrity: sha512-X6/nOwoFN7RT2svEQWUsW/5C/fYMBe4fnLK9DQk4SX4mgVBiTA9h64kjUYPvGQ0F/9xwJ5U5UfTbl6BEjaQdBQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -2029,8 +2049,18 @@ packages:
     cpu: [arm]
     os: [linux]
 
+  '@rollup/rollup-linux-arm-gnueabihf@4.24.0':
+    resolution: {integrity: sha512-0KXvIJQMOImLCVCz9uvvdPgfyWo93aHHp8ui3FrtOP57svqrF/roSSR5pjqL2hcMp0ljeGlU4q9o/rQaAQ3AYA==}
+    cpu: [arm]
+    os: [linux]
+
   '@rollup/rollup-linux-arm-musleabihf@4.18.0':
     resolution: {integrity: sha512-l3m9ewPgjQSXrUMHg93vt0hYCGnrMOcUpTz6FLtbwljo2HluS4zTXFy2571YQbisTnfTKPZ01u/ukJdQTLGh9A==}
+    cpu: [arm]
+    os: [linux]
+
+  '@rollup/rollup-linux-arm-musleabihf@4.24.0':
+    resolution: {integrity: sha512-it2BW6kKFVh8xk/BnHfakEeoLPv8STIISekpoF+nBgWM4d55CZKc7T4Dx1pEbTnYm/xEKMgy1MNtYuoA8RFIWw==}
     cpu: [arm]
     os: [linux]
 
@@ -2039,8 +2069,18 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@rollup/rollup-linux-arm64-gnu@4.24.0':
+    resolution: {integrity: sha512-i0xTLXjqap2eRfulFVlSnM5dEbTVque/3Pi4g2y7cxrs7+a9De42z4XxKLYJ7+OhE3IgxvfQM7vQc43bwTgPwA==}
+    cpu: [arm64]
+    os: [linux]
+
   '@rollup/rollup-linux-arm64-musl@4.18.0':
     resolution: {integrity: sha512-be6Yx37b24ZwxQ+wOQXXLZqpq4jTckJhtGlWGZs68TgdKXJgw54lUUoFYrg6Zs/kjzAQwEwYbp8JxZVzZLRepQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@rollup/rollup-linux-arm64-musl@4.24.0':
+    resolution: {integrity: sha512-9E6MKUJhDuDh604Qco5yP/3qn3y7SLXYuiC0Rpr89aMScS2UAmK1wHP2b7KAa1nSjWJc/f/Lc0Wl1L47qjiyQw==}
     cpu: [arm64]
     os: [linux]
 
@@ -2049,8 +2089,18 @@ packages:
     cpu: [ppc64]
     os: [linux]
 
+  '@rollup/rollup-linux-powerpc64le-gnu@4.24.0':
+    resolution: {integrity: sha512-2XFFPJ2XMEiF5Zi2EBf4h73oR1V/lycirxZxHZNc93SqDN/IWhYYSYj8I9381ikUFXZrz2v7r2tOVk2NBwxrWw==}
+    cpu: [ppc64]
+    os: [linux]
+
   '@rollup/rollup-linux-riscv64-gnu@4.18.0':
     resolution: {integrity: sha512-ROCM7i+m1NfdrsmvwSzoxp9HFtmKGHEqu5NNDiZWQtXLA8S5HBCkVvKAxJ8U+CVctHwV2Gb5VUaK7UAkzhDjlg==}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@rollup/rollup-linux-riscv64-gnu@4.24.0':
+    resolution: {integrity: sha512-M3Dg4hlwuntUCdzU7KjYqbbd+BLq3JMAOhCKdBE3TcMGMZbKkDdJ5ivNdehOssMCIokNHFOsv7DO4rlEOfyKpg==}
     cpu: [riscv64]
     os: [linux]
 
@@ -2059,8 +2109,18 @@ packages:
     cpu: [s390x]
     os: [linux]
 
+  '@rollup/rollup-linux-s390x-gnu@4.24.0':
+    resolution: {integrity: sha512-mjBaoo4ocxJppTorZVKWFpy1bfFj9FeCMJqzlMQGjpNPY9JwQi7OuS1axzNIk0nMX6jSgy6ZURDZ2w0QW6D56g==}
+    cpu: [s390x]
+    os: [linux]
+
   '@rollup/rollup-linux-x64-gnu@4.18.0':
     resolution: {integrity: sha512-xuglR2rBVHA5UsI8h8UbX4VJ470PtGCf5Vpswh7p2ukaqBGFTnsfzxUBetoWBWymHMxbIG0Cmx7Y9qDZzr648w==}
+    cpu: [x64]
+    os: [linux]
+
+  '@rollup/rollup-linux-x64-gnu@4.24.0':
+    resolution: {integrity: sha512-ZXFk7M72R0YYFN5q13niV0B7G8/5dcQ9JDp8keJSfr3GoZeXEoMHP/HlvqROA3OMbMdfr19IjCeNAnPUG93b6A==}
     cpu: [x64]
     os: [linux]
 
@@ -2069,8 +2129,18 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@rollup/rollup-linux-x64-musl@4.24.0':
+    resolution: {integrity: sha512-w1i+L7kAXZNdYl+vFvzSZy8Y1arS7vMgIy8wusXJzRrPyof5LAb02KGr1PD2EkRcl73kHulIID0M501lN+vobQ==}
+    cpu: [x64]
+    os: [linux]
+
   '@rollup/rollup-win32-arm64-msvc@4.18.0':
     resolution: {integrity: sha512-7J6TkZQFGo9qBKH0pk2cEVSRhJbL6MtfWxth7Y5YmZs57Pi+4x6c2dStAUvaQkHQLnEQv1jzBUW43GvZW8OFqA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@rollup/rollup-win32-arm64-msvc@4.24.0':
+    resolution: {integrity: sha512-VXBrnPWgBpVDCVY6XF3LEW0pOU51KbaHhccHw6AS6vBWIC60eqsH19DAeeObl+g8nKAz04QFdl/Cefta0xQtUQ==}
     cpu: [arm64]
     os: [win32]
 
@@ -2079,8 +2149,18 @@ packages:
     cpu: [ia32]
     os: [win32]
 
+  '@rollup/rollup-win32-ia32-msvc@4.24.0':
+    resolution: {integrity: sha512-xrNcGDU0OxVcPTH/8n/ShH4UevZxKIO6HJFK0e15XItZP2UcaiLFd5kiX7hJnqCbSztUF8Qot+JWBC/QXRPYWQ==}
+    cpu: [ia32]
+    os: [win32]
+
   '@rollup/rollup-win32-x64-msvc@4.18.0':
     resolution: {integrity: sha512-UOo5FdvOL0+eIVTgS4tIdbW+TtnBLWg1YBCcU2KWM7nuNwRz9bksDX1bekJJCpu25N1DVWaCwnT39dVQxzqS8g==}
+    cpu: [x64]
+    os: [win32]
+
+  '@rollup/rollup-win32-x64-msvc@4.24.0':
+    resolution: {integrity: sha512-fbMkAF7fufku0N2dE5TBXcNlg0pt0cJue4xBRE2Qc5Vqikxr4VCgKj/ht6SMdFcOacVA9rqF70APJ8RN/4vMJw==}
     cpu: [x64]
     os: [win32]
 
@@ -3703,6 +3783,11 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rollup@4.24.0:
+    resolution: {integrity: sha512-DOmrlGSXNk1DM0ljiQA+i+o0rSLhtii1je5wgk60j49d1jHT5YYttBv1iWOnYSTG+fZZESUOSNiAl89SIet+Cg==}
+    engines: {node: '>=18.0.0', npm: '>=8.0.0'}
+    hasBin: true
+
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
@@ -4114,6 +4199,34 @@ packages:
 
   vite@5.3.3:
     resolution: {integrity: sha512-NPQdeCU0Dv2z5fu+ULotpuq5yfCS1BzKUIPhNbP3YBfAMGJXbt2nS+sbTFu+qchaqWTD+H3JK++nRwr6XIcp6A==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+
+  vite@5.3.6:
+    resolution: {integrity: sha512-es78AlrylO8mTVBygC0gTC0FENv0C6T496vvd33ydbjF/mIi9q3XQ9A3NWo5qLGFKywvz10J26813OkLvcQleA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -4889,49 +5002,97 @@ snapshots:
   '@rollup/rollup-android-arm-eabi@4.18.0':
     optional: true
 
+  '@rollup/rollup-android-arm-eabi@4.24.0':
+    optional: true
+
   '@rollup/rollup-android-arm64@4.18.0':
+    optional: true
+
+  '@rollup/rollup-android-arm64@4.24.0':
     optional: true
 
   '@rollup/rollup-darwin-arm64@4.18.0':
     optional: true
 
+  '@rollup/rollup-darwin-arm64@4.24.0':
+    optional: true
+
   '@rollup/rollup-darwin-x64@4.18.0':
+    optional: true
+
+  '@rollup/rollup-darwin-x64@4.24.0':
     optional: true
 
   '@rollup/rollup-linux-arm-gnueabihf@4.18.0':
     optional: true
 
+  '@rollup/rollup-linux-arm-gnueabihf@4.24.0':
+    optional: true
+
   '@rollup/rollup-linux-arm-musleabihf@4.18.0':
+    optional: true
+
+  '@rollup/rollup-linux-arm-musleabihf@4.24.0':
     optional: true
 
   '@rollup/rollup-linux-arm64-gnu@4.18.0':
     optional: true
 
+  '@rollup/rollup-linux-arm64-gnu@4.24.0':
+    optional: true
+
   '@rollup/rollup-linux-arm64-musl@4.18.0':
+    optional: true
+
+  '@rollup/rollup-linux-arm64-musl@4.24.0':
     optional: true
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.18.0':
     optional: true
 
+  '@rollup/rollup-linux-powerpc64le-gnu@4.24.0':
+    optional: true
+
   '@rollup/rollup-linux-riscv64-gnu@4.18.0':
+    optional: true
+
+  '@rollup/rollup-linux-riscv64-gnu@4.24.0':
     optional: true
 
   '@rollup/rollup-linux-s390x-gnu@4.18.0':
     optional: true
 
+  '@rollup/rollup-linux-s390x-gnu@4.24.0':
+    optional: true
+
   '@rollup/rollup-linux-x64-gnu@4.18.0':
+    optional: true
+
+  '@rollup/rollup-linux-x64-gnu@4.24.0':
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.18.0':
     optional: true
 
+  '@rollup/rollup-linux-x64-musl@4.24.0':
+    optional: true
+
   '@rollup/rollup-win32-arm64-msvc@4.18.0':
+    optional: true
+
+  '@rollup/rollup-win32-arm64-msvc@4.24.0':
     optional: true
 
   '@rollup/rollup-win32-ia32-msvc@4.18.0':
     optional: true
 
+  '@rollup/rollup-win32-ia32-msvc@4.24.0':
+    optional: true
+
   '@rollup/rollup-win32-x64-msvc@4.18.0':
+    optional: true
+
+  '@rollup/rollup-win32-x64-msvc@4.24.0':
     optional: true
 
   '@sinclair/typebox@0.27.8': {}
@@ -4962,26 +5123,26 @@ snapshots:
       svelte: 4.2.19
       svelte-persisted-store: 0.9.4(svelte@4.2.19)
 
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))':
+  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       debug: 4.3.5
       svelte: 4.2.19
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+      vite: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))':
+  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       debug: 4.3.5
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.10
       svelte: 4.2.19
       svelte-hmr: 0.16.0(svelte@4.2.19)
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
-      vitefu: 0.2.5(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
+      vite: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
+      vitefu: 0.2.5(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -6546,6 +6707,28 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.18.0
       fsevents: 2.3.3
 
+  rollup@4.24.0:
+    dependencies:
+      '@types/estree': 1.0.6
+    optionalDependencies:
+      '@rollup/rollup-android-arm-eabi': 4.24.0
+      '@rollup/rollup-android-arm64': 4.24.0
+      '@rollup/rollup-darwin-arm64': 4.24.0
+      '@rollup/rollup-darwin-x64': 4.24.0
+      '@rollup/rollup-linux-arm-gnueabihf': 4.24.0
+      '@rollup/rollup-linux-arm-musleabihf': 4.24.0
+      '@rollup/rollup-linux-arm64-gnu': 4.24.0
+      '@rollup/rollup-linux-arm64-musl': 4.24.0
+      '@rollup/rollup-linux-powerpc64le-gnu': 4.24.0
+      '@rollup/rollup-linux-riscv64-gnu': 4.24.0
+      '@rollup/rollup-linux-s390x-gnu': 4.24.0
+      '@rollup/rollup-linux-x64-gnu': 4.24.0
+      '@rollup/rollup-linux-x64-musl': 4.24.0
+      '@rollup/rollup-win32-arm64-msvc': 4.24.0
+      '@rollup/rollup-win32-ia32-msvc': 4.24.0
+      '@rollup/rollup-win32-x64-msvc': 4.24.0
+      fsevents: 2.3.3
+
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
@@ -6966,9 +7149,19 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.24.1
 
-  vitefu@0.2.5(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)):
+  vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.4.47
+      rollup: 4.24.0
     optionalDependencies:
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
+      '@types/node': 18.19.50
+      fsevents: 2.3.3
+      lightningcss: 1.24.1
+
+  vitefu@0.2.5(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)):
+    optionalDependencies:
+      vite: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   vitest@2.0.1(@types/node@18.19.50)(lightningcss@1.24.1):
     dependencies:
