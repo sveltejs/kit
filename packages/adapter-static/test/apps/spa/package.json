@@ -14,7 +14,11 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"sirv-cli": "^2.0.2",
 		"svelte": "^4.2.10",
+<<<<<<< HEAD
 		"vite": "6.0.0-alpha.20"
+=======
+		"vite": "6.0.0-alpha.22"
+>>>>>>> baea0dfcf01ae84e0c3f9c9dc0ed051a736167f8
 	},
 	"type": "module"
 }
