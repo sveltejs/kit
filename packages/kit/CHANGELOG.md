@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.6.2
+### Patch Changes
+
+
+- chore(deps): update dependency cookie to ^0.7.0 ([#12746](https://github.com/sveltejs/kit/pull/12746))
+
 ## 2.6.1
 ### Patch Changes
 
