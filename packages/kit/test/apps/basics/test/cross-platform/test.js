@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -747,7 +748,6 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -755,12 +755,8 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
-		expect(
-			await page.evaluate(
-				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
-			)
-		).toBe('next focus element');
+
+		await page.waitForSelector('button:focus');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {

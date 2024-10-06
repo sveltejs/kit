@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';

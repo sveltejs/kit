@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';

@@ -1,5 +1,5 @@
 {
 	"devDependencies": {
-		"typescript-eslint": "^8.0.0-alpha.20"
+		"typescript-eslint": "^8.0.0"
 	}
 }

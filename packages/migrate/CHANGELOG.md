@@ -1,5 +1,41 @@
 # svelte-migrate
 
+## 1.6.0
+### Minor Changes
+
+
+- feat: pass filename to `migrate` to allow for `svelte:self` migration ([#12749](https://github.com/sveltejs/kit/pull/12749))
+
+
+### Patch Changes
+
+
+- fix: prompt SvelteKit 2 migration during Svelte 5 migration if necessary ([#12748](https://github.com/sveltejs/kit/pull/12748))
+
+## 1.5.1
+### Patch Changes
+
+
+- fix: use `next` versions for `svelte` and `vite-plugin-svelte` ([#12729](https://github.com/sveltejs/kit/pull/12729))
+
+## 1.5.0
+### Minor Changes
+
+
+- feat: add Svelte 5 migration ([#12519](https://github.com/sveltejs/kit/pull/12519))
+
+## 1.4.5
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 1.4.4
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 1.4.3
 
 ### Patch Changes
