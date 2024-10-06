@@ -434,7 +434,9 @@ function initialize(result, target, hydrate) {
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate
+		hydrate,
+		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
+		sync: false
 	});
 
 	restore_snapshot(current_navigation_index);
@@ -1851,6 +1853,10 @@ export function pushState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call pushState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1891,6 +1897,10 @@ export function replaceState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call replaceState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -2139,6 +2149,10 @@ function _start_router() {
 		);
 
 		const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
+
+		const target = submitter?.formTarget || form.target;
+
+		if (target === '_blank') return;
 
 		const method = submitter?.formMethod || form.method;
 

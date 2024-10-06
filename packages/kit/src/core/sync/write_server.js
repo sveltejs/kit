@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';

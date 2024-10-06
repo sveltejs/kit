@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -766,6 +767,34 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
+	});
+
+	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Inside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
+	});
+
+	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Outside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
 	});
 
 	test('ignores links with no href', async ({ page }) => {

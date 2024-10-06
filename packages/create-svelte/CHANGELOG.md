@@ -1,5 +1,56 @@
 # create-svelte
 
+## 6.3.12
+### Patch Changes
+
+
+- chore: update typescript-eslint configs ([#12721](https://github.com/sveltejs/kit/pull/12721))
+
+## 6.3.11
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 6.3.10
+### Patch Changes
+
+
+- chore: bump svelte-check to v4 ([#12642](https://github.com/sveltejs/kit/pull/12642))
+
+## 6.3.9
+### Patch Changes
+
+
+- chore: bump publint to v0.2 ([#12602](https://github.com/sveltejs/kit/pull/12602))
+
+## 6.3.8
+### Patch Changes
+
+
+- fix: use `vite-plugin-svelte` v4 pre-release when Svelte 5 is chosen ([#12586](https://github.com/sveltejs/kit/pull/12586))
+
+## 6.3.7
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 6.3.6
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 6.3.5
+### Patch Changes
+
+
+- chore: upgrade to @fontsource/fira-mono v5 and @neoconfetti/svelte v2 ([#12497](https://github.com/sveltejs/kit/pull/12497))
+
+
+- chore: upgrade to typescript-eslint 8 final ([#12528](https://github.com/sveltejs/kit/pull/12528))
+
 ## 6.3.4
 ### Patch Changes
 

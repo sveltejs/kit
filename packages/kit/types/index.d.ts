@@ -1843,6 +1843,8 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
+
+	export {};
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -1914,6 +1916,8 @@ declare module '@sveltejs/kit/hooks' {
 	 * @param handlers The chain of `handle` functions
 	 * */
 	export function sequence(...handlers: import('@sveltejs/kit').Handle[]): import('@sveltejs/kit').Handle;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/node' {
@@ -1929,6 +1933,8 @@ declare module '@sveltejs/kit/node' {
 	 * @since 2.4.0
 	 */
 	export function createReadableStream(file: string): ReadableStream;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -1938,6 +1944,8 @@ declare module '@sveltejs/kit/node/polyfills' {
 	 * - `File`
 	 */
 	export function installPolyfills(): void;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/vite' {
@@ -1945,6 +1953,8 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 * */
 	export function sveltekit(): Promise<import('vite').Plugin[]>;
+
+	export {};
 }
 
 declare module '$app/environment' {
@@ -1967,6 +1977,8 @@ declare module '$app/environment' {
 	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
+
+	export {};
 }
 
 declare module '$app/forms' {
@@ -2017,6 +2029,8 @@ declare module '$app/forms' {
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+
+	export {};
 }
 
 declare module '$app/navigation' {
@@ -2130,6 +2144,8 @@ declare module '$app/navigation' {
 	 * */
 	export function replaceState(url: string | URL, state: App.PageState): void;
 	type MaybePromise<T> = T | Promise<T>;
+
+	export {};
 }
 
 declare module '$app/paths' {
@@ -2161,6 +2177,8 @@ declare module '$app/paths' {
 	 * ```
 	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+
+	export {};
 }
 
 declare module '$app/server' {
@@ -2177,6 +2195,8 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+
+	export {};
 }
 
 declare module '$app/stores' {
@@ -2211,6 +2231,8 @@ declare module '$app/stores' {
 	export const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
+
+	export {};
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
