@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.6.3
+### Patch Changes
+
+
+- fix: ensure a changing `version` doesn't affect the hashes for chunks without any actual code changes ([#12700](https://github.com/sveltejs/kit/pull/12700))
+
+
+- fix: prevent crash when logging URL search params in a server load function ([#12763](https://github.com/sveltejs/kit/pull/12763))
+
+
+- chore: revert update dependency cookie to ^0.7.0 ([#12767](https://github.com/sveltejs/kit/pull/12767))
+
 ## 2.6.2
 ### Patch Changes
 
