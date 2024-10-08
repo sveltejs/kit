@@ -470,7 +470,7 @@ function initialize(result, target, hydrate) {
  *   state?: App.PageData | null;
  * }} opts
  */
-async function get_navigation_result_from_branch({
+function get_navigation_result_from_branch({
 	url,
 	params,
 	branch,
@@ -1045,7 +1045,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		status: 200,
 		error: null,
 		route,
-		// Reset `form` on navigation, but not invalidation
+		// Reset `form`/`state` on navigation, but not invalidation
 		form: invalidating ? undefined : null,
 		state: invalidating ? page.state : null
 	});
