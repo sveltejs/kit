@@ -1871,6 +1871,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * 		preload: () => {
 	 * 			// this one wins as it's the first defined in the chain
 	 * 			console.log('first preload');
+	 * 			return true;
 	 * 		}
 	 * 	});
 	 * 	console.log('first post-processing');
@@ -1887,10 +1888,12 @@ declare module '@sveltejs/kit/hooks' {
 	 * 		},
 	 * 		preload: () => {
 	 * 			console.log('second preload');
+	 * 			return true;
 	 * 		},
 	 * 		filterSerializedResponseHeaders: () => {
 	 * 			// this one wins as it's the first defined in the chain
-	 *    		console.log('second filterSerializedResponseHeaders');
+	 * 			console.log('second filterSerializedResponseHeaders');
+	 * 			return true;
 	 * 		}
 	 * 	});
 	 * 	console.log('second post-processing');
@@ -2167,6 +2170,8 @@ declare module '$app/paths' {
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
 	 * ```js
+	 * import { resolveRoute } from '$app/paths';
+	 *
 	 * resolveRoute(
 	 *   `/blog/[slug]/[...somethingElse]`,
 	 *   {
