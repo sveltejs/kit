@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 5.4.5
+### Patch Changes
+
+
+- fix: updated `@default` annotation for runtime ([#12717](https://github.com/sveltejs/kit/pull/12717))
+
+- Updated dependencies [[`3591411e880ed5337123c66365433afe8c2f747b`](https://github.com/sveltejs/kit/commit/3591411e880ed5337123c66365433afe8c2f747b), [`2292170ecba27c70600fae0c2adc473ac9d938e8`](https://github.com/sveltejs/kit/commit/2292170ecba27c70600fae0c2adc473ac9d938e8), [`809983f377f0b18c4651a8a4f3af7b69c0df20ab`](https://github.com/sveltejs/kit/commit/809983f377f0b18c4651a8a4f3af7b69c0df20ab)]:
+  - @sveltejs/kit@2.6.3
+
 ## 5.4.4
 ### Patch Changes
 

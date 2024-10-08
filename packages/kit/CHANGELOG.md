@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 2.6.3
+### Patch Changes
+
+
+- fix: ensure a changing `version` doesn't affect the hashes for chunks without any actual code changes ([#12700](https://github.com/sveltejs/kit/pull/12700))
+
+
+- fix: prevent crash when logging URL search params in a server load function ([#12763](https://github.com/sveltejs/kit/pull/12763))
+
+
+- chore: revert update dependency cookie to ^0.7.0 ([#12767](https://github.com/sveltejs/kit/pull/12767))
+
+## 2.6.2
+### Patch Changes
+
+
+- chore(deps): update dependency cookie to ^0.7.0 ([#12746](https://github.com/sveltejs/kit/pull/12746))
+
+## 2.6.1
+### Patch Changes
+
+
+- fix: better error message when calling push/replaceState before router is initialized ([#11968](https://github.com/sveltejs/kit/pull/11968))
+
+## 2.6.0
+### Minor Changes
+
+
+- feat: support typed arrays in `load` functions ([#12716](https://github.com/sveltejs/kit/pull/12716))
+
+
+### Patch Changes
+
+
+- fix: open a new tab for `<form target="_blank">` and `<button formtarget="_blank"> submissions ([#11936](https://github.com/sveltejs/kit/pull/11936))
+
 ## 2.5.28
 ### Patch Changes
 
