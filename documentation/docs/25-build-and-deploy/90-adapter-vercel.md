@@ -130,7 +130,14 @@ The `expiration` property is required; all others are optional.
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
 ```js
-// @errors: 2305
+/// file: blog/[slug]/+page.server.js
+// @filename: ambient.d.ts
+declare module '$env/static/private' {
+	export const VERCEL_COMMIT_REF: string;
+}
+
+// @filename: index.js
+// ---cut---
 /// file: +layout.server.js
 import { VERCEL_COMMIT_REF } from '$env/static/private';
 
