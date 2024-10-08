@@ -1543,7 +1543,10 @@ function setup_preload() {
 
 		const options = get_router_options(a);
 
-		if (!options.reload) {
+		// we don't want to preload data for a page we're already on
+		const same_url = url && current.url.pathname + current.url.search === url.pathname + url.search;
+
+		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
 				const intent = get_navigation_intent(url, false);
 				if (intent) {
