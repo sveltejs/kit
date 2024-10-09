@@ -83,7 +83,7 @@ This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts`
 
 ### vite.config.js
 
-A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](modules#sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
+A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
 
 ## Other files
 
