@@ -155,16 +155,19 @@ function remove_throws(source) {
 
 	/** @param {string} id */
 	function remove_throw(id) {
-		const namedImport = get_import(source, '@sveltejs/kit', id);
-		if (!namedImport) return;
-		for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
-			const call_expression = id.getParent();
-			const throw_stmt = call_expression?.getParent();
-			if (Node.isCallExpression(call_expression) && Node.isThrowStatement(throw_stmt)) {
-				throw_stmt.replaceWithText((writer) => {
-					writer.setIndentationLevel(0);
-					writer.write(call_expression.getText() + ';');
-				});
+		const named_import = get_import(source, '@sveltejs/kit', id);
+		if (!named_import) return;
+		const name_node = named_import.getNameNode();
+		if (Node.isIdentifier(name_node)) {
+			for (const id of name_node.findReferencesAsNodes()) {
+				const call_expression = id.getParent();
+				const throw_stmt = call_expression?.getParent();
+				if (Node.isCallExpression(call_expression) && Node.isThrowStatement(throw_stmt)) {
+					throw_stmt.replaceWithText((writer) => {
+						writer.setIndentationLevel(0);
+						writer.write(call_expression.getText() + ';');
+					});
+				}
 			}
 		}
 	}
@@ -271,21 +274,24 @@ function add_cookie_note(file_path, source) {
  * @param {import('ts-morph').SourceFile} source
  */
 function replace_resolve_path(source) {
-	const namedImport = get_import(source, '@sveltejs/kit', 'resolvePath');
-	if (!namedImport) return;
+	const named_import = get_import(source, '@sveltejs/kit', 'resolvePath');
+	if (!named_import) return;
 
 	const logger = log_on_ts_modification(
 		source,
 		'Replaced `resolvePath` with `resolveRoute`: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#resolvePath-has-been-removed'
 	);
 
-	for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
-		id.replaceWithText('resolveRoute');
+	const name_node = named_import.getNameNode();
+	if (Node.isIdentifier(name_node)) {
+		for (const id of name_node.findReferencesAsNodes()) {
+			id.replaceWithText('resolveRoute');
+		}
 	}
-	if (namedImport.getParent().getParent().getNamedImports().length === 1) {
-		namedImport.getParent().getParent().getParent().remove();
+	if (named_import.getParent().getParent().getNamedImports().length === 1) {
+		named_import.getParent().getParent().getParent().remove();
 	} else {
-		namedImport.remove();
+		named_import.remove();
 	}
 
 	const paths_import = source.getImportDeclaration(

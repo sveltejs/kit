@@ -260,18 +260,20 @@ function update_typeof_svelte_component(source, is_ts) {
 	for (const type of imports) {
 		if (type) {
 			const name = type.getAliasNode() ?? type.getNameNode();
-			name.findReferencesAsNodes().forEach((ref) => {
-				const parent = ref.getParent();
-				if (parent && Node.isTypeQuery(parent)) {
-					const id = parent.getFirstChildByKind(ts.SyntaxKind.Identifier);
-					if (id?.getText() === name.getText()) {
-						const typeArguments = parent.getTypeArguments();
-						if (typeArguments.length === 0) {
-							parent.addTypeArgument('any');
+			if (Node.isIdentifier(name)) {
+				name.findReferencesAsNodes().forEach((ref) => {
+					const parent = ref.getParent();
+					if (parent && Node.isTypeQuery(parent)) {
+						const id = parent.getFirstChildByKind(ts.SyntaxKind.Identifier);
+						if (id?.getText() === name.getText()) {
+							const typeArguments = parent.getTypeArguments();
+							if (typeArguments.length === 0) {
+								parent.addTypeArgument('any');
+							}
 						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 
