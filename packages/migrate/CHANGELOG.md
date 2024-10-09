@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.6.2
+### Patch Changes
+
+
+- chore: upgrade to ts-morph 24 ([#12781](https://github.com/sveltejs/kit/pull/12781))
+
 ## 1.6.1
 ### Patch Changes
 
