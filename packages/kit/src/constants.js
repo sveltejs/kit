@@ -9,15 +9,3 @@ export const GENERATED_COMMENT = '// this file is generated — do not edit it\n
 export const ENDPOINT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
-
-/**
- * Placeholders for the hash of the app version.
- * Later replaced in the generateBundle hook to avoid affecting the chunk hash.
- */
-export const APP_VERSION_HASH_PLACEHOLDER_BASE = '__SVELTEKIT_APP_VERSION_HASH__';
-
-/**
- * Placeholder for the app version.
- * Later replaced in the generateBundle hook to avoid affecting the chunk hash.
- */
-export const APP_VERSION_PLACEHOLDER_BASE = '__SVELTEKIT_APP_VERSION__';
