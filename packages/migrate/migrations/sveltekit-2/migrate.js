@@ -108,8 +108,8 @@ export function update_svelte_config_content(code) {
 		namedImport
 			.getParent()
 			.getParent()
-			.getParent()
-			.setModuleSpecifier('@sveltejs/vite-plugin-svelte');
+			.getParentIfKind(SyntaxKind.ImportDeclaration)
+			?.setModuleSpecifier('@sveltejs/vite-plugin-svelte');
 	} else {
 		namedImport.remove();
 		const vps = source.getImportDeclaration(
