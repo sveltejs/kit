@@ -484,6 +484,12 @@ test.describe('Load', () => {
 		expect(await response.text()).toBe('');
 		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
 	});
+
+	test('allows logging URL search params', async ({ page }) => {
+		await page.goto('/load/server-log-search-param');
+
+		expect(await page.textContent('p')).toBe('hello world');
+	});
 });
 
 test.describe('Routing', () => {
