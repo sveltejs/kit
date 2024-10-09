@@ -272,7 +272,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	function fix_stack_trace(error) {
 		try {
 			vite.ssrFixStacktrace(error);
-		} catch {}
+		} catch {
+			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
+			// by ignoring it the line numbers are wrong, but at least we can show the error
+		}
 		return error.stack;
 	}
 
