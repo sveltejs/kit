@@ -20,7 +20,7 @@ import { error } from '@sveltejs/kit'
 
 `svelte-migrate` will do these changes automatically for you.
 
-If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](modules#sveltejs-kit-ishttperror) and [`isRedirect`](modules#sveltejs-kit-isredirect) imported from `@sveltejs/kit`.
+If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](@sveltejs-kit#isHttpError) and [`isRedirect`](@sveltejs-kit#isRedirect) imported from `@sveltejs/kit`.
 
 ## path is required when setting cookies
 

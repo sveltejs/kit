@@ -53,7 +53,7 @@ When using `adapter-node` the equivalent is a [custom server](adapter-node#custo
 
 ### src/service-worker.js
 
-Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](modules#$service-worker):
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`]($service-worker):
 
 - `files` is unchanged
 - `routes` has been removed
