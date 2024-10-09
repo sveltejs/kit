@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.6.4
+### Patch Changes
+
+
+- fix: only preload links that have a different URL than the current page ([#12773](https://github.com/sveltejs/kit/pull/12773))
+
+
+- fix: revert change to replace version in generateBundle ([#12779](https://github.com/sveltejs/kit/pull/12779))
+
+
+- fix: catch stack trace fixing errors thrown in web containers ([#12775](https://github.com/sveltejs/kit/pull/12775))
+
+
+- fix: use absolute links in JSDoc comments ([#12772](https://github.com/sveltejs/kit/pull/12772))
+
 ## 2.6.3
 ### Patch Changes
 
