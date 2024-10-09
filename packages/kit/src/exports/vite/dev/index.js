@@ -270,7 +270,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
-		vite.ssrFixStacktrace(error);
+		try {
+			vite.ssrFixStacktrace(error);
+		} catch {}
 		return error.stack;
 	}
 
