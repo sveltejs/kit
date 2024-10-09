@@ -142,7 +142,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 
 ## $lib
 
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](kit/reference/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
+This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
 
 ### $lib/server
 
