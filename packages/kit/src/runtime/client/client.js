@@ -151,7 +151,7 @@ function native_navigation(url) {
  * tries to update it.
  */
 async function update_service_worker() {
-	if (BROWSER && 'serviceWorker' in navigator) {
+	if ('serviceWorker' in navigator) {
 		const registration = await navigator.serviceWorker.getRegistration(base || '/');
 		if (registration) {
 			await registration.update();
