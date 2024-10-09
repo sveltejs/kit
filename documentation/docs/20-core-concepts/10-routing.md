@@ -83,7 +83,7 @@ You can find more information about these in [page options](page-options).
 
 ### +page.server.js
 
-If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](modules#$env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
+If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables]($env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -390,7 +390,7 @@ You can read more about omitting `$types` in our [blog post](https://svelte.dev/
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
-If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`](modules#$lib).
+If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`]($lib).
 
 ## Further reading
 

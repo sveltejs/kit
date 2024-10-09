@@ -4,7 +4,7 @@ title: Packaging
 
 You can use SvelteKit to build apps as well as component libraries, using the `@sveltejs/package` package (`npm create svelte` has an option to set this up for you).
 
-When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`](modules#$lib) contains your app's internal library.
+When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`]($lib) contains your app's internal library.
 
 A component library has the exact same structure as a SvelteKit app, except that `src/lib` is the public-facing bit, and your root `package.json` is used to publish the package. `src/routes` might be a documentation or demo site that accompanies the library, or it might just be a sandbox you use during development.
 

@@ -68,7 +68,7 @@ Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapp
 
 ### src/node_modules
 
-A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`](modules#$lib) instead.
+A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`]($lib) instead.
 
 ## Pages and layouts
 
@@ -85,11 +85,11 @@ Your custom error page component should be renamed from `_error.svelte` to `+err
 
 ### Imports
 
-The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`](modules#$app-navigation).
+The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`]($app-navigation).
 
 The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#pages-and-layouts-stores) section below.
 
-Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`](modules#$lib) imports.
+Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`]($lib) imports.
 
 ### Preload
 

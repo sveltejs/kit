@@ -463,7 +463,7 @@ export function load({ locals }) {
 
 > Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
-In the browser, you can also navigate programmatically outside of a `load` function using [`goto`]($app-navigation#goto) from [`$app.navigation`](modules#$app-navigation).
+In the browser, you can also navigate programmatically outside of a `load` function using [`goto`]($app-navigation#goto) from [`$app.navigation`]($app-navigation).
 
 > [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
 
