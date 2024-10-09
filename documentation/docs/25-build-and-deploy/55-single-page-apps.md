@@ -35,7 +35,7 @@ The `fallback` page is an HTML page created by SvelteKit from your page template
 
 On some hosts it may be `index.html` or something else entirely — consult your platform's documentation.
 
-> Note that the fallback page will always contain absolute asset paths (i.e. beginning with `/` rather than `.`) regardless of the value of [`paths.relative`](/docs/configuration#paths), since it is used to respond to requests for arbitrary paths.
+> Note that the fallback page will always contain absolute asset paths (i.e. beginning with `/` rather than `.`) regardless of the value of [`paths.relative`](configuration#paths), since it is used to respond to requests for arbitrary paths.
 
 ## Apache
 
