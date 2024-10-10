@@ -146,6 +146,19 @@ function native_navigation(url) {
 	return new Promise(() => {});
 }
 
+/**
+ * Checks whether a service worker is registered, and if it is,
+ * tries to update it.
+ */
+async function update_service_worker() {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration(base || '/');
+		if (registration) {
+			await registration.update();
+		}
+	}
+}
+
 function noop() {}
 
 /** @type {import('types').CSRRoute[]} */
@@ -1003,6 +1016,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
 					if (updated) {
+						// Before reloading, try to update the service worker if it exists
+						await update_service_worker();
 						return await native_navigation(url);
 					}
 
@@ -1327,6 +1342,8 @@ async function navigate({
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
+			// Before reloading, try to update the service worker if it exists
+			await update_service_worker();
 			await native_navigation(url);
 		}
 	}
