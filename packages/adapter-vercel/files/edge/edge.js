@@ -1,3 +1,5 @@
+/* eslint-disable n/prefer-global/process --
+ Vercel Edge Runtime does not support node:process */
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 

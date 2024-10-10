@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import process from 'node:process';
 
 if (process.platform !== 'win32') {
 	process.chdir('src/routes/routing');

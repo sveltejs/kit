@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
@@ -482,6 +483,12 @@ test.describe('Load', () => {
 		expect(response.status()).toBe(204);
 		expect(await response.text()).toBe('');
 		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
+
+	test('allows logging URL search params', async ({ page }) => {
+		await page.goto('/load/server-log-search-param');
+
+		expect(await page.textContent('p')).toBe('hello world');
 	});
 });
 

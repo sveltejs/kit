@@ -1,5 +1,6 @@
 import colors from 'kleur';
 import fs from 'node:fs';
+import process from 'node:process';
 import prompts from 'prompts';
 import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
