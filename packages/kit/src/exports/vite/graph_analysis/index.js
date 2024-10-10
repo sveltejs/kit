@@ -4,37 +4,47 @@ import { strip_virtual_prefix } from '../utils.js';
 import { app_server, env_dynamic_private, env_static_private } from '../module_ids.js';
 
 const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
+// TODO why do the patterns use .*? it doesn't do anything as ^ and $ are not used
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
+const ILLEGAL_NESTED_SERVER_DIR_PATTERN = /.*\/server\/.+/;
 
 /**
  * Checks if given id imports a module that is not allowed to be imported into client-side code.
  * @param {string} id
  * @param {{
  *   cwd: string;
+ *   lib: string;
  *   node_modules: string;
- *   server: string;
+ *   server: true | string;
  * }} dirs
  */
 export function is_illegal(id, dirs) {
 	if (ILLEGAL_IMPORTS.has(id)) return true;
 	if (!id.startsWith(dirs.cwd) || id.startsWith(dirs.node_modules)) return false;
-	return ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) || id.startsWith(dirs.server);
+	if (ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id))) return true;
+	if (dirs.server === true) {
+		return id.startsWith(dirs.lib)
+			? ILLEGAL_NESTED_SERVER_DIR_PATTERN.test(id.substring(dirs.lib.length))
+			: false;
+	} else return id.startsWith(dirs.server);
 }
 
 /**
  * Creates a guard that checks that no id imports a module that is not allowed to be imported into client-side code.
  * @param {import('vite').Rollup.PluginContext} context
  * @param {{ cwd: string; lib: string }} paths
+ * @param {boolean} nestedServerDirs
  */
-export function module_guard(context, { cwd, lib }) {
+export function module_guard(context, { cwd, lib }, nestedServerDirs) {
 	/** @type {Set<string>} */
 	const seen = new Set();
 
 	const dirs = {
 		// ids will be posixified, so we need to posixify these, too
 		cwd: posixify(cwd),
+		lib: posixify(lib).replace(/\/+$/, ''),
 		node_modules: posixify(path.join(cwd, 'node_modules')),
-		server: posixify(path.join(lib, 'server'))
+		server: nestedServerDirs || posixify(path.join(lib, 'server'))
 	};
 
 	/**
