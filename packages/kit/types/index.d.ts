@@ -315,7 +315,9 @@ declare module '@sveltejs/kit' {
 		 *         'script-src': ['self']
 		 *       },
 		 *       reportOnly: {
-		 *         'script-src': ['self']
+		 *         'script-src': ['self'],
+		 *         // must be specified with either `report-uri` or `report-to` directives, or both
+		 *         'report-uri': ['/']
 		 *       }
 		 *     }
 		 *   }
