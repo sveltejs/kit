@@ -92,28 +92,28 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				}
 			}
 
-			let hasEdge;
-			let hasLambda;
+			let has_edge;
+			let has_lambda;
 			const mutatedRoutes = { edge: [], lamdba: [] };
 			for (let i = 0; i < builder.routes.length; i++) {
 				const route = builder.routes[i];
 				const isEdge = route?.config?.runtime == 'edge' || edge || false;
 				if (isEdge) {
-					hasEdge = true;
+					has_edge = true;
 					mutatedRoutes.edge.push(route);
 				} else if (!isEdge) {
-					hasLambda = true;
+					has_lambda = true;
 					mutatedRoutes.lamdba.push(route);
 				}
 			}
 
 			// generate edge
-			if (hasEdge) {
+			if (has_edge) {
 				builder.routes = mutatedRoutes.edge;
 
 				await generate_edge_functions({ builder });
 			}
-			if (hasLambda) {
+			if (has_lambda) {
 				builder.routes = mutatedRoutes.lamdba;
 				generate_lambda_functions({ builder, publish, split });
 			}
