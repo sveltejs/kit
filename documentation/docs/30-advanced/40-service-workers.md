@@ -18,7 +18,7 @@ if ('serviceWorker' in navigator) {
 
 ## Inside the service worker
 
-Inside the service worker you have access to the [`$service-worker` module](modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 

@@ -20,7 +20,7 @@ import { error } from '@sveltejs/kit'
 
 `svelte-migrate` will do these changes automatically for you.
 
-If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](/docs/modules#sveltejs-kit-ishttperror) and [`isRedirect`](/docs/modules#sveltejs-kit-isredirect) imported from `@sveltejs/kit`.
+If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](@sveltejs-kit#isHttpError) and [`isRedirect`](@sveltejs-kit#isRedirect) imported from `@sveltejs/kit`.
 
 ## path is required when setting cookies
 
@@ -72,9 +72,9 @@ export function load({ fetch }) {
 
 ## paths are now relative by default
 
-In SvelteKit 1, `%sveltekit.assets%` in your `app.html` was replaced with a relative path by default (i.e. `.` or `..` or `../..` etc, depending on the path being rendered) during server-side rendering unless the [`paths.relative`](/docs/configuration#paths) config option was explicitly set to `false`. The same was true for `base` and `assets` imported from `$app/paths`, but only if the `paths.relative` option was explicitly set to `true`.
+In SvelteKit 1, `%sveltekit.assets%` in your `app.html` was replaced with a relative path by default (i.e. `.` or `..` or `../..` etc, depending on the path being rendered) during server-side rendering unless the [`paths.relative`](configuration#paths) config option was explicitly set to `false`. The same was true for `base` and `assets` imported from `$app/paths`, but only if the `paths.relative` option was explicitly set to `true`.
 
-This inconsistency is fixed in version 2. Paths are either always relative or always absolute, depending on the value of [`paths.relative`](/docs/configuration#paths). It defaults to `true` as this results in more portable apps: if the `base` is something other than the app expected (as is the case when viewed on the [Internet Archive](https://archive.org/), for example) or unknown at build time (as is the case when deploying to [IPFS](https://ipfs.tech/) and so on), fewer things are likely to break.
+This inconsistency is fixed in version 2. Paths are either always relative or always absolute, depending on the value of [`paths.relative`](configuration#paths). It defaults to `true` as this results in more portable apps: if the `base` is something other than the app expected (as is the case when viewed on the [Internet Archive](https://archive.org/), for example) or unknown at build time (as is the case when deploying to [IPFS](https://ipfs.tech/) and so on), fewer things are likely to break.
 
 ## Server fetches are not trackable anymore
 
@@ -82,7 +82,7 @@ Previously it was possible to track URLs from `fetch`es on the server in order t
 
 ## `preloadCode` arguments must be prefixed with `base`
 
-SvelteKit exposes two functions, [`preloadCode`](/docs/modules#$app-navigation-preloadcode) and [`preloadData`](/docs/modules#$app-navigation-preloaddata), for programmatically loading the code and data associated with a particular path. In version 1, there was a subtle inconsistency — the path passed to `preloadCode` did not need to be prefixed with the `base` path (if set), while the path passed to `preloadData` did.
+SvelteKit exposes two functions, [`preloadCode`]($app-navigation#preloadCode) and [`preloadData`]($app-navigation#preloadData), for programmatically loading the code and data associated with a particular path. In version 1, there was a subtle inconsistency — the path passed to `preloadCode` did not need to be prefixed with the `base` path (if set), while the path passed to `preloadData` did.
 
 This is fixed in SvelteKit 2 — in both cases, the path should be prefixed with `base` if it is set.
 
@@ -107,7 +107,7 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 ## Improved error handling
 
-Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](/docs/types#app-error) type, if it is specified.
+Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](types#app-error) type, if it is specified.
 
 SvelteKit 2 cleans this up by calling `handleError` hooks with two new properties: `status` and `message`. For errors thrown from your code (or library code called by your code) the status will be `500` and the message will be `Internal Error`. While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe.
 
@@ -121,7 +121,7 @@ Because of this, dynamic environment variables can no longer be read during prer
 
 ## `form` and `data` have been removed from `use:enhance` callbacks
 
-If you provide a callback to [`use:enhance`](/docs/form-actions#progressive-enhancement-use-enhance), it will be called with an object containing various useful properties.
+If you provide a callback to [`use:enhance`](form-actions#progressive-enhancement-use-enhance), it will be called with an object containing various useful properties.
 
 In SvelteKit 1, those properties included `form` and `data`. These were deprecated some time ago in favour of `formElement` and `formData`, and have been removed altogether in SvelteKit 2.
 

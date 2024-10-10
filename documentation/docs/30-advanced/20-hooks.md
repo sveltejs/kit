@@ -67,7 +67,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can define multiple `handle` functions and execute them with [the `sequence` helper function](modules#sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with [the `sequence` helper function](@sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
@@ -140,7 +140,7 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an [unexpected error](/docs/errors#unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+If an [unexpected error](errors#unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
@@ -227,7 +227,7 @@ export async function handleError({ error, event, status, message }) {
 
 > In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
-This function is not called for _expected_ errors (those thrown with the [`error`](modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
+This function is not called for _expected_ errors (those thrown with the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
@@ -235,7 +235,7 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 ## Universal hooks
 
-The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific). 
+The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
 
 ### reroute
 

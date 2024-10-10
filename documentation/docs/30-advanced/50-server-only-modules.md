@@ -6,11 +6,11 @@ Like a good friend, SvelteKit keeps your secrets. When writing your backend and 
 
 ## Private environment variables
 
-The `$env/static/private` and `$env/dynamic/private` modules, which are covered in the [modules](modules) section, can only be imported into modules that only run on the server, such as [`hooks.server.js`](hooks#server-hooks) or [`+page.server.js`](routing#page-page-server-js).
+The [`$env/static/private`]($env-static-private) and [`$env/dynamic/private`]($env-dynamic-private) modules can only be imported into modules that only run on the server, such as [`hooks.server.js`](hooks#server-hooks) or [`+page.server.js`](routing#page-page-server-js).
 
 ## Server-only utilities
 
-The [`$app/server`](/docs/modules#$app-server) module, which contains a `read` function for reading assets from the filesystem, can likewise only be imported by code that runs on the server.
+The [`$app/server`]($app-server) module, which contains a `read` function for reading assets from the filesystem, can likewise only be imported by code that runs on the server.
 
 ## Your modules
 

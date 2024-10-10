@@ -16,6 +16,8 @@ export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit
  * Populate a route ID with params to resolve a pathname.
  * @example
  * ```js
+ * import { resolveRoute } from '$app/paths';
+ *
  * resolveRoute(
  *   `/blog/[slug]/[...somethingElse]`,
  *   {

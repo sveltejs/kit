@@ -53,7 +53,7 @@ When using `adapter-node` the equivalent is a [custom server](adapter-node#custo
 
 ### src/service-worker.js
 
-Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](modules#$service-worker):
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`]($service-worker):
 
 - `files` is unchanged
 - `routes` has been removed
@@ -68,7 +68,7 @@ Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapp
 
 ### src/node_modules
 
-A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`](modules#$lib) instead.
+A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`]($lib) instead.
 
 ## Pages and layouts
 
@@ -85,11 +85,11 @@ Your custom error page component should be renamed from `_error.svelte` to `+err
 
 ### Imports
 
-The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`](modules#$app-navigation).
+The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`]($app-navigation).
 
 The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#pages-and-layouts-stores) section below.
 
-Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`](modules#$lib) imports.
+Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`]($lib) imports.
 
 ### Preload
 
@@ -115,7 +115,7 @@ const { preloading, page, session } = stores();
 
 The `page` store still exists; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
-You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`](modules#$app-stores).
+You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`]($app-stores).
 
 ### Routing
 

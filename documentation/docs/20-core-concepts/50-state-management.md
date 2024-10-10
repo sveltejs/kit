@@ -81,7 +81,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 
 ## Using stores with context
 
-You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
+You might wonder how we're able to use `$page.data` and other [app stores]($app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
@@ -155,7 +155,7 @@ Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutoria
 </script>
 ```
 
-> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate](modules#$app-navigation-afternavigate) and [beforeNavigate](modules#$app-navigation-beforenavigate) respectively.
+> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate]($app-navigation#afterNavigate) and [beforeNavigate]($app-navigation#beforeNavigate) respectively.
 
 Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
 

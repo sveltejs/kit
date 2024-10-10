@@ -398,7 +398,7 @@ export async function load({ params, parent }) {
 
 ## Errors
 
-If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [_expected_](/docs/errors#expected-errors) errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
+If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [_expected_](errors#expected-errors) errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
 
 ```js
 /// file: src/routes/admin/+layout.server.js
@@ -430,7 +430,7 @@ export function load({ locals }) {
 
 Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-If an [_unexpected_](/docs/errors#unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
+If an [_unexpected_](errors#unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
 > [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
@@ -463,7 +463,7 @@ export function load({ locals }) {
 
 > Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
-In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
+In the browser, you can also navigate programmatically outside of a `load` function using [`goto`]($app-navigation#goto) from [`$app.navigation`]($app-navigation).
 
 > [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
 
@@ -615,7 +615,7 @@ export async function load({ untrack, url }) {
 
 ### Manual invalidation
 
-You can also rerun `load` functions that apply to the current page using [`invalidate(url)`](modules#$app-navigation-invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`](modules#$app-navigation-invalidateall), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`]($app-navigation#invalidateAll), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
@@ -665,12 +665,12 @@ To summarize, a `load` function will rerun in the following situations:
 - It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
-- It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
-- All active `load` functions were forcibly rerun with [`invalidateAll()`](modules#$app-navigation-invalidateall)
+- It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
+- All active `load` functions were forcibly rerun with [`invalidateAll()`]($app-navigation#invalidateAll)
 
-`params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#get-vs-post), a [`goto`](modules#$app-navigation-goto) invocation, or a [`redirect`](modules#sveltejs-kit-redirect).
+`params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#get-vs-post), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).
 
-Note that rerunning a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+Note that rerunning a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`]($app-navigation#afterNavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ## Implications for authentication
 

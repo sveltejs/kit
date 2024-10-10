@@ -12,7 +12,7 @@ You can add additional properties, like a `code` or a tracking `id`, as shown in
 
 ## Expected errors
 
-An _expected_ error is one created with the [`error`](modules#sveltejs-kit-error) helper imported from `@sveltejs/kit`:
+An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
