@@ -53,6 +53,7 @@ SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-lab
 For example you could deploy some parts of your app as Edge Functions...
 
 ```js
+// @errors: 2307
 /// file: about/+page.js
 /** @type {import('@sveltejs/adapter-netlify').Config} */
 export const config = {
