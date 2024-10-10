@@ -125,7 +125,7 @@ export const config = {
 
 The `expiration` property is required; all others are optional.
 
-> Do not specify [prerender page options](/docs/page-options#prerender) on ISR routes as they take precedence over ISR configuration.
+> Pages that are  [prerendered](/docs/page-options#prerender) will ignore ISR configuration.
 
 ## Environment variables
 
