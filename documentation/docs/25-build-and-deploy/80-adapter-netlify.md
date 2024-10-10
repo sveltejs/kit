@@ -61,7 +61,6 @@ export const config = {
 };
 ```
 
-copy to clipboard
 ...and others as Serverless Functions (note that by specifying config inside a layout, it applies to all child pages).
 
 If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor for all pages. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
