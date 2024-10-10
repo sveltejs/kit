@@ -253,13 +253,15 @@ test.describe('Endpoints', () => {
 	test('can get assets using absolute path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/absolute');
 		expect(response.status()).toBe(200);
-		expect(response.headers()['content-type']).toBe('image/png');
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
 	});
 
 	test('can get assets using relative path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/relative');
 		expect(response.status()).toBe(200);
-		expect(response.headers()['content-type']).toBe('image/png');
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
 	});
 });
 

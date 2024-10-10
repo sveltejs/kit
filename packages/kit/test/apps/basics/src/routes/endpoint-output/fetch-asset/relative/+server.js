@@ -1,10 +1,10 @@
-import image from '../image.png';
+import file_path from '../test.txt?url';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function GET({ fetch }) {
-	console.log('🚀 ~ image:', image);
+	console.log('🚀 ~ file_path:', file_path);
 
-	const response = await fetch(image);
+	const response = await fetch(file_path);
 
 	return new Response(response.body, {
 		headers: {
