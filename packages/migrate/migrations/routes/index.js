@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import colors from 'kleur';
 import path from 'node:path';
+import process from 'node:process';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { pathToFileURL } from 'node:url';

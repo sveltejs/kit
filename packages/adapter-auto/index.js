@@ -4,6 +4,7 @@ import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
 import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
+import process from 'node:process';
 
 /** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {

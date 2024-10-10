@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
@@ -42,19 +43,28 @@ if (socket_activation) {
 	});
 }
 
-function shutdown() {
+/** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
+function graceful_shutdown(reason) {
 	if (shutdown_timeout_id) return;
 
+	// If a connection was opened with a keep-alive header close() will wait for the connection to
+	// time out rather than close it even if it is not handling any requests, so call this first
 	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 	server.server.closeIdleConnections();
 
-	server.server.close(() => {
+	server.server.close((error) => {
+		// occurs if the server is already closed
+		if (error) return;
+
 		if (shutdown_timeout_id) {
-			shutdown_timeout_id = clearTimeout(shutdown_timeout_id);
+			clearTimeout(shutdown_timeout_id);
 		}
 		if (idle_timeout_id) {
-			idle_timeout_id = clearTimeout(idle_timeout_id);
+			clearTimeout(idle_timeout_id);
 		}
+
+		// @ts-expect-error custom events cannot be typed
+		process.emit('sveltekit:shutdown', reason);
 	});
 
 	shutdown_timeout_id = setTimeout(
@@ -77,19 +87,19 @@ server.server.on(
 		req.on('close', () => {
 			requests--;
 
-			if (requests === 0 && shutdown_timeout_id) {
-				// when all requests are done, close the connections, so the app shuts down without delay
+			if (shutdown_timeout_id) {
+				// close connections as soon as they become idle, so they don't accept new requests
 				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 				server.server.closeIdleConnections();
 			}
 			if (requests === 0 && socket_activation && idle_timeout) {
-				idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
+				idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
 			}
 		});
 	}
 );
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', graceful_shutdown);
+process.on('SIGINT', graceful_shutdown);
 
 export { server };

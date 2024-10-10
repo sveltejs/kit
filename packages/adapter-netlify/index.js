@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } 
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
+import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -30,7 +31,6 @@ import toml from '@iarna/toml';
 
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href).replace('files', 'src');
-console.log('files', files);
 
 const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
@@ -189,7 +189,15 @@ async function generate_edge_functions({ builder }) {
 		format: 'esm',
 		platform: 'browser',
 		sourcemap: 'linked',
-
+		target: 'es2020',
+		loader: {
+			'.wasm': 'copy',
+			'.woff': 'copy',
+			'.woff2': 'copy',
+			'.ttf': 'copy',
+			'.eot': 'copy',
+			'.otf': 'copy'
+		},
 		// Node built-ins are allowed, but must be prefixed with `node:`
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
 		external: builtinModules.map((id) => `node:${id}`),

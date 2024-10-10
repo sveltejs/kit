@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import * as p from '@clack/prompts';
 import { bold, cyan, grey, yellow } from 'kleur/colors';
 import { create } from './index.js';
@@ -122,42 +123,15 @@ await create(cwd, {
 
 p.outro('Your project is ready!');
 
-if (options.types === 'typescript') {
-	console.log(bold('✔ Typescript'));
-	console.log('  Inside Svelte components, use <script lang="ts">\n');
-} else if (options.types === 'checkjs') {
-	console.log(bold('✔ Type-checked JavaScript'));
-	console.log(cyan('  https://www.typescriptlang.org/tsconfig#checkJs\n'));
-} else if (options.template === 'skeletonlib') {
+if (!options.types && options.template === 'skeletonlib') {
 	const warning = yellow('▲');
 	console.log(
 		`${warning} You chose to not add type checking, but TypeScript will still be installed in order to generate type definitions when building the library\n`
 	);
 }
 
-if (options.features.includes('eslint')) {
-	console.log(bold('✔ ESLint'));
-	console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte\n'));
-}
-
-if (options.features.includes('prettier')) {
-	console.log(bold('✔ Prettier'));
-	console.log(cyan('  https://prettier.io/docs/en/options.html'));
-	console.log(cyan('  https://github.com/sveltejs/prettier-plugin-svelte#options\n'));
-}
-
-if (options.features.includes('playwright')) {
-	console.log(bold('✔ Playwright'));
-	console.log(cyan('  https://playwright.dev\n'));
-}
-
-if (options.features.includes('vitest')) {
-	console.log(bold('✔ Vitest'));
-	console.log(cyan('  https://vitest.dev\n'));
-}
-
-console.log('Install community-maintained integrations:');
-console.log(cyan('  https://github.com/svelte-add/svelte-add'));
+console.log('Install more integrations with:');
+console.log(bold(cyan('  npx svelte-add')));
 
 console.log('\nNext steps:');
 let i = 1;

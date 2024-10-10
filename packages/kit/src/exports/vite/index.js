@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 
-import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -34,7 +34,7 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { pathToFileURL } from 'node:url';
+import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
 
@@ -122,23 +122,6 @@ const warning_preprocessor = {
 		}
 	}
 };
-
-/**
- * Resolve a dependency relative to the current working directory,
- * rather than relative to this package
- * @param {string} dependency
- */
-async function resolve_peer_dependency(dependency) {
-	try {
-		// @ts-expect-error the types are wrong
-		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
-		return import(resolved);
-	} catch {
-		throw new Error(
-			`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
-		);
-	}
-}
 
 /**
  * Returns the SvelteKit Vite plugins.

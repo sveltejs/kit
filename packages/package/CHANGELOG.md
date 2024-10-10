@@ -1,5 +1,32 @@
 # @sveltejs/package
 
+## 2.3.5
+### Patch Changes
+
+
+- fix: use input tsconfig when calling emitDts ([#12612](https://github.com/sveltejs/kit/pull/12612))
+
+
+- chore(deps): update dependency chokidar to v4 ([#12671](https://github.com/sveltejs/kit/pull/12671))
+
+## 2.3.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.3.3
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 2.3.2
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
 ## 2.3.1
 
 ### Patch Changes

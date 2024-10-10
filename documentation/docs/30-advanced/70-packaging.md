@@ -126,6 +126,35 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 }
 ```
 
+### sideEffects
+
+The `sideEffects` field in `package.json` is used by bundlers to determine if a module may contain code that has side effects. A module is considered to have side effects if it makes changes that are observable from other scripts outside the module when it's imported. For example, side effects include modifying global variables or the prototype of built-in JavaScript objects. Because a side effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application. It is a best practice to avoid side effects in your code.
+
+Setting the `sideEffects` field in `package.json` can help the bundler to be more aggressive in eliminating unused exports from the final bundle, a process known as tree-shaking. This results in smaller and more efficient bundles. Different bundlers handle `sideEffects` in various manners. While not necessary for Vite, we recommend that libraries state that all CSS files have side effects so that your library will be [compatible with webpack](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free). This is the configuration that comes with newly created projects:
+
+```json
+/// file: package.json
+{
+	"sideEffects": ["**/*.css"]
+}
+```
+
+> If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
+
+If your package has files with side effects, you can specify them in an array:
+
+```json
+/// file: package.json
+{
+    "sideEffects": [
+    	"**/*.css",
+    	"./dist/sideEffectfulFile.js"
+    ]
+}
+```
+
+This will treat only the specified files as having side effects.
+
 ## TypeScript
 
 You should ship type definitions for your library even if you don't use TypeScript yourself so that people who do get proper intellisense when using your library. `@sveltejs/package` makes the process of generating types mostly opaque to you. By default, when packaging your library, type definitions are auto-generated for JavaScript, TypeScript and Svelte files. All you need to ensure is that the `types` condition in the [exports](#anatomy-of-a-package-json-exports) map points to the correct files. When initialising a library project through `npm create svelte@latest`, this is automatically setup for the root export.
@@ -195,7 +224,7 @@ You should think carefully about whether or not the changes you make to your pac
 
 - `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
 - `-i`/`--input` — the input directory which contains all the files of the package. Defaults to `src/lib`
-- `-o`/`--o` — the output directory where the processed files are written to. Your `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
+- `-o`/`--output` — the output directory where the processed files are written to. Your `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
 - `-t`/`--types` — whether or not to create type definitions (`d.ts` files). We strongly recommend doing this as it fosters ecosystem library quality. Defaults to `true`
 - `--tsconfig` - the path to a tsconfig or jsconfig. When not provided, searches for the next upper tsconfig/jsconfig in the workspace path.
 
