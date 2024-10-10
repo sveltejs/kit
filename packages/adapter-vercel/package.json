@@ -28,6 +28,7 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
+		"!files/edge/tsconfig.json",
 		"index.js",
 		"utils.js",
 		"index.d.ts"
@@ -39,6 +40,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@vercel/edge": "^1.1.1",
 		"@vercel/nft": "^0.27.1",
 		"esbuild": "^0.21.5"
 	},
