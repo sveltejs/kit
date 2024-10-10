@@ -1,5 +1,122 @@
 # @sveltejs/kit
 
+## 2.6.4
+### Patch Changes
+
+
+- fix: only preload links that have a different URL than the current page ([#12773](https://github.com/sveltejs/kit/pull/12773))
+
+
+- fix: revert change to replace version in generateBundle ([#12779](https://github.com/sveltejs/kit/pull/12779))
+
+
+- fix: catch stack trace fixing errors thrown in web containers ([#12775](https://github.com/sveltejs/kit/pull/12775))
+
+
+- fix: use absolute links in JSDoc comments ([#12772](https://github.com/sveltejs/kit/pull/12772))
+
+## 2.6.3
+### Patch Changes
+
+
+- fix: ensure a changing `version` doesn't affect the hashes for chunks without any actual code changes ([#12700](https://github.com/sveltejs/kit/pull/12700))
+
+
+- fix: prevent crash when logging URL search params in a server load function ([#12763](https://github.com/sveltejs/kit/pull/12763))
+
+
+- chore: revert update dependency cookie to ^0.7.0 ([#12767](https://github.com/sveltejs/kit/pull/12767))
+
+## 2.6.2
+### Patch Changes
+
+
+- chore(deps): update dependency cookie to ^0.7.0 ([#12746](https://github.com/sveltejs/kit/pull/12746))
+
+## 2.6.1
+### Patch Changes
+
+
+- fix: better error message when calling push/replaceState before router is initialized ([#11968](https://github.com/sveltejs/kit/pull/11968))
+
+## 2.6.0
+### Minor Changes
+
+
+- feat: support typed arrays in `load` functions ([#12716](https://github.com/sveltejs/kit/pull/12716))
+
+
+### Patch Changes
+
+
+- fix: open a new tab for `<form target="_blank">` and `<button formtarget="_blank"> submissions ([#11936](https://github.com/sveltejs/kit/pull/11936))
+
+## 2.5.28
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 2.5.27
+### Patch Changes
+
+
+- fix: asynchronously instantiate components when using Svelte 5 ([#12613](https://github.com/sveltejs/kit/pull/12613))
+
+
+- fix: use `{@render ...}` tag when generating default fallback page for svelte 5 apps ([#12653](https://github.com/sveltejs/kit/pull/12653))
+
+
+- fix: emulate `event.platform` even when the route does not exist ([#12513](https://github.com/sveltejs/kit/pull/12513))
+
+## 2.5.26
+### Patch Changes
+
+
+- fix: exclude service worker directory from tsconfig ([#12196](https://github.com/sveltejs/kit/pull/12196))
+
+## 2.5.25
+### Patch Changes
+
+
+- chore: upgrade dts-buddy to 0.5.3 ([`6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f`](https://github.com/sveltejs/kit/commit/6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f))
+
+## 2.5.24
+### Patch Changes
+
+
+- extend peer dependency range for @sveltejs/vite-plugin-svelte to include 4.0.0-next for improved svelte5 support ([#12593](https://github.com/sveltejs/kit/pull/12593))
+
+## 2.5.23
+### Patch Changes
+
+
+- fix: use dynamic components in `root.svelte` instead of `svelte:component` for svelte 5 ([#12584](https://github.com/sveltejs/kit/pull/12584))
+
+## 2.5.22
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.5.21
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 2.5.20
+### Patch Changes
+
+
+- fix: set revalidate cache header on 404'd static assets ([#12530](https://github.com/sveltejs/kit/pull/12530))
+
+## 2.5.19
+### Patch Changes
+
+
+- fix: Svelte 5 - ignore `binding_non_reactive` warning in generated root component (you also need to update to `svelte@5.0.0-next.204`) ([#12524](https://github.com/sveltejs/kit/pull/12524))
+
 ## 2.5.18
 ### Patch Changes
 

@@ -1,5 +1,41 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.7.2
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 4.7.1
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 4.7.0
+### Minor Changes
+
+
+- feat: generate static `_redirects` for Cloudflare Pages ([#12199](https://github.com/sveltejs/kit/pull/12199))
+
+
+### Patch Changes
+
+
+- fix: correctly return static assets if base path is set ([#12075](https://github.com/sveltejs/kit/pull/12075))
+
+## 4.6.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
 ## 4.6.0
 ### Minor Changes
 

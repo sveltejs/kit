@@ -59,6 +59,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
@@ -115,6 +117,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:cross-platform:${{ matrix.mode }}
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash

@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "6.3.2",
+	"version": "6.3.12",
 	"description": "A CLI for creating new SvelteKit projects",
 	"keywords": [
 		"create",
@@ -28,6 +28,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.44.1",
 		"@types/gitignore-parser": "^0.0.3",
+		"@types/node": "^18.19.48",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
@@ -35,7 +36,7 @@
 		"svelte": "^4.2.10",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^5.3.3",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.1"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

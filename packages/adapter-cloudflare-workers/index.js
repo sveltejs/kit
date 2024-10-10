@@ -73,9 +73,9 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
@@ -97,7 +97,12 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					format: 'esm',
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					logLevel: 'silent'
 				});

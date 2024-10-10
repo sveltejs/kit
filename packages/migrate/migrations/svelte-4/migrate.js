@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { Project, ts, Node } from 'ts-morph';
+import { Project, ts, Node, SyntaxKind } from 'ts-morph';
 import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
@@ -201,7 +201,12 @@ function update_imports(source, is_ts) {
 		return (
 			(Node.isImportSpecifier(parent) &&
 				!parent.getAliasNode() &&
-				parent.getParent().getParent().getParent().getModuleSpecifier().getText() === 'svelte') ||
+				parent
+					.getParent()
+					.getParent()
+					.getParentIfKind(SyntaxKind.ImportDeclaration)
+					?.getModuleSpecifier()
+					.getText() === 'svelte') ||
 			!is_declaration(parent)
 		);
 	});
@@ -255,18 +260,20 @@ function update_typeof_svelte_component(source, is_ts) {
 	for (const type of imports) {
 		if (type) {
 			const name = type.getAliasNode() ?? type.getNameNode();
-			name.findReferencesAsNodes().forEach((ref) => {
-				const parent = ref.getParent();
-				if (parent && Node.isTypeQuery(parent)) {
-					const id = parent.getFirstChildByKind(ts.SyntaxKind.Identifier);
-					if (id?.getText() === name.getText()) {
-						const typeArguments = parent.getTypeArguments();
-						if (typeArguments.length === 0) {
-							parent.addTypeArgument('any');
+			if (Node.isIdentifier(name)) {
+				name.findReferencesAsNodes().forEach((ref) => {
+					const parent = ref.getParent();
+					if (parent && Node.isTypeQuery(parent)) {
+						const id = parent.getFirstChildByKind(ts.SyntaxKind.Identifier);
+						if (id?.getText() === name.getText()) {
+							const typeArguments = parent.getTypeArguments();
+							if (typeArguments.length === 0) {
+								parent.addTypeArgument('any');
+							}
 						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 

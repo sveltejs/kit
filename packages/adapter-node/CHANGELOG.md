@@ -1,5 +1,53 @@
 # @sveltejs/adapter-node
 
+## 5.2.6
+### Patch Changes
+
+
+- fix: use `node:` imports to support Deno ([#12785](https://github.com/sveltejs/kit/pull/12785))
+
+## 5.2.5
+### Patch Changes
+
+
+- chore: upgrade rollup plugins ([#12706](https://github.com/sveltejs/kit/pull/12706))
+
+- Updated dependencies [[`a233f53f28fcb4c3ea63d2faf156fba09a18456c`](https://github.com/sveltejs/kit/commit/a233f53f28fcb4c3ea63d2faf156fba09a18456c), [`5b40b04608023a3fcb6c601a5f2d36485ce07196`](https://github.com/sveltejs/kit/commit/5b40b04608023a3fcb6c601a5f2d36485ce07196)]:
+  - @sveltejs/kit@2.6.0
+
+## 5.2.4
+### Patch Changes
+
+
+- chore: upgrade polka to 1.0.0-next.28 ([#12693](https://github.com/sveltejs/kit/pull/12693))
+
+## 5.2.3
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
+## 5.2.2
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 5.2.1
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
 ## 5.2.0
 
 ### Minor Changes
