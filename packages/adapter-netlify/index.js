@@ -30,7 +30,7 @@ import toml from '@iarna/toml';
  */
 
 const name = '@sveltejs/adapter-netlify';
-const files = fileURLToPath(new URL('./files', import.meta.url).href).replace('files', 'src');
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
@@ -92,29 +92,24 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				}
 			}
 
-			let has_edge;
-			let has_lambda;
 			/** @type {{ edge: import('@sveltejs/kit').RouteDefinition[], lambda: import('@sveltejs/kit').RouteDefinition[] }} */
 			const mutated_routes = { edge: [], lambda: [] };
 			for (let i = 0; i < builder.routes.length; i++) {
 				const route = builder.routes[i];
 
-				const is_edge = route?.config?.runtime == 'edge' || edge || false;
-				if (is_edge) {
-					has_edge = true;
+				if (route.config?.runtime === 'edge') {
 					mutated_routes.edge.push(route);
-				} else if (!is_edge) {
-					has_lambda = true;
+				} else {
 					mutated_routes.lambda.push(route);
 				}
 			}
 
-			if (has_edge) {
+			if (mutated_routes.edge.length) {
 				builder.routes = mutated_routes.edge;
 				await generate_edge_functions({ builder });
 			}
 
-			if (has_lambda) {
+			if (mutated_routes.lambda.length) {
 				builder.routes = mutated_routes.lambda;
 				generate_lambda_functions({ builder, publish, split });
 			}
