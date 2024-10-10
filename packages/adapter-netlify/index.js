@@ -94,7 +94,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 			let has_edge;
 			let has_lambda;
-			const mutated_routes = { edge: [], lamdba: [] };
+			/** @type {{ edge: import('@sveltejs/kit').RouteDefinition[], lambda: import('@sveltejs/kit').RouteDefinition[] }} */
+			const mutated_routes = { edge: [], lambda: [] };
 			for (let i = 0; i < builder.routes.length; i++) {
 				const route = builder.routes[i];
 				const is_edge = route?.config?.runtime == 'edge' || edge || false;
@@ -103,7 +104,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 					mutated_routes.edge.push(route);
 				} else if (!is_edge) {
 					has_lambda = true;
-					mutated_routes.lamdba.push(route);
+					mutated_routes.lambda.push(route);
 				}
 			}
 
@@ -114,7 +115,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				await generate_edge_functions({ builder });
 			}
 			if (has_lambda) {
-				builder.routes = mutated_routes.lamdba;
+				builder.routes = mutated_routes.lambda;
 				generate_lambda_functions({ builder, publish, split });
 			}
 		},
