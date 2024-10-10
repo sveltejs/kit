@@ -48,7 +48,20 @@ New projects will use the current Node LTS version by default. However, if you'r
 
 ## Netlify Edge Functions
 
-SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
+SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). To control how your routes are deployed to Netlify as functions, you can export const config inside +server.js, +page(.server).js and +layout(.server).js files.
+
+For example you could deploy some parts of your app as Edge Functions...
+
+about/+page.js
+/** @type {import('@sveltejs/adapter-netlify').Config} */
+export const config = {
+	runtime: 'edge'
+};
+
+copy to clipboard
+...and others as Serverless Functions (note that by specifying config inside a layout, it applies to all child pages).
+
+If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor for all pages. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
 
 ```js
 // @errors: 2307
