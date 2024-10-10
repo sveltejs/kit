@@ -92,10 +92,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				}
 			}
 
-			/** @type {{ edge: import('@sveltejs/kit').RouteDefinition<import('./index.js').RouteConfig>[], lambda: import('@sveltejs/kit').RouteDefinition<import('./index.js').RouteConfig>[] }} */
+			/** @type {{ edge: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[], lambda: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }} */
 			const mutated_routes = { edge: [], lambda: [] };
 			for (let i = 0; i < builder.routes.length; i++) {
-				/** @type {import('@sveltejs/kit').RouteDefinition<import('./index.js').RouteConfig>} */
+				/** @type {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>} */
 				const route = builder.routes[i];
 
 				if (route.config?.runtime === 'edge') {
