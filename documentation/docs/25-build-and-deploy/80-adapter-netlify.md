@@ -52,11 +52,13 @@ SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-lab
 
 For example you could deploy some parts of your app as Edge Functions...
 
-about/+page.js
+```js
+/// file: about/+page.js
 /** @type {import('@sveltejs/adapter-netlify').Config} */
 export const config = {
 	runtime: 'edge'
 };
+```
 
 copy to clipboard
 ...and others as Serverless Functions (note that by specifying config inside a layout, it applies to all child pages).
