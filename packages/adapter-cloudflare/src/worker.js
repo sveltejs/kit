@@ -33,8 +33,8 @@ const worker = {
 			is_static_asset =
 				manifest.assets.has(filename) ||
 				manifest.assets.has(filename + '/index.html') ||
-				Object.prototype.hasOwnProperty.call(manifest._.server_assets, filename) ||
-				Object.prototype.hasOwnProperty.call(manifest._.server_assets, filename + '/index.html');
+				filename in manifest._.server_assets ||
+				filename + '/index.html' in manifest._.server_assets;
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
