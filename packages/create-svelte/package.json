@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "6.3.12",
+	"version": "6.4.0",
 	"description": "A CLI for creating new SvelteKit projects",
 	"keywords": [
 		"create",
