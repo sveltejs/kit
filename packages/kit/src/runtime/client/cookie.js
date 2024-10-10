@@ -1,5 +1,4 @@
 import { parse, serialize } from 'cookie';
-import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -23,22 +22,12 @@ function validate_options(options) {
 }
 
 /**
- * @param {Request} request
  * @param {URL} url
- * @param {import('types').TrailingSlash} trailing_slash
  */
-export function get_cookies(request, url, trailing_slash) {
-	const header = request.headers.get('cookie') ?? '';
-	const initial_cookies = parse(header, { decode: (value) => value });
-
-	const normalized_url = normalize_path(url.pathname, trailing_slash);
-
-	/** @type {Record<string, import('../../types/internal.js').Cookie>} */
-	const new_cookies = {};
-
+export function get_cookies(url) {
 	/** @type {import('cookie').CookieSerializeOptions} */
 	const defaults = {
-		httpOnly: true,
+		httpOnly: false,
 		sameSite: 'lax',
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
@@ -55,17 +44,8 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieParseOptions} opts
 		 */
 		get(name, opts) {
-			const c = new_cookies[name];
-			if (
-				c &&
-				domain_matches(url.hostname, c.options.domain) &&
-				path_matches(url.pathname, c.options.path)
-			) {
-				return c.value;
-			}
-
 			const decoder = opts?.decode || decodeURIComponent;
-			const req_cookies = parse(header, { decode: decoder });
+			const req_cookies = parse(document.cookie, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -93,17 +73,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 */
 		getAll(opts) {
 			const decoder = opts?.decode || decodeURIComponent;
-			const cookies = parse(header, { decode: decoder });
-
-			for (const c of Object.values(new_cookies)) {
-				if (
-					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path)
-				) {
-					cookies[c.name] = c.value;
-				}
-			}
-
+			const cookies = parse(document.cookie, { decode: decoder });
 			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
 		},
 
@@ -133,50 +103,9 @@ export function get_cookies(request, url, trailing_slash) {
 		 */
 		serialize(name, value, options) {
 			validate_options(options);
-
-			let path = options.path;
-
-			if (!options.domain || options.domain === url.hostname) {
-				path = resolve(normalized_url, path);
-			}
-
-			return serialize(name, value, { ...defaults, ...options, path });
+			return serialize(name, value, { ...defaults, ...options });
 		}
 	};
-
-	/**
-	 * @param {URL} destination
-	 * @param {string | null} header
-	 */
-	function get_cookie_header(destination, header) {
-		/** @type {Record<string, string>} */
-		const combined_cookies = {
-			// cookies sent by the user agent have lowest precedence
-			...initial_cookies
-		};
-
-		// cookies previous set during this event with cookies.set have higher precedence
-		for (const key in new_cookies) {
-			const cookie = new_cookies[key];
-			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
-			if (!path_matches(destination.pathname, cookie.options.path)) continue;
-
-			const encoder = cookie.options.encode || encodeURIComponent;
-			combined_cookies[cookie.name] = encoder(cookie.value);
-		}
-
-		// explicit header has highest precedence
-		if (header) {
-			const parsed = parse(header, { decode: (value) => value });
-			for (const name in parsed) {
-				combined_cookies[name] = parsed[name];
-			}
-		}
-
-		return Object.entries(combined_cookies)
-			.map(([name, value]) => `${name}=${value}`)
-			.join('; ');
-	}
 
 	/**
 	 * @param {string} name
@@ -184,16 +113,10 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {import('../../types/internal.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
-		let path = options.path;
-
-		if (!options.domain || options.domain === url.hostname) {
-			path = resolve(normalized_url, path);
-		}
-
-		new_cookies[name] = { name, value, options: { ...options, path } };
+		const serialized = serialize(name, value, options);
+		document.cookie = serialized;
 
 		if (__SVELTEKIT_DEV__) {
-			const serialized = serialize(name, value, new_cookies[name].options);
 			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
@@ -201,27 +124,14 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
-				cookie_paths[name].delete(path);
+				cookie_paths[name].delete(options.path);
 			} else {
-				cookie_paths[name].add(path);
+				cookie_paths[name].add(options.path);
 			}
 		}
 	}
 
-	return { cookies, new_cookies, get_cookie_header, set_internal };
-}
-
-/**
- * @param {string} hostname
- * @param {string} [constraint]
- */
-export function domain_matches(hostname, constraint) {
-	if (!constraint) return true;
-
-	const normalized = constraint[0] === '.' ? constraint.slice(1) : constraint;
-
-	if (hostname === normalized) return true;
-	return hostname.endsWith('.' + normalized);
+	return cookies;
 }
 
 /**
@@ -235,25 +145,6 @@ export function path_matches(path, constraint) {
 
 	if (path === normalized) return true;
 	return path.startsWith(normalized + '/');
-}
-
-/**
- * @param {Headers} headers
- * @param {import('../../types/internal.js').Cookie[]} cookies
- */
-export function add_cookies_to_headers(headers, cookies) {
-	for (const new_cookie of cookies) {
-		const { name, value, options } = new_cookie;
-		headers.append('set-cookie', serialize(name, value, options));
-
-		// special case — for routes ending with .html, the route data lives in a sibling
-		// `.html__data.json` file rather than a child `/__data.json` file, which means
-		// we need to duplicate the cookie
-		if (options.path.endsWith('.html')) {
-			const path = add_data_suffix(options.path);
-			headers.append('set-cookie', serialize(name, value, { ...options, path }));
-		}
-	}
 }
 
 /**
