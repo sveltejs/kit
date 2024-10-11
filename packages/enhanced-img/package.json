@@ -37,7 +37,7 @@
 	"types": "types/index.d.ts",
 	"dependencies": {
 		"magic-string": "^0.30.5",
-		"svelte-parse-markup": "^0.1.2",
+		"svelte-parse-markup": "^0.1.5",
 		"vite-imagetools": "^7.0.1"
 	},
 	"devDependencies": {

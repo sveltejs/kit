@@ -371,8 +371,8 @@ importers:
         specifier: ^0.30.5
         version: 0.30.11
       svelte-parse-markup:
-        specifier: ^0.1.2
-        version: 0.1.2(svelte@4.2.19)
+        specifier: ^0.1.5
+        version: 0.1.5(svelte@4.2.19)
       vite-imagetools:
         specifier: ^7.0.1
         version: 7.0.1(rollup@4.24.0)
@@ -3885,10 +3885,10 @@ packages:
     peerDependencies:
       svelte: ^3.19.0 || ^4.0.0
 
-  svelte-parse-markup@0.1.2:
-    resolution: {integrity: sha512-DycY7DJr7VqofiJ63ut1/NEG92HrWWL56VWITn/cJCu+LlZhMoBkBXT4opUitPEEwbq1nMQbv4vTKUfbOqIW1g==}
+  svelte-parse-markup@0.1.5:
+    resolution: {integrity: sha512-T6mqZrySltPCDwfKXWQ6zehipVLk4GWfH1zCMGgRtLlOIFPuw58ZxVYxVvotMJgJaurKi1i14viB2GIRKXeJTQ==}
     peerDependencies:
-      svelte: ^3.0.0 || ^4.0.0
+      svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
 
   svelte-persisted-store@0.9.4:
     resolution: {integrity: sha512-Em3cDSsd3fAkQhvNc4+V7ZT86GnIkFrlcKK/oNSHFhF5fbNoavdxvtTZ0pCF2ueG/Oqg5kSbAFxn0rkeICpHUA==}
@@ -6739,7 +6739,7 @@ snapshots:
     dependencies:
       svelte: 4.2.19
 
-  svelte-parse-markup@0.1.2(svelte@4.2.19):
+  svelte-parse-markup@0.1.5(svelte@4.2.19):
     dependencies:
       svelte: 4.2.19
 
