@@ -382,7 +382,6 @@ In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files
 Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
 ```js
-// @errors: 2451
 /// file: +page.js
 // @filename: ambient.d.ts
 declare function getData(params: Record<string, string>): Promise<{ meta: any }>
