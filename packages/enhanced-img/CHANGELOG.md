@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.9
+### Patch Changes
+
+
+- chore: upgrade svelte-parse-markup ([#12793](https://github.com/sveltejs/kit/pull/12793))
+
 ## 0.3.8
 ### Patch Changes
 
