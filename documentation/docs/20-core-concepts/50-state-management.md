@@ -64,14 +64,15 @@ export async function load({ fetch }) {
 
 As with the previous example, this puts one user's information in a place that is shared by _all_ users. Instead, just return the data...
 
-```diff
+```js
 /// file: +page.js
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	const response = await fetch('/api/user');
 
-+	return {
-+		user: await response.json()
-+	};
++++	return {
+		user: await response.json()
+	};+++
 }
 ```
 
@@ -144,14 +145,14 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
-```diff
+```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
 
-+	$: wordCount = data.content.split(' ').length;
-+	$: estimatedReadingTime = wordCount / 250;
++++	$: wordCount = data.content.split(' ').length;
+	$: estimatedReadingTime = wordCount / 250;+++
 </script>
 ```
 
