@@ -110,26 +110,26 @@ export async function load() {
 
 Data returned from layout `load` functions is available to child `+layout.svelte` components and the `+page.svelte` component as well as the layout that it 'belongs' to.
 
-```diff
+```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-+	import { page } from '$app/stores';
+	+++import { page } from '$app/stores';+++
 
 	/** @type {import('./$types').PageData} */
 	export let data;
 
-+	// we can access `data.posts` because it's returned from
-+	// the parent layout `load` function
-+	$: index = data.posts.findIndex(post => post.slug === $page.params.slug);
-+	$: next = data.posts[index - 1];
++++	// we can access `data.posts` because it's returned from
+	// the parent layout `load` function
+	$: index = data.posts.findIndex(post => post.slug === $page.params.slug);
+	$: next = data.posts[index - 1];+++
 </script>
 
 <h1>{data.post.title}</h1>
 <div>{@html data.post.content}</div>
 
-+{#if next}
-+	<p>Next post: <a href="/blog/{next.slug}">{next.title}</a></p>
-+{/if}
++++{#if next}
+	<p>Next post: <a href="/blog/{next.slug}">{next.title}</a></p>
+{/if}+++
 ```
 
 > [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
@@ -381,16 +381,22 @@ In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files
 
 Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
-```diff
+```js
+// @errors: 2451
 /// file: +page.js
+// @filename: ambient.d.ts
+declare function getData(params: Record<string, string>): Promise<{ meta: any }>
+
+// @filename: index.js
+// ---cut---
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, parent }) {
--	const parentData = await parent();
+	---const parentData = await parent();---
 	const data = await getData(params);
-+	const parentData = await parent();
+	+++const parentData = await parent();+++
 
 	return {
-		...data
+		...data,
 		meta: { ...parentData.meta, ...data.meta }
 	};
 }
