@@ -280,6 +280,20 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
 
+	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		await page.evaluate(() => {
+			window.scrollTo(0, 50);
+		});
+		await page.locator('#non-ascii-anchor').click();
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
 	test('url-supplied anchor with special characters works on navigation to page', async ({
 		page,
 		in_view,
