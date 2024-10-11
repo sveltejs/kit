@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: decode the hash when clicking the same hash to correctly scroll for non ascii hashes
+fix: decode non ASCII anchor hashes when scrolling into view
