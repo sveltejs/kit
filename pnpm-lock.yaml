@@ -224,8 +224,8 @@ importers:
         specifier: ^3.0.1
         version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^3.0.0
+        version: 3.0.0
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -245,8 +245,8 @@ importers:
         specifier: ^3.0.1
         version: 3.1.0(svelte@4.2.19)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^3.0.0
+        version: 3.0.0
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -2506,7 +2506,7 @@ packages:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   consola@3.2.3:
     resolution: {integrity: sha512-I5qxpzLv+sJhTVEoLYNcTW+bThDCPsit0vLNKShZx6rLtpilNpmmeTPaeqJb9ZE9dV3DGaeby6Vuhrw38WjeyQ==}
@@ -2905,9 +2905,9 @@ packages:
   get-func-name@2.0.2:
     resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
 
-  get-port@3.2.0:
-    resolution: {integrity: sha512-x5UJKlgeUiNT8nyo/AcnwLnZuZNcSjSw0kogRB+Whd1fjjFq4B1hySFxSFWWSn4mIBzg3sRNUDFYc4g5gjPoLg==}
-    engines: {node: '>=4'}
+  get-port@5.1.1:
+    resolution: {integrity: sha512-g/Q1aTSDOxFpchXC4i8ZWvxA1lnPqx/JHqcpIw0/LX9T8x/GBbi6YnlN5nhaKIFkT8oFsscUKgDJYxfwfS6QsQ==}
+    engines: {node: '>=8'}
 
   get-source@2.0.12:
     resolution: {integrity: sha512-X5+4+iD+HoSeEED+uwrQ07BOQr0kEDFMVqqpBuI+RaZBpBpHCuXxo70bjar6f0b0u/DQJsJ7ssurpP0V60Az+w==}
@@ -3767,14 +3767,18 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
-  sirv-cli@2.0.2:
-    resolution: {integrity: sha512-OtSJDwxsF1NWHc7ps3Sa0s+dPtP15iQNJzfKVz+MxkEo3z72mCD+yu30ct79rPr0CaV1HXSOBp+MIY5uIhHZ1A==}
-    engines: {node: '>= 10'}
+  sirv-cli@3.0.0:
+    resolution: {integrity: sha512-p88yHl8DmTOUJroRiW2o9ezJc/YRLxphBydX2NGQc3naKBA09B3EM4Q/yaN8FYF0e50fRSZP7dyatr72b1u5Jw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   sirv@2.0.4:
     resolution: {integrity: sha512-94Bdh3cC2PKrbgSOUqTiGPWVZeSiXfKOVZNJniWoqrWrRkB1CJzBU3NEbiTsPcYy1lDsANA/THzS+9WBiy5nfQ==}
     engines: {node: '>= 10'}
+
+  sirv@3.0.0:
+    resolution: {integrity: sha512-BPwJGUeDaDCHihkORDchNyyTvWFhcusy1XMmhEVTQTwGeybFbp8YEmB+njbPnth1FibULBSBVwCQni25XlCUDg==}
+    engines: {node: '>=18'}
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
@@ -5840,7 +5844,7 @@ snapshots:
 
   get-func-name@2.0.2: {}
 
-  get-port@3.2.0: {}
+  get-port@5.1.1: {}
 
   get-source@2.0.12:
     dependencies:
@@ -6618,18 +6622,24 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  sirv-cli@2.0.2:
+  sirv-cli@3.0.0:
     dependencies:
       console-clear: 1.1.1
-      get-port: 3.2.0
+      get-port: 5.1.1
       kleur: 4.1.5
       local-access: 1.1.0
       sade: 1.8.1
       semiver: 1.1.0
-      sirv: 2.0.4
+      sirv: 3.0.0
       tinydate: 1.3.0
 
   sirv@2.0.4:
+    dependencies:
+      '@polka/url': 1.0.0-next.28
+      mrmime: 2.0.0
+      totalist: 3.0.1
+
+  sirv@3.0.0:
     dependencies:
       '@polka/url': 1.0.0-next.28
       mrmime: 2.0.0
