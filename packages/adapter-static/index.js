@@ -8,7 +8,7 @@ export default function (options) {
 
 		async adapt(builder) {
 			if (!options?.fallback) {
-				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
+				const dynamic_routes = builder.routes.filter((route) => route.prerender === undefined);
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
