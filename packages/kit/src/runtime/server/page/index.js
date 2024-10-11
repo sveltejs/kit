@@ -100,9 +100,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
 		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
-			// if SSR is turned off, and user makes a request through non-enhanced form and the action returns a value
-			// the returned value gets "lost", because neither the server nor the client will handle it
-			// so we warn the user about this
+			// if SSR is turned off, and the user makes a request through a non-enhanced form, the action that
+			// returns a value is lost because neither the server nor the client will handle it
 			if (DEV) {
 				const no_enhance = !event.request.headers.has('x-sveltekit-action');
 
