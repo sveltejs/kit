@@ -5,4 +5,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: fix handling of relative paths in fetch on the server
+fix: correctly handle relative paths when fetching assets on the server
