@@ -37,7 +37,7 @@ In these cases, you can specify the `"tap"` value, which causes SvelteKit to cal
 </a>
 ```
 
-> You can also programmatically invoke `preloadData` from `$app/navigation`.
+> [!NOTE] You can also programmatically invoke `preloadData` from `$app/navigation`.
 
 Data will never be preloaded if the user has chosen reduced data usage, meaning [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) is `true`.
 
@@ -52,7 +52,7 @@ Even in cases where you don't want to preload _data_ for a link, it can be benef
 
 Note that `viewport` and `eager` only apply to links that are present in the DOM immediately following navigation — if a link is added later (in an `{#if ...}` block, for example) it will not be preloaded until triggered by `hover` or `tap`. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
 
-> Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
+> [!NOTE] Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
 
 As with `data-sveltekit-preload-data`, this attribute will be ignored if the user has chosen reduced data usage.
 

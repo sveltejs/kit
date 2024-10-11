@@ -13,7 +13,7 @@ Running the `svelte-package` command from `@sveltejs/package` will take the cont
 - All the files in `src/lib`. Svelte components will be preprocessed, TypeScript files will be transpiled to JavaScript.
 - Type definitions (`d.ts` files) which are generated for Svelte, JavaScript and TypeScript files. You need to install `typescript >= 4.0.0` for this. Type definitions are placed next to their implementation, hand-written `d.ts` files are copied over as is. You can [disable generation](#options), but we strongly recommend against it — people using your library might use TypeScript, for which they require these type definition files.
 
-> `@sveltejs/package` version 1 generated a `package.json`. This is no longer the case and it will now use the `package.json` from your project and validate that it is correct instead. If you're still on version 1, see [this PR](https://github.com/sveltejs/kit/pull/8922) for migration instructions.
+> [!NOTE] `@sveltejs/package` version 1 generated a `package.json`. This is no longer the case and it will now use the `package.json` from your project and validate that it is correct instead. If you're still on version 1, see [this PR](https://github.com/sveltejs/kit/pull/8922) for migration instructions.
 
 ## Anatomy of a package.json
 
@@ -84,7 +84,7 @@ The `types` and `svelte` keys are [export conditions](https://nodejs.org/api/pac
 - TypeScript sees the `types` condition and looks up the type definition file. If you don't publish type definitions, omit this condition.
 - Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library. If you publish a library that does not export any Svelte components and that could also work in non-Svelte projects (for example a Svelte store library), you can replace this condition with `default`.
 
-> Previous versions of `@sveltejs/package` also added a `package.json` export. This is no longer part of the template because all tooling can now deal with a `package.json` not being explicitly exported.
+> [!NOTE] Previous versions of `@sveltejs/package` also added a `package.json` export. This is no longer part of the template because all tooling can now deal with a `package.json` not being explicitly exported.
 
 You can adjust `exports` to your liking and provide more entry points. For example, if instead of a `src/lib/index.js` file that re-exported components you wanted to expose a `src/lib/Foo.svelte` component directly, you could create the following export map...
 
@@ -110,7 +110,7 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
-> Beware that doing this will need additional care if you provide type definitions. Read more about the caveat [here](#typescript)
+> [!NOTE] Beware that doing this will need additional care if you provide type definitions. Read more about the caveat [here](#typescript)
 
 In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or a map of export conditions which in turn contains these file paths.
 

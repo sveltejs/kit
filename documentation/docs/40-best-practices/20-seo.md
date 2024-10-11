@@ -10,7 +10,7 @@ The most important aspect of SEO is to create high-quality content that is widel
 
 While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](hooks#server-hooks-handle), you should leave it on unless you have a good reason not to.
 
-> SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
+> [!NOTE] SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
 
 ### Performance
 
@@ -26,7 +26,7 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 
-> A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`$page.data`]($app-stores)) in a `<svelte:head>` in your root [layout](routing#layout).
+> [!NOTE] A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`$page.data`]($app-stores)) in a `<svelte:head>` in your root [layout](routing#layout).
 
 ### Sitemaps
 
@@ -147,4 +147,4 @@ export async function handle({ event, resolve }) {
 
 ```
 
-> It's a good idea to use the `handle` hook to validate the transformed HTML using `amphtml-validator`, but only if you're prerendering pages since it's very slow.
+> [!NOTE] It's a good idea to use the `handle` hook to validate the transformed HTML using `amphtml-validator`, but only if you're prerendering pages since it's very slow.

@@ -39,7 +39,7 @@ To invoke this action from the `/login` page, just add a `<form>` — no JavaScr
 
 If someone were to click the button, the browser would send the form data via `POST` request to the server, running the default action.
 
-> Actions always use `POST` requests, since `GET` requests should never have side-effects.
+> [!NOTE] Actions always use `POST` requests, since `GET` requests should never have side-effects.
 
 We can also invoke the action from other pages (for example if there's a login widget in the nav in the root layout) by adding the `action` attribute, pointing to the page:
 
@@ -99,7 +99,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 </form>
 ```
 
-> We can't have default actions next to named actions, because if you POST to a named action without a redirect, the query parameter is persisted in the URL, which means the next default POST would go through the named action from before.
+> [!NOTE] We can't have default actions next to named actions, because if you POST to a named action without a redirect, the query parameter is persisted in the URL, which means the next default POST would go through the named action from before.
 
 ## Anatomy of an action
 
@@ -184,7 +184,7 @@ export const actions = {
 };
 ```
 
-> Note that as a precaution, we only return the email back to the page — not the password.
+> [!NOTE] Note that as a precaution, we only return the email back to the page — not the password.
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -329,7 +329,7 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 +<form method="POST" use:enhance>
 ```
 
-> Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
+> [!NOTE] Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 

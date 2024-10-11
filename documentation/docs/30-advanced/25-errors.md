@@ -67,7 +67,7 @@ error(404, {
 +error(404, 'Not found');
 ```
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
 ## Unexpected errors
 

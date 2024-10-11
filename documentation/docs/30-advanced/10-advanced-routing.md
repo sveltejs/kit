@@ -22,7 +22,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+> [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
 
 ### 404 pages
 
@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
 
 ## Optional parameters
 
@@ -96,7 +96,7 @@ If the pathname doesn't match, SvelteKit will try to match other routes (using t
 
 Each module in the `params` directory corresponds to a matcher, with the exception of `*.test.js` and `*.spec.js` files which may be used to unit test your matchers.
 
-> Matchers run both on the server and in the browser.
+> [!NOTE] Matchers run both on the server and in the browser.
 
 ## Sorting
 
@@ -166,7 +166,7 @@ src/routes/🤪/+page.svelte
 
 The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid value between `0000` and `10ffff`. (Unlike JavaScript string escaping, there's no need to use surrogate pairs to represent code points above `ffff`.) To learn more about Unicode encodings, consult [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html).
 
-> Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
+> [!NOTE] Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
 
 ## Advanced layouts
 

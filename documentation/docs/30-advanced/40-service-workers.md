@@ -106,7 +106,7 @@ self.addEventListener('fetch', (event) => {
 });
 ```
 
-> Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
+> [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
 ## During development
 
@@ -120,7 +120,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 });
 ```
 
-> `build` and `prerendered` are empty arrays during development
+> [!NOTE] `build` and `prerendered` are empty arrays during development
 
 ## Type safety
 

@@ -4,7 +4,7 @@ title: Cloudflare Workers
 
 To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
-> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
+> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -64,7 +64,7 @@ workers_dev = true
 https://dash.cloudflare.com/<your-account-id>
 ```
 
-> You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
+> [!NOTE] You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
 
 You will need to install [wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
 
@@ -101,7 +101,7 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> SvelteKit's built-in `$env` module should be preferred for environment variables.
+> [!NOTE] SvelteKit's built-in `$env` module should be preferred for environment variables.
 
 To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 

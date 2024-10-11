@@ -8,7 +8,7 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 - `src/routes/about` creates an `/about` route
 - `src/routes/blog/[slug]` creates a route with a _parameter_, `slug`, that can be used to load data dynamically when a user requests a page like `/blog/hello-world`
 
-> You can change `src/routes` to a different directory by editing the [project config](configuration).
+> [!NOTE] You can change `src/routes` to a different directory by editing the [project config](configuration).
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
@@ -48,7 +48,7 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 <div>{@html data.content}</div>
 ```
 
-> Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+> [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 ### +page.js
 
@@ -139,7 +139,7 @@ If the error occurs inside a `load` function in `+layout(.server).js`, the close
 
 If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
-> `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#server-hooks-handle) or a [+server.js](#server) request handler.
+> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#server-hooks-handle) or a [+server.js](#server) request handler.
 
 You can read more about error handling [here](errors).
 
@@ -246,7 +246,7 @@ Data returned from a layout's `load` function is also available to all its child
 </script>
 ```
 
-> Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently rerun [`load`](load) functions when necessary.
+> [!NOTE] Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently rerun [`load`](load) functions when necessary.
 
 ### +layout.server.js
 
@@ -287,7 +287,7 @@ You can use the [`error`](@sveltejs-kit#error), [`redirect`](@sveltejs-kit#redir
 
 If an error is thrown (either `error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
 
-> When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
+> [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 
 ### Receiving data
 
@@ -331,9 +331,9 @@ export async function POST({ request }) {
 }
 ```
 
-> In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
+> [!NOTE] In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
 
-> If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
+> [!NOTE] If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
 
 ### Fallback method handler
 
@@ -356,7 +356,7 @@ export async function fallback({ request }) {
 }
 ```
 
-> For `HEAD` requests, the `GET` handler takes precedence over the `fallback` handler.
+> [!NOTE] For `HEAD` requests, the `GET` handler takes precedence over the `fallback` handler.
 
 ### Content negotiation
 

@@ -12,7 +12,7 @@ There are three hooks files, all optional:
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-> You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
+> [!NOTE] You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
 ## Server hooks
 
@@ -35,7 +35,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
+> [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
@@ -225,13 +225,13 @@ export async function handleError({ error, event, status, message }) {
 }
 ```
 
-> In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
+> [!NOTE] In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
 This function is not called for _expected_ errors (those thrown with the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
-> Make sure that `handleError` _never_ throws an error
+> [!NOTE] Make sure that `handleError` _never_ throws an error
 
 ## Universal hooks
 

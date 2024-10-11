@@ -57,7 +57,7 @@ Even though the public-facing code — `src/routes/+page.svelte` — only uses t
 
 This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``, with one small caveat: during development, if there are two or more dynamic imports between the public-facing code and the server-only module, the illegal import will not be detected the first time the code is loaded.
 
-> Unit testing frameworks like Vitest do not distinguish between server-only and public-facing code. For this reason, illegal import detection is disabled when running tests, as determined by `process.env.TEST === 'true'`.
+> [!NOTE] Unit testing frameworks like Vitest do not distinguish between server-only and public-facing code. For this reason, illegal import detection is disabled when running tests, as determined by `process.env.TEST === 'true'`.
 
 ## Further reading
 

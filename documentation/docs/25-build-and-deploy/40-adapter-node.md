@@ -93,13 +93,13 @@ With this, a request for the `/stuff` pathname will correctly resolve to `https:
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 ```
 
-> [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
+> [!NOTE] [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
 >
 > If you're hosting your proxy on a non-standard port and your reverse proxy supports `x-forwarded-port`, you can also set `PORT_HEADER=x-forwarded-port`.
 
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
-> Cross-site POST form submissions are forbidden
+> [!NOTE] Cross-site POST form submissions are forbidden
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
@@ -109,7 +109,7 @@ The [RequestEvent](types#public-types-requestevent) object passed to hooks and e
 ADDRESS_HEADER=True-Client-IP node build
 ```
 
-> Headers can easily be spoofed. As with `PROTOCOL_HEADER` and `HOST_HEADER`, you should [know what you're doing](https://adam-p.ca/blog/2022/03/x-forwarded-for/) before setting these.
+> [!NOTE] Headers can easily be spoofed. As with `PROTOCOL_HEADER` and `HOST_HEADER`, you should [know what you're doing](https://adam-p.ca/blog/2022/03/x-forwarded-for/) before setting these.
 
 If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. The `XFF_DEPTH` environment variable should specify how many trusted proxies sit in front of your server. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the original connection and the first two proxies:
 
@@ -125,7 +125,7 @@ Some guides will tell you to read the left-most address, but this leaves you [vu
 
 We instead read from the _right_, accounting for the number of trusted proxies. In this case, we would use `XFF_DEPTH=3`.
 
-> If you need to read the left-most address instead (and don't care about spoofing) — for example, to offer a geolocation service, where it's more important for the IP address to be _real_ than _trusted_, you can do so by inspecting the `x-forwarded-for` header within your app.
+> [!NOTE] If you need to read the left-most address instead (and don't care about spoofing) — for example, to offer a geolocation service, where it's more important for the IP address to be _real_ than _trusted_, you can do so by inspecting the `x-forwarded-for` header within your app.
 
 ### `BODY_SIZE_LIMIT`
 
@@ -191,7 +191,7 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
 3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#environment-variables-shutdown-timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
 
-> If you want to customize this behaviour you can use a [custom server](#custom-server).
+> [!NOTE] If you want to customize this behaviour you can use a [custom server](#custom-server).
 
 You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
 
@@ -213,7 +213,7 @@ The parameter `reason` has one of the following values:
 
 Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
 
-> You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
+> [!NOTE] You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
 
 To take advantage of socket activation follow these steps.
 

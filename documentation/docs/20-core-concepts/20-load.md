@@ -132,7 +132,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 +{/if}
 ```
 
-> If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
+> [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
 
 ## $page.data
 
@@ -224,7 +224,7 @@ Often the `load` function depends on the URL in one way or another. For this, th
 
 An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
 
-> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](adapter-node), for example, you may need to configure the adapter in order for the URL to be correct.
+> [!NOTE] In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](adapter-node), for example, you may need to configure the adapter in order for the URL to be correct.
 
 ### route
 
@@ -373,7 +373,7 @@ export async function load({ parent }) {
 <p>{data.a} + {data.b} = {data.c}</p>
 ```
 
-> Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
+> [!NOTE] Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
 
 Inside `+page.server.js` and `+layout.server.js`, `parent` returns data from parent `+layout.server.js` files.
 
@@ -432,7 +432,7 @@ Calling `error(...)` will throw an exception, making it easy to stop execution f
 
 If an [_unexpected_](errors#unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
 ## Redirects
 
@@ -461,11 +461,11 @@ export function load({ locals }) {
 }
 ```
 
-> Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
+> [!NOTE] Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`]($app-navigation#goto) from [`$app.navigation`]($app-navigation).
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
 
 ## Streaming with promises
 
@@ -534,13 +534,13 @@ export function load({ fetch }) {
 }
 ```
 
-> On platforms that do not support streaming, such as AWS Lambda or Firebase, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
+> [!NOTE] On platforms that do not support streaming, such as AWS Lambda or Firebase, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
 
-> Streaming data will only work when JavaScript is enabled. You should avoid returning promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
+> [!NOTE] Streaming data will only work when JavaScript is enabled. You should avoid returning promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
 
-> The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
+> [!NOTE] The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
 
 ## Parallel loading
 

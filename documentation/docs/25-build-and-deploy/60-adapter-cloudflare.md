@@ -80,7 +80,7 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> SvelteKit's built-in `$env` module should be preferred for environment variables.
+> [!NOTE] SvelteKit's built-in `$env` module should be preferred for environment variables.
 
 To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 
