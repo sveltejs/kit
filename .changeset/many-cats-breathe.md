@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: Add warning for form action responses lost without SSR
+fix: warn when form action responses are lost because SSR is off
