@@ -49,6 +49,7 @@ Some platforms have zero-config support (more to come in future):
 On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
 
 ```js
+// @errors: 2304
 /// file: svelte.config.js
 export default {
 	kit: {

@@ -236,6 +236,7 @@ npm publish
 All relative file imports need to be fully specified, adhering to Node's ESM algorithm. This means that for a file like `src/lib/something/index.js`, you must include the filename with the extension:
 
 ```js
+// @errors: 2307
 import { something } from './something+++/index.js+++';
 ```
 

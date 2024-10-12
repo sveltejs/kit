@@ -53,18 +53,32 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 
 You can add extra properties to the error object if needed...
 
-```diff
+```js
+import { error } from '@sveltejs/kit';
+
+declare global {
+	namespace App {
+		interface Error {
+			message: string;
+			code: string;
+		}
+	}
+}
+
+// ---cut---
 error(404, {
 	message: 'Not found',
-+	code: 'NOT_FOUND'
+	+++code: 'NOT_FOUND'+++
 });
 ```
 
 ...otherwise, for convenience, you can pass a string as the second argument:
 
-```diff
--error(404, { message: 'Not found' });
-+error(404, 'Not found');
+```js
+import { error } from '@sveltejs/kit';
+// ---cut---
+---error(404, { message: 'Not found' });---
++++error(404, 'Not found');+++
 ```
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself

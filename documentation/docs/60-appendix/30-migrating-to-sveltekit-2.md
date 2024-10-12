@@ -10,12 +10,12 @@ We highly recommend upgrading to the most recent 1.x version before upgrading to
 
 Previously, you had to `throw` the values returned from `error(...)` and `redirect(...)` yourself. In SvelteKit 2 this is no longer the case — calling the functions is sufficient.
 
-```diff
+```js
 import { error } from '@sveltejs/kit'
 
-...
-- throw error(500, 'something went wrong');
-+ error(500, 'something went wrong');
+// ...
+---throw error(500, 'something went wrong');---
++++error(500, 'something went wrong');+++
 ```
 
 `svelte-migrate` will do these changes automatically for you.
@@ -44,25 +44,37 @@ In SvelteKit version 1, if the top-level properties of the object returned from 
 
 As of version 2, SvelteKit no longer differentiates between top-level and non-top-level promises. To get back the blocking behavior, use `await` (with `Promise.all` to prevent waterfalls, where appropriate):
 
-```diff
+```js
+// @filename: ambient.d.ts
+declare const url: string;
+
+// @filename: index.js
+// ---cut---
 // If you have a single promise
-export function load({ fetch }) {
--    const response = fetch(...).then(r => r.json());
-+    const response = await fetch(...).then(r => r.json());
-    return { response }
+/** @type {import('./$types').PageServerLoad} */
+export +++async+++ function load({ fetch }) {
+	const response = +++await+++ fetch(url).then(r => r.json());
+	return { response }
 }
 ```
 
-```diff
+```js
+// @filename: ambient.d.ts
+declare const url1: string;
+declare const url2: string;
+
+// @filename: index.js
+// ---cut---
 // If you have multiple promises
-export function load({ fetch }) {
--    const a = fetch(...).then(r => r.json());
--    const b = fetch(...).then(r => r.json());
-+    const [a, b] = await Promise.all([
-+      fetch(...).then(r => r.json()),
-+      fetch(...).then(r => r.json()),
-+    ]);
-    return { a, b };
+/** @type {import('./$types').PageServerLoad} */
+export +++async+++ function load({ fetch }) {
+---	const a = fetch(url1).then(r => r.json());---
+---	const b = fetch(url2).then(r => r.json());---
++++	const [a, b] = await Promise.all([
+	  fetch(url1).then(r => r.json()),
+	  fetch(url2).then(r => r.json()),
+	]);+++
+	return { a, b };
 }
 ```
 
