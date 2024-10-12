@@ -28,7 +28,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 
 Rest parameters also allow you to render custom 404s. Given these routes...
 
-```
+```tree
 src/routes/
 ├ marx-brothers/
 │ ├ chico/
@@ -40,10 +40,10 @@ src/routes/
 
 ...the `marx-brothers/+error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`, because no route was matched. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
 
-```diff
+```tree
 src/routes/
 ├ marx-brothers/
-+| ├ [...path]/
++++| ├ [...path]/+++
 │ ├ chico/
 │ ├ harpo/
 │ ├ groucho/
@@ -87,9 +87,8 @@ export function match(param) {
 
 ...and augmenting your routes:
 
-```diff
--src/routes/fruits/[page]
-+src/routes/fruits/[page=fruit]
+```
+src/routes/fruits/[page+++=fruit+++]
 ```
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
@@ -176,13 +175,13 @@ By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases,
 
 Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/about` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
-```diff
+```tree
 src/routes/
-+│ (app)/
++++│ (app)/+++
 │ ├ dashboard/
 │ ├ item/
 │ └ +layout.svelte
-+│ (marketing)/
++++│ (marketing)/+++
 │ ├ about/
 │ ├ testimonials/
 │ └ +layout.svelte
@@ -202,13 +201,13 @@ In the example above, the `/admin` route does not inherit either the `(app)` or 
 
 Pages can break out of the current layout hierarchy on a route-by-route basis. Suppose we have an `/item/[id]/embed` route inside the `(app)` group from the previous example:
 
-```diff
+```tree
 src/routes/
 ├ (app)/
 │ ├ item/
 │ │ ├ [id]/
 │ │ │ ├ embed/
-+│ │ │ │ └ +page.svelte
++++│ │ │ │ └ +page.svelte+++
 │ │ │ └ +layout.svelte
 │ │ └ +layout.svelte
 │ └ +layout.svelte
@@ -222,13 +221,13 @@ Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` l
 - `+page@(app).svelte` - inherits from `src/routes/(app)/+layout.svelte`
 - `+page@.svelte` - inherits from `src/routes/+layout.svelte`
 
-```diff
+```tree
 src/routes/
 ├ (app)/
 │ ├ item/
 │ │ ├ [id]/
 │ │ │ ├ embed/
-+│ │ │ │ └ +page@(app).svelte
++++│ │ │ │ └ +page@(app).svelte+++
 │ │ │ └ +layout.svelte
 │ │ └ +layout.svelte
 │ └ +layout.svelte

@@ -188,27 +188,27 @@ Ensure that you add [aliases](configuration#alias) via `svelte.config.js` (not `
 
 You should think carefully about whether or not the changes you make to your package are a bug fix, a new feature, or a breaking change, and update the package version accordingly. Note that if you remove any paths from `exports` or any `export` conditions inside them from your existing library, that should be regarded as a breaking change.
 
-```diff
+```json
 {
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 // changing `svelte` to `default` is a breaking change:
--			"svelte": "./dist/index.js"
-+			"default": "./dist/index.js"
+---			"svelte": "./dist/index.js"---
++++			"default": "./dist/index.js"+++
 		},
 // removing this is a breaking change:
--		"./foo": {
--			"types": "./dist/foo.d.ts",
--			"svelte": "./dist/foo.js",
--			"default": "./dist/foo.js"
--		},
+---		"./foo": {
+			"types": "./dist/foo.d.ts",
+			"svelte": "./dist/foo.js",
+			"default": "./dist/foo.js"
+		},---
 // adding this is ok:
-+		"./bar": {
-+			"types": "./dist/bar.d.ts",
-+			"svelte": "./dist/bar.js",
-+			"default": "./dist/bar.js"
-+		}
++++		"./bar": {
+			"types": "./dist/bar.d.ts",
+			"svelte": "./dist/bar.js",
+			"default": "./dist/bar.js"
+		}+++
 	}
 }
 ```
@@ -235,9 +235,8 @@ npm publish
 
 All relative file imports need to be fully specified, adhering to Node's ESM algorithm. This means that for a file like `src/lib/something/index.js`, you must include the filename with the extension:
 
-```diff
--import { something } from './something';
-+import { something } from './something/index.js';
+```js
+import { something } from './something+++/index.js+++';
 ```
 
 If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending. (This is a TypeScript design decision outside our control.) Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
