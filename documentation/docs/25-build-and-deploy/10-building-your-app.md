@@ -12,13 +12,13 @@ Secondly, an _adapter_ takes this production build and tunes it for your target 
 
 SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. Any code that should _not_ be executed at this stage must check that `building` from [`$app/environment`]($app-environment) is `false`:
 
-```diff
-+import { building } from '$app/environment';
+```js
++++import { building } from '$app/environment';+++
 import { setupMyDatabase } from '$lib/server/database';
 
-+if (!building) {
++++if (!building) {+++
 	setupMyDatabase();
-+}
++++}+++
 
 export function load() {
 	// ...

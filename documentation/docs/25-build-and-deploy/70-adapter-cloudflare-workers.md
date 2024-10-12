@@ -105,15 +105,15 @@ export async function POST({ request, platform }) {
 
 To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 
-```diff
+```dts
 /// file: src/app.d.ts
 declare global {
 	namespace App {
 		interface Platform {
-+			env?: {
-+				YOUR_KV_NAMESPACE: KVNamespace;
-+				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
-+			};
++++			env?: {
+				YOUR_KV_NAMESPACE: KVNamespace;
+				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
+			};+++
 		}
 	}
 }

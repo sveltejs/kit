@@ -50,16 +50,14 @@ npm install dotenv
 
 ...and invoke it before running the built app:
 
-```diff
-- node build
-+ node -r dotenv/config build
+```bash
+node +++-r dotenv/config+++ build
 ```
 
 If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
 
-```diff
-- node build
-+ node --env-file=.env build
+```bash
+node +++--env-file=.env+++ build
 ```
 
 ### `PORT`, `HOST` and `SOCKET_PATH`
