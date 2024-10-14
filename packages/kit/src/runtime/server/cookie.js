@@ -118,13 +118,11 @@ export function get_cookies(request, url, trailing_slash) {
 		 */
 		set(name, value, options) {
 			// TODO: remove this check in 3.0
-			if (DEV) {
-				const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
-				if (illegal_characters) {
-					console.warn(
-						`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(' and ')}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
-					);
-				}
+			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
+			if (illegal_characters) {
+				console.warn(
+					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(' and ')}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
+				);
 			}
 
 			validate_options(options);
