@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.2.7
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+- Updated dependencies [[`dbc9c9486f962af7dbd9123d12d8a6829700d00f`](https://github.com/sveltejs/kit/commit/dbc9c9486f962af7dbd9123d12d8a6829700d00f), [`96642d234d1f5e961e919da725a1f6188e8aba2c`](https://github.com/sveltejs/kit/commit/96642d234d1f5e961e919da725a1f6188e8aba2c)]:
+  - @sveltejs/kit@2.7.1
+
 ## 5.2.6
 ### Patch Changes
 
