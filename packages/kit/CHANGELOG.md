@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.7.1
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+
+- fix: warn when form action responses are lost because SSR is off ([#12063](https://github.com/sveltejs/kit/pull/12063))
+
 ## 2.7.0
 ### Minor Changes
 
