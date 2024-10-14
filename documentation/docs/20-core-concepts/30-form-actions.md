@@ -12,7 +12,7 @@ In the simplest case, a page declares a `default` action:
 
 ```js
 /// file: src/routes/login/+page.server.js
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	default: async (event) => {
 		// TODO log the user in
@@ -56,7 +56,7 @@ Instead of one `default` action, a page can have as many named actions as it nee
 
 ```js
 /// file: src/routes/login/+page.server.js
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 ---	default: async (event) => {---
 +++	login: async (event) => {+++
@@ -119,7 +119,7 @@ export async function load({ cookies }) {
 	return { user };
 }
 
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	login: async ({ cookies, request }) => {
 		const data = await request.formData();
@@ -168,7 +168,7 @@ declare module '$lib/server/db';
 +++import { fail } from '@sveltejs/kit';+++
 import * as db from '$lib/server/db';
 
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	login: async ({ cookies, request }) => {
 		const data = await request.formData();
@@ -232,7 +232,7 @@ declare module '$lib/server/db';
 import { fail, +++redirect+++ } from '@sveltejs/kit';
 import * as db from '$lib/server/db';
 
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	login: async ({ cookies, request, +++url+++ }) => {
 		const data = await request.formData();
@@ -317,7 +317,7 @@ export function load(event) {
 	};
 }
 
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	logout: async (event) => {
 		event.cookies.delete('sessionid', { path: '/' });
