@@ -117,6 +117,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
+			// TODO: remove this check in 3.0
 			if (DEV) {
 				const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
 				if (illegal_characters) {
