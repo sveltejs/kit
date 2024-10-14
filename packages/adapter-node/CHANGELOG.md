@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.2.6
+### Patch Changes
+
+
+- fix: use `node:` imports to support Deno ([#12785](https://github.com/sveltejs/kit/pull/12785))
+
 ## 5.2.5
 ### Patch Changes
 

@@ -35,10 +35,6 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
-import {
-	APP_VERSION_PLACEHOLDER_BASE,
-	APP_VERSION_HASH_PLACEHOLDER_BASE
-} from '../../constants.js';
 
 const cwd = process.cwd();
 
@@ -188,16 +184,7 @@ async function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
-	const app_version = kit.version.name;
-	const version_hash = hash(app_version);
-
-	// if the app version or hash is longer than the placeholder, we need to pad it to avoid
-	// source map damage
-	const app_version_placeholder = APP_VERSION_PLACEHOLDER_BASE.padEnd(app_version.length, '_');
-	const app_version_hash_placeholder = APP_VERSION_HASH_PLACEHOLDER_BASE.padEnd(
-		version_hash.length,
-		'_'
-	);
+	const version_hash = hash(kit.version.name);
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -397,7 +384,7 @@ async function kit({ svelte_config }) {
 			const browser = !options?.ssr;
 
 			const global = is_build
-				? `globalThis.__sveltekit_${browser ? app_version_hash_placeholder : version_hash}`
+				? `globalThis.__sveltekit_${version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
@@ -483,8 +470,10 @@ async function kit({ svelte_config }) {
 				}
 
 				case sveltekit_environment: {
+					const { version } = svelte_config.kit;
+
 					return dedent`
-						export const version = ${is_build && browser ? app_version_placeholder : s(kit.version.name)};
+						export const version = ${s(version.name)};
 						export let building = false;
 						export let prerendering = false;
 
@@ -934,50 +923,7 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
-	const plugin_replace_version_and_hash = {
-		name: 'vite-plugin-svelte-replace-version-and-hash',
-		enforce: 'post',
-
-		generateBundle(_, bundle, __) {
-			if (vite_config.build.ssr) return;
-
-			for (const file in bundle) {
-				if (bundle[file].type !== 'chunk') continue;
-				const chunk = /** @type {import('rollup').OutputChunk} */ (bundle[file]);
-				let code = chunk.code;
-				if (
-					!(code.includes(app_version_placeholder) || code.includes(app_version_hash_placeholder))
-				)
-					continue;
-
-				// replace the version and version after the chunk hash has already been calculated
-				// to avoid affecting the chunk hash
-				const substitutions = [
-					[app_version_hash_placeholder, version_hash],
-					[app_version_placeholder, JSON.stringify(kit.version.name)]
-				];
-
-				for (const [placeholder, replacement] of substitutions) {
-					code = code.replaceAll(
-						placeholder,
-						// pad the replacement to mitigate source map changes
-						replacement.padEnd(placeholder.length, ' ')
-					);
-				}
-
-				chunk.code = code;
-			}
-		}
-	};
-
-	return [
-		plugin_setup,
-		plugin_virtual_modules,
-		plugin_guard,
-		plugin_compile,
-		plugin_replace_version_and_hash
-	];
+	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
 }
 
 /**

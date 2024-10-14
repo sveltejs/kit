@@ -280,6 +280,20 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
 
+	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		await page.evaluate(() => {
+			window.scrollTo(0, 50);
+		});
+		await page.locator('#non-ascii-anchor').click();
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
 	test('url-supplied anchor with special characters works on navigation to page', async ({
 		page,
 		in_view,
@@ -613,6 +627,19 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
 		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
+	});
+
+	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+
+		await clicknav('[href="/routing/hashes/a"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {

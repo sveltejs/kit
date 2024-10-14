@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.6.0",
+	"version": "1.6.2",
 	"description": "A CLI for migrating Svelte(Kit) codebases",
 	"keywords": [
 		"migration",
@@ -34,7 +34,7 @@
 		"prompts": "^2.4.2",
 		"semver": "^7.5.4",
 		"tiny-glob": "^0.2.9",
-		"ts-morph": "^22.0.0",
+		"ts-morph": "^24.0.0",
 		"typescript": "^5.3.3",
 		"zimmerframe": "^1.1.2"
 	},

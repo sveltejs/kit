@@ -118,6 +118,8 @@ export const config = {
 
 The `expiration` property is required; all others are optional.
 
+> Pages that are  [prerendered](/docs/page-options#prerender) will ignore ISR configuration.
+
 ## Environment variables
 
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:

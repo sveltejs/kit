@@ -128,9 +128,9 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 
 ### sideEffects
 
-The `sideEffects` field in `package.json` is used by bundlers to determine if a module may contain code that has side-effects. A module is considered to have side-effects if it makes changes that are observable from other scripts outside the module when it's imported. For example, side-effects include modifying global variables or the prototype of built-in JavaScript objects. Because a side-effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application. It is a best practice to avoid side-effects in your code.
+The `sideEffects` field in `package.json` is used by bundlers to determine if a module may contain code that has side effects. A module is considered to have side effects if it makes changes that are observable from other scripts outside the module when it's imported. For example, side effects include modifying global variables or the prototype of built-in JavaScript objects. Because a side effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application. It is a best practice to avoid side effects in your code.
 
-Setting the `sideEffects` field in `package.json` can help the bundler to be more aggressive in eliminating unused exports from the final bundle, a process known as tree-shaking. This results in smaller and more efficient bundles. Different bundlers handle `sideEffects` in various manners. While not necessary for Vite, we recommend that libraries state that all CSS files have side-effects so that your library will be [compatible with webpack](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free).
+Setting the `sideEffects` field in `package.json` can help the bundler to be more aggressive in eliminating unused exports from the final bundle, a process known as tree-shaking. This results in smaller and more efficient bundles. Different bundlers handle `sideEffects` in various manners. While not necessary for Vite, we recommend that libraries state that all CSS files have side effects so that your library will be [compatible with webpack](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free). This is the configuration that comes with newly created projects:
 
 ```json
 /// file: package.json
@@ -139,12 +139,17 @@ Setting the `sideEffects` field in `package.json` can help the bundler to be mor
 }
 ```
 
-Make sure that `"sideEffects"` is correctly set. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality. If your package has files with side effects, you can specify them in an array:
+> If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
+
+If your package has files with side effects, you can specify them in an array:
 
 ```json
 /// file: package.json
 {
-    "sideEffects": ["**/*.css", "./src/sideEffectfulFile.js"]
+    "sideEffects": [
+    	"**/*.css",
+    	"./dist/sideEffectfulFile.js"
+    ]
 }
 ```
 

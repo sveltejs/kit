@@ -1,5 +1,38 @@
 # @sveltejs/kit
 
+## 2.7.0
+### Minor Changes
+
+
+- feat: update service worker when new version is detected ([#12448](https://github.com/sveltejs/kit/pull/12448))
+
+
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+
+- fix: decode non ASCII anchor hashes when scrolling into view ([#12699](https://github.com/sveltejs/kit/pull/12699))
+
+
+- fix: page response missing CSP and Link headers when return promise in `load` ([#12418](https://github.com/sveltejs/kit/pull/12418))
+
+## 2.6.4
+### Patch Changes
+
+
+- fix: only preload links that have a different URL than the current page ([#12773](https://github.com/sveltejs/kit/pull/12773))
+
+
+- fix: revert change to replace version in generateBundle ([#12779](https://github.com/sveltejs/kit/pull/12779))
+
+
+- fix: catch stack trace fixing errors thrown in web containers ([#12775](https://github.com/sveltejs/kit/pull/12775))
+
+
+- fix: use absolute links in JSDoc comments ([#12772](https://github.com/sveltejs/kit/pull/12772))
+
 ## 2.6.3
 ### Patch Changes
 

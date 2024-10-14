@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.4.0
+### Minor Changes
+
+
+- feat: mark scripts in libraries as being side effect free by default ([#12372](https://github.com/sveltejs/kit/pull/12372))
+
 ## 6.3.12
 ### Patch Changes
 
