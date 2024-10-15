@@ -274,7 +274,7 @@ export async function load({ fetch, params }) {
 
 ## Cookies
 
-A server `load` function can get and set [`cookies`](types#Public-types-Cookies).
+A server `load` function can get and set [`cookies`](@sveltejs-kit#Cookies).
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -670,7 +670,7 @@ To summarize, a `load` function will rerun in the following situations:
 - It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
-- It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](types#Public-types-LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
+- It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
 - All active `load` functions were forcibly rerun with [`invalidateAll()`]($app-navigation#invalidateAll)
 
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#GET-vs-POST), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).
