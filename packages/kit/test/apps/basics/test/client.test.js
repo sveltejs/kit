@@ -1172,26 +1172,16 @@ test.describe('reroute', () => {
 });
 
 test.describe('redirect after invalidate', () => {
-	test('should not create new record in history', async ({ page }) => {
+	test('should not create new record in history', async ({ page, clicknav }) => {
 		await page.goto('/redirect/app-with-auth');
-		await page.click("a[data-testid='enter']");
-		await expect
-			.poll(async () => {
-				return await page.textContent('h1');
-			})
-			.toBe('signin');
-		await page.click("button[data-testid='login']");
-		await expect
-			.poll(async () => {
-				return await page.textContent('h1');
-			})
-			.toBe('main');
+		await clicknav("a[data-testid='enter']");
+		expect(await page.textContent('h1')).toContain('signin');
+
+		await clicknav("button[data-testid='login']");
+		expect(await page.textContent('h1')).toContain('main');
+
 		await page.evaluate(() => window.history.back());
-		await expect
-			.poll(async () => {
-				return await page.textContent('h1');
-			})
-			.toBe('App with authorization');
+		expect(await page.textContent('h1')).toContain('App with authorization');
 	});
 });
 
