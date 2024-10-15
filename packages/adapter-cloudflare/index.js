@@ -34,12 +34,10 @@ export default function (options = {}) {
 			const dest = builder.getBuildDirectory('cloudflare-intermediate');
 			const final_dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
-			const final_dest_parent_dir = path.basename(path.dirname(final_dest));
 
 			builder.rimraf(dest);
 			builder.rimraf(tmp);
 
-			builder.mkdirp(final_dest_parent_dir);
 			builder.mkdirp(dest);
 			builder.mkdirp(tmp);
 
