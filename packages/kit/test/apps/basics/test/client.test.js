@@ -623,6 +623,18 @@ test.describe('Invalidation', () => {
 		expect(next_layout_2).toBe(next_layout_1);
 		expect(next_page_2).not.toBe(next_page_1);
 	});
+
+	test('does not create new records in history for intermediate redirects', async ({ page, clicknav }) => {
+		await page.goto('/redirect/app-with-auth');
+		await clicknav("a[data-testid='enter']");
+		expect(await page.textContent('h1')).toContain('signin');
+
+		await clicknav("button[data-testid='login']");
+		expect(await page.textContent('h1')).toContain('main');
+
+		await page.evaluate(() => window.history.back());
+		expect(await page.textContent('h1')).toContain('App with authorization');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -1168,20 +1180,6 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
-	});
-});
-
-test.describe('redirect after invalidate', () => {
-	test('should not create new record in history', async ({ page, clicknav }) => {
-		await page.goto('/redirect/app-with-auth');
-		await clicknav("a[data-testid='enter']");
-		expect(await page.textContent('h1')).toContain('signin');
-
-		await clicknav("button[data-testid='login']");
-		expect(await page.textContent('h1')).toContain('main');
-
-		await page.evaluate(() => window.history.back());
-		expect(await page.textContent('h1')).toContain('App with authorization');
 	});
 });
 
