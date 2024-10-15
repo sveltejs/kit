@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -747,7 +748,6 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -755,12 +755,8 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
-		expect(
-			await page.evaluate(
-				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
-			)
-		).toBe('next focus element');
+
+		await page.waitForSelector('button:focus');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
@@ -1040,13 +1036,17 @@ test.describe('$app/server', () => {
 
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
-		const glob = await page.textContent('[data-testid="glob"]');
+		const local_glob = await page.textContent('[data-testid="local_glob"]');
+		const external_glob = await page.textContent('[data-testid="external_glob"]');
+		const svg = await page.innerHTML('[data-testid="svg"]');
 
 		// the emoji is there to check that base64 decoding works correctly
 		expect(auto.trim()).toBe('Imported without ?url 😎');
 		expect(url.trim()).toBe('Imported with ?url 😎');
-		expect(glob.trim()).toBe(
+		expect(local_glob.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
+		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
 	});
 });

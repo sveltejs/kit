@@ -13,7 +13,7 @@ export async function POST({ request, setHeaders }) {
 		} else if (lang === 'hu') {
 			return json({ hi: 'szia' });
 		}
-	} catch (error) {}
+	} catch {}
 
 	// default to english
 	return json({ hi: 'hello' });

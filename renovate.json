@@ -1,7 +1,6 @@
 {
 	"extends": [
-		"github>whitesource/merge-confidence:beta",
-		"config:base",
+		"config:recommended",
 		":preserveSemverRanges",
 		"group:allNonMajor",
 		":semanticCommitTypeAll(chore)"

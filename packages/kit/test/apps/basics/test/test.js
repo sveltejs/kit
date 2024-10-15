@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -543,12 +544,13 @@ test.describe('Load', () => {
 	});
 
 	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		clicknav,
 		page,
 		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a', { noWaitAfter: true });
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
@@ -1136,6 +1138,57 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'submitter: foo' })
 		);
+	});
+
+	test('use:enhance button with formenctype', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		const fileInput = page.locator('input[type="file"].form-file-input');
+
+		await fileInput.setInputFiles({
+			name: 'test-file.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('this is test')
+		});
+
+		await page.locator('button.form-file-submit').click();
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+		await expect(page.locator('pre.formdata2')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+	});
+
+	test('use:enhance has `application/x-www-form-urlencoded` as default value for `ContentType` request header', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		await page.locator('input[name="username"]').fill('foo');
+
+		const [request] = await Promise.all([
+			page.waitForRequest('/actions/enhance?/login'),
+			page.locator('button.form1').click()
+		]);
+
+		const requestHeaders = await request.allHeaders();
+
+		expect(requestHeaders['content-type']).toBe('application/x-www-form-urlencoded');
+
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name="username"]')).toHaveValue('');
 	});
 
 	test('use:enhance does not clear form on second submit', async ({ page }) => {

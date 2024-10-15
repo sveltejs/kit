@@ -200,7 +200,7 @@
 			stageHeight: window.innerHeight,
 			colors: ['#ff3e00', '#40b3ff', '#676778']
 		}}
-	/>
+	></div>
 {/if}
 
 <style>

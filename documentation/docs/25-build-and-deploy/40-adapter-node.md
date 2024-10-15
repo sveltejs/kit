@@ -32,6 +32,12 @@ node build
 
 Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
+### Compressing responses
+
+You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+
+However, if you're building a [custom server](#custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
+
 ## Environment variables
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
@@ -45,8 +51,15 @@ npm install dotenv
 ...and invoke it before running the built app:
 
 ```diff
--node build
-+node -r dotenv/config build
+- node build
++ node -r dotenv/config build
+```
+
+If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+
+```diff
+- node build
++ node --env-file=.env build
 ```
 
 ### `PORT`, `HOST` and `SOCKET_PATH`
@@ -116,7 +129,15 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+
+### `SHUTDOWN_TIMEOUT`
+
+The number of seconds to wait before forcefully closing any remaining connections after receiving a `SIGTERM` or `SIGINT` signal. Defaults to `30`. Internally the adapter calls [`closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections). See [Graceful shutdown](#graceful-shutdown) for more details.
+
+### `IDLE_TIMEOUT`
+
+When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
 
 ## Options
 
@@ -132,7 +153,7 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: false,
+			precompress: true,
 			envPrefix: ''
 		})
 	}
@@ -145,7 +166,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
+Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
 
 ### envPrefix
 
@@ -161,6 +182,62 @@ MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
+
+## Graceful shutdown
+
+By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It will:
+
+1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
+2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#environment-variables-shutdown-timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
+
+> If you want to customize this behaviour you can use a [custom server](#custom-server).
+
+You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
+
+```js
+// @errors: 2304
+process.on('sveltekit:shutdown', async (reason) => {
+  await jobs.stop();
+  await db.close();
+});
+```
+
+The parameter `reason` has one of the following values:
+
+- `SIGINT` - shutdown was triggered by a `SIGINT` signal
+- `SIGTERM` - shutdown was triggered by a `SIGTERM` signal
+- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#environment-variables-idle-timeout)
+
+## Socket activation
+
+Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
+
+> You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
+
+To take advantage of socket activation follow these steps.
+
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#environment-variables-idle-timeout) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+
+```ini
+/// file: /etc/systemd/system/myapp.service
+[Service]
+Environment=NODE_ENV=production IDLE_TIMEOUT=60
+ExecStart=/usr/bin/node /usr/bin/myapp/build
+```
+
+2. Create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
+
+```ini
+/// file: /etc/systemd/system/myapp.socket
+[Socket]
+ListenStream=3000
+
+[Install]
+WantedBy=sockets.target
+```
+
+3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`. The app will then automatically start once the first request is made to `localhost:3000`.
 
 ## Custom server
 
@@ -187,21 +264,4 @@ app.use(handler);
 app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
-```
-
-## Troubleshooting
-
-### Is there a hook for cleaning up before the server exits?
-
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the server exits:
-
-```js
-// @errors: 2304 2580
-function shutdownGracefully() {
-	// anything you need to clean up manually goes in here
-	db.shutdown();
-}
-
-process.on('SIGINT', shutdownGracefully);
-process.on('SIGTERM', shutdownGracefully);
 ```

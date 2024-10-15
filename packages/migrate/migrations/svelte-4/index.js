@@ -1,5 +1,6 @@
 import colors from 'kleur';
 import fs from 'node:fs';
+import process from 'node:process';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';

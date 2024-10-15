@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import process from 'node:process';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -149,6 +150,10 @@ test('create package and resolves $lib alias', async () => {
 
 test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
+});
+
+test('create package with tsconfig specified', async () => {
+	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
 });
 
 // chokidar doesn't fire events in github actions :shrug:
