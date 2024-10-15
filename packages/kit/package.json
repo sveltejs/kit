@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.7.0",
+	"version": "2.7.1",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -28,7 +28,7 @@
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.6.0",
-		"sirv": "^2.0.4",
+		"sirv": "^3.0.0",
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {

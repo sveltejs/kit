@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.2.6",
+	"version": "5.2.7",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -46,7 +46,7 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.48",
 		"polka": "^1.0.0-next.28",
-		"sirv": "^2.0.4",
+		"sirv": "^3.0.0",
 		"typescript": "^5.3.3",
 		"vitest": "^2.0.1"
 	},
