@@ -2,6 +2,7 @@ import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { EOL } from 'node:os';
+import process from 'node:process';
 
 test('prerenderable routes must be prerendered', () => {
 	assert.throws(

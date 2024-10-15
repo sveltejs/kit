@@ -162,17 +162,3 @@ export function stringify_uses(node) {
 
 	return `"uses":{${uses.join(',')}}`;
 }
-
-/**
- * @param {string} message
- * @param {number} offset
- */
-export function warn_with_callsite(message, offset = 0) {
-	if (DEV) {
-		const stack = fix_stack_trace(new Error()).split('\n');
-		const line = stack.at(3 + offset);
-		message += `\n${line}`;
-	}
-
-	console.warn(message);
-}

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { validate_config, load_config } from './index.js';
+import process from 'node:process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
