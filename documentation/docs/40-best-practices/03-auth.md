@@ -2,7 +2,7 @@
 title: Auth
 ---
 
-Auth refers to authentication and authorization, which are common needs when building a web application. Authentication means checking that the user is who they say they are by checking their provided credentials. Authorization means checking which actions they are allowed to take.
+Auth refers to authentication and authorization, which are common needs when building a web application. Authentication means verifying that the user is who they say they are based on their provided credentials. Authorization means determining which actions they are allowed to take.
 
 ## Sessions vs tokens
 
