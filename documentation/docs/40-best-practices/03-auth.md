@@ -10,7 +10,7 @@ After the user has provided their credentials such as a username and password, w
 
 Session IDs are most commonly stored in a database. They can be immediately revoked, but require a database query to be made on each request.
 
-JWT generally are not checked against a datastore, which means they cannot be immediately revoked. The advantage of this method is improved latency and reduced load on your datastore.
+In contrast, JWT generally are not checked against a datastore, which means they cannot be immediately revoked. The advantage of this method is improved latency and reduced load on your datastore.
 
 ## Integration points
 
