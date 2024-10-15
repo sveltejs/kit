@@ -22,7 +22,7 @@ We'll introduce these files in a moment in more detail, but here are a few simpl
 
 ### +page.svelte
 
-A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](glossary#ssr)) for the initial request and in the browser ([CSR](glossary#csr)) for subsequent navigation.
+A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](glossary#SSR)) for the initial request and in the browser ([CSR](glossary#CSR)) for subsequent navigation.
 
 ```svelte
 <!--- file: src/routes/+page.svelte --->
@@ -139,7 +139,7 @@ If the error occurs inside a `load` function in `+layout(.server).js`, the close
 
 If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
-> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#server-hooks-handle) or a [+server.js](#server) request handler.
+> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#Server-hooks-handle) or a [+server.js](#server) request handler.
 
 You can read more about error handling [here](errors).
 
@@ -213,7 +213,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
 
-By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
+By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#Advanced-layouts) can help you.
 
 ### +layout.js
 

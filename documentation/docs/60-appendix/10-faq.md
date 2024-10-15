@@ -11,7 +11,7 @@ Please see [the Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FA
 SvelteKit can be used to create most kinds of applications. Out of the box, SvelteKit supports many features including:
 
 - Dynamic page content with [load](load) functions and [API routes](routing#server).
-- SEO-friendly dynamic content with [server-side rendering (SSR)](glossary#ssr).
+- SEO-friendly dynamic content with [server-side rendering (SSR)](glossary#SSR).
 - User-friendly progressively-enhanced interactive pages with SSR and [Form Actions](form-actions).
 - Static pages with [prerendering](page-options#prerender).
 
@@ -163,7 +163,7 @@ Finally, you may also consider using an `{#await}` block:
 
 ### How do I use a different backend API server?
 
-You can use [`event.fetch`](./load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#server-hooks-handlefetch) helpful.
+You can use [`event.fetch`](./load#Making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#Server-hooks-handleFetch) helpful.
 
 Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 

@@ -110,7 +110,7 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
-> [!NOTE] Beware that doing this will need additional care if you provide type definitions. Read more about the caveat [here](#typescript)
+> [!NOTE] Beware that doing this will need additional care if you provide type definitions. Read more about the caveat [here](#TypeScript)
 
 In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or a map of export conditions which in turn contains these file paths.
 
@@ -118,7 +118,7 @@ Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packag
 
 ### svelte
 
-This is a legacy field that enabled tooling to recognise Svelte component libraries. It's no longer necessary when using the `svelte` [export condition](#anatomy-of-a-package-json-exports), but for backwards compatibility with outdated tooling that doesn't yet know about export conditions it's good to keep it around. It should point towards your root entry point.
+This is a legacy field that enabled tooling to recognise Svelte component libraries. It's no longer necessary when using the `svelte` [export condition](#Anatomy-of-a-package-json-exports), but for backwards compatibility with outdated tooling that doesn't yet know about export conditions it's good to keep it around. It should point towards your root entry point.
 
 ```json
 {

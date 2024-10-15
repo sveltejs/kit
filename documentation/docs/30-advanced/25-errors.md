@@ -8,7 +8,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
-You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#type-safety)).
+You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
 ## Expected errors
 
@@ -93,7 +93,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
+Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
 
 ## Responses
 

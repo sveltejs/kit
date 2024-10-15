@@ -6,7 +6,7 @@ In SvelteKit, `<a>` elements (rather than framework-specific `<Link>` components
 
 You can customise the behaviour of links with `data-sveltekit-*` attributes. These can be applied to the `<a>` itself, or to a parent element.
 
-These options also apply to `<form>` elements with [`method="GET"`](form-actions#get-vs-post).
+These options also apply to `<form>` elements with [`method="GET"`](form-actions#GET-vs-POST).
 
 ## data-sveltekit-preload-data
 
@@ -80,7 +80,7 @@ Sometimes you don't want navigation to create a new entry in the browser's sessi
 
 ## data-sveltekit-keepfocus
 
-Sometimes you don't want [focus to be reset](accessibility#focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
+Sometimes you don't want [focus to be reset](accessibility#Focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
 
 ```html
 <form data-sveltekit-keepfocus>

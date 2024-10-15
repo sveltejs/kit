@@ -119,7 +119,7 @@ import { base } from '$app/paths';---
 
 ## Improved error handling
 
-Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](types#app-error) type, if it is specified.
+Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](types#Error) type, if it is specified.
 
 SvelteKit 2 cleans this up by calling `handleError` hooks with two new properties: `status` and `message`. For errors thrown from your code (or library code called by your code) the status will be `500` and the message will be `Internal Error`. While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe.
 
@@ -133,7 +133,7 @@ Because of this, dynamic environment variables can no longer be read during prer
 
 ## `form` and `data` have been removed from `use:enhance` callbacks
 
-If you provide a callback to [`use:enhance`](form-actions#progressive-enhancement-use-enhance), it will be called with an object containing various useful properties.
+If you provide a callback to [`use:enhance`](form-actions#Progressive-enhancement-use:enhance), it will be called with an object containing various useful properties.
 
 In SvelteKit 1, those properties included `form` and `data`. These were deprecated some time ago in favour of `formElement` and `formData`, and have been removed altogether in SvelteKit 2.
 

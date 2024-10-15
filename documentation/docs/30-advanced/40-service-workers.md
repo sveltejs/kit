@@ -6,7 +6,7 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
 
-You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {

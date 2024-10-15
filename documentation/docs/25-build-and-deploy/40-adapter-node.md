@@ -36,7 +36,7 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
 
-However, if you're building a [custom server](#custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
+However, if you're building a [custom server](#Custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
 
 ## Environment variables
 
@@ -101,7 +101,7 @@ If `adapter-node` can't correctly determine the URL of your deployment, you may 
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](types#public-types-requestevent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [RequestEvent](types#Public-types-RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
@@ -131,11 +131,11 @@ The maximum request body size to accept in bytes including while streaming. The 
 
 ### `SHUTDOWN_TIMEOUT`
 
-The number of seconds to wait before forcefully closing any remaining connections after receiving a `SIGTERM` or `SIGINT` signal. Defaults to `30`. Internally the adapter calls [`closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections). See [Graceful shutdown](#graceful-shutdown) for more details.
+The number of seconds to wait before forcefully closing any remaining connections after receiving a `SIGTERM` or `SIGINT` signal. Defaults to `30`. Internally the adapter calls [`closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections). See [Graceful shutdown](#Graceful-shutdown) for more details.
 
 ### `IDLE_TIMEOUT`
 
-When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
+When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#Socket-activation) for more details.
 
 ## Options
 
@@ -187,9 +187,9 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 
 1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
 2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
-3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#environment-variables-shutdown-timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#Environment-variables-SHUTDOWN-TIMEOUT) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
 
-> [!NOTE] If you want to customize this behaviour you can use a [custom server](#custom-server).
+> [!NOTE] If you want to customize this behaviour you can use a [custom server](#Custom-server).
 
 You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
 
@@ -205,17 +205,17 @@ The parameter `reason` has one of the following values:
 
 - `SIGINT` - shutdown was triggered by a `SIGINT` signal
 - `SIGTERM` - shutdown was triggered by a `SIGTERM` signal
-- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#environment-variables-idle-timeout)
+- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#Environment-variables-IDLE-TIMEOUT)
 
 ## Socket activation
 
 Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
 
-> [!NOTE] You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
+> [!NOTE] You can still use [`envPrefix`](#Options-envPrefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
 
 To take advantage of socket activation follow these steps.
 
-1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#environment-variables-idle-timeout) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#Environment-variables-IDLE-TIMEOUT) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
 
 ```ini
 /// file: /etc/systemd/system/myapp.service

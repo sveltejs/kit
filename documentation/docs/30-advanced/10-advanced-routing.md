@@ -22,7 +22,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-> [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+> [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#Matching).
 
 ### 404 pages
 
@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#Shared-hooks-handleerror)
 
 ## Optional parameters
 
@@ -112,7 +112,7 @@ src/routes/foo-abc/+page.svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
+- Parameters with [matchers](#Matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority. In other words `x/[[y]]/z` is treated equivalently to `x/z` for the purposes of sorting
 - Ties are resolved alphabetically
 

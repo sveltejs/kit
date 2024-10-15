@@ -27,4 +27,4 @@ export function load() {
 
 ## Preview your app
 
-After building, you can view your production build locally with `vite preview` (via `npm run preview`). Note that this will run the app in Node, and so is not a perfect reproduction of your deployed app — adapter-specific adjustments like the [`platform` object](adapters#platform-specific-context) do not apply to previews.
+After building, you can view your production build locally with `vite preview` (via `npm run preview`). Note that this will run the app in Node, and so is not a perfect reproduction of your deployed app — adapter-specific adjustments like the [`platform` object](adapters#Platform-specific-context) do not apply to previews.

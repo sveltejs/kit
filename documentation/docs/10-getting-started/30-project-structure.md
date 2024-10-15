@@ -40,7 +40,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 
 - `lib` contains your library code (utilities and components), which can be imported via the [`$lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
   - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
-- `params` contains any [param matchers](advanced-routing#matching) your app needs
+- `params` contains any [param matchers](advanced-routing#Matching) your app needs
 - `routes` contains the [routes](routing) of your application. You can also colocate other components that are only used within a single route here
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
@@ -89,4 +89,4 @@ A SvelteKit project is really just a [Vite](https://vitejs.dev) project that use
 
 ### .svelte-kit
 
-As you develop and build your project, SvelteKit will generate files in a `.svelte-kit` directory (configurable as [`outDir`](configuration#outdir)). You can ignore its contents, and delete them at any time (they will be regenerated when you next `dev` or `build`).
+As you develop and build your project, SvelteKit will generate files in a `.svelte-kit` directory (configurable as [`outDir`](configuration#outDir)). You can ignore its contents, and delete them at any time (they will be regenerated when you next `dev` or `build`).

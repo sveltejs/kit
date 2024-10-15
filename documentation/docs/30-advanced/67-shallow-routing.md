@@ -33,7 +33,7 @@ The modal can be dismissed by navigating back (unsetting `$page.state.showModal`
 
 The first argument to `pushState` is the URL, relative to the current URL. To stay on the current URL, use `''`.
 
-The second argument is the new page state, which can be accessed via the [page store]($app-stores#page) as `$page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#app) interface (usually in `src/app.d.ts`).
+The second argument is the new page state, which can be accessed via the [page store]($app-stores#page) as `$page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
 

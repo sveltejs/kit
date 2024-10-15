@@ -2,15 +2,15 @@
 title: Page options
 ---
 
-By default, SvelteKit will render (or [prerender](glossary#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](glossary#hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](glossary#Prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](glossary#Hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](routing) that takes over subsequent navigations.
 
-You can control each of these on a page-by-page basis by exporting options from [`+page.js`](routing#page-page-js) or [`+page.server.js`](routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](routing#layout-layout-js) or [`+layout.server.js`](routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
+You can control each of these on a page-by-page basis by exporting options from [`+page.js`](routing#page-page.js) or [`+page.server.js`](routing#page-page-server.js), or for groups of pages using a shared [`+layout.js`](routing#layout-layout.js) or [`+layout.server.js`](routing#layout-layout-server.js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
 You can mix and match these options in different areas of your app. For example you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
 
 ## prerender
 
-It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](glossary#prerendering).
+It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](glossary#Prerendering).
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
@@ -62,7 +62,7 @@ The basic rule is this: for a page to be prerenderable, any two users hitting it
 
 Note that you can still prerender pages that load data based on the page's parameters, such as a `src/routes/blog/[slug]/+page.svelte` route.
 
-Accessing [`url.searchParams`](load#using-url-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
+Accessing [`url.searchParams`](load#Using-URL-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
 Pages with [actions](form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
 
@@ -117,7 +117,7 @@ export const prerender = true;
 
 ## ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](glossary#hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](glossary#Hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#SSR)).
 
 ```js
 /// file: +page.js
@@ -129,7 +129,7 @@ If you add `export const ssr = false` to your root `+layout.js`, your entire app
 
 ## csr
 
-Ordinarily, SvelteKit [hydrates](glossary#hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
+Ordinarily, SvelteKit [hydrates](glossary#Hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
 
 ```js
 /// file: +page.js
@@ -141,7 +141,7 @@ Disabling CSR does not ship any JavaScript to the client. This means:
 
 * The webpage should work with HTML and CSS only.
 * `<script>` tags inside all Svelte components are removed.
-* `<form>` elements cannot be [progressively enhanced](form-actions#progressive-enhancement).
+* `<form>` elements cannot be [progressively enhanced](form-actions#Progressive-enhancement).
 * Links are handled by the browser with a full-page navigation.
 * Hot Module Replacement (HMR) will be disabled.
 

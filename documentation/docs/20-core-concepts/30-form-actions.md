@@ -219,7 +219,7 @@ The returned data must be serializable as JSON. Beyond that, the structure is en
 
 ### Redirects
 
-Redirects (and errors) work exactly the same as in [`load`](load#redirects):
+Redirects (and errors) work exactly the same as in [`load`](load#Redirects):
 
 ```js
 // @errors: 2345
@@ -352,12 +352,12 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-customising-use-enhance)
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
 - reset the `<form>` element
 - invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
-- [reset focus](accessibility#focus-management) to the appropriate element
+- [reset focus](accessibility#Focus-management) to the appropriate element
 
 ### Customising use:enhance
 
@@ -415,7 +415,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location, { invalidateAll: true })`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](accessibility#focus-management).
+In all cases, [focus will be reset](accessibility#Focus-management).
 
 ### Custom event listener
 

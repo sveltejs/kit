@@ -27,7 +27,7 @@ Your browser also includes useful developer tools for analysing your site, wheth
 * Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
 * Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
-Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](building-your-app#preview-your-app) mode after building.
+Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](building-your-app#Preview-your-app) mode after building.
 
 ### Instrumenting
 
@@ -49,7 +49,7 @@ Video files can be very large, so extra care should be taken to ensure that they
 
 ### Fonts
 
-SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
+SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#Server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
 
 You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
 
@@ -81,14 +81,14 @@ You can speed up client-side navigations by eagerly preloading the necessary cod
 
 ### Non-essential data
 
-For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#streaming-with-promises) in after the navigation (or initial page load).
+For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#Streaming-with-promises) in after the navigation (or initial page load).
 
 ### Preventing waterfalls
 
 One of the biggest performance killers is what is referred to as a _waterfall_, which is a series of requests that is made sequentially. This can happen on the server or in the browser.
 
-- Asset waterfalls can occur in the browser when your HTML requests JS which requests CSS which requests a background image and web font. SvelteKit will largely solve this class of problems for you by adding [`modulepreload`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload) tags or headers, but you should view [the network tab in your devtools](#diagnosing-issues) to check whether additional resources need to be preloaded. Pay special attention to this if you use web [fonts](#optimizing-assets-fonts) since they need to be handled manually.
-- If a universal `load` function makes an API call to fetch the current user, then uses the details from that response to fetch a list of saved items, and then uses _that_ response to fetch the details for each item, the browser will end up making multiple sequential requests. This is deadly for performance, especially for users that are physically located far from your backend. Avoid this issue by using [server `load` functions](load#universal-vs-server) where possible.
+- Asset waterfalls can occur in the browser when your HTML requests JS which requests CSS which requests a background image and web font. SvelteKit will largely solve this class of problems for you by adding [`modulepreload`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload) tags or headers, but you should view [the network tab in your devtools](#Diagnosing-issues) to check whether additional resources need to be preloaded. Pay special attention to this if you use web [fonts](#Optimizing-assets-Fonts) since they need to be handled manually.
+- If a universal `load` function makes an API call to fetch the current user, then uses the details from that response to fetch a list of saved items, and then uses _that_ response to fetch the details for each item, the browser will end up making multiple sequential requests. This is deadly for performance, especially for users that are physically located far from your backend. Avoid this issue by using [server `load` functions](load#Universal-vs-server) where possible.
 - Server `load` functions are also not immune to waterfalls (though they are much less costly since they rarely involve roundtrips with high latency). For example if you query a database to get the current user and then use that data to make a second query for a list of saved items, it will typically be more performant to issue a single query with a database join.
 
 ## Hosting

@@ -20,7 +20,7 @@ The following hooks can be added to `src/hooks.server.js`:
 
 ### handle
 
-This function runs every time the SvelteKit server receives a [request](web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
 /// file: src/hooks.server.js
@@ -140,7 +140,7 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an [unexpected error](errors#unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+If an [unexpected error](errors#Unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
