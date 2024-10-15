@@ -624,7 +624,10 @@ test.describe('Invalidation', () => {
 		expect(next_page_2).not.toBe(next_page_1);
 	});
 
-	test('does not create new records in history for intermediate redirects', async ({ page, clicknav }) => {
+	test('does not create new records in history for intermediate redirects', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/redirect/app-with-auth');
 		await clicknav("a[data-testid='enter']");
 		expect(await page.textContent('h1')).toContain('signin');
