@@ -12,7 +12,7 @@ We recognize that accessibility can be hard to get right. If you want to suggest
 
 In traditional server-rendered applications, every navigation (e.g. clicking on an `<a>` tag) triggers a full page reload. When this happens, screen readers and other assistive technology will read out the new page's title so that users understand that the page has changed.
 
-Since navigation between pages in SvelteKit happens without reloading the page (known as [client-side routing](glossary#routing)), SvelteKit injects a [live region](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions) onto the page that will read out the new page name after each navigation. This determines the page name to announce by inspecting the `<title>` element.
+Since navigation between pages in SvelteKit happens without reloading the page (known as [client-side routing](glossary#Routing)), SvelteKit injects a [live region](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions) onto the page that will read out the new page name after each navigation. This determines the page name to announce by inspecting the `<title>` element.
 
 Because of this behavior, every page in your app should have a unique, descriptive title. In SvelteKit, you can do this by placing a `<svelte:head>` element on each page:
 
@@ -23,7 +23,7 @@ Because of this behavior, every page in your app should have a unique, descripti
 </svelte:head>
 ```
 
-This will allow screen readers and other assistive technology to identify the new page after a navigation occurs. Providing a descriptive title is also important for [SEO](seo#manual-setup-title-and-meta).
+This will allow screen readers and other assistive technology to identify the new page after a navigation occurs. Providing a descriptive title is also important for [SEO](seo#Manual-setup-title-and-meta).
 
 ## Focus management
 
@@ -56,7 +56,7 @@ By default, SvelteKit's page template sets the default language of the document 
 <html lang="de">
 ```
 
-If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#server-hooks-handle):
+If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#Server-hooks-handle):
 
 ```html
 /// file: src/app.html

@@ -354,7 +354,7 @@ export interface KitConfig {
 	 *
 	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 	 *
-	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle) to roll your own CSP.
+	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
 		/**
@@ -679,8 +679,8 @@ export interface KitConfig {
 }
 
 /**
- * The [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
- * determines the [response](https://kit.svelte.dev/docs/web-standards#fetch-apis-response).
+ * The [`handle`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#Fetch-APIs-Request) and
+ * determines the [response](https://kit.svelte.dev/docs/web-standards#Fetch-APIs-Response).
  * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
  * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
  */
@@ -690,7 +690,7 @@ export type Handle = (input: {
 }) => MaybePromise<Response>;
 
 /**
- * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+ * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
  *
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -703,7 +703,7 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+ * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -716,7 +716,7 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;
@@ -758,7 +758,7 @@ export interface LoadEvent<
 	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
 	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
 	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle)
 	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
@@ -1051,7 +1051,7 @@ export interface RequestEvent<
 	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
 	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
 	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle)
 	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
@@ -1062,7 +1062,7 @@ export interface RequestEvent<
 	 */
 	getClientAddress(): string;
 	/**
-	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle).
 	 */
 	locals: App.Locals;
 	/**

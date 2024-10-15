@@ -76,7 +76,7 @@ export async function load({ fetch }) {
 }
 ```
 
-...and pass it around to the components that need it, or use [`$page.data`](load#$page-data).
+...and pass it around to the components that need it, or use [`$page.data`](load#$page.data).
 
 If you're not using SSR, then there's no risk of accidentally exposing one user's data to another. But you should still avoid side-effects in your `load` functions — your application will be much easier to reason about without them.
 

@@ -2,7 +2,7 @@
 title: Loading data
 ---
 
-Before a [`+page.svelte`](routing#page-page.svelte) component (and its containing [`+layout.svelte`](routing#layout-layout-svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
+Before a [`+page.svelte`](routing#page-page.svelte) component (and its containing [`+layout.svelte`](routing#layout-layout.svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
 
 ## Page data
 
@@ -435,7 +435,7 @@ export function load({ locals }) {
 
 Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#Shared-hooks-handleerror) and treat it as a 500 Internal Error.
+If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#Shared-hooks-handleError) and treat it as a 500 Internal Error.
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
@@ -545,7 +545,7 @@ export function load({ fetch }) {
 
 > [!NOTE] The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
 
-> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#Top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
 
 ## Parallel loading
 
@@ -680,7 +680,7 @@ Note that rerunning a `load` function will update the `data` prop inside the cor
 ## Implications for authentication
 
 A couple features of loading data have important implications for auth checks:
-- Layout `load` functions do not run on every request, such as during client side navigation between child routes. [(When do load functions rerun?)](load#rerunning-load-functions-when-do-load-functions-rerun)
+- Layout `load` functions do not run on every request, such as during client side navigation between child routes. [(When do load functions rerun?)](load#Rerunning-load-functions-When-do-load-functions-rerun)
 - Layout and page `load` functions run concurrently unless `await parent()` is called. If a layout `load` throws, the page `load` function runs, but the client will not receive the returned data.
 
 There are a few possible strategies to ensure an auth check occurs before protected code.
