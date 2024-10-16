@@ -352,8 +352,8 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {string | undefined}} */
-	let illegal_importer;
+	/** @type {Map<string, string>} */
+	let import_map = new Map();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
@@ -376,9 +376,7 @@ async function kit({ svelte_config }) {
 					);
 				}
 
-				if (id.startsWith('$env/')) {
-					illegal_importer = importer;
-				}
+				import_map.set(id, importer);
 			}
 
 			// treat $env/static/[public|private] as virtual
@@ -408,9 +406,10 @@ async function kit({ svelte_config }) {
 
 					const illegal_module = strip_virtual_prefix(relative);
 
-					if (illegal_module.startsWith('$env/') && illegal_importer) {
+					if (illegal_module.startsWith('$env/') && import_map.has(illegal_module)) {
+						const importer = path.relative(cwd, /** @type {string} */ (import_map.get(illegal_module)));
 						throw new Error(
-							`Cannot import ${illegal_module} into client-side code: ${path.relative(cwd, illegal_importer)}`
+							`Cannot import ${illegal_module} into client-side code: ${importer}`
 						);
 					}
 
