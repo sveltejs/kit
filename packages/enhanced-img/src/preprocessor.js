@@ -1,8 +1,10 @@
+/** @import { AST } from 'svelte/compiler' */
+
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
 import MagicString from 'magic-string';
-import { asyncWalk } from 'estree-walker';
+import { walk } from 'zimmerframe';
 import { VERSION } from 'svelte/compiler';
 import { parse } from 'svelte-parse-markup';
 
@@ -32,7 +34,7 @@ export function image(opts) {
 			}
 
 			const s = new MagicString(content);
-			const ast = parse(content, { filename });
+			const ast = parse(content, { filename, modern: true });
 
 			/**
 			 * Import path to import name
@@ -49,20 +51,26 @@ export function image(opts) {
 			const consts = new Map();
 
 			/**
-			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
-			 * @param {{ type: string, start: number, end: number, raw: string }} src_attribute
+			 * @param {import('svelte/compiler').AST.RegularElement} node
+			 * @param {AST.Text | AST.ExpressionTag} src_attribute
 			 * @returns {Promise<void>}
 			 */
 			async function update_element(node, src_attribute) {
-				// TODO: this will become ExpressionTag in Svelte 5
-				if (src_attribute.type === 'MustacheTag') {
-					const src_var_name = content
-						.substring(src_attribute.start + 1, src_attribute.end - 1)
-						.trim();
-					s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
-					return;
-				} else if (src_attribute.type === 'AttributeShorthand') {
-					const src_var_name = content.substring(src_attribute.start, src_attribute.end).trim();
+				if (src_attribute.type === 'ExpressionTag') {
+					const start =
+						'end' in src_attribute.expression
+							? src_attribute.expression.end
+							: src_attribute.expression.range?.[0];
+					const end =
+						'start' in src_attribute.expression
+							? src_attribute.expression.start
+							: src_attribute.expression.range?.[1];
+
+					if (typeof start !== 'number' || typeof end !== 'number') {
+						throw new Error('ExpressionTag has no range');
+					}
+					const src_var_name = content.substring(start, end).trim();
+
 					s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
 					return;
 				}
@@ -73,10 +81,10 @@ export function image(opts) {
 				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
 				url += url.includes('?') ? '&' : '?';
-				if (sizes) {
+				if (sizes && 'raw' in sizes) {
 					url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
 				}
-				if (width) {
+				if (width && 'raw' in width) {
 					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
 				}
 				url += 'enhanced';
@@ -119,23 +127,35 @@ export function image(opts) {
 				}
 			}
 
+			/**
+			 * @type {Array<ReturnType<typeof update_element>>}
+			 */
+			const pending_ast_updates = [];
 			// TODO: switch to zimmerframe with Svelte 5
-			// @ts-ignore
-			await asyncWalk(ast.html, {
-				/**
-				 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
-				 */
-				async enter(node) {
-					if (node.type === 'Element') {
-						// Compare node tag match
-						if (node.name === 'enhanced:img') {
+
+			walk(
+				/** @type {import('svelte/compiler').AST.Root} */ (ast),
+				{},
+				{
+					_(_, { next }) {
+						next();
+					},
+					/** @param {import('svelte/compiler').AST.RegularElement} node */
+					// @ts-ignore
+					RegularElement(node) {
+						if ('name' in node && node.name === 'enhanced:img') {
+							// Compare node tag match
 							const src = get_attr_value(node, 'src');
-							if (!src) return;
-							await update_element(node, src);
+
+							if (!src || typeof src === 'boolean') return;
+
+							pending_ast_updates.push(update_element(node, src));
 						}
 					}
 				}
-			});
+			);
+
+			await Promise.all(pending_ast_updates);
 
 			// add imports and consts to <script module> block
 			let text = '';
@@ -215,22 +235,31 @@ export function parseObject(str) {
 }
 
 /**
- * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
+ * @param {import('../types/internal.ts').TemplateNode} node
  * @param {string} attr
+ * @returns {AST.Text | AST.ExpressionTag | undefined}
  */
 function get_attr_value(node, attr) {
+	if (!('type' in node) || !('attributes' in node)) return;
 	const attribute = node.attributes.find(
 		/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
 	);
 
-	if (!attribute) return;
+	if (!attribute || !('value' in attribute) || typeof attribute.value === 'boolean') return;
 
-	return attribute.value[0];
+	// Check if value is an array and has at least one element
+	if (Array.isArray(attribute.value)) {
+		if (attribute.value.length > 0) return attribute.value[0];
+		return;
+	}
+
+	// If it's not an array or is empty, return the value as is
+	return attribute.value;
 }
 
 /**
  * @param {string} content
- * @param {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes
+ * @param {import('../types/internal.ts').Attribute[]} attributes
  * @param {{
  *   src: string,
  *   width: string | number,
@@ -239,7 +268,7 @@ function get_attr_value(node, attr) {
  */
 function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
-		if (attribute.name === 'src') {
+		if ('name' in attribute && attribute.name === 'src') {
 			return `src=${details.src}`;
 		}
 		return content.substring(attribute.start, attribute.end);
@@ -250,8 +279,13 @@ function serialize_img_attributes(content, attributes, details) {
 	/** @type {number | undefined} */
 	let user_height;
 	for (const attribute of attributes) {
-		if (attribute.name === 'width') user_width = parseInt(attribute.value[0].raw);
-		if (attribute.name === 'height') user_height = parseInt(attribute.value[0].raw);
+		if ('name' in attribute && 'value' in attribute) {
+			const value = Array.isArray(attribute.value) ? attribute.value[0] : attribute.value;
+			if (typeof value === 'object' && 'raw' in value) {
+				if (attribute.name === 'width') user_width = parseInt(value.raw);
+				if (attribute.name === 'height') user_height = parseInt(value.raw);
+			}
+		}
 	}
 	if (!user_width && !user_height) {
 		attribute_strings.push(`width=${details.width}`);
@@ -283,13 +317,15 @@ function stringToNumber(param) {
 /**
  * @param {Map<string,string>} consts
  * @param {string} content
- * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
+ * @param {import('svelte/compiler').AST.RegularElement} node
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(consts, content, node, image) {
-	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
+	/** @type {import('../types/internal.ts').Attribute[]} attributes */
 	const attributes = node.attributes;
-	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
+	const index = attributes.findIndex(
+		(attribute) => 'name' in attribute && attribute.name === 'sizes'
+	);
 	let sizes_string = '';
 	if (index >= 0) {
 		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
@@ -324,19 +360,21 @@ function to_value(consts, src) {
 		}
 		return `{${var_name}}`;
 	}
+
 	return `"${src}"`;
 }
 
 /**
  * For images like `<img src={manually_imported} />`
  * @param {string} content
- * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
+ * @param {import('svelte/compiler').AST.RegularElement} node
  * @param {string} src_var_name
  */
 function dynamic_img_to_picture(content, node, src_var_name) {
-	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
-	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
+	const index = attributes.findIndex(
+		(attribute) => 'name' in attribute && attribute.name === 'sizes'
+	);
 	let sizes_string = '';
 	if (index >= 0) {
 		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
@@ -350,7 +388,7 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	};
 
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${serialize_img_attributes(content, node.attributes, details)} />
+	<img ${serialize_img_attributes(content, attributes, details)} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}

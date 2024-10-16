@@ -4,6 +4,7 @@
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
+	const get_image = (image_key: number) => images[image_key];
 
 	let foo: string = 'bar';
 </script>
@@ -28,7 +29,11 @@
 	alt="sizes test"
 />
 
-<enhanced:img src="./dev.png" on:click={(foo = 'clicked an image!')} alt="event handler test" />
+<enhanced:img
+	src="./dev.png"
+	onclick={() => (foo = 'clicked an image!')}
+	alt="event handler test"
+/>
 
 <enhanced:img src="$lib/dev.png" alt="alias test" />
 
@@ -40,6 +45,10 @@
 
 {#each images as image}
 	<enhanced:img src={image} alt="opt-in test" />
+{/each}
+
+{#each images as _, i}
+	<enhanced:img src={get_image(i)} alt="opt-in test" />
 {/each}
 
 <picture>
