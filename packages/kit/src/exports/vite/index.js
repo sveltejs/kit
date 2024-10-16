@@ -352,6 +352,9 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {string | undefined}} */
+	let illegal_importer;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
@@ -371,6 +374,10 @@ async function kit({ svelte_config }) {
 					throw new Error(
 						`Cannot import ${id} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
+				}
+
+				if (id.startsWith('$env/')) {
+					illegal_importer = importer;
 				}
 			}
 
@@ -398,7 +405,16 @@ async function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
+
+					const illegal_module = strip_virtual_prefix(relative);
+
+					if (illegal_module.startsWith('$env/') && illegal_importer) {
+						throw new Error(
+							`Cannot import ${illegal_module} into client-side code: ${path.relative(cwd, illegal_importer)}`
+						);
+					}
+
+					throw new Error(`Cannot import ${illegal_module} into client-side code`);
 				}
 			}
 
