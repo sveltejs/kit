@@ -298,6 +298,11 @@ export async function respond(request, options, manifest, state) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
+		} else if (state.emulator?.platform) {
+			event.platform = await state.emulator.platform({
+				config: {},
+				prerender: !!state.prerendering?.fallback
+			});
 		}
 
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(

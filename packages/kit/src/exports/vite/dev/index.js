@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
@@ -269,7 +270,12 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
-		vite.ssrFixStacktrace(error);
+		try {
+			vite.ssrFixStacktrace(error);
+		} catch {
+			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
+			// by ignoring it the line numbers are wrong, but at least we can show the error
+		}
 		return error.stack;
 	}
 
@@ -390,32 +396,26 @@ export async function dev(vite, vite_config, svelte_config) {
 	};
 
 	vite.middlewares.use((req, res, next) => {
-		try {
-			const base = `${vite.config.server.https ? 'https' : 'http'}://${
-				req.headers[':authority'] || req.headers.host
-			}`;
+		const base = `${vite.config.server.https ? 'https' : 'http'}://${
+			req.headers[':authority'] || req.headers.host
+		}`;
 
-			const decoded = decodeURI(new URL(base + req.url).pathname);
+		const decoded = decodeURI(new URL(base + req.url).pathname);
 
-			if (decoded.startsWith(assets)) {
-				const pathname = decoded.slice(assets.length);
-				const file = svelte_config.kit.files.assets + pathname;
+		if (decoded.startsWith(assets)) {
+			const pathname = decoded.slice(assets.length);
+			const file = svelte_config.kit.files.assets + pathname;
 
-				if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-					if (has_correct_case(file, svelte_config.kit.files.assets)) {
-						req.url = encodeURI(pathname); // don't need query/hash
-						asset_server(req, res);
-						return;
-					}
+			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
+				if (has_correct_case(file, svelte_config.kit.files.assets)) {
+					req.url = encodeURI(pathname); // don't need query/hash
+					asset_server(req, res);
+					return;
 				}
 			}
-
-			next();
-		} catch (e) {
-			const error = coalesce_to_error(e);
-			res.statusCode = 500;
-			res.end(fix_stack_trace(error));
 		}
+
+		next();
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
@@ -527,7 +527,13 @@ export async function dev(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
+
+						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
 					},

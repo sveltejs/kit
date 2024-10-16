@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } 
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
+import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 

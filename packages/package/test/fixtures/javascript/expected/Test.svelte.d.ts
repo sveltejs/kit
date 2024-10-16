@@ -36,5 +36,7 @@ declare const __propDef: {
 			astring: string;
 		};
 	};
+	exports?: {};
+	bindings?: string;
 };
 export {};

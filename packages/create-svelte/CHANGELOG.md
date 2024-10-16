@@ -1,5 +1,41 @@
 # create-svelte
 
+## 6.4.0
+### Minor Changes
+
+
+- feat: mark scripts in libraries as being side effect free by default ([#12372](https://github.com/sveltejs/kit/pull/12372))
+
+## 6.3.12
+### Patch Changes
+
+
+- chore: update typescript-eslint configs ([#12721](https://github.com/sveltejs/kit/pull/12721))
+
+## 6.3.11
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 6.3.10
+### Patch Changes
+
+
+- chore: bump svelte-check to v4 ([#12642](https://github.com/sveltejs/kit/pull/12642))
+
+## 6.3.9
+### Patch Changes
+
+
+- chore: bump publint to v0.2 ([#12602](https://github.com/sveltejs/kit/pull/12602))
+
+## 6.3.8
+### Patch Changes
+
+
+- fix: use `vite-plugin-svelte` v4 pre-release when Svelte 5 is chosen ([#12586](https://github.com/sveltejs/kit/pull/12586))
+
 ## 6.3.7
 ### Patch Changes
 

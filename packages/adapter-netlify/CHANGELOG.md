@@ -1,5 +1,23 @@
 # @sveltejs/adapter-netlify
 
+## 4.3.5
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+- Updated dependencies [[`df48fc6ede3859beabaae9fd7c6f722215bb8a42`](https://github.com/sveltejs/kit/commit/df48fc6ede3859beabaae9fd7c6f722215bb8a42), [`5780deba8e3ebd0e2b0abea029068ad0c6daf6ad`](https://github.com/sveltejs/kit/commit/5780deba8e3ebd0e2b0abea029068ad0c6daf6ad), [`6f9aefdb8699fc126d76a88471602cb9a80822eb`](https://github.com/sveltejs/kit/commit/6f9aefdb8699fc126d76a88471602cb9a80822eb), [`8aa95b4b3431e79f62f580abdcdcb157b4de86cd`](https://github.com/sveltejs/kit/commit/8aa95b4b3431e79f62f580abdcdcb157b4de86cd)]:
+  - @sveltejs/kit@2.7.0
+
+## 4.3.4
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
 ## 4.3.3
 ### Patch Changes
 
