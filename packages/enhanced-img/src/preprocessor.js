@@ -245,8 +245,6 @@ function get_attr_value(node, attr) {
 		/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
 	);
 
-	// console.log(attribute);
-
 	if (!attribute || !('value' in attribute) || typeof attribute.value === 'boolean') return;
 
 	// Check if value is an array and has at least one element
@@ -388,8 +386,6 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 		width: `{${src_var_name}.img.w}`,
 		height: `{${src_var_name}.img.h}`
 	};
-
-	console.log('DYNAMIC', details, src_var_name);
 
 	return `{#if typeof ${src_var_name} === 'string'}
 	<img ${serialize_img_attributes(content, attributes, details)} />
