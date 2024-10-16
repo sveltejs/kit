@@ -192,7 +192,7 @@ export async function load_data({
 	const result = await node.universal.load.call(null, {
 		url: event.url,
 		params: event.params,
-		data: server_data_node?.data ?? null,
+		data: server_data_node?.data ? Object.assign({}, server_data_node.data) : null,
 		route: event.route,
 		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 		setHeaders: event.setHeaders,
