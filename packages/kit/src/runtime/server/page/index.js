@@ -11,12 +11,12 @@ import {
 	is_action_request
 } from './actions.js';
 import { load_data, load_server_data } from './load_data.js';
-import { get_data, render_response } from './render.js';
+import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
-import { get_data_json } from '../data/index.js';
 import { load_page_nodes } from './load_page_nodes.js';
 import { DEV } from 'esm-env';
+import { get_data_json } from '../data/index.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -174,91 +174,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 			});
 		});
 
-		// if we don't do this, rejections will be unhandled
-		for (const p of server_promises) p.catch(() => {});
-
-		/** @type {(import('types').ServerDataNode | null)[]} */
-		const server_data = [];
-
-		for (let i = 0; i < nodes.length; i += 1) {
-			try {
-				const data = await server_promises[i];
-				server_data.push(data);
-			} catch (e) {
-				const err = normalize_error(e);
-
-				if (err instanceof Redirect) {
-					if (state.prerendering && should_prerender_data) {
-						const body = JSON.stringify({
-							type: 'redirect',
-							location: err.location
-						});
-
-						state.prerendering.dependencies.set(data_pathname, {
-							response: text(body),
-							body
-						});
-					}
-
-					return redirect_response(err.status, err.location);
-				}
-
-				const status = get_status(err);
-				const error = await handle_error_and_jsonify(event, options, err);
-
-				while (i--) {
-					if (page.errors[i]) {
-						const index = /** @type {number} */ (page.errors[i]);
-						const node = await manifest._.nodes[index]();
-
-						let j = i;
-						while (!branch[j]) j -= 1;
-
-						return await render_response({
-							event,
-							options,
-							manifest,
-							state,
-							resolve_opts,
-							page_config: { ssr: true, csr: true },
-							status,
-							error,
-							branch: compact(branch.slice(0, j + 1)).concat({
-								node,
-								data: null,
-								server_data: null
-							}),
-							fetched
-						});
-					}
-				}
-
-				// if we're still here, it means the error happened in the root layout,
-				// which means we have to fall back to error.html
-				return static_error_page(options, status, error.message);
-			}
-		}
-
-		if (state.prerendering && should_prerender_data) {
-			// ndjson format
-			let { data, chunks } = get_data_json(event, options, server_data);
-
-			if (chunks) {
-				for await (const chunk of chunks) {
-					data += chunk;
-				}
-			}
-
-			state.prerendering.dependencies.set(data_pathname, {
-				response: text(data),
-				body: data
-			});
-		}
-
-		const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
-
-		const serialized = get_data(event, options, server_data, global);
-
 		const csr = get_option(nodes, 'csr') ?? true;
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
@@ -290,6 +205,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		});
 
 		// if we don't do this, rejections will be unhandled
+		for (const p of server_promises) p.catch(() => {});
 		for (const p of load_promises) p.catch(() => {});
 
 		for (let i = 0; i < nodes.length; i += 1) {
@@ -363,6 +279,26 @@ export async function render_page(event, page, options, manifest, state, resolve
 
 		const ssr = get_option(nodes, 'ssr') ?? true;
 
+		if (state.prerendering && should_prerender_data) {
+			// ndjson format
+			let { data, chunks } = get_data_json(
+				event,
+				options,
+				branch.map((node) => node?.server_data)
+			);
+
+			if (chunks) {
+				for await (const chunk of chunks) {
+					data += chunk;
+				}
+			}
+
+			state.prerendering.dependencies.set(data_pathname, {
+				response: text(data),
+				body: data
+			});
+		}
+
 		return await render_response({
 			event,
 			options,
@@ -377,8 +313,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			error: null,
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
-			fetched,
-			serialized
+			fetched
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully

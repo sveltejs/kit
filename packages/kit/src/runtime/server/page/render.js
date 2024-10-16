@@ -37,7 +37,6 @@ const encoder = new TextEncoder();
  *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
- *   serialized?: { data: string; chunks: AsyncIterable<string> | null };
  * }} opts
  */
 export async function render_response({
@@ -51,8 +50,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	action_result,
-	serialized
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -263,15 +261,13 @@ export async function render_response({
 
 	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 
-	const { data, chunks } =
-		serialized ??
-		get_data(
-			event,
-			options,
-			branch.map((b) => b.server_data),
-			csp,
-			global
-		);
+	const { data, chunks } = get_data(
+		event,
+		options,
+		branch.map((b) => b.server_data),
+		csp,
+		global
+	);
 
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
@@ -531,7 +527,7 @@ export async function render_response({
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-export function get_data(event, options, nodes, csp, global) {
+function get_data(event, options, nodes, csp, global) {
 	let promise_id = 1;
 	let count = 0;
 
