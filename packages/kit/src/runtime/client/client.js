@@ -146,6 +146,19 @@ function native_navigation(url) {
 	return new Promise(() => {});
 }
 
+/**
+ * Checks whether a service worker is registered, and if it is,
+ * tries to update it.
+ */
+async function update_service_worker() {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration(base || '/');
+		if (registration) {
+			await registration.update();
+		}
+	}
+}
+
 function noop() {}
 
 /** @type {import('types').CSRRoute[]} */
@@ -434,7 +447,9 @@ function initialize(result, target, hydrate) {
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate
+		hydrate,
+		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
+		sync: false
 	});
 
 	restore_snapshot(current_navigation_index);
@@ -469,15 +484,7 @@ function initialize(result, target, hydrate) {
  *   form?: Record<string, any> | null;
  * }} opts
  */
-async function get_navigation_result_from_branch({
-	url,
-	params,
-	branch,
-	status,
-	error,
-	route,
-	form
-}) {
+function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -1009,6 +1016,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
 					if (updated) {
+						// Before reloading, try to update the service worker if it exists
+						await update_service_worker();
 						return await native_navigation(url);
 					}
 
@@ -1017,7 +1026,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
 				if (error_load) {
-					return await get_navigation_result_from_branch({
+					return get_navigation_result_from_branch({
 						url,
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -1036,7 +1045,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		}
 	}
 
-	return await get_navigation_result_from_branch({
+	return get_navigation_result_from_branch({
 		url,
 		params,
 		branch,
@@ -1070,7 +1079,7 @@ async function load_nearest_error_page(i, branch, errors) {
 						universal: null
 					}
 				};
-			} catch (e) {
+			} catch {
 				continue;
 			}
 		}
@@ -1136,7 +1145,7 @@ async function load_root_error_page({ status, error, url, route }) {
 		data: null
 	};
 
-	return await get_navigation_result_from_branch({
+	return get_navigation_result_from_branch({
 		url,
 		params,
 		branch: [root_layout, root_error],
@@ -1333,6 +1342,8 @@ async function navigate({
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
+			// Before reloading, try to update the service worker if it exists
+			await update_service_worker();
 			await native_navigation(url);
 		}
 	}
@@ -1549,7 +1560,10 @@ function setup_preload() {
 
 		const options = get_router_options(a);
 
-		if (!options.reload) {
+		// we don't want to preload data for a page we're already on
+		const same_url = url && current.url.pathname + current.url.search === url.pathname + url.search;
+
+		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
 				const intent = get_navigation_intent(url, false);
 				if (intent) {
@@ -1859,6 +1873,10 @@ export function pushState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call pushState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1899,6 +1917,10 @@ export function replaceState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call replaceState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1942,7 +1964,7 @@ export async function applyAction(result) {
 
 		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 		if (error_load) {
-			const navigation_result = await get_navigation_result_from_branch({
+			const navigation_result = get_navigation_result_from_branch({
 				url,
 				params: current.params,
 				branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -2099,7 +2121,7 @@ function _start_router() {
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
 					window.scrollTo({ top: 0 });
 				} else {
-					a.ownerDocument.getElementById(hash)?.scrollIntoView();
+					a.ownerDocument.getElementById(decodeURIComponent(hash))?.scrollIntoView();
 				}
 
 				return;
@@ -2147,6 +2169,10 @@ function _start_router() {
 		);
 
 		const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
+
+		const target = submitter?.formTarget || form.target;
+
+		if (target === '_blank') return;
 
 		const method = submitter?.formMethod || form.method;
 
@@ -2364,7 +2390,7 @@ async function _hydrate(
 			}
 		}
 
-		result = await get_navigation_result_from_branch({
+		result = get_navigation_result_from_branch({
 			url,
 			params,
 			branch,

@@ -3,9 +3,8 @@ import * as path from 'node:path';
 
 import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
+import { VERSION } from 'svelte/compiler';
 import { parse } from 'svelte-parse-markup';
-
-const ASSET_PREFIX = '___ASSET___';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
@@ -35,10 +34,19 @@ export function image(opts) {
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
 
-			// Import path to import name
-			// e.g. ./foo.png => ___ASSET___0
-			/** @type {Map<string, string>} */
+			/**
+			 * Import path to import name
+			 * e.g. ./foo.png => __IMPORTED_ASSET_0__
+			 * @type {Map<string, string>}
+			 */
 			const imports = new Map();
+
+			/**
+			 * Vite name to declaration name
+			 * e.g. __VITE_ASSET_0__ => __DECLARED_ASSET_0__
+			 * @type {Map<string, string>}
+			 */
+			const consts = new Map();
 
 			/**
 			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
@@ -94,10 +102,10 @@ export function image(opts) {
 						image = await process(resolved_id, opts);
 						images.set(resolved_id, image);
 					}
-					s.update(node.start, node.end, img_to_picture(content, node, image));
+					s.update(node.start, node.end, img_to_picture(consts, content, node, image));
 				} else {
-					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
-					const name = ASSET_PREFIX + imports.size;
+					// e.g. <img src="./foo.svg" /> => <img src={__IMPORTED_ASSET_0__} />
+					const name = '__IMPORTED_ASSET_' + imports.size + '__';
 					const { start, end } = src_attribute;
 					// update src with reference to imported asset
 					s.update(
@@ -129,18 +137,27 @@ export function image(opts) {
 				}
 			});
 
-			// add imports
+			// add imports and consts to <script module> block
+			let text = '';
 			if (imports.size) {
-				let import_text = '';
 				for (const [path, import_name] of imports.entries()) {
-					import_text += `import ${import_name} from "${path}";`;
+					text += `\timport ${import_name} from "${path}";\n`;
 				}
-				if (ast.instance) {
-					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, import_text);
-				} else {
-					s.append(`<script>${import_text}</script>`);
+			}
+
+			if (consts.size) {
+				for (const [vite_name, declaration_name] of consts.entries()) {
+					text += `\tconst ${declaration_name} = "${vite_name}";\n`;
 				}
+			}
+
+			if (ast.module) {
+				// @ts-ignore
+				s.appendLeft(ast.module.content.start, text);
+			} else {
+				s.prepend(
+					`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`
+				);
 			}
 
 			return {
@@ -192,7 +209,7 @@ export function parseObject(str) {
 		.replaceAll(/,(\n\s*)?([^ ])/g, ',"$2');
 	try {
 		return JSON.parse(updated);
-	} catch (err) {
+	} catch {
 		throw new Error(`Failed parsing string to object: ${str}`);
 	}
 }
@@ -220,7 +237,7 @@ function get_attr_value(node, attr) {
  *   height: string | number
  * }} details
  */
-function img_attributes_to_markdown(content, attributes, details) {
+function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
 			return `src=${details.src}`;
@@ -233,8 +250,8 @@ function img_attributes_to_markdown(content, attributes, details) {
 	/** @type {number | undefined} */
 	let user_height;
 	for (const attribute of attributes) {
-		if (attribute.name === 'width') user_width = parseInt(attribute.value[0]);
-		if (attribute.name === 'height') user_height = parseInt(attribute.value[0]);
+		if (attribute.name === 'width') user_width = parseInt(attribute.value[0].raw);
+		if (attribute.name === 'height') user_height = parseInt(attribute.value[0].raw);
 	}
 	if (!user_width && !user_height) {
 		attribute_strings.push(`width=${details.width}`);
@@ -264,11 +281,12 @@ function stringToNumber(param) {
 }
 
 /**
+ * @param {Map<string,string>} consts
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
  * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(content, node, image) {
+function img_to_picture(consts, content, node, image) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -279,22 +297,34 @@ function img_to_picture(content, node, image) {
 	}
 
 	let res = '<picture>';
+
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset={"${srcset}"}${sizes_string} type="image/${format}" />`;
+		res += `<source srcset=${to_value(consts, srcset)}${sizes_string} type="image/${format}" />`;
 	}
-	// Need to handle src differently when using either Vite's renderBuiltUrl or relative base path in Vite.
-	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
-	const src =
-		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
-			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
-			: `"${image.img.src}"`;
-	res += `<img ${img_attributes_to_markdown(content, attributes, {
-		src,
+
+	res += `<img ${serialize_img_attributes(content, attributes, {
+		src: to_value(consts, image.img.src),
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
-	res += '</picture>';
-	return res;
+
+	return (res += '</picture>');
+}
+
+/**
+ * @param {Map<string, string>} consts
+ * @param {string} src
+ */
+function to_value(consts, src) {
+	if (src.startsWith('__VITE_ASSET__')) {
+		let var_name = consts.get(src);
+		if (!var_name) {
+			var_name = '__DECLARED_ASSET_' + consts.size + '__';
+			consts.set(src, var_name);
+		}
+		return `{${var_name}}`;
+	}
+	return `"${src}"`;
 }
 
 /**
@@ -320,13 +350,13 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	};
 
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${img_attributes_to_markdown(content, node.attributes, details)} />
+	<img ${serialize_img_attributes(content, node.attributes, details)} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
-		<img ${img_attributes_to_markdown(content, attributes, details)} />
+		<img ${serialize_img_attributes(content, attributes, details)} />
 	</picture>
 {/if}`;
 }

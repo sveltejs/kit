@@ -314,8 +314,10 @@ declare module '@sveltejs/kit' {
 		 *       directives: {
 		 *         'script-src': ['self']
 		 *       },
+		 *       // must be specified with either the `report-uri` or `report-to` directives, or both
 		 *       reportOnly: {
-		 *         'script-src': ['self']
+		 *         'script-src': ['self'],
+		 *         'report-uri': ['/']
 		 *       }
 		 *     }
 		 *   }
@@ -378,12 +380,12 @@ declare module '@sveltejs/kit' {
 			 */
 			dir?: string;
 			/**
-			 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
+			 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://kit.svelte.dev/docs/modules#$env-static-public) and [`$env/dynamic/public`](https://kit.svelte.dev/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 			 * @default "PUBLIC_"
 			 */
 			publicPrefix?: string;
 			/**
-			 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
+			 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://kit.svelte.dev/docs/modules#$env-static-private) and [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynamic-private).
 			 * @default ""
 			 * @since 1.21.0
 			 */
@@ -486,7 +488,7 @@ declare module '@sveltejs/kit' {
 			 */
 			assets?: '' | `http://${string}` | `https://${string}`;
 			/**
-			 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+			 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](https://kit.svelte.dev/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
 			 * @default ""
 			 */
 			base?: '' | `/${string}`;
@@ -628,7 +630,7 @@ declare module '@sveltejs/kit' {
 		 * </script>
 		 * ```
 		 *
-		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores-updated) store to `true` when it detects one.
+		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://kit.svelte.dev/docs/modules#$app-stores-updated) store to `true` when it detects one.
 		 */
 		version?: {
 			/**
@@ -781,7 +783,7 @@ declare module '@sveltejs/kit' {
 		 */
 		parent(): Promise<ParentData>;
 		/**
-		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://kit.svelte.dev/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 		 *
 		 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 		 *
@@ -1205,7 +1207,7 @@ declare module '@sveltejs/kit' {
 		 */
 		parent(): Promise<ParentData>;
 		/**
-		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://kit.svelte.dev/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 		 *
 		 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 		 *
@@ -1613,14 +1615,15 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
+		/** The +page.svelte */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
+		/** The +page.js/.ts */
 		universal?: string;
+		/** The +page.server.js/ts */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
-		/**
-		 * Filled with the pages that reference this layout (if this is a layout)
-		 */
+		/** Filled with the pages that reference this layout (if this is a layout) */
 		child_pages?: PageNode[];
 	}
 
@@ -1842,6 +1845,8 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
+
+	export {};
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -1913,6 +1918,8 @@ declare module '@sveltejs/kit/hooks' {
 	 * @param handlers The chain of `handle` functions
 	 * */
 	export function sequence(...handlers: import('@sveltejs/kit').Handle[]): import('@sveltejs/kit').Handle;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/node' {
@@ -1928,6 +1935,8 @@ declare module '@sveltejs/kit/node' {
 	 * @since 2.4.0
 	 */
 	export function createReadableStream(file: string): ReadableStream;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -1937,6 +1946,8 @@ declare module '@sveltejs/kit/node/polyfills' {
 	 * - `File`
 	 */
 	export function installPolyfills(): void;
+
+	export {};
 }
 
 declare module '@sveltejs/kit/vite' {
@@ -1944,6 +1955,8 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 * */
 	export function sveltekit(): Promise<import('vite').Plugin[]>;
+
+	export {};
 }
 
 declare module '$app/environment' {
@@ -1966,6 +1979,8 @@ declare module '$app/environment' {
 	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
+
+	export {};
 }
 
 declare module '$app/forms' {
@@ -1998,7 +2013,7 @@ declare module '$app/forms' {
 	 * If nothing is returned, the fallback will be used.
 	 *
 	 * If this function or its return value isn't set, it
-	 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+	 * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
 	 * - updates `$page.status`
 	 * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
 	 * - redirects in case of a redirect response
@@ -2016,6 +2031,8 @@ declare module '$app/forms' {
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+
+	export {};
 }
 
 declare module '$app/navigation' {
@@ -2129,6 +2146,8 @@ declare module '$app/navigation' {
 	 * */
 	export function replaceState(url: string | URL, state: App.PageState): void;
 	type MaybePromise<T> = T | Promise<T>;
+
+	export {};
 }
 
 declare module '$app/paths' {
@@ -2160,6 +2179,8 @@ declare module '$app/paths' {
 	 * ```
 	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+
+	export {};
 }
 
 declare module '$app/server' {
@@ -2176,6 +2197,8 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+
+	export {};
 }
 
 declare module '$app/stores' {
@@ -2210,6 +2233,8 @@ declare module '$app/stores' {
 	export const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
+
+	export {};
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *

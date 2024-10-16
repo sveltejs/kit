@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
@@ -28,7 +29,7 @@ const cwd = process.cwd();
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
-export async function write_all_types(config, manifest_data) {
+export function write_all_types(config, manifest_data) {
 	if (!ts) return;
 
 	const types_dir = `${config.kit.outDir}/types`;
@@ -133,7 +134,7 @@ export async function write_all_types(config, manifest_data) {
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  */
-export async function write_types(config, manifest_data, file) {
+export function write_types(config, manifest_data, file) {
 	if (!ts) return;
 
 	if (!path.basename(file).startsWith('+')) {

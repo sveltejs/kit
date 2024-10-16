@@ -269,6 +269,7 @@ export async function render_response({
 			event,
 			options,
 			branch.map((b) => b.server_data),
+			csp,
 			global
 		);
 
@@ -515,9 +516,7 @@ export async function render_response({
 					type: 'bytes'
 				}),
 				{
-					headers: {
-						'content-type': 'text/html'
-					}
+					headers
 				}
 			);
 }
@@ -528,10 +527,11 @@ export async function render_response({
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
+ * @param {import('./csp.js').Csp} csp
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-export function get_data(event, options, nodes, global) {
+export function get_data(event, options, nodes, csp, global) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -560,7 +560,7 @@ export function get_data(event, options, nodes, global) {
 						let str;
 						try {
 							str = devalue.uneval({ id, data, error }, replacer);
-						} catch (e) {
+						} catch {
 							error = await handle_error_and_jsonify(
 								event,
 								options,
@@ -570,7 +570,9 @@ export function get_data(event, options, nodes, global) {
 							str = devalue.uneval({ id, data, error }, replacer);
 						}
 
-						push(`<script>${global}.resolve(${str})</script>\n`);
+						push(
+							`<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${global}.resolve(${str})</script>\n`
+						);
 						if (count === 0) done();
 					}
 				);

@@ -2,4 +2,4 @@ This is a simple alias to `src/lib`, or whatever directory is specified as [`con
 
 ### `$lib/server`
 
-A subdirectory of `$lib`. SvelteKit will prevent you from importing any modules in `$lib/server` into client-side code. See [server-only modules](/docs/server-only-modules).
+A subdirectory of `$lib`. SvelteKit will prevent you from importing any modules in `$lib/server` into client-side code. See [server-only modules](https://kit.svelte.dev/docs/server-only-modules).

@@ -53,6 +53,7 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
+				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({})
 			});
 
@@ -66,6 +67,7 @@ export async function respond_with_error({
 				event,
 				fetched,
 				node: default_layout,
+				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({}),
 				resolve_opts,
 				server_data_promise,

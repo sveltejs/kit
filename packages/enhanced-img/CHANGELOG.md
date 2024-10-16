@@ -1,5 +1,78 @@
 # @sveltejs/enhanced-img
 
+## 0.3.9
+### Patch Changes
+
+
+- chore: upgrade svelte-parse-markup ([#12793](https://github.com/sveltejs/kit/pull/12793))
+
+## 0.3.8
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 0.3.7
+### Patch Changes
+
+
+- fix: avoid duplicating width/height attributes ([#12673](https://github.com/sveltejs/kit/pull/12673))
+
+## 0.3.6
+### Patch Changes
+
+
+- fix: address Svelte 5 warning ([`ec04dae73702c99652e4972d2b7363f2c11ccf5a`](https://github.com/sveltejs/kit/commit/ec04dae73702c99652e4972d2b7363f2c11ccf5a))
+
+## 0.3.5
+### Patch Changes
+
+
+- perf: hoist vite asset declarations to module block ([#12627](https://github.com/sveltejs/kit/pull/12627))
+
+## 0.3.4
+### Patch Changes
+
+
+- perf: apply performance optimization to dev srcset ([#12621](https://github.com/sveltejs/kit/pull/12621))
+
+## 0.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 0.3.2
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+
+- fix: ensure src attribute is properly formed ([`65931f276ac2102032e3032c864a472eee19b7bb`](https://github.com/sveltejs/kit/commit/65931f276ac2102032e3032c864a472eee19b7bb))
+
+## 0.3.1
+### Patch Changes
+
+
+- fix: make `*?enhanced` imports available in the ambient context ([#12363](https://github.com/sveltejs/kit/pull/12363))
+
+## 0.3.0
+
+### Minor Changes
+
+- breaking: return plugin synchronously from `enhancedImages()` ([#12297](https://github.com/sveltejs/kit/pull/12297))
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 0.2.1
+
+### Patch Changes
+
+- fix: use correct type for `*?enhanced` imports ([#12224](https://github.com/sveltejs/kit/pull/12224))
+
 ## 0.2.0
 
 ### Minor Changes

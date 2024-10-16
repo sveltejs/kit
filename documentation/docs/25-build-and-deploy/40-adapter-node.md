@@ -51,8 +51,15 @@ npm install dotenv
 ...and invoke it before running the built app:
 
 ```diff
--node build
-+node -r dotenv/config build
+- node build
++ node -r dotenv/config build
+```
+
+If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+
+```diff
+- node build
++ node --env-file=.env build
 ```
 
 ### `PORT`, `HOST` and `SOCKET_PATH`
@@ -122,7 +129,7 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
 ### `SHUTDOWN_TIMEOUT`
 
@@ -186,6 +193,22 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 
 > If you want to customize this behaviour you can use a [custom server](#custom-server).
 
+You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
+
+```js
+// @errors: 2304
+process.on('sveltekit:shutdown', async (reason) => {
+  await jobs.stop();
+  await db.close();
+});
+```
+
+The parameter `reason` has one of the following values:
+
+- `SIGINT` - shutdown was triggered by a `SIGINT` signal
+- `SIGTERM` - shutdown was triggered by a `SIGTERM` signal
+- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#environment-variables-idle-timeout)
+
 ## Socket activation
 
 Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
@@ -241,20 +264,4 @@ app.use(handler);
 app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
-```
-
-## Troubleshooting
-
-### Is there a hook for cleaning up before the app exits?
-
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the app exits:
-
-```js
-// @errors: 2304 2580
-function shutdownGracefully() {
-	// anything you need to clean up manually goes in here
-	db.shutdown();
-}
-
-process.on('exit', shutdownGracefully);
 ```

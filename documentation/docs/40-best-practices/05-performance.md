@@ -37,7 +37,7 @@ If you see in the network tab of your browser that an API call is taking a long 
 
 ### Images
 
-Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-image` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
+Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-img` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
 
 ### Videos
 
@@ -71,7 +71,7 @@ To run third party scripts in a web worker (which avoids blocking the main threa
 
 ### Selective loading
 
-Code imported with static `import` declarations will be automatically bundled with the rest of your page. If there is a piece of code you need only when some condition is met, use the dynamic `import(...)` form instead.
+Code imported with static `import` declarations will be automatically bundled with the rest of your page. If there is a piece of code you need only when some condition is met, use the dynamic `import(...)` form to selectively lazy-load the component.
 
 ## Navigation
 

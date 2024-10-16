@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	app: async ({ page }, use) => {
+	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
 			/**
@@ -66,7 +67,7 @@ export const test = base.extend({
 			}
 		}
 
-		use(clicknav);
+		await use(clicknav);
 	},
 
 	in_view: async ({ page }, use) => {
@@ -77,7 +78,7 @@ export const test = base.extend({
 			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
-		use(in_view);
+		await use(in_view);
 	},
 
 	get_computed_style: async ({ page }, use) => {
@@ -85,7 +86,7 @@ export const test = base.extend({
 		 * @param {string} selector
 		 * @param {string} prop
 		 */
-		async function get_computed_style(selector, prop) {
+		function get_computed_style(selector, prop) {
 			return page.$eval(
 				selector,
 				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),
@@ -101,25 +102,37 @@ export const test = base.extend({
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
 			// @ts-expect-error
-			const page_fn = page[fn];
-			if (!page_fn) {
+			const original_page_fn = page[fn];
+			if (!original_page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
 			}
+
 			// @ts-expect-error
-			page[fn] = async function (...args) {
-				const res = await page_fn.call(page, ...args);
-				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-					await page.waitForSelector('body.started', { timeout: 15000 });
+			async function modified_fn(...args) {
+				try {
+					const res = await original_page_fn.apply(page, args);
+					if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
+						await page.waitForSelector('body.started', { timeout: 15000 });
+					}
+					return res;
+				} catch (e) {
+					// Exclude this function from the stack trace so that it points to the failing test
+					// instead of this file.
+					// @ts-expect-error
+					Error.captureStackTrace(e, modified_fn);
+					throw e;
 				}
-				return res;
-			};
+			}
+
+			// @ts-expect-error
+			page[fn] = modified_fn;
 		});
 
 		await use(page);
 	},
 
 	// eslint-disable-next-line no-empty-pattern
-	read_errors: ({}, use) => {
+	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -128,7 +141,7 @@ export const test = base.extend({
 			return errors[path];
 		}
 
-		use(read_errors);
+		await use(read_errors);
 	},
 
 	// eslint-disable-next-line no-empty-pattern

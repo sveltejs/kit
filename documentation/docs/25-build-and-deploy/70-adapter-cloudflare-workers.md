@@ -18,11 +18,14 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 export default {
 	kit: {
 		adapter: adapter({
-      config: '<your-wrangler-name>.toml',
-      platformProxy: {
-        persist: './your-custom-path'
-      }
-    })
+			config: 'wrangler.toml',
+			platformProxy: {
+				configPath: 'wrangler.toml',
+				environment: undefined,
+				experimentalJsonConfig: false,
+				persist: false
+			}
+		})
 	}
 };
 ```
