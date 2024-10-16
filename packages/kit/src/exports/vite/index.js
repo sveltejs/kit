@@ -352,6 +352,9 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {Map<string, string>} */
+	const import_map = new Map();
+
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
@@ -372,6 +375,8 @@ async function kit({ svelte_config }) {
 						`Cannot import ${id} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
+
+				import_map.set(id, importer);
 			}
 
 			// treat $env/static/[public|private] as virtual
@@ -398,7 +403,18 @@ async function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
+
+					const illegal_module = strip_virtual_prefix(relative);
+
+					if (import_map.has(illegal_module)) {
+						const importer = path.relative(
+							cwd,
+							/** @type {string} */ (import_map.get(illegal_module))
+						);
+						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
+					}
+
+					throw new Error(`Cannot import ${illegal_module} into client-side code`);
 				}
 			}
 
