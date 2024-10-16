@@ -1,3 +1,6 @@
 export function load() {
-	return { a: 1 };
+	return {
+		a: 1,
+		c: new Promise((resolve) => resolve())
+	};
 }
