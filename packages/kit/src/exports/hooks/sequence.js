@@ -21,6 +21,7 @@
  * 		preload: () => {
  * 			// this one wins as it's the first defined in the chain
  * 			console.log('first preload');
+ * 			return true;
  * 		}
  * 	});
  * 	console.log('first post-processing');
@@ -37,10 +38,12 @@
  * 		},
  * 		preload: () => {
  * 			console.log('second preload');
+ * 			return true;
  * 		},
  * 		filterSerializedResponseHeaders: () => {
  * 			// this one wins as it's the first defined in the chain
- *    		console.log('second filterSerializedResponseHeaders');
+ * 			console.log('second filterSerializedResponseHeaders');
+ * 			return true;
  * 		}
  * 	});
  * 	console.log('second post-processing');

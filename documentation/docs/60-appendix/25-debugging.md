@@ -54,7 +54,7 @@ If you use a different editor, these community guides might be useful for you:
 
 It's possible to debug Node.js applications using a browser-based debugger.
 
-> Note this only works with debugging client-side SvelteKit source maps.
+> [!NOTE] Note this only works with debugging client-side SvelteKit source maps.
 
 1. Run the `--inspect` flag when starting the Vite server with Node.js. For instance: `NODE_OPTIONS="--inspect" npm run dev`
 2. Open your site in a new tab. Typically at `localhost:5173`.

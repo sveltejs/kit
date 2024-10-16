@@ -5,7 +5,7 @@ rank: 1
 
 SvelteKit is the successor to Sapper and shares many elements of its design.
 
-If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](additional-resources#examples) while migrating.
+If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](additional-resources#Examples) while migrating.
 
 ## package.json
 
@@ -20,7 +20,7 @@ Remove `polka` or `express`, if you're using one of those, and any middleware su
 
 ### devDependencies
 
-Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](adapters) you plan to use (see [next section](migrating#project-files-configuration)).
+Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](adapters) you plan to use (see [next section](migrating#Project-files-Configuration)).
 
 ### scripts
 
@@ -41,7 +41,7 @@ Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte
 
 You will need to add an [adapter](adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/main/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
-If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](project-structure#project-files-vite-config-js).
+If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](project-structure#Project-files-vite.config.js).
 
 ### src/client.js
 
@@ -49,11 +49,11 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 ### src/server.js
 
-When using `adapter-node` the equivalent is a [custom server](adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
+When using `adapter-node` the equivalent is a [custom server](adapter-node#Custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
 
 ### src/service-worker.js
 
-Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](modules#$service-worker):
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`]($service-worker):
 
 - `files` is unchanged
 - `routes` has been removed
@@ -68,7 +68,7 @@ Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapp
 
 ### src/node_modules
 
-A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`](modules#$lib) instead.
+A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`]($lib) instead.
 
 ## Pages and layouts
 
@@ -81,15 +81,15 @@ Routes now are made up of the folder name exclusively to remove ambiguity, the f
 | routes/about/index.svelte | routes/about/+page.svelte |
 | routes/about.svelte       | routes/about/+page.svelte |
 
-Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](routing#other-files).
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](routing#Other-files).
 
 ### Imports
 
-The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`](modules#$app-navigation).
+The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`]($app-navigation).
 
-The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#pages-and-layouts-stores) section below.
+The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#Pages-and-layouts-Stores) section below.
 
-Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`](modules#$lib) imports.
+Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`]($lib) imports.
 
 ### Preload
 
@@ -97,7 +97,7 @@ As before, pages and layouts can export a function that allows data to be loaded
 
 This function has been renamed from `preload` to [`load`](load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
-There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](load#making-fetch-requests) from the input methods, and both [`error`](load#errors) and [`redirect`](load#redirects) are now thrown.
+There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](load#Making-fetch-requests) from the input methods, and both [`error`](load#Errors) and [`redirect`](load#Redirects) are now thrown.
 
 ### Stores
 
@@ -115,11 +115,11 @@ const { preloading, page, session } = stores();
 
 The `page` store still exists; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
-You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`](modules#$app-stores).
+You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`]($app-stores).
 
 ### Routing
 
-Regex routes are no longer supported. Instead, use [advanced route matching](advanced-routing#matching).
+Regex routes are no longer supported. Instead, use [advanced route matching](advanced-routing#Matching).
 
 ### Segments
 
@@ -150,7 +150,7 @@ See [integrations](./integrations) for detailed information about integrations.
 
 ### HTML minifier
 
-Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add it as a prod dependency and then use it through a [hook](hooks#server-hooks-handle):
+Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add it as a prod dependency and then use it through a [hook](hooks#Server-hooks-handle):
 
 ```js
 // @filename: ambient.d.ts
