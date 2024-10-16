@@ -106,13 +106,22 @@ export function sequence(...handlers) {
 					/** @type {import('@sveltejs/kit').ResolveOptions['preload']} */
 					const preload = parent_options?.preload ?? options?.preload;
 
+					/** @type {import('@sveltejs/kit').ResolveOptions['load']} */
+					const load = parent_options?.load ?? options?.load;
+
 					return i < length - 1
 						? apply_handle(i + 1, event, {
 								transformPageChunk,
 								filterSerializedResponseHeaders,
-								preload
+								preload,
+								load
 							})
-						: resolve(event, { transformPageChunk, filterSerializedResponseHeaders, preload });
+						: resolve(event, {
+								transformPageChunk,
+								filterSerializedResponseHeaders,
+								preload,
+								load
+							});
 				}
 			});
 		}
