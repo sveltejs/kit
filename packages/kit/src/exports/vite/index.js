@@ -406,7 +406,7 @@ async function kit({ svelte_config }) {
 
 					const illegal_module = strip_virtual_prefix(relative);
 
-					if (illegal_module.startsWith('$env/') && import_map.has(illegal_module)) {
+					if (import_map.has(illegal_module)) {
 						const importer = path.relative(
 							cwd,
 							/** @type {string} */ (import_map.get(illegal_module))
