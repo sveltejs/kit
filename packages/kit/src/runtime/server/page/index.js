@@ -14,9 +14,9 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
+import { get_data_json } from '../data/index.js';
 import { load_page_nodes } from './load_page_nodes.js';
 import { DEV } from 'esm-env';
-import { get_data_json } from '../data/index.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -277,8 +277,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 			}
 		}
 
-		const ssr = get_option(nodes, 'ssr') ?? true;
-
 		if (state.prerendering && should_prerender_data) {
 			// ndjson format
 			let { data, chunks } = get_data_json(
@@ -298,6 +296,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 				body: data
 			});
 		}
+
+		const ssr = get_option(nodes, 'ssr') ?? true;
 
 		return await render_response({
 			event,
