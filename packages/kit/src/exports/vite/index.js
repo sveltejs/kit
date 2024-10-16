@@ -353,7 +353,7 @@ async function kit({ svelte_config }) {
 	};
 
 	/** @type {Map<string, string>} */
-	let import_map = new Map();
+	const import_map = new Map();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
@@ -407,10 +407,11 @@ async function kit({ svelte_config }) {
 					const illegal_module = strip_virtual_prefix(relative);
 
 					if (illegal_module.startsWith('$env/') && import_map.has(illegal_module)) {
-						const importer = path.relative(cwd, /** @type {string} */ (import_map.get(illegal_module)));
-						throw new Error(
-							`Cannot import ${illegal_module} into client-side code: ${importer}`
+						const importer = path.relative(
+							cwd,
+							/** @type {string} */ (import_map.get(illegal_module))
 						);
+						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
 					}
 
 					throw new Error(`Cannot import ${illegal_module} into client-side code`);
