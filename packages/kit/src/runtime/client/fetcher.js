@@ -154,7 +154,9 @@ function dev_fetch(resource, opts) {
  * @param {RequestInit} [opts]
  */
 function build_selector(resource, opts) {
-	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
+	let url = resource instanceof Request ? resource.url : resource;
+	if (url instanceof URL) url = url.toString();
+	url = JSON.stringify(url);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
