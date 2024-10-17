@@ -601,10 +601,7 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('routing/b/+page.js')).length).toBe(1);
 			expect(requests.filter((req) => req.endsWith('routing/b/+page.svelte')).length).toBe(1);
 		} else {
-			// request should match "routing/b/[node].js"
-			expect(
-				requests.filter((req) => /.*?\/routing\/b\/\d+\.js$/.test(req)).length
-			).toBeGreaterThan(1);
+			expect(requests.filter((req) => /\/_app\/immutable\/nodes\/.*?.js$/.test(req)).length).toBe(1);
 		}
 
 		if (process.env.DEV) {
