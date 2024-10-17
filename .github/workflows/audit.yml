@@ -13,6 +13,8 @@ permissions:
 
 jobs:
   Audit:
+    # prevents this action from running on forks
+    if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

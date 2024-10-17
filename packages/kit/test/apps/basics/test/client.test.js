@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -145,35 +146,41 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.now = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
-		await page.locator('button').click();
-		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
 
-		await page.evaluate(() => (window.now = 2500));
+		const button = page.locator('button');
+		const p = page.locator('p.counter');
 
-		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '2');
+		await expect(p).toHaveText('Count is 0');
+
+		await page.evaluate('window.now = 2500');
+
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '4');
+		await expect(p).toHaveText('Count is 2');
 	});
 
 	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
@@ -1044,11 +1051,11 @@ test.describe('untrack', () => {
 		expect(await page.textContent('p.id')).toBe(id);
 	});
 
-	test('untracks universal load function', async ({ page }) => {
+	test('untracks universal load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/universal/1');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
 		const id = await page.textContent('p.id');
-		await page.click('a[href="/untrack/universal/2"]');
+		await clicknav('a[href="/untrack/universal/2"]');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
 		expect(await page.textContent('p.id')).toBe(id);
 	});
@@ -1220,5 +1227,21 @@ test.describe('INP', () => {
 		// we may need to tweak this number, and the `rate` above,
 		// depending on if this proves flaky
 		expect(time).toBeLessThan(400);
+	});
+});
+
+test.describe('binding_property_non_reactive warn', () => {
+	test('warning is not thrown from the root of svelte', async ({ page }) => {
+		let is_warning_thrown = false;
+		page.on('console', (m) => {
+			if (
+				m.type() === 'warn' &&
+				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
+			) {
+				is_warning_thrown = true;
+			}
+		});
+		await page.goto('/');
+		expect(is_warning_thrown).toBeFalsy();
 	});
 });

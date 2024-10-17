@@ -1,6 +1,7 @@
 import { load_config } from './src/core/config/index.js';
 import glob from 'tiny-glob/sync.js';
 import fs from 'node:fs';
+import process from 'node:process';
 
 try {
 	const cwd = process.env.INIT_CWD ?? process.cwd();

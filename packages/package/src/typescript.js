@@ -17,8 +17,9 @@ import { load_pkg_json } from './config.js';
  * @param {string} cwd
  * @param {Record<string, string>} alias
  * @param {import('./types.js').File[]} files
+ * @param {string | undefined} tsconfig
  */
-export async function emit_dts(input, output, cwd, alias, files) {
+export async function emit_dts(input, output, cwd, alias, files, tsconfig) {
 	const tmp = `${output}/__package_types_tmp__`;
 	rimraf(tmp);
 	mkdirp(tmp);
@@ -32,7 +33,8 @@ export async function emit_dts(input, output, cwd, alias, files) {
 		svelteShimsPath: no_svelte_3
 			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
 			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: path.relative(cwd, tmp)
+		declarationDir: path.relative(cwd, tmp),
+		tsconfig
 	});
 
 	const handwritten = new Set();

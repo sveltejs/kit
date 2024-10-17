@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import process from 'node:process';
 import { expect, test } from '@playwright/test';
 
 const cwd = process.cwd();
