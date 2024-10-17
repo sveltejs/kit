@@ -18,7 +18,7 @@ export const test: TestType<
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(url: URL): void | boolean;
 				afterNavigate(url: URL): void;
-				preloadCode(pathname: string): Promise<void>;
+				preloadCode(...urls: string[]): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
 			clicknav(selector: string, options?: Parameters<Page['waitForNavigation']>[0]): Promise<void>;
