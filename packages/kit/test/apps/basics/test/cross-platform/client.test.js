@@ -601,7 +601,9 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('routing/b/+page.js')).length).toBe(1);
 			expect(requests.filter((req) => req.endsWith('routing/b/+page.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => /\/_app\/immutable\/nodes\/.*?.js$/.test(req)).length).toBe(1);
+			expect(requests.filter((req) => /\/_app\/immutable\/nodes\/.*?.js$/.test(req)).length).toBe(
+				1
+			);
 		}
 
 		if (process.env.DEV) {
