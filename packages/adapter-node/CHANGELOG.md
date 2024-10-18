@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.2.8
+### Patch Changes
+
+
+- chore: upgrade @rollup/plugin-commonjs to 28.0.1 ([#12817](https://github.com/sveltejs/kit/pull/12817))
+
 ## 5.2.7
 ### Patch Changes
 
