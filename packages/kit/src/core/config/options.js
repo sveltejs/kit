@@ -198,6 +198,7 @@ const options = object(
 					return input;
 				}),
 
+				generateCssPreloadTags: boolean(false),
 				handleHttpError: validate(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
