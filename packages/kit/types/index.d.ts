@@ -1044,7 +1044,7 @@ declare module '@sveltejs/kit' {
 		 */
 		getClientAddress(): string;
 		/**
-		 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+		 * Contains custom data that was added to the request within the [`server handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
 		 */
 		locals: App.Locals;
 		/**
@@ -2266,7 +2266,7 @@ declare namespace App {
 	}
 
 	/**
-	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
+	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://kit.svelte.dev/docs/hooks) (`handle` and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
 
