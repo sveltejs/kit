@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.6.3
+### Patch Changes
+
+
+- chore: add `svelte-eslint-parser` to list of migratable dependencies ([#12828](https://github.com/sveltejs/kit/pull/12828))
+
 ## 1.6.2
 ### Patch Changes
 
