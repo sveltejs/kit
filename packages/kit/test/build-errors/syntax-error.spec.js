@@ -1,6 +1,7 @@
 import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import process from 'node:process';
 
 test('$lib/*.server.* is not statically importable from the client', () => {
 	try {

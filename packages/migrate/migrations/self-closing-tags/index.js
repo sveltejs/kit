@@ -1,5 +1,6 @@
 import colors from 'kleur';
 import fs from 'node:fs';
+import process from 'node:process';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { remove_self_closing_tags } from './migrate.js';

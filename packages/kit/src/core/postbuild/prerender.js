@@ -16,6 +16,12 @@ import { createReadableStream } from '@sveltejs/kit/node';
 
 export default forked(import.meta.url, prerender);
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#scrolling-to-a-fragment
+// "If fragment is the empty string, then return the special value top of the document."
+// ...and
+// "If decodedFragment is an ASCII case-insensitive match for the string 'top', then return the top of the document."
+const SPECIAL_HASHLINKS = new Set(['', 'top']);
+
 /**
  * @param {{
  *   out: string;
@@ -484,7 +490,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.includes(id)) {
+		if (!hashlinks.includes(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

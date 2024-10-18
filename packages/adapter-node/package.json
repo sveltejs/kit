@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.2.0",
+	"version": "5.2.8",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -41,19 +41,19 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "1.0.0-next.25",
+		"@polka/url": "^1.0.0-next.28",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
-		"polka": "1.0.0-next.25",
-		"sirv": "^2.0.4",
+		"@types/node": "^18.19.48",
+		"polka": "^1.0.0-next.28",
+		"sirv": "^3.0.0",
 		"typescript": "^5.3.3",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.1"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^26.0.1",
+		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^15.2.3",
+		"@rollup/plugin-node-resolve": "^15.3.0",
 		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {
