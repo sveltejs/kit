@@ -28,7 +28,8 @@ export function update_pkg_json_content(content) {
 		['rollup-plugin-svelte', '^7.2.2'],
 		['prettier', '^3.1.0'],
 		['prettier-plugin-svelte', '^3.2.6'],
-		['eslint-plugin-svelte', '^2.43.0'],
+		['eslint-plugin-svelte', '^2.45.1'],
+		['svelte-eslint-parser', '^0.42.0'],
 		[
 			'eslint-plugin-svelte3',
 			'^4.0.0',
