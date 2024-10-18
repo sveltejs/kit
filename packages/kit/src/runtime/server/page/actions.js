@@ -287,6 +287,7 @@ function try_deserialize(data, fn, route_id) {
 			);
 		}
 
+		// if devalue could not serialize the data
 		if ('path' in error) {
 			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
 			if (error.path !== '') message += ` (data.${error.path})`;
