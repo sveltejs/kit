@@ -1,4 +1,3 @@
-import { CookieSerializeOptions } from 'cookie';
 import { SSRNode, CspDirectives, ServerDataNode } from 'types';
 
 export interface Fetched {
@@ -27,10 +26,4 @@ export interface CspConfig {
 
 export interface CspOpts {
 	prerender: boolean;
-}
-
-export interface Cookie {
-	name: string;
-	value: string;
-	options: CookieSerializeOptions & { path: string };
 }
