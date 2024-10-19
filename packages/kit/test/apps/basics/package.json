@@ -15,7 +15,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"cross-env": "^7.0.3",
 		"marked": "^14.0.0",
 		"svelte": "^4.2.10",

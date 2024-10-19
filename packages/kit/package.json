@@ -33,7 +33,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.44.1",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@types/connect": "^3.4.38",
 		"@types/node": "^18.19.48",
 		"@types/set-cookie-parser": "^2.4.7",
