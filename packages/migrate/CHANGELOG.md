@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.6.4
+### Patch Changes
+
+
+- fix: migrate `svelte` and `vite-plugin-svelte` to latest ([#12838](https://github.com/sveltejs/kit/pull/12838))
+
 ## 1.6.3
 ### Patch Changes
 

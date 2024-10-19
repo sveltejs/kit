@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.7.2
+### Patch Changes
+
+
+- fix: use absolute links in JSDoc comments ([#12718](https://github.com/sveltejs/kit/pull/12718))
+
 ## 2.7.1
 ### Patch Changes
 
