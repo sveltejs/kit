@@ -24,7 +24,7 @@
 		"@sveltejs/package": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"publint": "^0.2.0",
-		"svelte": "^4.2.10",
+		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.1",
 		"typescript": "^5.3.3",
 		"vite": "^5.3.2"
@@ -42,7 +42,7 @@
 		"!dist/**/*.spec.*"
 	],
 	"peerDependencies": {
-		"svelte": "^4.0.0"
+		"svelte": "^5.0.0"
 	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts"

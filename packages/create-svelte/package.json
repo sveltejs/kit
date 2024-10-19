@@ -33,7 +33,7 @@
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"sucrase": "^3.34.0",
-		"svelte": "^4.2.10",
+		"svelte": "^5.0.0",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^5.3.3",
 		"vitest": "^2.0.1"

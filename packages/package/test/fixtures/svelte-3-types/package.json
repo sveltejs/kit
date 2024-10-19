@@ -5,7 +5,7 @@
 	"description": "creates Svelte 3 backwards compatible types",
 	"type": "module",
 	"peerDependencies": {
-		"svelte": "^3.0.0 || ^4.0.0"
+		"svelte": "^5.0.0"
 	},
 	"exports": {
 		".": {

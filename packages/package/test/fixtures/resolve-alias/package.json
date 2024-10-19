@@ -5,7 +5,7 @@
 	"description": "package using $lib alias",
 	"type": "module",
 	"peerDependencies": {
-		"svelte": "^4.0.0"
+		"svelte": "^5.0.0"
 	},
 	"exports": {
 		".": {
