@@ -149,29 +149,33 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			builder.writePrerendered(bucket_dir);
 		},
 
-		async emulate() {
-			const proxy = await getPlatformProxy(platformProxy);
-			const platform = /** @type {App.Platform} */ ({
-				env: proxy.env,
-				context: proxy.ctx,
-				caches: proxy.caches,
-				cf: proxy.cf
-			});
-
-			/** @type {Record<string, any>} */
-			const env = {};
-			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-
-			for (const key in proxy.env) {
-				Object.defineProperty(env, key, {
-					get: () => {
-						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-					}
+		emulate() {
+			const getting_platform = (async () => {
+				const proxy = await getPlatformProxy(platformProxy);
+				const platform = /** @type {App.Platform} */ ({
+					env: proxy.env,
+					context: proxy.ctx,
+					caches: proxy.caches,
+					cf: proxy.cf
 				});
-			}
+
+				/** @type {Record<string, any>} */
+				const env = {};
+				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+
+				for (const key in proxy.env) {
+					Object.defineProperty(env, key, {
+						get: () => {
+							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+						}
+					});
+				}
+				return { platform, prerender_platform };
+			})();
 
 			return {
-				platform: ({ prerender }) => {
+				platform: async ({ prerender }) => {
+					const { platform, prerender_platform } = await getting_platform;
 					return prerender ? prerender_platform : platform;
 				}
 			};
