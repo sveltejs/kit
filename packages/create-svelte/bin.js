@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import * as p from '@clack/prompts';
+import { bold, cyan, grey, yellow } from 'kleur/colors';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import * as p from '@clack/prompts';
-import { bold, cyan, grey, yellow } from 'kleur/colors';
 import { create } from './index.js';
 import { dist, package_manager } from './utils.js';
 
@@ -99,10 +99,6 @@ const options = await p.group(
 					{
 						value: 'vitest',
 						label: 'Add Vitest for unit testing'
-					},
-					{
-						value: 'svelte5',
-						label: 'Try the Svelte 5 preview (unstable!)'
 					}
 				]
 			})
@@ -117,8 +113,7 @@ await create(cwd, {
 	prettier: options.features.includes('prettier'),
 	eslint: options.features.includes('eslint'),
 	playwright: options.features.includes('playwright'),
-	vitest: options.features.includes('vitest'),
-	svelte5: options.features.includes('svelte5')
+	vitest: options.features.includes('vitest')
 });
 
 p.outro('Your project is ready!');
