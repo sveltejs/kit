@@ -90,8 +90,7 @@ export async function migrate() {
 			({ migrate } = await import_from_cwd('svelte/compiler'));
 			if (!migrate) throw new Error('found Svelte 4');
 		} catch {
-			// TODO replace with svelte@5 once it's released
-			execSync('npm install svelte@next --no-save', {
+			execSync('npm install svelte@^5.0.0 --no-save', {
 				stdio: 'inherit',
 				cwd: dirname(fileURLToPath(import.meta.url))
 			});

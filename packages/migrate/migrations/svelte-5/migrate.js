@@ -14,12 +14,12 @@ export function update_pkg_json() {
  */
 export function update_pkg_json_content(content) {
 	return update_pkg(content, [
-		['svelte', '^5.0.0-next.0'],
+		['svelte', '^5.0.0'],
 		['svelte-check', '^4.0.0'],
 		['svelte-preprocess', '^6.0.0'],
 		['@sveltejs/enhanced-img', '^0.3.6'],
 		['@sveltejs/kit', '^2.5.27'],
-		['@sveltejs/vite-plugin-svelte', '^4.0.0-next.0'],
+		['@sveltejs/vite-plugin-svelte', '^4.0.0'],
 		[
 			'svelte-loader',
 			'^3.2.3',
