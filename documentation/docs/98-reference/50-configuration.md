@@ -26,8 +26,12 @@ const config = {
 export default config;
 ```
 
-> TYPES: @sveltejs/kit#Config
+## Config
+
+> TYPES: Configuration#Config
+
+## KitConfig
 
 The `kit` property configures SvelteKit, and can have the following properties:
 
-> EXPANDED_TYPES: @sveltejs/kit#KitConfig
+> EXPANDED_TYPES: Configuration#KitConfig
