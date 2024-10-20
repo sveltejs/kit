@@ -138,7 +138,7 @@ let i = 1;
 
 const relative = path.relative(process.cwd(), cwd);
 if (relative !== '') {
-	console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
+	console.log(`  ${i++}: ${bold(cyan(`cd "${relative}"`))}`);
 }
 
 console.log(`  ${i++}: ${bold(cyan(`${package_manager} install`))}`);
