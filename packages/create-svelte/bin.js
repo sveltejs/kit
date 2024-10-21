@@ -1,1 +1,3 @@
-console.log(`'npm create svelte' has been replaced with 'npx sv create'`);
+#!/usr/bin/env node
+
+console.log("'npm create svelte' has been replaced with 'npx sv create'");
