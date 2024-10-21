@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.6
+### Patch Changes
+
+
+- docs: demonstrate sv migrate over prior commands ([#12840](https://github.com/sveltejs/kit/pull/12840))
+
 ## 2.3.5
 ### Patch Changes
 
