@@ -1,0 +1,5 @@
+name = "svelte-cloudflare-test"
+
+kv_namespaces = [
+  { binding = "TEST_NAMESPACE", id = "c9f87d3580e24ccc8743d6c8c0d1428c" }
+]
