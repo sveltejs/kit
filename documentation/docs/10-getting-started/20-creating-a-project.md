@@ -2,10 +2,10 @@
 title: Creating a project
 ---
 
-The easiest way to start building a SvelteKit app is to run `npm create`:
+The easiest way to start building a SvelteKit app is to run `npx sv create`:
 
 ```bash
-npm create svelte@latest my-app
+npx sv create my-app
 cd my-app
 npm install
 npm run dev

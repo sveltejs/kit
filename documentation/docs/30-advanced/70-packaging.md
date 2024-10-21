@@ -2,7 +2,7 @@
 title: Packaging
 ---
 
-You can use SvelteKit to build apps as well as component libraries, using the `@sveltejs/package` package (`npm create svelte` has an option to set this up for you).
+You can use SvelteKit to build apps as well as component libraries, using the `@sveltejs/package` package (`npx sv create` has an option to set this up for you).
 
 When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`]($lib) contains your app's internal library.
 
@@ -59,7 +59,7 @@ Read more about it [here](https://docs.npmjs.com/cli/v9/configuring-npm/package-
 
 ### exports
 
-The `"exports"` field contains the package's entry points. If you set up a new library project through `npm create svelte@latest`, it's set to a single export, the package root:
+The `"exports"` field contains the package's entry points. If you set up a new library project through `npx sv create`, it's set to a single export, the package root:
 
 ```json
 {
@@ -157,7 +157,7 @@ This will treat only the specified files as having side effects.
 
 ## TypeScript
 
-You should ship type definitions for your library even if you don't use TypeScript yourself so that people who do get proper intellisense when using your library. `@sveltejs/package` makes the process of generating types mostly opaque to you. By default, when packaging your library, type definitions are auto-generated for JavaScript, TypeScript and Svelte files. All you need to ensure is that the `types` condition in the [exports](#Anatomy-of-a-package.json-exports) map points to the correct files. When initialising a library project through `npm create svelte@latest`, this is automatically setup for the root export.
+You should ship type definitions for your library even if you don't use TypeScript yourself so that people who do get proper intellisense when using your library. `@sveltejs/package` makes the process of generating types mostly opaque to you. By default, when packaging your library, type definitions are auto-generated for JavaScript, TypeScript and Svelte files. All you need to ensure is that the `types` condition in the [exports](#Anatomy-of-a-package.json-exports) map points to the correct files. When initialising a library project through `npx sv create`, this is automatically setup for the root export.
 
 If you have something else than a root export however — for example providing a `your-library/foo` import — you need to take additional care for providing type definitions. Unfortunately, TypeScript by default will _not_ resolve the `types` condition for an export like `{ "./foo": { "types": "./dist/foo.d.ts", ... }}`. Instead, it will search for a `foo.d.ts` relative to the root of your library (i.e. `your-library/foo.d.ts` instead of `your-library/dist/foo.d.ts`). To fix this, you have two options:
 

@@ -17,11 +17,17 @@ export default {
 
 ## Adders
 
-Run `npx svelte-add` to setup many different complex integrations with a single command including:
-- CSS - Tailwind, Bootstrap, Bulma
-- database - Drizzle ORM
-- markdown - mdsvex
-- Storybook
+Run `npx sv add` to setup many different complex integrations with a single command including:
+- prettier (formatting)
+- eslint (linting)
+- vitest (unit testing)
+- playwright (e2e testing)
+- lucia (auth)
+- tailwind (CSS)
+- drizzle (DB)
+- paraglide (i18n)
+- mdsvex (markdown)
+- storybook (frontend workshop)
 
 ## Directory
 

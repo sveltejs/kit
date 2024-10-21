@@ -2,7 +2,7 @@
 title: Zero-config deployments
 ---
 
-When you create a new SvelteKit project with `npm create svelte@latest`, it installs [`adapter-auto`](https://github.com/sveltejs/kit/tree/main/packages/adapter-auto) by default. This adapter automatically installs and uses the correct adapter for supported environments when you deploy:
+When you create a new SvelteKit project with `npx sv create`, it installs [`adapter-auto`](https://github.com/sveltejs/kit/tree/main/packages/adapter-auto) by default. This adapter automatically installs and uses the correct adapter for supported environments when you deploy:
 
 - [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for [Cloudflare Pages](https://developers.cloudflare.com/pages/)
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for [Netlify](https://netlify.com/)

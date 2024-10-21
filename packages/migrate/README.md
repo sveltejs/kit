@@ -2,16 +2,16 @@
 
 A CLI for migrating Svelte(Kit) codebases.
 
-Run it using
+Run it directly using:
 
 ```
 npx svelte-migrate [migration]
 ```
 
-Or if you're using `pnpm`:
+Or via the unified Svlete CLI with:
 
 ```
-pnpm dlx svelte-migrate [migration]
+npx sv migrate [migration]
 ```
 
 ## Migrations
