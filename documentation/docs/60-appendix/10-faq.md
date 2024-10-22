@@ -4,7 +4,7 @@ title: Frequently asked questions
 
 ## Other resources
 
-Please see [the Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) as well for the answers to questions deriving from those libraries.
+Please see [the Svelte FAQ](../svelte/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) as well for the answers to questions deriving from those libraries.
 
 ## What can I make with SvelteKit?
 
@@ -29,7 +29,7 @@ It is also possible to write custom adapters or leverage community adapters to d
 
 ## How do I use HMR with SvelteKit?
 
-SvelteKit has HMR enabled by default powered by [svelte-hmr](https://github.com/sveltejs/svelte-hmr). If you saw [Rich's presentation at the 2020 Svelte Summit](https://svelte.dev/blog/whats-the-deal-with-sveltekit), you may have seen a more powerful-looking version of HMR presented. This demo had `svelte-hmr`'s `preserveLocalState` flag on. This flag is now off by default because it may lead to unexpected behaviour and edge cases. But don't worry, you are still getting HMR with SvelteKit! If you'd like to preserve local state you can use the `@hmr:keep` or `@hmr:keep-all` directives as documented on the [svelte-hmr](https://github.com/sveltejs/svelte-hmr) page.
+SvelteKit has HMR enabled by default powered by [svelte-hmr](https://github.com/sveltejs/svelte-hmr). If you saw [Rich's presentation at the 2020 Svelte Summit](/blog/whats-the-deal-with-sveltekit), you may have seen a more powerful-looking version of HMR presented. This demo had `svelte-hmr`'s `preserveLocalState` flag on. This flag is now off by default because it may lead to unexpected behaviour and edge cases. But don't worry, you are still getting HMR with SvelteKit! If you'd like to preserve local state you can use the `@hmr:keep` or `@hmr:keep-all` directives as documented on the [svelte-hmr](https://github.com/sveltejs/svelte-hmr) page.
 
 ## How do I include details from package.json in my application?
 
@@ -83,7 +83,7 @@ onNavigate((navigation) => {
 });
 ```
 
-For more, see ["Unlocking view transitions"](https://svelte.dev/blog/view-transitions) on the Svelte blog.
+For more, see ["Unlocking view transitions"](/blog/view-transitions) on the Svelte blog.
 
 ## How do I use X with SvelteKit?
 

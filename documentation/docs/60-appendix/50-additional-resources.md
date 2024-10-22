@@ -4,9 +4,9 @@ title: Additional resources
 
 ## FAQs
 
-Please see the [SvelteKit FAQ](../faq) for solutions to common issues and helpful tips and tricks.
+Please see the [SvelteKit FAQ](faq) for solutions to common issues and helpful tips and tricks.
 
-The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) may also be helpful for questions deriving from those libraries.
+The [Svelte FAQ](../svelte/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) may also be helpful for questions deriving from those libraries.
 
 ## Examples
 
