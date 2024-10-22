@@ -101,7 +101,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ## Documentation changes
 
-All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev) and can be run locally to preview changes.
+All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sveltejs/svelte.dev` repo](https://github.com/sveltejs/svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
 
