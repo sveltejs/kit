@@ -151,8 +151,8 @@ export async function migrate() {
 	const tasks = [
 		'Run npm install (or the corresponding installation command of your package manager)',
 		use_git && cyan('git commit -m "migration to SvelteKit 2"'),
-		'Review the migration guide at https://kit.svelte.dev/docs/migrating-to-sveltekit-2',
-		'Read the updated docs at https://kit.svelte.dev/docs'
+		'Review the migration guide at https://svelte.dev/docs/kit/migrating-to-sveltekit-2',
+		'Read the updated docs at https://svelte.dev/docs/kit'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {

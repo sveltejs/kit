@@ -18,7 +18,7 @@
 		"vite"
 	],
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"scripts": {
 		"lint": "prettier --check .",

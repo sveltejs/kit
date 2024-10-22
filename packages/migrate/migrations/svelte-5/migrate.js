@@ -33,7 +33,7 @@ export function update_pkg_json_content(content) {
 		[
 			'eslint-plugin-svelte3',
 			'^4.0.0',
-			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
+			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/svelte/v4-migration-guide#new-eslint-package)'
 		],
 		[
 			'typescript',

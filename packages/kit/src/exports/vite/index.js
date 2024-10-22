@@ -93,7 +93,7 @@ const warning_preprocessor = {
 
 				const message =
 					`\n${colors.bold().red(path.relative('.', filename))}\n` +
-					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://kit.svelte.dev/docs/page-options for more information.`;
+					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
 					console.log(message);
@@ -900,7 +900,7 @@ async function kit({ svelte_config }) {
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
-						const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+						const link = colors.bold().cyan('https://svelte.dev/docs/kit/adapters');
 						console.log(
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
