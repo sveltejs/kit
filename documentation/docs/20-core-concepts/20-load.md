@@ -120,8 +120,8 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 +++	// we can access `data.posts` because it's returned from
 	// the parent layout `load` function
-	$: index = data.posts.findIndex(post => post.slug === $page.params.slug);
-	$: next = data.posts[index - 1];+++
+	let index = $derived(data.posts.findIndex(post => post.slug === $page.params.slug));
+	let next = $derived(data.posts[index - 1];)+++
 </script>
 
 <h1>{data.post.title}</h1>
