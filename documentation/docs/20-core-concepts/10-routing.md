@@ -394,6 +394,6 @@ If components and modules are needed by multiple routes, it's a good idea to put
 
 ## Further reading
 
-- [Tutorial: Routing](../tutorial/kit/pages)
-- [Tutorial: API routes](../tutorial/kit/get-handlers)
+- [Tutorial: Routing](/tutorial/kit/pages)
+- [Tutorial: API routes](/tutorial/kit/get-handlers)
 - [Docs: Advanced routing](advanced-routing)

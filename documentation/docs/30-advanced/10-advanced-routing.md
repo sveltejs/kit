@@ -287,4 +287,4 @@ export function load(event) {
 
 ## Further reading
 
-- [Tutorial: Advanced Routing](../tutorial/kit/optional-params)
+- [Tutorial: Advanced Routing](/tutorial/kit/optional-params)

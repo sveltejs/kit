@@ -61,4 +61,4 @@ This feature also works with dynamic imports, even interpolated ones like ``awai
 
 ## Further reading
 
-- [Tutorial: Environment variables](../tutorial/kit/env-static-private)
+- [Tutorial: Environment variables](/tutorial/kit/env-static-private)
