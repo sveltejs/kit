@@ -82,7 +82,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 
 ## Using stores with context
 
-You might wonder how we're able to use `$page.data` and other [app stores]($app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](../tutorial/svelte/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
+You might wonder how we're able to use `$page.data` and other [app stores]($app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
@@ -143,7 +143,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 
 ...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the layout, page and any other components within to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will update (as it would with any other Svelte component) and, because the code isn't rerunning, lifecycle methods like `onMount` and `onDestroy` won't rerun and `estimatedReadingTime` won't be recalculated.
 
-Instead, we need to make the value [_reactive_](../tutorial/svelte/state):
+Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
 
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
