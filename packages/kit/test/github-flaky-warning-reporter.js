@@ -1,3 +1,5 @@
+import { appendFileSync } from 'node:fs';
+
 /**
  * @class
  * @implements {import('@playwright/test/reporter').Reporter}
@@ -24,12 +26,17 @@ export default class GithubFlakyWarningReporter {
 	}
 
 	onEnd() {
-		this._flaky.forEach(({ file, line, title, message }) => {
-			console.log(`::warning file=${file},line=${line},title=${title}::${message}`);
-		});
+		const output = this._flaky
+			.map(
+				({ file, line, title, message }) =>
+					`::warning file=${file},line=${line},title=${title}::${message}\n`
+			)
+			.join('');
+
+		appendFileSync(new URL('../../../_tmp_flaky_test_output.txt', import.meta.url), output);
 	}
 
 	printsToStdio() {
-		return true;
+		return false;
 	}
 }

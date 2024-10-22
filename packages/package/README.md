@@ -5,7 +5,7 @@ Create Svelte packages, build and push them to npm. This is part of the [SvelteK
 The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) package:
 
 ```bash
-npm create svelte@latest my-app
+npm sv create my-app
 cd my-app
 npm install
 npm run dev

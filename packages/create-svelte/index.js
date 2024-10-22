@@ -3,6 +3,7 @@ import path from 'node:path';
 import { mkdirp, copy, dist } from './utils.js';
 
 /** @type {import('./types/index.js').create} */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function create(cwd, options) {
 	mkdirp(cwd);
 

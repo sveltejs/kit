@@ -27,7 +27,7 @@ Your browser also includes useful developer tools for analysing your site, wheth
 * Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
 * Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
-Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](/docs/building-your-app#preview-your-app) mode after building.
+Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](building-your-app#Preview-your-app) mode after building.
 
 ### Instrumenting
 
@@ -37,7 +37,7 @@ If you see in the network tab of your browser that an API call is taking a long 
 
 ### Images
 
-Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-image` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
+Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-img` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
 
 ### Videos
 
@@ -49,7 +49,7 @@ Video files can be very large, so extra care should be taken to ensure that they
 
 ### Fonts
 
-SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
+SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#Server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
 
 You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
 
@@ -71,7 +71,7 @@ To run third party scripts in a web worker (which avoids blocking the main threa
 
 ### Selective loading
 
-Code imported with static `import` declarations will be automatically bundled with the rest of your page. If there is a piece of code you need only when some condition is met, use the dynamic `import(...)` form instead.
+Code imported with static `import` declarations will be automatically bundled with the rest of your page. If there is a piece of code you need only when some condition is met, use the dynamic `import(...)` form to selectively lazy-load the component.
 
 ## Navigation
 
@@ -81,7 +81,7 @@ You can speed up client-side navigations by eagerly preloading the necessary cod
 
 ### Non-essential data
 
-For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#streaming-with-promises) in after the navigation (or initial page load).
+For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#Streaming-with-promises) in after the navigation (or initial page load).
 
 ### Preventing waterfalls
 

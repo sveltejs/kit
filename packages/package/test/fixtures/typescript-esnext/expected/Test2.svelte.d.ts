@@ -8,6 +8,8 @@ declare const __propDef: {
 		[evt: string]: CustomEvent<any>;
 	};
 	slots: {};
+	exports?: {};
+	bindings?: string;
 };
 export type Test2Props = typeof __propDef.props;
 export type Test2Events = typeof __propDef.events;

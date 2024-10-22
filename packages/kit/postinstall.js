@@ -1,7 +1,7 @@
 import { load_config } from './src/core/config/index.js';
-import * as sync from './src/core/sync/sync.js';
 import glob from 'tiny-glob/sync.js';
 import fs from 'node:fs';
+import process from 'node:process';
 
 try {
 	const cwd = process.env.INIT_CWD ?? process.cwd();
@@ -38,9 +38,12 @@ try {
 			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 			if (!pkg.dependencies?.['@sveltejs/kit'] && !pkg.devDependencies?.['@sveltejs/kit']) continue;
 
+			// defer import until after the chdir so that peer dependency resolves correctly
+			const sync = await import('./src/core/sync/sync.js');
+
 			try {
 				const config = await load_config();
-				await sync.all(config, 'development');
+				sync.all(config, 'development');
 			} catch (error) {
 				console.error('Error while trying to sync SvelteKit config');
 				console.error(error);

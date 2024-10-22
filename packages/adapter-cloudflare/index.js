@@ -1,13 +1,35 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { getPlatformProxy } from 'wrangler';
+
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+const compatible_node_modules = [
+	'assert',
+	'async_hooks',
+	'buffer',
+	'crypto',
+	'diagnostics_channel',
+	'events',
+	'path',
+	'process',
+	'stream',
+	'string_decoder',
+	'util'
+];
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
+			if (existsSync('_routes.json')) {
+				throw new Error(
+					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+				);
+			}
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
@@ -36,7 +58,7 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const app_path = ${JSON.stringify(builder.getAppPath())};\n`
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			writeFileSync(
@@ -46,6 +68,12 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
+			if (builder.prerendered.redirects.size > 0) {
+				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
+					flag: 'a'
+				});
+			}
+
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
@@ -53,21 +81,95 @@ export default function (options = {}) {
 				}
 			});
 
-			await esbuild.build({
-				platform: 'browser',
-				conditions: ['worker', 'browser'],
-				sourcemap: 'linked',
-				target: 'es2022',
-				entryPoints: [`${tmp}/_worker.js`],
-				outfile: `${dest}/_worker.js`,
-				allowOverwrite: true,
-				format: 'esm',
-				bundle: true,
-				loader: {
-					'.wasm': 'copy'
-				},
-				external: ['cloudflare:*']
+			const external = ['cloudflare:*', ...compatible_node_modules.map((id) => `node:${id}`)];
+
+			try {
+				const result = await esbuild.build({
+					platform: 'browser',
+					// https://github.com/cloudflare/workers-sdk/blob/a12b2786ce745f24475174bcec994ad691e65b0f/packages/wrangler/src/deployment-bundle/bundle.ts#L35-L36
+					conditions: ['workerd', 'worker', 'browser'],
+					sourcemap: 'linked',
+					target: 'es2022',
+					entryPoints: [`${tmp}/_worker.js`],
+					outfile: `${dest}/_worker.js`,
+					allowOverwrite: true,
+					format: 'esm',
+					bundle: true,
+					loader: {
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
+					},
+					external,
+					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
+					logLevel: 'silent'
+				});
+
+				if (result.warnings.length > 0) {
+					const formatted = await esbuild.formatMessages(result.warnings, {
+						kind: 'warning',
+						color: true
+					});
+
+					console.error(formatted.join('\n'));
+				}
+			} catch (error) {
+				for (const e of error.errors) {
+					for (const node of e.notes) {
+						const match =
+							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+								node.text
+							);
+
+						if (match) {
+							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
+						}
+					}
+				}
+
+				const formatted = await esbuild.formatMessages(error.errors, {
+					kind: 'error',
+					color: true
+				});
+
+				console.error(formatted.join('\n'));
+
+				throw new Error(
+					`Bundling with esbuild failed with ${error.errors.length} ${
+						error.errors.length === 1 ? 'error' : 'errors'
+					}`
+				);
+			}
+		},
+		async emulate() {
+			const proxy = await getPlatformProxy(options.platformProxy);
+			const platform = /** @type {App.Platform} */ ({
+				env: proxy.env,
+				context: proxy.ctx,
+				caches: proxy.caches,
+				cf: proxy.cf
 			});
+
+			/** @type {Record<string, any>} */
+			const env = {};
+			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+
+			for (const key in proxy.env) {
+				Object.defineProperty(env, key, {
+					get: () => {
+						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+					}
+				});
+			}
+
+			return {
+				platform: ({ prerender }) => {
+					return prerender ? prerender_platform : platform;
+				}
+			};
 		}
 	};
 }
@@ -108,18 +210,11 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 								file === '_redirects'
 							)
 					)
-					.map((file) => `/${file}`);
+					.map((file) => `${builder.config.kit.paths.base}/${file}`);
 			}
 
 			if (rule === '<prerendered>') {
-				const prerendered = [];
-				for (const path of builder.prerendered.paths) {
-					if (!builder.prerendered.redirects.has(path)) {
-						prerendered.push(path);
-					}
-				}
-
-				return prerendered;
+				return builder.prerendered.paths;
 			}
 
 			return rule;
@@ -152,5 +247,19 @@ function generate_headers(app_dir) {
   ! Cache-Control
 	Cache-Control: public, immutable, max-age=31536000
 # === END AUTOGENERATED SVELTE IMMUTABLE HEADERS ===
+`.trimEnd();
+}
+
+/** @param {Map<string, { status: number; location: string }>} redirects */
+function generate_redirects(redirects) {
+	const rules = Array.from(
+		redirects.entries(),
+		([path, redirect]) => `${path} ${redirect.location} ${redirect.status}`
+	).join('\n');
+
+	return `
+# === START AUTOGENERATED SVELTE PRERENDERED REDIRECTS ===
+${rules}
+# === END AUTOGENERATED SVELTE PRERENDERED REDIRECTS ===
 `.trimEnd();
 }

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import process from 'node:process';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -246,7 +247,7 @@ const options = object(
 
 					try {
 						origin = new URL(input).origin;
-					} catch (e) {
+					} catch {
 						throw new Error(`${keypath} must be a valid origin`);
 					}
 

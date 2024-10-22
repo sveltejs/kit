@@ -4,8 +4,7 @@
 
 	export let data;
 
-	$: pageData = $page.data.page;
-	$: category = pageData?.category;
+	$: category = $page.data.page?.category;
 </script>
 
 <div class="container">

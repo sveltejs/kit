@@ -1,5 +1,6 @@
 import colors from 'kleur';
 import fs from 'node:fs';
+import process from 'node:process';
 import prompts from 'prompts';
 import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
@@ -60,7 +61,7 @@ export async function migrate() {
 			colors
 				.bold()
 				.yellow(
-					'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
+					'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx sv migrate svelte-4`).\n'
 				)
 		);
 		const response = await prompts({

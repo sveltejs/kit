@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 
-import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -31,9 +31,10 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_environment,
-	sveltekit_paths
+	sveltekit_paths,
+	sveltekit_server
 } from './module_ids.js';
-import { pathToFileURL } from 'node:url';
+import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
 
@@ -123,23 +124,6 @@ const warning_preprocessor = {
 };
 
 /**
- * Resolve a dependency relative to the current working directory,
- * rather than relative to this package
- * @param {string} dependency
- */
-async function resolve_peer_dependency(dependency) {
-	try {
-		// @ts-expect-error the types are wrong
-		const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
-		return import(resolved);
-	} catch (e) {
-		throw new Error(
-			`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
-		);
-	}
-}
-
-/**
  * Returns the SvelteKit Vite plugins.
  * @returns {Promise<import('vite').Plugin[]>}
  */
@@ -163,7 +147,6 @@ export async function sveltekit() {
 		preprocess,
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
-			// @ts-expect-error SvelteKit requires hydratable true by default
 			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
@@ -224,6 +207,13 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
+	/**
+	 * A map showing which features (such as `$app/server:read`) are defined
+	 * in which chunks, so that we can later determine which routes use which features
+	 * @type {Record<string, string[]>}
+	 */
+	const tracked_features = {};
+
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
@@ -235,7 +225,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -286,6 +276,10 @@ async function kit({ svelte_config }) {
 					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
+					entries: [
+						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
+						`!${kit.files.routes}/**/+*server.*`
+					],
 					exclude: [
 						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
@@ -328,7 +322,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 				}
 			} else {
 				new_config.define = {
@@ -362,7 +356,7 @@ async function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		async resolveId(id, importer) {
+		resolveId(id, importer) {
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
@@ -386,7 +380,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		async load(id, options) {
+		load(id, options) {
 			const browser = !options?.ssr;
 
 			const global = is_build
@@ -492,13 +486,29 @@ async function kit({ svelte_config }) {
 						}
 					`;
 				}
+
+				case sveltekit_server: {
+					return dedent`
+						export let read_implementation = null;
+
+						export let manifest = null;
+
+						export function set_read_implementation(fn) {
+							read_implementation = fn;
+						}
+
+						export function set_manifest(_) {
+							manifest = _;
+						}
+					`;
+				}
 			}
 		}
 	};
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
 	 * @type {import('vite').Plugin}
 	 */
 	const plugin_guard = {
@@ -506,7 +516,7 @@ async function kit({ svelte_config }) {
 
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			handler(_options) {
 				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
@@ -533,7 +543,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config) {
+		config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
@@ -621,7 +631,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node18.13' : 'es2022'
+						target: ssr ? 'node18.13' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -685,6 +695,19 @@ async function kit({ svelte_config }) {
 			}
 		},
 
+		renderChunk(code, chunk) {
+			if (code.includes('__SVELTEKIT_TRACK__')) {
+				return {
+					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+						(tracked_features[chunk.name + '.js'] ??= []).push(label);
+						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
+						return `/* track ${label}            */`;
+					}),
+					map: null // TODO we may need to generate a sourcemap in future
+				};
+			}
+		},
+
 		generateBundle() {
 			if (vite_config.build.ssr) return;
 
@@ -716,6 +739,7 @@ async function kit({ svelte_config }) {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
+					out_dir: out,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest
@@ -738,6 +762,9 @@ async function kit({ svelte_config }) {
 
 				const metadata = await analyse({
 					manifest_path,
+					manifest_data,
+					server_manifest,
+					tracked_features,
 					env: { ...env.private, ...env.public }
 				});
 
