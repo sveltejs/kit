@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 3.3.0
+### Minor Changes
+
+
+- feat: add support for Bun package manager ([#12854](https://github.com/sveltejs/kit/pull/12854))
+
 ## 3.2.5
 ### Patch Changes
 
