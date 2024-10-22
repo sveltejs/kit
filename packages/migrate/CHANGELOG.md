@@ -1,5 +1,14 @@
 # svelte-migrate
 
+## 1.6.5
+### Patch Changes
+
+
+- docs: demonstrate sv migrate over prior commands ([#12840](https://github.com/sveltejs/kit/pull/12840))
+
+
+- fix: bump enhanced-img version to avoid peer dep warning ([#12852](https://github.com/sveltejs/kit/pull/12852))
+
 ## 1.6.4
 ### Patch Changes
 
