@@ -171,7 +171,7 @@ declare module '@sveltejs/kit' {
 
 	export interface Config {
 		/**
-		 * Options passed to [`svelte.compile`](https://svelte.dev/docs#compile-time-svelte-compile).
+		 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
 		 * @default {}
 		 */
 		compilerOptions?: CompileOptions;
@@ -333,7 +333,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * > [!NOTE] When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 		 *
-		 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+		 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/svelte/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 		 *
 		 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) to roll your own CSP.
 		 */
@@ -379,12 +379,12 @@ declare module '@sveltejs/kit' {
 			 */
 			dir?: string;
 			/**
-			 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://kit.svelte.dev/docs/modules#$env-static-public) and [`$env/dynamic/public`](https://svelte.dev/docs/kit/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
+			 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://svelte.dev/docs/kit/modules#$env-static-public) and [`$env/dynamic/public`](https://svelte.dev/docs/kit/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 			 * @default "PUBLIC_"
 			 */
 			publicPrefix?: string;
 			/**
-			 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://kit.svelte.dev/docs/modules#$env-static-private) and [`$env/dynamic/private`](https://svelte.dev/docs/kit/modules#$env-dynamic-private).
+			 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://svelte.dev/docs/kit/modules#$env-static-private) and [`$env/dynamic/private`](https://svelte.dev/docs/kit/modules#$env-dynamic-private).
 			 * @default ""
 			 * @since 1.21.0
 			 */
@@ -660,7 +660,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The [`handle`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Request) and
+	 * The [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Request) and
 	 * determines the [response](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Response).
 	 * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
 	 * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
@@ -1004,7 +1004,7 @@ declare module '@sveltejs/kit' {
 		 */
 		data: App.PageData & Record<string, any>;
 		/**
-		 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://svelte.dev/docs/kit/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+		 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/modules#$app-navigation-pushstate) and [`replaceState`](https://svelte.dev/docs/kit/modules#$app-navigation-replacestate) functions from `$app/navigation`.
 		 */
 		state: App.PageState;
 		/**
@@ -2282,7 +2282,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://svelte.dev/docs/kit/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/modules#$app-navigation-pushstate) and [`replaceState`](https://svelte.dev/docs/kit/modules#$app-navigation-replacestate) functions from `$app/navigation`.
 	 */
 	export interface PageState {}
 

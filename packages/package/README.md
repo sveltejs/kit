@@ -1,8 +1,8 @@
 # The fastest way to build Svelte packages
 
-Create Svelte packages, build and push them to npm. This is part of the [SvelteKit](https://kit.svelte.dev) framework and CLI.
+[Build Svelte packages](https://svelte.dev/docs/kit/packaging) in correctly packaged format.
 
-The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) package:
+The quickest way to get started is via the [sv](https://npmjs.com/package/sv) package:
 
 ```bash
 npm sv create my-app
