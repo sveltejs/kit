@@ -15,7 +15,7 @@
 		"directory": "packages/migrate"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"bin": {
 		"svelte-migrate": "./bin.js"
