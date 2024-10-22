@@ -21,8 +21,7 @@
 		"*.js",
 		"scripts/**/*",
 		"src/**/*",
-		"src/types/**/*",
-		"../../sites/kit.svelte.dev/scripts/extract-types.js"
+		"src/types/**/*"
 	],
 	"exclude": ["./**/write_types/test/**"]
 }
