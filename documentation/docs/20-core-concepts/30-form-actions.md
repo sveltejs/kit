@@ -518,4 +518,4 @@ Submitting this form will navigate to `/search?q=...` and invoke your load funct
 
 ## Further reading
 
-- [Tutorial: Forms](https://learn.svelte.dev/tutorial/the-form-element)
+- [Tutorial: Forms](../tutorial/kit/the-form-element)

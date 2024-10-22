@@ -219,4 +219,4 @@ export const config = {
 
 ## Further reading
 
-- [Tutorial: Page options](https://learn.svelte.dev/tutorial/page-options)
+- [Tutorial: Page options](../tutorial/kit/page-options)

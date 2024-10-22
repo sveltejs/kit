@@ -144,5 +144,5 @@ This interface always includes a `message: string` property.
 
 ## Further reading
 
-- [Tutorial: Errors and redirects](https://learn.svelte.dev/tutorial/error-basics)
-- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)
+- [Tutorial: Errors and redirects](../tutorial/kit/error-basics)
+- [Tutorial: Hooks](../tutorial/kit/handle)

@@ -270,4 +270,4 @@ Using `reroute` will _not_ change the contents of the browser's address bar, or 
 
 ## Further reading
 
-- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)
+- [Tutorial: Hooks](../tutorial/kit/handle)
