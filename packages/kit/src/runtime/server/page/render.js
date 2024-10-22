@@ -566,9 +566,8 @@ function get_data(event, options, nodes, csp, global) {
 							str = devalue.uneval({ id, data, error }, replacer);
 						}
 
-						push(
-							`<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${global}.resolve(${str})</script>\n`
-						);
+						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
+						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
 						if (count === 0) done();
 					}
 				);
