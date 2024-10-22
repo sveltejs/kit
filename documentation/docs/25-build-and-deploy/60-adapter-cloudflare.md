@@ -108,11 +108,11 @@ For testing the build, you should use [wrangler](https://developers.cloudflare.c
 
 ## Notes
 
-Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](https://kit.svelte.dev/docs/routing#server) in your SvelteKit app.
+Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](routing#server) in your SvelteKit app.
 
 The `_headers` and `_redirects` files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
 
-However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](https://kit.svelte.dev/docs/routing#server) or with the [`handle`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) hook.
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
 
 ## Troubleshooting
 
@@ -122,4 +122,4 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 
 ### Accessing the file system
 
-You can't use `fs` in Cloudflare Workers — you must [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.
+You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#prerender) the routes in question.
