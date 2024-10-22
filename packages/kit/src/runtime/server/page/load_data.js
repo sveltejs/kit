@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
+import { b64_encode } from '../../utils.js';
 
 /**
  * Calls the user's server `load` function.
@@ -208,25 +209,6 @@ export async function load_data({
 }
 
 /**
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-function b64_encode(buffer) {
-	if (globalThis.Buffer) {
-		return Buffer.from(buffer).toString('base64');
-	}
-
-	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
-
-	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
-	return btoa(
-		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
-			new Uint16Array(new Uint8Array(buffer))
-		)
-	);
-}
-
-/**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
  * @param {import('./types.js').Fetched[]} fetched
@@ -366,7 +348,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
 						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route.id})`
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#Server-hooks-handle (at ${event.route.id})`
 						);
 					}
 				}

@@ -20,7 +20,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	const stylesheets = new Set();
 
 	/** @type {Set<string>} */
-	const fonts = new Set();
+	const imported_assets = new Set();
 
 	/**
 	 * @param {string} current
@@ -36,9 +36,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 
 		if (chunk.assets) {
 			for (const asset of chunk.assets) {
-				if (/\.(woff2?|ttf|otf)$/.test(asset)) {
-					fonts.add(asset);
-				}
+				imported_assets.add(asset);
 			}
 		}
 
@@ -59,11 +57,15 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 
 	traverse(file, true);
 
+	const assets = Array.from(imported_assets);
+
 	return {
+		assets,
 		file: chunk.file,
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets),
-		fonts: Array.from(fonts)
+		// TODO do we need this separately?
+		fonts: assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset))
 	};
 }
 

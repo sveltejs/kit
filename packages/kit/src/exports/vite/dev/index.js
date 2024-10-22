@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { URL } from 'node:url';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -15,6 +17,7 @@ import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
+import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
 
@@ -26,6 +29,15 @@ const cwd = process.cwd();
  */
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
+
+	const async_local_storage = new AsyncLocalStorage();
+
+	globalThis.__SVELTEKIT_TRACK__ = (label) => {
+		const context = async_local_storage.getStore();
+		if (!context || context.prerender === true) return;
+
+		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+	};
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
@@ -76,7 +88,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -86,9 +98,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	async function update_manifest() {
+	function update_manifest() {
 		try {
-			({ manifest_data } = await sync.create(svelte_config));
+			({ manifest_data } = sync.create(svelte_config));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -123,6 +135,13 @@ export async function dev(vite, vite_config, svelte_config) {
 					fonts: [],
 					uses_env_dynamic_public: true
 				},
+				server_assets: new Proxy(
+					{},
+					{
+						has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
+						get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
+					}
+				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
 						/** @type {import('types').SSRNode} */
@@ -251,11 +270,16 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
-		vite.ssrFixStacktrace(error);
+		try {
+			vite.ssrFixStacktrace(error);
+		} catch {
+			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
+			// by ignoring it the line numbers are wrong, but at least we can show the error
+		}
 		return error.stack;
 	}
 
-	await update_manifest();
+	update_manifest();
 
 	/**
 	 * @param {string} event
@@ -371,36 +395,31 @@ export async function dev(vite, vite_config, svelte_config) {
 		return ws_send.apply(vite.ws, args);
 	};
 
-	vite.middlewares.use(async (req, res, next) => {
-		try {
-			const base = `${vite.config.server.https ? 'https' : 'http'}://${
-				req.headers[':authority'] || req.headers.host
-			}`;
+	vite.middlewares.use((req, res, next) => {
+		const base = `${vite.config.server.https ? 'https' : 'http'}://${
+			req.headers[':authority'] || req.headers.host
+		}`;
 
-			const decoded = decodeURI(new URL(base + req.url).pathname);
+		const decoded = decodeURI(new URL(base + req.url).pathname);
 
-			if (decoded.startsWith(assets)) {
-				const pathname = decoded.slice(assets.length);
-				const file = svelte_config.kit.files.assets + pathname;
+		if (decoded.startsWith(assets)) {
+			const pathname = decoded.slice(assets.length);
+			const file = svelte_config.kit.files.assets + pathname;
 
-				if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-					if (has_correct_case(file, svelte_config.kit.files.assets)) {
-						req.url = encodeURI(pathname); // don't need query/hash
-						asset_server(req, res);
-						return;
-					}
+			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
+				if (has_correct_case(file, svelte_config.kit.files.assets)) {
+					req.url = encodeURI(pathname); // don't need query/hash
+					asset_server(req, res);
+					return;
 				}
 			}
-
-			next();
-		} catch (e) {
-			const error = coalesce_to_error(e);
-			res.statusCode = 500;
-			res.end(fix_stack_trace(error));
 		}
+
+		next();
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -470,7 +489,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const server = new Server(manifest);
 
-				await server.init({ env });
+				await server.init({
+					env,
+					read: (file) => createReadableStream(from_fs(file))
+				});
 
 				const request = await getRequest({
 					base,
@@ -505,7 +527,17 @@ export async function dev(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
+
+						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					},
+					emulator
 				});
 
 				if (rendered.status === 404) {

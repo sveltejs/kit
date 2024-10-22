@@ -13,6 +13,8 @@ declare const __propDef: {
 			astring: string;
 		};
 	};
+	exports?: {};
+	bindings?: string;
 };
 export type TestProps = typeof __propDef.props;
 export type TestEvents = typeof __propDef.events;

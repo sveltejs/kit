@@ -10,8 +10,8 @@ test.describe('embed', () => {
 		await page.goto('/embed');
 
 		if (javaScriptEnabled) {
-			expect(await page.textContent('[data-testid="a"]')).toBe('a (browser)');
-			expect(await page.textContent('[data-testid="b"]')).toBe('b (browser)');
+			await expect(page.getByTestId('a')).toHaveText('a (browser)');
+			await expect(page.getByTestId('b')).toHaveText('b (browser)');
 		} else {
 			expect(await page.textContent('[data-testid="a"]')).toBe('a (server)');
 			expect(await page.textContent('[data-testid="b"]')).toBe('b (server)');
