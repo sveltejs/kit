@@ -90,6 +90,9 @@ const get_defaults = (prefix = '') => ({
 			appTemplate: join(prefix, 'src/app.html'),
 			errorTemplate: join(prefix, 'src/error.html')
 		},
+		importMap: {
+			enabled: false
+		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
 		output: { preloadStrategy: 'modulepreload' },
