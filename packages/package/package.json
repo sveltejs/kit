@@ -17,7 +17,7 @@
 		"tool"
 	],
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
 		"chokidar": "^4.0.0",
