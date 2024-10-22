@@ -197,7 +197,7 @@ export async function handle_action_request(event, server) {
 function check_named_default_separate(actions) {
 	if (actions.default && Object.keys(actions).length > 1) {
 		throw new Error(
-			'When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions'
+			'When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions'
 		);
 	}
 }

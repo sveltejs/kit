@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-See the [documentation](https://kit.svelte.dev/docs) to learn more.
+See the [documentation](https://svelte.dev/docs/kit) to learn more.
 
 ## Changelog
 

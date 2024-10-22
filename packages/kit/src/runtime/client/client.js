@@ -1574,7 +1574,7 @@ function setup_preload() {
 									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
 										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
 										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://kit.svelte.dev/docs/link-options for more info'
+										'See https://svelte.dev/docs/kit/link-options for more info'
 								);
 							}
 						});
@@ -1717,12 +1717,12 @@ export function disableScrollHandling() {
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
  * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
  * @returns {Promise<void>}
  */
@@ -1861,7 +1861,7 @@ export function preloadCode(pathname) {
 }
 
 /**
- * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1905,7 +1905,7 @@ export function pushState(url, state) {
 }
 
 /**
- * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
