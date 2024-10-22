@@ -346,7 +346,7 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 <form method="POST" +++use:enhance+++>
 ```
 
-> `use:enhance` can only be used with forms that have `method="POST"`. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` will result in an error.
+> [!NOTE] `use:enhance` can only be used with forms that have `method="POST"`. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` will result in an error.
 
 > [!NOTE] Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
 
