@@ -128,6 +128,7 @@ const options = object(
 					universal: string(join('src', 'hooks'))
 				}),
 				lib: string(join('src', 'lib')),
+				nestedServerDirs: boolean(false),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),

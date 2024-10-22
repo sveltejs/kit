@@ -393,8 +393,11 @@ async function kit({ svelte_config }) {
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
+						lib: normalized_lib,
 						node_modules: vite.normalizePath(path.resolve('node_modules')),
-						server: vite.normalizePath(path.join(normalized_lib, 'server'))
+						server:
+							svelte_config.kit.files.nestedServerDirs ||
+							vite.normalizePath(path.join(normalized_lib, 'server'))
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
@@ -519,10 +522,14 @@ async function kit({ svelte_config }) {
 			handler(_options) {
 				if (vite_config.build.ssr) return;
 
-				const guard = module_guard(this, {
-					cwd: vite.normalizePath(process.cwd()),
-					lib: vite.normalizePath(kit.files.lib)
-				});
+				const guard = module_guard(
+					this,
+					{
+						cwd: vite.normalizePath(process.cwd()),
+						lib: vite.normalizePath(kit.files.lib)
+					},
+					svelte_config.kit.files.nestedServerDirs
+				);
 
 				manifest_data.nodes.forEach((_node, i) => {
 					const id = vite.normalizePath(
