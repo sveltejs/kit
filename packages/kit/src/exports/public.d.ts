@@ -189,7 +189,7 @@ export interface Builder {
 
 export interface Config {
 	/**
-	 * Options passed to [`svelte.compile`](https://svelte.dev/docs#compile-time-svelte-compile).
+	 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
 	 * @default {}
 	 */
 	compilerOptions?: CompileOptions;
@@ -351,7 +351,7 @@ export interface KitConfig {
 	 *
 	 * > [!NOTE] When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
-	 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/svelte/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 	 *
 	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) to roll your own CSP.
 	 */

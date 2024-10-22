@@ -30,7 +30,7 @@ export function update_pkg_json_content(content) {
 		[
 			'eslint-plugin-svelte3',
 			'^4.0.0',
-			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
+			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/svelte/v4-migration-guide#new-eslint-package)'
 		],
 		[
 			'typescript',
@@ -70,7 +70,7 @@ export function transform_svelte_code(code, migrate_transition) {
 function update_svelte_options(code) {
 	return code.replace(/<svelte:options([^]*?)\stag=([^]*?)\/?>/, (match) => {
 		log_migration(
-			'Replaced `svelte:options` `tag` attribute with `customElement` attribute: https://svelte.dev/docs/v4-migration-guide#custom-elements-with-svelte'
+			'Replaced `svelte:options` `tag` attribute with `customElement` attribute: https://svelte.dev/docs/svelte/v4-migration-guide#custom-elements-with-svelte'
 		);
 		return match.replace('tag=', 'customElement=');
 	});
@@ -87,7 +87,7 @@ function update_transitions(code, migrate_transition) {
 		const replaced = code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
 		if (replaced !== code) {
 			log_migration(
-				'Added `|global` to `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default'
+				'Added `|global` to `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/svelte/v4-migration-guide#transitions-are-local-by-default'
 			);
 		}
 		code = replaced;
@@ -95,7 +95,7 @@ function update_transitions(code, migrate_transition) {
 	const replaced = code.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
 	if (replaced !== code) {
 		log_migration(
-			'Removed `|local` from `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default'
+			'Removed `|local` from `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/svelte/v4-migration-guide#transitions-are-local-by-default'
 		);
 	}
 	return replaced;
@@ -109,7 +109,7 @@ function update_transitions(code, migrate_transition) {
 function update_action_types(source, is_ts) {
 	const logger = log_on_ts_modification(
 		source,
-		'Updated `Action` interface usages: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+		'Updated `Action` interface usages: https://svelte.dev/docs/svelte/v4-migration-guide#stricter-types-for-svelte-functions'
 	);
 
 	const imports = get_imports(source, 'svelte/action', 'Action');
@@ -152,7 +152,7 @@ function update_action_types(source, is_ts) {
 function update_action_return_types(source, is_ts) {
 	const logger = log_on_ts_modification(
 		source,
-		'Updated `ActionReturn` interface usages: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+		'Updated `ActionReturn` interface usages: https://svelte.dev/docs/svelte/v4-migration-guide#stricter-types-for-svelte-functions'
 	);
 
 	const imports = get_imports(source, 'svelte/action', 'ActionReturn');
@@ -192,7 +192,7 @@ function update_action_return_types(source, is_ts) {
 function update_imports(source, is_ts) {
 	const logger = log_on_ts_modification(
 		source,
-		'Replaced `SvelteComponentTyped` imports with `SvelteComponent` imports: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+		'Replaced `SvelteComponentTyped` imports with `SvelteComponent` imports: https://svelte.dev/docs/svelte/v4-migration-guide#stricter-types-for-svelte-functions'
 	);
 
 	const identifiers = find_identifiers(source, 'SvelteComponent');
@@ -252,7 +252,7 @@ function update_imports(source, is_ts) {
 function update_typeof_svelte_component(source, is_ts) {
 	const logger = log_on_ts_modification(
 		source,
-		'Adjusted `typeof SvelteComponent` to `typeof SvelteComponent<any>`: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+		'Adjusted `typeof SvelteComponent` to `typeof SvelteComponent<any>`: https://svelte.dev/docs/svelte/v4-migration-guide#stricter-types-for-svelte-functions'
 	);
 
 	const imports = get_imports(source, 'svelte', 'SvelteComponent');
