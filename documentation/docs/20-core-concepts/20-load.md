@@ -693,6 +693,6 @@ Putting an auth guard in `+layout.server.js` requires all child pages to call `a
 
 ## Further reading
 
-- [Tutorial: Loading data](../tutorial/kit/page-data)
-- [Tutorial: Errors and redirects](../tutorial/kit/error-basics)
-- [Tutorial: Advanced loading](../tutorial/kit/await-parent)
+- [Tutorial: Loading data](/tutorial/kit/page-data)
+- [Tutorial: Errors and redirects](/tutorial/kit/error-basics)
+- [Tutorial: Advanced loading](/tutorial/kit/await-parent)

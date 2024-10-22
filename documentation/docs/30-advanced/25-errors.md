@@ -144,5 +144,5 @@ This interface always includes a `message: string` property.
 
 ## Further reading
 
-- [Tutorial: Errors and redirects](../tutorial/kit/error-basics)
-- [Tutorial: Hooks](../tutorial/kit/handle)
+- [Tutorial: Errors and redirects](/tutorial/kit/error-basics)
+- [Tutorial: Hooks](/tutorial/kit/handle)
