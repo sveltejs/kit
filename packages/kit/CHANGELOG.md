@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.7.3
+### Patch Changes
+
+
+- fix: include importer in illegal import error message ([#12820](https://github.com/sveltejs/kit/pull/12820))
+
+
+- fix: better error message when a `Result` is returned from a form action ([#12829](https://github.com/sveltejs/kit/pull/12829))
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
 ## 2.7.2
 ### Patch Changes
 

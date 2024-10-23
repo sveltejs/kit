@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.6.6
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
 ## 1.6.5
 ### Patch Changes
 
