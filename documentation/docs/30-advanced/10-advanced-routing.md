@@ -260,7 +260,7 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 <!--- file: src/routes/nested/route/+layout@.svelte --->
 <script>
 	import ReusableLayout from '$lib/ReusableLayout.svelte';
-	export let data;
+	let { data } = $props();
 </script>
 
 <ReusableLayout {data}>

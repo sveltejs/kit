@@ -90,12 +90,14 @@ You might wonder how we're able to use `$page.data` and other [app stores]($app-
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
-	/** @type {import('./$types').LayoutData} */
-	export let data;
+	/** @type {{ data: import('./$types').LayoutData }} */
+	let { data } = $props();
 
 	// Create a store and update it when necessary...
-	const user = writable();
-	$: user.set(data.user);
+	const user = writable(data.user);
+	$effect.pre(() => {
+		user.set(data.user);
+	});
 
 	// ...and add it to the context for child components to access
 	setContext('user', user);
@@ -125,8 +127,8 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 	// THIS CODE IS BUGGY!
 	const wordCount = data.content.split(' ').length;
@@ -148,8 +150,8 @@ Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 +++	let wordCount = $state(data.content.split(' ').length);
 	let estimatedReadingTime = $derived(wordCount / 250);+++

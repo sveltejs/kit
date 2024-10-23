@@ -11,7 +11,7 @@ To do this, export a `snapshot` object with `capture` and `restore` methods from
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-	let comment = '';
+	let comment = $state('');
 
 	/** @type {import('./$types').Snapshot<string>} */
 	export const snapshot = {
