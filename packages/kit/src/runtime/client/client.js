@@ -2123,7 +2123,9 @@ function _start_router() {
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
 					window.scrollTo({ top: 0 });
 				} else {
-					a.ownerDocument.getElementById(decodeURIComponent(hash))?.scrollIntoView();
+					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
+					element?.scrollIntoView();
+					element?.focus();
 				}
 
 				return;
