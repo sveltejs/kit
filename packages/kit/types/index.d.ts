@@ -61,11 +61,12 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> = T extends ActionFailure<infer X>
-		? X
-		: T extends void
-			? undefined // needs to be undefined, because void will corrupt union type
-			: T;
+	type UnpackValidationError<T> =
+		T extends ActionFailure<infer X>
+			? X
+			: T extends void
+				? undefined // needs to be undefined, because void will corrupt union type
+				: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -706,7 +707,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
+	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
 	export type Reroute = (event: { url: URL }) => void | string;
@@ -742,7 +743,7 @@ declare module '@sveltejs/kit' {
 		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
 		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#cookies)
+		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies)
 		 */
 		fetch: typeof fetch;
 		/**
@@ -1014,7 +1015,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#matching) for more info.
+	 * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
 	 */
 	export type ParamMatcher = (param: string) => boolean;
 
@@ -1035,7 +1036,7 @@ declare module '@sveltejs/kit' {
 		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
 		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#cookies)
+		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies)
 		 */
 		fetch: typeof fetch;
 		/**
