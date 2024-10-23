@@ -2089,8 +2089,11 @@ function _start_router() {
 
 		if (download) return;
 
+		const [nonhash, hash] = url.href.split('#');
+		const same_pathname = nonhash === strip_hash(location);
+
 		// Ignore the following but fire beforeNavigate
-		if (external || options.reload) {
+		if (external || (options.reload && !same_pathname && !hash)) {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
@@ -2105,25 +2108,20 @@ function _start_router() {
 		// Check if new url only differs by hash and use the browser default behavior in that case
 		// This will ensure the `hashchange` event is fired
 		// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-		const [nonhash, hash] = url.href.split('#');
-		if (hash !== undefined && nonhash === strip_hash(location)) {
-			// If we are trying to navigate to the same hash, we should only
-			// attempt to scroll to that element and avoid any history changes.
-			// Otherwise, this can cause Firefox to incorrectly assign a null
-			// history state value without any signal that we can detect.
+		if (hash !== undefined && same_pathname) {
 			const [, current_hash] = current.url.href.split('#');
 			if (current_hash === hash) {
 				event.preventDefault();
-
-				// We're already on /# and click on a link that goes to /#, or we're on
-				// /#top and click on a link that goes to /#top. In those cases just go to
-				// the top of the page, and avoid a history change.
-				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					window.scrollTo({ top: 0 });
-				} else {
-					a.ownerDocument.getElementById(decodeURIComponent(hash))?.scrollIntoView();
-				}
-
+				setTimeout(() => {
+					const history_state = history.state;
+					// Mimic the browsers' behaviour and set the sequential focus navigation
+					// starting point to the fragment identifier
+					location.replace(location.hash);
+					// but Firefox has a bug that sets the history state as null so we
+					// need to restore the history state
+					// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
+					history.replaceState(history_state, '', location.hash);
+				});
 				return;
 			}
 			// set this flag to distinguish between navigations triggered by
