@@ -2124,8 +2124,10 @@ function _start_router() {
 					window.scrollTo({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
-					element?.scrollIntoView();
-					element?.focus();
+					if (element) {
+						element.scrollIntoView();
+						element.focus();
+					}
 				}
 
 				return;
