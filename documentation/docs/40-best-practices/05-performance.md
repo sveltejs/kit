@@ -57,7 +57,7 @@ You can reduce the size of font files by [subsetting](https://web.dev/learn/perf
 
 ### Svelte version
 
-We recommend running the latest version of Svelte. Svelte 5 is smaller and faster than Svelte 4. Svelte 4 is smaller and faster than Svlete 3. So, keeping up-to-date (v5) is the best way to enhance performance!
+We recommend running the latest version of Svelte. Svelte 5 is smaller and faster than Svelte 4, which is smaller and faster than Svelte 3.
 
 ### Packages
 
