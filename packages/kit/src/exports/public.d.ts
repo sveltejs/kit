@@ -826,7 +826,7 @@ export interface LoadEvent<
 	 * <script>
 	 * 	import { invalidate } from '$app/navigation';
 	 *
-	 * 	export let data;
+	 * 	let { data } = $props();
 	 *
 	 * 	const increase = async () => {
 	 * 		await invalidate('increase:count');
@@ -1250,7 +1250,7 @@ export interface ServerLoadEvent<
 	 * <script>
 	 * 	import { invalidate } from '$app/navigation';
 	 *
-	 * 	export let data;
+	 * 	export let { data } = $props();
 	 *
 	 * 	const increase = async () => {
 	 * 		await invalidate('increase:count');

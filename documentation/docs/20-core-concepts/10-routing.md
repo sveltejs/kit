@@ -37,16 +37,21 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 <a href="/">Home</a>
 ```
 
+Pages can receive data from `load` functions via the `data` prop.
+
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 </script>
 
 <h1>{data.title}</h1>
 <div>{@html data.content}</div>
 ```
+
+> [!LEGACY] In Svelte 4
+> In Svelte 4, you'd use `export let data` instead
 
 > [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
@@ -196,8 +201,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 ```svelte
 <!--- file: src/routes/settings/+layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutData} */
-	export let data;
+	/** @type {{ data: import('./$types').LayoutData }} */
+	let { data } = $props();
 </script>
 
 <h1>Settings</h1>
@@ -239,8 +244,8 @@ Data returned from a layout's `load` function is also available to all its child
 ```svelte
 <!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
 </script>
@@ -370,13 +375,13 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `export let data` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `let { data } = $props()` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 </script>
 ```
 
