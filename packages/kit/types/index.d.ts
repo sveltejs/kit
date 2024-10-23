@@ -1232,7 +1232,7 @@ declare module '@sveltejs/kit' {
 		 * <script>
 		 * 	import { invalidate } from '$app/navigation';
 		 *
-		 * 	export let { data } = $props();
+		 * 	let { data } = $props();
 		 *
 		 * 	const increase = async () => {
 		 * 		await invalidate('increase:count');
