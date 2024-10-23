@@ -724,12 +724,19 @@ test.describe('Routing', () => {
 		await expect(page.getByRole('textbox')).toBeFocused();
 	});
 
-	test('backwards navigation works after clicking a hash link with data-sveltekit-reload', async ({ page, baseURL }) => {
+	test('backwards navigation works after clicking a hash link with data-sveltekit-reload', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
 		await page.goto('/data-sveltekit/reload/hash');
 		await page.locator('a[href="#example"]').click();
-		await page.locator('a[href="/data-sveltekit/reload/hash/new-page"]').click();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
