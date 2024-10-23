@@ -56,7 +56,7 @@ export const navigating = {
  * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
- * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
+ * @type {import('svelte/store').Readable<boolean> & { check: () => Promise<boolean> }}
  */
 export const updated = {
 	subscribe(fn) {

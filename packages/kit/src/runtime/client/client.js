@@ -88,12 +88,14 @@ if (DEV && BROWSER) {
 		);
 	};
 
+	// eslint-disable-next-line @typescript-eslint/unbound-method -- We'll pass `history` as `this`
 	const push_state = history.pushState;
 	history.pushState = (...args) => {
 		warn();
 		return push_state.apply(history, args);
 	};
 
+	// eslint-disable-next-line @typescript-eslint/unbound-method -- We'll pass `history` as `this`
 	const replace_state = history.replaceState;
 	history.replaceState = (...args) => {
 		warn();
@@ -1374,6 +1376,7 @@ async function navigate({
 			[STATES_KEY]: state
 		};
 
+		// eslint-disable-next-line @typescript-eslint/unbound-method -- We'll pass `history` as `this`
 		const fn = replace_state ? history.replaceState : history.pushState;
 		fn.call(history, entry, '', url);
 

@@ -16,7 +16,7 @@ declare module '@sveltejs/kit' {
 		 * This function is called after SvelteKit has built your app.
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
-		adapt(builder: Builder): MaybePromise<void>;
+		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
 		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 		 */
@@ -31,7 +31,7 @@ declare module '@sveltejs/kit' {
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering
 		 */
-		emulate?(): MaybePromise<Emulator>;
+		emulate?: () => MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -667,7 +667,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+		resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
 	}) => MaybePromise<Response>;
 
 	/**
@@ -773,14 +773,14 @@ declare module '@sveltejs/kit' {
 		 *
 		 * `setHeaders` has no effect when a `load` function runs in the browser.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * `await parent()` returns data from parent `+layout.js` `load` functions.
 		 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -818,7 +818,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: Array<`${string}:${string}`>): void;
+		depends: (...deps: Array<`${string}:${string}`>) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -832,7 +832,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	export interface NavigationEvent<
@@ -1041,7 +1041,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The client's IP address, set by the adapter.
 		 */
-		getClientAddress(): string;
+		getClientAddress: () => string;
 		/**
 		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
 		 */
@@ -1089,7 +1089,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
 		 */
@@ -1122,20 +1122,20 @@ declare module '@sveltejs/kit' {
 		 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 		 * @param input the html chunk and the info if this is the last chunk
 		 */
-		transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+		transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 		/**
 		 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 		 * By default, none will be included.
 		 * @param name header name
 		 * @param value header value
 		 */
-		filterSerializedResponseHeaders?(name: string, value: string): boolean;
+		filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 		/**
 		 * Determines what should be added to the `<head>` tag to preload it.
 		 * By default, `js` and `css` files will be preloaded.
 		 * @param input the type of the file and its path
 		 */
-		preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 	}
 
 	export interface RouteDefinition<Config = any> {
@@ -1204,7 +1204,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -1242,7 +1242,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: string[]): void;
+		depends: (...deps: string[]) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -1256,7 +1256,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	/**
@@ -1327,7 +1327,7 @@ declare module '@sveltejs/kit' {
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
-		cancel(): void;
+		cancel: () => void;
 	}) => MaybePromise<
 		| void
 		| ((opts: {
@@ -1340,7 +1340,7 @@ declare module '@sveltejs/kit' {
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 				 */
-				update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
+				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
 		  }) => void)
 	>;
 
@@ -1367,13 +1367,15 @@ declare module '@sveltejs/kit' {
 		 * - Fallback pages: `/foo/[c]` is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
 		 * - Grouping routes that share a common `config`: `/foo` should be deployed to the edge, `/bar` and `/baz` should be deployed to a serverless function
 		 */
-		filter(route: RouteDefinition): boolean;
+		filter: (route: RouteDefinition) => boolean;
 
 		/**
 		 * A function that is invoked once the entry has been created. This is where you
 		 * should write the function to the filesystem and generate redirect manifests.
 		 */
-		complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
+		complete: (entry: {
+			generateManifest(opts: { relativePath: string }): string;
+		}) => MaybePromise<void>;
 	}
 
 	// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -2235,7 +2237,7 @@ declare module '$app/stores' {
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 * */
 	export const updated: import('svelte/store').Readable<boolean> & {
-		check(): Promise<boolean>;
+		check: () => Promise<boolean>;
 	};
 
 	export {};

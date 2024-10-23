@@ -64,6 +64,7 @@ export function get_cookies(request, url, trailing_slash) {
 				return c.value;
 			}
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method -- Fixed in `cookie@1.0.0`'s types
 			const decoder = opts?.decode || decodeURIComponent;
 			const req_cookies = parse(header, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
@@ -92,6 +93,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieParseOptions} opts
 		 */
 		getAll(opts) {
+			// eslint-disable-next-line @typescript-eslint/unbound-method -- Fixed in `cookie@1.0.0`'s types
 			const decoder = opts?.decode || decodeURIComponent;
 			const cookies = parse(header, { decode: decoder });
 
@@ -161,6 +163,7 @@ export function get_cookies(request, url, trailing_slash) {
 			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
 			if (!path_matches(destination.pathname, cookie.options.path)) continue;
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method -- Fixed in `cookie@1.0.0`'s types
 			const encoder = cookie.options.encode || encodeURIComponent;
 			combined_cookies[cookie.name] = encoder(cookie.value);
 		}
