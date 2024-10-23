@@ -280,6 +280,14 @@ function try_deserialize(data, fn, route_id) {
 		// If we're here, the data could not be serialized with devalue
 		const error = /** @type {any} */ (e);
 
+		// if someone tries to use `json()` in their action
+		if (data instanceof Response) {
+			throw new Error(
+				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`
+			);
+		}
+
+		// if devalue could not serialize a property on the object, etc.
 		if ('path' in error) {
 			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
 			if (error.path !== '') message += ` (data.${error.path})`;
