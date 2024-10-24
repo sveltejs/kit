@@ -80,6 +80,15 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		mime_types[ext] ??= mime.lookup(ext) || '';
 	}
 
+	const emitted_asset_dir = path.resolve(build_data.out_dir, 'server', build_data.asset_prefix);
+	if (fs.existsSync(emitted_asset_dir)) {
+		for (const file of fs.readdirSync(emitted_asset_dir)) {
+			assets.push(path.join(build_data.asset_prefix, file).replaceAll(path.sep, '/'));
+			const ext = path.extname(file);
+			mime_types[ext] ??= mime.lookup(ext) || '';
+		}
+	}
+
 	// prettier-ignore
 	// String representation of
 	/** @template {import('@sveltejs/kit').SSRManifest} T */
