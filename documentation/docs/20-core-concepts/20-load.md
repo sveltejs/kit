@@ -89,7 +89,7 @@ export async function load() {
 <!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
 	/** @type {{ data: import('./$types').LayoutData }} */
-	export let { data } = $props();
+	let { data } = $props();
 </script>
 
 <main>
