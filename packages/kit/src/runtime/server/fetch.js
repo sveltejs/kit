@@ -97,7 +97,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation) {
+					} else if (read_implementation && file in manifest._.server_assets) {
 						const length = manifest._.server_assets[file];
 						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
