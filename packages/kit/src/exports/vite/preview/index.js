@@ -128,10 +128,12 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-				let filename = normalizePath(join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname));
+				let filename = normalizePath(
+					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
+				);
 
 				try {
-					filename = decodeURI(filename)
+					filename = decodeURI(filename);
 				} catch {
 					// malformed URI
 				}
