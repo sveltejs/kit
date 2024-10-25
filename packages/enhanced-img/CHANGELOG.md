@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.10
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
 ## 0.3.9
 ### Patch Changes
 

@@ -37,16 +37,21 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 <a href="/">Home</a>
 ```
 
+Pages can receive data from `load` functions via the `data` prop.
+
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 </script>
 
 <h1>{data.title}</h1>
 <div>{@html data.content}</div>
 ```
+
+> [!LEGACY] In Svelte 4
+> In Svelte 4, you'd use `export let data` instead
 
 > [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
@@ -153,21 +158,29 @@ But in many apps, there are elements that should be visible on _every_ page, suc
 
 To create a layout that applies to every page, make a file called `src/routes/+layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this...
 
-```html
-<slot></slot>
+```svelte
+<script>
+	let { children } = $props();
+</script>
+
+{@render children()}
 ```
 
-...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
+...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `@render` tag for the page content. For example, let's add a nav bar:
 
-```html
-/// file: src/routes/+layout.svelte
+```svelte
+<!---- file: src/routes/+layout.svelte --->
+<script>
+	let { children } = $props();
+</script>
+
 <nav>
 	<a href="/">Home</a>
 	<a href="/about">About</a>
 	<a href="/settings">Settings</a>
 </nav>
 
-<slot></slot>
+{@render children()}
 ```
 
 If we create pages for `/`, `/about` and `/settings`...
@@ -196,8 +209,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 ```svelte
 <!--- file: src/routes/settings/+layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutData} */
-	export let data;
+	/** @type {{ data: import('./$types').LayoutData, children: import('svelte').Snippet }} */
+	let { data, children } = $props();
 </script>
 
 <h1>Settings</h1>
@@ -208,7 +221,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 	{/each}
 </div>
 
-<slot></slot>
+{@render children()}
 ```
 
 You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
@@ -239,8 +252,8 @@ Data returned from a layout's `load` function is also available to all its child
 ```svelte
 <!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
 </script>
@@ -370,13 +383,13 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `export let data` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `let { data } = $props()` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 </script>
 ```
 
