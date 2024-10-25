@@ -1,7 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
-import { read_implementation } from '__sveltekit/server';
 
 /**
  * @param {{
@@ -96,16 +95,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
-						});
-					} else if (read_implementation) {
-						const length = manifest._.server_assets[file];
-						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
-
-						return new Response(read_implementation(file), {
-							headers: {
-								'Content-Length': '' + length,
-								'Content-Type': type
-							}
 						});
 					}
 
