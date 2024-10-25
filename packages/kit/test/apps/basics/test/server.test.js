@@ -630,6 +630,11 @@ test.describe('Miscellaneous', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('foo');
 	});
+
+	test('serves prerendered non-latin pages', async ({ request }) => {
+		const response = await request.get('/prerendering/中文');
+		expect(response.status()).toBe(200);
+	})
 });
 
 test.describe('reroute', () => {
