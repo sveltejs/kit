@@ -1061,7 +1061,7 @@ export interface RequestEvent<
 	 */
 	getClientAddress(): string;
 	/**
-	 * Contains custom data that was added to the request within the [`handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
+	 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
 	 */
 	locals: App.Locals;
 	/**
