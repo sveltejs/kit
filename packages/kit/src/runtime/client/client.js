@@ -2093,7 +2093,7 @@ function _start_router() {
 		const same_pathname = nonhash === strip_hash(location);
 
 		// Ignore the following but fire beforeNavigate
-		if (external || (options.reload && !same_pathname && !hash)) {
+		if (external || (options.reload && (!same_pathname || !hash))) {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
