@@ -140,11 +140,8 @@ export const actions = {
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
-
-	/** @type {import('./$types').ActionData} */
-	export let form;
+	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+	let { data, form } = $props();
 </script>
 
 {#if form?.success}
@@ -153,6 +150,9 @@ export const actions = {
 	<p>Successfully logged in! Welcome back, {data.user.name}</p>
 {/if}
 ```
+
+> [!LEGACY] In Svelte 4
+> In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties
 
 ### Validation errors
 
@@ -339,8 +339,8 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 <script>
 	+++import { enhance } from '$app/forms';+++
 
-	/** @type {import('./$types').ActionData} */
-	export let form;
+	/** @type {{ form: import('./$types').ActionData }} */
+	let { form } = $props();
 </script>
 
 <form method="POST" +++use:enhance+++>
@@ -390,8 +390,8 @@ If you return a callback, you may need to reproduce part of the default `use:enh
 <script>
 	import { enhance, +++applyAction+++ } from '$app/forms';
 
-	/** @type {import('./$types').ActionData} */
-	export let form;
+	/** @type {{ form: import('./$types').ActionData }} */
+	let { form } = $props();
 </script>
 
 <form
@@ -427,11 +427,8 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
 
-	/** @type {import('./$types').ActionData} */
-	export let form;
-
-	/** @type {any} */
-	let error;
+	/** @type {{ form: import('./$types').ActionData }} */
+	let { form } = $props();
 
 	/** @param {{ currentTarget: EventTarget & HTMLFormElement}} event */
 	async function handleSubmit(event) {

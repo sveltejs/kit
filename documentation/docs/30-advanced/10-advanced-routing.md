@@ -193,7 +193,7 @@ You can also put a `+page` directly inside a `(group)`, for example if `/` shoul
 
 ### Breaking out of layouts
 
-The root layout applies to every page of your app — if omitted, it defaults to `<slot />`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
+The root layout applies to every page of your app — if omitted, it defaults to `{@render children()}`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
 
 In the example above, the `/admin` route does not inherit either the `(app)` or `(marketing)` layouts.
 
@@ -260,11 +260,11 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 <!--- file: src/routes/nested/route/+layout@.svelte --->
 <script>
 	import ReusableLayout from '$lib/ReusableLayout.svelte';
-	export let data;
+	let { data, children } = $props();
 </script>
 
 <ReusableLayout {data}>
-	<slot />
+	{@render children()}
 </ReusableLayout>
 ```
 

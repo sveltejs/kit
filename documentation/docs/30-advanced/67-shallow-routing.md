@@ -51,7 +51,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 	import Modal from './Modal.svelte';
 	import PhotoPage from './[id]/+page.svelte';
 
-	export let data;
+	let { data } = $props();
 </script>
 
 {#each data.thumbnails as thumbnail}
