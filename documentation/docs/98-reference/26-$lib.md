@@ -2,7 +2,7 @@
 title: $lib
 ---
 
-As a convenience, SvelteKit makes imports from `src/lib` (if you didn't adjust it in your [config file](configuration#files)) available via the `$lib` alias.
+SvelteKit automatically makes files under `src/lib` available using the `$lib` import alias. You can change which directory this alias points to in your [config file](configuration#files).
 
 ```svelte
 <!--- file: src/lib/Component.svelte --->
