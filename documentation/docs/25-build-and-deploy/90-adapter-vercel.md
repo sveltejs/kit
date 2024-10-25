@@ -140,8 +140,8 @@ export function load() {
 ```svelte
 <!--- file: +layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutServerData} */
-	export let data;
+	/** @type {{ data: import('./$types').LayoutServerData }} */
+	let { data } = $props();
 </script>
 
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>

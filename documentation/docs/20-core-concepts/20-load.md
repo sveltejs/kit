@@ -88,13 +88,13 @@ export async function load() {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
-	/** @type {{ data: import('./$types').LayoutData }} */
-	let { data } = $props();
+	/** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+	let { data, children } = $props();
 </script>
 
 <main>
-	<!-- +page.svelte is rendered in this <slot> -->
-	<slot />
+	<!-- +page.svelte is `@render`ed here -->
+	{@render children()}
 </main>
 
 <aside>
@@ -124,7 +124,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 +++	// we can access `data.posts` because it's returned from
 	// the parent layout `load` function
 	let index = $derived(data.posts.findIndex(post => post.slug === $page.params.slug));
-	let next = $derived(data.posts[index - 1];)+++
+	let next = $derived(data.posts[index + 1]);+++
 </script>
 
 <h1>{data.post.title}</h1>
