@@ -112,6 +112,15 @@ export function isRedirect(e) {
 }
 
 /**
+ * Checks whether this is an action failure thrown by {@link fail}.
+ * @param {unknown} e The object to check.
+ * @return {e is ActionFailure}
+ */
+export function isActionFailure(e) {
+	return e instanceof ActionFailure;
+}
+
+/**
  * Create a JSON `Response` object from the supplied data.
  * @param {any} data The value that will be serialized as JSON.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.

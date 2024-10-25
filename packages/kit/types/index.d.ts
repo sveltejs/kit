@@ -1805,6 +1805,11 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function isRedirect(e: unknown): e is Redirect_1;
 	/**
+	 * Checks whether this is an action failure thrown by {@link fail}.
+	 * @param e The object to check.
+	 * */
+	export function isActionFailure(e: unknown): e is ActionFailure_1<undefined>;
+	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
@@ -1844,6 +1849,13 @@ declare module '@sveltejs/kit' {
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
+	}
+
+	class ActionFailure_1<T extends Record<string, unknown> | undefined = undefined> {
+		
+		constructor(status: number, data: T);
+		status: number;
+		data: T;
 	}
 
 	export {};
