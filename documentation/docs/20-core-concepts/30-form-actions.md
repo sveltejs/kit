@@ -3,6 +3,7 @@ title: Form actions
 ---
 
 A `+page.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
+'+page.server.js' 파일에서 _actions_ 를 export 할 수 있는데, 이렇게 하면 <form> 요소를 사용해서 서버로 데이터를 'POST' 할 수 있다.
 
 When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
 
