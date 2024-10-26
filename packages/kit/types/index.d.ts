@@ -1807,7 +1807,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
 	 * */
-	export function isActionFailure(e: unknown): e is import("@sveltejs/kit").ActionFailure<undefined>;
+	export function isActionFailure(e: unknown): e is ActionFailure<undefined>;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
@@ -1830,7 +1830,7 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): import("@sveltejs/kit").ActionFailure<T>;
+	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
