@@ -1529,6 +1529,7 @@ function setup_preload() {
 
 	/** @param {Event} event */
 	function tap(event) {
+		if (event.defaultPrevented) return;
 		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 	}
 
