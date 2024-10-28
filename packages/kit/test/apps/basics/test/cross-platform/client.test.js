@@ -235,6 +235,12 @@ test.describe('Navigation lifecycle functions', () => {
 		await expect(page.locator('pre')).toHaveText('1 false link');
 	});
 
+	test("beforeNavigate's complete fulfills after redirect", async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/complete');
+		clicknav('a[href="/navigation-lifecycle/before-navigate/redirect"]');
+		expect(await page.waitForEvent('console', (msg) => msg.text() === 'complete')).toBeTruthy();
+	});
+
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
 		expect(await page.textContent('h1')).toBe(
