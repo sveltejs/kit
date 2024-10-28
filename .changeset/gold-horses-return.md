@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: fulfil `beforeNavigate` `navigation.complete` when being redirected
+fix: fulfil `beforeNavigate` `complete` when redirected
