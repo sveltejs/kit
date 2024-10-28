@@ -50,7 +50,7 @@ Pages can receive data from `load` functions via the `data` prop.
 <div>{@html data.content}</div>
 ```
 
-> [!LEGACY] In Svelte 4
+> [!LEGACY]
 > In Svelte 4, you'd use `export let data` instead
 
 > [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
