@@ -106,26 +106,11 @@ function get_raw_body(req, body_size_limit) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
-	// strip out symbol keys because the `Request` implementation doesn't like them
-	const headers = /** @type {Record<string, string>} */ (
-		Object.fromEntries(Object.entries(request.headers))
-	);
-
-	if (request.httpVersionMajor === 2) {
-		// strip out the HTTP/2 pseudo-headers because the `Headers`
-		// implementation doesn't like them
-		delete headers[':method'];
-		delete headers[':path'];
-		delete headers[':authority'];
-		delete headers[':scheme'];
-		delete headers[':status'];
-	}
-
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers,
+		headers: /** @type {Record<string, string>} */ (request.headers),
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
