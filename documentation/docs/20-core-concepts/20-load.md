@@ -32,7 +32,7 @@ export function load({ params }) {
 <div>{@html data.post.content}</div>
 ```
 
-> [!LEGACY] In Svelte 4
+> [!LEGACY]
 > In Svelte 4, you'd use `export let data` instead
 
 Thanks to the generated `$types` module, we get full type safety.
