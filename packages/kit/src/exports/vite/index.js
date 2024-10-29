@@ -353,7 +353,7 @@ async function kit({ svelte_config }) {
 			const vite_basic_ssl = config.plugins.find(({ name }) => name === 'vite:basic-ssl');
 
 			// by default, when enabling HTTPS in Vite, it also enables HTTP/2
-			// however, undici's Request implementation does not like the HTTP/2 headers
+			// however, undici's Headers implementation does not like the HTTP/2 headers
 			// we set a no-op proxy config to force Vite to downgrade to TLS-only
 			// see https://vitejs.dev/config/#server-https
 			if ((config.server.https || vite_basic_ssl) && !config.server.proxy) {
