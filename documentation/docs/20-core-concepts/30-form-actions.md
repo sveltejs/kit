@@ -151,7 +151,7 @@ export const actions = {
 {/if}
 ```
 
-> [!LEGACY] In Svelte 4
+> [!LEGACY]
 > In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties
 
 ### Validation errors
