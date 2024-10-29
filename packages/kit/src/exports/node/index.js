@@ -106,7 +106,7 @@ function get_raw_body(req, body_size_limit) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
-	// strip out symbol keys which Request doesn't like
+	// strip out symbol keys because the `Request` implementation doesn't like them
 	const headers = /** @type {Record<string, string>} */ (
 		Object.fromEntries(Object.entries(request.headers))
 	);
