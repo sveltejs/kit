@@ -349,7 +349,7 @@ async function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			// we search for this plugin by name because we can't detect it
-			// since it doesn't directly modify the https config unlike mkcert
+			// since it doesn't directly modify the https config unlike the mkcert plugin
 			const vite_basic_ssl = config.plugins.find(({ name }) => name === 'vite:basic-ssl');
 
 			// by default, when enabling HTTPS in Vite, it also enables HTTP/2
