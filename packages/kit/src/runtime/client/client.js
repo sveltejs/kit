@@ -146,6 +146,19 @@ function native_navigation(url) {
 	return new Promise(() => {});
 }
 
+/**
+ * Checks whether a service worker is registered, and if it is,
+ * tries to update it.
+ */
+async function update_service_worker() {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration(base || '/');
+		if (registration) {
+			await registration.update();
+		}
+	}
+}
+
 function noop() {}
 
 /** @type {import('types').CSRRoute[]} */
@@ -1003,6 +1016,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
 					if (updated) {
+						// Before reloading, try to update the service worker if it exists
+						await update_service_worker();
 						return await native_navigation(url);
 					}
 
@@ -1327,6 +1342,8 @@ async function navigate({
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
+			// Before reloading, try to update the service worker if it exists
+			await update_service_worker();
 			await native_navigation(url);
 		}
 	}
@@ -1512,6 +1529,7 @@ function setup_preload() {
 
 	/** @param {Event} event */
 	function tap(event) {
+		if (event.defaultPrevented) return;
 		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 	}
 
@@ -1557,7 +1575,7 @@ function setup_preload() {
 									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
 										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
 										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://kit.svelte.dev/docs/link-options for more info'
+										'See https://svelte.dev/docs/kit/link-options for more info'
 								);
 							}
 						});
@@ -1700,12 +1718,12 @@ export function disableScrollHandling() {
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
  * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
  * @returns {Promise<void>}
  */
@@ -1844,7 +1862,7 @@ export function preloadCode(pathname) {
 }
 
 /**
- * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1888,7 +1906,7 @@ export function pushState(url, state) {
 }
 
 /**
- * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -2072,8 +2090,11 @@ function _start_router() {
 
 		if (download) return;
 
+		const [nonhash, hash] = url.href.split('#');
+		const same_pathname = nonhash === strip_hash(location);
+
 		// Ignore the following but fire beforeNavigate
-		if (external || options.reload) {
+		if (external || (options.reload && (!same_pathname || !hash))) {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
@@ -2088,8 +2109,7 @@ function _start_router() {
 		// Check if new url only differs by hash and use the browser default behavior in that case
 		// This will ensure the `hashchange` event is fired
 		// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-		const [nonhash, hash] = url.href.split('#');
-		if (hash !== undefined && nonhash === strip_hash(location)) {
+		if (hash !== undefined && same_pathname) {
 			// If we are trying to navigate to the same hash, we should only
 			// attempt to scroll to that element and avoid any history changes.
 			// Otherwise, this can cause Firefox to incorrectly assign a null
@@ -2104,7 +2124,11 @@ function _start_router() {
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
 					window.scrollTo({ top: 0 });
 				} else {
-					a.ownerDocument.getElementById(hash)?.scrollIntoView();
+					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
+					if (element) {
+						element.scrollIntoView();
+						element.focus();
+					}
 				}
 
 				return;

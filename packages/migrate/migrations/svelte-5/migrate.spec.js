@@ -80,7 +80,8 @@ test('Update package.json', () => {
 	"devDependencies": {
 		"svelte": "^4.0.0",
 		"svelte-check": "^3.0.0",
-		"svelte-preprocess": "^5.0.0"
+		"svelte-preprocess": "^5.0.0",
+		"svelte-eslint-parser": "^0.41.1"
 	},
 	"dependencies": {
 		"@sveltejs/kit": "^2.0.0"
@@ -92,9 +93,10 @@ test('Update package.json', () => {
 	"name": "svelte-app",
 	"version": "1.0.0",
 	"devDependencies": {
-		"svelte": "^5.0.0-next.0",
+		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
-		"svelte-preprocess": "^6.0.0"
+		"svelte-preprocess": "^6.0.0",
+		"svelte-eslint-parser": "^0.42.0"
 	},
 	"dependencies": {
 		"@sveltejs/kit": "^2.5.27"

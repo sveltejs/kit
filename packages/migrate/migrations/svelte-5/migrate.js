@@ -14,12 +14,12 @@ export function update_pkg_json() {
  */
 export function update_pkg_json_content(content) {
 	return update_pkg(content, [
-		['svelte', '^5.0.0-next.0'],
+		['svelte', '^5.0.0'],
 		['svelte-check', '^4.0.0'],
 		['svelte-preprocess', '^6.0.0'],
-		['@sveltejs/enhanced-img', '^0.3.6'],
+		['@sveltejs/enhanced-img', '^0.3.9'],
 		['@sveltejs/kit', '^2.5.27'],
-		['@sveltejs/vite-plugin-svelte', '^4.0.0-next.0'],
+		['@sveltejs/vite-plugin-svelte', '^4.0.0'],
 		[
 			'svelte-loader',
 			'^3.2.3',
@@ -28,11 +28,12 @@ export function update_pkg_json_content(content) {
 		['rollup-plugin-svelte', '^7.2.2'],
 		['prettier', '^3.1.0'],
 		['prettier-plugin-svelte', '^3.2.6'],
-		['eslint-plugin-svelte', '^2.43.0'],
+		['eslint-plugin-svelte', '^2.45.1'],
+		['svelte-eslint-parser', '^0.42.0'],
 		[
 			'eslint-plugin-svelte3',
 			'^4.0.0',
-			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
+			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/svelte/v4-migration-guide#new-eslint-package)'
 		],
 		[
 			'typescript',
