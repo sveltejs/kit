@@ -2231,7 +2231,7 @@ function _start_router() {
 			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
-			const is_hash_change = strip_hash(location) === strip_hash(current.url);
+			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
