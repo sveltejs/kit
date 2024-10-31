@@ -36,6 +36,7 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
+		"estree-walker": "^3.0.3",
 		"magic-string": "^0.30.5",
 		"svelte-parse-markup": "^0.1.5",
 		"vite-imagetools": "^7.0.1"
@@ -43,7 +44,6 @@
 	"devDependencies": {
 		"@types/estree": "^1.0.5",
 		"@types/node": "^18.19.48",
-		"estree-walker": "^3.0.3",
 		"rollup": "^4.14.2",
 		"svelte": "^4.2.10",
 		"typescript": "^5.3.3",

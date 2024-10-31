@@ -299,6 +299,9 @@ importers:
 
   packages/enhanced-img:
     dependencies:
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
       magic-string:
         specifier: ^0.30.5
         version: 0.30.11
@@ -315,9 +318,6 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
-      estree-walker:
-        specifier: ^3.0.3
-        version: 3.0.3
       rollup:
         specifier: ^4.14.2
         version: 4.24.0
