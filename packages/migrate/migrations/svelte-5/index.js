@@ -149,6 +149,8 @@ export async function migrate() {
 
 	update_pkg_json();
 
+	const use_ts = fs.existsSync('tsconfig.json');
+
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
 	// 	: { default: {} };
@@ -170,7 +172,7 @@ export async function migrate() {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
 				update_svelte_file(file, transform_module_code, (code) =>
-					transform_svelte_code(code, migrate, { filename: file })
+					transform_svelte_code(code, migrate, { filename: file, use_ts })
 				);
 			} else {
 				update_js_file(file, transform_module_code);

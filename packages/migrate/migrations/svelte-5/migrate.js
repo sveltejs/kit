@@ -56,8 +56,8 @@ export function transform_module_code(code) {
 
 /**
  * @param {string} code
- * @param {(source: string, options: { filename?: string }) => { code: string }} transform_code
- * @param {{ filename?: string }} options
+ * @param {(source: string, options: { filename?: string, use_ts?: boolean }) => { code: string }} transform_code
+ * @param {{ filename?: string, use_ts?: boolean }} options
  */
 export function transform_svelte_code(code, transform_code, options) {
 	return transform_code(code, options).code;
