@@ -32,7 +32,7 @@ export function load({ params }) {
 <div>{@html data.post.content}</div>
 ```
 
-> [!LEGACY] In Svelte 4
+> [!LEGACY]
 > In Svelte 4, you'd use `export let data` instead
 
 Thanks to the generated `$types` module, we get full type safety.
@@ -322,8 +322,8 @@ export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/products.json`;
 	const response = await fetch(url);
 
-	// cache the page for the same length of time
-	// as the underlying data
+	// Headers are only set during SSR, caching the page's HTML
+	// for the same length of time as the underlying data.
 	setHeaders({
 		age: response.headers.get('age'),
 		'cache-control': response.headers.get('cache-control')
@@ -333,7 +333,7 @@ export async function load({ fetch, setHeaders }) {
 }
 ```
 
-Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
+Setting the same header multiple times (even in separate `load` functions) is an error. You can only set a given header once using the `setHeaders` function. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
 
 ## Using parent data
 

@@ -1529,6 +1529,7 @@ function setup_preload() {
 
 	/** @param {Event} event */
 	function tap(event) {
+		if (event.defaultPrevented) return;
 		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 	}
 
@@ -2089,8 +2090,11 @@ function _start_router() {
 
 		if (download) return;
 
+		const [nonhash, hash] = url.href.split('#');
+		const same_pathname = nonhash === strip_hash(location);
+
 		// Ignore the following but fire beforeNavigate
-		if (external || options.reload) {
+		if (external || (options.reload && (!same_pathname || !hash))) {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
@@ -2105,8 +2109,7 @@ function _start_router() {
 		// Check if new url only differs by hash and use the browser default behavior in that case
 		// This will ensure the `hashchange` event is fired
 		// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-		const [nonhash, hash] = url.href.split('#');
-		if (hash !== undefined && nonhash === strip_hash(location)) {
+		if (hash !== undefined && same_pathname) {
 			// If we are trying to navigate to the same hash, we should only
 			// attempt to scroll to that element and avoid any history changes.
 			// Otherwise, this can cause Firefox to incorrectly assign a null
@@ -2121,7 +2124,11 @@ function _start_router() {
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
 					window.scrollTo({ top: 0 });
 				} else {
-					a.ownerDocument.getElementById(decodeURIComponent(hash))?.scrollIntoView();
+					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
+					if (element) {
+						element.scrollIntoView();
+						element.focus();
+					}
 				}
 
 				return;

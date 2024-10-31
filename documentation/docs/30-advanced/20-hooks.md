@@ -37,7 +37,11 @@ export async function handle({ event, resolve }) {
 
 > [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
+
+### locals
+
+To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.server.js

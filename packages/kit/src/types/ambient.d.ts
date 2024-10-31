@@ -29,7 +29,7 @@ declare namespace App {
 	}
 
 	/**
-	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
+	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
 
