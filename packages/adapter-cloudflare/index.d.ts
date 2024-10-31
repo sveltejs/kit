@@ -49,6 +49,14 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	/**
+	 * This option tells esbuild to produce metadata about the build in JSON format. This can
+	 * be used, e.g., for tools like bundle size analyzers.
+	 *
+	 * @see https://esbuild.github.io/api/#metafile
+	 */
+	metafile?: boolean;
 }
 
 export interface RoutesJSONSpec {
