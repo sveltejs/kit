@@ -401,3 +401,21 @@ export function read_samples(test_file) {
 
 	return samples;
 }
+
+/**
+ * @param {import('ts-morph').SourceFile} source
+ * @param {string} _import
+ * @param {string} method
+ */
+export function add_named_import(source, _import, method) {
+	const existing = source.getImportDeclaration(_import);
+	if (existing) {
+		if (existing.getNamedImports().some((i) => i.getName() === method)) return;
+		existing?.addNamedImport(method);
+	} else {
+		source.addImportDeclaration({
+			moduleSpecifier: _import,
+			namedImports: [method]
+		});
+	}
+}

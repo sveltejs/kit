@@ -208,7 +208,7 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
-			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[] | undefined, group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
 			/** @type {Set<string>} */
@@ -252,7 +252,10 @@ const plugin = function (defaults = {}) {
 					isr_config.set(route, {
 						expiration: config.isr.expiration,
 						bypassToken: config.isr.bypassToken,
-						allowQuery: ['__pathname', ...(config.isr.allowQuery ?? [])],
+						// for backward compat we probably need to set this to [] by default, and if passed null then undefined
+						allowQuery: config.isr.allowQuery
+							? ['__pathname', ...config.isr.allowQuery]
+							: undefined,
 						group: isr_config.size + 1,
 						passQuery: true
 					});
