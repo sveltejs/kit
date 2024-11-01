@@ -283,7 +283,7 @@ importers:
     dependencies:
       '@sveltejs/kit':
         specifier: ^1.0.0 || ^2.0.0
-        version: link:../kit
+        version: 2.7.3(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.265)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.0.0-next.265)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -386,9 +386,6 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
-      estree-walker:
-        specifier: ^3.0.3
-        version: 3.0.3
       rollup:
         specifier: ^4.14.2
         version: 4.24.0
@@ -2102,6 +2099,15 @@ packages:
       eslint-plugin-svelte: '>= 2.36'
       typescript: '>= 5'
       typescript-eslint: '>= 7.5'
+
+  '@sveltejs/kit@2.7.3':
+    resolution: {integrity: sha512-Vx7nq5MJ86I8qXYsVidC5PX6xm+uxt8DydvOdmJoyOK7LvGP18OFEG359yY+aa51t6pENvqZAMqAREQQx1OI2Q==}
+    engines: {node: '>=18.13'}
+    hasBin: true
+    peerDependencies:
+      '@sveltejs/vite-plugin-svelte': ^3.0.0 || ^4.0.0-next.1
+      svelte: ^4.0.0 || ^5.0.0-next.0
+      vite: ^5.0.3
 
   '@sveltejs/site-kit@6.0.0-next.64':
     resolution: {integrity: sha512-SosLY07DBA79yJhRR9vQpk9eXlSc3VjzOlIJQFvPzgsbu727rq5u3dudFEsm0NeQFoAF+NNgDYi5D85v5Yc+vQ==}
@@ -4945,6 +4951,24 @@ snapshots:
       globals: 15.10.0
       typescript: 5.6.3
       typescript-eslint: 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+
+  '@sveltejs/kit@2.7.3(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.265)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.0.0-next.265)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@5.0.0-next.265)(vite@5.3.6(@types/node@18.19.50)(lightningcss@1.24.1))
+      '@types/cookie': 0.6.0
+      cookie: 0.6.0
+      devalue: 5.1.0
+      esm-env: 1.0.0
+      import-meta-resolve: 4.1.0
+      kleur: 4.1.5
+      magic-string: 0.30.11
+      mrmime: 2.0.0
+      sade: 1.8.1
+      set-cookie-parser: 2.6.0
+      sirv: 3.0.0
+      svelte: 5.0.0-next.265
+      tiny-glob: 0.2.9
+      vite: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   '@sveltejs/site-kit@6.0.0-next.64(@sveltejs/kit@packages+kit)(svelte@4.2.19)':
     dependencies:
