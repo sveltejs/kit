@@ -156,7 +156,7 @@ export const actions = {
 
 ### Validation errors
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -195,7 +195,7 @@ export const actions = {
 };
 ```
 
-> [!NOTE] Note that as a precaution, we only return the email back to the page — not the password.
+> [!NOTE] Note that as a precaution, we only return the email back to the page — not the password.
 
 ```svelte
 /// file: src/routes/login/+page.svelte
