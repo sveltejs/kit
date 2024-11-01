@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.6.7
+### Patch Changes
+
+
+- fix: prefer TS in unclear migration situations if `tsconfig.json` found ([#12881](https://github.com/sveltejs/kit/pull/12881))
+
 ## 1.6.6
 ### Patch Changes
 

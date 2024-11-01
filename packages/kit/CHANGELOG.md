@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.7.4
+### Patch Changes
+
+
+- fix: ensure element is focused after subsequent clicks of the same hash link ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
+
+- fix: avoid preload if event default was prevented for `touchstart` and `mousedown` events ([#12887](https://github.com/sveltejs/kit/pull/12887))
+
+
+- fix: avoid reloading behaviour for hash links with data-sveltekit-reload if the hash is on the same page ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
 ## 2.7.3
 ### Patch Changes
 
