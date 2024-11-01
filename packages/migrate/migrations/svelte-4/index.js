@@ -53,7 +53,7 @@ export async function migrate() {
 		type: 'confirm',
 		name: 'value',
 		message:
-			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
+			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/svelte/v4-migration-guide#transitions-are-local-by-default',
 		initial: true
 	});
 
@@ -96,8 +96,8 @@ export async function migrate() {
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to Svelte 4"'),
-		'Review the migration guide at https://svelte.dev/docs/v4-migration-guide',
-		'Read the updated docs at https://svelte.dev/docs'
+		'Review the migration guide at https://svelte.dev/docs/svelte/v4-migration-guide',
+		'Read the updated docs at https://svelte.dev/docs/svelte'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {

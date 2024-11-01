@@ -348,7 +348,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
 						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route.id})`
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
 						);
 					}
 				}

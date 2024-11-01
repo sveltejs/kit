@@ -9,5 +9,5 @@
 		"allowSyntheticDefaultImports": true,
 		"strict": true
 	},
-	"include": ["./scripts/**/*", "./test/*.js", "./*.js"]
+	"include": ["./*.js"]
 }

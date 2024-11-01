@@ -30,7 +30,7 @@ export async function migrate() {
 			colors
 				.bold()
 				.yellow(
-					'\nDetected Svelte 3. You need to upgrade to Svelte version 4 first (`npx svelte-migrate svelte-4`).\n'
+					'\nDetected Svelte 3. You need to upgrade to Svelte version 4 first (`npx sv migrate svelte-4`).\n'
 				)
 		);
 		const response = await prompts({
@@ -47,7 +47,7 @@ export async function migrate() {
 				colors
 					.bold()
 					.green(
-						'svelte-4 migration complete. Check that everything is ok, then run `npx svelte-migrate svelte-5` again to continue the Svelte 5 migration.\n'
+						'svelte-4 migration complete. Check that everything is ok, then run `npx sv migrate svelte-5` again to continue the Svelte 5 migration.\n'
 					)
 			);
 			process.exit(0);
@@ -60,7 +60,7 @@ export async function migrate() {
 			colors
 				.bold()
 				.yellow(
-					'\nDetected SvelteKit 1. You need to upgrade to SvelteKit version 2 first (`npx svelte-migrate sveltekit-2`).\n'
+					'\nDetected SvelteKit 1. You need to upgrade to SvelteKit version 2 first (`npx sv migrate sveltekit-2`).\n'
 				)
 		);
 		const response = await prompts({
@@ -77,7 +77,7 @@ export async function migrate() {
 				colors
 					.bold()
 					.green(
-						'sveltekit-2 migration complete. Check that everything is ok, then run `npx svelte-migrate svelte-5` again to continue the Svelte 5 migration.\n'
+						'sveltekit-2 migration complete. Check that everything is ok, then run `npx sv migrate svelte-5` again to continue the Svelte 5 migration.\n'
 					)
 			);
 			process.exit(0);
@@ -90,8 +90,7 @@ export async function migrate() {
 			({ migrate } = await import_from_cwd('svelte/compiler'));
 			if (!migrate) throw new Error('found Svelte 4');
 		} catch {
-			// TODO replace with svelte@5 once it's released
-			execSync('npm install svelte@next --no-save', {
+			execSync('npm install svelte@^5.0.0 --no-save', {
 				stdio: 'inherit',
 				cwd: dirname(fileURLToPath(import.meta.url))
 			});
@@ -150,6 +149,8 @@ export async function migrate() {
 
 	update_pkg_json();
 
+	const use_ts = fs.existsSync('tsconfig.json');
+
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
 	// 	: { default: {} };
@@ -171,7 +172,7 @@ export async function migrate() {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
 				update_svelte_file(file, transform_module_code, (code) =>
-					transform_svelte_code(code, migrate, { filename: file })
+					transform_svelte_code(code, migrate, { filename: file, use_ts })
 				);
 			} else {
 				update_js_file(file, transform_module_code);

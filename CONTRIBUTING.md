@@ -43,7 +43,7 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) - code that's run when you create a new project with `npx sv create`
 - [`packages/package`](https://github.com/sveltejs/kit/tree/main/packages/package) - for the `svelte-package` command
 - [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core) - code that's called at dev/build-time
 - [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
@@ -101,7 +101,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ## Documentation changes
 
-All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev) and can be run locally to preview changes.
+All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sveltejs/svelte.dev` repo](https://github.com/sveltejs/svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
 

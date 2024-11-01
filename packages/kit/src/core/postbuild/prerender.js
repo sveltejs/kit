@@ -114,7 +114,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		({ status, path, referrer, referenceType }) => {
 			const message =
 				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
+					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
 					: path;
 
 			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
@@ -126,7 +126,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://kit.svelte.dev/docs/configuration#prerender for more info:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://svelte.dev/docs/kit/configuration#prerender for more info:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
@@ -136,7 +136,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		log,
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://kit.svelte.dev/docs/configuration#prerender for more info.`;
+			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
 		}
 	);
 
@@ -385,7 +385,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		if (response.status === 200) {
 			if (existsSync(dest) && statSync(dest).isDirectory()) {
 				throw new Error(
-					`Cannot save ${decoded} as it is already a directory. See https://kit.svelte.dev/docs/page-options#prerender-route-conflicts for more information`
+					`Cannot save ${decoded} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
 				);
 			}
 
@@ -394,7 +394,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 			if (existsSync(dir) && !statSync(dir).isDirectory()) {
 				const parent = decoded.split('/').slice(0, -1).join('/');
 				throw new Error(
-					`Cannot save ${decoded} as ${parent} is already a file. See https://kit.svelte.dev/docs/page-options#prerender-route-conflicts for more information`
+					`Cannot save ${decoded} as ${parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
 				);
 			}
 
@@ -509,7 +509,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const list = not_prerendered.map((id) => `  - ${id}`).join('\n');
 
 		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
+			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://svelte.dev/docs/kit/page-options#prerender-troubleshooting for info on how to solve this`
 		);
 	}
 

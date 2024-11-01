@@ -93,7 +93,7 @@ const warning_preprocessor = {
 
 				const message =
 					`\n${colors.bold().red(path.relative('.', filename))}\n` +
-					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://kit.svelte.dev/docs/page-options for more information.`;
+					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
 					console.log(message);
@@ -353,6 +353,9 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {Map<string, string>} */
+	const import_map = new Map();
+
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
@@ -373,6 +376,8 @@ async function kit({ svelte_config }) {
 						`Cannot import ${id} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
+
+				import_map.set(id, importer);
 			}
 
 			// treat $env/static/[public|private] as virtual
@@ -399,7 +404,18 @@ async function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
+
+					const illegal_module = strip_virtual_prefix(relative);
+
+					if (import_map.has(illegal_module)) {
+						const importer = path.relative(
+							cwd,
+							/** @type {string} */ (import_map.get(illegal_module))
+						);
+						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
+					}
+
+					throw new Error(`Cannot import ${illegal_module} into client-side code`);
 				}
 			}
 
@@ -901,7 +917,7 @@ async function kit({ svelte_config }) {
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
-						const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+						const link = colors.bold().cyan('https://svelte.dev/docs/kit/adapters');
 						console.log(
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);

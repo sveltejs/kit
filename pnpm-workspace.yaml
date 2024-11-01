@@ -1,6 +1,5 @@
 packages:
   - 'packages/*'
-  - 'sites/*'
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'

@@ -6,7 +6,7 @@ As you navigate around a SvelteKit app, you create _history entries_. Clicking t
 
 Sometimes, it's useful to create history entries _without_ navigating. For example, you might want to show a modal dialog that the user can dismiss by navigating back. This is particularly valuable on mobile devices, where swipe gestures are often more natural than interacting directly with the UI. In these cases, a modal that is _not_ associated with a history entry can be a source of frustration, as a user may swipe backwards in an attempt to dismiss it and find themselves on the wrong page.
 
-SvelteKit makes this possible with the [`pushState`](/docs/modules#$app-navigation-pushstate) and [`replaceState`](/docs/modules#$app-navigation-replacestate) functions, which allow you to associate state with a history entry without navigating. For example, to implement a history-driven modal:
+SvelteKit makes this possible with the [`pushState`]($app-navigation#pushState) and [`replaceState`]($app-navigation#replaceState) functions, which allow you to associate state with a history entry without navigating. For example, to implement a history-driven modal:
 
 ```svelte
 <!--- file: +page.svelte --->
@@ -33,7 +33,7 @@ The modal can be dismissed by navigating back (unsetting `$page.state.showModal`
 
 The first argument to `pushState` is the URL, relative to the current URL. To stay on the current URL, use `''`.
 
-The second argument is the new page state, which can be accessed via the [page store](/docs/modules#$app-stores-page) as `$page.state`. You can make page state type-safe by declaring an [`App.PageState`](/docs/types#app) interface (usually in `src/app.d.ts`).
+The second argument is the new page state, which can be accessed via the [page store]($app-stores#page) as `$page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
 
@@ -41,7 +41,7 @@ To set page state without creating a new history entry, use `replaceState` inste
 
 When shallow routing, you may want to render another `+page.svelte` inside the current page. For example, clicking on a photo thumbnail could pop up the detail view without navigating to the photo page.
 
-For this to work, you need to load the data that the `+page.svelte` expects. A convenient way to do this is to use [`preloadData`](/docs/modules#$app-navigation-preloaddata) inside the `click` handler of an `<a>` element. If the element (or a parent) uses [`data-sveltekit-preload-data`](/docs/link-options#data-sveltekit-preload-data), the data will have already been requested, and `preloadData` will reuse that request.
+For this to work, you need to load the data that the `+page.svelte` expects. A convenient way to do this is to use [`preloadData`]($app-navigation#preloadData) inside the `click` handler of an `<a>` element. If the element (or a parent) uses [`data-sveltekit-preload-data`](link-options#data-sveltekit-preload-data), the data will have already been requested, and `preloadData` will reuse that request.
 
 ```svelte
 <!--- file: src/routes/photos/+page.svelte --->
@@ -51,7 +51,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 	import Modal from './Modal.svelte';
 	import PhotoPage from './[id]/+page.svelte';
 
-	export let data;
+	let { data } = $props();
 </script>
 
 {#each data.thumbnails as thumbnail}
@@ -61,7 +61,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 			if (innerWidth < 640        // bail if the screen is too small
 				|| e.shiftKey             // or the link is opened in a new window
 				|| e.metaKey || e.ctrlKey // or a new tab (mac: metaKey, win/linux: ctrlKey)
-				// should also consider clicking with a mouse scroll wheel 
+				// should also consider clicking with a mouse scroll wheel
 			) return;
 
 			// prevent navigation

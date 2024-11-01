@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.6.2",
+	"version": "1.6.6",
 	"description": "A CLI for migrating Svelte(Kit) codebases",
 	"keywords": [
 		"migration",
@@ -15,7 +15,7 @@
 		"directory": "packages/migrate"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"bin": {
 		"svelte-migrate": "./bin.js"
@@ -42,7 +42,6 @@
 		"@types/node": "^18.19.48",
 		"@types/prompts": "^2.4.9",
 		"@types/semver": "^7.5.6",
-		"prettier": "^3.1.1",
 		"svelte": "^4.2.10",
 		"vitest": "^2.0.1"
 	},

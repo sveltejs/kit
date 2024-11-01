@@ -17,11 +17,17 @@ export default {
 
 ## Adders
 
-Run `npx svelte-add` to setup many different complex integrations with a single command including:
-- CSS - Tailwind, Bootstrap, Bulma
-- database - Drizzle ORM
-- markdown - mdsvex
-- Storybook
+Run `npx sv add` to setup many different complex integrations with a single command including:
+- prettier (formatting)
+- eslint (linting)
+- vitest (unit testing)
+- playwright (e2e testing)
+- lucia (auth)
+- tailwind (CSS)
+- drizzle (DB)
+- paraglide (i18n)
+- mdsvex (markdown)
+- storybook (frontend workshop)
 
 ## Directory
 
@@ -41,4 +47,4 @@ Since SvelteKit projects are built with Vite, you can use Vite plugins to enhanc
 
 ## Integration FAQs
 
-The SvelteKit FAQ has a [how to do X with SvelteKit](./faq#how-do-i-use-x-with-sveltekit), which may be helpful if you still have questions.
+The SvelteKit FAQ has a [how to do X with SvelteKit](./faq#How-do-I-use-X-with-SvelteKit), which may be helpful if you still have questions.

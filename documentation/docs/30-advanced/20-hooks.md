@@ -12,7 +12,7 @@ There are three hooks files, all optional:
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-> You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
+> [!NOTE] You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
 ## Server hooks
 
@@ -20,7 +20,7 @@ The following hooks can be added to `src/hooks.server.js`:
 
 ### handle
 
-This function runs every time the SvelteKit server receives a [request](web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
 /// file: src/hooks.server.js
@@ -35,9 +35,13 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
+> [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
+
+### locals
+
+To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.server.js
@@ -67,7 +71,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can define multiple `handle` functions and execute them with [the `sequence` helper function](modules#sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with [the `sequence` helper function](@sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
@@ -140,7 +144,7 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an [unexpected error](/docs/errors#unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+If an [unexpected error](errors#Unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
@@ -225,17 +229,17 @@ export async function handleError({ error, event, status, message }) {
 }
 ```
 
-> In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
+> [!NOTE] In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
-This function is not called for _expected_ errors (those thrown with the [`error`](modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
+This function is not called for _expected_ errors (those thrown with the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
-> Make sure that `handleError` _never_ throws an error
+> [!NOTE] Make sure that `handleError` _never_ throws an error
 
 ## Universal hooks
 
-The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific). 
+The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
 
 ### reroute
 
@@ -270,4 +274,4 @@ Using `reroute` will _not_ change the contents of the browser's address bar, or 
 
 ## Further reading
 
-- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)
+- [Tutorial: Hooks](/tutorial/kit/handle)
