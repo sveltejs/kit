@@ -73,6 +73,35 @@ function destroy() {
 	);
 });
 
+test('Updates component creation with multiple components', () => {
+	const result = transform_module_code(
+		`import App from './App.svelte';
+import Child from './Child.svelte';
+
+const x = new App({
+  target: document.getElementById('app')!
+});
+const y = new Child({
+  target: document.getElementById('child')!
+});
+`
+	);
+	assert.equal(
+		result,
+		`import App from './App.svelte';
+import Child from './Child.svelte';
+import { mount } from "svelte";
+
+const x = mount(App, {
+  target: document.getElementById('app')!
+});
+const y = mount(Child, {
+  target: document.getElementById('child')!
+});
+`
+	);
+});
+
 test('Update package.json', () => {
 	const result = update_pkg_json_content(`{
 	"name": "svelte-app",

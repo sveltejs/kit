@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import { Project, Node, SyntaxKind } from 'ts-morph';
-import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
+import {
+	add_named_import,
+	log_migration,
+	log_on_ts_modification,
+	update_pkg
+} from '../../utils.js';
 import path from 'node:path';
 
 export function update_pkg_json() {
@@ -112,17 +117,7 @@ export function update_svelte_config_content(code) {
 			?.setModuleSpecifier('@sveltejs/vite-plugin-svelte');
 	} else {
 		namedImport.remove();
-		const vps = source.getImportDeclaration(
-			(i) => i.getModuleSpecifierValue() === '@sveltejs/vite-plugin-svelte'
-		);
-		if (vps) {
-			vps.addNamedImport('vitePreprocess');
-		} else {
-			source.addImportDeclaration({
-				moduleSpecifier: '@sveltejs/vite-plugin-svelte',
-				namedImports: ['vitePreprocess']
-			});
-		}
+		add_named_import(source, '@sveltejs/vite-plugin-svelte', 'vitePreprocess');
 	}
 
 	logger();

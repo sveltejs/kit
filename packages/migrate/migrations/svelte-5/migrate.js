@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
-import { update_pkg } from '../../utils.js';
+import { add_named_import, update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -94,14 +94,7 @@ function update_component_instantiation(source) {
 							?.remove();
 					}
 
-					if (source.getImportDeclaration('svelte')) {
-						source.getImportDeclaration('svelte')?.addNamedImport(method);
-					} else {
-						source.addImportDeclaration({
-							moduleSpecifier: 'svelte',
-							namedImports: [method]
-						});
-					}
+					add_named_import(source, 'svelte', method);
 
 					const declaration = parent
 						.getParentIfKind(ts.SyntaxKind.VariableDeclaration)
@@ -114,7 +107,7 @@ function update_component_instantiation(source) {
 								const call_expr = parent.getParentIfKind(ts.SyntaxKind.CallExpression);
 								if (call_expr) {
 									call_expr.replaceWithText(`unmount(${usage.getText()})`);
-									source.getImportDeclaration('svelte')?.addNamedImport('unmount');
+									add_named_import(source, 'svelte', 'unmount');
 								}
 							}
 						}
