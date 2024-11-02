@@ -73,7 +73,7 @@ function destroy() {
 	);
 });
 
-test('Updates component creation #4', () => {
+test('Updates component creation with multiple components', () => {
 	const result = transform_module_code(
 		`import App from './App.svelte';
 import Child from './Child.svelte';
