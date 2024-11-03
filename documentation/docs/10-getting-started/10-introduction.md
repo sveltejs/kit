@@ -2,6 +2,8 @@
 title: Introduction
 ---
 
+<!-- testing, delete me -->
+
 ## Before we begin
 
 > [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](/tutorial/kit).
