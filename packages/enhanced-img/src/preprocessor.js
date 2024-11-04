@@ -131,7 +131,6 @@ export function image(opts) {
 			 * @type {Array<ReturnType<typeof update_element>>}
 			 */
 			const pending_ast_updates = [];
-			// TODO: switch to zimmerframe with Svelte 5
 
 			walk(
 				/** @type {import('svelte/compiler').AST.Root} */ (ast),
@@ -142,7 +141,7 @@ export function image(opts) {
 					},
 					/** @param {import('svelte/compiler').AST.RegularElement} node */
 					// @ts-ignore
-					RegularElement(node) {
+					RegularElement(node, { next }) {
 						if ('name' in node && node.name === 'enhanced:img') {
 							// Compare node tag match
 							const src = get_attr_value(node, 'src');
@@ -150,7 +149,11 @@ export function image(opts) {
 							if (!src || typeof src === 'boolean') return;
 
 							pending_ast_updates.push(update_element(node, src));
+
+							return;
 						}
+
+						next();
 					}
 				}
 			);

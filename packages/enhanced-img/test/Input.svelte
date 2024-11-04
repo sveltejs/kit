@@ -15,6 +15,10 @@
 
 <enhanced:img src="./dev.png" alt="dev test" />
 
+<div>
+	<enhanced:img src="./dev.png" alt="nested test" />
+</div>
+
 <enhanced:img src="./prod.png" alt="production test" />
 
 <enhanced:img src="./dev.png" width="5" height="10" alt="dimensions test" />
