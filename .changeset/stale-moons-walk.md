@@ -2,4 +2,4 @@
 '@sveltejs/enhanced-img': patch
 ---
 
-fix: Fix nested <enhanced:img /> elements
+fix: correctly handle `<enhanced:img />` elements nested in other DOM elements
