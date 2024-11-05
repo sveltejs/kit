@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.7.7
+### Patch Changes
+
+
+- fix: update link in JSDoc ([#12963](https://github.com/sveltejs/kit/pull/12963))
+
 ## 2.7.6
 ### Patch Changes
 
