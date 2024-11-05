@@ -41,10 +41,8 @@ export async function render_endpoint(event, mod, state) {
 
 	try {
 		if (method === 'GET' && event.request.headers.has('upgrade') && event.upgrade && mod.UPGRADE) {
-			console.log('upgrade');
 			await mod.UPGRADE(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event));
 		} else {
-			console.log('not upgrade');
 			let response = await handler(
 				/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 			);
@@ -65,8 +63,6 @@ export async function render_endpoint(event, mod, state) {
 				});
 				response.headers.set('x-sveltekit-prerender', String(prerender));
 			}
-
-			console.log(response);
 
 			return response;
 		}

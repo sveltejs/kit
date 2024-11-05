@@ -59,7 +59,6 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  */
 export async function respond(request, options, manifest, state, upgradeRequest) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	console.log('hit respond');
 	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
@@ -83,7 +82,6 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 		}
 	}
 
-	console.log('hit reroute');
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
@@ -94,7 +92,6 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 		});
 	}
 
-	console.log('hit decode');
 	let decoded;
 	try {
 		decoded = decode_pathname(rerouted_path);
@@ -210,11 +207,8 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
-	console.log('hit create event');
 
 	if(upgradeRequest) {
-		console.log('hit upgrade event');
-		console.log(upgradeRequest);
 		event.upgrade = upgradeRequest;
 	}
 
@@ -335,7 +329,6 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
-		console.log('hit handle');
 		const response = await options.hooks.handle({
 			event,
 			resolve: (event, opts) =>
