@@ -214,6 +214,7 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 
 	if(upgradeRequest) {
 		console.log('hit upgrade event');
+		console.log(upgradeRequest);
 		event.upgrade = upgradeRequest;
 	}
 

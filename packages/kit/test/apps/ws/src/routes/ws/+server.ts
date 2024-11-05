@@ -4,14 +4,22 @@ import { WebSocketServer } from 'ws';
 const wss = new WebSocketServer({ noServer: true });
 // const io = new Server();
 
-export function UPGRADE({upgrade}) {
-		console.log(request);
-			wss.handleUpgrade(upgrade.request, upgrade.socket, upgrade.head, (ws) => {
-				wss.emit('connection', ws, request);
-			});
+wss.on('connection', (ws) => {
+	ws.on('error', console.error);
+
+	ws.on('message', (message) => {
+		console.log('received: %s', message);
+	});
+});
+
+export function UPGRADE({ upgrade }) {
+	wss.handleUpgrade(upgrade.request, upgrade.socket, upgrade.head, (ws) => {
+		console.log('UPGRADED');
+		wss.emit('connection', ws, upgrade.request);
+	});
 }
 
-export function GET({request}) {
+export function GET({ request }) {
 	console.log(request);
 
 	return new Response('ok');

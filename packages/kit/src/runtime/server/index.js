@@ -92,10 +92,10 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {{request: import('http').IncomingMessage, socket: import('stream').Duplex , head: Buffer}?} webhookRequest
 	 * @param {import('types').RequestOptions} options
+	 * @param {{request: import('http').IncomingMessage, socket: import('stream').Duplex , head: Buffer}?} webhookRequest
 	 */
-	async respond(request, webhookRequest, options) {
+	async respond(request, options, webhookRequest) {
 		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,

@@ -10,7 +10,6 @@ import { method_not_allowed } from './utils.js';
  * @returns {Promise<Response | void>}
  */
 export async function render_endpoint(event, mod, state) {
-	console.log(event);
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
