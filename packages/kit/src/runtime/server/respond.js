@@ -182,6 +182,7 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 		params,
 		platform: state.platform,
 		request,
+		upgrade: upgradeRequest || null,
 		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
@@ -207,10 +208,6 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
-
-	if(upgradeRequest) {
-		event.upgrade = upgradeRequest;
-	}
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {

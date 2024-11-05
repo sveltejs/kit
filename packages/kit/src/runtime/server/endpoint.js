@@ -50,7 +50,6 @@ export async function render_endpoint(event, mod, state) {
 	try {
 
 		if (method === 'GET' && event.request.headers.has('upgrade') && event.upgrade && mod.UPGRADE) {
-			console.log('upgrade')
 			await handler(
 				/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 			);

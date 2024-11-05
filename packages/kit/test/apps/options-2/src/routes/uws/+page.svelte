@@ -20,9 +20,8 @@
 
 		socket.onmessage = (event) => {
 			console.log(event.data)
-			messages = [...messages, event.data];
+			messages.push(event.data)
 			console.log(messages)
-
 		}
 	}
 </script>

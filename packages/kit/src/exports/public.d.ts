@@ -1081,7 +1081,7 @@ export interface RequestEvent<
 		/**
 	 * The upgrade request object
 	 */
-	upgrade?: {request: IncomingMessage, socket: Duplex, head: Buffer}
+	upgrade: {request: IncomingMessage, socket: Duplex, head: Buffer} | null
 	/**
 	 * Info about the current route
 	 */
