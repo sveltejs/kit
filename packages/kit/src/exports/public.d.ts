@@ -1078,10 +1078,10 @@ export interface RequestEvent<
 	 * The original request object
 	 */
 	request: Request;
-		/**
+	/**
 	 * The upgrade request object
 	 */
-	upgrade: {request: IncomingMessage, socket: Duplex, head: Buffer} | null
+	upgrade: { request: IncomingMessage; socket: Duplex; head: Buffer } | null;
 	/**
 	 * Info about the current route
 	 */

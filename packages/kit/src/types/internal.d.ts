@@ -135,7 +135,7 @@ export class InternalServer extends Server {
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
 		},
-		webhookRequest?: {request: IncomingMessage, socket: Duplex, head: Buffer},
+		webhookRequest?: { request: IncomingMessage; socket: Duplex; head: Buffer }
 	): Promise<Response>;
 }
 
@@ -390,12 +390,12 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
-  UPGRADE?: UpgradeHandler;
-  prerender?: PrerenderOption;
-  trailingSlash?: TrailingSlash;
-  config?: any;
-  entries?: PrerenderEntryGenerator;
-  fallback?: RequestHandler;
+	UPGRADE?: UpgradeHandler;
+	prerender?: PrerenderOption;
+	trailingSlash?: TrailingSlash;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+	fallback?: RequestHandler;
 };
 
 export interface SSRRoute {

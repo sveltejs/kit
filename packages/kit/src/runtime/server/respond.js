@@ -330,7 +330,7 @@ export async function respond(request, options, manifest, state, upgradeRequest)
 			event,
 			resolve: (event, opts) =>
 				resolve(event, opts).then((response) => {
-					if(!response) return;
+					if (!response) return;
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
 					for (const key in headers) {

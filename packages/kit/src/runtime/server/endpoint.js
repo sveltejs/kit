@@ -13,9 +13,9 @@ export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	/**
- * The handler function to use for the request
- * @type {import('@sveltejs/kit').RequestHandler | import('@sveltejs/kit').UpgradeHandler | undefined}
- */
+	 * The handler function to use for the request
+	 * @type {import('@sveltejs/kit').RequestHandler | import('@sveltejs/kit').UpgradeHandler | undefined}
+	 */
 	let handler = mod[method] || mod.fallback;
 
 	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
@@ -48,7 +48,6 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-
 		if (method === 'GET' && event.request.headers.has('upgrade') && event.upgrade && mod.UPGRADE) {
 			await handler(
 				/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)

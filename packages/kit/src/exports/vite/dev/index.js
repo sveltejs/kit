@@ -567,27 +567,24 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const rendered = await server.respond(
-					request,
-					{
-						getClientAddress: () => {
-							const { remoteAddress } = req.socket;
-							if (remoteAddress) return remoteAddress;
-							throw new Error('Could not determine clientAddress');
-						},
-						read: (file) => {
-							if (file in manifest._.server_assets) {
-								return fs.readFileSync(from_fs(file));
-							}
+				const rendered = await server.respond(request, {
+					getClientAddress: () => {
+						const { remoteAddress } = req.socket;
+						if (remoteAddress) return remoteAddress;
+						throw new Error('Could not determine clientAddress');
+					},
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
 
-							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-						},
-						before_handle: (event, config, prerender) => {
-							async_local_storage.enterWith({ event, config, prerender });
-						},
-						emulator
-					}
-				);
+						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					},
+					emulator
+				});
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
