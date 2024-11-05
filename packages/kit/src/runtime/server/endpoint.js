@@ -12,10 +12,18 @@ import { method_not_allowed } from './utils.js';
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
+	/**
+ * The handler function to use for the request
+ * @type {import('@sveltejs/kit').RequestHandler | import('@sveltejs/kit').UpgradeHandler | undefined}
+ */
 	let handler = mod[method] || mod.fallback;
 
-	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
+	if (method === 'HEAD' && (mod.GET && !mod.HEAD)) {
 		handler = mod.GET;
+	}
+
+	if (method === 'GET' && !mod.GET && mod.UPGRADE) {
+		handler = mod.UPGRADE;
 	}
 
 	if (!handler) {
@@ -40,32 +48,37 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
+
 		if (method === 'GET' && event.request.headers.has('upgrade') && event.upgrade && mod.UPGRADE) {
-			await mod.UPGRADE(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event));
-		} else {
-			let response = await handler(
+			console.log('upgrade')
+			await handler(
 				/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 			);
-
-			if (!(response instanceof Response)) {
-				throw new Error(
-					`Invalid response from route ${event.url.pathname}: handler should return a Response object`
-				);
-			}
-
-			if (state.prerendering) {
-				// the returned Response might have immutable Headers
-				// so we should clone them before trying to mutate them
-				response = new Response(response.body, {
-					status: response.status,
-					statusText: response.statusText,
-					headers: new Headers(response.headers)
-				});
-				response.headers.set('x-sveltekit-prerender', String(prerender));
-			}
-
-			return response;
+			return;
 		}
+
+		let response = await handler(
+			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
+		);
+
+		if (!(response instanceof Response)) {
+			throw new Error(
+				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
+			);
+		}
+
+		if (state.prerendering) {
+			// the returned Response might have immutable Headers
+			// so we should clone them before trying to mutate them
+			response = new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers)
+			});
+			response.headers.set('x-sveltekit-prerender', String(prerender));
+		}
+
+		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
 			return new Response(undefined, {

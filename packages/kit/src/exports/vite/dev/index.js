@@ -586,8 +586,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							async_local_storage.enterWith({ event, config, prerender });
 						},
 						emulator
-					},
-					undefined
+					}
 				);
 
 				if (rendered.status === 404) {

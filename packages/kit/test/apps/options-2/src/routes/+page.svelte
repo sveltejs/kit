@@ -8,3 +8,7 @@
 <p data-testid="assets">assets: {assets}</p>
 
 <a href="{base}/hello" data-testid="link">Go to /hello</a>
+<br>
+<a href="{base}/ws" data-testid="link">Go to /ws</a>
+<br>
+<a href="{base}/socket.io" data-testid="link">Go to /socket.io</a>
