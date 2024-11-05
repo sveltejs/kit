@@ -4,6 +4,8 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { IncomingMessage } from 'node:http';
+	import type { Duplex } from 'node:stream';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -667,8 +669,8 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-	}) => MaybePromise<Response>;
+		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<void | Response>;
+	}) => MaybePromise<void | Response>;
 
 	/**
 	 * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1059,6 +1061,10 @@ declare module '@sveltejs/kit' {
 		 */
 		request: Request;
 		/**
+		 * The upgrade request object
+		 */
+		upgrade: { request: IncomingMessage; socket: Duplex; head: Buffer } | null;
+		/**
 		 * Info about the current route
 		 */
 		route: {
@@ -1114,6 +1120,16 @@ declare module '@sveltejs/kit' {
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		RouteId extends string | null = string | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
+
+	/**
+	 * A `(event: UpgradeEvent) => void` function exported from a `+server.js` file with the name UPGRADE and handles server upgrade requests.
+	 *
+	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
+	 */
+	export type UpgradeHandler<
+		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		RouteId extends string | null = string | null
+	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<void>;
 
 	export interface ResolveOptions {
 		/**
@@ -1734,6 +1750,7 @@ declare module '@sveltejs/kit' {
 	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 	type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+		UPGRADE?: UpgradeHandler;
 		prerender?: PrerenderOption;
 		trailingSlash?: TrailingSlash;
 		config?: any;
