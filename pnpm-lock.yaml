@@ -454,9 +454,6 @@ importers:
       marked:
         specifier: ^14.0.0
         version: 14.1.1
-      socket.io:
-        specifier: ^4.8.1
-        version: 4.8.1
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -469,9 +466,6 @@ importers:
       vite:
         specifier: ^5.3.2
         version: 5.3.6(@types/node@18.19.50)(lightningcss@1.24.1)
-      ws:
-        specifier: ^8.18.0
-        version: 8.18.0
 
   packages/kit/test/apps/dev-only:
     devDependencies:
