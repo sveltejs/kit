@@ -349,6 +349,22 @@ async function kit({ svelte_config }) {
 		 * Stores the final config.
 		 */
 		configResolved(config) {
+			// we search for this plugin by name because we can't detect it
+			// since it doesn't directly modify the https config unlike the mkcert plugin
+			const vite_basic_ssl = config.plugins.find(({ name }) => name === 'vite:basic-ssl');
+
+			// by default, when enabling HTTPS in Vite, it also enables HTTP/2
+			// however, undici has not yet enabled HTTP/2 by default: https://github.com/nodejs/undici/issues/2750
+			// we set a no-op proxy config to force Vite to downgrade to TLS-only
+			// see https://vitejs.dev/config/#server-https
+			if ((config.server.https || vite_basic_ssl) && !config.server.proxy) {
+				config.server.proxy = {};
+			}
+
+			if ((config.preview.https || vite_basic_ssl) && !config.preview.proxy) {
+				config.preview.proxy = {};
+			}
+
 			vite_config = config;
 		}
 	};
