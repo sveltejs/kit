@@ -1,0 +1,27 @@
+{
+	"name": "test-ws",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && tsc && svelte-check",
+		"test": "pnpm test:dev && pnpm test:build",
+		"test:dev": "cross-env DEV=true playwright test",
+		"test:build": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"cross-env": "^7.0.3",
+		"socket.io": "^4.8.1",
+		"svelte": "^4.2.10",
+		"svelte-check": "^4.0.1",
+		"typescript": "^5.3.3",
+		"vite": "^5.3.2",
+		"ws": "^8.18.0"
+	},
+	"type": "module"
+}

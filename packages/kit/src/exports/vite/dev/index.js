@@ -43,7 +43,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	globalThis.fetch = (info, init) => {
 		if (typeof info === 'string' && !SCHEME.test(info)) {
 			throw new Error(
-				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`
+				`Cannot use relative URL (${info}) with global fetch - use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`
 			);
 		}
 
@@ -431,6 +431,52 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
+		vite.httpServer?.on('upgrade', async (req, socket, head) => {
+			const base = `${vite.config.server.https ? 'wss' : 'ws'}://${
+				req.headers[':authority'] || req.headers.host
+			}`;
+
+			// we have to import `Server` before calling `set_assets`
+			const { Server } = /** @type {import('types').ServerModule} */ (
+				await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+			);
+
+			const server = new Server(manifest);
+
+			await server.init({
+				env,
+				read: (file) => createReadableStream(from_fs(file))
+			});
+
+			const request = await getRequest({
+				base,
+				request: req
+			});
+
+			await server.respond(
+				request,
+				{
+					getClientAddress: () => {
+						const { remoteAddress } = req.socket;
+						if (remoteAddress) return remoteAddress;
+						throw new Error('Could not determine clientAddress');
+					},
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
+
+						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					},
+					emulator
+				},
+				{ request: req, socket, head }
+			);
+		});
+
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
@@ -521,24 +567,28 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				const rendered = await server.respond(
+					request,
+					{
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						},
+						read: (file) => {
+							if (file in manifest._.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
 
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+						},
+						before_handle: (event, config, prerender) => {
+							async_local_storage.enterWith({ event, config, prerender });
+						},
+						emulator
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
-					emulator
-				});
+					undefined
+				);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

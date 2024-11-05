@@ -71,3 +71,4 @@ export function read(asset) {
 
 	throw new Error(`Asset does not exist: ${file}`);
 }
+

@@ -54,10 +54,12 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
+ * @param {{request: import('http').IncomingMessage, socket: import('stream').Duplex , head: Buffer}?} upgradeRequest
+ * @returns {Promise<void | Response>}
  */
-export async function respond(request, options, manifest, state) {
+export async function respond(request, options, manifest, state, upgradeRequest) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
+	console.log('hit respond');
 	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
@@ -81,6 +83,7 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	console.log('hit reroute');
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
@@ -91,6 +94,7 @@ export async function respond(request, options, manifest, state) {
 		});
 	}
 
+	console.log('hit decode');
 	let decoded;
 	try {
 		decoded = decode_pathname(rerouted_path);
@@ -139,7 +143,7 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (!state.prerendering?.fallback) {
-		// TODO this could theoretically break — should probably be inside a try-catch
+		// TODO this could theoretically break - should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
 		for (const candidate of manifest._.routes) {
@@ -206,6 +210,12 @@ export async function respond(request, options, manifest, state) {
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
+	console.log('hit create event');
+
+	if(upgradeRequest) {
+		console.log('hit upgrade event');
+		event.upgrade = upgradeRequest;
+	}
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
@@ -324,10 +334,12 @@ export async function respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
+		console.log('hit handle');
 		const response = await options.hooks.handle({
 			event,
 			resolve: (event, opts) =>
 				resolve(event, opts).then((response) => {
+					if(!response) return;
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
 					for (const key in headers) {
@@ -346,7 +358,7 @@ export async function respond(request, options, manifest, state) {
 		});
 
 		// respond with 304 if etag matches
-		if (response.status === 200 && response.headers.has('etag')) {
+		if (response?.status === 200 && response?.headers.has('etag')) {
 			let if_none_match_value = request.headers.get('if-none-match');
 
 			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
@@ -381,7 +393,7 @@ export async function respond(request, options, manifest, state) {
 
 		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
 		// we need to transform the redirect response to a corresponding JSON response.
-		if (is_data_request && response.status >= 300 && response.status <= 308) {
+		if (is_data_request && response && response.status >= 300 && response.status <= 308) {
 			const location = response.headers.get('location');
 			if (location) {
 				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
@@ -434,7 +446,7 @@ export async function respond(request, options, manifest, state) {
 			if (route) {
 				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-				/** @type {Response} */
+				/** @type {void | Response} */
 				let response;
 
 				if (is_data_request) {
@@ -484,7 +496,7 @@ export async function respond(request, options, manifest, state) {
 
 				// If the route contains a page and an endpoint, we need to add a
 				// `Vary: Accept` header to the response because of browser caching
-				if (request.method === 'GET' && route.page && route.endpoint) {
+				if (request.method === 'GET' && route.page && route.endpoint && response) {
 					const vary = response.headers
 						.get('vary')
 						?.split(',')

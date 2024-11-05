@@ -7,9 +7,10 @@ import { method_not_allowed } from './utils.js';
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
+ * @returns {Promise<Response | void>}
  */
 export async function render_endpoint(event, mod, state) {
+	console.log(event);
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
@@ -40,28 +41,36 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		let response = await handler(
-			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
-		);
-
-		if (!(response instanceof Response)) {
-			throw new Error(
-				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
+		if (method === 'GET' && event.request.headers.has('upgrade') && event.upgrade && mod.UPGRADE) {
+			console.log('upgrade');
+			await mod.UPGRADE(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event));
+		} else {
+			console.log('not upgrade');
+			let response = await handler(
+				/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 			);
-		}
 
-		if (state.prerendering) {
-			// the returned Response might have immutable Headers
-			// so we should clone them before trying to mutate them
-			response = new Response(response.body, {
-				status: response.status,
-				statusText: response.statusText,
-				headers: new Headers(response.headers)
-			});
-			response.headers.set('x-sveltekit-prerender', String(prerender));
-		}
+			if (!(response instanceof Response)) {
+				throw new Error(
+					`Invalid response from route ${event.url.pathname}: handler should return a Response object`
+				);
+			}
 
-		return response;
+			if (state.prerendering) {
+				// the returned Response might have immutable Headers
+				// so we should clone them before trying to mutate them
+				response = new Response(response.body, {
+					status: response.status,
+					statusText: response.statusText,
+					headers: new Headers(response.headers)
+				});
+				response.headers.set('x-sveltekit-prerender', String(prerender));
+			}
+
+			console.log(response);
+
+			return response;
+		}
 	} catch (e) {
 		if (e instanceof Redirect) {
 			return new Response(undefined, {

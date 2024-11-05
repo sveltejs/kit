@@ -17,7 +17,8 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	UpgradeHandler
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -26,6 +27,8 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import type { IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -131,7 +134,8 @@ export class InternalServer extends Server {
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
-		}
+		},
+		webhookRequest?: {request: IncomingMessage, socket: Duplex, head: Buffer},
 	): Promise<Response>;
 }
 
@@ -386,11 +390,12 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
-	prerender?: PrerenderOption;
-	trailingSlash?: TrailingSlash;
-	config?: any;
-	entries?: PrerenderEntryGenerator;
-	fallback?: RequestHandler;
+  UPGRADE?: UpgradeHandler;
+  prerender?: PrerenderOption;
+  trailingSlash?: TrailingSlash;
+  config?: any;
+  entries?: PrerenderEntryGenerator;
+  fallback?: RequestHandler;
 };
 
 export interface SSRRoute {
