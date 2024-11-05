@@ -18,7 +18,7 @@ export async function render_endpoint(event, mod, state) {
  */
 	let handler = mod[method] || mod.fallback;
 
-	if (method === 'HEAD' && (mod.GET && !mod.HEAD)) {
+	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
 		handler = mod.GET;
 	}
 
