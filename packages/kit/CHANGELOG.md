@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.7.6
+### Patch Changes
+
+
+- fix: update broken links in JSDoc ([#12960](https://github.com/sveltejs/kit/pull/12960))
+
 ## 2.7.5
 ### Patch Changes
 
