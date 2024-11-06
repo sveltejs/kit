@@ -21,7 +21,7 @@ If you don't want to write this for every page, you can do the following instead
 ```svelte
 <!--- file: page.svelte --->
 <script>
-  import { PageProps } from './$types';
+	import { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
