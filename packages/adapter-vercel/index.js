@@ -446,7 +446,7 @@ function static_vercel_config(builder, config, dir) {
 
 	for (const [src, redirect] of builder.prerendered.redirects) {
 		prerendered_redirects.push({
-			src,
+			src: src.replace(/\/?$/, '/?'),
 			headers: {
 				Location: redirect.location
 			},
