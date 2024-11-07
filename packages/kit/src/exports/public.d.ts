@@ -1182,6 +1182,8 @@ export interface ServerInitOptions {
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 	read?: (file: string) => ReadableStream;
+	/** A function that upgrades the websocket connection. Required for the `upgrade` export from `$app/server` to work */
+	upgrade?: () => void;
 }
 
 export interface SSRManifest {

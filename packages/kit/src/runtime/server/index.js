@@ -4,7 +4,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_read_implementation, set_upgrade_implementation, set_manifest } from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -17,7 +17,7 @@ const prerender_env_handler = {
 
 export class Server {
 	/** @type {import('types').SSROptions} */
-	#options;
+	options;
 
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	#manifest;
@@ -25,7 +25,7 @@ export class Server {
 	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
-		this.#options = options;
+		this.options = options;
 		this.#manifest = manifest;
 
 		set_manifest(manifest);
@@ -35,17 +35,18 @@ export class Server {
 	 * @param {{
 	 *   env: Record<string, string>;
 	 *   read?: (file: string) => ReadableStream;
+	 *   upgrade?: () => void;
 	 * }} opts
 	 */
-	async init({ env, read }) {
+	async init({ env, read, upgrade }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 
 		// set env, in case it's used in initialisation
 		const prefixes = {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
+			public_prefix: this.options.env_public_prefix,
+			private_prefix: this.options.env_private_prefix
 		};
 
 		const private_env = filter_private_env(env, prefixes);
@@ -63,11 +64,16 @@ export class Server {
 			set_read_implementation(read);
 		}
 
-		if (!this.#options.hooks) {
+		if (upgrade) {
+			set_upgrade_implementation(upgrade);
+		}
+
+		if (!this.options.hooks) {
 			try {
 				const module = await get_hooks();
 
-				this.#options.hooks = {
+				this.options.hooks = {
+					websocketHooks: module.websocketHooks,
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
@@ -75,7 +81,8 @@ export class Server {
 				};
 			} catch (error) {
 				if (DEV) {
-					this.#options.hooks = {
+					this.options.hooks = {
+						websocketHooks: undefined,
 						handle: () => {
 							throw error;
 						},
@@ -95,7 +102,7 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
+		return respond(request, this.options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0

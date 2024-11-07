@@ -26,6 +26,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import {Hooks} from 'crossws';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -39,6 +40,7 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
+	set_upgrade_implementation(implementation: () => void): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -105,6 +107,7 @@ export interface Deferred {
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface ServerHooks {
+	websocketHooks?: Hooks;
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
@@ -123,11 +126,13 @@ export interface Env {
 
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
+	options: SSROptions;
 	respond(
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
+			upgrade: () => void;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;

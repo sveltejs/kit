@@ -523,11 +523,16 @@ async function kit({ svelte_config }) {
 				case sveltekit_server: {
 					return dedent`
 						export let read_implementation = null;
+						export let upgrade_implementation = null;
 
 						export let manifest = null;
 
 						export function set_read_implementation(fn) {
 							read_implementation = fn;
+						}
+
+						export function set_upgrade_implementation(fn) {
+							upgrade_implementation = fn;
 						}
 
 						export function set_manifest(_) {

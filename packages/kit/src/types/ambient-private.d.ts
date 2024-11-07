@@ -23,6 +23,8 @@ declare module '__sveltekit/server' {
 
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
+	export function upgrade_implementation(): void;
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+	export function set_upgrade_implementation(fn: () => void): void;
 }

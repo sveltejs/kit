@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
+import crossws from 'crossws/adapters/node';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
@@ -421,7 +422,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	return () => {
+	return async () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
@@ -431,7 +432,48 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
+		// we have to import `Server` before calling `set_assets`
+		const { Server } = /** @type {import('types').ServerModule} */ (
+			await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+		);
+
+		const { set_fix_stack_trace } = await vite.ssrLoadModule(
+			`${runtime_base}/shared-server.js`
+		);
+		set_fix_stack_trace(fix_stack_trace);
+
+		const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+		set_assets(assets);
+
+		const server = new Server(manifest);
+
+		await server.init({
+			env,
+			read: (file) => createReadableStream(from_fs(file)),
+			upgrade: () => {}
+		});
+
+		/** @type {import('crossws/adapters/node').NodeAdapter | undefined} */
+		let ws
+
+		if (server.options.hooks?.websocketHooks) {
+			ws = crossws({
+				hooks: server.options.hooks.websocketHooks
+			});
+
+			if(!ws) {
+				throw new Error('websocket hooks failed to initialize');
+			}
+
+			vite.httpServer?.on('upgrade', (req, socket, head) => {
+				if(req.headers['sec-websocket-protocol'] !== 'vite-hmr'){
+					ws.handleUpgrade(req, socket, head);
+				}
+			});
+		}
+
 		vite.middlewares.use(async (req, res) => {
+			console.log('middleware');
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -474,26 +516,6 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
-				);
-
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${runtime_base}/shared-server.js`
-				);
-				set_fix_stack_trace(fix_stack_trace);
-
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
-				set_assets(assets);
-
-				const server = new Server(manifest);
-
-				await server.init({
-					env,
-					read: (file) => createReadableStream(from_fs(file))
-				});
-
 				const request = await getRequest({
 					base,
 					request: req
@@ -533,6 +555,12 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
+					upgrade: () => {
+						if(!ws) {
+							throw new Error('websocket hooks failed to initialize');
+						}
+						return { ws, env: { req, res } };
 					},
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });

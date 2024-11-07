@@ -1,4 +1,4 @@
-import { read_implementation, manifest } from '__sveltekit/server';
+import { read_implementation, upgrade_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 import { b64_decode } from '../../utils.js';
@@ -70,4 +70,30 @@ export function read(asset) {
 	}
 
 	throw new Error(`Asset does not exist: ${file}`);
+}
+
+
+/**
+ * Read the contents of an imported asset from the filesystem
+ * @example
+ * ```js
+ * import { upgrade } from '$app/server';
+ * import somefile from './somefile.txt';
+ *
+ * const asset = read(somefile);
+ * const text = await asset.text();
+ * ```
+ * @returns {void}
+ * @since 2.4.0
+ */
+export function upgrade() {
+	__SVELTEKIT_TRACK__('$app/server:upgrade');
+
+	if (!upgrade_implementation) {
+		throw new Error(
+			'No `upgrade` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
+		);
+	}
+
+	upgrade_implementation();
 }
