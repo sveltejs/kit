@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 5.4.7
+### Patch Changes
+
+
+- fix: disregard presence/absence of trailing slash in prerendered redirect ([#12966](https://github.com/sveltejs/kit/pull/12966))
+
+- Updated dependencies [[`92b2686314a7dbebee1761c3da7719d599f003c7`](https://github.com/sveltejs/kit/commit/92b2686314a7dbebee1761c3da7719d599f003c7)]:
+  - @sveltejs/kit@2.8.0
+
 ## 5.4.6
 ### Patch Changes
 

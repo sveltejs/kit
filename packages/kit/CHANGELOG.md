@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.8.0
+### Minor Changes
+
+
+- feat: add helper to identify `ActionFailure` objects ([#12878](https://github.com/sveltejs/kit/pull/12878))
+
 ## 2.7.7
 ### Patch Changes
 
