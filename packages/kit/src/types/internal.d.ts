@@ -107,7 +107,6 @@ export interface Deferred {
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface ServerHooks {
-	websocketHooks?: Partial<Hooks>;
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;

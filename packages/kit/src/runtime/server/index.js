@@ -78,7 +78,6 @@ export class Server {
 				const module = await get_hooks();
 
 				this.options.hooks = {
-					websocketHooks: module.websocketHooks,
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
@@ -87,7 +86,6 @@ export class Server {
 			} catch (error) {
 				if (DEV) {
 					this.options.hooks = {
-						websocketHooks: undefined,
 						handle: () => {
 							throw error;
 						},
