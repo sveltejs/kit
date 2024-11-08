@@ -70,7 +70,6 @@ export class Server {
 		}
 
 		if (upgrade) {
-			console.log('upgrade server function set');
 			set_upgrade_implementation(upgrade);
 		}
 
