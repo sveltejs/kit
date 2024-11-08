@@ -33,6 +33,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
+import { set_upgrade_implementation } from '__sveltekit/server';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -59,6 +60,10 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
+
+	if(state.upgrade) {
+		set_upgrade_implementation(state.upgrade);
+	}
 
 	if (options.csrf_check_origin) {
 		const forbidden =

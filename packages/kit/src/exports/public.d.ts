@@ -19,6 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import { Hooks } from 'crossws';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -687,6 +688,11 @@ export type Handle = (input: {
 	event: RequestEvent;
 	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
 }) => MaybePromise<Response>;
+
+/**
+ * The WebsocketHooks are used when the SvelteKit server receives a websocket request and specifies how to handle it.
+ */
+export type WebsocketHooks = Hooks
 
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.

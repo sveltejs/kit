@@ -2,18 +2,33 @@
 	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
 	let messages = [];
-	let socket
+	let socket1, socket2;
 	if (browser) {
-		socket = new WebSocket(`${base}/ws`);
-		console.log(socket);
-		socket.onopen = () => {
+		socket1 = new WebSocket(`${base}/ws`);
+		console.log(socket1);
+		socket1.onopen = () => {
 			console.log('websocket connected');
-			socket.send('ping');
+			socket1.send('ping');
 		};
-		socket.onclose = () => {
+		socket1.onclose = () => {
 			console.log('disconnected');
 		};
-		socket.onmessage = (event) => {
+		socket1.onmessage = (event) => {
+			console.log(event.data);
+			messages = [...messages, event.data];
+			console.log(messages);
+		};
+
+		socket2 = new WebSocket(`${base}/diff-socket`);
+		console.log(socket2);
+		socket2.onopen = () => {
+			console.log('websocket connected');
+			socket2.send('ping');
+		};
+		socket2.onclose = () => {
+			console.log('disconnected');
+		};
+		socket2.onmessage = (event) => {
 			console.log(event.data);
 			messages = [...messages, event.data];
 			console.log(messages);
@@ -23,9 +38,16 @@
 
 <h1>Messages:</h1>
 
-<button on:click={() => socket.send('ping')}>ping</button>
-<button on:click={() => socket.send('add')}>add</button>
-<button on:click={() => socket.send('broadcast')}>broadcast</button>
+<button
+	on:click={() => {
+		socket1.send('ping');
+		socket2.send('ping');
+	}}
+>
+	ping
+</button>
+<button on:click={() => socket1.send('add')}>add</button>
+<button on:click={() => socket1.send('broadcast')}>broadcast</button>
 
 <div>
 	{#each messages as message}

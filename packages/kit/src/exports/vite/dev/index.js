@@ -437,9 +437,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
 		);
 
-		const { set_fix_stack_trace } = await vite.ssrLoadModule(
-			`${runtime_base}/shared-server.js`
-		);
+		const { set_fix_stack_trace } = await vite.ssrLoadModule(`${runtime_base}/shared-server.js`);
 		set_fix_stack_trace(fix_stack_trace);
 
 		const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
@@ -447,33 +445,26 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		const server = new Server(manifest);
 
+		// we have to initialize the server before we can call the resolve function to populate the webhook resolver in the websocket handler
 		await server.init({
 			env,
 			read: (file) => createReadableStream(from_fs(file)),
-			upgrade: () => {}
+			upgrade: () => {return { ws, env: 'sadly no data yet'}}
 		});
 
-		/** @type {import('crossws/adapters/node').NodeAdapter | undefined} */
-		let ws
-
-		if (server.options.hooks?.websocketHooks) {
-			ws = crossws({
-				hooks: server.options.hooks.websocketHooks
+		/** @type {import('crossws/adapters/node').NodeAdapter} */
+			const ws = crossws({
+				resolve: server.resolve(),
 			});
 
-			if(!ws) {
-				throw new Error('websocket hooks failed to initialize');
-			}
-
 			vite.httpServer?.on('upgrade', (req, socket, head) => {
-				if(req.headers['sec-websocket-protocol'] !== 'vite-hmr'){
+				if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
 					ws.handleUpgrade(req, socket, head);
 				}
 			});
-		}
+
 
 		vite.middlewares.use(async (req, res) => {
-			console.log('middleware');
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -556,12 +547,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
-					upgrade: () => {
-						if(!ws) {
-							throw new Error('websocket hooks failed to initialize');
-						}
-						return { ws, env: { req, res } };
-					},
+					// This is intended to pass through the specific values needed to properly upgrade the websocket connection in other adapters
+					upgrade: () => {return { ws, env: { req, res } }},
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
 					},

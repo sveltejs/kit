@@ -1,10 +1,15 @@
 import { respond } from './respond.js';
+import { resolve } from './resolve.js';
 import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import { set_read_implementation, set_upgrade_implementation, set_manifest } from '__sveltekit/server';
+import {
+	set_read_implementation,
+	set_upgrade_implementation,
+	set_manifest
+} from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -35,7 +40,7 @@ export class Server {
 	 * @param {{
 	 *   env: Record<string, string>;
 	 *   read?: (file: string) => ReadableStream;
-	 *   upgrade?: () => void;
+	 *   upgrade?: () => { ws: import('crossws').AdapterInstance; env: any };
 	 * }} opts
 	 */
 	async init({ env, read, upgrade }) {
@@ -65,6 +70,7 @@ export class Server {
 		}
 
 		if (upgrade) {
+			console.log('upgrade server function set');
 			set_upgrade_implementation(upgrade);
 		}
 
@@ -107,5 +113,13 @@ export class Server {
 			error: false,
 			depth: 0
 		});
+	}
+
+	/**
+	 * Returns a function that resolves the websocket hooks for a given request
+	 * @returns {(info: Request) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
+	 */
+	resolve() {
+		return resolve(this.options, this.#manifest);
 	}
 }

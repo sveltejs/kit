@@ -26,7 +26,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
-import {Hooks} from 'crossws';
+import {AdapterInstance, Hooks, Peer} from 'crossws';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -107,7 +107,7 @@ export interface Deferred {
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface ServerHooks {
-	websocketHooks?: Hooks;
+	websocketHooks?: Partial<Hooks>;
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
@@ -132,12 +132,13 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
-			upgrade: () => void;
+			upgrade: () => { ws: AdapterInstance; env: any };
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
 		}
 	): Promise<Response>;
+	resolve(): (info: RequestInit | Peer) => Partial<Hooks> | Promise<Partial<Hooks>>;
 }
 
 export interface ManifestData {
@@ -391,6 +392,7 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	socket?: Partial<Hooks>;
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;
@@ -426,6 +428,7 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
+	upgrade?: () => { ws: AdapterInstance; env: any };
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 	emulator?: Emulator;
 }

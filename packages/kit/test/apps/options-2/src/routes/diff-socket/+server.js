@@ -1,6 +1,15 @@
+import { upgrade } from '$app/server';
+import { text } from '@sveltejs/kit';
+
+export const GET = () => {
+	console.log(upgrade());
+	return text('hello from /diff-socket');
+};
+
 let sockets = [];
 
-export const websocketHooks = {
+
+export const socket = {
 	upgrade(req) {
     console.log(`[ws] upgrading ${req.url}...`)
     return {
@@ -15,7 +24,7 @@ export const websocketHooks = {
   message(peer, message) {
     console.log('[ws] message', message.text());
     if (message.text().includes('ping')) {
-      peer.send('pong');
+      peer.send('pong - from /diff-socket');
     }
 		if(message.text().includes('add')) {
 			sockets.push(peer);

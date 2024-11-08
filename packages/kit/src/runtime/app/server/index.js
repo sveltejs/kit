@@ -89,11 +89,13 @@ export function read(asset) {
 export function upgrade() {
 	__SVELTEKIT_TRACK__('$app/server:upgrade');
 
+	console.log('upgrade server function called');
+
 	if (!upgrade_implementation) {
 		throw new Error(
 			'No `upgrade` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
 		);
 	}
 
-	upgrade_implementation();
+	return upgrade_implementation();
 }
