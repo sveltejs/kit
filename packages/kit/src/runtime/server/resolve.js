@@ -4,8 +4,6 @@ import { exec } from '../../utils/routing.js';
 import { decode_pathname } from '../../utils/url.js';
 import { base } from '__sveltekit/paths';
 
-/* global __SVELTEKIT_ADAPTER_NAME__ */
-
 /**
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
