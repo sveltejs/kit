@@ -72,7 +72,6 @@ export function read(asset) {
 	throw new Error(`Asset does not exist: ${file}`);
 }
 
-
 /**
  * Read the contents of an imported asset from the filesystem
  * @example

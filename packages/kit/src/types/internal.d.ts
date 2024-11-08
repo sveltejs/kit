@@ -26,7 +26,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
-import {AdapterInstance, Hooks, Peer} from 'crossws';
+import { AdapterInstance, Hooks, Peer } from 'crossws';
 
 export interface ServerModule {
 	Server: typeof InternalServer;

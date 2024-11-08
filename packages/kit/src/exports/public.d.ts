@@ -692,7 +692,7 @@ export type Handle = (input: {
 /**
  * The WebsocketHooks are used when the SvelteKit server receives a websocket request and specifies how to handle it.
  */
-export type WebsocketHooks = Hooks
+export type WebsocketHooks = Hooks;
 
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.

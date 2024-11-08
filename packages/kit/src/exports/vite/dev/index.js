@@ -449,20 +449,21 @@ export async function dev(vite, vite_config, svelte_config) {
 		await server.init({
 			env,
 			read: (file) => createReadableStream(from_fs(file)),
-			upgrade: () => {return { ws, env: 'sadly no data yet'}}
+			upgrade: () => {
+				return { ws, env: 'sadly no data yet' };
+			}
 		});
 
 		/** @type {import('crossws/adapters/node').NodeAdapter} */
-			const ws = crossws({
-				resolve: server.resolve(),
-			});
+		const ws = crossws({
+			resolve: server.resolve()
+		});
 
-			vite.httpServer?.on('upgrade', (req, socket, head) => {
-				if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
-					ws.handleUpgrade(req, socket, head);
-				}
-			});
-
+		vite.httpServer?.on('upgrade', (req, socket, head) => {
+			if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
+				ws.handleUpgrade(req, socket, head);
+			}
+		});
 
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
@@ -548,7 +549,9 @@ export async function dev(vite, vite_config, svelte_config) {
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
 					// This is intended to pass through the specific values needed to properly upgrade the websocket connection in other adapters
-					upgrade: () => {return { ws, env: { req, res } }},
+					upgrade: () => {
+						return { ws, env: { req, res } };
+					},
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
 					},

@@ -61,7 +61,7 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	if(state.upgrade) {
+	if (state.upgrade) {
 		set_upgrade_implementation(state.upgrade);
 	}
 
