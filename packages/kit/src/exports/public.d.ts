@@ -19,7 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-import { Hooks } from 'crossws';
+import { AdapterInstance, Hooks } from 'crossws';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -686,13 +686,9 @@ export interface KitConfig {
  */
 export type Handle = (input: {
 	event: RequestEvent;
-	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-}) => MaybePromise<Response>;
+	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<void | ResponseInit | Response>;
+}) => MaybePromise<void | ResponseInit | Response>;
 
-/**
- * The WebsocketHooks are used when the SvelteKit server receives a websocket request and specifies how to handle it.
- */
-export type WebsocketHooks = Hooks;
 
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1083,6 +1079,10 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
+	 * The two functions used to control the flow of websocket requests
+	*/
+	socket?: { accept: (init: ResponseInit) => ResponseInit; reject: (status: number, body: any) => Response };
+	/**
 	 * Info about the current route
 	 */
 	route: {
@@ -1188,8 +1188,6 @@ export interface ServerInitOptions {
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 	read?: (file: string) => ReadableStream;
-	/** A function that upgrades the websocket connection. Required for the `upgrade` export from `$app/server` to work */
-	upgrade?: () => void;
 }
 
 export interface SSRManifest {

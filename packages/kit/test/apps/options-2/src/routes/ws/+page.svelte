@@ -6,6 +6,9 @@
 	if (browser) {
 		socket1 = new WebSocket(`${base}/ws`);
 		console.log(socket1);
+		socket1.onerror = (event) => {
+			console.log(event);
+		};
 		socket1.onopen = () => {
 			console.log('websocket connected');
 			socket1.send('ping');
