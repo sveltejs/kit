@@ -56,7 +56,6 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
-	internal.set_upgrade_implementation(() => {});
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

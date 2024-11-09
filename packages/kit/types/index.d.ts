@@ -672,11 +672,6 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The WebsocketHooks are used when the SvelteKit server receives a websocket request and specifies how to handle it.
-	 */
-	export type WebsocketHooks = Hooks;
-
-	/**
 	 * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
@@ -1170,8 +1165,6 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 		read?: (file: string) => ReadableStream;
-		/** A function that upgrades the websocket connection. Required for the `upgrade` export from `$app/server` to work */
-		upgrade?: () => void;
 	}
 
 	export interface SSRManifest {
@@ -1844,7 +1837,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 	class HttpError_1 {
-		
+
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -1853,7 +1846,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-		
+
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2215,30 +2208,17 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
-	/**
-	 * Read the contents of an imported asset from the filesystem
-	 * @example
-	 * ```js
-	 * import { upgrade } from '$app/server';
-	 * import somefile from './somefile.txt';
-	 *
-	 * const asset = read(somefile);
-	 * const text = await asset.text();
-	 * ```
-	 * @since 2.4.0
-	 */
-	export function upgrade(): void;
 
 	export {};
 }
 
 declare module '$app/stores' {
 	export function getStores(): {
-		
+
 		page: typeof page;
-		
+
 		navigating: typeof navigating;
-		
+
 		updated: typeof updated;
 	};
 	/**

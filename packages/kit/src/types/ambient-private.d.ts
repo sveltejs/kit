@@ -20,7 +20,6 @@ declare module '__sveltekit/paths' {
 /** Internal version of $app/server */
 declare module '__sveltekit/server' {
 	import { SSRManifest } from '@sveltejs/kit';
-	import { AdapterInstance } from 'crossws';
 
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;

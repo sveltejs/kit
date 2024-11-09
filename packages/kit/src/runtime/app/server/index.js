@@ -1,4 +1,4 @@
-import { read_implementation, upgrade_implementation, manifest } from '__sveltekit/server';
+import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 import { b64_decode } from '../../utils.js';

@@ -40,7 +40,6 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_upgrade_implementation(implementation: () => void): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -131,7 +130,6 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
-			upgrade: () => { ws: AdapterInstance; env: any };
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
@@ -427,7 +425,6 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
-	upgrade?: () => { ws: AdapterInstance; env: any };
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 	emulator?: Emulator;
 }

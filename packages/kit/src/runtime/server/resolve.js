@@ -186,12 +186,6 @@ export function resolve(options, manifest, state) {
 						});
 
 						return response ?? new Response('Not Implemented', { status: 501 });
-
-						// if(!response) {
-						// 	return new Response('Not Implemented', { status: 501 });
-						// }else {
-						// 	return response;
-						// }
 					}
 				};
 			}

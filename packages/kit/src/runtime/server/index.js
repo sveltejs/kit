@@ -7,7 +7,6 @@ import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import {
 	set_read_implementation,
-	set_upgrade_implementation,
 	set_manifest
 } from '__sveltekit/server';
 
@@ -40,10 +39,9 @@ export class Server {
 	 * @param {{
 	 *   env: Record<string, string>;
 	 *   read?: (file: string) => ReadableStream;
-	 *   upgrade?: () => { ws: import('crossws').AdapterInstance; env: any };
 	 * }} opts
 	 */
-	async init({ env, read, upgrade }) {
+	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -67,10 +65,6 @@ export class Server {
 
 		if (read) {
 			set_read_implementation(read);
-		}
-
-		if (upgrade) {
-			set_upgrade_implementation(upgrade);
 		}
 
 		if (!this.options.hooks) {
