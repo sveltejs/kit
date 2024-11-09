@@ -689,7 +689,6 @@ export type Handle = (input: {
 	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<void | ResponseInit | Response>;
 }) => MaybePromise<void | ResponseInit | Response>;
 
-
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
  *
@@ -1080,8 +1079,11 @@ export interface RequestEvent<
 	request: Request;
 	/**
 	 * The two functions used to control the flow of websocket requests
-	*/
-	socket?: { accept: (init: ResponseInit) => ResponseInit; reject: (status: number, body: any) => Response };
+	 */
+	socket?: {
+		accept: (init: ResponseInit) => ResponseInit;
+		reject: (status: number, body: any) => Response;
+	};
 	/**
 	 * Info about the current route
 	 */

@@ -1,10 +1,7 @@
 import { BROWSER, DEV } from 'esm-env';
 import { validate_server_exports } from '../../utils/exports.js';
 import { exec } from '../../utils/routing.js';
-import {
-	decode_pathname,
-	decode_params,
-} from '../../utils/url.js';
+import { decode_pathname, decode_params } from '../../utils/url.js';
 import { base } from '__sveltekit/paths';
 
 /**
@@ -93,7 +90,6 @@ export function resolve(options, manifest, state) {
 				return {
 					...node.socket,
 					upgrade: async (req) => {
-
 						/** @type {import('@sveltejs/kit').RequestEvent} */
 						const event = {
 							// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
@@ -118,7 +114,7 @@ export function resolve(options, manifest, state) {
 								 * @returns {RequestInit}
 								 */
 								accept: (init) => {
-									return {...init};
+									return { ...init };
 								},
 								/**
 								 * Reject a WebSocket Upgrade request
@@ -129,18 +125,20 @@ export function resolve(options, manifest, state) {
 								 */
 								reject: (status, body) => {
 									if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
-										throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
+										throw new Error(
+											`HTTP error status codes must be between 400 and 599 — ${status} is invalid`
+										);
 									}
 
 									try {
-										const jsonBody =JSON.stringify(body)
+										const jsonBody = JSON.stringify(body);
 										return new Response(jsonBody, {
 											status,
 											headers: {
 												'content-type': 'application/json'
 											}
 										});
-									}catch (e) {
+									} catch (e) {
 										console.error(e);
 										throw new Error('Failed to serialize error body');
 									}
@@ -172,11 +170,9 @@ export function resolve(options, manifest, state) {
 							isSubRequest: state.depth > 0
 						};
 
-
 						const response = await options.hooks.handle({
 							event,
 							resolve: async (event) => {
-
 								if (node.socket && node.socket.upgrade) {
 									return await node.socket.upgrade(event.request);
 								} else {
@@ -191,7 +187,7 @@ export function resolve(options, manifest, state) {
 			}
 		} catch (e) {
 			console.error(e);
-			return {}
+			return {};
 		}
 	};
 }

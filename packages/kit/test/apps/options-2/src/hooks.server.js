@@ -1,6 +1,6 @@
 export async function handle({ event, resolve }) {
-	console.log('handle called')
-	console.log(event)
+	console.log('handle called');
+	console.log(event);
 
 	// if (Math.random() > 0.5) {
 	// 	console.log('rejecting socket connection')
