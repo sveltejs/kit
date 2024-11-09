@@ -452,8 +452,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       marked:
-        specifier: ^14.0.0
-        version: 14.1.1
+        specifier: ^15.0.0
+        version: 15.0.0
       svelte:
         specifier: ^4.2.10
         version: 4.2.19
@@ -2876,8 +2876,8 @@ packages:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
 
-  marked@14.1.1:
-    resolution: {integrity: sha512-eS59oxof5eBVDCKTs+mJbvB/6Vq137GbimF9wkTIlto2/B2ppY5nigUUQgKVmA3bI2mPTIshUyDj5j612ZxlQQ==}
+  marked@15.0.0:
+    resolution: {integrity: sha512-0mouKmBROJv/WSHJBPZZyYofUgawMChnD5je/g+aOBXsHDjb/IsnTQj7mnhQZu+qPJmRQ0ecX3mLGEUm3BgwYA==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -5534,7 +5534,7 @@ snapshots:
     dependencies:
       semver: 6.3.1
 
-  marked@14.1.1: {}
+  marked@15.0.0: {}
 
   mdn-data@2.0.30: {}
 
