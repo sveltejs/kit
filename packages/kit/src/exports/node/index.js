@@ -110,18 +110,13 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
 		headers = Object.assign({}, headers);
-		if (headers[':method']) {
-			if (!headers.method) {
-				headers.method = headers[':method'];
-			}
-			delete headers[':method'];
-		}
 		if (headers[':authority']) {
 			if (!headers.host) {
 				headers.host = headers[':authority'];
 			}
 			delete headers[':authority'];
 		}
+		delete headers[':method'];
 		delete headers[':path'];
 		delete headers[':scheme'];
 	}
