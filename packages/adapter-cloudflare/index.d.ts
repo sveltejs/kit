@@ -51,6 +51,10 @@ export interface AdapterOptions {
 	platformProxy?: GetPlatformProxyOptions;
 }
 
+/**
+ * The JSON format of the {@link https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file | `_routes.json`}
+ * file that controls when the Cloudflare Pages Function is invoked.
+ */
 export interface RoutesJSONSpec {
 	version: 1;
 	description: string;
