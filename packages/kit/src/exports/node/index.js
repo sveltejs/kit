@@ -110,12 +110,11 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
 		headers = Object.assign({}, headers);
+		// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
 		if (headers[':authority']) {
-			if (!headers.host) {
-				headers.host = headers[':authority'];
-			}
-			delete headers[':authority'];
+			headers.host = headers[':authority'];
 		}
+		delete headers[':authority'];
 		delete headers[':method'];
 		delete headers[':path'];
 		delete headers[':scheme'];
