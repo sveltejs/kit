@@ -106,24 +106,26 @@ function get_raw_body(req, body_size_limit) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
-	// the Request constructor rejects headers with ':' in the name
-	const headers = {
-		.../** @type {Record<string, string>} */ (request.headers)
-	};
-	if (headers[':method']) {
-		if (!headers.method) {
-			headers.method = headers[':method'];
+	let headers = /** @type {Record<string, string>} */ (request.headers);
+	if (request.httpVersionMajor >= 2) {
+		// the Request constructor rejects headers with ':' in the name
+		headers = Object.assign({}, headers);
+		if (headers[':method']) {
+			if (!headers.method) {
+				headers.method = headers[':method'];
+			}
+			delete headers[':method'];
 		}
-		delete headers[':method'];
-	}
-	if (headers[':authority']) {
-		if (!headers.host) {
-			headers.host = headers[':authority'];
+		if (headers[':authority']) {
+			if (!headers.host) {
+				headers.host = headers[':authority'];
+			}
+			delete headers[':authority'];
 		}
-		delete headers[':authority'];
+		delete headers[':path'];
+		delete headers[':scheme'];
 	}
-	delete headers[':path'];
-	delete headers[':scheme'];
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
