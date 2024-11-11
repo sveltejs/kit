@@ -27,10 +27,6 @@ In order to support SSR, a JS backend — such as Node.js or Deno-based server, 
 
 It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [integrations](./integrations) for more examples and integrations.
 
-## How do I use HMR with SvelteKit?
-
-SvelteKit has HMR enabled by default powered by [svelte-hmr](https://github.com/sveltejs/svelte-hmr). If you saw [Rich's presentation at the 2020 Svelte Summit](/blog/whats-the-deal-with-sveltekit), you may have seen a more powerful-looking version of HMR presented. This demo had `svelte-hmr`'s `preserveLocalState` flag on. This flag is now off by default because it may lead to unexpected behaviour and edge cases. But don't worry, you are still getting HMR with SvelteKit! If you'd like to preserve local state you can use the `@hmr:keep` or `@hmr:keep-all` directives as documented on the [svelte-hmr](https://github.com/sveltejs/svelte-hmr) page.
-
 ## How do I include details from package.json in my application?
 
 You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](./configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
