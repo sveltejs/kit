@@ -8,8 +8,10 @@
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "npm run package",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
+		"check": "svelte-kit sync && svelte-check",
+		"check:watch": "svelte-kit sync && svelte-check --watch",
+		"format": "prettier --config ../../.prettierrc --write .",
+		"lint": "prettier --config ../../.prettierrc --check ."
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
@@ -22,12 +24,14 @@
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/package": "workspace:*",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"prettier": "^3.3.2",
+		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.2.0",
-		"svelte": "^4.2.10",
+		"svelte": "^5.1.13",
 		"svelte-check": "^4.0.1",
-		"typescript": "^5.3.3",
-		"vite": "^5.3.2"
+		"typescript": "^5.5.0",
+		"vite": "^5.4.4"
 	},
 	"type": "module",
 	"exports": {
@@ -41,9 +45,6 @@
 		"!dist/**/*.test.*",
 		"!dist/**/*.spec.*"
 	],
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts"
 }
