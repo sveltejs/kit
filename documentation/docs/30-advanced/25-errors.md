@@ -126,9 +126,8 @@ The exception is when the error occurs inside the root `+layout.js` or `+layout.
 
 If you're using TypeScript and need to customize the shape of errors, you can do so by declaring an `App.Error` interface in your app (by convention, in `src/app.d.ts`, though it can live anywhere that TypeScript can 'see'):
 
-```dts
-/// file: src/app.d.ts
-// @filename: ambient.d.ts
+```ts
+/// file: /src/app.d.ts
 declare global {
 	namespace App {
 		interface Error {
