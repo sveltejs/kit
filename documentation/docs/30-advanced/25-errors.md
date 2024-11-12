@@ -128,6 +128,7 @@ If you're using TypeScript and need to customize the shape of errors, you can do
 
 ```dts
 /// file: src/app.d.ts
+// @filename: ambient.d.ts
 declare global {
 	namespace App {
 		interface Error {
