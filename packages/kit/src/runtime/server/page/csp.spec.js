@@ -79,58 +79,6 @@ test('generates CSP header with nonce', () => {
 	);
 });
 
-test('skips nonce in style-src when using unsafe-inline', () => {
-	const csp = new Csp(
-		{
-			mode: 'nonce',
-			directives: {
-				'style-src': ['self', 'unsafe-inline']
-			},
-			reportOnly: {
-				'style-src': ['self', 'unsafe-inline'],
-				'report-uri': ['/']
-			}
-		},
-		{
-			prerender: false
-		}
-	);
-
-	csp.add_style('');
-
-	assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
-	assert.equal(
-		csp.report_only_provider.get_header(),
-		"style-src 'self' 'unsafe-inline'; report-uri /"
-	);
-});
-
-test('skips nonce in style-src when using unsafe-inline', () => {
-	const csp = new Csp(
-		{
-			mode: 'nonce',
-			directives: {
-				'style-src': ['self', 'unsafe-inline']
-			},
-			reportOnly: {
-				'style-src': ['self', 'unsafe-inline'],
-				'report-uri': ['/']
-			}
-		},
-		{
-			prerender: false
-		}
-	);
-
-	csp.add_style('');
-
-	assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
-	assert.equal(
-		csp.report_only_provider.get_header(),
-		"style-src 'self' 'unsafe-inline'; report-uri /"
-	);
-});
-
 test('skips nonce with unsafe-inline', () => {
 	const csp = new Csp(
 		{
@@ -168,6 +116,32 @@ test('skips nonce with unsafe-inline', () => {
 	assert.equal(
 		csp.report_only_provider.get_header(),
 		"default-src 'unsafe-inline'; script-src 'unsafe-inline'; script-src-elem 'unsafe-inline'; style-src 'unsafe-inline'; style-src-attr 'unsafe-inline'; style-src-elem 'unsafe-inline'; report-uri /"
+	);
+});
+
+test('skips nonce in style-src when using unsafe-inline', () => {
+	const csp = new Csp(
+		{
+			mode: 'nonce',
+			directives: {
+				'style-src': ['self', 'unsafe-inline']
+			},
+			reportOnly: {
+				'style-src': ['self', 'unsafe-inline'],
+				'report-uri': ['/']
+			}
+		},
+		{
+			prerender: false
+		}
+	);
+
+	csp.add_style('');
+
+	assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
+	assert.equal(
+		csp.report_only_provider.get_header(),
+		"style-src 'self' 'unsafe-inline'; report-uri /"
 	);
 });
 
