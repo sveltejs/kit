@@ -79,15 +79,15 @@ test('generates CSP header with nonce', () => {
 	);
 });
 
-test('skips nonce with unsafe-inline', () => {
+test('skips nonce in style-src when using unsafe-inline', () => {
 	const csp = new Csp(
 		{
 			mode: 'nonce',
 			directives: {
-				'default-src': ['unsafe-inline']
+				'style-src': ['self', 'unsafe-inline']
 			},
 			reportOnly: {
-				'default-src': ['unsafe-inline'],
+				'style-src': ['self', 'unsafe-inline'],
 				'report-uri': ['/']
 			}
 		},
@@ -96,10 +96,13 @@ test('skips nonce with unsafe-inline', () => {
 		}
 	);
 
-	csp.add_script('');
+	csp.add_style('');
 
-	assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
-	assert.equal(csp.report_only_provider.get_header(), "default-src 'unsafe-inline'; report-uri /");
+	assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
+	assert.equal(
+		csp.report_only_provider.get_header(),
+		"style-src 'self' 'unsafe-inline'; report-uri /"
+	);
 });
 
 test('skips nonce in style-src when using unsafe-inline', () => {
