@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
+import { isSvelte5Plus } from '../utils.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -18,10 +20,11 @@ import { sort_routes } from './sort.js';
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${runtime_directory}/components`,
+	fallback = `${runtime_directory}/components/${isSvelte5Plus() ? 'svelte-5' : 'svelte-4'}`,
 	cwd = process.cwd()
 }) {
 	const assets = create_assets(config);
+	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
@@ -35,6 +38,7 @@ export default function create_manifest_data({
 
 	return {
 		assets,
+		hooks,
 		matchers,
 		nodes,
 		routes
@@ -50,6 +54,22 @@ export function create_assets(config) {
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
 		type: lookup(file) || null
 	}));
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ */
+function create_hooks(config, cwd) {
+	const client = resolve_entry(config.kit.files.hooks.client);
+	const server = resolve_entry(config.kit.files.hooks.server);
+	const universal = resolve_entry(config.kit.files.hooks.universal);
+
+	return {
+		client: client && posixify(path.relative(cwd, client)),
+		server: server && posixify(path.relative(cwd, server)),
+		universal: universal && posixify(path.relative(cwd, universal))
+	};
 }
 
 /**

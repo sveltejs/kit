@@ -9,6 +9,7 @@ declare module 'HANDLER' {
 declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 
+	export const base: string;
 	export const manifest: SSRManifest;
 	export const prerendered: Set<string>;
 }

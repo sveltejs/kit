@@ -1,11 +1,24 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
+import { GetPlatformProxyOptions } from 'wrangler';
 
 export default function plugin(options?: AdapterOptions): Adapter;
 
 export interface AdapterOptions {
 	/**
-	 * Customize the automatically-generated `_routes.json` file
+	 * Whether to render a plaintext 404.html page, or a rendered SPA fallback page. This page will
+	 * only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
+	 *
+	 * Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
+	 * exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
+	 * use `spa` instead to avoid showing an unstyled 404 page to users.
+	 *
+	 * @default 'plaintext'
+	 */
+	fallback?: 'plaintext' | 'spa';
+
+	/**
+	 * Customize the automatically-generated `_routes.json` file.
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */
 	routes?: {
@@ -30,6 +43,12 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	/**
+	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
+	 * during development and preview.
+	 */
+	platformProxy?: GetPlatformProxyOptions;
 }
 
 export interface RoutesJSONSpec {

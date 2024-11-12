@@ -3,6 +3,7 @@ import MagicString from 'magic-string';
 import { execFileSync, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import semver from 'semver';
 import ts from 'typescript';
 
@@ -215,23 +216,30 @@ export function update_pkg(content, updates) {
 	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
 	 */
 	function update_pkg(name, version, additional = '', insert) {
-		if (pkg.dependencies?.[name]) {
-			const existing_range = pkg.dependencies[name];
+		/**
+		 * @param {string} type
+		 */
+		const updateVersion = (type) => {
+			const existingRange = pkg[type]?.[name];
 
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.dependencies[name] = version;
+			if (
+				existingRange &&
+				semver.validRange(existingRange) &&
+				!semver.subset(existingRange, version)
+			) {
+				// Check if the new version range is an upgrade
+				const minExistingVersion = semver.minVersion(existingRange);
+				const minNewVersion = semver.minVersion(version);
+
+				if (minExistingVersion && minNewVersion && semver.gt(minNewVersion, minExistingVersion)) {
+					log_migration(`Updated ${name} to ${version}`);
+					pkg[type][name] = version;
+				}
 			}
-		}
+		};
 
-		if (pkg.devDependencies?.[name]) {
-			const existing_range = pkg.devDependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.devDependencies[name] = version;
-			}
-		}
+		updateVersion('dependencies');
+		updateVersion('devDependencies');
 
 		if (insert && !pkg[insert]?.[name]) {
 			if (!pkg[insert]) pkg[insert] = {};
@@ -252,7 +260,9 @@ export function update_pkg(content, updates) {
 		update_pkg(...update);
 	}
 
-	return JSON.stringify(pkg, null, indent);
+	const result = JSON.stringify(pkg, null, indent);
+	if (content.endsWith('\n')) return result + '\n';
+	return result;
 }
 
 const logged_migrations = new Set();
@@ -302,8 +312,11 @@ export function update_svelte_file(file_path, transform_script_code, transform_s
 			}
 		);
 		fs.writeFileSync(file_path, transform_svelte_code(updated, file_path), 'utf-8');
-	} catch (e) {
-		console.error(`Error updating ${file_path}:`, e);
+	} catch (err) {
+		// TODO: change to import('svelte/compiler').Warning after upgrading to Svelte 5
+		const e = /** @type {any} */ (err);
+		console.warn(buildExtendedLogMessage(e), e.frame);
+		console.info(e.stack);
 	}
 }
 
@@ -317,9 +330,32 @@ export function update_js_file(file_path, transform_code) {
 		const content = fs.readFileSync(file_path, 'utf-8');
 		const updated = transform_code(content, file_path.endsWith('.ts'), file_path);
 		fs.writeFileSync(file_path, updated, 'utf-8');
-	} catch (e) {
-		console.error(`Error updating ${file_path}:`, e);
+	} catch (err) {
+		// TODO: change to import('svelte/compiler').Warning after upgrading to Svelte 5
+		const e = /** @type {any} */ (err);
+		console.warn(buildExtendedLogMessage(e), e.frame);
+		console.info(e.stack);
 	}
+}
+
+/**
+ * @param {any} w
+ */
+export function buildExtendedLogMessage(w) {
+	const parts = [];
+	if (w.filename) {
+		parts.push(w.filename);
+	}
+	if (w.start) {
+		parts.push(':', w.start.line, ':', w.start.column);
+	}
+	if (w.message) {
+		if (parts.length > 0) {
+			parts.push(' ');
+		}
+		parts.push(w.message);
+	}
+	return parts.join('');
 }
 
 /**

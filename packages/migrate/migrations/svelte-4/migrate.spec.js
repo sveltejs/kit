@@ -363,7 +363,6 @@ test('Update package.json', () => {
 	);
 });
 
-
 test('Does not downgrade versions', () => {
 	const result = update_pkg_json_content(`{
 	"devDependencies": {

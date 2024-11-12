@@ -35,6 +35,21 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
+	/**
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+	 */
+	supports?: {
+		/**
+		 * Test support for `read` from `$app/server`
+		 * @param config The merged route config
+		 */
+		read?: (details: { config: any; route: { id: string } }) => boolean;
+	};
+	/**
+	 * Creates an `Emulator`, which allows the adapter to influence the environment
+	 * during dev, build and prerendering
+	 */
+	emulate?(): MaybePromise<Emulator>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -64,11 +79,12 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> = T extends ActionFailure<infer X>
-	? X
-	: T extends void
-		? undefined // needs to be undefined, because void will corrupt union type
-		: T;
+type UnpackValidationError<T> =
+	T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -89,12 +105,18 @@ export interface Builder {
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
 
+	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
 	 * @deprecated Use `builder.routes` instead
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+
+	/**
+	 * Find all the assets imported by server files belonging to `routes`
+	 */
+	findServerAssets(routes: RouteDefinition[]): string[];
 
 	/**
 	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
@@ -244,6 +266,17 @@ export interface Cookies {
 	): string;
 }
 
+/**
+ * A collection of functions that influence the environment during dev, build and prerendering
+ */
+export interface Emulator {
+	/**
+	 * A function that is called with the current route `config` and `prerender` option
+	 * and returns an `App.Platform` object
+	 */
+	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+}
+
 export interface KitConfig {
 	/**
 	 * Your [adapter](https://kit.svelte.dev/docs/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
@@ -274,9 +307,9 @@ export interface KitConfig {
 	 * };
 	 * ```
 	 *
-	 * > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
+	 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
 	 *
-	 * > You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @default {}
 	 */
 	alias?: Record<string, string>;
@@ -299,8 +332,10 @@ export interface KitConfig {
 	 *       directives: {
 	 *         'script-src': ['self']
 	 *       },
+	 *       // must be specified with either the `report-uri` or `report-to` directives, or both
 	 *       reportOnly: {
-	 *         'script-src': ['self']
+	 *         'script-src': ['self'],
+	 *         'report-uri': ['/']
 	 *       }
 	 *     }
 	 *   }
@@ -315,11 +350,11 @@ export interface KitConfig {
 	 *
 	 * When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
 	 *
-	 * > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
+	 * > [!NOTE] When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
-	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 	 *
-	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle) to roll your own CSP.
+	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
 		/**
@@ -363,12 +398,12 @@ export interface KitConfig {
 		 */
 		dir?: string;
 		/**
-		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
+		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://kit.svelte.dev/docs/modules#$env-static-public) and [`$env/dynamic/public`](https://kit.svelte.dev/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 		 * @default "PUBLIC_"
 		 */
 		publicPrefix?: string;
 		/**
-		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
+		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://kit.svelte.dev/docs/modules#$env-static-private) and [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynamic-private).
 		 * @default ""
 		 * @since 1.21.0
 		 */
@@ -435,7 +470,7 @@ export interface KitConfig {
 	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *
-	 * > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+	 * > [!NOTE] This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
 	 * @default 0
 	 */
 	inlineStyleThreshold?: number;
@@ -471,7 +506,7 @@ export interface KitConfig {
 		 */
 		assets?: '' | `http://${string}` | `https://${string}`;
 		/**
-		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](https://kit.svelte.dev/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
 		 * @default ""
 		 */
 		base?: '' | `/${string}`;
@@ -613,7 +648,7 @@ export interface KitConfig {
 	 * </script>
 	 * ```
 	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores-updated) store to `true` when it detects one.
+	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://kit.svelte.dev/docs/modules#$app-stores-updated) store to `true` when it detects one.
 	 */
 	version?: {
 		/**
@@ -644,8 +679,8 @@ export interface KitConfig {
 }
 
 /**
- * The [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
- * determines the [response](https://kit.svelte.dev/docs/web-standards#fetch-apis-response).
+ * The [`handle`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#Fetch-APIs-Request) and
+ * determines the [response](https://kit.svelte.dev/docs/web-standards#Fetch-APIs-Response).
  * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
  * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
  */
@@ -655,7 +690,7 @@ export type Handle = (input: {
 }) => MaybePromise<Response>;
 
 /**
- * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+ * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
  *
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -668,7 +703,7 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+ * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -681,7 +716,7 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;
@@ -723,7 +758,7 @@ export interface LoadEvent<
 	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
 	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
 	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle)
 	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
@@ -766,7 +801,7 @@ export interface LoadEvent<
 	 */
 	parent(): Promise<ParentData>;
 	/**
-	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://kit.svelte.dev/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 	 *
 	 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 	 *
@@ -1016,7 +1051,7 @@ export interface RequestEvent<
 	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
 	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
 	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle)
 	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
@@ -1027,7 +1062,7 @@ export interface RequestEvent<
 	 */
 	getClientAddress(): string;
 	/**
-	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#Server-hooks-handle).
 	 */
 	locals: App.Locals;
 	/**
@@ -1144,7 +1179,10 @@ export class Server {
 }
 
 export interface ServerInitOptions {
+	/** A map of environment variables */
 	env: Record<string, string>;
+	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+	read?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {
@@ -1159,6 +1197,8 @@ export interface SSRManifest {
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code */
+		server_assets: Record<string, number>;
 	};
 }
 
@@ -1185,7 +1225,7 @@ export interface ServerLoadEvent<
 	 */
 	parent(): Promise<ParentData>;
 	/**
-	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://kit.svelte.dev/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 	 *
 	 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 	 *
