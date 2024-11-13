@@ -124,7 +124,7 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers,
+		headers: Object.entries(headers),
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
