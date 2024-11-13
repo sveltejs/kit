@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.8.1
+### Patch Changes
+
+
+- fix: only add nonce to `script-src-elem`, `style-src-attr` and `style-src-elem` CSP directives when `unsafe-inline` is not present ([#11613](https://github.com/sveltejs/kit/pull/11613))
+
+
+- fix: support HTTP/2 in dev and production. Revert the changes from [#12907](https://github.com/sveltejs/kit/pull/12907) to downgrade HTTP/2 to TLS as now being unnecessary ([#12989](https://github.com/sveltejs/kit/pull/12989))
+
 ## 2.8.0
 ### Minor Changes
 
