@@ -7,7 +7,6 @@
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
- * 		// interface PageProps {}
  * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
@@ -40,13 +39,6 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
-
-	/**
-	 * Defines the reusable shape for [$props()](https://svelte.dev/docs/svelte/$props#Type-safety) for `+page.svelte` specifically
-	 */
-	export interface PageProps {
-		data: PageData;
-	}
 
 	/**
 	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
