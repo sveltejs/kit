@@ -3,16 +3,16 @@ export async function load({ fetch, url }) {
 		headers: {
 			'x-foo': 'a'
 		}
-	});
+	}).then((r) => r.json());
 
 	const r2 = await fetch(url.pathname, {
 		headers: {
 			'x-foo': 'b'
 		}
-	});
+	}).then((r) => r.json());
 
 	return {
-		a: r1.json(),
-		b: r2.json()
+		a: r1,
+		b: r2
 	};
 }

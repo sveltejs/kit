@@ -1,11 +1,12 @@
 import path from 'node:path';
+import process from 'node:process';
 import fs from 'node:fs';
 import url from 'node:url';
 
 /**
  * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
- * @returns {Promise<import('./types').Options['config']>}
+ * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
@@ -24,4 +25,18 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	}
 
 	return config;
+}
+
+/**
+ * @param {string} cwd
+ * @returns Record<string, any>
+ */
+export function load_pkg_json(cwd = process.cwd()) {
+	const pkg_json_file = path.join(cwd, 'package.json');
+
+	if (!fs.existsSync(pkg_json_file)) {
+		return {};
+	}
+
+	return JSON.parse(fs.readFileSync(pkg_json_file, 'utf-8'));
 }

@@ -1,5 +1,314 @@
 # create-svelte
 
+## 7.0.0
+### Major Changes
+
+
+- breaking: the `create-svelte` package has been replaced by the `sv` package ([#12850](https://github.com/sveltejs/kit/pull/12850))
+
+## 6.4.0
+### Minor Changes
+
+
+- feat: mark scripts in libraries as being side effect free by default ([#12372](https://github.com/sveltejs/kit/pull/12372))
+
+## 6.3.12
+### Patch Changes
+
+
+- chore: update typescript-eslint configs ([#12721](https://github.com/sveltejs/kit/pull/12721))
+
+## 6.3.11
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 6.3.10
+### Patch Changes
+
+
+- chore: bump svelte-check to v4 ([#12642](https://github.com/sveltejs/kit/pull/12642))
+
+## 6.3.9
+### Patch Changes
+
+
+- chore: bump publint to v0.2 ([#12602](https://github.com/sveltejs/kit/pull/12602))
+
+## 6.3.8
+### Patch Changes
+
+
+- fix: use `vite-plugin-svelte` v4 pre-release when Svelte 5 is chosen ([#12586](https://github.com/sveltejs/kit/pull/12586))
+
+## 6.3.7
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 6.3.6
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 6.3.5
+### Patch Changes
+
+
+- chore: upgrade to @fontsource/fira-mono v5 and @neoconfetti/svelte v2 ([#12497](https://github.com/sveltejs/kit/pull/12497))
+
+
+- chore: upgrade to typescript-eslint 8 final ([#12528](https://github.com/sveltejs/kit/pull/12528))
+
+## 6.3.4
+### Patch Changes
+
+
+- chore: upgrade to vitest 2 ([#12462](https://github.com/sveltejs/kit/pull/12462))
+
+
+- fix: remove unnecessary `tslib` dependency ([#12453](https://github.com/sveltejs/kit/pull/12453))
+
+
+- chore: bump @types/eslint to v9 ([#12496](https://github.com/sveltejs/kit/pull/12496))
+
+## 6.3.3
+### Patch Changes
+
+
+- chore: rename styles.css to app.css ([#12426](https://github.com/sveltejs/kit/pull/12426))
+
+## 6.3.2
+
+### Patch Changes
+
+- chore: update text about svelte-add ([#12337](https://github.com/sveltejs/kit/pull/12337))
+
+## 6.3.1
+
+### Patch Changes
+
+- chore: overhaul ignore configs ([#11938](https://github.com/sveltejs/kit/pull/11938))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 6.3.0
+
+### Minor Changes
+
+- feat: upgrade eslint to v9 ([#12268](https://github.com/sveltejs/kit/pull/12268))
+
+## 6.2.1
+
+### Patch Changes
+
+- fix: update default playwright test case for lib-project ([#12261](https://github.com/sveltejs/kit/pull/12261))
+
+## 6.2.0
+
+### Minor Changes
+
+- feat: make TypeScript the default for apps ([#12186](https://github.com/sveltejs/kit/pull/12186))
+
+## 6.1.2
+
+### Patch Changes
+
+- fix: set peerDependencies based on chosen Svelte version ([#12117](https://github.com/sveltejs/kit/pull/12117))
+
+## 6.1.1
+
+### Patch Changes
+
+- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12124](https://github.com/sveltejs/kit/pull/12124))
+
+## 6.1.0
+
+### Minor Changes
+
+- feat: upgrade eslint to v9 ([#12089](https://github.com/sveltejs/kit/pull/12089))
+
+## 6.0.10
+
+### Patch Changes
+
+- docs: update comment about path aliases ([#11788](https://github.com/sveltejs/kit/pull/11788))
+
+## 6.0.9
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v7 ([#11845](https://github.com/sveltejs/kit/pull/11845))
+
+## 6.0.8
+
+### Patch Changes
+
+- chore: upgrade to vite 5.0.11 and vitest 1.2.0 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 6.0.7
+
+### Patch Changes
+
+- fix: install eslint-plugin-svelte@next for svelte5 ([#11627](https://github.com/sveltejs/kit/pull/11627))
+
+## 6.0.6
+
+### Patch Changes
+
+- fix: set path: '/' in demo ([#11495](https://github.com/sveltejs/kit/pull/11495))
+
+## 6.0.5
+
+### Patch Changes
+
+- fix: set the correct type for the ESLint config object ([#11453](https://github.com/sveltejs/kit/pull/11453))
+
+## 6.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
+## 6.0.2
+
+### Patch Changes
+
+- fix: use vitest 1.0 in playwright + vitest template ([#11376](https://github.com/sveltejs/kit/pull/11376))
+
+## 6.0.1
+
+### Patch Changes
+
+- chore: simplify `.prettierignore` ([#11349](https://github.com/sveltejs/kit/pull/11349))
+
+## 6.0.0
+
+### Major Changes
+
+- feat: create projects with SvelteKit 2 ([#11236](https://github.com/sveltejs/kit/pull/11236))
+
+- breaking: require Node 18.13 or newer ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+### Minor Changes
+
+- feat: update vitest to 1.0 ([#11196](https://github.com/sveltejs/kit/pull/11196))
+
+## 5.3.4
+
+### Patch Changes
+
+- chore: upgrade to prettier 3.1.1 ([#11304](https://github.com/sveltejs/kit/pull/11304))
+
+## 5.3.3
+
+### Patch Changes
+
+- fix: call Svelte 5 an alpha rather than beta ([#11119](https://github.com/sveltejs/kit/pull/11119))
+
+## 5.3.2
+
+### Patch Changes
+
+- chore: add type declaration to `.eslintrc.cjs` files ([#11091](https://github.com/sveltejs/kit/pull/11091))
+
+## 5.3.1
+
+### Patch Changes
+
+- chore: upgrade eslint-config-prettier ([#11037](https://github.com/sveltejs/kit/pull/11037))
+
+## 5.3.0
+
+### Minor Changes
+
+- feat: upgrade to prettier 3 and prettier-plugin-svelte 3 ([#10410](https://github.com/sveltejs/kit/pull/10410))
+
+### Patch Changes
+
+- fix: correctly configure `module` and `noEmit` tsconfig and jsconfig properties ([#11029](https://github.com/sveltejs/kit/pull/11029))
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add option to try out Svelte 5 beta ([#11026](https://github.com/sveltejs/kit/pull/11026))
+
+## 5.1.1
+
+### Patch Changes
+
+- fix: specified `initial-scale=1` on all viewport meta tags ([#10793](https://github.com/sveltejs/kit/pull/10793))
+
+- feat: make output reflect user's choice of package manager ([#10811](https://github.com/sveltejs/kit/pull/10811))
+
+## 5.1.0
+
+### Minor Changes
+
+- chore: remove `resolution-mode=highest` in template `.npmrc` ([#10635](https://github.com/sveltejs/kit/pull/10635))
+
+### Patch Changes
+
+- feat: improve sverdle reactivity ([#10670](https://github.com/sveltejs/kit/pull/10670))
+
+## 5.0.6
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v6 ([#10371](https://github.com/sveltejs/kit/pull/10371))
+
+## 5.0.5
+
+### Patch Changes
+
+- chore: upgrade `vitest` to 0.34.0 and `@clack/prompts` to 0.7.0 ([#10240](https://github.com/sveltejs/kit/pull/10240))
+
+## 5.0.4
+
+### Patch Changes
+
+- chore: upgrade @fontsource/fira-mono to v5 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- chore: upgrade to vitest 0.33.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+## 5.0.3
+
+### Patch Changes
+
+- chore: bump Vite and Svelte dependencies ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- fix: create lib folder in skeleton project ([#10341](https://github.com/sveltejs/kit/pull/10341))
+
+## 5.0.2
+
+### Patch Changes
+
+- fix: npm test should run unit tests ([#10241](https://github.com/sveltejs/kit/pull/10241))
+
+- chore: upgrade vitest ([#10236](https://github.com/sveltejs/kit/pull/10236))
+
+## 5.0.1
+
+### Patch Changes
+
+- chore: use satisfies keyword in jsdocs, in create-svelte default template ([#10203](https://github.com/sveltejs/kit/pull/10203))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: install Svelte 4 ([#10217](https://github.com/sveltejs/kit/pull/10217))
+
 ## 4.2.0
 
 ### Minor Changes

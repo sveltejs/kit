@@ -1,9 +1,11 @@
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { hash } from '../hash.js';
+import { b64_decode } from '../utils.js';
 
 let loading = 0;
 
-export const native_fetch = window.fetch;
+/** @type {typeof fetch} */
+export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -13,9 +15,11 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV) {
+if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
+	// detect whether async stack traces work
+	// eslint-disable-next-line @typescript-eslint/require-await
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
@@ -23,6 +27,10 @@ if (DEV) {
 
 	check_stack_trace();
 
+	/**
+	 * @param {RequestInfo | URL} input
+	 * @param {RequestInit & Record<string, any> | undefined} init
+	 */
 	window.fetch = (input, init) => {
 		// Check if fetch was called via load_node. the lock method only checks if it was called at the
 		// same time, but not necessarily if it was called from `load`.
@@ -36,12 +44,16 @@ if (DEV) {
 		const cutoff = stack_array.findIndex((a) => a.includes('load@') || a.includes('at load'));
 		const stack = stack_array.slice(0, cutoff + 2).join('\n');
 
-		const heuristic = can_inspect_stack_trace
+		const in_load_heuristic = can_inspect_stack_trace
 			? stack.includes('src/runtime/client/client.js')
 			: loading;
-		if (heuristic) {
+
+		// This flag is set in initial_fetch and subsequent_fetch
+		const used_kit_fetch = init?.__sveltekit_fetch__;
+
+		if (in_load_heuristic && !used_kit_fetch) {
 			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		}
 
@@ -53,7 +65,7 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (BROWSER) {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
@@ -78,15 +90,21 @@ export function initial_fetch(resource, opts) {
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
-		const { body, ...init } = JSON.parse(script.textContent);
+		let { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
 		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
+		const b64 = script.getAttribute('data-b64');
+		if (b64 !== null) {
+			// Can't use native_fetch('data:...;base64,${body}')
+			// csp can block the request
+			body = b64_decode(body);
+		}
 
 		return Promise.resolve(new Response(body, init));
 	}
 
-	return native_fetch(resource, opts);
+	return DEV ? dev_fetch(resource, opts) : window.fetch(resource, opts);
 }
 
 /**
@@ -112,7 +130,22 @@ export function subsequent_fetch(resource, resolved, opts) {
 		}
 	}
 
-	return native_fetch(resolved, opts);
+	return DEV ? dev_fetch(resolved, opts) : window.fetch(resolved, opts);
+}
+
+/**
+ * @param {RequestInfo | URL} resource
+ * @param {RequestInit & Record<string, any> | undefined} opts
+ */
+function dev_fetch(resource, opts) {
+	const patched_opts = { ...opts };
+	// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
+	Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
+		value: true,
+		writable: true,
+		configurable: true
+	});
+	return window.fetch(resource, patched_opts);
 }
 
 /**

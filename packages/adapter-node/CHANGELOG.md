@@ -1,5 +1,263 @@
 # @sveltejs/adapter-node
 
+## 5.2.9
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 5.2.8
+### Patch Changes
+
+
+- chore: upgrade @rollup/plugin-commonjs to 28.0.1 ([#12817](https://github.com/sveltejs/kit/pull/12817))
+
+## 5.2.7
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+- Updated dependencies [[`dbc9c9486f962af7dbd9123d12d8a6829700d00f`](https://github.com/sveltejs/kit/commit/dbc9c9486f962af7dbd9123d12d8a6829700d00f), [`96642d234d1f5e961e919da725a1f6188e8aba2c`](https://github.com/sveltejs/kit/commit/96642d234d1f5e961e919da725a1f6188e8aba2c)]:
+  - @sveltejs/kit@2.7.1
+
+## 5.2.6
+### Patch Changes
+
+
+- fix: use `node:` imports to support Deno ([#12785](https://github.com/sveltejs/kit/pull/12785))
+
+## 5.2.5
+### Patch Changes
+
+
+- chore: upgrade rollup plugins ([#12706](https://github.com/sveltejs/kit/pull/12706))
+
+- Updated dependencies [[`a233f53f28fcb4c3ea63d2faf156fba09a18456c`](https://github.com/sveltejs/kit/commit/a233f53f28fcb4c3ea63d2faf156fba09a18456c), [`5b40b04608023a3fcb6c601a5f2d36485ce07196`](https://github.com/sveltejs/kit/commit/5b40b04608023a3fcb6c601a5f2d36485ce07196)]:
+  - @sveltejs/kit@2.6.0
+
+## 5.2.4
+### Patch Changes
+
+
+- chore: upgrade polka to 1.0.0-next.28 ([#12693](https://github.com/sveltejs/kit/pull/12693))
+
+## 5.2.3
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
+## 5.2.2
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 5.2.1
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add unit suffixes to the `BODY_SIZE_LIMIT` environment variable ([#11680](https://github.com/sveltejs/kit/pull/11680))
+
+### Patch Changes
+
+- Updated dependencies [[`121836fcbf6c615fd18c79a12203613ddbe49acf`](https://github.com/sveltejs/kit/commit/121836fcbf6c615fd18c79a12203613ddbe49acf)]:
+  - @sveltejs/kit@2.5.17
+
+## 5.1.1
+
+### Patch Changes
+
+- fix: do not create more than one shutdown timeout ([#12359](https://github.com/sveltejs/kit/pull/12359))
+
+- Updated dependencies [[`835ebf6ce9979203992cca30f434b3785afae818`](https://github.com/sveltejs/kit/commit/835ebf6ce9979203992cca30f434b3785afae818)]:
+  - @sveltejs/kit@2.5.16
+
+## 5.1.0
+
+### Minor Changes
+
+- feat: add shutdown event ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+### Patch Changes
+
+- fix: close keep-alive connections as soon as possible during graceful shutdown rather than accepting new requests ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+## 5.0.2
+
+### Patch Changes
+
+- chore: update to @rollup/plugin-commonjs@26 ([#12326](https://github.com/sveltejs/kit/pull/12326))
+
+- chore(deps): update dependency @rollup/plugin-commonjs to v26 ([`9aa59db67080248eb22fd227e7a491102b011c47`](https://github.com/sveltejs/kit/commit/9aa59db67080248eb22fd227e7a491102b011c47))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 5.0.1
+
+### Patch Changes
+
+- fix: regression preventing built application from starting ([#11960](https://github.com/sveltejs/kit/pull/11960))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: add graceful shutdown ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+- breaking: change default value of `precompress` option to true to serve precompressed assets by default ([#11945](https://github.com/sveltejs/kit/pull/11945))
+
+### Minor Changes
+
+- feat: add systemd socket activation ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+### Patch Changes
+
+- Updated dependencies [[`873a09eac86817d1cbb53bf3f9c8842d7346d20d`](https://github.com/sveltejs/kit/commit/873a09eac86817d1cbb53bf3f9c8842d7346d20d), [`30c78f223a4f9e6c4547d087338a8b8cc477ba55`](https://github.com/sveltejs/kit/commit/30c78f223a4f9e6c4547d087338a8b8cc477ba55)]:
+  - @sveltejs/kit@2.5.3
+
+## 4.0.1
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails ([#11713](https://github.com/sveltejs/kit/pull/11713))
+
+- Updated dependencies [[`f56781fa47a0f958b228e4a51bb3cbf173854f12`](https://github.com/sveltejs/kit/commit/f56781fa47a0f958b228e4a51bb3cbf173854f12)]:
+  - @sveltejs/kit@2.4.3
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: update peer dependency on `@sveltejs/kit` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Minor Changes
+
+- feat: support `read` from `$app/server` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 3.0.3
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
+## 3.0.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
+## 3.0.1
+
+### Patch Changes
+
+- chore: upgrade rollup to 4.9.5 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes ([#11589](https://github.com/sveltejs/kit/pull/11589))
+
+## 2.1.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: correctly handle BODY_SIZE_LIMIT=0 ([#11574](https://github.com/sveltejs/kit/pull/11574))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: add `PORT_HEADER` env var for reverse proxies with non-standard ports ([#11249](https://github.com/sveltejs/kit/pull/11249))
+
+### Patch Changes
+
+- Updated dependencies [[`9556abae4ba28c02ba468735beb9eb868876a9a1`](https://github.com/sveltejs/kit/commit/9556abae4ba28c02ba468735beb9eb868876a9a1), [`8468af597c6240f7a3687ef1ed3873990b944f8c`](https://github.com/sveltejs/kit/commit/8468af597c6240f7a3687ef1ed3873990b944f8c)]:
+  - @sveltejs/kit@2.1.1
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: upgrade `sirv` and `mrmime` to modernize javascript mime type ([#11419](https://github.com/sveltejs/kit/pull/11419))
+
+- Updated dependencies [[`b999cfdea24e72043505e032ed9d621590896263`](https://github.com/sveltejs/kit/commit/b999cfdea24e72043505e032ed9d621590896263), [`2a091dcbbdf7d2a70a38316638e16761bd1b9b59`](https://github.com/sveltejs/kit/commit/2a091dcbbdf7d2a70a38316638e16761bd1b9b59)]:
+  - @sveltejs/kit@2.0.5
+
+## 2.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- breaking: remove polyfill option. fetch APIs will now always come from the platform being used. File and crypto APIs will be polyfilled if not available ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+- chore: upgrade rollup ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+## 1.3.1
+
+### Patch Changes
+
+- fix: build output stuck on top level await ([#10314](https://github.com/sveltejs/kit/pull/10314))
+
+- Updated dependencies [[`c1ad5b2f8`](https://github.com/sveltejs/kit/commit/c1ad5b2f84762a34adb327a0e309792603b405b3), [`67a0d869b`](https://github.com/sveltejs/kit/commit/67a0d869b3221925c3f456127205a4aee0b28e85), [`4d7f38fa1`](https://github.com/sveltejs/kit/commit/4d7f38fa18c75991bca3f723cdc50d8a67036f83), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956)]:
+  - @sveltejs/kit@1.22.0
+
+## 1.3.0
+
+### Minor Changes
+
+- chore: remove build step for adapter node ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+- feat: load sourcemaps so that they can be merged to point to original sourcefiles ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+### Patch Changes
+
+- fix: do not crash server if specified `ADDRESS_HEADER` is missing from a request ([#10285](https://github.com/sveltejs/kit/pull/10285))
+
 ## 1.2.4
 
 ### Patch Changes

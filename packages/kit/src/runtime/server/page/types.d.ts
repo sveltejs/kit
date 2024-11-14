@@ -8,6 +8,7 @@ export interface Fetched {
 	request_headers?: HeadersInit | undefined;
 	response_body: string;
 	response: Response;
+	is_b64?: boolean;
 }
 
 export type Loaded = {
@@ -31,5 +32,5 @@ export interface CspOpts {
 export interface Cookie {
 	name: string;
 	value: string;
-	options: CookieSerializeOptions;
+	options: CookieSerializeOptions & { path: string };
 }

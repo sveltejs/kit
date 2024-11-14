@@ -1,6 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { mkdirp } from '../../utils/filesystem.js';
+import { resolve_peer_dependency } from '../../utils/import.js';
+
+/** @type {string} */
+let VERSION;
+
+try {
+	({ VERSION } = await resolve_peer_dependency('svelte/compiler'));
+} catch {
+	// we can end up here from e.g. unit tests. this is the simplest fix
+	({ VERSION } = await import('svelte/compiler'));
+}
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -67,4 +78,8 @@ export function dedent(strings, ...values) {
 	str = str.trim();
 
 	return str;
+}
+
+export function isSvelte5Plus() {
+	return Number(VERSION[0]) >= 5;
 }

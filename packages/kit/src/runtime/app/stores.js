@@ -1,13 +1,13 @@
 import { getContext } from 'svelte';
-import { browser } from './environment.js';
-import { stores as browser_stores } from '../client/singletons.js';
+import { BROWSER } from 'esm-env';
+import { stores as browser_stores } from '../client/client.js';
 
 /**
  * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
  * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
  */
 export const getStores = () => {
-	const stores = browser ? browser_stores : getContext('__svelte__');
+	const stores = BROWSER ? browser_stores : getContext('__svelte__');
 
 	return {
 		/** @type {typeof page} */
@@ -53,7 +53,7 @@ export const navigating = {
 };
 
 /**
- * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
  * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
@@ -62,7 +62,7 @@ export const updated = {
 	subscribe(fn) {
 		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
 
-		if (browser) {
+		if (BROWSER) {
 			updated.check = store.check;
 		}
 
@@ -70,7 +70,7 @@ export const updated = {
 	},
 	check: () => {
 		throw new Error(
-			browser
+			BROWSER
 				? 'Cannot check updated store before subscribing'
 				: 'Can only check updated store in browser'
 		);
@@ -85,10 +85,10 @@ export const updated = {
 function get_store(name) {
 	try {
 		return getStores()[name];
-	} catch (e) {
+	} catch {
 		throw new Error(
 			`Cannot subscribe to '${name}' store on the server outside of a Svelte component, as it is bound to the current request via component context. This prevents state from leaking between users.` +
-				'For more information, see https://kit.svelte.dev/docs/state-management#avoid-shared-state-on-the-server'
+				'For more information, see https://svelte.dev/docs/kit/state-management#avoid-shared-state-on-the-server'
 		);
 	}
 }

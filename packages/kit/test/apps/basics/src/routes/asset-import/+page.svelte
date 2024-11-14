@@ -3,5 +3,5 @@
 	import large from './large.jpg';
 </script>
 
-<img alt="svelte" src={small}>
-<img alt="potatoes" src={large}>
+<img alt="svelte" src={small} />
+<img alt="potatoes" src={large} />

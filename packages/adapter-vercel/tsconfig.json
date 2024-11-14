@@ -5,14 +5,13 @@
 		"strict": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"module": "es2022",
-		"moduleResolution": "node",
 		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
-	},
-	"include": ["**/*.js", "index.d.ts", "internal.d.ts"]
+	}
 }

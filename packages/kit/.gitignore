@@ -1,15 +1,13 @@
 .DS_Store
-/node_modules
-/assets/*
-/dist
-/docs
+/node_modules/
 /test/**/build
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
-/types
+/types/*.map
 .custom-out-dir
 
 # these are already ignored by the top level .gitignore
-# repeating them here as a faux prettier ignore
-.svelte-kit
+# repeating them here as a faux .prettierignore
+/.svelte-kit/
+/dist/

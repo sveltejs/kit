@@ -1,14 +1,22 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "2.3.0",
+	"version": "4.7.4",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
+	"keywords": [
+		"adapter",
+		"cloudflare pages",
+		"deploy",
+		"hosting",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-cloudflare"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"exports": {
 		".": {
@@ -26,25 +34,24 @@
 	],
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20230404.0",
-		"esbuild": "^0.17.18",
-		"worktop": "0.8.0-next.15"
+		"@cloudflare/workers-types": "^4.20231121.0",
+		"esbuild": "^0.21.5",
+		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
-		"@types/node": "^16.18.6",
-		"@types/ws": "^8.5.3",
-		"typescript": "^4.9.4"
+		"@sveltejs/kit": "workspace:^",
+		"@types/node": "^18.19.48",
+		"@types/ws": "^8.5.10",
+		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0"
-	},
-	"publishConfig": {
-		"access": "public"
+		"@sveltejs/kit": "^2.0.0",
+		"wrangler": "^3.28.4"
 	}
 }

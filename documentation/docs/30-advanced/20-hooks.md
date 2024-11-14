@@ -4,14 +4,15 @@ title: Hooks
 
 'Hooks' are app-wide functions you declare that SvelteKit will call in response to specific events, giving you fine-grained control over the framework's behaviour.
 
-There are two hooks files, both optional:
+There are three hooks files, all optional:
 
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
+- `src/hooks.js` — your app's hooks that run on both the client and server
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-> You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
+> [!NOTE] You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
 ## Server hooks
 
@@ -19,7 +20,7 @@ The following hooks can be added to `src/hooks.server.js`:
 
 ### handle
 
-This function runs every time the SvelteKit server receives a [request](web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
 /// file: src/hooks.server.js
@@ -34,9 +35,13 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
+> [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
+
+### locals
+
+To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.server.js
@@ -66,7 +71,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can define multiple `handle` functions and execute them with [the `sequence` helper function](modules#sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with [the `sequence` helper function](@sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
@@ -139,12 +144,14 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an unexpected error is thrown during loading or rendering, this function will be called with the `error` and the `event`. This allows for two things:
+If an [unexpected error](errors#Unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `$page.error`. It defaults to `{ message: 'Not Found' }` in case of a 404 (you can detect them through `event.route.id` being `null`) and to `{ message: 'Internal Error' }` for everything else. To make this type-safe, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior).
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
 
-The following code shows an example of typing the error shape as `{ message: string; errorId: string }` and returning it accordingly from the `handleError` functions:
+For errors thrown from your code (or library code called by your code) the status will be 500 and the message will be "Internal Error". While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe (albeit meaningless to the average user).
+
+To add more information to the `$page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
 
 ```ts
 /// file: src/app.d.ts
@@ -162,25 +169,27 @@ export {};
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
-declare module '@sentry/node' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/node';
-import crypto from 'crypto';
+import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export async function handleError({ error, event }) {
+export async function handleError({ error, event, status, message }) {
 	const errorId = crypto.randomUUID();
+
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { extra: { event, errorId } });
+	Sentry.captureException(error, {
+		extra: { event, errorId, status }
+	});
 
 	return {
 		message: 'Whoops!',
@@ -191,24 +200,27 @@ export async function handleError({ error, event }) {
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
-declare module '@sentry/svelte' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/svelte';
+import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleClientError} */
-export async function handleError({ error, event }) {
+export async function handleError({ error, event, status, message }) {
 	const errorId = crypto.randomUUID();
+
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { extra: { event, errorId } });
+	Sentry.captureException(error, {
+		extra: { event, errorId, status }
+	});
 
 	return {
 		message: 'Whoops!',
@@ -217,14 +229,49 @@ export async function handleError({ error, event }) {
 }
 ```
 
-> In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
+> [!NOTE] In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
-This function is not called for _expected_ errors (those thrown with the [`error`](modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
+This function is not called for _expected_ errors (those thrown with the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
-> Make sure that `handleError` _never_ throws an error
+> [!NOTE] Make sure that `handleError` _never_ throws an error
+
+## Universal hooks
+
+The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
+
+### reroute
+
+This function runs before `handle` and allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
+
+For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
+
+```js
+/// file: src/hooks.js
+// @errors: 2345
+// @errors: 2304
+
+/** @type {Record<string, string>} */
+const translated = {
+	'/en/about': '/en/about',
+	'/de/ueber-uns': '/de/about',
+	'/fr/a-propos': '/fr/about',
+};
+
+/** @type {import('@sveltejs/kit').Reroute} */
+export function reroute({ url }) {
+	if (url.pathname in translated) {
+		return translated[url.pathname];
+	}
+}
+```
+
+The `lang` parameter will be correctly derived from the returned pathname.
+
+Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
+
 
 ## Further reading
 
-- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)
+- [Tutorial: Hooks](/tutorial/kit/handle)

@@ -9,9 +9,6 @@ const config = {
 				'require-trusted-types-for': ['script']
 			}
 		},
-		dangerZone: {
-			trackServerFetches: true
-		},
 		files: {
 			assets: 'public',
 			lib: 'source/components',
@@ -36,7 +33,8 @@ const config = {
 		},
 		env: {
 			dir: './env-dir',
-			publicPrefix: 'GO_AWAY_'
+			publicPrefix: 'GO_AWAY_',
+			privatePrefix: 'TOP_SECRET_SHH'
 		}
 	}
 };

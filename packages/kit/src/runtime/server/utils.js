@@ -1,9 +1,10 @@
 import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
-import { coalesce_to_error } from '../../utils/error.js';
+import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -34,9 +35,7 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
-		(method) => method in mod
-	);
+	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
 
 	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
@@ -71,7 +70,7 @@ export function static_error_page(options, status, message) {
  */
 export async function handle_fatal_error(event, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
-	const status = error instanceof HttpError ? error.status : 500;
+	const status = get_status(error);
 	const body = await handle_error_and_jsonify(event, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
@@ -98,25 +97,16 @@ export async function handle_fatal_error(event, options, error) {
 export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
-	} else {
-		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-			error = new Proxy(error, {
-				get: (target, property) => {
-					if (property === 'stack') {
-						return fix_stack_trace(target.stack);
-					}
-
-					return Reflect.get(target, property, target);
-				}
-			});
-		}
-
-		return (
-			(await options.hooks.handleError({ error, event })) ?? {
-				message: event.route.id != null ? 'Internal Error' : 'Not Found'
-			}
-		);
 	}
+
+	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+		fix_stack_trace(error);
+	}
+
+	const status = get_status(error);
+	const message = get_message(error);
+
+	return (await options.hooks.handleError({ error, event, status, message })) ?? { message };
 }
 
 /**
@@ -156,6 +146,10 @@ export function stringify_uses(node) {
 
 	if (node.uses && node.uses.dependencies.size > 0) {
 		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses && node.uses.search_params.size > 0) {
+		uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
 	}
 
 	if (node.uses && node.uses.params.size > 0) {

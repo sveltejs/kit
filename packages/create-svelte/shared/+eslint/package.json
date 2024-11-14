@@ -1,6 +1,0 @@
-{
-	"devDependencies": {
-		"eslint": "^8.28.0",
-		"eslint-plugin-svelte": "^2.26.0"
-	}
-}

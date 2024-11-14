@@ -32,7 +32,22 @@ class BaseProvider {
 	#script_needs_csp;
 
 	/** @type {boolean} */
+	#script_src_needs_csp;
+
+	/** @type {boolean} */
+	#script_src_elem_needs_csp;
+
+	/** @type {boolean} */
 	#style_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_attr_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_elem_needs_csp;
 
 	/** @type {import('types').CspDirectives} */
 	#directives;
@@ -41,7 +56,16 @@ class BaseProvider {
 	#script_src;
 
 	/** @type {import('types').Csp.Source[]} */
+	#script_src_elem;
+
+	/** @type {import('types').Csp.Source[]} */
 	#style_src;
+
+	/** @type {import('types').Csp.Source[]} */
+	#style_src_attr;
+
+	/** @type {import('types').Csp.Source[]} */
+	#style_src_elem;
 
 	/** @type {string} */
 	#nonce;
@@ -57,6 +81,18 @@ class BaseProvider {
 
 		const d = this.#directives;
 
+		this.#script_src = [];
+		this.#script_src_elem = [];
+		this.#style_src = [];
+		this.#style_src_attr = [];
+		this.#style_src_elem = [];
+
+		const effective_script_src = d['script-src'] || d['default-src'];
+		const script_src_elem = d['script-src-elem'];
+		const effective_style_src = d['style-src'] || d['default-src'];
+		const style_src_attr = d['style-src-attr'];
+		const style_src_elem = d['style-src-elem'];
+
 		if (__SVELTEKIT_DEV__) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
@@ -70,52 +106,111 @@ class BaseProvider {
 			// 	if (d['script-src'].length === 0) delete d['script-src'];
 			// }
 
-			const effective_style_src = d['style-src'] || d['default-src'];
-
 			// ...and add unsafe-inline so we can inject <style> elements
+			// Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list, so we remove those during dev when injecting unsafe-inline
 			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
-				d['style-src'] = [...effective_style_src, 'unsafe-inline'];
+				d['style-src'] = [
+					...effective_style_src.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
+			}
+
+			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
+				d['style-src-attr'] = [
+					...style_src_attr.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
+			}
+
+			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
+				d['style-src-elem'] = [
+					...style_src_elem.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
 			}
 		}
 
-		this.#script_src = [];
-		this.#style_src = [];
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const needs_csp = (directive) =>
+			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
-		const effective_script_src = d['script-src'] || d['default-src'];
-		const effective_style_src = d['style-src'] || d['default-src'];
+		this.#script_src_needs_csp = needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = needs_csp(script_src_elem);
+		this.#style_src_needs_csp = needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = needs_csp(style_src_elem);
 
-		this.#script_needs_csp =
-			!!effective_script_src &&
-			effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0;
-
+		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
 			!__SVELTEKIT_DEV__ &&
-			!!effective_style_src &&
-			effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0;
+			(this.#style_src_needs_csp ||
+				this.#style_src_attr_needs_csp ||
+				this.#style_src_elem_needs_csp);
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+
 		this.#nonce = nonce;
 	}
 
 	/** @param {string} content */
 	add_script(content) {
-		if (this.#script_needs_csp) {
-			if (this.#use_hashes) {
-				this.#script_src.push(`sha256-${sha256(content)}`);
-			} else if (this.#script_src.length === 0) {
-				this.#script_src.push(`nonce-${this.#nonce}`);
-			}
+		if (!this.#script_needs_csp) return;
+
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+
+		if (this.#script_src_needs_csp) {
+			this.#script_src.push(source);
+		}
+
+		if (this.#script_src_elem_needs_csp) {
+			this.#script_src_elem.push(source);
 		}
 	}
 
 	/** @param {string} content */
 	add_style(content) {
-		if (this.#style_needs_csp) {
-			if (this.#use_hashes) {
-				this.#style_src.push(`sha256-${sha256(content)}`);
-			} else if (this.#style_src.length === 0) {
-				this.#style_src.push(`nonce-${this.#nonce}`);
+		if (!this.#style_needs_csp) return;
+
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(source);
+		}
+
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(source);
+		}
+
+		if (this.#style_src_attr_needs_csp) {
+			this.#style_src_attr.push(source);
+		}
+
+		if (this.#style_src_elem_needs_csp) {
+			// this is the sha256 hash for the string "/* empty */"
+			// adding it so that svelte does not break csp
+			// see https://github.com/sveltejs/svelte/pull/7800
+			const sha256_empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
+			const d = this.#directives;
+
+			if (
+				d['style-src-elem'] &&
+				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
+				!this.#style_src_elem.includes(sha256_empty_comment_hash)
+			) {
+				this.#style_src_elem.push(sha256_empty_comment_hash);
+			}
+
+			if (source !== sha256_empty_comment_hash) {
+				this.#style_src_elem.push(source);
 			}
 		}
 	}
@@ -139,10 +234,31 @@ class BaseProvider {
 			];
 		}
 
+		if (this.#style_src_attr.length > 0) {
+			directives['style-src-attr'] = [
+				...(directives['style-src-attr'] || []),
+				...this.#style_src_attr
+			];
+		}
+
+		if (this.#style_src_elem.length > 0) {
+			directives['style-src-elem'] = [
+				...(directives['style-src-elem'] || []),
+				...this.#style_src_elem
+			];
+		}
+
 		if (this.#script_src.length > 0) {
 			directives['script-src'] = [
 				...(directives['script-src'] || directives['default-src'] || []),
 				...this.#script_src
+			];
+		}
+
+		if (this.#script_src_elem.length > 0) {
+			directives['script-src-elem'] = [
+				...(directives['script-src-elem'] || []),
+				...this.#script_src_elem
 			];
 		}
 
@@ -223,8 +339,8 @@ export class Csp {
 	report_only_provider;
 
 	/**
-	 * @param {import('./types').CspConfig} config
-	 * @param {import('./types').CspOpts} opts
+	 * @param {import('./types.js').CspConfig} config
+	 * @param {import('./types.js').CspOpts} opts
 	 */
 	constructor({ mode, directives, reportOnly }, { prerender }) {
 		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);

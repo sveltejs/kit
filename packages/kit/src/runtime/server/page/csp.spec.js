@@ -2,8 +2,11 @@ import { webcrypto } from 'node:crypto';
 import { assert, beforeAll, test } from 'vitest';
 import { Csp } from './csp.js';
 
-// @ts-expect-error
-globalThis.crypto = webcrypto;
+// TODO: remove after bumping peer dependency to require Node 20
+if (!globalThis.crypto) {
+	// @ts-expect-error
+	globalThis.crypto = webcrypto;
+}
 
 beforeAll(() => {
 	// @ts-expect-error
@@ -81,10 +84,20 @@ test('skips nonce with unsafe-inline', () => {
 		{
 			mode: 'nonce',
 			directives: {
-				'default-src': ['unsafe-inline']
+				'default-src': ['unsafe-inline'],
+				'script-src': ['unsafe-inline'],
+				'script-src-elem': ['unsafe-inline'],
+				'style-src': ['unsafe-inline'],
+				'style-src-attr': ['unsafe-inline'],
+				'style-src-elem': ['unsafe-inline']
 			},
 			reportOnly: {
 				'default-src': ['unsafe-inline'],
+				'script-src': ['unsafe-inline'],
+				'script-src-elem': ['unsafe-inline'],
+				'style-src': ['unsafe-inline'],
+				'style-src-attr': ['unsafe-inline'],
+				'style-src-elem': ['unsafe-inline'],
 				'report-uri': ['/']
 			}
 		},
@@ -94,9 +107,42 @@ test('skips nonce with unsafe-inline', () => {
 	);
 
 	csp.add_script('');
+	csp.add_style('');
 
-	assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
-	assert.equal(csp.report_only_provider.get_header(), "default-src 'unsafe-inline'; report-uri /");
+	assert.equal(
+		csp.csp_provider.get_header(),
+		"default-src 'unsafe-inline'; script-src 'unsafe-inline'; script-src-elem 'unsafe-inline'; style-src 'unsafe-inline'; style-src-attr 'unsafe-inline'; style-src-elem 'unsafe-inline'"
+	);
+	assert.equal(
+		csp.report_only_provider.get_header(),
+		"default-src 'unsafe-inline'; script-src 'unsafe-inline'; script-src-elem 'unsafe-inline'; style-src 'unsafe-inline'; style-src-attr 'unsafe-inline'; style-src-elem 'unsafe-inline'; report-uri /"
+	);
+});
+
+test('skips nonce in style-src when using unsafe-inline', () => {
+	const csp = new Csp(
+		{
+			mode: 'nonce',
+			directives: {
+				'style-src': ['self', 'unsafe-inline']
+			},
+			reportOnly: {
+				'style-src': ['self', 'unsafe-inline'],
+				'report-uri': ['/']
+			}
+		},
+		{
+			prerender: false
+		}
+	);
+
+	csp.add_style('');
+
+	assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
+	assert.equal(
+		csp.report_only_provider.get_header(),
+		"style-src 'self' 'unsafe-inline'; report-uri /"
+	);
 });
 
 test('skips hash with unsafe-inline', () => {
@@ -120,6 +166,30 @@ test('skips hash with unsafe-inline', () => {
 
 	assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
 	assert.equal(csp.report_only_provider.get_header(), "default-src 'unsafe-inline'; report-uri /");
+});
+
+test('does not add empty comment hash to style-src-elem if already defined', () => {
+	const csp = new Csp(
+		{
+			mode: 'hash',
+			directives: {
+				'style-src-elem': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=']
+			},
+			reportOnly: {
+				'report-uri': ['/']
+			}
+		},
+		{
+			prerender: false
+		}
+	);
+
+	csp.add_style('/* empty */');
+
+	assert.equal(
+		csp.csp_provider.get_header(),
+		"style-src-elem 'self' 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc='"
+	);
 });
 
 test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
@@ -150,6 +220,72 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 	);
 });
 
+test('adds nonce style-src-attr and style-src-elem and nonce + sha to script-src-elem if necessary', () => {
+	const csp = new Csp(
+		{
+			mode: 'auto',
+			directives: {
+				'script-src-elem': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self']
+			},
+			reportOnly: {}
+		},
+		{
+			prerender: false
+		}
+	);
+
+	csp.add_script('');
+	csp.add_style('');
+
+	const csp_header = csp.csp_provider.get_header();
+	assert.ok(csp_header.includes("script-src-elem 'self' 'nonce-"));
+	assert.ok(csp_header.includes("style-src-attr 'self' 'nonce-"));
+	assert.ok(
+		csp_header.includes(
+			"style-src-elem 'self' 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=' 'nonce-"
+		)
+	);
+});
+
+test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessary during prerendering', () => {
+	const csp = new Csp(
+		{
+			mode: 'auto',
+			directives: {
+				'script-src-elem': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self']
+			},
+			reportOnly: {}
+		},
+		{
+			prerender: true
+		}
+	);
+
+	csp.add_script('');
+	csp.add_style('');
+
+	const csp_header = csp.csp_provider.get_header();
+	assert.ok(
+		csp_header.includes(
+			"script-src-elem 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+	assert.ok(
+		csp_header.includes(
+			"style-src-attr 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+	assert.ok(
+		csp_header.includes(
+			"style-src-elem 'self' 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+});
+
 test('adds unsafe-inline styles in dev', () => {
 	// @ts-expect-error
 	globalThis.__SVELTEKIT_DEV__ = true;
@@ -158,10 +294,14 @@ test('adds unsafe-inline styles in dev', () => {
 		{
 			mode: 'hash',
 			directives: {
-				'default-src': ['self']
+				'default-src': ['self'],
+				'style-src-attr': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc='],
+				'style-src-elem': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=']
 			},
 			reportOnly: {
 				'default-src': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self'],
 				'report-uri': ['/']
 			}
 		},
@@ -174,12 +314,12 @@ test('adds unsafe-inline styles in dev', () => {
 
 	assert.equal(
 		csp.csp_provider.get_header(),
-		"default-src 'self'; style-src 'self' 'unsafe-inline'"
+		"default-src 'self'; style-src-attr 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
 	);
 
 	assert.equal(
 		csp.report_only_provider.get_header(),
-		"default-src 'self'; report-uri /; style-src 'self' 'unsafe-inline'"
+		"default-src 'self'; style-src-attr 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; report-uri /; style-src 'self' 'unsafe-inline'"
 	);
 });
 

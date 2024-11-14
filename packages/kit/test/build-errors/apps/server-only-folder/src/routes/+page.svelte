@@ -1,5 +1,5 @@
 <script>
-	import { should_explode } from '$lib/server/something/test.js';
+	import { should_explode } from '$lib/server/something/private.js';
 </script>
 
 <p>{should_explode}</p>

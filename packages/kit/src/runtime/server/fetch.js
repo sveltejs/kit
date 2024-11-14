@@ -1,6 +1,7 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
+import { read_implementation } from '__sveltekit/server';
 
 /**
  * @param {{
@@ -9,12 +10,15 @@ import * as paths from '__sveltekit/paths';
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
- *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
+ *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
 export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
-	return async (info, init) => {
+	/**
+	 * @type {typeof fetch}
+	 */
+	const server_fetch = async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
@@ -23,7 +27,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return await options.hooks.handleFetch({
+		return options.hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -51,7 +55,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				}
 
 				if (url.origin !== event.url.origin) {
-					// allow cookie passthrough for "same-origin"
+					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
 					// -     my.domain.com WILL receive cookies
@@ -59,6 +63,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					// - sub.my.domain.com WILL receive cookies
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
+					// Do not forward other cookies for "credentials: include" because we don't know
+					// which cookie belongs to which domain (browser does not pass this info)
 					if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== 'omit') {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
@@ -76,8 +82,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename);
-				const is_asset_html = manifest.assets.has(filename_html);
+				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset_html =
+					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
@@ -89,6 +96,16 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
+						});
+					} else if (read_implementation && file in manifest._.server_assets) {
+						const length = manifest._.server_assets[file];
+						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+
+						return new Response(read_implementation(file), {
+							headers: {
+								'Content-Length': '' + length,
+								'Content-Type': type
+							}
 						});
 					}
 
@@ -118,7 +135,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				/** @type {Response} */
 				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
@@ -127,20 +143,33 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
 					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-						const { name, value, ...options } = set_cookie_parser.parseString(str);
+						const { name, value, ...options } = set_cookie_parser.parseString(str, {
+							decodeValues: false
+						});
+
+						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
 						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(
-							name,
-							value,
-							/** @type {import('cookie').CookieSerializeOptions} */ (options)
-						);
+						set_internal(name, value, {
+							path,
+							encode: (value) => value,
+							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+						});
 					}
 				}
 
 				return response;
 			}
 		});
+	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to prevent this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = server_fetch(input, init);
+		response.catch(() => {});
+		return response;
 	};
 }
 

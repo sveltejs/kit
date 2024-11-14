@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -197,7 +198,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope) (500 Internal Error)"'
 			);
 		});
 	}
@@ -212,7 +213,7 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Crashing now"'
+				'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 			);
 		});
 
@@ -236,8 +237,13 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
+			const details = javaScriptEnabled
+				? "related to route '/errors/invalid-load-response'"
+				: 'in src/routes/errors/invalid-load-response/+page.js';
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`) (500 Internal Error)"`
 			);
 		});
 
@@ -254,8 +260,9 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-server-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`) (500 Internal Error)"'
 			);
 		});
 	}
@@ -265,7 +272,7 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 
 		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
@@ -276,7 +283,7 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url"'
+			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url (404 Not Found)"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});
@@ -313,7 +320,9 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "500"');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "500 (500 Internal Error)"'
+		);
 	});
 
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
@@ -329,7 +338,7 @@ test.describe('Errors', () => {
 
 		expect(res && res.status()).toBe(500);
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "nope"'
+			'This is your custom error page saying: "nope (500 Internal Error)"'
 		);
 	});
 
@@ -351,7 +360,7 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('500');
 
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages with actions"'
+			'This is your custom error page saying: "Cannot prerender pages with actions (500 Internal Error)"'
 		);
 	});
 
@@ -364,7 +373,7 @@ test.describe('Errors', () => {
 		await clicknav('#get-implicit');
 
 		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
+			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
@@ -407,7 +416,7 @@ test.describe('Errors', () => {
 		await clicknav('#post-implicit');
 
 		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
+			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
@@ -474,7 +483,7 @@ test.describe('Redirects', () => {
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Redirect loop"'
+				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
@@ -502,7 +511,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message}"`
+			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 
 		if (!javaScriptEnabled) {
@@ -522,7 +531,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message}"`
+			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 	});
 
@@ -553,7 +562,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('throw redirect in handle hook', async ({ baseURL, clicknav, page }) => {
+	test('redirect in handle hook', async ({ baseURL, clicknav, page }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/in-handle?throw"]');
@@ -566,11 +575,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('sets cookies when throw redirect in handle hook', async ({
-		page,
-		app,
-		javaScriptEnabled
-	}) => {
+	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
@@ -743,7 +748,6 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -751,12 +755,8 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
-		expect(
-			await page.evaluate(
-				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
-			)
-		).toBe('next focus element');
+
+		await page.waitForSelector('button:focus');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
@@ -936,6 +936,34 @@ test.describe('Routing', () => {
 		);
 	});
 
+	test('trailing slash server with config ignore and no trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+	});
+
+	test('trailing slash server with config ignore and trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+	});
+
 	test('trailing slash server with config never', async ({ page, clicknav }) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/never/"]');
@@ -999,5 +1027,26 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+});
+
+test.describe('$app/server', () => {
+	test('can read a file', async ({ page }) => {
+		await page.goto('/read-file');
+
+		const auto = await page.textContent('[data-testid="auto"]');
+		const url = await page.textContent('[data-testid="url"]');
+		const local_glob = await page.textContent('[data-testid="local_glob"]');
+		const external_glob = await page.textContent('[data-testid="external_glob"]');
+		const svg = await page.innerHTML('[data-testid="svg"]');
+
+		// the emoji is there to check that base64 decoding works correctly
+		expect(auto.trim()).toBe('Imported without ?url 😎');
+		expect(url.trim()).toBe('Imported with ?url 😎');
+		expect(local_glob.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob.trim()).toBe(
+			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
+		);
+		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
 	});
 });

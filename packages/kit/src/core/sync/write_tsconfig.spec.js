@@ -9,12 +9,13 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 				simpleKey: 'simple/value',
 				key: 'value',
 				'key/*': 'some/other/value/*',
-				keyToFile: 'path/to/file.ts'
+				keyToFile: 'path/to/file.ts',
+				$routes: '.svelte-kit/types/src/routes'
 			}
 		}
 	});
 
-	const { compilerOptions } = get_tsconfig(kit, false);
+	const { compilerOptions } = get_tsconfig(kit);
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
@@ -23,32 +24,9 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
 		'key/*': ['../some/other/value/*'],
-		keyToFile: ['../path/to/file.ts']
-	});
-});
-
-test('Creates tsconfig path aliases from kit.alias with existing baseUrl', () => {
-	const { kit } = validate_config({
-		kit: {
-			alias: {
-				simpleKey: 'simple/value',
-				key: 'value',
-				'key/*': 'some/other/value/*',
-				keyToFile: 'path/to/file.ts'
-			}
-		}
-	});
-
-	const { compilerOptions } = get_tsconfig(kit, true);
-
-	// $lib isn't part of the outcome because there's a "path exists"
-	// check in the implementation
-	expect(compilerOptions.paths).toEqual({
-		simpleKey: ['simple/value'],
-		'simpleKey/*': ['simple/value/*'],
-		key: ['value'],
-		'key/*': ['some/other/value/*'],
-		keyToFile: ['path/to/file.ts']
+		keyToFile: ['../path/to/file.ts'],
+		$routes: ['./types/src/routes'],
+		'$routes/*': ['./types/src/routes/*']
 	});
 });
 
@@ -63,8 +41,9 @@ test('Allows generated tsconfig to be mutated', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit, false);
+	const config = get_tsconfig(kit);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -80,8 +59,9 @@ test('Allows generated tsconfig to be replaced', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit, false);
+	const config = get_tsconfig(kit);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -94,11 +74,13 @@ test('Creates tsconfig include from kit.files', () => {
 		}
 	});
 
-	const { include } = get_tsconfig(kit, false);
+	const { include } = get_tsconfig(kit);
 
 	expect(include).toEqual([
 		'ambient.d.ts',
+		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
+		'../vite.config.js',
 		'../vite.config.ts',
 		'../app/**/*.js',
 		'../app/**/*.ts',

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 
 	/** @type {string} */
-	let hash
+	let hash;
 
 	onMount(set_hash);
 

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
+import { replace_hydration_attrs } from '../../test-utils';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -59,6 +60,14 @@ test('renders a relative redirect', () => {
 	);
 });
 
+test('renders a shell when SSR is turned off and there is no server data', () => {
+	const content = read('spa-shell.html');
+	assert.match(
+		content,
+		/<!doctype html>\n<html lang="en">([\s]*?)<head>([\s]*?)<meta charset="utf-8" \/>([\s]*?)<meta name="viewport" content="width=device-width, initial-scale=1" \/>([\s\S]*?)<\/head>\n([\s]*?)<body>([\s]*?)<script>([\s\S]*?)<\/script>([\s]*?)<\/body>\n<\/html>/g
+	);
+});
+
 test('inserts http-equiv tag for cache-control headers', () => {
 	const content = read('max-age.html');
 	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
@@ -113,6 +122,21 @@ test('generates __data.json file for shadow endpoints', () => {
 	});
 });
 
+test('generates __data.json file for shadow endpoints with ssr turned off', () => {
+	const data = JSON.parse(read('shadowed-get/ssr-off/__data.json'));
+	expect(data).toEqual({
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ answer: 1 }, 42],
+				uses: {}
+			}
+		]
+	});
+});
+
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post.html`));
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post/__data.json`));
@@ -146,7 +170,7 @@ test('decodes paths when writing files', () => {
 });
 
 test('prerendering is set to true in root +layout.js', () => {
-	const content = read('prerendering-true.html');
+	const content = replace_hydration_attrs(read('prerendering-true.html'));
 	expect(content).toMatch('<h1>prerendering: true/true</h1>');
 });
 
@@ -179,7 +203,7 @@ test('fetches data from local endpoint', () => {
 
 test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
-	expect(content).toMatch('<h2>http://example.com</h2>');
+	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
 test('$env - includes environment variables', () => {
@@ -189,16 +213,12 @@ test('$env - includes environment variables', () => {
 		content,
 		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
 	);
-	assert.match(
-		content,
-		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
-	);
+
 	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
-	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
 });
 
 test('prerenders a page in a (group)', () => {
-	const content = read('grouped.html');
+	const content = replace_hydration_attrs(read('grouped.html'));
 	expect(content).toMatch('<h1>grouped</h1>');
 });
 
@@ -227,4 +247,21 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 test('prerenders responses with immutable Headers', () => {
 	const content = read('immutable-headers');
 	expect(content).toMatch('foo');
+});
+
+test('prerenders paths with optional parameters with empty values', () => {
+	const content = read('optional-params.html');
+	expect(content).includes('Path with Value');
+});
+
+test('crawls links that start with config.prerender.origin', () => {
+	const content = read('prerender-origin/dynamic.html');
+	expect(content).toBeTruthy();
+});
+
+test('identifies missing ids', () => {
+	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
+	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
+	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
+	expect(missing_ids).toEqual(['missing-id']);
 });

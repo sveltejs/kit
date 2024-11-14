@@ -1,23 +1,9 @@
 import * as devalue from 'devalue';
-import { BROWSER, DEV } from 'esm-env';
-import { client } from '../client/singletons.js';
+import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
+import { applyAction } from '../client/client.js';
 
-/**
- * This action updates the `form` property of the current page with the given data and updates `$page.status`.
- * In case of an error, it redirects to the nearest error page.
- * @template {Record<string, unknown> | undefined} Success
- * @template {Record<string, unknown> | undefined} Failure
- * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
- * @returns {Promise<void>}
- */
-export function applyAction(result) {
-	if (BROWSER) {
-		return client.apply_action(result);
-	} else {
-		throw new Error('Cannot call applyAction(...) on the server');
-	}
-}
+export { applyAction };
 
 /**
  * Use this function to deserialize the response from a form submission.
@@ -50,20 +36,6 @@ export function deserialize(result) {
 }
 
 /**
- * @param {string} old_name
- * @param {string} new_name
- * @param {string} call_location
- * @returns void
- */
-function warn_on_access(old_name, new_name, call_location) {
-	if (!DEV) return;
-	// TODO 2.0: Remove this code
-	console.warn(
-		`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
-	);
-}
-
-/**
  * Shallow clone an element, so that we can access e.g. `form.action` without worrying
  * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
  * @template {HTMLElement} T
@@ -84,7 +56,7 @@ function clone(element) {
  * If nothing is returned, the fallback will be used.
  *
  * If this function or its return value isn't set, it
- * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+ * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
  * - updates `$page.status`
  * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
  * - redirects in case of a redirect response
@@ -104,17 +76,25 @@ export function enhance(form_element, submit = () => {}) {
 	/**
 	 * @param {{
 	 *   action: URL;
+	 *   invalidateAll?: boolean;
 	 *   result: import('@sveltejs/kit').ActionResult;
 	 *   reset?: boolean
 	 * }} opts
 	 */
-	const fallback_callback = async ({ action, result, reset }) => {
+	const fallback_callback = async ({
+		action,
+		result,
+		reset = true,
+		invalidateAll: shouldInvalidateAll = true
+	}) => {
 		if (result.type === 'success') {
-			if (reset !== false) {
+			if (reset) {
 				// We call reset from the prototype to avoid DOM clobbering
 				HTMLFormElement.prototype.reset.call(form_element);
 			}
-			await invalidateAll();
+			if (shouldInvalidateAll) {
+				await invalidateAll();
+			}
 		}
 
 		// For success/failure results, only apply action if it belongs to the
@@ -130,6 +110,11 @@ export function enhance(form_element, submit = () => {}) {
 
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
+		const method = event.submitter?.hasAttribute('formmethod')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
+			: clone(form_element).method;
+		if (method !== 'post') return;
+
 		event.preventDefault();
 
 		const action = new URL(
@@ -139,16 +124,18 @@ export function enhance(form_element, submit = () => {}) {
 				: clone(form_element).action
 		);
 
+		const enctype = event.submitter?.hasAttribute('formenctype')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
+			: clone(form_element).enctype;
+
 		const form_data = new FormData(form_element);
 
-		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
+		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
-					// TODO 2.0: Upgrade to `throw Error`
-					console.warn(
-						'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+					throw new Error(
+						'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
 					);
-					break;
 				}
 			}
 		}
@@ -163,21 +150,12 @@ export function enhance(form_element, submit = () => {}) {
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
-		// TODO 2.0: Remove `data` and `form`
 		const callback =
 			(await submit({
 				action,
 				cancel,
 				controller,
-				get data() {
-					warn_on_access('data', 'formData', 'use:enhance submit function');
-					return form_data;
-				},
 				formData: form_data,
-				get form() {
-					warn_on_access('form', 'formElement', 'use:enhance submit function');
-					return form_element;
-				},
 				formElement: form_element,
 				submitter: event.submitter
 			})) ?? fallback_callback;
@@ -187,14 +165,31 @@ export function enhance(form_element, submit = () => {}) {
 		let result;
 
 		try {
+			const headers = new Headers({
+				accept: 'application/json',
+				'x-sveltekit-action': 'true'
+			});
+
+			// do not explicitly set the `Content-Type` header when sending `FormData`
+			// or else it will interfere with the browser's header setting
+			// see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Using_FormData_Objects#sect4
+			if (enctype !== 'multipart/form-data') {
+				headers.set(
+					'Content-Type',
+					/^(:?application\/x-www-form-urlencoded|text\/plain)$/.test(enctype)
+						? enctype
+						: 'application/x-www-form-urlencoded'
+				);
+			}
+
+			// @ts-expect-error `URLSearchParams(form_data)` is kosher, but typescript doesn't know that
+			const body = enctype === 'multipart/form-data' ? form_data : new URLSearchParams(form_data);
+
 			const response = await fetch(action, {
 				method: 'POST',
-				headers: {
-					accept: 'application/json',
-					'x-sveltekit-action': 'true'
-				},
+				headers,
 				cache: 'no-store',
-				body: form_data,
+				body,
 				signal: controller.signal
 			});
 
@@ -207,17 +202,15 @@ export function enhance(form_element, submit = () => {}) {
 
 		callback({
 			action,
-			get data() {
-				warn_on_access('data', 'formData', 'callback returned from use:enhance submit function');
-				return form_data;
-			},
 			formData: form_data,
-			get form() {
-				warn_on_access('form', 'formElement', 'callback returned from use:enhance submit function');
-				return form_element;
-			},
 			formElement: form_element,
-			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
+			update: (opts) =>
+				fallback_callback({
+					action,
+					result,
+					reset: opts?.reset,
+					invalidateAll: opts?.invalidateAll
+				}),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
 		});

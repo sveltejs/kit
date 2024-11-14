@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import process from 'node:process';
 import { expect, test } from '@playwright/test';
 
 const cwd = process.cwd();
@@ -26,4 +27,9 @@ test('renders content in fallback page when JS runs', async ({ page }) => {
 test('renders error page for missing page', async ({ page }) => {
 	await page.goto('/nosuchpage');
 	expect(await page.textContent('h1')).toEqual('404');
+});
+
+test('uses correct environment variables for fallback page (mode = staging)', async ({ page }) => {
+	await page.goto('/fallback/x/y/z');
+	expect(await page.textContent('b')).toEqual('42');
 });

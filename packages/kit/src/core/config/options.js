@@ -1,6 +1,7 @@
 import { join } from 'node:path';
+import process from 'node:process';
 
-/** @typedef {import('./types').Validator} Validator */
+/** @typedef {import('./types.js').Validator} Validator */
 
 const directives = object({
 	'child-src': string_array(),
@@ -67,7 +68,7 @@ const options = object(
 						message += ', rather than the name of an adapter';
 					}
 
-					throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
+					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
 				}
 
 				return input;
@@ -91,7 +92,7 @@ const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs/configuration"
+							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
 						);
 					}
 				} else {
@@ -111,23 +112,20 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
-			dangerZone: object({
-				// TODO 2.0: Remove this
-				trackServerFetches: boolean(false)
-			}),
-
 			embedded: boolean(false),
 
 			env: object({
 				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_')
+				publicPrefix: string('PUBLIC_'),
+				privatePrefix: string('')
 			}),
 
 			files: object({
 				assets: string('static'),
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server'))
+					server: string(join('src', 'hooks.server')),
+					universal: string(join('src', 'hooks'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
@@ -153,7 +151,7 @@ const options = object(
 
 					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 						throw new Error(
-							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
 						);
 					}
 
@@ -165,26 +163,20 @@ const options = object(
 					if (input) {
 						if (!/^[a-z]+:\/\//.test(input)) {
 							throw new Error(
-								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs/configuration#paths`
+								`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
 							);
 						}
 
 						if (input.endsWith('/')) {
 							throw new Error(
-								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+								`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
 							);
 						}
 					}
 
 					return input;
 				}),
-				relative: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'boolean') {
-						throw new Error(`${keypath} option must be a boolean or undefined`);
-					}
-
-					return input;
-				})
+				relative: boolean(true)
 			}),
 
 			prerender: object({
@@ -210,7 +202,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleHttpError` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -224,7 +216,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleMissingId` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -238,7 +230,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -255,7 +247,7 @@ const options = object(
 
 					try {
 						origin = new URL(input).origin;
-					} catch (e) {
+					} catch {
 						throw new Error(`${keypath} must be a valid origin`);
 					}
 

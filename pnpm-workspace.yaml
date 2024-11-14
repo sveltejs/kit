@@ -1,6 +1,5 @@
 packages:
   - 'packages/*'
-  - 'sites/*'
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'
@@ -8,3 +7,4 @@ packages:
   - 'packages/kit/test/build-errors/apps/*'
   - 'packages/create-svelte/templates/*'
   - '!.test-tmp/**'
+  - 'playgrounds/*'

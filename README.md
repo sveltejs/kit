@@ -2,7 +2,7 @@
 
 # SvelteKit
 
-Web development, streamlined. Read the [documentation](https://kit.svelte.dev/docs) to get started.
+Web development, streamlined. Read the [documentation](https://svelte.dev/docs/kit) to get started.
 
 ### Packages
 
@@ -17,11 +17,11 @@ Web development, streamlined. Read the [documentation](https://kit.svelte.dev/do
 | [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
 | [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
 | [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
+| [@sveltejs/enhanced-img](packages/enhanced-img)                             | [Changelog](packages/enhanced-img/CHANGELOG.md)               |
 | [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
 | [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
-| [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
 
-[Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
+[Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.
 
 ## Bug reporting
 
@@ -43,4 +43,4 @@ Funds donated via Open Collective will be used for compensating expenses related
 
 ## License
 
-[MIT](https://github.com/sveltejs/kit/blob/master/LICENSE)
+[MIT](https://github.com/sveltejs/kit/blob/main/LICENSE)

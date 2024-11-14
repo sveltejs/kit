@@ -3,9 +3,9 @@
 		"/styles.css",
 		"/favicon.png",
 		"/test&ampersand",
-		"/test\"quotation",
-		"/test♡decimal",
-		"/test♥hex"
+		"/test%22quotation",
+		"/test%E2%99%A1decimal",
+		"/test%E2%99%A5hex"
 	],
 	"ids": []
 }

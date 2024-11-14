@@ -1,5 +1,5 @@
 <script>
-	const mod = import('$lib/server/something/test.js');
+	const mod = import('$lib/server/something/private.js');
 </script>
 
 {#await mod then resolved}

@@ -12,34 +12,36 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 /**
  * @param {string} dir
  */
-async function run_test(dir) {
+function run_test(dir) {
 	rimraf(path.join(cwd, dir, '.svelte-kit'));
 
 	const initial = options({}, 'config');
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
+	initial.kit.files.params = path.resolve(cwd, dir, 'params');
 	initial.kit.files.routes = path.resolve(cwd, dir);
 	initial.kit.outDir = path.resolve(cwd, path.join(dir, '.svelte-kit'));
 
 	const manifest = create_manifest_data({
 		config: /** @type {import('types').ValidatedConfig} */ (initial)
 	});
-	await write_all_types(initial, manifest);
+
+	write_all_types(initial, manifest);
 }
 
-test('Creates correct $types', async () => {
+test('Creates correct $types', () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
-	await run_test('actions');
-	await run_test('simple-page-shared-only');
-	await run_test('simple-page-server-only');
-	await run_test('simple-page-server-and-shared');
-	await run_test('layout');
-	await run_test('layout-advanced');
-	await run_test('slugs');
-	await run_test('slugs-layout-not-all-pages-have-load');
+	run_test('actions');
+	run_test('simple-page-shared-only');
+	run_test('simple-page-server-only');
+	run_test('simple-page-server-and-shared');
+	run_test('layout');
+	run_test('layout-advanced');
+	run_test('slugs');
+	run_test('slugs-layout-not-all-pages-have-load');
+	run_test('param-type-inference');
 	try {
 		execSync('pnpm testtypes', { cwd });
 	} catch (e) {

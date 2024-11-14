@@ -22,3 +22,12 @@
 >
 	invalidate server
 </button>
+
+<p class="neither">neither</p>
+<button
+	type="button"
+	class="neither"
+	on:click={() => (window.promise = invalidate('invalidate-depends:neither'))}
+>
+	invalidate neither
+</button>

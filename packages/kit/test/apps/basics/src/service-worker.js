@@ -1,6 +1,7 @@
 import { build, version } from '$service-worker';
+import { PUBLIC_STATIC } from '$env/static/public';
 
-const name = `cache-${version}`;
+const name = `cache-${version}-${PUBLIC_STATIC}`;
 
 self.addEventListener('install', (event) => {
 	// @ts-expect-error

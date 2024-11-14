@@ -1,5 +1,5 @@
 <script>
-	export let data 
+	export let data;
 </script>
 
 <p>Page without load</p>

@@ -2,13 +2,7 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
-		"noEmit": true,
-		"paths": {
-			"@sveltejs/kit": ["../../../types"],
-			"$lib": ["./source/components"],
-			"$lib/*": ["./source/components/*"],
-			"types": ["../../../types/internal"]
-		}
+		"noEmit": true
 	},
 	"extends": "./.custom-out-dir/tsconfig.json"
 }

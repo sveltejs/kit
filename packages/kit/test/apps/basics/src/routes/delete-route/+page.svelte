@@ -6,7 +6,7 @@
 		fetch('delete-route/42.json', { method: 'DELETE' })
 			.then((r) => r.json())
 			.then(
-				({id}) => (status = `deleted ${id}`),
+				({ id }) => (status = `deleted ${id}`),
 				(e) => (status = e.toString())
 			);
 	}

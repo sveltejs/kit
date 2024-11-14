@@ -34,7 +34,7 @@ export const actions = {
 		};
 	},
 	error: () => {
-		throw error(400, 'error');
+		error(400, 'error');
 	},
 	echo: async ({ request }) => {
 		const data = await request.formData();
@@ -52,6 +52,17 @@ export const actions = {
 			path: '/actions/enhance'
 		});
 
+		return {};
+	},
+	send_file: async ({ request }) => {
+		const data = await request.formData();
+		const file = data.get('file');
+
+		if (file instanceof File) {
+			return {
+				result: 'file name:' + file.name
+			};
+		}
 		return {};
 	}
 };

@@ -1,6 +1,6 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
-import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -190,7 +190,7 @@ test.describe('Endpoints', () => {
 	});
 
 	test('OPTIONS handler', async ({ request }) => {
-		const url = '/endpoint-output/options';
+		const url = '/endpoint-output';
 
 		const response = await request.fetch(url, {
 			method: 'OPTIONS'
@@ -198,6 +198,71 @@ test.describe('Endpoints', () => {
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
+	});
+
+	test('HEAD handler', async ({ request }) => {
+		const url = '/endpoint-output/head-handler';
+
+		const page_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(page_response.status()).toBe(200);
+		expect(await page_response.text()).toBe('');
+		expect(page_response.headers()['x-sveltekit-page']).toBe('true');
+
+		const endpoint_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(endpoint_response.status()).toBe(200);
+		expect(await endpoint_response.text()).toBe('');
+		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
+	});
+
+	test('catch-all handler', async ({ request }) => {
+		const url = '/endpoint-output/fallback';
+
+		let response = await request.fetch(url, {
+			method: 'GET'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+
+		response = await request.fetch(url, {
+			method: 'MOVE' // also works with arcane methods
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+
+		response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+	});
+
+	test('can get assets using absolute path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/absolute');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
+	});
+
+	test('can get assets using relative path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/relative');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
 	});
 });
 
@@ -239,17 +304,17 @@ test.describe('Errors', () => {
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 
 		// check the stack wasn't mutated
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 	});
 
-	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+	test('error(...) in endpoint', async ({ request, read_errors }) => {
 		// HTML
 		{
 			const res = await request.get('/errors/endpoint-throw-error', {
@@ -281,7 +346,7 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
+	test('redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 
@@ -308,7 +373,7 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No actions exist for this page'
+				message: 'POST method not allowed. No actions exist for this page (405 Method Not Allowed)'
 			}
 		});
 	});
@@ -339,7 +404,7 @@ test.describe('Errors', () => {
 			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				message: 'Error in handle'
+				message: 'Error in handle (500 Internal Error)'
 			});
 		}
 	});
@@ -412,6 +477,33 @@ test.describe('Load', () => {
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
+
+	test('does not run when using invalid request methods', async ({ request }) => {
+		const load_url = '/load';
+
+		let response = await request.fetch(load_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS');
+
+		const actions_url = '/actions/enhance';
+		response = await request.fetch(actions_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
+
+	test('allows logging URL search params', async ({ page }) => {
+		await page.goto('/load/server-log-search-param');
+
+		expect(await page.textContent('p')).toBe('hello world');
+	});
 });
 
 test.describe('Routing', () => {
@@ -429,6 +521,21 @@ test.describe('Routing', () => {
 
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
+	});
+
+	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({
+		request
+	}) => {
+		if (process.env.DEV) return;
+
+		let response = await request.get('/routing/prerendered/trailing-slash/always?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/never/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/ignore/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
 	});
 });
 
@@ -467,23 +574,18 @@ test.describe('Static files', () => {
 	});
 
 	test('Vite serves assets in allowed directories', async ({ page, request }) => {
-		await page.goto('/assets');
-		const path = await page.textContent('h1');
+		await page.goto('/asset-import');
+		const path = await page.getAttribute('img[alt=potatoes]', 'src');
 		if (!path) throw new Error('Could not determine path');
 
 		const r1 = await request.get(path);
 		expect(r1.status()).toBe(200);
-		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
+		expect(await r1.text()).toBeTruthy();
 
 		// check that we can fetch a route which overlaps with the name of a file
 		const r2 = await request.get('/package.json');
 		expect(r2.status()).toBe(200);
 		expect(await r2.json()).toEqual({ works: true });
-	});
-
-	test('Filenames are case-sensitive', async ({ request }) => {
-		const response = await request.get('/static.JSON');
-		expect(response.status()).toBe(404);
 	});
 
 	test('Serves symlinked asset', async ({ request }) => {
@@ -521,5 +623,28 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/_app/version.json');
 		const headers = response.headers();
 		expect(headers['cache-control'] || '').not.toContain('immutable');
+	});
+
+	test('handles responses with immutable headers', async ({ request }) => {
+		const response = await request.get('/immutable-headers');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('foo');
+	});
+
+	test('serves prerendered non-latin pages', async ({ request }) => {
+		const response = await request.get('/prerendering/中文');
+		expect(response.status()).toBe(200);
+	});
+});
+
+test.describe('reroute', () => {
+	test('Apply reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/basic/a');
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
+		const response = await page.goto('/reroute/error-handling/server-error');
+		expect(response?.status()).toBe(500);
 	});
 });

@@ -4,7 +4,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		// disable inlining to test asset base path
+		assetsInlineLimit: 0
 	},
 
 	clearScreen: false,

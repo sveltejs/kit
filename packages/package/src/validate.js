@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import colors from 'kleur';
 
 /**
- * @param {import("./types").Options} options
+ * @param {import("./types.js").Options} options
  */
 export function create_validator(options) {
 	const { analyse_code, validate } = _create_validator(options);
@@ -38,7 +38,7 @@ export function create_validator(options) {
 	};
 }
 /**
- * @param {import("./types").Options} options
+ * @param {import("./types.js").Options} options
  */
 export function _create_validator(options) {
 	/** @type {Set<string>} */
@@ -87,8 +87,8 @@ export function _create_validator(options) {
 
 		if (uses_import_meta) {
 			warnings.push(
-				'Avoid usage of `import.meta.env` in your code. It requires a bundler to work. ' +
-					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
+				'Avoid usage of `import.meta.env` in your code. It only works in apps bundled with Vite. ' +
+					'Consider using packages like `esm-env` instead which works with all bundlers or without bundling.'
 			);
 		}
 
@@ -119,7 +119,7 @@ export function _create_validator(options) {
 				warnings.push(
 					'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
 						'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
-						'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+						'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 				);
 			}
 
@@ -142,7 +142,7 @@ export function _create_validator(options) {
 		} else {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
-					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 			);
 		}
 

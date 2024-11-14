@@ -1,18 +1,18 @@
 # The fastest way to build Svelte apps
 
-This is the [SvelteKit](https://kit.svelte.dev) framework and CLI.
+This is the [SvelteKit](https://svelte.dev/docs/kit) framework and CLI.
 
-The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) package:
+The quickest way to get started is via the [sv](https://npmjs.com/package/sv) package:
 
 ```bash
-npm create svelte@latest my-app
+npx sv create my-app
 cd my-app
 npm install
 npm run dev
 ```
 
-See the [documentation](https://kit.svelte.dev/docs) to learn more.
+See the [documentation](https://svelte.dev/docs/kit) to learn more.
 
 ## Changelog
 
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/kit/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/main/packages/kit/CHANGELOG.md).

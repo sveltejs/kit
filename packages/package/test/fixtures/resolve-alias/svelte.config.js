@@ -1,4 +1,4 @@
-import { vitePreprocess } from '../../../../kit/src/exports/vite/index.js';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 

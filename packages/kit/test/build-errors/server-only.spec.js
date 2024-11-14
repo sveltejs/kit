@@ -1,6 +1,7 @@
 import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import process from 'node:process';
 
 test('$lib/*.server.* is not statically importable from the client', () => {
 	try {
@@ -45,7 +46,7 @@ test('$lib/server/* is not statically importable from the client', () => {
 		});
 	} catch (err) {
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/test.js into client-side code'),
+			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
 			`received unexpected exception message ${err.message}`
 		);
 		return;
@@ -62,7 +63,7 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 		});
 	} catch (err) {
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/test.js into client-side code'),
+			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
 			`received unexpected exception message ${err.message}`
 		);
 		return;

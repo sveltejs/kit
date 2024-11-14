@@ -2,11 +2,9 @@
 title: Cloudflare Workers
 ---
 
-To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers).
+To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
-Unless you have a specific reason to use this adapter, we recommend using [`adapter-cloudflare`](adapter-cloudflare) instead.
-
-> Requires [Wrangler v2](https://developers.cloudflare.com/workers/wrangler/get-started/).
+> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -19,10 +17,28 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+			config: 'wrangler.toml',
+			platformProxy: {
+				configPath: 'wrangler.toml',
+				environment: undefined,
+				experimentalJsonConfig: false,
+				persist: false
+			}
+		})
 	}
 };
 ```
+
+## Options
+
+### config
+
+Path to your custom `wrangler.toml` config file.
+
+### platformProxy
+
+Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
 
 ## Basic Configuration
 
@@ -48,7 +64,7 @@ workers_dev = true
 https://dash.cloudflare.com/<your-account-id>
 ```
 
-> You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
+> [!NOTE] You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
 
 You will need to install [wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
 
@@ -60,28 +76,23 @@ wrangler login
 Then, you can build your app and deploy it:
 
 ```sh
-wrangler publish
+wrangler deploy
 ```
 
 ## Custom config
 
-If you would like to use a config file other than `wrangler.toml`, you can do like so:
+If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#Options-config).
 
-```js
-// @errors: 2307
-/// file: svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare-workers';
+If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
 
-export default {
-	kit: {
-		adapter: adapter({ config: '<your-wrangler-name>.toml' })
-	}
-};
+```toml
+/// file: wrangler.toml
+compatibility_flags = [ "nodejs_compat" ]
 ```
 
-## Environment variables
+## Runtime APIs
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/platform/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#the-cf-property-requestinitcfproperties), meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -90,17 +101,19 @@ export async function POST({ request, platform }) {
 }
 ```
 
-To make these types available to your app, reference them in your `src/app.d.ts`:
+> [!NOTE] SvelteKit's built-in `$env` module should be preferred for environment variables.
 
-```diff
+To include type declarations for your bindings, reference them in your `src/app.d.ts`:
+
+```ts
 /// file: src/app.d.ts
 declare global {
 	namespace App {
 		interface Platform {
-+			env?: {
-+				YOUR_KV_NAMESPACE: KVNamespace;
-+				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
-+			};
++++			env?: {
+				YOUR_KV_NAMESPACE: KVNamespace;
+				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
+			};+++
 		}
 	}
 }
@@ -108,14 +121,18 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+### Testing Locally
+
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
+
+For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler dev`.
 
 ## Troubleshooting
 
 ### Worker size limits
 
-When deploying to workers, the server generated by SvelteKit is bundled into a single file. Wrangler will fail to publish your worker if it exceeds [the size limits](https://developers.cloudflare.com/workers/platform/limits/#worker-size) after minification. You're unlikely to hit this limit usually, but some large libraries can cause this to happen. In that case, you can try to reduce the size of your worker by only importing such libraries on the client side. See [the FAQ](../faq#how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window) for more information.
+When deploying to workers, the server generated by SvelteKit is bundled into a single file. Wrangler will fail to publish your worker if it exceeds [the size limits](https://developers.cloudflare.com/workers/platform/limits/#worker-size) after minification. You're unlikely to hit this limit usually, but some large libraries can cause this to happen. In that case, you can try to reduce the size of your worker by only importing such libraries on the client side. See [the FAQ](./faq#How-do-I-use-X-with-SvelteKit-How-do-I-use-a-client-side-only-library-that-depends-on-document-or-window) for more information.
 
 ### Accessing the file system
 
-You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
+You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#prerender) the routes in question.

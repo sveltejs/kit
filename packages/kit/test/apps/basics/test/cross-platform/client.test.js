@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -76,6 +77,7 @@ test.describe('a11y', () => {
 		).toBe(1);
 
 		await clicknav('[href="/selection/b"]');
+
 		expect(
 			await page.evaluate(() => {
 				const selection = getSelection();
@@ -98,7 +100,7 @@ test.describe('a11y', () => {
 	});
 
 	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.active = null;
 			window.addEventListener('focusin', () => window.active = document.activeElement);
 		`);
@@ -106,24 +108,29 @@ test.describe('a11y', () => {
 		await page.goto('/accessibility/autofocus/a');
 		await clicknav('[href="/"]');
 
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		expect(
+			await page.evaluate(
+				// @ts-expect-error
+				() => window.active?.nodeName
+			)
+		).toBe('BODY');
+		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
 	});
 });
 
-test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+test.describe('Navigation lifecycle functions', () => {
+	test('beforeNavigate prevents navigation triggered by link click', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('[href="/before-navigate/a"]');
+		await page.click('[href="/navigation-lifecycle/before-navigate/a"]');
 		await page.waitForLoadState('networkidle');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	test('prevents navigation to external', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation to external', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		page.on('dialog', (dialog) => dialog.dismiss());
@@ -131,35 +138,32 @@ test.describe('beforeNavigate', () => {
 		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
 		await page.waitForTimeout(500);
 		await expect(page.locator('pre')).toHaveText('1 true link');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 	});
 
-	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
-		await app.goto('/before-navigate/a');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
+		await app.goto('/navigation-lifecycle/before-navigate/a');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
-		await app.goto('https://google.de');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 true goto');
-	});
-
-	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/a');
-		await app.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation triggered by back button', async ({
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/a');
+		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
 		expect(await page.innerHTML('pre')).toBe('1 false popstate');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 	});
 
-	test('prevents unload', async ({ page }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents unload', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 		const type = new Promise((fulfil) => {
 			page.on('dialog', async (dialog) => {
@@ -173,57 +177,84 @@ test.describe('beforeNavigate', () => {
 		expect(await page.innerHTML('pre')).toBe('1 true leave');
 	});
 
-	test('is not triggered on redirect', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate is not triggered on redirect', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('[href="/before-navigate/redirect"]');
+		await page.click('[href="/navigation-lifecycle/before-navigate/redirect"]');
 		await page.waitForLoadState('networkidle');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	test('is not triggered on target=_blank', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate is not triggered on target=_blank', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('a[href="https://google.com"]');
 		await page.waitForTimeout(500);
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 	});
 
-	test('is not triggered on click or popstate for hash links', async ({ page }) => {
-		await page.goto('/before-navigate/hash-links');
+	test('beforeNavigate is not triggered on click or popstate for hash links', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/hash-links');
 
 		await page.click('a[href="#x"]');
 		await page.goBack();
 		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
 	});
 
-	test('cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
+	test('beforeNavigate cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
 		page,
 		app
 	}) => {
-		await page.goto('/before-navigate/prevent-navigation');
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
-
-		await app.goto('https://google.de');
-		await app.goto('/before-navigate/prevent-navigation?x=1');
+		page.on('dialog', async (dialog) => {
+			await dialog.dismiss();
+		});
+		await page.close({ runBeforeUnload: true });
+		await page.waitForTimeout(100);
+		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation?x=1');
 
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('is triggered after clicking a download link', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate is triggered after clicking a download link', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('a[download]');
-		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+		const download = page.waitForEvent('download');
+		await page.locator('a[download]').click();
+		await (await download).cancel();
 
-		await page.click('a[href="/before-navigate/a"]');
+		await expect(page.locator('pre')).toHaveText('0 false undefined');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
+		await page.locator('a[href="/navigation-lifecycle/before-navigate/a"]').click();
+
+		await expect(page.locator('pre')).toHaveText('1 false link');
+	});
+
+	test('afterNavigate calls callback', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate/a');
+		expect(await page.textContent('h1')).toBe(
+			'undefined -> /navigation-lifecycle/after-navigate/a'
+		);
+
+		await clicknav('[href="/navigation-lifecycle/after-navigate/b"]');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b'
+		);
+	});
+
+	test('onNavigate calls callback', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/on-navigate/a');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
+
+		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
+		);
 	});
 
 	test('preserves search parameter between subsequent page navigations when link data preloading is on', async ({
@@ -301,6 +332,20 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
 
+	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		await page.evaluate(() => {
+			window.scrollTo(0, 50);
+		});
+		await page.locator('#non-ascii-anchor').click();
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
 	test('url-supplied anchor with special characters works on navigation to page', async ({
 		page,
 		in_view,
@@ -349,20 +394,18 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
-	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
+	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+
+		await expect(page).toHaveURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-
-		expect(page.url()).toBe(baseURL + '/anchor');
+		await expect(page).toHaveURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
@@ -447,13 +490,29 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({
+		page,
+		app,
+		browserName
+	}) => {
+		// No idea why the workaround below works only in dev mode
+		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
+		// in the Firefox preferences but the Playwright API to do so is incomprehensible
+		if (!process.env.DEV && browserName === 'firefox') {
+			return;
+		}
+
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
+		if (browserName === 'firefox') {
+			// Firefox with Playwright pushed new history entry history after reload
+			// See https://github.com/microsoft/playwright/issues/22640
+			await page.goBack();
+		}
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
 		await page.goBack();
@@ -466,15 +525,35 @@ test.describe('Scrolling', () => {
 		await page.reload();
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
-});
 
-test.describe('afterNavigate', () => {
-	test('calls callback', async ({ page, clicknav }) => {
-		await page.goto('/after-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> /after-navigate/a');
+	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+		await page.goto('/scroll/top');
 
-		await clicknav('[href="/after-navigate/b"]');
-		expect(await page.textContent('h1')).toBe('/after-navigate/a -> /after-navigate/b');
+		for (const href of ['#', '#top']) {
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		}
+	});
+
+	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+		await page.goto('/scroll/push-state');
+		await page.locator('#subpage-link').click();
+		await page.locator('#back-button').click();
+
+		await page.evaluate(() => window.scrollTo(0, 9999));
+
+		const scroll = await page.evaluate(() => window.scrollY);
+		expect(scroll).toBeGreaterThan(0);
+
+		await page.locator('#shallow-button').click();
+		await page.locator('#back-button').click();
+
+		expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
 	});
 });
 
@@ -497,7 +576,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -506,7 +585,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -536,7 +615,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
-			'This is the static error page with the following message: Failed to load'
+			'This is the static error page with the following message: Failed to load (500 Internal Error)'
 		);
 	});
 
@@ -581,18 +660,15 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
+		expect(requests).toContain(`${baseURL}/routing/preloading/preloaded.json`);
 
 		requests = [];
 		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
-		try {
-			await app.preloadData('https://example.com');
-			throw new Error('Error was not thrown');
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
-		}
+		await expect(app.preloadData('https://example.com')).rejects.toThrowError(
+			'Attempted to preload a URL that does not belong to this app'
+		);
 	});
 
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
@@ -603,6 +679,19 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
 		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
+	});
+
+	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+
+		await clicknav('[href="/routing/hashes/a"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
@@ -673,6 +762,33 @@ test.describe('Routing', () => {
 		await page.locator('[href="/routing/hashes/pagestore"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
+		await page.goBack();
+		expect(await page.textContent('#window-hash')).toBe('#target');
+		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('clicking on a hash link focuses the associated element', async ({ page }) => {
+		await page.goto('/routing/hashes/focus');
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+		// check it still works when the hash is already present in the URL
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+	});
+
+	test('backwards navigation works after clicking a hash link with data-sveltekit-reload', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/data-sveltekit/reload/hash');
+		await page.locator('a[href="#example"]').click();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
@@ -684,8 +800,9 @@ test.describe('Routing', () => {
 		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
+		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 	});
 
 	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
@@ -737,6 +854,7 @@ test.describe('Routing', () => {
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
 		await page.goto('/routing/form-get');
+
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');
@@ -752,6 +870,34 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
+	});
+
+	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Inside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
+	});
+
+	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Outside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
 	});
 
 	test('ignores links with no href', async ({ page }) => {
@@ -778,6 +924,16 @@ test.describe('Routing', () => {
 		await clicknav('a[href="/routing/trailing-slash/ignore/"]');
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
+	});
+
+	test('trailing slash redirect works when navigating from root page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/');
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
 	});
 });
 
@@ -807,6 +963,11 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+
+	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
+		await page.goto('/cookies/collect-without-re-escaping');
+		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');
 	});
 });
 
@@ -848,7 +1009,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}

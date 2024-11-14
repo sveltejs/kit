@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -80,12 +81,14 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
-	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
-		await page.goto('/load/url-hash#please-dont-send-me-to-load');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead"'
-		);
-	});
+	if (process.env.DEV) {
+		test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead (500 Internal Error)"'
+			);
+		});
+	}
 
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
@@ -143,35 +146,41 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.now = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
-		await page.locator('button').click();
-		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
 
-		await page.evaluate(() => (window.now = 2500));
+		const button = page.locator('button');
+		const p = page.locator('p.counter');
 
-		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '2');
+		await expect(p).toHaveText('Count is 0');
+
+		await page.evaluate('window.now = 2500');
+
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '4');
+		await expect(p).toHaveText('Count is 2');
 	});
 
 	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
@@ -228,6 +237,21 @@ test.describe('Load', () => {
 		expect(requests).toEqual([]);
 	});
 
+	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
+		/** @type {string[]} */
+		const logs = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'log') {
+				logs.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch/patching');
+		expect(await page.textContent('h1')).toBe('42');
+
+		expect(logs).toContain('Called a patched window.fetch');
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([
@@ -236,7 +260,7 @@ test.describe('Load', () => {
 					predicate: (message) => {
 						return (
 							message.text() ===
-							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 						);
 					},
 					timeout: 3_000
@@ -256,7 +280,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}
@@ -324,7 +348,7 @@ test.describe('SPA mode / no SSR', () => {
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
 		await expect(page.locator('p')).toHaveText(
-			'This is your custom error page saying: "document is not defined"'
+			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
 	});
 });
@@ -398,6 +422,30 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
+	test('load function only re-runs when tracked searchParams change (universal)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?tracked=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="tracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[data-id="untracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function only re-runs when tracked searchParams change (server)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/server?tracked=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="tracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[data-id="untracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
@@ -436,6 +484,16 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('layout: 4, page: 4')).toBeVisible();
 	});
 
+	test('multiple synchronous invalidations are batched', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple-batched');
+		const btn = page.locator('#multiple-batched');
+		await expect(btn).toHaveText('0');
+
+		await btn.click();
+		await expect(btn).toHaveAttribute('data-done', 'true');
+		await expect(btn).toHaveText('2');
+	});
+
 	test('invalidateAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
@@ -455,10 +513,16 @@ test.describe('Invalidation', () => {
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
 	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
-		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetches` and associated code is removed
+		// legacy behavior was to track server dependencies -- this could leak secrets to the client (see github.com/sveltejs/kit/pull/9945)
+		// we keep this test just to make sure the behavior stays the same.
 		await request.get('/load/invalidation/server-fetch/count.json?reset');
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
@@ -481,6 +545,11 @@ test.describe('Invalidation', () => {
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
 	test('Parameter use is tracked even for routes that do not use the parameters', async ({
@@ -532,6 +601,28 @@ test.describe('Invalidation', () => {
 		await page.locator('button').click();
 		await expect(page.getByText('updated')).toBeVisible();
 	});
+
+	test('goto after invalidation does not reset state', async ({ page }) => {
+		await page.goto('/load/invalidation/invalidate-then-goto');
+		const layout = await page.textContent('p.layout');
+		const _page = await page.textContent('p.page');
+		expect(layout).toBeDefined();
+		expect(_page).toBeDefined();
+
+		await page.click('button.invalidate');
+		await page.evaluate(() => window.promise);
+		const next_layout_1 = await page.textContent('p.layout');
+		const next_page_1 = await page.textContent('p.page');
+		expect(next_layout_1).not.toBe(layout);
+		expect(next_page_1).toBe(_page);
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		const next_layout_2 = await page.textContent('p.layout');
+		const next_page_2 = await page.textContent('p.page');
+		expect(next_layout_2).toBe(next_layout_1);
+		expect(next_page_2).not.toBe(next_page_1);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -579,6 +670,72 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(0);
+	});
+
+	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload-data error does not block user navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#one').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.waitForLoadState('networkidle');
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#slow-navigation').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -640,7 +797,9 @@ test.describe('data-sveltekit attributes', () => {
 
 test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
-		await page.goto('/routing/content-negotiation');
+		const response = await page.goto('/routing/content-negotiation');
+
+		expect(response.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');
@@ -673,6 +832,15 @@ test.describe('env', () => {
 		expect(await page.evaluate(() => window.PUBLIC_DYNAMIC)).toBe(
 			'accessible anywhere/evaluated at run time'
 		);
+	});
+
+	test('uses correct dynamic env when navigating from prerendered page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/prerendering/env/prerendered');
+		await clicknav('[href="/prerendering/env/dynamic"]');
+		expect(await page.locator('h2')).toHaveText('prerendering: false');
 	});
 });
 
@@ -729,9 +897,19 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
 		await expect(page.locator('p.success', { timeout: 15000 })).toHaveText('success');
-		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText('fail');
+		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText(
+			'fail (500 Internal Error)'
+		);
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+
+	test('Catches fetch errors from server load functions (client nav)', async ({ page }) => {
+		await page.goto('/streaming');
+		page.click('[href="/streaming/server-error"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.fail')).toBeVisible();
 	});
 
 	// TODO `vite preview` buffers responses, causing these tests to fail
@@ -771,9 +949,15 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeVisible();
 
 			await expect(page.locator('p.success')).toHaveText('success');
-			await expect(page.locator('p.fail')).toHaveText('fail');
+			await expect(page.locator('p.fail')).toHaveText('fail (500 Internal Error)');
 			expect(page.locator('p.loadingsuccess')).toBeHidden();
 			expect(page.locator('p.loadingfail')).toBeHidden();
+		});
+
+		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
+			page.goto('/streaming/server-error');
+			await expect(page.locator('p.eager')).toHaveText('eager');
+			await expect(page.locator('p.fail')).toHaveText('fail');
 		});
 	}
 });
@@ -788,5 +972,246 @@ test.describe('Actions', () => {
 		await expect(pre).toHaveText('prop: 1, store: 1');
 		await page.evaluate('window.svelte_tick()');
 		await expect(pre).toHaveText('prop: 1, store: 1');
+	});
+});
+
+test.describe('Assets', () => {
+	test('only one link per stylesheet', async ({ page }) => {
+		if (process.env.DEV) return;
+
+		await page.goto('/');
+
+		expect(
+			await page.evaluate(() => {
+				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
+
+				for (let i = 0; i < links.length; ) {
+					const link = links.shift();
+					const asset_name = link.href.split('/').at(-1);
+					if (links.some((link) => link.href.includes(asset_name))) {
+						return false;
+					}
+				}
+
+				return true;
+			})
+		).toBe(true);
+	});
+});
+
+test.describe('goto', () => {
+	test('goto fails with external URL', async ({ page }) => {
+		await page.goto('/goto');
+		await page.click('button');
+
+		const message = process.env.DEV
+			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com/"` instead'
+			: 'goto: invalid URL';
+		await expect(page.locator('p')).toHaveText(message);
+	});
+});
+
+test.describe('untrack', () => {
+	test('untracks server load function', async ({ page, clicknav }) => {
+		await page.goto('/untrack/server/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
+		const id = await page.textContent('p.id');
+		await clicknav('a[href="/untrack/server/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+
+	test('untracks universal load function', async ({ page, clicknav }) => {
+		await page.goto('/untrack/universal/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
+		const id = await page.textContent('p.id');
+		await clicknav('a[href="/untrack/universal/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+});
+
+test.describe('Shallow routing', () => {
+	test('Pushes state to the current URL', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('active: false');
+	});
+
+	test('Pushes state to a new URL', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Invalidates the correct route after pushing state to a new URL', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = await page.locator('span').textContent();
+
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+
+		await page.locator('[data-id="invalidate"]').click();
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await page.goBack();
+		await page.goForward();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shallow-routing/replace-state/b');
+		await clicknav('[href="/shallow-routing/replace-state"]');
+
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page.locator('h1')).toHaveText('b');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Replaces state on a new URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shallow-routing/replace-state/b');
+		await clicknav('[href="/shallow-routing/replace-state"]');
+
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page.locator('h1')).toHaveText('b');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+});
+
+test.describe('reroute', () => {
+	test('Apply reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/basic');
+		await page.click("a[href='/reroute/basic/a']");
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute after client-only redirects', async ({ page }) => {
+		await page.goto('/reroute/client-only-redirect');
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute to preload data', async ({ page }) => {
+		await page.goto('/reroute/preload-data');
+		await page.click('button');
+		await page.waitForSelector('pre');
+		expect(await page.textContent('pre')).toContain('"success": true');
+	});
+
+	test('reroute does not get applied to external URLs', async ({ page }) => {
+		await page.goto('/reroute/external');
+		const current_url = new URL(page.url());
+
+		//click the link with the text External URL
+		await page.click("a[data-test='external-url']");
+
+		//The URl should not have the same origin as the current URL
+		const new_url = new URL(page.url());
+		expect(current_url.origin).not.toEqual(new_url.origin);
+	});
+
+	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
+		await page.goto('/reroute/error-handling');
+
+		//click the link with the text External URL
+		await page.click('a#client-error');
+
+		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+});
+
+test.describe('INP', () => {
+	test('does not block next paint', async ({ page }) => {
+		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		async function measureInteractionToPaint(selector) {
+			return page.evaluate(async (selector) => {
+				return new Promise((resolve) => {
+					const startTime = performance.now();
+					document.querySelector(selector).click();
+					requestAnimationFrame(() => {
+						const endTime = performance.now();
+						resolve(endTime - startTime);
+					});
+				});
+			}, selector);
+		}
+
+		await page.goto('/routing');
+
+		const client = await page.context().newCDPSession(page);
+		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+
+		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+
+		// we may need to tweak this number, and the `rate` above,
+		// depending on if this proves flaky
+		expect(time).toBeLessThan(400);
+	});
+});
+
+test.describe('binding_property_non_reactive warn', () => {
+	test('warning is not thrown from the root of svelte', async ({ page }) => {
+		let is_warning_thrown = false;
+		page.on('console', (m) => {
+			if (
+				m.type() === 'warn' &&
+				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
+			) {
+				is_warning_thrown = true;
+			}
+		});
+		await page.goto('/');
+		expect(is_warning_thrown).toBeFalsy();
 	});
 });

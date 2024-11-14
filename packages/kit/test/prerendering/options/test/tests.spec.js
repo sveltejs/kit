@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
+import { replace_hydration_attrs } from '../../test-utils';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -8,12 +9,12 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
 const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
 test('prerenders /path-base', () => {
-	const content = read('index.html');
+	const content = replace_hydration_attrs(read('index.html'));
 	expect(content).toMatch('<h1>hello</h1>');
 });
 
 test('prerenders nested /path-base', () => {
-	const content = read('nested/index.html');
+	const content = replace_hydration_attrs(read('nested/index.html'));
 	expect(content).toMatch('<h1>nested hello</h1>');
 });
 

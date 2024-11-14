@@ -1,5 +1,6 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
-import { extname, join } from 'node:path/posix';
+import colors from 'kleur';
+import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
+import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -10,9 +11,10 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'];
+const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -24,6 +26,7 @@ const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'];
  *   prerendered: import('types').Prerendered;
  *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
+ *   vite_config: import('vite').ResolvedConfig;
  * }} opts
  * @returns {import('@sveltejs/kit').Builder}
  */
@@ -34,7 +37,8 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
-	log
+	log,
+	vite_config
 }) {
 	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
@@ -84,9 +88,12 @@ export function create_builder({
 				return;
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file)));
+			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
+				(file) => resolve(directory, file)
+			);
+
 			await Promise.all(
-				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
 			);
 		},
 
@@ -139,19 +146,43 @@ export function create_builder({
 			}
 		},
 
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
+		},
+
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, 'production');
+			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
 				manifest_path,
 				env: { ...env.private, ...env.public }
 			});
 
+			if (existsSync(dest)) {
+				console.log(
+					colors
+						.bold()
+						.yellow(
+							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+						)
+				);
+			}
+
 			write(dest, fallback);
 		},
 
-		generateManifest: ({ relativePath, routes: subset }) => {
+		generateEnvModule() {
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = get_env(config.kit.env, vite_config.mode);
+
+			write(dest, `export const env=${JSON.stringify(env.public)}`);
+		},
+
+		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
@@ -178,23 +209,13 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			const server_assets = copy(
-				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
-				join(dest, config.kit.appDir, 'immutable/assets')
-			).map((filename) => join(config.kit.appDir, 'immutable/assets', filename));
-			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
-			return Array.from(new Set([...server_assets, ...client_assets]));
+			return copy(`${config.kit.outDir}/output/client`, dest, {
+				// avoid making vite build artefacts public
+				filter: (basename) => basename !== '.vite'
+			});
 		},
 
-		// @ts-expect-error
-		writePrerendered(dest, opts) {
-			// TODO remove for 1.0
-			if (opts?.fallback) {
-				throw new Error(
-					'The fallback option no longer exists — use builder.generateFallback(fallback) instead'
-				);
-			}
-
+		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
 			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
 		},
@@ -218,7 +239,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
-			  })
+				})
 			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);

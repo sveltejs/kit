@@ -1,10 +1,11 @@
 /**
  * Read a value from `sessionStorage`
  * @param {string} key
+ * @param {(value: string) => any} parse
  */
-export function get(key) {
+export function get(key, parse = JSON.parse) {
 	try {
-		return JSON.parse(sessionStorage[key]);
+		return parse(sessionStorage[key]);
 	} catch {
 		// do nothing
 	}
@@ -14,11 +15,12 @@ export function get(key) {
  * Write a value to `sessionStorage`
  * @param {string} key
  * @param {any} value
+ * @param {(value: any) => string} stringify
  */
-export function set(key, value) {
-	const json = JSON.stringify(value);
+export function set(key, value, stringify = JSON.stringify) {
+	const data = stringify(value);
 	try {
-		sessionStorage[key] = json;
+		sessionStorage[key] = data;
 	} catch {
 		// do nothing
 	}

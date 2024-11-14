@@ -9,11 +9,11 @@
 {#if visible}
 	<button on:click={toggle}>remove</button>
 
-	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events a11y-no-static-element-interactions -->
 	<a on:click={toggle}>remove</a>
 {:else}
 	<button on:click={toggle}>add</button>
 
-	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events a11y-no-static-element-interactions -->
 	<a on:click={toggle}>add</a>
 {/if}

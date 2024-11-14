@@ -1,5 +1,8 @@
 import { parse, serialize } from 'cookie';
-import { normalize_path } from '../../utils/url.js';
+import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
+
+// eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
+const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -14,6 +17,14 @@ const cookie_paths = {};
  */
 const MAX_COOKIE_SIZE = 4129;
 
+// TODO 3.0 remove this check
+/** @param {import('./page/types.js').Cookie['options']} options */
+function validate_options(options) {
+	if (options?.path === undefined) {
+		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
+	}
+}
+
 /**
  * @param {Request} request
  * @param {URL} url
@@ -24,10 +35,8 @@ export function get_cookies(request, url, trailing_slash) {
 	const initial_cookies = parse(header, { decode: (value) => value });
 
 	const normalized_url = normalize_path(url.pathname, trailing_slash);
-	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
-	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
 	/** @type {import('cookie').CookieSerializeOptions} */
@@ -104,33 +113,47 @@ export function get_cookies(request, url, trailing_slash) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
-		set(name, value, opts = {}) {
-			set_internal(name, value, { ...defaults, ...opts });
+		set(name, value, options) {
+			// TODO: remove this check in 3.0
+			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
+			if (illegal_characters) {
+				console.warn(
+					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(
+						' and '
+					)}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
+				);
+			}
+
+			validate_options(options);
+			set_internal(name, value, { ...defaults, ...options });
 		},
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
-		delete(name, opts = {}) {
-			cookies.set(name, '', {
-				...opts,
-				maxAge: 0
-			});
+		delete(name, options) {
+			validate_options(options);
+			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
-		serialize(name, value, opts) {
-			return serialize(name, value, {
-				...defaults,
-				...opts
-			});
+		serialize(name, value, options) {
+			validate_options(options);
+
+			let path = options.path;
+
+			if (!options.domain || options.domain === url.hostname) {
+				path = resolve(normalized_url, path);
+			}
+
+			return serialize(name, value, { ...defaults, ...options, path });
 		}
 	};
 
@@ -171,19 +194,16 @@ export function get_cookies(request, url, trailing_slash) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('cookie').CookieSerializeOptions} opts
+	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
-	function set_internal(name, value, opts) {
-		const path = opts.path ?? default_path;
+	function set_internal(name, value, options) {
+		let path = options.path;
 
-		new_cookies[name] = {
-			name,
-			value,
-			options: {
-				...opts,
-				path
-			}
-		};
+		if (!options.domain || options.domain === url.hostname) {
+			path = resolve(normalized_url, path);
+		}
+
+		new_cookies[name] = { name, value, options: { ...options, path } };
 
 		if (__SVELTEKIT_DEV__) {
 			const serialized = serialize(name, value, new_cookies[name].options);
@@ -232,12 +252,20 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types').Cookie[]} cookies
+ * @param {import('./page/types.js').Cookie[]} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
 		const { name, value, options } = new_cookie;
 		headers.append('set-cookie', serialize(name, value, options));
+
+		// special case — for routes ending with .html, the route data lives in a sibling
+		// `.html__data.json` file rather than a child `/__data.json` file, which means
+		// we need to duplicate the cookie
+		if (options.path.endsWith('.html')) {
+			const path = add_data_suffix(options.path);
+			headers.append('set-cookie', serialize(name, value, { ...options, path }));
+		}
 	}
 }
 

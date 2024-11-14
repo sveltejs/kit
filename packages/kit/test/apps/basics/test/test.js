@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -7,13 +8,33 @@ test.skip(() => process.env.KIT_E2E_BROWSER === 'webkit');
 
 test.describe.configure({ mode: 'parallel' });
 
-test.describe('Imports', () => {
-	test('imports from node_modules', async ({ page, clicknav }) => {
-		await page.goto('/imports');
-		await clicknav('[href="/imports/markdown"]');
-		expect(await page.innerHTML('p')).toBe('this is some <strong>markdown</strong>');
+test.describe('adapter', () => {
+	test('populates event.platform for dynamic SSR', async ({ page }) => {
+		await page.goto('/adapter/dynamic');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from dynamic page'
+			},
+			prerender: false
+		});
 	});
 
+	test('populates event.platform for prerendered page', async ({ page }) => {
+		await page.goto('/adapter/prerendered');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from prerendered page'
+			},
+			prerender: true
+		});
+	});
+});
+
+test.describe('Imports', () => {
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
@@ -29,7 +50,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
+			expect(sources[1]).toMatch(/\/_app\/immutable\/assets\/large\.[\w-]+\.jpg/);
 		}
 	});
 });
@@ -275,6 +296,28 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-arraybuffer-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+			const post_payload =
+				'{"status":200,"statusText":"","headers":{},"body":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"]'
+			);
+			const post_script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"][data-hash="16h3sp1"]'
+			);
+
+			expect(script_content).toBe(payload);
+			expect(post_script_content).toBe(post_payload);
+		}
+	});
+
 	test('json string is returned', async ({ page }) => {
 		await page.goto('/load/relay');
 		expect(await page.textContent('h1')).toBe('42');
@@ -495,12 +538,13 @@ test.describe('Load', () => {
 	});
 
 	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		clicknav,
 		page,
 		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a', { noWaitAfter: true });
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
@@ -508,6 +552,22 @@ test.describe('Load', () => {
 		expect(await page.textContent('html')).toBe(
 			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
+	});
+
+	test('Logging $page.url during prerendering works', async ({ page }) => {
+		await page.goto('/prerendering/log-url');
+
+		expect(await page.textContent('p')).toBe('error: false');
+	});
+
+	test('404 and root layout load fetch to prerendered endpoint works', async ({ page }) => {
+		await page.goto('/non-existent-route');
+
+		expect(await page.textContent('h1')).toBe('404');
+
+		await page.goto('/non-existent-route-loop');
+
+		expect(await page.textContent('h1')).toBe('404');
 	});
 });
 
@@ -548,7 +608,9 @@ test.describe('Nested layouts', () => {
 		expect(await page.$('p#nested')).not.toBeNull();
 		expect(await page.$('p#nested-foo')).not.toBeNull();
 		expect(await page.$('p#nested-bar')).not.toBeNull();
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 
 	test('resets layout', async ({ page }) => {
@@ -566,7 +628,9 @@ test.describe('Nested layouts', () => {
 
 		expect(await page.textContent('h1')).toBe('Nested error page');
 		expect(await page.textContent('#nested-error-status')).toBe('status: 500');
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 });
 
@@ -606,6 +670,16 @@ test.describe('Page options', () => {
 		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
+
+	test('prerenders page that uses browser globals with ssr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+		await page.goto('/prerendering/no-ssr');
+		await expect(page.getByText('Hello world!')).toBeVisible();
+	});
 });
 
 test.describe('$app/environment', () => {
@@ -616,24 +690,16 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page }) => {
+	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '',
-				assets: ''
-			})
-		);
+		let base = javaScriptEnabled ? '' : '.';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 
 		await page.goto('/paths/deeply/nested');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '',
-				assets: ''
-			})
-		);
+		base = javaScriptEnabled ? '' : '../..';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 	});
 
 	// some browsers will re-request assets after a `pushState`
@@ -760,6 +826,30 @@ test.describe('$app/stores', () => {
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
+
+	test('should update page store when URL hash is changed through the address bar', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const href = `${baseURL}/store/data/zzz`;
+		await page.goto(href);
+
+		expect(await page.textContent('#url-hash')).toBe('');
+
+		if (javaScriptEnabled) {
+			for (const urlHash of ['#1', '#2', '#5', '#8']) {
+				await page.evaluate(
+					({ href, urlHash }) => {
+						location.href = `${href}${urlHash}`;
+					},
+					{ href, urlHash }
+				);
+
+				expect(await page.textContent('#url-hash')).toBe(urlHash);
+			}
+		}
+	});
 });
 
 test.describe('searchParams', () => {
@@ -828,67 +918,45 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
-	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
+	test("invalidateAll = false doesn't invalidate all", async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=false');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		if (!javaScriptEnabled) {
+			expect(preSubmitContent).not.toBe(postSubmitContent);
+		} else {
+			expect(preSubmitContent).toBe(postSubmitContent);
+		}
+	});
+
+	test('invalidateAll = true does invalidate all', async ({ page }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=true');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		expect(preSubmitContent).not.toBe(postSubmitContent);
+	});
+
+	test('Submitting a form with a file input but no enctype="multipart/form-data" throws an error', async ({
 		page,
 		javaScriptEnabled
 	}) => {
 		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
 		test.skip(!process.env.DEV, 'Skip when not in dev mode');
 		await page.goto('/actions/file-without-enctype');
-		const log_promise = page.waitForEvent('console');
+		const error_promise = page.waitForEvent('pageerror');
 		await page.click('button');
-		const log = await log_promise;
-		expect(log.text()).toBe(
-			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+		const error = await error_promise;
+		expect(error.message).toBe(
+			'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
 		);
-	});
-
-	test('Accessing v2 deprecated properties results in a warning log', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'skip when js is disabled');
-		test.skip(!process.env.DEV, 'skip when not in dev mode');
-		await page.goto('/actions/enhance/old-property-access');
-
-		for (const { id, old_name, new_name, call_location } of [
-			{
-				id: 'access-form-in-submit',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-form-in-callback',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'callback returned from use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-submit',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-callback',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'callback returned from use:enhance submit function'
-			}
-		]) {
-			await test.step(id, async () => {
-				const log_promise = page.waitForEvent('console');
-				const button = page.locator(`#${id}`);
-				await button.click();
-				await expect(button).toHaveAttribute('data-processed', 'true');
-				const log = await log_promise;
-				expect(log.text()).toBe(
-					`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
-				);
-				expect(log.type()).toBe('warning');
-			});
-		}
 	});
 
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
@@ -1043,6 +1111,14 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance button with formAction dialog', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('button[formmethod="dialog"]').click();
+
+		await expect(page.locator('button[formmethod="dialog"]')).not.toBeVisible();
+	});
+
 	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
@@ -1056,6 +1132,57 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'submitter: foo' })
 		);
+	});
+
+	test('use:enhance button with formenctype', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		const fileInput = page.locator('input[type="file"].form-file-input');
+
+		await fileInput.setInputFiles({
+			name: 'test-file.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('this is test')
+		});
+
+		await page.locator('button.form-file-submit').click();
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+		await expect(page.locator('pre.formdata2')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+	});
+
+	test('use:enhance has `application/x-www-form-urlencoded` as default value for `ContentType` request header', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		await page.locator('input[name="username"]').fill('foo');
+
+		const [request] = await Promise.all([
+			page.waitForRequest('/actions/enhance?/login'),
+			page.locator('button.form1').click()
+		]);
+
+		const requestHeaders = await request.allHeaders();
+
+		expect(requestHeaders['content-type']).toBe('application/x-www-form-urlencoded');
+
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name="username"]')).toHaveValue('');
 	});
 
 	test('use:enhance does not clear form on second submit', async ({ page }) => {
@@ -1135,6 +1262,43 @@ test.describe('Actions', () => {
 		await page.locator('button').click();
 
 		await expect(page.locator('pre')).toHaveText('something went wrong');
+	});
+
+	test('submitting application/json should return http status code 415', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/form-errors`, {
+			method: 'POST',
+			body: JSON.stringify({ foo: 'bar' }),
+			headers: {
+				'Content-Type': 'application/json',
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe(
+			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
+		);
+		expect(response.status()).toBe(415);
+	});
+
+	test('submitting to a form action that does not exists, should return http status code 404', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/enhance?/doesnt-exist`, {
+			method: 'POST',
+			body: 'irrelevant',
+			headers: {
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
+		expect(response.status()).toBe(404);
 	});
 });
 

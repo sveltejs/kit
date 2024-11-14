@@ -2,7 +2,8 @@ import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { get_option } from '../../../utils/options.js';
-import { HttpError, Redirect } from '../../control.js';
+import { Redirect } from '../../control.js';
+import { get_status } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -28,7 +29,12 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
-	/** @type {import('./types').Fetched[]} */
+	// reroute to the fallback page to prevent an infinite chain of requests.
+	if (event.request.headers.get('x-sveltekit-error')) {
+		return static_error_page(options, status, /** @type {Error} */ (error).message);
+	}
+
+	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 
 	try {
@@ -44,8 +50,8 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({}),
-				track_server_fetches: options.track_server_fetches
+				// eslint-disable-next-line @typescript-eslint/require-await
+				parent: async () => ({})
 			});
 
 			const server_data = await server_data_promise;
@@ -54,6 +60,7 @@ export async function respond_with_error({
 				event,
 				fetched,
 				node: default_layout,
+				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({}),
 				resolve_opts,
 				server_data_promise,
@@ -81,7 +88,7 @@ export async function respond_with_error({
 			state,
 			page_config: {
 				ssr,
-				csr: get_option([default_layout], 'csr') ?? true
+				csr
 			},
 			status,
 			error: await handle_error_and_jsonify(event, options, error),
@@ -99,7 +106,7 @@ export async function respond_with_error({
 
 		return static_error_page(
 			options,
-			e instanceof HttpError ? e.status : 500,
+			get_status(e),
 			(await handle_error_and_jsonify(event, options, e)).message
 		);
 	}

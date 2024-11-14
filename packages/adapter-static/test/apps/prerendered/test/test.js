@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import process from 'node:process';
 import { expect, test } from '@playwright/test';
 
 const cwd = process.cwd();
@@ -24,4 +25,5 @@ test('prerenders a referenced endpoint with implicit `prerender` setting', async
 test('exposes public env vars to the client', async ({ page }) => {
 	await page.goto('/public-env');
 	expect(await page.textContent('h1')).toEqual('The answer is 42');
+	expect(await page.textContent('h2')).toEqual('The dynamic answer is 42');
 });

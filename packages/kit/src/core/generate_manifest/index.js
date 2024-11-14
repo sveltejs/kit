@@ -1,9 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import * as mime from 'mrmime';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
+import { find_server_assets } from './find_server_assets.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -26,6 +30,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	 */
 	const used_nodes = new Set([0, 1]);
 
+	const server_assets = find_server_assets(build_data, routes);
+
 	for (const route of routes) {
 		if (route.page) {
 			for (const i of route.page.layouts) used_nodes.add(i);
@@ -44,7 +50,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	);
 
 	/** @type {(path: string) => string} */
-	const loader = (path) => `() => import('${path}')`;
+	const loader = (path) => `__memo(() => import('${path}'))`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -63,15 +69,26 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		return `[${string},]`;
 	}
 
+	const mime_types = get_mime_lookup(build_data.manifest_data);
+
+	/** @type {Record<string, number>} */
+	const files = {};
+	for (const file of server_assets) {
+		files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
+
+		const ext = path.extname(file);
+		mime_types[ext] ??= mime.lookup(ext) || '';
+	}
+
 	// prettier-ignore
 	// String representation of
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	return dedent`
+	/** @template {import('@sveltejs/kit').SSRManifest} T */
+	const manifest_expr = dedent`
 		{
 			appDir: ${s(build_data.app_dir)},
 			appPath: ${s(build_data.app_path)},
 			assets: new Set(${s(assets)}),
-			mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
+			mimeTypes: ${s(mime_types)},
 			_: {
 				client: ${s(build_data.client)},
 				nodes: [
@@ -80,7 +97,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 				routes: [
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;
-						
+
 						route.params.forEach(param => {
 							if (param.matcher) matchers.add(param.matcher);
 						});
@@ -97,10 +114,27 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 					}).filter(Boolean).join(',\n')}
 				],
 				matchers: async () => {
-					${Array.from(matchers).map(type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`).join('\n')}
+					${Array.from(
+						matchers,
+						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
+					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };
-				}
+				},
+				server_assets: ${s(files)}
 			}
 		}
+	`;
+
+	// Memoize the loaders to prevent Node from doing unnecessary work
+	// on every dynamic import call
+	return dedent`
+		(() => {
+		function __memo(fn) {
+			let value;
+			return () => value ??= (value = fn());
+		}
+
+		return ${manifest_expr}
+		})()
 	`;
 }
