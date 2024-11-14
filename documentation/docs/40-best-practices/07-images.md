@@ -26,7 +26,7 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 
 `@sveltejs/enhanced-img` is a plugin offered on top of Vite's built-in asset handling. It provides plug and play image processing that serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic `width` and `height` of the image to avoid layout shift, creates images of multiple sizes for various devices, and strips EXIF data for privacy. It will work in any Vite-based project including, but not limited to, SvelteKit projects.
 
-> As a build plugin, `@sveltejs/enhanced-img` can only optimize files located on your machine during the build process. If you have an image located elsewhere (such as a path served from your database, CMS, or backend), please read about [loading images dynamically from a CDN](#loading-images-dynamically-from-a-cdn).
+> [!NOTE] As a build plugin, `@sveltejs/enhanced-img` can only optimize files located on your machine during the build process. If you have an image located elsewhere (such as a path served from your database, CMS, or backend), please read about [loading images dynamically from a CDN](#Loading-images-dynamically-from-a-CDN).
 >
 > **WARNING**: The `@sveltejs/enhanced-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
@@ -40,14 +40,14 @@ npm install --save-dev @sveltejs/enhanced-img
 
 Adjust `vite.config.js`:
 
-```diff
+```js
 import { sveltekit } from '@sveltejs/kit/vite';
-+import { enhancedImages } from '@sveltejs/enhanced-img';
++++import { enhancedImages } from '@sveltejs/enhanced-img';+++
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-+		enhancedImages(),
+		+++enhancedImages(),+++
 		sveltekit()
 	]
 });
@@ -71,27 +71,34 @@ If you wish to add styles to your `<enhanced:img>`, you should add a `class` and
 
 ### Dynamically choosing an image
 
-You can also manually import an image asset and pass it to an `<enhanced:img>`. This is useful when you have a collection of static images and would like to dynamically choose one or [iterate over them](https://github.com/sveltejs/kit/blob/main/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `<img>` element as shown below to indicate you'd like process them.
+You can also manually import an image asset and pass it to an `<enhanced:img>`. This is useful when you have a collection of static images and would like to dynamically choose one or [iterate over them](https://github.com/sveltejs/kit/blob/0ab1733e394b6310895a1d3bf0f126ce34531170/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `<img>` element as shown below to indicate you'd like process them.
 
 ```svelte
 <script>
 	import MyImage from './path/to/your/image.jpg?enhanced';
 </script>
 
-<enhanced:img src={MyImage} alt="Some alt text" />
+<enhanced:img src={MyImage} alt="some alt text" />
 ```
 
 You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `enhanced` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
 
-```js
-const pictures = import.meta.glob(
-	'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
-	{
-		query: {
-			enhanced: true
+```svelte
+<script>
+	const imageModules = import.meta.glob(
+		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp,svg}',
+		{
+			eager: true,
+			query: {
+				enhanced: true
+			}
 		}
-	}
-);
+	)
+</script>
+
+{#each Object.entries(imageModules) as [_path, module]}
+	<enhanced:img src={module.default} alt="some alt text" />
+{/each}
 ```
 
 ### Intrinsic Dimensions

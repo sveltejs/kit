@@ -1,14 +1,22 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "4.2.0",
+	"version": "4.3.6",
 	"description": "A SvelteKit adapter that creates a Netlify app",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"netlify",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"exports": {
 		".": {
@@ -25,7 +33,7 @@
 	],
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && cp src/edge.js files/edge.js",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
@@ -34,21 +42,21 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.20.2",
+		"esbuild": "^0.21.5",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
 		"@netlify/functions": "^2.4.1",
-		"@rollup/plugin-commonjs": "^25.0.7",
+		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^15.2.3",
+		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
+		"@types/node": "^18.19.48",
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^1.5.0"
+		"vitest": "^2.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

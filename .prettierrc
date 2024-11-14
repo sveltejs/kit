@@ -27,8 +27,7 @@
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
-				"packages/kit/src/core/postbuild/fixtures/**/*",
-				"packages/migrate/migrations/routes/*/samples.md"
+				"packages/kit/src/core/postbuild/fixtures/**/*"
 			],
 			"options": {
 				"requirePragma": true

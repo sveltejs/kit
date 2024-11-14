@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
@@ -87,8 +88,11 @@ export function get_tsconfig(kit) {
 		exclude.push(config_relative(kit.files.serviceWorker));
 	} else {
 		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.js`));
 		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.ts`));
 		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.d.ts`));
 	}
 
 	const config = {
@@ -162,7 +166,7 @@ function validate_user_config(cwd, out, config) {
 					.bold()
 					.yellow(
 						`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-							'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://kit.svelte.dev/docs/configuration#alias'
+							'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
 					)
 			);
 		}

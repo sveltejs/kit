@@ -53,7 +53,7 @@ export const navigating = {
 };
 
 /**
- * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
  * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
@@ -85,10 +85,10 @@ export const updated = {
 function get_store(name) {
 	try {
 		return getStores()[name];
-	} catch (e) {
+	} catch {
 		throw new Error(
 			`Cannot subscribe to '${name}' store on the server outside of a Svelte component, as it is bound to the current request via component context. This prevents state from leaking between users.` +
-				'For more information, see https://kit.svelte.dev/docs/state-management#avoid-shared-state-on-the-server'
+				'For more information, see https://svelte.dev/docs/kit/state-management#avoid-shared-state-on-the-server'
 		);
 	}
 }

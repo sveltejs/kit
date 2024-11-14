@@ -119,7 +119,7 @@ export function _create_validator(options) {
 				warnings.push(
 					'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
 						'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
-						'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+						'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 				);
 			}
 
@@ -142,7 +142,7 @@ export function _create_validator(options) {
 		} else {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
-					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 			);
 		}
 
