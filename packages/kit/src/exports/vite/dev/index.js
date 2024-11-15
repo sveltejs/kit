@@ -20,6 +20,10 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
+// vite-specifc queries that we should skip handling for css urls
+const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
+const svelte_query_regex = /(?:\?|&)svelte(?:&|$)/;
+const type_css_query_regex = /(?:\?|&)type=css(?:&|$)/;
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -187,6 +191,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 						// components/stylesheets loaded via import() during `load` are included
 						result.inline_styles = async () => {
+							/** @type {Set<import('vite').ModuleNode>} */
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
@@ -197,19 +202,17 @@ export async function dev(vite, vite_config, svelte_config) {
 							const styles = {};
 
 							for (const dep of deps) {
-								const url = new URL(dep.url, 'dummy:/');
-								const query = url.searchParams;
-
 								if (
-									(isCSSRequest(dep.file) ||
-										(query.has('svelte') && query.get('type') === 'style')) &&
-									!(query.has('raw') || query.has('url') || query.has('inline'))
+									isCSSRequest(dep.url) &&
+									svelte_query_regex.test(dep.url) &&
+									type_css_query_regex.test(dep.url) &&
+									!vite_css_query_regex.test(dep.url)
 								) {
+									const inlineCssUrl = dep.url.includes('?')
+										? dep.url.replace('?', '?inline&')
+										: dep.url + '?inline';
 									try {
-										query.set('inline', '');
-										const mod = await vite.ssrLoadModule(
-											`${decodeURI(url.pathname)}${url.search}${url.hash}`
-										);
+										const mod = await vite.ssrLoadModule(inlineCssUrl);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
