@@ -203,9 +203,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 							for (const dep of deps) {
 								if (
-									isCSSRequest(dep.url) &&
-									svelte_query_regex.test(dep.url) &&
-									type_css_query_regex.test(dep.url) &&
+									(isCSSRequest(dep.url) ||
+										(svelte_query_regex.test(dep.url) && type_css_query_regex.test(dep.url))) &&
 									!vite_css_query_regex.test(dep.url)
 								) {
 									const inlineCssUrl = dep.url.includes('?')
