@@ -208,6 +208,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const response = await server.respond(
 			new Request(config.prerender.origin + encoded, {
 				headers: {
+					// we need to specify text/html or else content negotiation
+					// will prefer any +server file over +page for the same route
 					accept: 'text/html,*/*'
 				}
 			}),
