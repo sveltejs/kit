@@ -20,7 +20,8 @@ export default defineConfig({
 			'**/node_modules/**',
 			'**/.svelte-kit/**',
 			'**/.{idea,git,cache,output,temp}/**',
-			'**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*'
+			'**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+			'**/src/core/sync/create_manifest_data/test/**'
 		]
 	}
 });
