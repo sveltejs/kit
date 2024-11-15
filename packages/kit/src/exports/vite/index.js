@@ -640,8 +640,8 @@ async function kit({ svelte_config }) {
 							output: {
 								format: 'esm',
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
-								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].${ext}`,
+								assetFileNames: `${prefix}/assets/[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList
 							},
@@ -655,8 +655,8 @@ async function kit({ svelte_config }) {
 						rollupOptions: {
 							output: {
 								entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-								chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
-								assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
+								chunkFileNames: `${prefix}/workers/chunks/[hash].js`,
+								assetFileNames: `${prefix}/workers/assets/[hash][extname]`,
 								hoistTransitiveImports: false
 							}
 						}

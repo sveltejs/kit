@@ -50,7 +50,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toMatch(/\/_app\/immutable\/assets\/large\.[\w-]+\.jpg/);
+			expect(sources[1]).toMatch(/\/_app\/immutable\/assets\/[\w-]+\.jpg/);
 		}
 	});
 });
