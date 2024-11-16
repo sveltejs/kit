@@ -69,7 +69,7 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handlePageData: module.handlePageData || (({ pageData, resolve }) => resolve(pageData)),
+					handlePageData: module.handlePageData || (() => void null),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {})
@@ -80,7 +80,7 @@ export class Server {
 						handle: () => {
 							throw error;
 						},
-						handlePageData: ({ pageData, resolve }) => resolve(pageData),
+						handlePageData: () => void null,
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: () => {}
