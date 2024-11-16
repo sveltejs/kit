@@ -4,7 +4,7 @@ title: Integrations
 
 ## `vitePreprocess`
 
-Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) in your project will allow you to use the various flavors of JS and CSS that Vite supports: TypeScript, PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
+Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) in your project will allow you to use the various flavors of CSS that Vite supports: PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
 
 ```js
 // svelte.config.js
@@ -14,6 +14,8 @@ export default {
   preprocess: [vitePreprocess()]
 };
 ```
+
+You will also need to use a preprocessor if you're using TypeScript with Svelte 4. TypeScript is supported natively in Svelte 5 if you're using only the type syntax. To use more complex TypeScript syntax in Svelte 5, you will need still need a preprocessor and can use `vitePreprocess({ script: true })`.
 
 ## Adders
 
