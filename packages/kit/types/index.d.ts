@@ -679,7 +679,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export type HandlePageData = (input: {
 		event: RequestEvent;
-		pageData: Record<string, unknown>;
+		pageData: Record<string, unknown>[];
 	}) => MaybePromise<void | Response>;
 
 	/**

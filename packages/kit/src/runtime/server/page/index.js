@@ -299,7 +299,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 
 		const hookResponse = await options.hooks.handlePageData({
 			event,
-			pageData: compact(branch).map((b) => b.data)
+			pageData: compact(branch.map((b) => b?.data))
 		});
 		if (hookResponse) return hookResponse;
 
