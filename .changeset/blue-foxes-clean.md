@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-perf: shorten file names
+perf: shorten chunk file names
