@@ -95,6 +95,32 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
 
+### handlePageData
+
+This function allows you to inspect, modify or extract the data, which has been loaded in your `+layout.server.js`, `+layout.js`, `+page.server.js`, `+page.js` respective to the current request route.
+
+If the function returns the `Response` object then the current request resolves immediately. This allows you to extract the loaded data without the page being rendered.
+
+For example you might use it to extract the data for your end-to-end testing purposes.
+
+```js
+/// file: src/hooks.server.js
+/** @type {import('@sveltejs/kit').HandlePageData} */
+export async function handlePageData({ request, pageData }) {
+	if (request.headers.get('x-e2e-testing') !== 'true') {
+		// not in end-to-end testing mode - continue as usual
+		return;
+	}
+
+	// return the pageData in the easy to test format
+	return new Response(JSON.stringify(pageData), {
+		headers: {
+			'content-type': 'application/json'
+		}
+	});
+}
+```
+
 ### handleFetch
 
 This function allows you to modify (or replace) a `fetch` request that happens inside a `load` or `action` function that runs on the server (or during pre-rendering).

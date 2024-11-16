@@ -671,6 +671,18 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
+	 * The [`handlePageData`](https://svelte.dev/docs/kit/hooks#Server-hooks-handlePageData) hook runs with $pade.data payload - the data that has been loaded in the
+	 * `+layout.server.js`, `+layout.js`, `+page.server.js`, `+page.js` respective to the current request route.
+	 * It receives as `event` object representing the request and the `pageData` object as described above.
+	 * This allows you to inspect, modify or extract the loaded data without page being rendered.
+	 * If the hook returns a `Response` the request is immediately resolved with it, otherwise page rendering concludes as usual
+	 */
+	export type HandlePageData = (input: {
+		event: RequestEvent;
+		pageData: Record<string, unknown>;
+	}) => MaybePromise<void | Response>;
+
+	/**
 	 * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
