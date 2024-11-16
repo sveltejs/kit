@@ -80,7 +80,7 @@ export class Server {
 						handle: () => {
 							throw error;
 						},
-						handlePageData: (({ pageData, resolve }) => resolve(pageData)),
+						handlePageData: ({ pageData, resolve }) => resolve(pageData),
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: () => {}
