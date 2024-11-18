@@ -158,18 +158,12 @@ function build_selector(resource, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	let has_headers = !!opts?.headers;
-
-	if (opts?.headers && opts.headers instanceof Headers) {
-		has_headers = [...opts.headers.keys()].length > 0;
-	}
-
-	if (has_headers || opts?.body) {
+	if (opts?.headers || opts?.body) {
 		/** @type {import('types').StrictBody[]} */
 		const values = [];
 
-		if (has_headers) {
-			values.push([...new Headers(opts?.headers)].join(','));
+		if (opts?.headers) {
+			values.push([...new Headers(opts.headers)].join(','));
 		}
 
 		if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {

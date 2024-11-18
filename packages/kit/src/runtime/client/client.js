@@ -669,7 +669,9 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 								: await resource.blob(),
 						cache: resource.cache,
 						credentials: resource.credentials,
-						headers: resource.headers,
+						// the headers are undefined on the server if the Headers object is empty
+						// so we need to make sure they are also undefined here if there are no headers
+						headers: [...resource.headers].length ? resource.headers : undefined,
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,
