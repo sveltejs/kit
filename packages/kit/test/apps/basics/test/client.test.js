@@ -252,7 +252,7 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
-	test('does not repeat fetch request on hydration when using Request object', async ({ page }) => {
+	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
 		const requests = [];
 		page.on('request', (request) => {
 			if (request.url().includes('/load/fetch-request.json')) {
