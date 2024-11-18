@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly serialise empty Request headers when using the load function's fetch
+fix: prevent duplicate fetch request when using Request with load function's fetch
