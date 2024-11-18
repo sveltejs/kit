@@ -162,11 +162,11 @@ function build_selector(resource, opts) {
 		/** @type {import('types').StrictBody[]} */
 		const values = [];
 
-		if (opts?.headers) {
+		if (opts.headers) {
 			values.push([...new Headers(opts.headers)].join(','));
 		}
 
-		if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
+		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
 			values.push(opts.body);
 		}
 
