@@ -77,17 +77,11 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		attrs.push('data-b64');
 	}
 
-	let has_request_headers = !!fetched.request_headers;
-
-	if (has_request_headers && fetched.request_headers instanceof Headers) {
-		has_request_headers = [...fetched.request_headers.keys()].length > 0;
-	}
-
-	if (has_request_headers || fetched.request_body) {
+	if (fetched.request_headers || fetched.request_body) {
 		/** @type {import('types').StrictBody[]} */
 		const values = [];
 
-		if (has_request_headers) {
+		if (fetched.request_headers) {
 			values.push([...new Headers(fetched.request_headers)].join(','));
 		}
 
