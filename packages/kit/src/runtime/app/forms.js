@@ -63,6 +63,8 @@ function clone(element) {
  * - redirects to the nearest error page in case of an unexpected error
  *
  * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+ * `update` accepts an option object - Set reset: false if you don't want the <form> values to be reset after a successful submission,
+ * or set invalidateAll: false if you don't want the action to call invalidateAll after submission.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
