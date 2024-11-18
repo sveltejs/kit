@@ -252,6 +252,21 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
+	test('does not repeat fetch request on hydration when using Request object', async ({ page }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			if (request.url().includes('/load/fetch-request.json')) {
+				requests.push(request);
+			}
+		});
+
+		await page.goto('/load/fetch-request-empty-headers');
+
+		console.log({ requests });
+
+		expect(requests).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([
