@@ -1961,7 +1961,9 @@ declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import('vite').Plugin[]>;
+	export function sveltekit(config?: {
+		root?: string;
+	}): Promise<import('vite').Plugin[]>;
 
 	export {};
 }
