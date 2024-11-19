@@ -130,7 +130,7 @@ const warning_preprocessor = {
  */
 export async function sveltekit(config) {
 	const options = {
-		cwd: config.root ? config.root : process.cwd();
+		cwd: config.root ? config.root : process.cwd(),
 	};
 	const svelte_config = await load_config(options);
 
