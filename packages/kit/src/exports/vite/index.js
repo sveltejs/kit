@@ -128,7 +128,7 @@ const warning_preprocessor = {
  * @param {{ root: string }} config
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function sveltekit(config) {
+export async function sveltekit(config = {}) {
 	const options = {
 		cwd: config.root ? config.root : process.cwd(),
 	};
