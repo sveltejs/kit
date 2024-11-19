@@ -36,25 +36,29 @@ export function write_root(manifest_data, output) {
 					isSvelte5Plus()
 						? dedent`{@const Pyramid_${l} = constructors[${l}]}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form}>
-							${pyramid}
-						</Pyramid_${l}>`
+						{#if constructors[${l}]}
+							<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form}>
+								${pyramid}
+							</Pyramid_${l}>
+						{/if}`
 						: dedent`<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}}>
 					${pyramid}
 				</svelte:component>`
 				}
-				
+
 			{:else}
 				${
 					isSvelte5Plus()
 						? dedent`
 					{@const Pyramid_${l} = constructors[${l}]}
-					<!-- svelte-ignore binding_property_non_reactive -->
-					<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} />
+					{#if constructors[${l}]}
+						<!-- svelte-ignore binding_property_non_reactive -->
+						<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} />
+					{/if}
 					`
 						: dedent`<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />`
 				}
-				
+
 			{/if}
 		`;
 	}
