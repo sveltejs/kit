@@ -125,12 +125,12 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {{ root: string }} config
+ * @param {{ root?: string }} config
  * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function sveltekit(config = {}) {
 	const options = {
-		cwd: config.root ? config.root : process.cwd(),
+		cwd: config.root ? config.root : process.cwd()
 	};
 	const svelte_config = await load_config(options);
 
