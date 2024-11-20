@@ -150,6 +150,7 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 		},
 
 		emulate() {
+			// we want to invoke `getPlatformProxy` only once and await it only when it is accessed
 			const getting_platform = (async () => {
 				const proxy = await getPlatformProxy(platformProxy);
 				const platform = /** @type {App.Platform} */ ({

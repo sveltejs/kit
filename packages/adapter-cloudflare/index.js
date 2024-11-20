@@ -145,6 +145,7 @@ export default function (options = {}) {
 			}
 		},
 		emulate() {
+			// we want to invoke `getPlatformProxy` only once and await it only when it is accessed
 			const getting_platform = (async () => {
 				const proxy = await getPlatformProxy(options.platformProxy);
 				const platform = /** @type {App.Platform} */ ({
