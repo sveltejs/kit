@@ -224,6 +224,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 			if (rule === '<redirects>' && existsSync(redirects_file)) {
 				const redirects = readFileSync(redirects_file, 'utf8')
 					.split('\n')
+					.map((s) => s.trim())
 					.filter(Boolean)
 					.map((line) => {
 						const [pathname] = line.split(' ');
