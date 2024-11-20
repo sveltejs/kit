@@ -131,6 +131,13 @@ export async function preview(vite, vite_config, svelte_config) {
 				let filename = normalizePath(
 					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
 				);
+
+				try {
+					filename = decodeURI(filename);
+				} catch {
+					// malformed URI
+				}
+
 				let prerendered = is_file(filename);
 
 				if (!prerendered) {
@@ -178,7 +185,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers['host'];
+			const host = req.headers[':authority'] || req.headers.host;
 
 			const request = await getRequest({
 				base: `${protocol}://${host}`,

@@ -323,7 +323,7 @@ function get_publish_directory(netlify_config, builder) {
 	}
 
 	builder.log.warn(
-		'No netlify.toml found. Using default publish directory. Consult https://kit.svelte.dev/docs/adapter-netlify#usage for more details'
+		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
 	);
 }
 

@@ -252,6 +252,21 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
+	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			if (request.url().includes('/load/fetch-request.json')) {
+				requests.push(request);
+			}
+		});
+
+		await page.goto('/load/fetch-request-empty-headers');
+
+		console.log({ requests });
+
+		expect(requests).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([
@@ -260,7 +275,7 @@ test.describe('Load', () => {
 					predicate: (message) => {
 						return (
 							message.text() ===
-							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 						);
 					},
 					timeout: 3_000
@@ -280,7 +295,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}

@@ -35,12 +35,6 @@ test.describe('adapter', () => {
 });
 
 test.describe('Imports', () => {
-	test('imports from node_modules', async ({ page, clicknav }) => {
-		await page.goto('/imports');
-		await clicknav('[href="/imports/markdown"]');
-		expect(await page.innerHTML('p')).toBe('this is some <strong>markdown</strong>');
-	});
-
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
