@@ -67,7 +67,6 @@ export function get_cookies(request, url, trailing_slash) {
 				return c.value;
 			}
 
-			// `parse` uses default decoder if `opts.decode` is undefined
 			const req_cookies = parse(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
