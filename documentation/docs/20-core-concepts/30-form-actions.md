@@ -451,7 +451,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	}
 </script>
 
-<form method="POST" on:submit|preventDefault={handleSubmit}>
+<form method="POST" onsubmit|preventDefault={handleSubmit}>
 	<!-- content -->
 </form>
 ```
@@ -484,7 +484,7 @@ Form actions are the preferred way to send data to the server, since they can be
 	}
 </script>
 
-<button on:click={rerun}>Rerun CI</button>
+<button onclick={rerun}>Rerun CI</button>
 ```
 
 ```js

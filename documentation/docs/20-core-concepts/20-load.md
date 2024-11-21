@@ -661,7 +661,7 @@ export async function load({ fetch, depends }) {
 </script>
 
 <p>random number: {data.number}</p>
-<button on:click={rerunLoadFunction}>Update random number</button>
+<button onclick={rerunLoadFunction}>Update random number</button>
 ```
 
 ### When do load functions rerun?
