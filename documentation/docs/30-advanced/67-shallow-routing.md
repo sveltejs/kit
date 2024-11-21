@@ -57,7 +57,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 {#each data.thumbnails as thumbnail}
 	<a
 		href="/photos/{thumbnail.id}"
-		on:click={async (e) => {
+		onclick={async (e) => {
 			if (innerWidth < 640        // bail if the screen is too small
 				|| e.shiftKey             // or the link is opened in a new window
 				|| e.metaKey || e.ctrlKey // or a new tab (mac: metaKey, win/linux: ctrlKey)
@@ -86,7 +86,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 {/each}
 
 {#if $page.state.selected}
-	<Modal on:close={() => history.back()}>
+	<Modal onclose={() => history.back()}>
 		<!-- pass page data to the +page.svelte component,
 		     just like SvelteKit would on navigation -->
 		<PhotoPage data={$page.state.selected} />
