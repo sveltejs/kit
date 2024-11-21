@@ -94,7 +94,6 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieParseOptions} opts
 		 */
 		getAll(opts) {
-			// `parse` uses default decoder if `opts.decode` is undefined
 			const cookies = parse(header, { decode: opts?.decode });
 
 			for (const c of Object.values(new_cookies)) {
