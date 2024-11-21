@@ -5,7 +5,6 @@ import * as path from 'node:path';
 
 import MagicString from 'magic-string';
 import { walk } from 'zimmerframe';
-import { VERSION } from 'svelte/compiler';
 import { parse } from 'svelte-parse-markup';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
@@ -42,13 +41,6 @@ export function image(opts) {
 			 * @type {Map<string, string>}
 			 */
 			const imports = new Map();
-
-			/**
-			 * Vite name to declaration name
-			 * e.g. __VITE_ASSET_0__ => __DECLARED_ASSET_0__
-			 * @type {Map<string, string>}
-			 */
-			const consts = new Map();
 
 			/**
 			 * @param {import('svelte/compiler').AST.RegularElement} node
@@ -110,7 +102,7 @@ export function image(opts) {
 						image = await process(resolved_id, opts);
 						images.set(resolved_id, image);
 					}
-					s.update(node.start, node.end, img_to_picture(consts, content, node, image));
+					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src={__IMPORTED_ASSET_0__} />
 					const name = '__IMPORTED_ASSET_' + imports.size + '__';
@@ -160,7 +152,7 @@ export function image(opts) {
 
 			await Promise.all(pending_ast_updates);
 
-			// add imports and consts to <script module> block
+			// add imports
 			let text = '';
 			if (imports.size) {
 				for (const [path, import_name] of imports.entries()) {
@@ -168,19 +160,11 @@ export function image(opts) {
 				}
 			}
 
-			if (consts.size) {
-				for (const [vite_name, declaration_name] of consts.entries()) {
-					text += `\tconst ${declaration_name} = "${vite_name}";\n`;
-				}
-			}
-
-			if (ast.module) {
+			if (ast.instance) {
 				// @ts-ignore
-				s.appendLeft(ast.module.content.start, text);
+				s.appendLeft(ast.instance.content.start, text);
 			} else {
-				s.prepend(
-					`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`
-				);
+				s.prepend(`<script>${text}</script>\n`);
 			}
 
 			return {
@@ -318,12 +302,11 @@ function stringToNumber(param) {
 }
 
 /**
- * @param {Map<string,string>} consts
  * @param {string} content
  * @param {import('svelte/compiler').AST.RegularElement} node
  * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(consts, content, node, image) {
+function img_to_picture(content, node, image) {
 	/** @type {import('../types/internal.ts').Attribute[]} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
@@ -338,11 +321,11 @@ function img_to_picture(consts, content, node, image) {
 	let res = '<picture>';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset=${to_value(consts, srcset)}${sizes_string} type="image/${format}" />`;
+		res += `<source srcset=${to_value(srcset)}${sizes_string} type="image/${format}" />`;
 	}
 
 	res += `<img ${serialize_img_attributes(content, attributes, {
-		src: to_value(consts, image.img.src),
+		src: to_value(image.img.src),
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
@@ -351,20 +334,11 @@ function img_to_picture(consts, content, node, image) {
 }
 
 /**
- * @param {Map<string, string>} consts
  * @param {string} src
  */
-function to_value(consts, src) {
-	if (src.startsWith('__VITE_ASSET__')) {
-		let var_name = consts.get(src);
-		if (!var_name) {
-			var_name = '__DECLARED_ASSET_' + consts.size + '__';
-			consts.set(src, var_name);
-		}
-		return `{${var_name}}`;
-	}
-
-	return `"${src}"`;
+function to_value(src) {
+	// __VITE_ASSET__ needs to be contained in double quotes to work with Vite asset plugin
+	return src.startsWith('__VITE_ASSET__') ? `{"${src}"}` : `"${src}"`;
 }
 
 /**
