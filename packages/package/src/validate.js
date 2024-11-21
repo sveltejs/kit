@@ -14,10 +14,10 @@ export function create_validator(options) {
 		 * @param {string} name
 		 * @param {string} content
 		 */
-		analyse_code(name, content) {
+		analyse_code: (name, content) => {
 			analyse_code(name, content);
 		},
-		validate() {
+		validate: () => {
 			/** @type {Record<string, any>} */
 			const pkg = JSON.parse(readFileSync(join(options.cwd, 'package.json'), 'utf-8'));
 			const warnings = validate(pkg);

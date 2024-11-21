@@ -32,16 +32,16 @@ export interface ServerModule {
 }
 
 export interface ServerInternalModule {
-	set_assets(path: string): void;
-	set_building(): void;
-	set_manifest(manifest: SSRManifest): void;
-	set_prerendering(): void;
-	set_private_env(environment: Record<string, string>): void;
-	set_public_env(environment: Record<string, string>): void;
-	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_safe_public_env(environment: Record<string, string>): void;
-	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	set_assets: (path: string) => void;
+	set_building: () => void;
+	set_manifest: (manifest: SSRManifest) => void;
+	set_prerendering: () => void;
+	set_private_env: (environment: Record<string, string>) => void;
+	set_public_env: (environment: Record<string, string>) => void;
+	set_read_implementation: (implementation: (path: string) => ReadableStream) => void;
+	set_safe_public_env: (environment: Record<string, string>) => void;
+	set_version: (version: string) => void;
+	set_fix_stack_trace: (fix_stack_trace: (error: unknown) => string) => void;
 }
 
 export interface Asset {
@@ -404,7 +404,7 @@ export interface SSRRoute {
 
 export interface SSRState {
 	fallback?: string;
-	getClientAddress(): string;
+	getClientAddress: () => string;
 	/**
 	 * True if we're currently attempting to render an error page
 	 */

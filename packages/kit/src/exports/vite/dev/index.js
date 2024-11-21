@@ -384,6 +384,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		});
 	}
 	align_exports();
+	// eslint-disable-next-line @typescript-eslint/unbound-method -- We'll pass `this` back to it later
 	const ws_send = vite.ws.send;
 	/** @param {any} args */
 	vite.ws.send = function (...args) {

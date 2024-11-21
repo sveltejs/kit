@@ -340,6 +340,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		if (csr) {
 			// ensure that excluded headers can't be read
+			// eslint-disable-next-line @typescript-eslint/unbound-method -- We'll pass `response.headers` as `this`
 			const get = response.headers.get;
 			response.headers.get = (key) => {
 				const lower = key.toLowerCase();

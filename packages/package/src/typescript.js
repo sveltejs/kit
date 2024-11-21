@@ -132,7 +132,9 @@ function load_tsconfig(tsconfig, filename, ts) {
 		throw new Error('Failed to locate tsconfig or jsconfig');
 	}
 
-	const { error, config } = ts.readConfigFile(config_filename, ts.sys.readFile);
+	const { error, config } = ts.readConfigFile(config_filename, (...args) =>
+		ts.sys.readFile(...args)
+	);
 
 	if (error) {
 		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));

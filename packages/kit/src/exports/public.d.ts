@@ -34,7 +34,7 @@ export interface Adapter {
 	 * This function is called after SvelteKit has built your app.
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
-	adapt(builder: Builder): MaybePromise<void>;
+	adapt: (builder: Builder) => MaybePromise<void>;
 	/**
 	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 	 */
@@ -49,7 +49,7 @@ export interface Adapter {
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering
 	 */
-	emulate?(): MaybePromise<Emulator>;
+	emulate?: () => MaybePromise<Emulator>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -685,7 +685,7 @@ export interface KitConfig {
  */
 export type Handle = (input: {
 	event: RequestEvent;
-	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+	resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
 }) => MaybePromise<Response>;
 
 /**
@@ -791,14 +791,14 @@ export interface LoadEvent<
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
-	setHeaders(headers: Record<string, string>): void;
+	setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * `await parent()` returns data from parent `+layout.js` `load` functions.
 	 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
 	 *
 	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 	 */
-	parent(): Promise<ParentData>;
+	parent: () => Promise<ParentData>;
 	/**
 	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 	 *
@@ -836,7 +836,7 @@ export interface LoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends(...deps: Array<`${string}:${string}`>): void;
+	depends: (...deps: Array<`${string}:${string}`>) => void;
 	/**
 	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 	 *
@@ -850,7 +850,7 @@ export interface LoadEvent<
 	 * }
 	 * ```
 	 */
-	untrack<T>(fn: () => T): T;
+	untrack: <T>(fn: () => T) => T;
 }
 
 export interface NavigationEvent<
@@ -1059,7 +1059,7 @@ export interface RequestEvent<
 	/**
 	 * The client's IP address, set by the adapter.
 	 */
-	getClientAddress(): string;
+	getClientAddress: () => string;
 	/**
 	 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
 	 */
@@ -1107,7 +1107,7 @@ export interface RequestEvent<
 	 *
 	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 	 */
-	setHeaders(headers: Record<string, string>): void;
+	setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
 	 */
@@ -1140,20 +1140,20 @@ export interface ResolveOptions {
 	 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 	 * @param input the html chunk and the info if this is the last chunk
 	 */
-	transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 	/**
 	 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 	 * By default, none will be included.
 	 * @param name header name
 	 * @param value header value
 	 */
-	filterSerializedResponseHeaders?(name: string, value: string): boolean;
+	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 	/**
 	 * Determines what should be added to the `<head>` tag to preload it.
 	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */
-	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+	preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 }
 
 export interface RouteDefinition<Config = any> {
@@ -1222,7 +1222,7 @@ export interface ServerLoadEvent<
 	 *
 	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 	 */
-	parent(): Promise<ParentData>;
+	parent: () => Promise<ParentData>;
 	/**
 	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 	 *
@@ -1260,7 +1260,7 @@ export interface ServerLoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends(...deps: string[]): void;
+	depends: (...deps: string[]) => void;
 	/**
 	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 	 *
@@ -1274,7 +1274,7 @@ export interface ServerLoadEvent<
 	 * }
 	 * ```
 	 */
-	untrack<T>(fn: () => T): T;
+	untrack: <T>(fn: () => T) => T;
 }
 
 /**
@@ -1345,7 +1345,7 @@ export type SubmitFunction<
 	formElement: HTMLFormElement;
 	controller: AbortController;
 	submitter: HTMLElement | null;
-	cancel(): void;
+	cancel: () => void;
 }) => MaybePromise<
 	| void
 	| ((opts: {
@@ -1358,7 +1358,7 @@ export type SubmitFunction<
 			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
-			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
+			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
 	  }) => void)
 >;
 
