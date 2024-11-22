@@ -6,6 +6,9 @@
 const escape_html_attr_dict = {
 	'&': '&amp;',
 	'"': '&quot;'
+	// Svelte also escapes < because the escape function could be called inside a `noscript` there
+	// https://github.com/sveltejs/svelte/security/advisories/GHSA-8266-84wp-wv5c
+	// However, that doesn't apply in SvelteKit
 };
 
 /**
