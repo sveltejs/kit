@@ -4,7 +4,7 @@ import { escape_html } from './escape.js';
 test('escape_html_attr escapes special attribute characters', () => {
 	assert.equal(
 		escape_html('some "values" are &special here, <others> aren\'t.', true),
-		'some &quot;values&quot; are &amp;special here, <others> aren\'t.'
+		"some &quot;values&quot; are &amp;special here, <others> aren't."
 	);
 });
 
