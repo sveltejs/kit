@@ -22,8 +22,6 @@ import { check_feature } from '../../../utils/features.js';
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
-const svelte_query_regex = /(?:\?|&)svelte(?:&|$)/;
-const type_css_query_regex = /(?:\?|&)type=css(?:&|$)/;
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -202,11 +200,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							const styles = {};
 
 							for (const dep of deps) {
-								if (
-									(isCSSRequest(dep.url) ||
-										(svelte_query_regex.test(dep.url) && type_css_query_regex.test(dep.url))) &&
-									!vite_css_query_regex.test(dep.url)
-								) {
+								if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
 									const inlineCssUrl = dep.url.includes('?')
 										? dep.url.replace('?', '?inline&')
 										: dep.url + '?inline';
