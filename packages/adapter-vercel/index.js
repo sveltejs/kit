@@ -13,9 +13,10 @@ const DEFAULT_FUNCTION_NAME = 'fn';
 const get_default_runtime = () => {
 	const major = Number(process.version.slice(1).split('.')[0]);
 
-	// If we're building on Vercel, we know that the version will be fine. Also means
-	// we're not on the hook for updating the adapter every time a new Node version is
-	// added to Vercel.
+	// If we're building on Vercel, we know that the version will be fine because Vercel
+	// provides Node (and Vercel won't provide something it doesn't support).
+	// Also means we're not on the hook for updating the adapter every time a new Node
+	// version is added to Vercel.
 	if (!process.env.VERCEL) {
 		if (major < 18 || major > 22) {
 			throw new Error(
