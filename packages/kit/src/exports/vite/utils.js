@@ -3,7 +3,7 @@ import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { escape_html, escape_html_attr } from '../../utils/escape.js';
+import { escape_html } from '../../utils/escape.js';
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
@@ -92,7 +92,7 @@ export function not_found(req, res, base) {
 		res.end(
 			`The server is configured with a public base URL of ${escape_html(
 				base
-			)} - did you mean to visit <a href=${escape_html_attr(prefixed)}>${escape_html(
+			)} - did you mean to visit <a href="${escape_html(prefixed, true)}">${escape_html(
 				prefixed
 			)}</a> instead?`
 		);

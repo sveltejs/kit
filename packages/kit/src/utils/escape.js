@@ -8,6 +8,14 @@ const escape_html_attr_dict = {
 	'"': '&quot;'
 };
 
+/**
+ * @type {Record<string, string>}
+ */
+const escape_html_dict = {
+	'&': '&amp;',
+	'<': '&lt;'
+};
+
 const escape_html_attr_regex = new RegExp(
 	// special characters
 	`[${Object.keys(escape_html_attr_dict).join('')}]|` +
@@ -22,52 +30,39 @@ const escape_html_attr_regex = new RegExp(
 	'g'
 );
 
+const escape_html_regex = new RegExp(
+	// special characters
+	`[${Object.keys(escape_html_dict).join('')}]|` +
+		// high surrogate without paired low surrogate
+		'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
+		// a valid surrogate pair, the only match with 2 code units
+		// we match it so that we can match unpaired low surrogates in the same pass
+		// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
+		'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
+		// unpaired low surrogate (see previous match)
+		'[\\udc00-\\udfff]',
+	'g'
+);
+
 /**
- * Formats a string to be used as an attribute's value in raw HTML.
- *
- * It escapes unpaired surrogates (which are allowed in js strings but invalid in HTML), escapes
- * characters that are special in attributes, and surrounds the whole string in double-quotes.
+ * Escapes unpaired surrogates (which are allowed in js strings but invalid in HTML) and
+ * escapes characters that are special.
  *
  * @param {string} str
- * @returns {string} Escaped string surrounded by double-quotes.
- * @example const html = `<tag data-value=${escape_html_attr('value')}>...</tag>`;
+ * @param {boolean} [is_attr]
+ * @returns {string} escaped string
+ * @example const html = `<tag data-value="${escape_html('value', true)}">...</tag>`;
  */
-export function escape_html_attr(str) {
-	const escaped_str = str.replace(escape_html_attr_regex, (match) => {
+export function escape_html(str, is_attr) {
+	const dict = is_attr ? escape_html_attr_dict : escape_html_dict;
+	const escaped_str = str.replace(is_attr ? escape_html_attr_regex : escape_html_regex, (match) => {
 		if (match.length === 2) {
 			// valid surrogate pair
 			return match;
 		}
 
-		return escape_html_attr_dict[match] ?? `&#${match.charCodeAt(0)};`;
+		return dict[match] ?? `&#${match.charCodeAt(0)};`;
 	});
 
-	return `"${escaped_str}"`;
-}
-
-const ATTR_REGEX = /[&"<]/g;
-const CONTENT_REGEX = /[&<]/g;
-
-/**
- * @template V
- * @param {V} value
- * @param {boolean} [is_attr]
- */
-export function escape_html(value, is_attr) {
-	const str = String(value ?? '');
-
-	const pattern = is_attr ? ATTR_REGEX : CONTENT_REGEX;
-	pattern.lastIndex = 0;
-
-	let escaped = '';
-	let last = 0;
-
-	while (pattern.test(str)) {
-		const i = pattern.lastIndex - 1;
-		const ch = str[i];
-		escaped += str.substring(last, i) + (ch === '&' ? '&amp;' : ch === '"' ? '&quot;' : '&lt;');
-		last = i + 1;
-	}
-
-	return escaped + str.substring(last);
+	return escaped_str;
 }
