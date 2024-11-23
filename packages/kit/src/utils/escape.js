@@ -19,31 +19,22 @@ const escape_html_dict = {
 	'<': '&lt;'
 };
 
+const surrogates = // high surrogate without paired low surrogate
+	'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
+	// a valid surrogate pair, the only match with 2 code units
+	// we match it so that we can match unpaired low surrogates in the same pass
+	// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
+	'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
+	// unpaired low surrogate (see previous match)
+	'[\\udc00-\\udfff]';
+
 const escape_html_attr_regex = new RegExp(
-	// special characters
-	`[${Object.keys(escape_html_attr_dict).join('')}]|` +
-		// high surrogate without paired low surrogate
-		'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
-		// a valid surrogate pair, the only match with 2 code units
-		// we match it so that we can match unpaired low surrogates in the same pass
-		// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
-		'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
-		// unpaired low surrogate (see previous match)
-		'[\\udc00-\\udfff]',
+	`[${Object.keys(escape_html_attr_dict).join('')}]|` + surrogates,
 	'g'
 );
 
 const escape_html_regex = new RegExp(
-	// special characters
-	`[${Object.keys(escape_html_dict).join('')}]|` +
-		// high surrogate without paired low surrogate
-		'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
-		// a valid surrogate pair, the only match with 2 code units
-		// we match it so that we can match unpaired low surrogates in the same pass
-		// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
-		'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
-		// unpaired low surrogate (see previous match)
-		'[\\udc00-\\udfff]',
+	`[${Object.keys(escape_html_dict).join('')}]|` + surrogates,
 	'g'
 );
 
