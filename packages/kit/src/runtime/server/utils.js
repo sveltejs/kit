@@ -5,6 +5,7 @@ import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { escape_html } from '../../utils/escape.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -50,7 +51,7 @@ export function allowed_methods(mod) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	let page = options.templates.error({ status, message });
+	let page = options.templates.error({ status, message: escape_html(message) });
 
 	if (DEV) {
 		// inject Vite HMR client, for easier debugging

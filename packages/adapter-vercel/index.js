@@ -11,13 +11,27 @@ const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
-	const major = process.version.slice(1).split('.')[0];
-	if (major === '18') return 'nodejs18.x';
-	if (major === '20') return 'nodejs20.x';
+	const major = Number(process.version.slice(1).split('.')[0]);
 
-	throw new Error(
-		`Unsupported Node.js version: ${process.version}. Please use Node 18 or Node 20 to build your project, or explicitly specify a runtime in your adapter configuration.`
-	);
+	// If we're building on Vercel, we know that the version will be fine because Vercel
+	// provides Node (and Vercel won't provide something it doesn't support).
+	// Also means we're not on the hook for updating the adapter every time a new Node
+	// version is added to Vercel.
+	if (!process.env.VERCEL) {
+		if (major < 18 || major > 22) {
+			throw new Error(
+				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 18, 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+
+		if (major % 2 !== 0) {
+			throw new Error(
+				`Unsupported Node.js version: ${process.version}. Please use an even-numbered Node version to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+	}
+
+	return `nodejs${major}.x`;
 };
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules

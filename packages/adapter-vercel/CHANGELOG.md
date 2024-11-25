@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 5.4.8
+### Patch Changes
+
+
+- chore: support building with Node 22 ([#13043](https://github.com/sveltejs/kit/pull/13043))
+
+- Updated dependencies [[`570562b74d9e9f295d9b617478088a650f51e96b`](https://github.com/sveltejs/kit/commit/570562b74d9e9f295d9b617478088a650f51e96b), [`1358cccd52190df3c74bdd8970dbfb06ffc4ec72`](https://github.com/sveltejs/kit/commit/1358cccd52190df3c74bdd8970dbfb06ffc4ec72)]:
+  - @sveltejs/kit@2.8.2
+
 ## 5.4.7
 ### Patch Changes
 

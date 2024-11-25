@@ -18,6 +18,7 @@ import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
+import { escape_html } from '../../../utils/escape.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -504,7 +505,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					const error_template = ({ status, message }) => {
 						return error_page
 							.replace(/%sveltekit\.status%/g, String(status))
-							.replace(/%sveltekit\.error\.message%/g, message);
+							.replace(/%sveltekit\.error\.message%/g, escape_html(message));
 					};
 
 					res.writeHead(500, {
