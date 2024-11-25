@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.8.4
+### Patch Changes
+
+
+- fix: update inline css url generation for FOUC prevention in dev ([#13007](https://github.com/sveltejs/kit/pull/13007))
+
 ## 2.8.3
 ### Patch Changes
 
