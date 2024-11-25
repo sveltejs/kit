@@ -4,12 +4,14 @@ import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
 import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
+import process from 'node:process';
 
 /** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {
 	npm: (name, version) => `npm install -D ${name}@${version}`,
 	pnpm: (name, version) => `pnpm add -D ${name}@${version}`,
-	yarn: (name, version) => `yarn add -D ${name}@${version}`
+	yarn: (name, version) => `yarn add -D ${name}@${version}`,
+	bun: (name, version) => `bun add -D ${name}@${version}`
 };
 
 function detect_lockfile() {
@@ -19,6 +21,7 @@ function detect_lockfile() {
 		if (existsSync(join(dir, 'pnpm-lock.yaml'))) return 'pnpm';
 		if (existsSync(join(dir, 'yarn.lock'))) return 'yarn';
 		if (existsSync(join(dir, 'package-lock.json'))) return 'npm';
+		if (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))) return 'bun';
 	} while (dir !== (dir = dirname(dir)));
 
 	return 'npm';
@@ -114,7 +117,7 @@ export default () => ({
 		if (adapter) return adapter.adapt(builder);
 
 		builder.log.warn(
-			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
+			'Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing'
 		);
 	},
 	supports: {

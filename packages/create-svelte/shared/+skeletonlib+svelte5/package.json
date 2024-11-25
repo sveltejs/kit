@@ -1,8 +1,0 @@
-{
-	"peerDependencies": {
-		"svelte": "^5.0.0-next.1"
-	},
-	"devDependencies": {
-		"svelte": "^5.0.0-next.1"
-	}
-}
