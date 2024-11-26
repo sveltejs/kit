@@ -1,7 +1,7 @@
 <script>
 	import { getStores } from '$app/stores';
 
-	let pathname;
+	let pathname = 'undefined';
 </script>
 
 <h1>{pathname}</h1>

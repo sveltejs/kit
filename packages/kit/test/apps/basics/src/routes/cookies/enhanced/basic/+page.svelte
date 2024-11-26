@@ -6,7 +6,7 @@
 </script>
 
 Cookie: <span id="cookie-value">
-	{data.cookie}
+	{data.cookie ?? 'undefined'}
 </span>
 
 <form method="post" action="?/setTeapot" use:enhance>

@@ -3,7 +3,7 @@
 
 	let times_triggered = 0;
 	let unload = false;
-	let navigation_type;
+	let navigation_type = 'undefined';
 	beforeNavigate(({ cancel, type, willUnload, to }) => {
 		times_triggered++;
 		unload = willUnload;

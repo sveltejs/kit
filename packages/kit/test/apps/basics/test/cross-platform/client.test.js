@@ -50,10 +50,10 @@ test.describe('a11y', () => {
 			expect(has_live_region).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
+			expect(await page.innerText('[aria-live]')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+			expect(await page.innerText('[aria-live]')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_live_region).toBeFalsy();
 		}
