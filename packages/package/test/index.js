@@ -32,6 +32,7 @@ async function test_make_package(path, options) {
 		cwd,
 		input,
 		output,
+		preserve_output: false,
 		types: true,
 		config,
 		...options
@@ -90,7 +91,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
 		try {
-			await build({ cwd, input, output, types: true, config });
+			await build({ cwd, input, output, types: true, config, preserve_output: false });
 			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
@@ -167,6 +168,7 @@ if (!process.env.CI) {
 			cwd,
 			input: 'src/lib',
 			output: 'package',
+			preserve_output: false,
 			types: true,
 			config
 		});
@@ -256,6 +258,7 @@ test('validates package (1)', () => {
 		cwd: '',
 		input: '',
 		output: '',
+		preserve_output: false,
 		types: true
 	});
 	analyse_code('src/lib/index.js', 'export const a = 1;import.meta.env;');
@@ -275,6 +278,7 @@ test('validates package (2)', () => {
 		cwd: '',
 		input: '',
 		output: '',
+		preserve_output: false,
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
@@ -294,6 +298,7 @@ test('validates package (all ok 1)', () => {
 		cwd: '',
 		input: '',
 		output: '',
+		preserve_output: false,
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
@@ -311,6 +316,7 @@ test('validates package (all ok 2)', () => {
 		cwd: '',
 		input: '',
 		output: '',
+		preserve_output: false,
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
@@ -321,6 +327,14 @@ test('validates package (all ok 2)', () => {
 	});
 
 	assert.equal(warnings.length, 0);
+});
+
+test('create package with preserved output', async () => {
+	const output = join(__dirname, 'fixtures', 'preserve-output', 'dist');
+	rimraf(output);
+	fs.mkdirSync(join(output, 'assets'), { recursive: true });
+	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');
+	await test_make_package('preserve-output', { preserve_output: true });
 });
 
 test.run();

@@ -4,6 +4,7 @@ export interface Options {
 	cwd: string;
 	input: string;
 	output: string;
+	preserve_output: boolean;
 	types: boolean;
 	tsconfig?: string;
 	config: {
