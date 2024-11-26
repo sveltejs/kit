@@ -11,7 +11,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"sirv-cli": "^3.0.0",
 		"svelte": "^4.2.10",
 		"vite": "^5.3.2"
