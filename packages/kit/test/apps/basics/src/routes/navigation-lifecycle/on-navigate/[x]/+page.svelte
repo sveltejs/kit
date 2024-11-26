@@ -25,5 +25,7 @@
 	});
 </script>
 
-<h1>{from?.url.pathname ?? 'undefined'} -> {to?.url.pathname ?? 'undefined'} ({type ?? '...'}) {called_return}</h1>
+<h1>
+	{from?.url.pathname ?? 'undefined'} -> {to?.url.pathname ?? 'undefined'} ({type ?? '...'}) {called_return}
+</h1>
 <a href="/navigation-lifecycle/on-navigate/b">/b</a>

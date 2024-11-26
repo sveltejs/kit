@@ -13,5 +13,5 @@
 	});
 </script>
 
-<h1>{from?.url.pathname  ?? 'undefined'} -> {to?.url.pathname  ?? 'undefined'}</h1>
+<h1>{from?.url.pathname ?? 'undefined'} -> {to?.url.pathname ?? 'undefined'}</h1>
 <a href="/navigation-lifecycle/after-navigate/b">/b</a>
