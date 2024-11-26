@@ -25,7 +25,7 @@
 		"e2e-test-dep-server": "file:./_test_dependencies/cjs-only",
 		"svelte": "^4.2.10",
 		"svelte-check": "^4.0.1",
-		"typescript": "^5.3.3",
+		"typescript": "^5.5.4",
 		"vite": "^5.3.2"
 	},
 	"type": "module"
