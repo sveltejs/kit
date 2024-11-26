@@ -23,6 +23,8 @@
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
 				"**/.svelte-kit/**",
+				"**/.custom-out-dir/**",
+				"**/build/**",
 				"**/test-results/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",

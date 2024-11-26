@@ -2358,6 +2358,7 @@ async function _hydrate(
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
 	let result;
+	let hydrate = true;
 
 	try {
 		const branch_promises = node_ids.map(async (n, i) => {
@@ -2422,13 +2423,16 @@ async function _hydrate(
 			url,
 			route
 		});
+
+		target.textContent = '';
+		hydrate = false;
 	}
 
 	if (result.props.page) {
 		result.props.page.state = {};
 	}
 
-	initialize(result, target, true);
+	initialize(result, target, hydrate);
 }
 
 /**

@@ -11,10 +11,10 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
-			'packages/adapter-static/test/apps/*/build',
-			'packages/adapter-cloudflare/files',
-			'packages/adapter-netlify/files',
-			'packages/adapter-node/files'
+			'**/test-results',
+			'**/build',
+			'**/.custom-out-dir',
+			'packages/adapter-*/files'
 		]
 	},
 	{
