@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.8.5
+### Patch Changes
+
+
+- fix: don't hydrate when falling back to error page ([#13056](https://github.com/sveltejs/kit/pull/13056))
+
 ## 2.8.4
 ### Patch Changes
 
