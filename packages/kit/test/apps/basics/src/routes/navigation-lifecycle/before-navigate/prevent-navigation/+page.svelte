@@ -3,7 +3,7 @@
 
 	let times_triggered = 0;
 	let unload = false;
-	let navigation_type = 'undefined';
+	let navigation_type;
 	beforeNavigate(({ cancel, type, willUnload, to }) => {
 		times_triggered++;
 		unload = willUnload;
@@ -22,4 +22,4 @@
 <a href="https://google.de">external</a>
 <!-- svelte-ignore a11y-invalid-attribute -->
 <a download href="">external</a>
-<pre>{times_triggered} {unload} {navigation_type}</pre>
+<pre>{times_triggered} {unload} {`${navigation_type}`}</pre>
