@@ -37,6 +37,7 @@ import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_
 export const options = {
 	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+	app_template_contains_svelte_htmlAttributes: ${template.includes('%svelte.htmlAttributes%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
@@ -47,7 +48,8 @@ export const options = {
 	root,
 	service_worker: ${has_service_worker},
 	templates: {
-		app: ({ head, body, assets, nonce, env }) => ${s(template)
+		app: ({ html_attributes, head, body, assets, nonce, env }) => ${s(template)
+			.replace('%svelte.htmlAttributes%', '" + html_attributes + "')
 			.replace('%sveltekit.head%', '" + head + "')
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
