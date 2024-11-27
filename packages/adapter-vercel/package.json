@@ -40,7 +40,7 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.27.1",
-		"esbuild": "^0.21.5"
+		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

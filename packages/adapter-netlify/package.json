@@ -42,7 +42,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.21.5",
+		"esbuild": "^0.24.0",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
