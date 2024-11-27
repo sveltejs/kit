@@ -10,9 +10,9 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"sirv-cli": "^3.0.0",
-		"svelte": "^4.2.10",
+		"svelte": "^5.2.9",
 		"vite": "^6.0.0"
 	},
 	"type": "module"

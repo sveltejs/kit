@@ -13,7 +13,7 @@ importers:
         version: 2.27.8
       '@sveltejs/eslint-config':
         specifier: ^8.1.0
-        version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.1.13))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)
+        version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
@@ -28,7 +28,7 @@ importers:
         version: 3.1.1
       prettier-plugin-svelte:
         specifier: ^3.1.2
-        version: 3.1.2(prettier@3.1.1)(svelte@5.1.13)
+        version: 3.1.2(prettier@3.1.1)(svelte@5.2.9)
       typescript-eslint:
         specifier: ^8.0.0
         version: 8.4.0(eslint@9.6.0)(typescript@5.6.3)
@@ -43,8 +43,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -136,8 +136,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -176,8 +176,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -203,8 +203,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -212,8 +212,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -227,14 +227,14 @@ importers:
         specifier: workspace:^
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^3.0.0
         version: 3.0.0
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       vite:
         specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -248,14 +248,14 @@ importers:
         specifier: workspace:^
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^3.0.0
         version: 3.0.0
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       vite:
         specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -273,8 +273,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -304,7 +304,7 @@ importers:
         version: 0.30.11
       svelte-parse-markup:
         specifier: ^0.1.5
-        version: 0.1.5(svelte@5.1.13)
+        version: 0.1.5(svelte@5.2.9)
       vite-imagetools:
         specifier: ^7.0.1
         version: 7.0.1(rollup@4.24.0)
@@ -322,8 +322,8 @@ importers:
         specifier: ^4.14.2
         version: 4.24.0
       svelte:
-        specifier: ^5.1.3
-        version: 5.1.13
+        specifier: ^5.2.9
+        version: 5.2.9
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -377,8 +377,8 @@ importers:
         specifier: ^1.44.1
         version: 1.44.1
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/connect':
         specifier: ^3.4.38
         version: 3.4.38
@@ -395,11 +395,11 @@ importers:
         specifier: ^4.14.2
         version: 4.24.0
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@4.2.19)(typescript@5.4.5)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@5.2.9)(typescript@5.4.5)
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -419,8 +419,8 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -428,11 +428,11 @@ importers:
         specifier: ^1.0.16
         version: 1.0.16
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -446,17 +446,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -470,8 +470,8 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -506,11 +506,11 @@ importers:
         specifier: file:./_test_dependencies/cjs-only
         version: e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -524,17 +524,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -548,17 +548,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -572,17 +572,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -599,17 +599,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -623,17 +623,17 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -656,14 +656,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -680,14 +680,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -704,14 +704,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -725,14 +725,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -746,14 +746,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -767,17 +767,17 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -791,14 +791,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -812,14 +812,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -833,14 +833,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -854,14 +854,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -875,14 +875,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -896,14 +896,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -917,14 +917,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -938,14 +938,14 @@ importers:
         specifier: workspace:^
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -959,14 +959,14 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -983,14 +983,14 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -1007,14 +1007,14 @@ importers:
         specifier: workspace:^
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
@@ -1041,11 +1041,11 @@ importers:
         version: 7.6.3
       svelte2tsx:
         specifier: ~0.7.16
-        version: 0.7.18(svelte@4.2.19)(typescript@5.4.5)
+        version: 0.7.18(svelte@5.2.9)(typescript@5.4.5)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -1056,11 +1056,11 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       svelte:
-        specifier: ^4.2.10
-        version: 4.2.19
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@4.2.19)(typescript@5.4.5)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@5.2.9)(typescript@5.4.5)
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -1101,23 +1101,23 @@ importers:
         specifier: workspace:*
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^4.0.0
-        version: 4.0.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
       prettier:
         specifier: ^3.3.2
         version: 3.3.3
       prettier-plugin-svelte:
         specifier: ^3.2.6
-        version: 3.2.7(prettier@3.3.3)(svelte@5.1.13)
+        version: 3.2.7(prettier@3.3.3)(svelte@5.2.9)
       publint:
         specifier: ^0.2.0
         version: 0.2.7
       svelte:
-        specifier: ^5.1.13
-        version: 5.1.13
+        specifier: ^5.2.9
+        version: 5.2.9
       svelte-check:
         specifier: ^4.0.1
-        version: 4.0.1(picomatch@4.0.2)(svelte@5.1.13)(typescript@5.6.3)
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
       typescript:
         specifier: ^5.5.0
         version: 5.6.3
@@ -1671,8 +1671,18 @@ packages:
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
 
+  '@eslint-community/eslint-utils@4.4.1':
+    resolution: {integrity: sha512-s3O3waFUrMV8P/XaF/+ZTp1X9XBZW1a4B97ZnjQF2KYWaFD2A8KyFBsrsfSjEmjn3RGWAIuvlneuZm3CUK3jbA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
+
   '@eslint-community/regexpp@4.11.1':
     resolution: {integrity: sha512-m4DVN9ZqskZoLU5GlWZadwDnYo3vAEydiUayB9widCl9ffWx2IvPnp6n3on5rJmziJSw9Bv+Z3ChDVdMwXCY8Q==}
+    engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
+
+  '@eslint-community/regexpp@4.12.1':
+    resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
   '@eslint/config-array@0.17.0':
@@ -2038,14 +2048,6 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       vite: ^5.0.3
 
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0':
-    resolution: {integrity: sha512-9QX28IymvBlSCqsCll5t0kQVxipsfhFFL+L2t3nTWfXnddYwxBuAEtTtlaVQpRz9c37BhJjltSeY4AJSC03SSg==}
-    engines: {node: ^18.0.0 || >=20}
-    peerDependencies:
-      '@sveltejs/vite-plugin-svelte': ^3.0.0
-      svelte: ^4.0.0 || ^5.0.0-next.0
-      vite: ^5.0.0
-
   '@sveltejs/vite-plugin-svelte-inspector@3.0.1':
     resolution: {integrity: sha512-2CKypmj1sM4GE7HjllT7UKmo4Q6L5xFRd7VMGEWhYnZ+wc6AUVU01IBd7yUi6WnFndEwWoMNOd6e8UjoN0nbvQ==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22}
@@ -2054,12 +2056,13 @@ packages:
       svelte: ^5.0.0-next.96 || ^5.0.0
       vite: ^5.0.0
 
-  '@sveltejs/vite-plugin-svelte@3.1.0':
-    resolution: {integrity: sha512-sY6ncCvg+O3njnzbZexcVtUqOBE3iYmQPJ9y+yXSkOwG576QI/xJrBnQSRXFLGwJNBa0T78JEKg5cIR0WOAuUw==}
-    engines: {node: ^18.0.0 || >=20}
+  '@sveltejs/vite-plugin-svelte-inspector@4.0.1':
+    resolution: {integrity: sha512-J/Nmb2Q2y7mck2hyCX4ckVHcR5tu2J+MtBEQqpDrrgELZ2uvraQcK/ioCV61AqkdXFgriksOKIceDcQmqnGhVw==}
+    engines: {node: ^18.0.0 || ^20.0.0 || >=22}
     peerDependencies:
-      svelte: ^4.0.0 || ^5.0.0-next.0
-      vite: ^5.0.0
+      '@sveltejs/vite-plugin-svelte': ^5.0.0
+      svelte: ^5.0.0
+      vite: ^6.0.0
 
   '@sveltejs/vite-plugin-svelte@4.0.0':
     resolution: {integrity: sha512-kpVJwF+gNiMEsoHaw+FJL76IYiwBikkxYU83+BpqQLdVMff19KeRKLd2wisS8niNBMJ2omv5gG+iGDDwd8jzag==}
@@ -2067,6 +2070,13 @@ packages:
     peerDependencies:
       svelte: ^5.0.0-next.96 || ^5.0.0
       vite: ^5.0.0
+
+  '@sveltejs/vite-plugin-svelte@5.0.1':
+    resolution: {integrity: sha512-D5l5+STmywGoLST07T9mrqqFFU+xgv5fqyTWM+VbxTvQ6jujNn4h3lQNCvlwVYs4Erov8i0K5Rwr3LQtmBYmBw==}
+    engines: {node: ^18.0.0 || ^20.0.0 || >=22}
+    peerDependencies:
+      svelte: ^5.0.0
+      vite: ^6.0.0
 
   '@svitejs/changesets-changelog-github-compact@1.1.0':
     resolution: {integrity: sha512-qhUGGDHcpbY2zpjW3SwqchuW8J/5EzlPFud7xNntHKA7f3a/mx5+g+ruJKFHSAiVZYo30PALt+AyhmPUNKH/Og==}
@@ -2212,6 +2222,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.14.0:
+    resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -2344,9 +2359,6 @@ packages:
     resolution: {integrity: sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ==}
     engines: {node: '>=8'}
 
-  code-red@1.0.4:
-    resolution: {integrity: sha512-7qJWqItLA8/VPVlKJlFXU+NBlo/qyfs39aJcuMT/2ere32ZqvF5OSxgdM5xOfJJ7O429gg2HM47y8v9P+9wrNw==}
-
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -2401,10 +2413,6 @@ packages:
   cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
     engines: {node: '>= 8'}
-
-  css-tree@2.3.1:
-    resolution: {integrity: sha512-6Fv1DV/TYw//QF5IzQdqsNDjx/wc8TrMBZsqjL9eW01tWb7R7k/mq+/VXfJCl7SoD5emsJop9cOByJZfs8hYIw==}
-    engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -2586,6 +2594,10 @@ packages:
     resolution: {integrity: sha512-Q7lok0mqMUSf5a/AdAZkA5a/gHcO6snwQClVNNvFKCAVlxXucdU8pKydU5ZVZjBx5xr37vGbFFWtLQYreLzrZg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  eslint-visitor-keys@4.2.0:
+    resolution: {integrity: sha512-UyLnSehNt62FFhSwjZlHmeokpRK59rcz29j+F1/aDgbkbRTk7wIc9XzdoasMUbRNKDM0qQt/+BJ4BrpFeABemw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   eslint@9.6.0:
     resolution: {integrity: sha512-ElQkdLMEEqQNM9Njff+2Y4q2afHk7JpkPvrd7Xh7xefwgQynqPxwf55J7di9+MEibWUGdNjFF9ITG9Pck5M84w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -2594,8 +2606,15 @@ packages:
   esm-env@1.0.0:
     resolution: {integrity: sha512-Cf6VksWPsTuW01vU9Mk/3vRue91Zevka5SjyNf3nEpokFRuqt/KjUQoGAwq9qMmhpLTHmXzSIrFRw8zxWzmFBA==}
 
+  esm-env@1.1.4:
+    resolution: {integrity: sha512-oO82nKPHKkzIj/hbtuDYy/JHqBHFlMIW36SDiPCVsj87ntDLcWN+sJ1erdVryd4NxODacFTsdrIE3b7IamqbOg==}
+
   espree@10.2.0:
     resolution: {integrity: sha512-upbkBJbckcCNBDBDXEbuhjbP68n+scUd3k/U2EkyM9nw+I/jPiL4cLF/Al06CF96wRltFda16sxDFrxsI1v0/g==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  espree@10.3.0:
+    resolution: {integrity: sha512-0QYC8b24HWY8zjRnDTL6RiHfDbAWn63qb4LMj1Z4b076A4une81+z03Kg7l7mn/48PUTqoLptSXez8oknU8Clg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   espree@9.6.1:
@@ -2786,8 +2805,8 @@ packages:
     resolution: {integrity: sha512-tqFIbz83w4Y5TCbtgjZjApohbuh7K9BxGYFm7ifwDR240tvdb7P9x+/9VvUKlmkPoiknoJtanI8UOrqxS3a7lQ==}
     engines: {node: '>=18'}
 
-  globals@15.11.0:
-    resolution: {integrity: sha512-yeyNSjdbyVaWurlwCpcA6XNBrHTMIeDdj0/hnvX/OLJ9ekOXYbLsLinH/MucQyGvNnXhidTdNhTtJaffL2sMfw==}
+  globals@15.12.0:
+    resolution: {integrity: sha512-1+gLErljJFhbOVyaetcwJiJ4+eLe45S2E7P5UiZ9xGfeq3ATQf5DOv9G7MH3gGbKQLkzmNh2DxfZwLdw+j6oTQ==}
     engines: {node: '>=18'}
 
   globalyzer@0.1.0:
@@ -2900,6 +2919,9 @@ packages:
 
   is-reference@3.0.2:
     resolution: {integrity: sha512-v3rht/LgVcsdZa3O2Nqs+NMowLOxeOm7Ay9+/ARQ2F+qEoANRcqrjAZKGN0v8ymUetZGgkp26LTnGT7H0Qo9Pg==}
+
+  is-reference@3.0.3:
+    resolution: {integrity: sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==}
 
   is-stream@3.0.0:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
@@ -3051,12 +3073,12 @@ packages:
   magic-string@0.30.12:
     resolution: {integrity: sha512-Ea8I3sQMVXr8JhN4z+H/d8zwo+tYDgHE9+5G4Wnrwhs0gaK9fXTKx0Tw5Xwsd/bCPTTZNRAdpyzvoeORe9LYpw==}
 
+  magic-string@0.30.14:
+    resolution: {integrity: sha512-5c99P1WKTed11ZC0HMJOj6CDIue6F8ySu+bJL+85q1zBEIY8IklrJ1eiKC2NDRh3Ct3FcvmJPyQHb9erXMTJNw==}
+
   make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
-
-  mdn-data@2.0.30:
-    resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
 
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
@@ -3286,9 +3308,6 @@ packages:
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
     engines: {node: '>= 14.16'}
-
-  periscopic@3.1.0:
-    resolution: {integrity: sha512-vKiQ8RRtkl9P+r/+oefh25C3fhybptkHKCZSPlcXiJux2tJF55GnEj3BVn4A5gKfq9NWWXXrxkHBwVPUfH0opw==}
 
   picocolors@1.1.0:
     resolution: {integrity: sha512-TQ92mBOW0l3LeMeyLV6mzy/kWr8lkd/hp3mTg7wYK7zJhuBStmGMBG0BdeDZS/dZx1IukaX6Bk11zcln25o1Aw==}
@@ -3645,12 +3664,6 @@ packages:
       svelte:
         optional: true
 
-  svelte-hmr@0.16.0:
-    resolution: {integrity: sha512-Gyc7cOS3VJzLlfj7wKS0ZnzDVdv3Pn2IuVeJPk9m2skfhcu5bq3wtIZyQGggr7/Iim5rH5cncyQft/kRLupcnA==}
-    engines: {node: ^12.20 || ^14.13.1 || >= 16}
-    peerDependencies:
-      svelte: ^3.19.0 || ^4.0.0
-
   svelte-parse-markup@0.1.5:
     resolution: {integrity: sha512-T6mqZrySltPCDwfKXWQ6zehipVLk4GWfH1zCMGgRtLlOIFPuw58ZxVYxVvotMJgJaurKi1i14viB2GIRKXeJTQ==}
     peerDependencies:
@@ -3699,12 +3712,12 @@ packages:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
       typescript: ^4.9.4 || ^5.0.0
 
-  svelte@4.2.19:
-    resolution: {integrity: sha512-IY1rnGr6izd10B0A8LqsBfmlT5OILVuZ7XsI0vdGPEvuonFV7NYEUK4dAkm9Zg2q0Um92kYjTpS1CAP3Nh/KWw==}
-    engines: {node: '>=16'}
-
   svelte@5.1.13:
     resolution: {integrity: sha512-xVNk8yLsZNfkyqWzVg8+nfU9ewiSjVW0S4qyTxfKa6Y7P5ZBhA+LDsh2cHWIXJQMltikQAk6W3sqGdQZSH58PA==}
+    engines: {node: '>=18'}
+
+  svelte@5.2.9:
+    resolution: {integrity: sha512-LjO7R6K8FI8dA3l+4CcsbJ3djIe2TtokHGzfpDTro5g8nworMbTz9alCR95EQXGsqlzIAvqJtZ7Yy0o33lL09Q==}
     engines: {node: '>=18'}
 
   tapable@2.2.1:
@@ -3930,18 +3943,18 @@ packages:
       yaml:
         optional: true
 
-  vitefu@0.2.5:
-    resolution: {integrity: sha512-SgHtMLoqaeeGnd2evZ849ZbACbnwQCIwRH57t18FxcXoZop0uQu0uzlIhJBlF/eWVzuce0sHeqPcDo+evVcg8Q==}
-    peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0
-    peerDependenciesMeta:
-      vite:
-        optional: true
-
   vitefu@1.0.3:
     resolution: {integrity: sha512-iKKfOMBHob2WxEJbqbJjHAkmYgvFDPhuqrO82om83S8RLk+17FtyMBfcyeH8GqD0ihShtkMW/zzJgiA51hCNCQ==}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0-beta.0
+    peerDependenciesMeta:
+      vite:
+        optional: true
+
+  vitefu@1.0.4:
+    resolution: {integrity: sha512-y6zEE3PQf6uu/Mt6DTJ9ih+kyJLr4XcSgHR2zUkM8SWDhuixEJxfJ6CZGMHh1Ec3vPLoEA0IHU5oWzVqw8ulow==}
+    peerDependencies:
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
     peerDependenciesMeta:
       vite:
         optional: true
@@ -4470,7 +4483,14 @@ snapshots:
       eslint: 9.6.0
       eslint-visitor-keys: 3.4.3
 
+  '@eslint-community/eslint-utils@4.4.1(eslint@9.6.0)':
+    dependencies:
+      eslint: 9.6.0
+      eslint-visitor-keys: 3.4.3
+
   '@eslint-community/regexpp@4.11.1': {}
+
+  '@eslint-community/regexpp@4.12.1': {}
 
   '@eslint/config-array@0.17.0':
     dependencies:
@@ -4766,18 +4786,18 @@ snapshots:
   '@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0)':
     dependencies:
       '@types/eslint': 8.56.12
-      acorn: 8.12.1
+      acorn: 8.14.0
       eslint: 9.6.0
-      eslint-visitor-keys: 4.1.0
-      espree: 10.2.0
+      eslint-visitor-keys: 4.2.0
+      espree: 10.3.0
 
-  '@sveltejs/eslint-config@8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.1.13))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)':
+  '@sveltejs/eslint-config@8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)':
     dependencies:
       '@stylistic/eslint-plugin-js': 2.1.0(eslint@9.6.0)
       eslint: 9.6.0
       eslint-config-prettier: 9.1.0(eslint@9.6.0)
       eslint-plugin-n: 17.9.0(eslint@9.6.0)
-      eslint-plugin-svelte: 2.41.0(eslint@9.6.0)(svelte@5.1.13)
+      eslint-plugin-svelte: 2.41.0(eslint@9.6.0)(svelte@5.2.9)
       globals: 15.10.0
       typescript: 5.6.3
       typescript-eslint: 8.4.0(eslint@9.6.0)(typescript@5.6.3)
@@ -4800,24 +4820,6 @@ snapshots:
       tiny-glob: 0.2.9
       vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
-      debug: 4.3.5
-      svelte: 4.2.19
-      vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
-      debug: 4.3.5
-      svelte: 5.1.13
-      vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
-    transitivePeerDependencies:
-      - supports-color
-
   '@sveltejs/vite-plugin-svelte-inspector@3.0.1(@sveltejs/vite-plugin-svelte@4.0.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 4.0.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
@@ -4827,31 +4829,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
+  '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.19)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
-      debug: 4.3.5
-      deepmerge: 4.3.1
-      kleur: 4.1.5
-      magic-string: 0.30.11
-      svelte: 4.2.19
-      svelte-hmr: 0.16.0(svelte@4.2.19)
+      '@sveltejs/vite-plugin-svelte': 5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+      debug: 4.3.7
+      svelte: 5.2.9
       vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
-      vitefu: 0.2.5(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
-    transitivePeerDependencies:
-      - supports-color
-
-  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.1.13)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
-      debug: 4.3.5
-      deepmerge: 4.3.1
-      kleur: 4.1.5
-      magic-string: 0.30.11
-      svelte: 5.1.13
-      svelte-hmr: 0.16.0(svelte@5.1.13)
-      vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
-      vitefu: 0.2.5(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -4865,6 +4848,19 @@ snapshots:
       svelte: 5.1.13
       vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitefu: 1.0.3(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.2.9)(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
+      debug: 4.3.7
+      deepmerge: 4.3.1
+      kleur: 4.1.5
+      magic-string: 0.30.14
+      svelte: 5.2.9
+      vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
+      vitefu: 1.0.4(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -5049,13 +5045,23 @@ snapshots:
     dependencies:
       acorn: 8.12.1
 
+  acorn-jsx@5.3.2(acorn@8.14.0):
+    dependencies:
+      acorn: 8.14.0
+
   acorn-typescript@1.4.13(acorn@8.12.1):
     dependencies:
       acorn: 8.12.1
 
+  acorn-typescript@1.4.13(acorn@8.14.0):
+    dependencies:
+      acorn: 8.14.0
+
   acorn-walk@8.3.2: {}
 
   acorn@8.12.1: {}
+
+  acorn@8.14.0: {}
 
   agent-base@6.0.2:
     dependencies:
@@ -5187,14 +5193,6 @@ snapshots:
 
   ci-info@3.9.0: {}
 
-  code-red@1.0.4:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
-      '@types/estree': 1.0.6
-      acorn: 8.12.1
-      estree-walker: 3.0.3
-      periscopic: 3.1.0
-
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -5242,11 +5240,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  css-tree@2.3.1:
-    dependencies:
-      mdn-data: 2.0.30
-      source-map-js: 1.2.1
 
   cssesc@3.0.0: {}
 
@@ -5417,26 +5410,26 @@ snapshots:
 
   eslint-plugin-es-x@7.8.0(eslint@9.6.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.6.0)
-      '@eslint-community/regexpp': 4.11.1
+      '@eslint-community/eslint-utils': 4.4.1(eslint@9.6.0)
+      '@eslint-community/regexpp': 4.12.1
       eslint: 9.6.0
       eslint-compat-utils: 0.5.1(eslint@9.6.0)
 
   eslint-plugin-n@17.9.0(eslint@9.6.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.4.1(eslint@9.6.0)
       enhanced-resolve: 5.17.1
       eslint: 9.6.0
       eslint-plugin-es-x: 7.8.0(eslint@9.6.0)
       get-tsconfig: 4.8.1
-      globals: 15.11.0
+      globals: 15.12.0
       ignore: 5.3.2
       minimatch: 9.0.5
       semver: 7.6.3
 
-  eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.1.13):
+  eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9):
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.4.1(eslint@9.6.0)
       '@jridgewell/sourcemap-codec': 1.5.0
       eslint: 9.6.0
       eslint-compat-utils: 0.5.1(eslint@9.6.0)
@@ -5447,9 +5440,9 @@ snapshots:
       postcss-safe-parser: 6.0.0(postcss@8.4.49)
       postcss-selector-parser: 6.1.2
       semver: 7.6.3
-      svelte-eslint-parser: 0.39.2(svelte@5.1.13)
+      svelte-eslint-parser: 0.39.2(svelte@5.2.9)
     optionalDependencies:
-      svelte: 5.1.13
+      svelte: 5.2.9
     transitivePeerDependencies:
       - ts-node
 
@@ -5466,6 +5459,8 @@ snapshots:
   eslint-visitor-keys@3.4.3: {}
 
   eslint-visitor-keys@4.1.0: {}
+
+  eslint-visitor-keys@4.2.0: {}
 
   eslint@9.6.0:
     dependencies:
@@ -5508,16 +5503,24 @@ snapshots:
 
   esm-env@1.0.0: {}
 
+  esm-env@1.1.4: {}
+
   espree@10.2.0:
     dependencies:
       acorn: 8.12.1
       acorn-jsx: 5.3.2(acorn@8.12.1)
       eslint-visitor-keys: 4.1.0
 
+  espree@10.3.0:
+    dependencies:
+      acorn: 8.14.0
+      acorn-jsx: 5.3.2(acorn@8.14.0)
+      eslint-visitor-keys: 4.2.0
+
   espree@9.6.1:
     dependencies:
-      acorn: 8.12.1
-      acorn-jsx: 5.3.2(acorn@8.12.1)
+      acorn: 8.14.0
+      acorn-jsx: 5.3.2(acorn@8.14.0)
       eslint-visitor-keys: 3.4.3
 
   esprima@4.0.1: {}
@@ -5706,7 +5709,7 @@ snapshots:
 
   globals@15.10.0: {}
 
-  globals@15.11.0: {}
+  globals@15.12.0: {}
 
   globalyzer@0.1.0: {}
 
@@ -5803,6 +5806,10 @@ snapshots:
       '@types/estree': 1.0.6
 
   is-reference@3.0.2:
+    dependencies:
+      '@types/estree': 1.0.6
+
+  is-reference@3.0.3:
     dependencies:
       '@types/estree': 1.0.6
 
@@ -5933,11 +5940,13 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  magic-string@0.30.14:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.0
+
   make-dir@3.1.0:
     dependencies:
       semver: 6.3.1
-
-  mdn-data@2.0.30: {}
 
   merge-stream@2.0.0: {}
 
@@ -6133,12 +6142,6 @@ snapshots:
 
   pathval@2.0.0: {}
 
-  periscopic@3.1.0:
-    dependencies:
-      '@types/estree': 1.0.6
-      estree-walker: 3.0.3
-      is-reference: 3.0.2
-
   picocolors@1.1.0: {}
 
   picocolors@1.1.1: {}
@@ -6196,15 +6199,15 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-svelte@3.1.2(prettier@3.1.1)(svelte@5.1.13):
+  prettier-plugin-svelte@3.1.2(prettier@3.1.1)(svelte@5.2.9):
     dependencies:
       prettier: 3.1.1
-      svelte: 5.1.13
+      svelte: 5.2.9
 
-  prettier-plugin-svelte@3.2.7(prettier@3.3.3)(svelte@5.1.13):
+  prettier-plugin-svelte@3.2.7(prettier@3.3.3)(svelte@5.2.9):
     dependencies:
       prettier: 3.3.3
-      svelte: 5.1.13
+      svelte: 5.2.9
 
   prettier@2.8.8: {}
 
@@ -6461,31 +6464,19 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.0.1(picomatch@4.0.2)(svelte@4.2.19)(typescript@5.6.3):
+  svelte-check@4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 3.6.0
       fdir: 6.3.0(picomatch@4.0.2)
       picocolors: 1.1.0
       sade: 1.8.1
-      svelte: 4.2.19
+      svelte: 5.2.9
       typescript: 5.6.3
     transitivePeerDependencies:
       - picomatch
 
-  svelte-check@4.0.1(picomatch@4.0.2)(svelte@5.1.13)(typescript@5.6.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
-      chokidar: 3.6.0
-      fdir: 6.3.0(picomatch@4.0.2)
-      picocolors: 1.1.0
-      sade: 1.8.1
-      svelte: 5.1.13
-      typescript: 5.6.3
-    transitivePeerDependencies:
-      - picomatch
-
-  svelte-eslint-parser@0.39.2(svelte@5.1.13):
+  svelte-eslint-parser@0.39.2(svelte@5.2.9):
     dependencies:
       eslint-scope: 7.2.2
       eslint-visitor-keys: 3.4.3
@@ -6493,53 +6484,28 @@ snapshots:
       postcss: 8.4.49
       postcss-scss: 4.0.9(postcss@8.4.49)
     optionalDependencies:
-      svelte: 5.1.13
+      svelte: 5.2.9
 
-  svelte-hmr@0.16.0(svelte@4.2.19):
+  svelte-parse-markup@0.1.5(svelte@5.2.9):
     dependencies:
-      svelte: 4.2.19
+      svelte: 5.2.9
 
-  svelte-hmr@0.16.0(svelte@5.1.13):
-    dependencies:
-      svelte: 5.1.13
-
-  svelte-parse-markup@0.1.5(svelte@5.1.13):
-    dependencies:
-      svelte: 5.1.13
-
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@4.2.19)(typescript@5.4.5):
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.4.49))(postcss@8.4.49)(svelte@5.2.9)(typescript@5.4.5):
     dependencies:
       detect-indent: 6.1.0
       strip-indent: 3.0.0
-      svelte: 4.2.19
+      svelte: 5.2.9
     optionalDependencies:
       postcss: 8.4.49
       postcss-load-config: 3.1.4(postcss@8.4.49)
       typescript: 5.4.5
 
-  svelte2tsx@0.7.18(svelte@4.2.19)(typescript@5.4.5):
+  svelte2tsx@0.7.18(svelte@5.2.9)(typescript@5.4.5):
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
-      svelte: 4.2.19
+      svelte: 5.2.9
       typescript: 5.4.5
-
-  svelte@4.2.19:
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@jridgewell/sourcemap-codec': 1.5.0
-      '@jridgewell/trace-mapping': 0.3.25
-      '@types/estree': 1.0.6
-      acorn: 8.12.1
-      aria-query: 5.3.2
-      axobject-query: 4.1.0
-      code-red: 1.0.4
-      css-tree: 2.3.1
-      estree-walker: 3.0.3
-      is-reference: 3.0.2
-      locate-character: 3.0.0
-      magic-string: 0.30.11
-      periscopic: 3.1.0
 
   svelte@5.1.13:
     dependencies:
@@ -6555,6 +6521,22 @@ snapshots:
       is-reference: 3.0.2
       locate-character: 3.0.0
       magic-string: 0.30.11
+      zimmerframe: 1.1.2
+
+  svelte@5.2.9:
+    dependencies:
+      '@ampproject/remapping': 2.3.0
+      '@jridgewell/sourcemap-codec': 1.5.0
+      '@types/estree': 1.0.6
+      acorn: 8.14.0
+      acorn-typescript: 1.4.13(acorn@8.14.0)
+      aria-query: 5.3.2
+      axobject-query: 4.1.0
+      esm-env: 1.1.4
+      esrap: 1.2.2
+      is-reference: 3.0.3
+      locate-character: 3.0.0
+      magic-string: 0.30.14
       zimmerframe: 1.1.2
 
   tapable@2.2.1: {}
@@ -6719,11 +6701,11 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.24.1
 
-  vitefu@0.2.5(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)):
+  vitefu@1.0.3(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)):
     optionalDependencies:
       vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
-  vitefu@1.0.3(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)):
+  vitefu@1.0.4(vite@6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)):
     optionalDependencies:
       vite: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
