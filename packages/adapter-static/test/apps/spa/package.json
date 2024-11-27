@@ -12,9 +12,9 @@
 		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"sirv-cli": "^2.0.2",
+		"sirv-cli": "^3.0.0",
 		"svelte": "^4.2.10",
-		"vite": "6.0.0-beta.2"
+		"vite": "6.0.0"
 	},
 	"type": "module"
 }

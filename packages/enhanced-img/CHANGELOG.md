@@ -1,5 +1,29 @@
 # @sveltejs/enhanced-img
 
+## 0.4.1
+### Patch Changes
+
+
+- fix: correctly handle `<enhanced:img />` elements nested in other DOM elements ([#12945](https://github.com/sveltejs/kit/pull/12945))
+
+## 0.4.0
+### Minor Changes
+
+
+- breaking: require Svelte 5 ([#12822](https://github.com/sveltejs/kit/pull/12822))
+
+## 0.3.10
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 0.3.9
+### Patch Changes
+
+
+- chore: upgrade svelte-parse-markup ([#12793](https://github.com/sveltejs/kit/pull/12793))
+
 ## 0.3.8
 ### Patch Changes
 

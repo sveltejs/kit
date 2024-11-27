@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.3.5",
+	"version": "2.3.7",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -17,7 +17,7 @@
 		"tool"
 	],
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
 		"chokidar": "^4.0.0",

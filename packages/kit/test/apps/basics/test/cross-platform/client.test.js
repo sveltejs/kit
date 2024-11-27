@@ -50,10 +50,10 @@ test.describe('a11y', () => {
 			expect(has_live_region).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
+			expect(await page.innerText('[aria-live]')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+			expect(await page.innerText('[aria-live]')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_live_region).toBeFalsy();
 		}
@@ -277,6 +277,20 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#non-ascii-anchor');
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
+	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		await page.evaluate(() => {
+			window.scrollTo(0, 50);
+		});
+		await page.locator('#non-ascii-anchor').click();
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
 
@@ -615,6 +629,19 @@ test.describe('Prefetching', () => {
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
+	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+
+		await clicknav('[href="/routing/hashes/a"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+
+		await clicknav('[href="#preload"]');
+		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+	});
+
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
@@ -686,6 +713,30 @@ test.describe('Routing', () => {
 		await page.goBack();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('clicking on a hash link focuses the associated element', async ({ page }) => {
+		await page.goto('/routing/hashes/focus');
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+		// check it still works when the hash is already present in the URL
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+	});
+
+	test('backwards navigation works after clicking a hash link with data-sveltekit-reload', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/data-sveltekit/reload/hash');
+		await page.locator('a[href="#example"]').click();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
@@ -906,7 +957,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}

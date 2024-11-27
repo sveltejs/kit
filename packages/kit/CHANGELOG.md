@@ -1,5 +1,161 @@
 # @sveltejs/kit
 
+## 2.8.5
+### Patch Changes
+
+
+- fix: don't hydrate when falling back to error page ([#13056](https://github.com/sveltejs/kit/pull/13056))
+
+## 2.8.4
+### Patch Changes
+
+
+- fix: update inline css url generation for FOUC prevention in dev ([#13007](https://github.com/sveltejs/kit/pull/13007))
+
+## 2.8.3
+### Patch Changes
+
+
+- fix: ensure error messages are escaped ([#13050](https://github.com/sveltejs/kit/pull/13050))
+
+
+- fix: escape values included in dev 404 page ([#13039](https://github.com/sveltejs/kit/pull/13039))
+
+## 2.8.2
+### Patch Changes
+
+
+- fix: prevent duplicate fetch request when using Request with load function's fetch ([#13023](https://github.com/sveltejs/kit/pull/13023))
+
+
+- fix: do not override default cookie decoder to allow users to override the `cookie` library version ([#13037](https://github.com/sveltejs/kit/pull/13037))
+
+## 2.8.1
+### Patch Changes
+
+
+- fix: only add nonce to `script-src-elem`, `style-src-attr` and `style-src-elem` CSP directives when `unsafe-inline` is not present ([#11613](https://github.com/sveltejs/kit/pull/11613))
+
+
+- fix: support HTTP/2 in dev and production. Revert the changes from [#12907](https://github.com/sveltejs/kit/pull/12907) to downgrade HTTP/2 to TLS as now being unnecessary ([#12989](https://github.com/sveltejs/kit/pull/12989))
+
+## 2.8.0
+### Minor Changes
+
+
+- feat: add helper to identify `ActionFailure` objects ([#12878](https://github.com/sveltejs/kit/pull/12878))
+
+## 2.7.7
+### Patch Changes
+
+
+- fix: update link in JSDoc ([#12963](https://github.com/sveltejs/kit/pull/12963))
+
+## 2.7.6
+### Patch Changes
+
+
+- fix: update broken links in JSDoc ([#12960](https://github.com/sveltejs/kit/pull/12960))
+
+## 2.7.5
+### Patch Changes
+
+
+- fix: warn on invalid cookie name characters ([#12806](https://github.com/sveltejs/kit/pull/12806))
+
+
+- fix: when using `@vitejs/plugin-basic-ssl`, set a no-op proxy config to downgrade from HTTP/2 to TLS since `undici` does not yet enable HTTP/2 by default ([#12907](https://github.com/sveltejs/kit/pull/12907))
+
+## 2.7.4
+### Patch Changes
+
+
+- fix: ensure element is focused after subsequent clicks of the same hash link ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
+
+- fix: avoid preload if event default was prevented for `touchstart` and `mousedown` events ([#12887](https://github.com/sveltejs/kit/pull/12887))
+
+
+- fix: avoid reloading behaviour for hash links with data-sveltekit-reload if the hash is on the same page ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
+## 2.7.3
+### Patch Changes
+
+
+- fix: include importer in illegal import error message ([#12820](https://github.com/sveltejs/kit/pull/12820))
+
+
+- fix: don't try reading assets directly that aren't present ([#12876](https://github.com/sveltejs/kit/pull/12876))
+
+
+- fix: decode non-latin characters when previewing prerendered pages ([#12874](https://github.com/sveltejs/kit/pull/12874))
+
+
+- fix: better error message when a `Result` is returned from a form action ([#12829](https://github.com/sveltejs/kit/pull/12829))
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 2.7.2
+### Patch Changes
+
+
+- fix: use absolute links in JSDoc comments ([#12718](https://github.com/sveltejs/kit/pull/12718))
+
+## 2.7.1
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+
+- fix: warn when form action responses are lost because SSR is off ([#12063](https://github.com/sveltejs/kit/pull/12063))
+
+## 2.7.0
+### Minor Changes
+
+
+- feat: update service worker when new version is detected ([#12448](https://github.com/sveltejs/kit/pull/12448))
+
+
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+
+- fix: decode non ASCII anchor hashes when scrolling into view ([#12699](https://github.com/sveltejs/kit/pull/12699))
+
+
+- fix: page response missing CSP and Link headers when return promise in `load` ([#12418](https://github.com/sveltejs/kit/pull/12418))
+
+## 2.6.4
+### Patch Changes
+
+
+- fix: only preload links that have a different URL than the current page ([#12773](https://github.com/sveltejs/kit/pull/12773))
+
+
+- fix: revert change to replace version in generateBundle ([#12779](https://github.com/sveltejs/kit/pull/12779))
+
+
+- fix: catch stack trace fixing errors thrown in web containers ([#12775](https://github.com/sveltejs/kit/pull/12775))
+
+
+- fix: use absolute links in JSDoc comments ([#12772](https://github.com/sveltejs/kit/pull/12772))
+
+## 2.6.3
+### Patch Changes
+
+
+- fix: ensure a changing `version` doesn't affect the hashes for chunks without any actual code changes ([#12700](https://github.com/sveltejs/kit/pull/12700))
+
+
+- fix: prevent crash when logging URL search params in a server load function ([#12763](https://github.com/sveltejs/kit/pull/12763))
+
+
+- chore: revert update dependency cookie to ^0.7.0 ([#12767](https://github.com/sveltejs/kit/pull/12767))
+
 ## 2.6.2
 ### Patch Changes
 
@@ -4146,8 +4302,8 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
-- breaking: Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://svelte.dev/docs/kit/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- breaking: Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://svelte.dev/docs/kit/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 - breaking: change `app.render` signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
 - breaking: move protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
@@ -4282,7 +4438,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- breaking: Add `disableScrollHandling` function (see https://kit.svelte.dev/docs/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+- breaking: Add `disableScrollHandling` function (see https://svelte.dev/docs/kit/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
 
 ## 1.0.0-next.213
 

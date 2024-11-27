@@ -250,6 +250,20 @@ test.describe('Endpoints', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('catch-all');
 	});
+
+	test('can get assets using absolute path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/absolute');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
+	});
+
+	test('can get assets using relative path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/relative');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
+	});
 });
 
 test.describe('Errors', () => {
@@ -484,6 +498,12 @@ test.describe('Load', () => {
 		expect(await response.text()).toBe('');
 		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
 	});
+
+	test('allows logging URL search params', async ({ page }) => {
+		await page.goto('/load/server-log-search-param');
+
+		expect(await page.textContent('p')).toBe('hello world');
+	});
 });
 
 test.describe('Routing', () => {
@@ -609,6 +629,11 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/immutable-headers');
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('foo');
+	});
+
+	test('serves prerendered non-latin pages', async ({ request }) => {
+		const response = await request.get('/prerendering/中文');
+		expect(response.status()).toBe(200);
 	});
 });
 

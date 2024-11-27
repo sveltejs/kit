@@ -1,4 +1,4 @@
-import { escape_html_attr } from '../../../utils/escape.js';
+import { escape_html } from '../../../utils/escape.js';
 import { base64, sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
@@ -32,7 +32,22 @@ class BaseProvider {
 	#script_needs_csp;
 
 	/** @type {boolean} */
+	#script_src_needs_csp;
+
+	/** @type {boolean} */
+	#script_src_elem_needs_csp;
+
+	/** @type {boolean} */
 	#style_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_attr_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_elem_needs_csp;
 
 	/** @type {import('types').CspDirectives} */
 	#directives;
@@ -121,92 +136,81 @@ class BaseProvider {
 			}
 		}
 
-		this.#script_needs_csp =
-			(!!effective_script_src &&
-				effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
-			(!!script_src_elem &&
-				script_src_elem.filter((value) => value !== 'unsafe-inline').length > 0);
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const needs_csp = (directive) =>
+			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
+		this.#script_src_needs_csp = needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = needs_csp(script_src_elem);
+		this.#style_src_needs_csp = needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = needs_csp(style_src_elem);
+
+		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
 			!__SVELTEKIT_DEV__ &&
-			((!!effective_style_src &&
-				effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
-				(!!style_src_attr &&
-					style_src_attr.filter((value) => value !== 'unsafe-inline').length > 0) ||
-				(!!style_src_elem &&
-					style_src_elem.filter((value) => value !== 'unsafe-inline').length > 0));
+			(this.#style_src_needs_csp ||
+				this.#style_src_attr_needs_csp ||
+				this.#style_src_elem_needs_csp);
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+
 		this.#nonce = nonce;
 	}
 
 	/** @param {string} content */
 	add_script(content) {
-		if (this.#script_needs_csp) {
-			const d = this.#directives;
+		if (!this.#script_needs_csp) return;
 
-			if (this.#use_hashes) {
-				const hash = sha256(content);
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
-				this.#script_src.push(`sha256-${hash}`);
+		if (this.#script_src_needs_csp) {
+			this.#script_src.push(source);
+		}
 
-				if (d['script-src-elem']?.length) {
-					this.#script_src_elem.push(`sha256-${hash}`);
-				}
-			} else {
-				if (this.#script_src.length === 0) {
-					this.#script_src.push(`nonce-${this.#nonce}`);
-				}
-				if (d['script-src-elem']?.length) {
-					this.#script_src_elem.push(`nonce-${this.#nonce}`);
-				}
-			}
+		if (this.#script_src_elem_needs_csp) {
+			this.#script_src_elem.push(source);
 		}
 	}
 
 	/** @param {string} content */
 	add_style(content) {
-		if (this.#style_needs_csp) {
-			// this is the hash for "/* empty */"
+		if (!this.#style_needs_csp) return;
+
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(source);
+		}
+
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(source);
+		}
+
+		if (this.#style_src_attr_needs_csp) {
+			this.#style_src_attr.push(source);
+		}
+
+		if (this.#style_src_elem_needs_csp) {
+			// this is the sha256 hash for the string "/* empty */"
 			// adding it so that svelte does not break csp
 			// see https://github.com/sveltejs/svelte/pull/7800
-			const empty_comment_hash = '9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
-
+			const sha256_empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
 			const d = this.#directives;
 
-			if (this.#use_hashes) {
-				const hash = sha256(content);
+			if (
+				d['style-src-elem'] &&
+				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
+				!this.#style_src_elem.includes(sha256_empty_comment_hash)
+			) {
+				this.#style_src_elem.push(sha256_empty_comment_hash);
+			}
 
-				this.#style_src.push(`sha256-${hash}`);
-
-				if (d['style-src-attr']?.length) {
-					this.#style_src_attr.push(`sha256-${hash}`);
-				}
-				if (d['style-src-elem']?.length) {
-					if (
-						hash !== empty_comment_hash &&
-						!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)
-					) {
-						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-					}
-
-					this.#style_src_elem.push(`sha256-${hash}`);
-				}
-			} else {
-				if (this.#style_src.length === 0 && !d['style-src']?.includes('unsafe-inline')) {
-					this.#style_src.push(`nonce-${this.#nonce}`);
-				}
-				if (d['style-src-attr']?.length) {
-					this.#style_src_attr.push(`nonce-${this.#nonce}`);
-				}
-				if (d['style-src-elem']?.length) {
-					if (!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)) {
-						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-					}
-
-					this.#style_src_elem.push(`nonce-${this.#nonce}`);
-				}
+			if (source !== sha256_empty_comment_hash) {
+				this.#style_src_elem.push(source);
 			}
 		}
 	}
@@ -296,7 +300,7 @@ class CspProvider extends BaseProvider {
 			return;
 		}
 
-		return `<meta http-equiv="content-security-policy" content=${escape_html_attr(content)}>`;
+		return `<meta http-equiv="content-security-policy" content="${escape_html(content, true)}">`;
 	}
 }
 

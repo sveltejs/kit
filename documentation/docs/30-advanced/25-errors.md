@@ -8,11 +8,11 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
-You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#type-safety)).
+You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
 ## Expected errors
 
-An _expected_ error is one created with the [`error`](modules#sveltejs-kit-error) helper imported from `@sveltejs/kit`:
+An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -53,21 +53,35 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 
 You can add extra properties to the error object if needed...
 
-```diff
+```js
+import { error } from '@sveltejs/kit';
+
+declare global {
+	namespace App {
+		interface Error {
+			message: string;
+			code: string;
+		}
+	}
+}
+
+// ---cut---
 error(404, {
 	message: 'Not found',
-+	code: 'NOT_FOUND'
+	+++code: 'NOT_FOUND'+++
 });
 ```
 
 ...otherwise, for convenience, you can pass a string as the second argument:
 
-```diff
--error(404, { message: 'Not found' });
-+error(404, 'Not found');
+```js
+import { error } from '@sveltejs/kit';
+// ---cut---
+---error(404, { message: 'Not found' });---
++++error(404, 'Not found');+++
 ```
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
+> [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
 ## Unexpected errors
 
@@ -79,7 +93,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
+Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
 
 ## Responses
 
@@ -112,13 +126,13 @@ The exception is when the error occurs inside the root `+layout.js` or `+layout.
 
 If you're using TypeScript and need to customize the shape of errors, you can do so by declaring an `App.Error` interface in your app (by convention, in `src/app.d.ts`, though it can live anywhere that TypeScript can 'see'):
 
-```diff
+```ts
 /// file: src/app.d.ts
 declare global {
 	namespace App {
 		interface Error {
-+			code: string;
-+			id: string;
++++			code: string;
+			id: string;+++
 		}
 	}
 }
@@ -130,5 +144,5 @@ This interface always includes a `message: string` property.
 
 ## Further reading
 
-- [Tutorial: Errors and redirects](https://learn.svelte.dev/tutorial/error-basics)
-- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)
+- [Tutorial: Errors and redirects](/tutorial/kit/error-basics)
+- [Tutorial: Hooks](/tutorial/kit/handle)

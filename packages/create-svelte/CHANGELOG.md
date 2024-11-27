@@ -1,5 +1,17 @@
 # create-svelte
 
+## 7.0.0
+### Major Changes
+
+
+- breaking: the `create-svelte` package has been replaced by the `sv` package ([#12850](https://github.com/sveltejs/kit/pull/12850))
+
+## 6.4.0
+### Minor Changes
+
+
+- feat: mark scripts in libraries as being side effect free by default ([#12372](https://github.com/sveltejs/kit/pull/12372))
+
 ## 6.3.12
 ### Patch Changes
 

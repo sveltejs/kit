@@ -20,7 +20,7 @@ export function load() {
 	return { user };
 }
 
-/** @type {import('./$types').Actions} */
+/** @satisfies {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request }) => {
 		const data = await request.formData();
@@ -36,7 +36,7 @@ export const actions = {
 
 The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
 
-Instead, you should _authenticate_ the user using [`cookies`](load#cookies) and persist the data to a database.
+Instead, you should _authenticate_ the user using [`cookies`](load#Cookies) and persist the data to a database.
 
 ## No side-effects in load
 
@@ -64,24 +64,25 @@ export async function load({ fetch }) {
 
 As with the previous example, this puts one user's information in a place that is shared by _all_ users. Instead, just return the data...
 
-```diff
+```js
 /// file: +page.js
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	const response = await fetch('/api/user');
 
-+	return {
-+		user: await response.json()
-+	};
++++	return {
+		user: await response.json()
+	};+++
 }
 ```
 
-...and pass it around to the components that need it, or use [`$page.data`](load#$page-data).
+...and pass it around to the components that need it, or use [`$page.data`](load#$page.data).
 
 If you're not using SSR, then there's no risk of accidentally exposing one user's data to another. But you should still avoid side-effects in your `load` functions — your application will be much easier to reason about without them.
 
 ## Using stores with context
 
-You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
+You might wonder how we're able to use `$page.data` and other [app stores]($app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
@@ -89,12 +90,14 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
-	/** @type {import('./$types').LayoutData} */
-	export let data;
+	/** @type {{ data: import('./$types').LayoutData }} */
+	let { data } = $props();
 
 	// Create a store and update it when necessary...
-	const user = writable();
-	$: user.set(data.user);
+	const user = writable(data.user);
+	$effect.pre(() => {
+		user.set(data.user);
+	});
 
 	// ...and add it to the context for child components to access
 	setContext('user', user);
@@ -124,8 +127,8 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 	// THIS CODE IS BUGGY!
 	const wordCount = data.content.split(' ').length;
@@ -142,20 +145,20 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 
 ...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the layout, page and any other components within to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will update (as it would with any other Svelte component) and, because the code isn't rerunning, lifecycle methods like `onMount` and `onDestroy` won't rerun and `estimatedReadingTime` won't be recalculated.
 
-Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
+Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
 
-```diff
+```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
-+	$: wordCount = data.content.split(' ').length;
-+	$: estimatedReadingTime = wordCount / 250;
++++	let wordCount = $state(data.content.split(' ').length);
+	let estimatedReadingTime = $derived(wordCount / 250);+++
 </script>
 ```
 
-> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate](modules#$app-navigation-afternavigate) and [beforeNavigate](modules#$app-navigation-beforenavigate) respectively.
+> [!NOTE] If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate]($app-navigation#afterNavigate) and [beforeNavigate]($app-navigation#beforeNavigate) respectively.
 
 Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
 
