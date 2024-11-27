@@ -76,6 +76,11 @@ export const test = base.extend({
 		 * @param {number} y
 		 */
 		async function scroll_to(x, y) {
+			// The browser will do this for us, but we need to do it pre-emptively
+			// so that we can check the scroll location.
+			// Otherwise, we'd be checking a decimal number against an integer.
+			x = Math.trunc(x);
+			y = Math.trunc(y);
 			const watcher = page.waitForFunction(
 				/** @param {{ x: number, y: number }} opt */ (opt) =>
 					window.scrollX === opt.x && window.scrollY === opt.y,
