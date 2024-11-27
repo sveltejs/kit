@@ -633,13 +633,13 @@ test.describe('Prefetching', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#preload"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 
 		await clicknav('[href="/routing/hashes/a"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 
 		await clicknav('[href="#preload"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
