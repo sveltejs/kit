@@ -452,6 +452,8 @@ test.describe('Scrolling', () => {
 
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
+		// wait for the scroll to be processed before jumping to the next page
+		await page.waitForTimeout(1000);
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
