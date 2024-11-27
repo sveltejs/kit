@@ -83,7 +83,9 @@ export const test = base.extend({
 			y = Math.trunc(y);
 			const watcher = page.waitForFunction(
 				/** @param {{ x: number, y: number }} opt */ (opt) =>
-					window.scrollX === opt.x && window.scrollY === opt.y,
+					// check if the scroll position reached the desired or maximum position
+					window.scrollX === Math.min(opt.x, document.documentElement.offsetWidth - window.innerWidth) &&
+					window.scrollY === Math.min(opt.y, document.documentElement.offsetHeight - window.innerHeight),
 				{ x, y }
 			);
 			await page.evaluate(
