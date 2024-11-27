@@ -218,7 +218,7 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/prerendered:
@@ -236,7 +236,7 @@ importers:
         specifier: ^4.2.10
         version: 4.2.19
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/spa:
@@ -257,7 +257,7 @@ importers:
         specifier: ^4.2.10
         version: 4.2.19
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-vercel:
@@ -328,7 +328,7 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
@@ -404,7 +404,7 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
@@ -437,7 +437,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/basics:
@@ -461,7 +461,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/dev-only:
@@ -515,7 +515,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/embed:
@@ -539,7 +539,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/no-ssr:
@@ -563,7 +563,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options:
@@ -587,7 +587,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options-2:
@@ -614,7 +614,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/writes:
@@ -638,7 +638,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors:
@@ -668,7 +668,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
@@ -692,7 +692,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
@@ -716,7 +716,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
@@ -737,7 +737,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
@@ -758,7 +758,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env:
@@ -782,7 +782,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
@@ -803,7 +803,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder:
@@ -824,7 +824,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
@@ -845,7 +845,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module:
@@ -866,7 +866,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
@@ -887,7 +887,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-dynamic-public-env:
@@ -908,7 +908,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-private-env:
@@ -929,7 +929,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/syntax-error:
@@ -950,7 +950,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/prerendering/basics:
@@ -971,7 +971,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
@@ -995,7 +995,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
@@ -1019,7 +1019,7 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
@@ -1122,7 +1122,7 @@ importers:
         specifier: ^5.5.0
         version: 5.6.3
       vite:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(@types/node@18.19.50)(lightningcss@1.24.1)
 
 packages:
