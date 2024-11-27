@@ -441,7 +441,8 @@ test.describe('Scrolling', () => {
 	test('scroll positions are recovered on reloading the page', async ({
 		page,
 		app,
-		browserName
+		browserName,
+		scroll_to
 	}) => {
 		// No idea why the workaround below works only in dev mode
 		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
@@ -451,9 +452,9 @@ test.describe('Scrolling', () => {
 		}
 
 		await page.goto('/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 		await app.goto('/anchor/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 
 		await page.reload();
 		if (browserName === 'firefox') {
@@ -461,10 +462,11 @@ test.describe('Scrolling', () => {
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack();
 		}
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await page.waitForFunction(() => window.scrollY === 1000);
 
+		const waiter = page.waitForFunction(() => window.scrollY === 1000);
 		await page.goBack();
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await waiter;
 	});
 
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
