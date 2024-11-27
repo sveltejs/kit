@@ -70,6 +70,19 @@ export const test = base.extend({
 		await use(clicknav);
 	},
 
+	scroll_to: async ({ page }, use) => {
+		/**
+		 * @param {number} x
+		 * @param {number} y
+		 */
+		async function scroll_to(x, y) {
+			await page.evaluate(() => window.scrollTo(x, y));
+			await page.waitForFunction(() => window.scrollY === y);
+		}
+
+		await use(scroll_to);
+	},
+
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
