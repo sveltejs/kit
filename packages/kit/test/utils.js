@@ -76,15 +76,16 @@ export const test = base.extend({
 		 * @param {number} y
 		 */
 		async function scroll_to(x, y) {
-			await page.evaluate(
-				/** @param {{ x: number, y: number }} opt */ (opt) => window.scrollTo(opt.x, opt.y),
-				{ x, y }
-			);
-			await page.waitForFunction(
+			const watcher = page.waitForFunction(
 				/** @param {{ x: number, y: number }} opt */ (opt) =>
 					window.scrollX === opt.x && window.scrollY === opt.y,
 				{ x, y }
 			);
+			await page.evaluate(
+				/** @param {{ x: number, y: number }} opt */ (opt) => window.scrollTo(opt.x, opt.y),
+				{ x, y }
+			);
+			await watcher;
 		}
 
 		await use(scroll_to);
