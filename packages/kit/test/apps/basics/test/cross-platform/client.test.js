@@ -441,8 +441,7 @@ test.describe('Scrolling', () => {
 	test('scroll positions are recovered on reloading the page', async ({
 		page,
 		app,
-		browserName,
-		scroll_to
+		browserName
 	}) => {
 		// No idea why the workaround below works only in dev mode
 		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
@@ -452,9 +451,9 @@ test.describe('Scrolling', () => {
 		}
 
 		await page.goto('/anchor');
-		await scroll_to(0, 1000);
+		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
-		await scroll_to(0, 1000);
+		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
 		if (browserName === 'firefox') {
