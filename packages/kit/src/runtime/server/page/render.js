@@ -79,7 +79,7 @@ export async function render_response({
 
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'failure'
-			? action_result.data ?? null
+			? (action_result.data ?? null)
 			: null;
 
 	/** @type {string} */

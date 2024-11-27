@@ -970,7 +970,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			server_data_node: create_data_node(
 				// server_data_node is undefined if it wasn't reloaded from the server;
 				// and if current loader uses server data, we want to reuse previous data.
-				server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+				server_data_node === undefined && loader[0] ? { type: 'skip' } : (server_data_node ?? null),
 				loader[0] ? previous?.server : undefined
 			)
 		});
