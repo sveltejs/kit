@@ -19,12 +19,30 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 	const stylesheet_lookup = new Map();
 
 	if (css) {
-		css.forEach((asset) => {
-			if (asset.source.length < kit.inlineStyleThreshold) {
+		/** @type {string[]} */
+		const server_stylesheets = [];
+		for (const key in server_manifest) {
+			const file = server_manifest[key];
+			if (file.css) {
+				server_stylesheets.push(...file.css);
+			}
+		}
+
+		// sort the client stylesheets so they can be mapped to the server stylesheets
+		css.sort((a, b) => {
+			return a.originalFileNames[0].localeCompare(b.originalFileNames[0]);
+		});
+
+		css.forEach((asset, i) => {
+			if (server_stylesheets[i] && asset.source.length < kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
 				const file = `${out}/server/stylesheets/${index}.js`;
 
-				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
+				// we need to inline the server stylesheet instead of the client one
+				// so that asset paths are correct on document load
+				const source = fs.readFileSync(`${out}/server/${server_stylesheets[i]}`, 'utf-8');
+
+				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(source)};`);
 				stylesheet_lookup.set(asset.fileName, index);
 			}
 		});
