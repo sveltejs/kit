@@ -820,8 +820,9 @@ async function kit({ svelte_config }) {
 				/** @type {string[]} */
 				const ssr_stylesheets = [];
 				for (const key in server_manifest) {
-					if (server_manifest[key].css) {
-						ssr_stylesheets.push(...server_manifest[key].css);
+					const stylesheets = server_manifest[key].css;
+					if (stylesheets) {
+						ssr_stylesheets.push(...stylesheets);
 					}
 				}
 				const ssr_stylesheets_set = new Set(ssr_stylesheets);
