@@ -30,7 +30,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 		// sort the client stylesheets so they can be mapped to the server stylesheets
 		css.sort((a, b) => {
-			return a.originalFileNames[0].localeCompare(b.originalFileNames[0]);
+			return a.originalFileNames[0]?.localeCompare(b.originalFileNames[0]);
 		});
 
 		css.forEach((asset, i) => {
