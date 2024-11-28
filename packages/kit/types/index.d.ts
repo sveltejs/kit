@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { Hooks } from 'crossws';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -667,8 +668,8 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-	}) => MaybePromise<Response>;
+		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<void | ResponseInit | Response>;
+	}) => MaybePromise<void | ResponseInit | Response>;
 
 	/**
 	 * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1058,6 +1059,13 @@ declare module '@sveltejs/kit' {
 		 * The original request object
 		 */
 		request: Request;
+		/**
+		 * The two functions used to control the flow of websocket requests
+		 */
+		socket?: {
+			accept: (init: ResponseInit) => ResponseInit;
+			reject: (status: number, body: any) => Response;
+		};
 		/**
 		 * Info about the current route
 		 */
@@ -1734,6 +1742,7 @@ declare module '@sveltejs/kit' {
 	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 	type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+		socket?: Partial<Hooks>;
 		prerender?: PrerenderOption;
 		trailingSlash?: TrailingSlash;
 		config?: any;

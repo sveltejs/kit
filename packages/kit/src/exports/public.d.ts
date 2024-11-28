@@ -19,6 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import { AdapterInstance, Hooks } from 'crossws';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -685,8 +686,8 @@ export interface KitConfig {
  */
 export type Handle = (input: {
 	event: RequestEvent;
-	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-}) => MaybePromise<Response>;
+	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<void | ResponseInit | Response>;
+}) => MaybePromise<void | ResponseInit | Response>;
 
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1076,6 +1077,13 @@ export interface RequestEvent<
 	 * The original request object
 	 */
 	request: Request;
+	/**
+	 * The two functions used to control the flow of websocket requests
+	 */
+	socket?: {
+		accept: (init: ResponseInit) => ResponseInit;
+		reject: (status: number, body: any) => Response;
+	};
 	/**
 	 * Info about the current route
 	 */

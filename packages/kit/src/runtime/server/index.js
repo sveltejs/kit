@@ -1,4 +1,5 @@
 import { respond } from './respond.js';
+import { resolve } from './resolve.js';
 import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
@@ -17,7 +18,7 @@ const prerender_env_handler = {
 
 export class Server {
 	/** @type {import('types').SSROptions} */
-	#options;
+	options;
 
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	#manifest;
@@ -25,7 +26,7 @@ export class Server {
 	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
-		this.#options = options;
+		this.options = options;
 		this.#manifest = manifest;
 
 		set_manifest(manifest);
@@ -44,8 +45,8 @@ export class Server {
 
 		// set env, in case it's used in initialisation
 		const prefixes = {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
+			public_prefix: this.options.env_public_prefix,
+			private_prefix: this.options.env_private_prefix
 		};
 
 		const private_env = filter_private_env(env, prefixes);
@@ -63,11 +64,11 @@ export class Server {
 			set_read_implementation(read);
 		}
 
-		if (!this.#options.hooks) {
+		if (!this.options.hooks) {
 			try {
 				const module = await get_hooks();
 
-				this.#options.hooks = {
+				this.options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
@@ -75,7 +76,7 @@ export class Server {
 				};
 			} catch (error) {
 				if (DEV) {
-					this.#options.hooks = {
+					this.options.hooks = {
 						handle: () => {
 							throw error;
 						},
@@ -95,7 +96,20 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
+		return respond(request, this.options, this.#manifest, {
+			...options,
+			error: false,
+			depth: 0
+		});
+	}
+
+	/**
+	 * Returns a function that resolves the websocket hooks for a given request
+	 * @param {import('types').RequestOptions} options
+	 * @returns {(info: Request) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
+	 */
+	resolve(options) {
+		return resolve(this.options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
