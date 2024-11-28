@@ -37,7 +37,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			}
 		}
 
-		// we only inline stylesheets statically imported on pages and layouts
+		// ignore dynamically imported stylesheets since we can't inline those
 		css.filter(asset => client_stylesheets.has(asset.fileName))
 		// sort the client stylesheets so they can be mapped to the server stylesheets
 		.sort((a, b) => {
