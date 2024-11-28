@@ -19,25 +19,31 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 	const stylesheet_lookup = new Map();
 
 	if (css) {
+		/** @type {Set<string>} */
+		const client_stylesheets = new Set([]);
+		for (const key in client_manifest) {
+			const file = client_manifest[key];
+			if (file.css?.[0]) {
+				client_stylesheets.add(file.css[0]);
+			}
+		}
+
 		/** @type {string[]} */
 		const server_stylesheets = [];
 		for (const key in server_manifest) {
 			const file = server_manifest[key];
-			if (file.css) {
-				server_stylesheets.push(...file.css);
+			if (file.css?.[0]) {
+				server_stylesheets.push(file.css[0]);
 			}
 		}
 
+		// we only inline stylesheets statically imported on pages and layouts
+		css.filter(asset => client_stylesheets.has(asset.fileName))
 		// sort the client stylesheets so they can be mapped to the server stylesheets
-		css.sort((a, b) => {
-			if (a.originalFileNames[0] && b.originalFileNames[0]) {
-				return a.originalFileNames[0].localeCompare(b.originalFileNames[0]);
-			}
+		.sort((a, b) => {
 			return a.fileName.localeCompare(b.fileName);
-		});
-
-		css.forEach((asset, i) => {
-			if (server_stylesheets[i] && asset.source.length < kit.inlineStyleThreshold) {
+		}).forEach((asset, i) => {
+			if (asset.source.length < kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
 				const file = `${out}/server/stylesheets/${index}.js`;
 
