@@ -9,8 +9,3 @@ declare module 'MANIFEST' {
 	export const prerendered: Map<string, { file: string }>;
 	export const base_path: string;
 }
-
-declare module '__STATIC_CONTENT_MANIFEST' {
-	const json: string;
-	export default json;
-}

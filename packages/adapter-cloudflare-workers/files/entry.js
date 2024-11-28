@@ -1,8 +1,5 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
-import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
-import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
-const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
@@ -25,7 +22,7 @@ export default {
 		// static assets
 		if (url.pathname.startsWith(app_path)) {
 			/** @type {Response} */
-			const res = await get_asset_from_kv(req, env, context);
+			const res = await env.ASSETS.fetch(req);
 			if (is_error(res.status)) return res;
 
 			const cache_control = url.pathname.startsWith(immutable)
@@ -65,20 +62,11 @@ export default {
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
-		if (
-			is_static_asset ||
-			prerendered.has(pathname) ||
-			pathname === version_file ||
-			pathname.startsWith(immutable)
-		) {
-			return get_asset_from_kv(req, env, context, (request, options) => {
-				if (prerendered.has(pathname)) {
-					url.pathname = '/' + prerendered.get(pathname).file;
-					return new Request(url.toString(), request);
-				}
-
-				return mapRequestToAsset(request, options);
-			});
+		if (prerendered.has(pathname)) {
+			url.pathname = '/' + prerendered.get(pathname).file;
+			return env.ASSETS.fetch(new Request(url.toString(), req));
+		} else if (is_static_asset || pathname === version_file || pathname.startsWith(immutable)) {
+			return env.ASSETS.fetch(req);
 		} else if (location && prerendered.has(location)) {
 			if (search) location += search;
 			return new Response('', {
@@ -105,27 +93,6 @@ export default {
 		});
 	}
 };
-
-/**
- * @param {Request} req
- * @param {any} env
- * @param {any} context
- */
-async function get_asset_from_kv(req, env, context, map = mapRequestToAsset) {
-	return await getAssetFromKV(
-		{
-			request: req,
-			waitUntil(promise) {
-				return context.waitUntil(promise);
-			}
-		},
-		{
-			ASSET_NAMESPACE: env.__STATIC_CONTENT,
-			ASSET_MANIFEST: static_asset_manifest,
-			mapRequestToAsset: map
-		}
-	);
-}
 
 /**
  * @param {number} status
