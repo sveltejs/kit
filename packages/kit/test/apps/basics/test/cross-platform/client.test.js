@@ -667,6 +667,18 @@ test.describe('Prefetching', () => {
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
 	});
+
+	test('preloads errors', async ({ page }) => {
+		await page.goto('/routing/preloading/error');
+
+		await expect(page.locator('p')).toHaveText('undefined undefined undefined');
+
+		page.locator('button', { hasText: '404' }).click();
+		await expect(page.locator('p')).toHaveText('error 404 Not found');
+
+		page.locator('button', { hasText: '500' }).click();
+		await expect(page.locator('p')).toHaveText('error 500 Oopsie (500 Internal Error)');
+	});
 });
 
 test.describe('Routing', () => {
