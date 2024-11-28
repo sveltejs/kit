@@ -79,6 +79,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
+      vitest:
+        specifier: ^2.0.1
+        version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-cloudflare-workers:
     dependencies:

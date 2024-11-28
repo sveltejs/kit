@@ -37,7 +37,8 @@
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
@@ -48,7 +49,8 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
 		"@types/ws": "^8.5.10",
-		"typescript": "^5.3.3"
+		"typescript": "^5.3.3",
+		"vitest": "^2.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",

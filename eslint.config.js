@@ -29,6 +29,7 @@ export default [
 			'@typescript-eslint/require-await': 'error'
 		},
 		ignores: [
+			'packages/adapter-cloudflare/test/utils.spec.js',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec.js',
 			'packages/adapter-static/test/apps/**/*',

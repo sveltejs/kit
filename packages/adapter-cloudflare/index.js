@@ -1,8 +1,9 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 import { getPlatformProxy } from 'wrangler';
+import { parse_redirects } from 'utils.js';
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -193,8 +194,12 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
+	const redirects_file = `${builder.config.kit.files.assets}/_redirects`;
+
 	exclude = exclude
-		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
+		.flatMap((rule) =>
+			rule === '<all>' ? ['<build>', '<files>', '<prerendered>', '<redirects>'] : rule
+		)
 		.flatMap((rule) => {
 			if (rule === '<build>') {
 				return `/${builder.getAppPath()}/*`;
@@ -215,6 +220,11 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 
 			if (rule === '<prerendered>') {
 				return builder.prerendered.paths;
+			}
+
+			if (rule === '<redirects>' && existsSync(redirects_file)) {
+				const file_contents = readFileSync(redirects_file, 'utf8');
+				return parse_redirects(file_contents);
 			}
 
 			return rule;
