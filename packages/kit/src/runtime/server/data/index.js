@@ -39,7 +39,8 @@ export async function render_data(
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
-		let parent_invalid = false;
+		/** @type {Set<number>} */
+		const parent_invalid = new Set();
 
 		let aborted = false;
 
@@ -65,8 +66,6 @@ export async function render_data(
 						state,
 						node,
 						parent: async () => {
-							parent_invalid = true;
-
 							/** @type {Record<string, any>} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
@@ -77,6 +76,8 @@ export async function render_data(
 								if (parent) {
 									Object.assign(data, parent.data);
 								}
+
+								parent_invalid.add(j);
 							}
 							return data;
 						}
@@ -124,8 +125,8 @@ export async function render_data(
 		let nodes = await Promise.all(promises.map(handle_load_error));
 
 		// return updated layout data if `parent` is used
-		if (parent_invalid) {
-			invalidated.fill(true, 0, -1);
+		if (parent_invalid.size) {
+			parent_invalid.forEach((i) => invalidated[i] = true);
 			nodes = await Promise.all(functions.map((fn) => fn()).map(handle_load_error));
 		}
 
