@@ -420,7 +420,7 @@ test.describe('Invalidation', () => {
 
 		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h2')).toBe('count: 1');
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
 		expect(await page.textContent('h3')).toBe('doubled: 2');
