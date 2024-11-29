@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.9.0
+### Minor Changes
+
+
+- feat: Vite 6 support ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+
+- fix: transform link[rel='shortcut icon'] and link[rel='apple-touch-icon'] to be absolute to avoid console error when navigating ([#13077](https://github.com/sveltejs/kit/pull/13077))
+
 ## 2.8.5
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.8.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
 ## 4.7.4
 ### Patch Changes
 
