@@ -126,7 +126,7 @@ export async function render_data(
 
 		// return updated layout data if `parent` is used
 		if (parent_invalid.size) {
-			parent_invalid.forEach((i) => invalidated[i] = true);
+			parent_invalid.forEach((i) => (invalidated[i] = true));
 			nodes = await Promise.all(functions.map((fn) => fn()).map(handle_load_error));
 		}
 
