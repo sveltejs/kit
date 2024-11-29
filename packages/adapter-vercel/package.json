@@ -40,14 +40,14 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.27.1",
-		"esbuild": "^0.21.5"
+		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
 		"typescript": "^5.3.3",
-		"vitest": "^2.0.1"
+		"vitest": "^2.1.6"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"
