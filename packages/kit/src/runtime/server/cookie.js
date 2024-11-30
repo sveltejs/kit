@@ -18,7 +18,7 @@ const cookie_paths = {};
 const MAX_COOKIE_SIZE = 4129;
 
 // TODO 3.0 remove this check
-/** @param {import('./page/types.js').Cookie['options']} options */
+/** @param {import('../../types/internal.js').Cookie['options']} options */
 function validate_options(options) {
 	if (options?.path === undefined) {
 		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
@@ -36,7 +36,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 	const normalized_url = normalize_path(url.pathname, trailing_slash);
 
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
+	/** @type {Record<string, import('../../types/internal.js').Cookie>} */
 	const new_cookies = {};
 
 	/** @type {import('cookie').CookieSerializeOptions} */
@@ -111,7 +111,7 @@ export function get_cookies(request, url, trailing_slash) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('../../types/internal.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
 			// TODO: remove this check in 3.0
@@ -130,7 +130,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 		/**
 		 * @param {string} name
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 *  @param {import('../../types/internal.js').Cookie['options']} options
 		 */
 		delete(name, options) {
 			validate_options(options);
@@ -140,7 +140,7 @@ export function get_cookies(request, url, trailing_slash) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 *  @param {import('../../types/internal.js').Cookie['options']} options
 		 */
 		serialize(name, value, options) {
 			validate_options(options);
@@ -192,7 +192,7 @@ export function get_cookies(request, url, trailing_slash) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('./page/types.js').Cookie['options']} options
+	 * @param {import('../../types/internal.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
 		let path = options.path;
@@ -250,7 +250,7 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types.js').Cookie[]} cookies
+ * @param {import('../../types/internal.js').Cookie[]} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {

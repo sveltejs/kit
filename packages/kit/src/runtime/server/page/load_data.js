@@ -190,6 +190,7 @@ export async function load_data({
 	}
 
 	const result = await node.universal.load.call(null, {
+		cookies: event.cookies,
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
