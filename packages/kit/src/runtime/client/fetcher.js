@@ -163,7 +163,22 @@ function build_selector(resource, opts) {
 		const values = [];
 
 		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
+			const headers = new Headers(opts.headers);
+			// @ts-ignore
+			if (opts.headers.delete) {
+				// @ts-ignore
+				opts.headers.delete('sveltekit-ignore');
+			} else {
+				// @ts-ignore
+				delete opts.headers['sveltekit-ignore'];
+			}
+
+			const ignores = headers.get('sveltekit-ignore')?.split(',') || [];
+			headers.delete('sveltekit-ignore');
+
+			ignores.forEach((key) => headers.delete(key));
+
+			values.push([...headers].join(','));
 		}
 
 		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
