@@ -236,7 +236,8 @@ export interface Cookies {
 	set(
 		name: string,
 		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
+		opts: import('../runtime/server/page/types.d.ts').CustomCookieSerializeOptions
+
 	): void;
 
 	/**
@@ -246,7 +247,7 @@ export interface Cookies {
 	 * @param name the name of the cookie
 	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
+	delete(name: string, opts: import('../runtime/server/page/types.d.ts').CustomCookieSerializeOptions): void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -262,7 +263,7 @@ export interface Cookies {
 	serialize(
 		name: string,
 		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
+		opts: import('../runtime/server/page/types.d.ts').CustomCookieSerializeOptions
 	): string;
 }
 
