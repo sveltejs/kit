@@ -107,6 +107,8 @@ To include type declarations for your bindings, reference them in your `src/app.
 
 ```ts
 /// file: src/app.d.ts
+import { KVNamespace, DurableObjectNamespace } from '@cloudflare/workers-types';
+
 declare global {
 	namespace App {
 		interface Platform {
