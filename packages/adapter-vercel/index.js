@@ -351,7 +351,11 @@ const plugin = function (defaults = {}) {
 			const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
 			const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
 
-			if (!singular && hooks_output_path) {
+			const has_reroute_hook =
+				fs.existsSync(hooks_output_path) &&
+				(await import(hooks_output_path).then((m) => 'reroute' in m));
+
+			if (!singular && has_reroute_hook) {
 				static_config.routes.push({
 					src: '/.*',
 					middlewarePath: 'reroute',

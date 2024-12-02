@@ -98,7 +98,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
 				const hooks_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
 
-				if (split && hooks_path) {
+				const has_reroute_hook =
+					existsSync(hooks_path) && (await import(hooks_path).then((m) => 'reroute' in m));
+
+				if (split && has_reroute_hook) {
 					await generate_reroute_middleware({ builder, hooks_path });
 				}
 			}
