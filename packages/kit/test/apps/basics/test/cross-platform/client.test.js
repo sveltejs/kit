@@ -50,10 +50,10 @@ test.describe('a11y', () => {
 			expect(has_live_region).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
+			expect(await page.innerText('[aria-live]')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+			expect(await page.innerText('[aria-live]')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_live_region).toBeFalsy();
 		}
@@ -283,13 +283,12 @@ test.describe('Scrolling', () => {
 	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
 		page,
 		in_view,
-		clicknav
+		clicknav,
+		scroll_to
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#non-ascii-anchor');
-		await page.evaluate(() => {
-			window.scrollTo(0, 50);
-		});
+		await scroll_to(0, 50);
 		await page.locator('#non-ascii-anchor').click();
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
@@ -359,7 +358,8 @@ test.describe('Scrolling', () => {
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
 		page,
-		clicknav
+		clicknav,
+		scroll_to
 	}) => {
 		await page.goto('/scroll/cross-document/a');
 
@@ -368,7 +368,7 @@ test.describe('Scrolling', () => {
 		if (!rect) throw new Error('Could not determine bounding box');
 
 		const target_scroll_y = rect.y + rect.height - height;
-		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
+		await scroll_to(0, target_scroll_y);
 
 		await page.locator('[href="/scroll/cross-document/b"]').click();
 		expect(await page.textContent('h1')).toBe('b');
@@ -441,7 +441,8 @@ test.describe('Scrolling', () => {
 	test('scroll positions are recovered on reloading the page', async ({
 		page,
 		app,
-		browserName
+		browserName,
+		scroll_to
 	}) => {
 		// No idea why the workaround below works only in dev mode
 		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
@@ -451,9 +452,9 @@ test.describe('Scrolling', () => {
 		}
 
 		await page.goto('/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 		await app.goto('/anchor/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 
 		await page.reload();
 		if (browserName === 'firefox') {
@@ -461,10 +462,11 @@ test.describe('Scrolling', () => {
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack();
 		}
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await page.waitForFunction(() => window.scrollY === 1000);
 
+		const waiter = page.waitForFunction(() => window.scrollY === 1000);
 		await page.goBack();
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await waiter;
 	});
 
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
@@ -474,26 +476,32 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 
-	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+	test('clicking # or #top takes you to the top of the current page', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/top');
 
 		for (const href of ['#', '#top']) {
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 		}
 	});
 
-	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+	test('Scroll position is correct after going back from a shallow route', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/push-state');
 		await page.locator('#subpage-link').click();
 		await page.locator('#back-button').click();
 
-		await page.evaluate(() => window.scrollTo(0, 9999));
+		await scroll_to(0, 9999);
 
 		const scroll = await page.evaluate(() => window.scrollY);
 		expect(scroll).toBeGreaterThan(0);
@@ -633,13 +641,13 @@ test.describe('Prefetching', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#preload"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 
 		await clicknav('[href="/routing/hashes/a"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 
 		await clicknav('[href="#preload"]');
-		await expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {

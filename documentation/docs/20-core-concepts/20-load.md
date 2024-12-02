@@ -333,7 +333,7 @@ export async function load({ fetch, setHeaders }) {
 }
 ```
 
-Setting the same header multiple times (even in separate `load` functions) is an error. You can only set a given header once using the `setHeaders` function. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
+Setting the same header multiple times (even in separate `load` functions) is an error. You can only set a given header once using the `setHeaders` function. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
 
 ## Using parent data
 
@@ -661,7 +661,7 @@ export async function load({ fetch, depends }) {
 </script>
 
 <p>random number: {data.number}</p>
-<button on:click={rerunLoadFunction}>Update random number</button>
+<button onclick={rerunLoadFunction}>Update random number</button>
 ```
 
 ### When do load functions rerun?

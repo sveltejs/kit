@@ -190,3 +190,12 @@ export function fail(status, data) {
 	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
 }
+
+/**
+ * Checks whether this is an action failure thrown by {@link fail}.
+ * @param {unknown} e The object to check.
+ * @return {e is import('./public.js').ActionFailure}
+ */
+export function isActionFailure(e) {
+	return e instanceof ActionFailure;
+}

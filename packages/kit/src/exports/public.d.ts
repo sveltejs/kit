@@ -79,11 +79,12 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> = T extends ActionFailure<infer X>
-	? X
-	: T extends void
-		? undefined // needs to be undefined, because void will corrupt union type
-		: T;
+type UnpackValidationError<T> =
+	T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -441,7 +442,7 @@ export interface KitConfig {
 		 */
 		lib?: string;
 		/**
-		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#matching)
+		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
 		 * @default "src/params"
 		 */
 		params?: string;
@@ -689,7 +690,7 @@ export type Handle = (input: {
 }) => MaybePromise<Response>;
 
 /**
- * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
+ * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
  *
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -702,7 +703,7 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
+ * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
@@ -715,7 +716,7 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;

@@ -46,6 +46,8 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 
+const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
+
 let errored = false;
 
 // We track the scroll position associated with each history entry in sessionStorage,
@@ -669,7 +671,9 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 								: await resource.blob(),
 						cache: resource.cache,
 						credentials: resource.credentials,
-						headers: resource.headers,
+						// the headers are undefined on the server if the Headers object is empty
+						// so we need to make sure they are also undefined here if there are no headers
+						headers: [...resource.headers].length ? resource.headers : undefined,
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,
@@ -968,7 +972,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			server_data_node: create_data_node(
 				// server_data_node is undefined if it wasn't reloaded from the server;
 				// and if current loader uses server data, we want to reuse previous data.
-				server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+				server_data_node === undefined && loader[0] ? { type: 'skip' } : (server_data_node ?? null),
 				loader[0] ? previous?.server : undefined
 			)
 		});
@@ -2305,7 +2309,9 @@ function _start_router() {
 	// URLs after a pushState/replaceState, resulting in a 404 — see
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	for (const link of document.querySelectorAll('link')) {
-		if (link.rel === 'icon') link.href = link.href; // eslint-disable-line
+		if (ICON_REL_ATTRIBUTES.has(link.rel)) {
+			link.href = link.href; // eslint-disable-line
+		}
 	}
 
 	addEventListener('pageshow', (event) => {
@@ -2356,6 +2362,7 @@ async function _hydrate(
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
 	let result;
+	let hydrate = true;
 
 	try {
 		const branch_promises = node_ids.map(async (n, i) => {
@@ -2420,13 +2427,16 @@ async function _hydrate(
 			url,
 			route
 		});
+
+		target.textContent = '';
+		hydrate = false;
 	}
 
 	if (result.props.page) {
 		result.props.page.state = {};
 	}
 
-	initialize(result, target, true);
+	initialize(result, target, hydrate);
 }
 
 /**

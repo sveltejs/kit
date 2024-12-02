@@ -46,7 +46,7 @@ declare namespace App {
 	export interface PageState {}
 
 	/**
-	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#platform-specific-context) via `event.platform`, you can specify it here.
+	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
 }

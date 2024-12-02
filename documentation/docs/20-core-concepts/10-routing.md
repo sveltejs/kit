@@ -330,7 +330,7 @@ By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.j
 <input type="number" bind:value={b}> =
 {total}
 
-<button on:click={add}>Calculate</button>
+<button onclick={add}>Calculate</button>
 ```
 
 ```js

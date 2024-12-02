@@ -147,6 +147,7 @@ export async function sveltekit() {
 		preprocess,
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
+			// @ts-ignore - ignore this property when running `pnpm check` against Svelte 5 in the ecosystem CI
 			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},

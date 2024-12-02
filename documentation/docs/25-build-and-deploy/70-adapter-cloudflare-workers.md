@@ -105,8 +105,10 @@ export async function POST({ request, platform }) {
 
 To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 
-```dts
+```ts
 /// file: src/app.d.ts
+import { KVNamespace, DurableObjectNamespace } from '@cloudflare/workers-types';
+
 declare global {
 	namespace App {
 		interface Platform {

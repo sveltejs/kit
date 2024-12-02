@@ -129,7 +129,7 @@ The `$env/dynamic/public` and `$env/dynamic/private` modules provide access to _
 
 During prerendering in SvelteKit 1, they are one and the same. As such, prerendered pages that make use of 'dynamic' environment variables are really 'baking in' build time values, which is incorrect. Worse, `$env/dynamic/public` is populated in the browser with these stale values if the user happens to land on a prerendered page before navigating to dynamically-rendered pages.
 
-Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `_env.js` — this can be configured with `config.kit.env.publicModule`) instead of reading them from the server-rendered HTML.
+Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `_env.js` — this can be configured with `config.kit.env.publicModule`) instead of reading them from the server-rendered HTML.
 
 ## `form` and `data` have been removed from `use:enhance` callbacks
 
