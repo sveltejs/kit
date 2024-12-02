@@ -40,7 +40,6 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@vercel/edge": "^1.1.2",
 		"@vercel/nft": "^0.27.7",
 		"esbuild": "^0.24.0"
 	},
@@ -52,6 +51,7 @@
 		"vitest": "^2.1.6"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.4.0"
+		"@sveltejs/kit": "^2.4.0",
+		"@vercel/edge": "^1.1.2"
 	}
 }
