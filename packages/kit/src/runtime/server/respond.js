@@ -82,9 +82,16 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	// reroute could alter the given URL, so we pass a copy
+	const url_copy = new URL(url);
+	if (has_data_suffix(url_copy.pathname)) {
+		url_copy.pathname = strip_data_suffix(url_copy.pathname) || '/';
+		url_copy.searchParams.delete(TRAILING_SLASH_PARAM);
+		url_copy.searchParams.delete(INVALIDATED_PARAM);
+	}
+
 	let rerouted_path;
 	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted_path = options.hooks.reroute({ url: url_copy }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
