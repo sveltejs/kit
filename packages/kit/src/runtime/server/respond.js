@@ -12,7 +12,7 @@ import {
 	disable_search,
 	has_data_suffix,
 	normalize_path,
-	strip_data_suffix,
+	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
