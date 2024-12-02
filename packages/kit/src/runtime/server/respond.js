@@ -134,7 +134,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 	if (is_data_request) {
-		// if reroute didn't run, the decoded URL still has the data suffix
+		// if reroute doesn't return anything, the decoded URL still has the data suffix
 		if (has_data_suffix(decoded)) {
 			decoded = strip_data_suffix(decoded) || '/';
 		}
