@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
+import * as semver from 'semver';
+import * as svelte from 'svelte/compiler';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
@@ -21,7 +23,7 @@ const __dirname = join(__filename, '..');
  */
 async function test_make_package(path, options) {
 	const cwd = join(__dirname, 'fixtures', path);
-	const ewd = join(cwd, 'expected');
+	const ewd = join(cwd, get_expected_dir(cwd));
 	const output = join(cwd, 'dist');
 
 	const config = await load_config({ cwd });
@@ -78,6 +80,25 @@ async function format(file, content) {
 		parser: file.endsWith('.svelte') ? 'svelte' : file.endsWith('.json') ? 'json' : 'typescript',
 		plugins: ['prettier-plugin-svelte']
 	});
+}
+
+/**
+ * adapted from https://github.com/Rich-Harris/dts-buddy/blob/94d4ff35f48a487c081a3a48ceb3d9124712b84e/test/test.js#L52-L61
+ * @param {string} cwd
+ * @returns {string}
+ */
+function get_expected_dir(cwd) {
+	let expected_dir = 'expected';
+	for (const candidate of fs.readdirSync(cwd)) {
+		if (!candidate.startsWith('expected ')) continue;
+		const range = candidate.slice(8);
+
+		if (semver.satisfies(svelte.VERSION.split('-')[0], range)) {
+			expected_dir = candidate;
+			break;
+		}
+	}
+	return expected_dir;
 }
 
 for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
@@ -173,7 +194,7 @@ if (!process.env.CI) {
 
 		/** @param {string} file */
 		function compare(file) {
-			assert.equal(read(`package/${file}`), read(`expected/${file}`));
+			assert.equal(read(`package/${file}`), read(`${get_expected_dir(cwd)}/${file}`));
 		}
 
 		/** @param {string} file */
