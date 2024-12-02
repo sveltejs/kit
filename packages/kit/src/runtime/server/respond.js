@@ -12,7 +12,7 @@ import {
 	disable_search,
 	has_data_suffix,
 	normalize_path,
-	strip_data_suffix
+	strip_data_suffix,
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
@@ -134,6 +134,9 @@ export async function respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 	if (is_data_request) {
+		if (has_data_suffix(decoded)) {
+			decoded = strip_data_suffix(decoded) || '/';
+		}
 		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
