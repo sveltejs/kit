@@ -3,7 +3,8 @@ import { browser } from '$app/environment';
 const mapping = {
 	'/reroute/basic/a': '/reroute/basic/b',
 	'/reroute/client-only-redirect/a': '/reroute/client-only-redirect/b',
-	'/reroute/preload-data/a': '/reroute/preload-data/b'
+	'/reroute/preload-data/a': '/reroute/preload-data/b',
+	'/reroute/invalidate/a': '/reroute/invalidate'
 };
 
 /** @type {import("@sveltejs/kit").Reroute} */
