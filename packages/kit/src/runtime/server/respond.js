@@ -83,7 +83,9 @@ export async function respond(request, options, manifest, state) {
 
 	// reroute could alter the given URL, so we pass a copy
 	const url_copy = new URL(url);
-	if (has_data_suffix(url_copy.pathname)) {
+
+	const is_data_request = has_data_suffix(url.pathname);
+	if (is_data_request) {
 		url_copy.pathname = strip_data_suffix(url_copy.pathname) || '/';
 		url_copy.searchParams.delete(TRAILING_SLASH_PARAM);
 		url_copy.searchParams.delete(INVALIDATED_PARAM);
@@ -129,11 +131,9 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	const is_data_request = has_data_suffix(decoded);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 	if (is_data_request) {
-		decoded = strip_data_suffix(decoded) || '/';
 		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
