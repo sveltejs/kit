@@ -3,7 +3,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 /** @type {import('rollup').RollupOptions} */
 const config = {
 	input: {
-		reroute: 'src/edge/reroute.js',
+		reroute: 'src/edge/reroute.js'
 	},
 	output: {
 		dir: 'files/edge',
