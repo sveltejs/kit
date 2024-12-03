@@ -109,11 +109,13 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	init?: () => void | Promise<void>;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	init?: () => void | Promise<void>;
 }
 
 export interface Env {

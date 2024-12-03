@@ -67,6 +67,10 @@ export class Server {
 			try {
 				const module = await get_hooks();
 
+				if (module.init != null) {
+					await module.init();
+				}
+
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),

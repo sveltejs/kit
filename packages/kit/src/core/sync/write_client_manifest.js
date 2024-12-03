@@ -152,7 +152,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 
-				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {})
+				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
+				init: ${universal_hooks_file ? 'universal_hooks.init || ' : client_hooks_file ? 'client_hooks.init || ' : ''}(() => {}),
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
