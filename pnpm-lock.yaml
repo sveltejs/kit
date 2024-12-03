@@ -272,6 +272,9 @@ importers:
         specifier: ^0.24.0
         version: 0.24.0
     devDependencies:
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.3.0
+        version: 15.3.0(rollup@4.27.4)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -281,6 +284,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      rollup:
+        specifier: ^4.14.2
+        version: 4.27.4
       typescript:
         specifier: ^5.3.3
         version: 5.6.3

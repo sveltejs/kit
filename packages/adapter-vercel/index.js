@@ -229,7 +229,7 @@ const plugin = function (defaults = {}) {
 			 * @param {import('./index.js').Config} config
 			 */
 			async function generate_edge_middleware(name, config) {
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const tmp = builder.getBuildDirectory('vercel-tmp');
 
 				const dest = `${tmp}/${name}.js`;
 

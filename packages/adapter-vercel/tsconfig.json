@@ -14,5 +14,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"exclude": ["files/edge"]
+	"exclude": ["src/edge", "files"]
 }

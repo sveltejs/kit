@@ -34,24 +34,29 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/serverless.js', 'files/serverless.js'); fs.cpSync('src/edge/edge.js', 'files/edge/edge.js')\"",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
+		"@vercel/edge": "^1.1.2",
 		"@vercel/nft": "^0.27.7",
 		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
+		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
+		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
 		"vitest": "^2.1.6"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.4.0",
-		"@vercel/edge": "^1.1.2"
+		"@sveltejs/kit": "^2.4.0"
 	}
 }
