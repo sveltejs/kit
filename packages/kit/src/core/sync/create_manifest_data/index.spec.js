@@ -427,7 +427,7 @@ test('optional parameters', () => {
 		default_layout,
 		{
 			component: 'samples/optional-group/[[optional]]/(group)/+page.svelte'
-		},
+		}
 	]);
 
 	expect(routes.map(simplify_route)).toEqual([
@@ -442,7 +442,9 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
-				leaf: nodes.findIndex((node) => node.component?.includes('optional-group/[[optional]]/(group)'))
+				leaf: nodes.findIndex((node) =>
+					node.component?.includes('optional-group/[[optional]]/(group)')
+				)
 			}
 		},
 		{
