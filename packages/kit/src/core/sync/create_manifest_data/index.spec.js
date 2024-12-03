@@ -412,7 +412,7 @@ test('nested optionals', () => {
 	]);
 });
 
-test('optional parameters', () => {
+test('group preceding optional parameters', () => {
 	const { nodes, routes } = create('samples/optional-group');
 
 	expect(
