@@ -648,3 +648,15 @@ test.describe('reroute', () => {
 		expect(response?.status()).toBe(500);
 	});
 });
+
+test.describe('init', () => {
+	// we need to skip in dev because the vite dev middleware create
+	// multiple servers and it would be flaky
+	test.skip(() => process.env.DEV);
+	test('init server hook is called once before the load function', async ({ page }) => {
+		await page.goto('/init-hooks');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('1');
+	});
+});
