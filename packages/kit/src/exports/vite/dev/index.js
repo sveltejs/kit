@@ -428,9 +428,6 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
-		/** @type {InstanceType<import('types').ServerModule["Server"]>} */
-		let server;
-
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
@@ -487,9 +484,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
 				set_assets(assets);
 
-				if (!server) {
-					server = new Server(manifest);
-				}
+				const server = new Server(manifest);
 
 				await server.init({
 					env,
