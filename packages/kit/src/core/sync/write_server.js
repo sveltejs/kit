@@ -70,6 +70,12 @@ export async function get_hooks() {
 	};
 }
 
+export let inited = false;
+
+export function set_inited(){
+	inited = true;
+}
+
 export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation, set_safe_public_env };
 `;
 
