@@ -237,6 +237,36 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 > [!NOTE] Make sure that `handleError` _never_ throws an error
 
+### init
+
+This function is the very first function that will be invoked in the SvelteKit context both on the server (when the server starts) and on the client (when the client side app starts). It can be asynchronous and it will be awaited by the SvelteKit runtime. It's guaranteed to only run once.
+
+On the server it can be used to initialize your database connection, setup your mocks or prepare whatever state your application will need.
+
+> [!NOTE] If your environment supports top level await the `init` function is really not different from writing your initialization in the module itself but it can be useful if you don't have that luxury.
+
+```js
+/// file: src/hooks.server.js
+
+let db;
+
+/** @type {import('@sveltejs/kit').ServerInit} */
+export async function init() {
+	db = await client.connect();
+}
+```
+
+On the client this is the only way to actually stop svelte from hydrating your code until your initialization run. Pay attention to what you put in your init because the app will be unresponsive until the `init` hook completes (it will not execute again on navigation tho).
+
+```js
+/// file: src/hooks.client.js
+
+/** @type {import('@sveltejs/kit').ServerInit} */
+export async function init() {
+	await loadSomeDataNeededForHydration();
+}
+```
+
 ## Universal hooks
 
 The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
