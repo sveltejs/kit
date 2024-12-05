@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -31,6 +31,7 @@ export default function (options = {}) {
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
+			const templates = fileURLToPath(new URL('./templates-experimental', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
@@ -73,6 +74,8 @@ export default function (options = {}) {
 					flag: 'a'
 				});
 			}
+
+			copyFileSync(`${templates}/.assetsignore`, `${dest}/.assetsignore`);
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
