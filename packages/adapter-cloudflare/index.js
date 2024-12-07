@@ -31,7 +31,6 @@ export default function (options = {}) {
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const templates = fileURLToPath(new URL('./templates-experimental', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
@@ -75,7 +74,7 @@ export default function (options = {}) {
 				});
 			}
 
-			copyFileSync(`${templates}/.assetsignore`, `${dest}/.assetsignore`);
+			copyFileSync(`${files}/.assetsignore`, `${dest}/.assetsignore`);
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {

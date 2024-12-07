@@ -28,7 +28,6 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
-		"templates-experimental",
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts"
