@@ -262,6 +262,9 @@ importers:
 
   packages/adapter-vercel:
     dependencies:
+      '@vercel/edge':
+        specifier: ^1.1.2
+        version: 1.1.2
       '@vercel/nft':
         specifier: ^0.27.7
         version: 0.27.7(rollup@4.27.4)
@@ -269,6 +272,9 @@ importers:
         specifier: ^0.24.0
         version: 0.24.0
     devDependencies:
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.3.0
+        version: 15.3.0(rollup@4.27.4)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -278,6 +284,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      rollup:
+        specifier: ^4.14.2
+        version: 4.27.4
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
@@ -2001,6 +2010,9 @@ packages:
   '@typescript-eslint/visitor-keys@8.4.0':
     resolution: {integrity: sha512-zTQD6WLNTre1hj5wp09nBIDiOc2U5r/qmzo7wxPn4ZgAjHql09EofqhF9WF+fZHzL5aCyaIpPcT2hyxl73kr9A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@vercel/edge@1.1.2':
+    resolution: {integrity: sha512-wt5SnhsMahWX8U9ZZhFUQoiXhMn/CUxA5xeMdZX1cwyOL1ZbDR3rNI8HRT9RSU73nDxeF6jlnqJyp/0Jy0VM2A==}
 
   '@vercel/nft@0.27.7':
     resolution: {integrity: sha512-FG6H5YkP4bdw9Ll1qhmbxuE8KwW2E/g8fJpM183fWQLeVDGqzeywMIeJ9h2txdWZ03psgWMn6QymTxaDLmdwUg==}
@@ -4513,6 +4525,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.4.0
       eslint-visitor-keys: 3.4.3
+
+  '@vercel/edge@1.1.2': {}
 
   '@vercel/nft@0.27.7(rollup@4.27.4)':
     dependencies:

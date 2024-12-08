@@ -167,6 +167,10 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 Projects created before a certain date may default to using an older Node version than what SvelteKit currently requires. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
+### Individual functions and `reroute`
+
+If `split` is set to `true` for a route, or at the adapter level, the [`reroute`](/docs/hooks#universal-hooks-reroute) function will be deployed as an edge middleware that runs before any individual function.
+
 ## Troubleshooting
 
 ### Accessing the file system
