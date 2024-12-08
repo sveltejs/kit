@@ -422,9 +422,14 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {string} pathname */
-async function _preload_code(pathname) {
-	const route = routes.find((route) => route.exec(get_url_path(pathname)));
+/** @param {string} href */
+async function _preload_code(href) {
+	const url = get_navigation_url(resolve_url(href));
+	if (!url) return;
+
+	const pathname = get_url_path(url);
+
+	const route = routes.find((route) => route.exec(pathname));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1160,20 +1165,13 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
- * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
- * returns undefined.
- * @param {URL | undefined} url
- * @param {boolean} invalidating
+ * Resolve the relative rerouted URL for a client-side navigation from the URL
+ * @param {URL} url
  */
-function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
-	if (is_external_url(url, base)) return;
-
+function get_navigation_url(url) {
 	// reroute could alter the given URL, so we pass a copy
-	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		return app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1186,6 +1184,21 @@ function get_navigation_intent(url, invalidating) {
 		// fall back to native navigation
 		return undefined;
 	}
+}
+
+/**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
+ * @param {URL | undefined} url
+ * @param {boolean} invalidating
+ */
+function get_navigation_intent(url, invalidating) {
+	if (!url) return;
+	if (is_external_url(url, base)) return;
+
+	const rerouted = get_navigation_url(url);
+	if (!rerouted) return;
 
 	const path = get_url_path(rerouted);
 
