@@ -725,6 +725,16 @@ export type HandleFetch = (input: {
 }) => MaybePromise<Response>;
 
 /**
+ * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked once as soon as the server is executed.
+ */
+export type ServerInit = () => MaybePromise<void>;
+
+/**
+ * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked once as the client side app is started.
+ */
+export type ClientInit = () => MaybePromise<void>;
+
+/**
  * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
  * @since 2.3.0
  */
