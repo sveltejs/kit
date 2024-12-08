@@ -17,7 +17,8 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	HandlePageData
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -107,6 +108,7 @@ export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
+	handlePageData: HandlePageData;
 	handleError: HandleServerError;
 	reroute: Reroute;
 }
