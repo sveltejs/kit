@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -73,6 +73,8 @@ export default function (options = {}) {
 					flag: 'a'
 				});
 			}
+
+			copyFileSync(`${files}/.assetsignore`, `${dest}/.assetsignore`);
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
