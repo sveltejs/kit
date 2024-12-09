@@ -484,9 +484,19 @@ function initialize(result, target, hydrate) {
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
+ *   state?: App.PageData | null;
  * }} opts
  */
-function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
+function get_navigation_result_from_branch({
+	url,
+	params,
+	branch,
+	status,
+	error,
+	route,
+	form,
+	state
+}) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -562,7 +572,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 			route: {
 				id: route?.id ?? null
 			},
-			state: {},
+			state: state ?? {},
 			status,
 			url: new URL(url),
 			form: form ?? null,
@@ -1056,8 +1066,9 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		status: 200,
 		error: null,
 		route,
-		// Reset `form` on navigation, but not invalidation
-		form: invalidating ? undefined : null
+		// Reset `form`/`state` on navigation, but not invalidation
+		form: invalidating ? undefined : null,
+		state: invalidating ? page.state : null
 	});
 }
 
