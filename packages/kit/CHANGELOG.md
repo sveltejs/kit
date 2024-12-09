@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.9.1
+### Patch Changes
+
+
+- fix: correctly match route groups preceding optional parameters ([#13099](https://github.com/sveltejs/kit/pull/13099))
+
 ## 2.9.0
 ### Minor Changes
 
