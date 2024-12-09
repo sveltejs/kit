@@ -15,6 +15,9 @@ const prerender_env_handler = {
 	}
 };
 
+/** @type {Promise<any>} */
+let init_promise;
+
 export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
@@ -63,7 +66,7 @@ export class Server {
 			set_read_implementation(read);
 		}
 
-		if (!this.#options.hooks) {
+		await (init_promise ??= (async () => {
 			try {
 				const module = await get_hooks();
 
@@ -91,7 +94,7 @@ export class Server {
 					throw error;
 				}
 			}
-		}
+		})());
 	}
 
 	/**
