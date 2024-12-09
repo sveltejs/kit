@@ -13,7 +13,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"svelte": "^5.2.9",
-		"svelte-check": "^4.0.1",
+		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "^6.0.1"
 	},
