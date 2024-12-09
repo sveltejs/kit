@@ -4,8 +4,9 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
 import MagicString from 'magic-string';
-import { walk } from 'zimmerframe';
+import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
+import { walk } from 'zimmerframe';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
@@ -70,33 +71,36 @@ export function image(opts) {
 				const original_url = src_attribute.raw.trim();
 				let url = original_url;
 
-				const sizes = get_attr_value(node, 'sizes');
-				const width = get_attr_value(node, 'width');
-				url += url.includes('?') ? '&' : '?';
-				if (sizes && 'raw' in sizes) {
-					url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
-				}
-				if (width && 'raw' in width) {
-					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
-				}
-				url += 'enhanced';
-
 				if (OPTIMIZABLE.test(url)) {
-					// resolves the import so that we can build the entire picture template string and don't
-					// need any logic blocks
-					const resolved_id = (await opts.plugin_context.resolve(url, filename))?.id;
-					if (!resolved_id) {
-						const file_path = url.substring(0, url.indexOf('?'));
-						if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
-							throw new Error(
-								`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
-							);
-						}
+					const sizes = get_attr_value(node, 'sizes');
+					const width = get_attr_value(node, 'width');
+					url += url.includes('?') ? '&' : '?';
+					if (sizes && 'raw' in sizes) {
+						url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
+					}
+					if (width && 'raw' in width) {
+						url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
+					}
+					url += 'enhanced';
+				}
+
+				// resolves the import so that we can build the entire picture template string and don't
+				// need any logic blocks
+				const resolved_id = (await opts.plugin_context.resolve(url, filename))?.id;
+				if (!resolved_id) {
+					const query_index = url.indexOf('?');
+					const file_path = query_index >= 0 ? url.substring(0, query_index) : url;
+					if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
 						throw new Error(
-							`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+							`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
 						);
 					}
+					throw new Error(
+						`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+					);
+				}
 
+				if (OPTIMIZABLE.test(url)) {
 					let image = images.get(resolved_id);
 					if (!image) {
 						image = await process(resolved_id, opts);
@@ -104,17 +108,14 @@ export function image(opts) {
 					}
 					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
-					// e.g. <img src="./foo.svg" /> => <img src={__IMPORTED_ASSET_0__} />
 					const name = '__IMPORTED_ASSET_' + imports.size + '__';
-					const { start, end } = src_attribute;
-					// update src with reference to imported asset
-					s.update(
-						is_quote(content, start - 1) ? start - 1 : start,
-						is_quote(content, end) ? end + 1 : end,
-						`{${name}}`
-					);
-					// update `enhanced:img` to `img`
-					s.update(node.start + 1, node.start + 1 + 'enhanced:img'.length, 'img');
+					const metadata = await sharp(resolved_id).metadata();
+					const new_markup = `<img ${serialize_img_attributes(content, node.attributes, {
+						src: `{${name}}`,
+						width: metadata.width || 0,
+						height: metadata.height || 0
+					})} />`;
+					s.update(node.start, node.end, new_markup);
 					imports.set(original_url, name);
 				}
 			}
@@ -173,15 +174,6 @@ export function image(opts) {
 			};
 		}
 	};
-}
-
-/**
- * @param {string} content
- * @param {number} index
- * @returns {boolean}
- */
-function is_quote(content, index) {
-	return content.charAt(index) === '"' || content.charAt(index) === "'";
 }
 
 /**

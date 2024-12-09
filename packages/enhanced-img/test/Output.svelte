@@ -1,6 +1,4 @@
-<script lang="ts">	
-	import __IMPORTED_ASSET_0__ from "./foo.svg";
-
+<script lang="ts">
 	
 	import manual_image1 from './no.png';
 	
@@ -49,8 +47,6 @@
 		<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
 	</picture>
 {/if}
-
-<img src={__IMPORTED_ASSET_0__} alt="svg test" />
 
 {#each images as image}
 	{#if typeof image === 'string'}
