@@ -1,6 +1,6 @@
 import { respond } from './respond.js';
 import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
-import { options, get_hooks, inited, set_inited } from '__SERVER__/internal.js';
+import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
@@ -67,17 +67,16 @@ export class Server {
 			try {
 				const module = await get_hooks();
 
-				if (module.init != null && !inited) {
-					set_inited();
-					await module.init();
-				}
-
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {})
 				};
+
+				if (module.init) {
+					await module.init();
+				}
 			} catch (error) {
 				if (DEV) {
 					this.#options.hooks = {
