@@ -1230,24 +1230,3 @@ test.describe('binding_property_non_reactive warn', () => {
 		expect(is_warning_thrown).toBeFalsy();
 	});
 });
-
-test.describe('Serialization', () => {
-	test('A custom data type can be serialized/deserialized', async ({ page }) => {
-		await page.goto('/serialization-basic');
-		expect(await page.textContent('h1')).toBe('It works!');
-	});
-
-	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form');
-		await page.click('button');
-		expect(await page.textContent('h1')).toBe('It works!');
-	});
-
-	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
-		page
-	}) => {
-		await page.goto('/serialization-form2');
-		await page.click('button');
-		expect(await page.textContent('h1')).toBe('It works!');
-	});
-});

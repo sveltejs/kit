@@ -8,4 +8,6 @@
 	<button type="submit">submit</button>
 </form>
 
-<h1>{form?.foo?.bar()}</h1>
+{#if form}
+	<h1>{form?.foo?.bar()}</h1>
+{/if}
