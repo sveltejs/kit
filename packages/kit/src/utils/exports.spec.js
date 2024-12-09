@@ -41,7 +41,7 @@ test('validates +layout.js', () => {
 		validate_layout_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, deserialize, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -78,7 +78,7 @@ test('validates +page.js', () => {
 		validate_page_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, deserialize, entries, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_exports(
@@ -114,7 +114,7 @@ test('validates +layout.server.js', () => {
 		validate_layout_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, deserialize, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -152,7 +152,7 @@ test('validates +page.server.js', () => {
 		validate_page_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, deserialize, actions, entries, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_server_exports({
@@ -174,7 +174,7 @@ test('validates +server.js', () => {
 		validate_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, fallback, prerender, trailingSlash, config, entries, deserialize, serialize, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, fallback, prerender, trailingSlash, config, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_server_exports({

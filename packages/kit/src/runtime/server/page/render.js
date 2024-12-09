@@ -37,7 +37,6 @@ const encoder = new TextEncoder();
  *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
- *   serializers: null | Record<string, (value: any) => any>;
  * }} opts
  */
 export async function render_response({
@@ -51,8 +50,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	action_result,
-	serializers
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -268,8 +266,7 @@ export async function render_response({
 		options,
 		branch.map((b) => b.server_data),
 		csp,
-		global,
-		serializers
+		global
 	);
 
 	if (page_config.ssr && page_config.csr) {
@@ -325,10 +322,17 @@ export async function render_response({
 						})`);
 
 			properties.push(`resolve: ({ id, data, error }) => {
-							const { fulfil, reject } = deferred.get(id);
-							deferred.delete(id);
-							if (error) reject(error);
-							else fulfil(data);
+							const try_to_resolve = () => {
+								if (!deferred.has(id)) {
+									setTimeout(try_to_resolve, 0);
+									return;
+								}
+								const { fulfil, reject } = deferred.get(id);
+								deferred.delete(id);
+								if (error) reject(error);
+								else fulfil(data);
+							}
+							try_to_resolve();
 						}`);
 		}
 
@@ -525,14 +529,14 @@ export async function render_response({
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {import('./csp.js').Csp} csp
  * @param {string} global
- * @param {Record<string, (value: any) => any> | null} serializers
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, options, nodes, csp, global, serializers) {
+function get_data(event, options, nodes, csp, global) {
 	let promise_id = 1;
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
+	const serializers = options.hooks.serialize;
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -574,7 +578,7 @@ function get_data(event, options, nodes, csp, global, serializers) {
 				);
 
 			return `${global}.defer(${id})`;
-		} else if (serializers !== null) {
+		} else {
 			for (const key in serializers) {
 				const serialized = serializers[key](thing);
 				if (serialized) {

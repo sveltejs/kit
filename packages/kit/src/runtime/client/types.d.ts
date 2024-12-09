@@ -66,7 +66,7 @@ export type BranchNode = {
 	loader: CSRPageNodeLoader;
 	server: DataNode | null;
 	universal: DataNode | null;
-	data: ((deserialize: () => any) => Record<string, any>) | Record<string, any> | null;
+	data: Record<string, any> | null;
 	slash?: TrailingSlash;
 };
 

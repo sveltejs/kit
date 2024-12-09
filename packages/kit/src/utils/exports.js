@@ -66,8 +66,7 @@ const valid_layout_exports = new Set([
 	'csr',
 	'ssr',
 	'trailingSlash',
-	'config',
-	'deserialize'
+	'config'
 ]);
 const valid_page_exports = new Set([...valid_layout_exports, 'entries']);
 const valid_layout_server_exports = new Set([...valid_layout_exports]);
@@ -84,9 +83,7 @@ const valid_server_exports = new Set([
 	'prerender',
 	'trailingSlash',
 	'config',
-	'entries',
-	'deserialize',
-	'serialize'
+	'entries'
 ]);
 
 export const validate_layout_exports = validator(valid_layout_exports);

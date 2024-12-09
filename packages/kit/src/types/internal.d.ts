@@ -80,7 +80,6 @@ export interface CSRPageNode {
 	universal: {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
-		deserialize?: Record<string, (value: any) => any>;
 	};
 }
 
