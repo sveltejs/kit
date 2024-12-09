@@ -85,6 +85,7 @@ const valid_server_exports = new Set([
 	'trailingSlash',
 	'config',
 	'entries',
+	'deserialize',
 	'serialize'
 ]);
 
