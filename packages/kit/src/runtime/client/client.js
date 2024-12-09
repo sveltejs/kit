@@ -630,6 +630,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 	if (node.universal?.load) {
 		const deserializer = create_deserializer(node);
+		const load_data =
+			typeof server_data_node?.data === 'function'
+				? server_data_node.data(deserializer)
+				: (server_data_node?.data ?? null);
 
 		/** @param {string[]} deps */
 		function depends(...deps) {
@@ -659,10 +663,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					return target[/** @type {string} */ (key)];
 				}
 			}),
-			get data() {
-				const data = server_data_node?.data;
-				return typeof data === 'function' ? data(deserializer) : (data ?? null);
-			},
+			data: load_data,
 			url: make_trackable(
 				url,
 				() => {
