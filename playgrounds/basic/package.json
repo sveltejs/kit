@@ -22,6 +22,7 @@
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*",
 		"@sveltejs/amp": "workspace:*",
+		"@sveltejs/enhanced-img": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/package": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
