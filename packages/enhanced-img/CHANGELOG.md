@@ -1,5 +1,14 @@
 # @sveltejs/enhanced-img
 
+## 0.4.2
+### Patch Changes
+
+
+- feat: set intrinsic width and height for SVGs ([#13126](https://github.com/sveltejs/kit/pull/13126))
+
+
+- perf: directly inline values since Svelte no longer inlines variables into template ([#13035](https://github.com/sveltejs/kit/pull/13035))
+
 ## 0.4.1
 ### Patch Changes
 
