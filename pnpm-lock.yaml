@@ -617,6 +617,30 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
 
+  packages/kit/test/apps/serialization:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.2.9)(vite@6.0.1(@types/node@18.19.50)(lightningcss@1.24.1))
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      svelte:
+        specifier: ^5.2.9
+        version: 5.2.9
+      svelte-check:
+        specifier: ^4.0.1
+        version: 4.0.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+      typescript:
+        specifier: ^5.5.4
+        version: 5.6.3
+      vite:
+        specifier: ^6.0.1
+        version: 6.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
+
   packages/kit/test/apps/writes:
     devDependencies:
       '@sveltejs/kit':

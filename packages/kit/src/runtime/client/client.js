@@ -535,19 +535,11 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 		const node = branch[i];
 		const prev = current.branch[i];
 
-		const deserialize = (/** @type {string} */ type, /** @type {any} */ value) => {
-			const deserializers = node?.node.universal.deserialize;
-
-			if (deserializers && deserializers[type]) {
-				return deserializers[type](value);
-			}
-
-			return null;
-		};
-
 		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
-		const branch_data = typeof node.data === 'function' ? node.data(deserialize) : node.data;
+		const deserializer = create_deserializer(node.node);
+
+		const branch_data = typeof node.data === 'function' ? node.data(deserializer) : node.data;
 
 		data = { ...data, ...branch_data };
 
@@ -583,6 +575,21 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 	}
 
 	return result;
+}
+
+/**
+ * @param {import("types").CSRPageNode} node
+ */
+function create_deserializer(node) {
+	return (/** @type {string} */ type, /** @type {any} */ value) => {
+		const deserializers = node.universal.deserialize;
+
+		if (deserializers && deserializers[type]) {
+			return deserializers[type](value);
+		}
+
+		return null;
+	};
 }
 
 /**
@@ -622,6 +629,8 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 	}
 
 	if (node.universal?.load) {
+		const deserializer = create_deserializer(node);
+
 		/** @param {string[]} deps */
 		function depends(...deps) {
 			for (const dep of deps) {
@@ -650,7 +659,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					return target[/** @type {string} */ (key)];
 				}
 			}),
-			data: server_data_node?.data ?? null,
+			get data() {
+				const data = server_data_node?.data;
+				return typeof data === 'function' ? data(deserializer) : (data ?? null);
+			},
 			url: make_trackable(
 				url,
 				() => {
