@@ -1391,6 +1391,7 @@ test.describe('Serialization', () => {
 		await page.click('button');
 		expect(await page.textContent('h1')).toBe('It works!');
 
+		// Test navigating to the basic page works as intended
 		await page.locator('a').first();
 		expect(await page.textContent('h1')).toBe('It works!');
 	});
