@@ -1,5 +1,5 @@
 export class Foo {
 	bar() {
-		return 'it worked!';
+		return 'It works!';
 	}
 }

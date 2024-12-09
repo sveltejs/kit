@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/public';
+import { Foo } from './lib';
 
 window.PUBLIC_DYNAMIC = env.PUBLIC_DYNAMIC;
 
@@ -8,3 +9,9 @@ export function handleError({ error, event, status, message }) {
 		? undefined
 		: { message: `${/** @type {Error} */ (error).message} (${status} ${message})` };
 }
+
+export const deserialize = {
+	Foo() {
+		return new Foo();
+	}
+};

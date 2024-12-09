@@ -351,7 +351,8 @@ export async function render_response({
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id)
+					/** @type {string} */ (event.route.id),
+					options.hooks.serialize
 				);
 			}
 

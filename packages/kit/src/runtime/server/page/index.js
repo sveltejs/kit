@@ -128,7 +128,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 				options,
 				manifest,
 				state,
-				resolve_opts,
+				resolve_opts
 			});
 		}
 

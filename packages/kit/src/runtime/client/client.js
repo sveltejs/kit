@@ -174,7 +174,7 @@ let container;
 /** @type {HTMLElement} */
 let target;
 /** @type {import('./types.js').SvelteKitApp} */
-let app;
+export let app;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];

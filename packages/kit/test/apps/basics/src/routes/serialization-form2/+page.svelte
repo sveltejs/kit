@@ -1,0 +1,11 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+
+	let { form } = $props();
+</script>
+
+<form method="POST" use:enhance>
+	<button type="submit">submit</button>
+</form>
+
+<h1>{form?.foo?.bar()}</h1>
