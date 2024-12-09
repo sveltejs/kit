@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.4.3
+### Patch Changes
+
+
+- fix: properly handle multiple SVGs ([#13127](https://github.com/sveltejs/kit/pull/13127))
+
 ## 0.4.2
 ### Patch Changes
 
