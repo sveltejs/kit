@@ -6,7 +6,7 @@ import { test } from '../../../utils.js';
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Serialization', () => {
-	test('A custom type can be serialized/deserialized', async ({ page }) => {
+	test('A custom data type can be serialized/deserialized', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.textContent('h1')).toBe('it worked!');
 	});
