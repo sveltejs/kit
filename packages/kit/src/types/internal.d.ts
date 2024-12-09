@@ -110,11 +110,13 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	serialize?: Record<string, (value: any) => any>;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	deserialize?: Record<string, (value: any) => any>;
 }
 
 export interface Env {
@@ -334,7 +336,6 @@ export interface SSRNode {
 		trailingSlash?: TrailingSlash;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
-		deserialize?: Record<string, (value: any) => any>;
 		serialize?: Record<string, (value: any) => any>;
 	};
 
@@ -347,7 +348,6 @@ export interface SSRNode {
 		actions?: Actions;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
-		serialize?: Record<string, (value: any) => any>;
 	};
 
 	universal_id: string;

@@ -537,11 +537,8 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 
 		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
-		const deserializer = create_deserializer(node.node);
 
-		const branch_data = typeof node.data === 'function' ? node.data(deserializer) : node.data;
-
-		data = { ...data, ...branch_data };
+		data = { ...data, ...node.data };
 
 		// Only set props if the node actually updated. This prevents needless rerenders.
 		if (data_changed) {
@@ -575,21 +572,6 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 	}
 
 	return result;
-}
-
-/**
- * @param {import("types").CSRPageNode} node
- */
-function create_deserializer(node) {
-	return (/** @type {string} */ type, /** @type {any} */ value) => {
-		const deserializers = node.universal.deserialize;
-
-		if (deserializers && deserializers[type]) {
-			return deserializers[type](value);
-		}
-
-		return null;
-	};
 }
 
 /**
@@ -629,12 +611,6 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 	}
 
 	if (node.universal?.load) {
-		const deserializer = create_deserializer(node);
-		const load_data =
-			typeof server_data_node?.data === 'function'
-				? server_data_node.data(deserializer)
-				: (server_data_node?.data ?? null);
-
 		/** @param {string[]} deps */
 		function depends(...deps) {
 			for (const dep of deps) {
@@ -663,7 +639,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					return target[/** @type {string} */ (key)];
 				}
 			}),
-			data: load_data,
+			data: server_data_node?.data ?? null,
 			url: make_trackable(
 				url,
 				() => {

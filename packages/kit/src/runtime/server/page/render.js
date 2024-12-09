@@ -325,18 +325,10 @@ export async function render_response({
 						})`);
 
 			properties.push(`resolve: ({ id, data, error }) => {
-							const try_to_resolve = () => {
-								if (!deferred.has(id)) {
-									setTimeout(try_to_resolve, 0);
-									return;
-								}
-								const { fulfil, reject } = deferred.get(id);
-								deferred.delete(id);
-
-								if (error) reject(error);
-								else fulfil(data);
-							}
-							try_to_resolve();
+							const { fulfil, reject } = deferred.get(id);
+							deferred.delete(id);
+							if (error) reject(error);
+							else fulfil(data);
 						}`);
 		}
 
@@ -352,8 +344,6 @@ export async function render_response({
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
-			blocks.push(`const data = ${data};`);
-
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
@@ -367,7 +357,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				'data',
+				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -588,7 +578,7 @@ function get_data(event, options, nodes, csp, global, serializers) {
 			for (const key in serializers) {
 				const serialized = serializers[key](thing);
 				if (serialized) {
-					return `deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
+					return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
 				}
 			}
 		}
@@ -598,7 +588,7 @@ function get_data(event, options, nodes, csp, global, serializers) {
 		const strings = nodes.map((node) => {
 			if (!node) return 'null';
 
-			return `{"type":"data","data":(deserialize) => (${devalue.uneval(node.data, replacer)}),${stringify_uses(node)}${
+			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
 				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
 			}}`;
 		});

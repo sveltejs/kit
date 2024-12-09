@@ -49,7 +49,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		const nodes = await load_page_nodes(page, manifest);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
-		const serializers = get_option(nodes, 'serialize') ?? null;
+		const serializers = options.hooks.serialize ?? null;
 
 		let status = 200;
 
