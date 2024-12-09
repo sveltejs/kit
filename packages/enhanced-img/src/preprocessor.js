@@ -108,8 +108,10 @@ export function image(opts) {
 					}
 					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
-					const name = '__IMPORTED_ASSET_' + imports.size + '__';
 					const metadata = await sharp(resolved_id).metadata();
+					// this must come after the await so that we don't hand off processing between getting
+					// the imports.size and incrementing the imports.size
+					const name = '__IMPORTED_ASSET_' + imports.size + '__';
 					const new_markup = `<img ${serialize_img_attributes(content, node.attributes, {
 						src: `{${name}}`,
 						width: metadata.width || 0,
