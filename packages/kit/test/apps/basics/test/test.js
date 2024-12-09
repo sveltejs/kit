@@ -1390,6 +1390,9 @@ test.describe('Serialization', () => {
 		await page.goto('/serialization-form');
 		await page.click('button');
 		expect(await page.textContent('h1')).toBe('It works!');
+
+		await page.locator('a').first();
+		expect(await page.textContent('h1')).toBe('It works!');
 	});
 
 	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({

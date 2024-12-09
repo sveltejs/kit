@@ -11,3 +11,5 @@
 {#if form}
 	<h1>{form?.foo?.bar()}</h1>
 {/if}
+
+<a href="/serialization-basic">To basic form</a>

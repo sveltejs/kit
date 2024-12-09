@@ -321,6 +321,8 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			// When resolving, the id might not yet be available due to the data
+			// be evaluated upon init of kit, so we use a timeout to retry
 			properties.push(`resolve: ({ id, data, error }) => {
 							const try_to_resolve = () => {
 								if (!deferred.has(id)) {
