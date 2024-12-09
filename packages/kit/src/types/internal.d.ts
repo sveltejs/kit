@@ -335,7 +335,6 @@ export interface SSRNode {
 		trailingSlash?: TrailingSlash;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
-		serialize?: Record<string, (value: any) => any>;
 	};
 
 	server: {
