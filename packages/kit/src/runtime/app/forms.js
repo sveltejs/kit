@@ -104,7 +104,7 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
-			applyAction(result);
+			await applyAction(result);
 		}
 	};
 
