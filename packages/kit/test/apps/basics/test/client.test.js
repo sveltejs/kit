@@ -1184,6 +1184,12 @@ test.describe('reroute', () => {
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
+
+	test('reroute works with invalidate', async ({ page }) => {
+		await page.goto('/reroute/invalidate/a');
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('data request: true');
+	});
 });
 
 test.describe('INP', () => {
