@@ -54,7 +54,7 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		constructors: Array<typeof SvelteComponent>;
-		components?: Array<SvelteComponent>;
+		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
@@ -66,7 +66,7 @@ export type BranchNode = {
 	loader: CSRPageNodeLoader;
 	server: DataNode | null;
 	universal: DataNode | null;
-	data: Record<string, any> | null;
+	data: ((deserialize: () => any) => Record<string, any>) | Record<string, any> | null;
 	slash?: TrailingSlash;
 };
 

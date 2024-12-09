@@ -49,6 +49,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		const nodes = await load_page_nodes(page, manifest);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
+		const serializers = get_option(nodes, 'serialize') ?? null;
 
 		let status = 200;
 
@@ -128,7 +129,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 				options,
 				manifest,
 				state,
-				resolve_opts
+				resolve_opts,
+				serializers
 			});
 		}
 
@@ -261,7 +263,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 									data: null,
 									server_data: null
 								}),
-								fetched
+								fetched,
+								serializers
 							});
 						}
 					}
@@ -313,7 +316,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 			error: null,
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
-			fetched
+			fetched,
+			serializers
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully

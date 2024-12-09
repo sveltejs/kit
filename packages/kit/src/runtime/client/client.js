@@ -535,10 +535,21 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 		const node = branch[i];
 		const prev = current.branch[i];
 
+		const deserialize = (/** @type {string} */ type, /** @type {any} */ value) => {
+			const deserializers = node?.node.universal.deserialize;
+
+			if (deserializers && deserializers[type]) {
+				return deserializers[type](value);
+			}
+
+			return null;
+		};
+
 		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
+		const branch_data = typeof node.data === 'function' ? node.data(deserialize) : node.data;
 
-		data = { ...data, ...node.data };
+		data = { ...data, ...branch_data };
 
 		// Only set props if the node actually updated. This prevents needless rerenders.
 		if (data_changed) {

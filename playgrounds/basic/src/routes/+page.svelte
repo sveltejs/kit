@@ -2,8 +2,8 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const foo = data.foo;
+
+	console.log(foo.lol());
 </script>
-
-<h1>Welcome to SvelteKit</h1>
-
-2 + 2 = {data.sum}

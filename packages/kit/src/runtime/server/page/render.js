@@ -37,6 +37,7 @@ const encoder = new TextEncoder();
  *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   serializers: null | Record<string, (value: any) => any>;
  * }} opts
  */
 export async function render_response({
@@ -50,7 +51,8 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	action_result
+	action_result,
+	serializers
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -266,7 +268,8 @@ export async function render_response({
 		options,
 		branch.map((b) => b.server_data),
 		csp,
-		global
+		global,
+		serializers
 	);
 
 	if (page_config.ssr && page_config.csr) {
@@ -525,9 +528,10 @@ export async function render_response({
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {import('./csp.js').Csp} csp
  * @param {string} global
+ * @param {Record<string, (value: any) => any> | null} serializers
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, options, nodes, csp, global) {
+function get_data(event, options, nodes, csp, global, serializers) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -573,6 +577,13 @@ function get_data(event, options, nodes, csp, global) {
 				);
 
 			return `${global}.defer(${id})`;
+		} else if (serializers !== null) {
+			for (const key in serializers) {
+				const serialized = serializers[key](thing);
+				if (serialized) {
+					return `deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
+				}
+			}
 		}
 	}
 
@@ -580,7 +591,7 @@ function get_data(event, options, nodes, csp, global) {
 		const strings = nodes.map((node) => {
 			if (!node) return 'null';
 
-			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
+			return `{"type":"data","data":(deserialize) => (${devalue.uneval(node.data, replacer)}),${stringify_uses(node)}${
 				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
 			}}`;
 		});
