@@ -1,4 +1,4 @@
-import { getContext } from 'svelte'
+import { getContext } from 'svelte';
 
 function context() {
 	return getContext('__request__');
@@ -29,4 +29,4 @@ export const page = {
 	get url() {
 		return context().page.url;
 	}
-}
+};

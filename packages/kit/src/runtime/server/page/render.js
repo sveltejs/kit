@@ -150,9 +150,14 @@ export async function render_response({
 		if (paths.relative) paths.override({ base, assets });
 
 		const render_opts = {
-			context: new Map([['__request__', {
-				page: props.page
-			}]])
+			context: new Map([
+				[
+					'__request__',
+					{
+						page: props.page
+					}
+				]
+			])
 		};
 
 		if (__SVELTEKIT_DEV__) {
