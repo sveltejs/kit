@@ -708,11 +708,13 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked before the server responds to its first request
+	 * @since 2.10.0
 	 */
 	export type ServerInit = () => MaybePromise<void>;
 
 	/**
 	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked once the app starts in the browser
+	 * @since 2.10.0
 	 */
 	export type ClientInit = () => MaybePromise<void>;
 
