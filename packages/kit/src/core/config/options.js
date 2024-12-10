@@ -138,6 +138,13 @@ const options = object(
 			inlineStyleThreshold: number(0),
 
 			moduleExtensions: string_array(['.js', '.ts']),
+			testExtensions: string_array([
+				'.test.js',
+				'.test.ts',
+				'.spec.js',
+				'.spec.ts',
+				'.stories.svelte'
+			]),
 
 			outDir: string('.svelte-kit'),
 
