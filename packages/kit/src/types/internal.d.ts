@@ -17,7 +17,9 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	ServerInit,
+	ClientInit
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -109,11 +111,13 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	init?: ClientInit;
 }
 
 export interface Env {

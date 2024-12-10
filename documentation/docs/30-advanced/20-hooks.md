@@ -237,6 +237,25 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 > [!NOTE] Make sure that `handleError` _never_ throws an error
 
+### init
+
+This function runs once, when the server is created or the app starts in the browser, and is a useful place to do asynchronous work such as initializing a database connection.
+
+> [!NOTE] If your environment supports top-level await, the `init` function is really no different from writing your initialisation logic at the top level of the module, but some environments — most notably, Safari — don't.
+
+```js
+/// file: src/hooks.server.js
+import * as db from '$lib/server/database';
+
+/** @type {import('@sveltejs/kit').ServerInit} */
+export async function init() {
+	await db.connect();
+}
+```
+
+> [!NOTE]
+> In the browser, asynchronous work in `init` will delay hydration, so be mindful of what you put in there.
+
 ## Universal hooks
 
 The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
