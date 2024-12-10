@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.10.1
+### Patch Changes
+
+
+- fix: export `init` hook from `get_hooks` ([#13136](https://github.com/sveltejs/kit/pull/13136))
+
 ## 2.10.0
 ### Minor Changes
 
