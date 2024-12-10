@@ -1186,6 +1186,29 @@ test.describe('reroute', () => {
 	});
 });
 
+test.describe('init', () => {
+	test('init client hook is called once when the application start on the client', async ({
+		page
+	}) => {
+		/**
+		 * @type string[]
+		 */
+		const logs = [];
+		page.addListener('console', (message) => {
+			if (message.type() === 'log') {
+				logs.push(message.text());
+			}
+		});
+		const log_event = page.waitForEvent('console');
+		await page.goto('/init-hooks');
+		await log_event;
+		expect(logs).toStrictEqual(['init hooks.client.js']);
+		await page.getByRole('link').first().click();
+		await page.waitForLoadState('load');
+		expect(logs).toStrictEqual(['init hooks.client.js']);
+	});
+});
+
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp

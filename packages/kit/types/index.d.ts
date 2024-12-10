@@ -707,6 +707,16 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
+	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked before the server responds to its first request
+	 */
+	export type ServerInit = () => MaybePromise<void>;
+
+	/**
+	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked once the app starts in the browser
+	 */
+	export type ClientInit = () => MaybePromise<void>;
+
+	/**
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */

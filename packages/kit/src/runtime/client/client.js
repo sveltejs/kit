@@ -266,6 +266,9 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
+
+	await _app.hooks.init?.();
+
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;

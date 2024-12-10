@@ -8,3 +8,7 @@ export function handleError({ error, event, status, message }) {
 		? undefined
 		: { message: `${/** @type {Error} */ (error).message} (${status} ${message})` };
 }
+
+export function init() {
+	console.log('init hooks.client.js');
+}
