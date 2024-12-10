@@ -10,5 +10,5 @@ export const page = new class Page {
 	})
 	state = $state.raw({})
 	status = $state.raw(-1)
-	url = $state.raw(new URL(location.href))
+	url = $state.raw(new URL('https://example.com'))
 }
