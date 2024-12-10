@@ -1990,7 +1990,16 @@ export async function applyAction(result) {
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page: { ...page, form: result.data, status: result.status }
+			page: {
+				data: page.data,
+				error: page.error,
+				params: page.params,
+				route: page.route,
+				state: page.state,
+				url: page.url,
+				form: result.data,
+				status: result.status
+			}
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
@@ -2327,7 +2336,16 @@ function _start_router() {
 	 */
 	function update_url(url) {
 		current.url = url;
-		stores.page.set({ ...page, url });
+		stores.page.set({
+			data: page.data,
+			error: page.error,
+			form: page.form,
+			params: page.params,
+			route: page.route,
+			state: page.state,
+			status: page.status,
+			url
+		});
 		stores.page.notify();
 	}
 }
