@@ -45,7 +45,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
-import { page } from './state.svelte.js';
+import { page, update } from './state.svelte.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -341,6 +341,7 @@ async function _invalidate() {
 	current = navigation_result.state;
 	reset_invalidation();
 	root.$set(navigation_result.props);
+	update(navigation_result.props.page);
 }
 
 function reset_invalidation() {
@@ -1418,6 +1419,7 @@ async function navigate({
 		}
 
 		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
 		initialize(navigation_result, target, false);
@@ -1979,27 +1981,22 @@ export async function applyAction(result) {
 			current = navigation_result.state;
 
 			root.$set(navigation_result.props);
+			update(navigation_result.props.page);
 
 			tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
 		_goto(result.location, { invalidateAll: true }, 0);
 	} else {
+		page.form = result.data;
+		page.status = result.status;
+
 		/** @type {Record<string, any>} */
 		root.$set({
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page: {
-				data: page.data,
-				error: page.error,
-				params: page.params,
-				route: page.route,
-				state: page.state,
-				url: page.url,
-				form: result.data,
-				status: result.status
-			}
+			page
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored

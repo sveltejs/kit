@@ -26,4 +26,4 @@ export const page = {
 	get url() {
 		return _page.url;
 	}
-}
+};
