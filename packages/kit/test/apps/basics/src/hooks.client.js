@@ -15,3 +15,7 @@ export const deserialize = {
 		return new Foo();
 	}
 };
+
+export function init() {
+	console.log('init hooks.client.js');
+}

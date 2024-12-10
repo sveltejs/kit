@@ -17,7 +17,9 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	ServerInit,
+	ClientInit
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -110,12 +112,14 @@ export interface ServerHooks {
 	handleError: HandleServerError;
 	reroute: Reroute;
 	serialize: Record<string, (value: any) => any>;
+	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
 	deserialize: Record<string, (value: any) => any>;
+	init?: ClientInit;
 }
 
 export interface Env {
