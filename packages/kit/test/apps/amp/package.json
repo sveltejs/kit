@@ -18,7 +18,7 @@
 		"cross-env": "^7.0.3",
 		"dropcss": "^1.0.16",
 		"svelte": "^5.2.9",
-		"svelte-check": "^4.0.1",
+		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "^6.0.1"
 	},
