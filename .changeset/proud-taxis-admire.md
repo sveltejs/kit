@@ -3,4 +3,4 @@
 '@sveltejs/adapter-cloudflare': minor
 ---
 
-.assetsignore file generation for Cloudflare deployment. It is corresponded to https://github.com/cloudflare/workers-sdk/pull/6640
+feat: add `.assetsignore` file to avoid serving known server-only files to browser
