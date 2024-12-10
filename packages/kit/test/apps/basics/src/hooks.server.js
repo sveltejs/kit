@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { COOKIE_NAME } from './routes/cookies/shared';
+import { Foo } from './lib';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -154,3 +155,7 @@ export async function handleFetch({ request, fetch }) {
 
 	return fetch(request);
 }
+
+export const serialize = {
+	Foo: (value) => value instanceof Foo && {}
+};
