@@ -67,6 +67,7 @@ export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let init;
 	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
