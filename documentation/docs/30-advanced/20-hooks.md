@@ -239,6 +239,9 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 ### init
 
+> [!NOTE]
+> This hook was added in 2.10.1
+
 This function runs once, when the server is created or the app starts in the browser, and is a useful place to do asynchronous work such as initializing a database connection.
 
 > [!NOTE] If your environment supports top-level await, the `init` function is really no different from writing your initialisation logic at the top level of the module, but some environments — most notably, Safari — don't.
