@@ -886,7 +886,13 @@ async function kit({ svelte_config }) {
 					await build_service_worker(
 						out,
 						kit,
-						vite_config,
+						{
+							...vite_config,
+							build: {
+								...vite_config.build,
+								minify: initial_config.build?.minify ?? 'esbuild',
+							}
+						},
 						manifest_data,
 						service_worker_entry_file,
 						prerendered,
