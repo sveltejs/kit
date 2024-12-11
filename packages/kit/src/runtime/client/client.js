@@ -2493,7 +2493,9 @@ async function load_data(url, invalid) {
 		 */
 		function deserialize(data) {
 			return devalue.unflatten(data, {
-				...app.hooks.deserialize,
+				...Object.fromEntries(
+					Object.entries(app.hooks.transport).map(([key, value]) => [key, value.revive])
+				),
 				Promise: (id) => {
 					return new Promise((fulfil, reject) => {
 						deferreds.set(id, { fulfil, reject });
