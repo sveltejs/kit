@@ -1,5 +1,9 @@
 export class Foo {
+	constructor(message) {
+		this.message = message;
+	}
+
 	bar() {
-		return 'It works!';
+		return this.message + '!';
 	}
 }

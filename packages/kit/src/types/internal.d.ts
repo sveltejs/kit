@@ -106,19 +106,24 @@ export interface Deferred {
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
+interface Transporter<T = any, U = any> {
+	reduce: (value: T) => false | U;
+	revive: (data: U) => T;
+}
+
 export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
-	serialize: Record<string, (value: any) => any>;
+	transport: Record<string, Transporter>;
 	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
-	deserialize: Record<string, (value: any) => any>;
+	transport: Record<string, Transporter>;
 	init?: ClientInit;
 }
 

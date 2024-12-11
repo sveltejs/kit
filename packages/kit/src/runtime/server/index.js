@@ -77,7 +77,7 @@ export class Server {
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {}),
-					serialize: module.serialize || {}
+					transport: module.transport || {}
 				};
 
 				if (module.init) {
@@ -92,7 +92,7 @@ export class Server {
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: () => {},
-						serialize: {}
+						transport: {}
 					};
 				} else {
 					throw error;

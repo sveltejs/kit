@@ -197,7 +197,9 @@ export function get_data_json(event, options, nodes) {
 	const { iterator, push, done } = create_async_iterator();
 
 	const reducers = {
-		...options.hooks.serialize,
+		...Object.fromEntries(
+			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.reduce])
+		),
 		/** @param {any} thing */
 		Promise: (thing) => {
 			if (typeof thing?.then === 'function') {

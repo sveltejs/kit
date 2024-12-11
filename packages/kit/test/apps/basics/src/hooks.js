@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { Foo } from './lib';
 
 const mapping = {
 	'/reroute/basic/a': '/reroute/basic/b',
@@ -27,5 +28,13 @@ export const reroute = ({ url }) => {
 
 	if (url.pathname in mapping) {
 		return mapping[url.pathname];
+	}
+};
+
+// TODO add a `Transport` type
+export const transport = {
+	Foo: {
+		reduce: (value) => value instanceof Foo && [value.message],
+		revive: ([message]) => new Foo(message)
 	}
 };

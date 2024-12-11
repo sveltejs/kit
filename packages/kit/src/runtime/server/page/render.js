@@ -354,7 +354,7 @@ export async function render_response({
 				serialized.form = uneval_action_response(
 					form_value,
 					/** @type {string} */ (event.route.id),
-					options.hooks.serialize
+					options.hooks.transport
 				);
 			}
 
@@ -539,7 +539,6 @@ function get_data(event, options, nodes, csp, global) {
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
-	const serializers = options.hooks.serialize;
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -582,8 +581,8 @@ function get_data(event, options, nodes, csp, global) {
 
 			return `${global}.defer(${id})`;
 		} else {
-			for (const key in serializers) {
-				const serialized = serializers[key](thing);
+			for (const key in options.hooks.transport) {
+				const serialized = options.hooks.transport[key].reduce(thing);
 				if (serialized) {
 					return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
 				}

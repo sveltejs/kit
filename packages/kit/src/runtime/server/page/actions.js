@@ -64,7 +64,7 @@ export async function handle_action_json_request(event, options, server) {
 				data: stringify_action_response(
 					data.data,
 					/** @type {string} */ (event.route.id),
-					options.hooks.serialize
+					options.hooks.transport
 				)
 			});
 		} else {
@@ -75,7 +75,7 @@ export async function handle_action_json_request(event, options, server) {
 				data: stringify_action_response(
 					data,
 					/** @type {string} */ (event.route.id),
-					options.hooks.serialize
+					options.hooks.transport
 				)
 			});
 		}
@@ -262,31 +262,33 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {Record<string, (value: any) => any>} serializers
+ * @param {import('types').ServerHooks['transport']} transport
  */
-export function uneval_action_response(data, route_id, serializers) {
+export function uneval_action_response(data, route_id, transport) {
 	const replacer = (/** @type {any} */ thing) => {
-		if (serializers) {
-			for (const key in serializers) {
-				const serialized = serializers[key](thing);
-				if (serialized) {
-					return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
-				}
+		for (const key in transport) {
+			const serialized = transport[key].reduce(thing);
+			if (serialized) {
+				return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
 			}
 		}
 	};
 
-	return try_deserialize(data, (value) => devalue.uneval(value, replacer), route_id);
+	return try_serialize(data, (value) => devalue.uneval(value, replacer), route_id);
 }
 
 /**
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {Record<string, (value: any) => any>} serializers
+ * @param {import('types').ServerHooks['transport']} transport
  */
-function stringify_action_response(data, route_id, serializers) {
-	return try_deserialize(data, (value) => devalue.stringify(value, serializers), route_id);
+function stringify_action_response(data, route_id, transport) {
+	const serialize = Object.fromEntries(
+		Object.entries(transport).map(([key, value]) => [key, value.reduce])
+	);
+
+	return try_serialize(data, (value) => devalue.stringify(value, serialize), route_id);
 }
 
 /**
@@ -294,7 +296,7 @@ function stringify_action_response(data, route_id, serializers) {
  * @param {(data: any) => string} fn
  * @param {string} route_id
  */
-function try_deserialize(data, fn, route_id) {
+function try_serialize(data, fn, route_id) {
 	try {
 		return fn(data);
 	} catch (e) {
