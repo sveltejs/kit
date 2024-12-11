@@ -160,7 +160,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 				deserialize: deserializers
 			};
 
-			export const deserialize = (type, value) => deserializers[type]?.(value) ?? null;
+			export const deserialize = (type, value) => deserializers[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`
