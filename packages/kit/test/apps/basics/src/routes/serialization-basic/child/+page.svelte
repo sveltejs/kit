@@ -5,4 +5,3 @@
 </script>
 
 <h1>{data.foo.bar()}</h1>
-<a href="/serialization-basic/child">child page</a>

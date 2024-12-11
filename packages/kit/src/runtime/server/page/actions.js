@@ -269,7 +269,7 @@ export function uneval_action_response(data, route_id, transport) {
 		for (const key in transport) {
 			const serialized = transport[key].reduce(thing);
 			if (serialized) {
-				return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
+				return `app.revive('${key}', ${devalue.uneval(serialized, replacer)})`;
 			}
 		}
 	};

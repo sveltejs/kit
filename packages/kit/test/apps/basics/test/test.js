@@ -1381,9 +1381,12 @@ test.describe.serial('Cookies API', () => {
 });
 
 test.describe('Serialization', () => {
-	test('A custom data type can be serialized/deserialized', async ({ page }) => {
+	test('A custom data type can be serialized/deserialized', async ({ page, clicknav }) => {
 		await page.goto('/serialization-basic');
 		expect(await page.textContent('h1')).toBe('It works!');
+
+		await clicknav('[href="/serialization-basic/child"]');
+		expect(await page.textContent('h1')).toBe('Client-side navigation also works!');
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {

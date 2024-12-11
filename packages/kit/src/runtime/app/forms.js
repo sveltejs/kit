@@ -31,11 +31,7 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		const deserialize = Object.fromEntries(
-			Object.entries(app.hooks.transport).map(([key, value]) => [key, value.revive])
-		);
-
-		parsed.data = devalue.parse(parsed.data, deserialize);
+		parsed.data = devalue.parse(parsed.data, app.revivers);
 	}
 
 	return parsed;

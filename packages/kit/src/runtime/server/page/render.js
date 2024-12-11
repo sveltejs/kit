@@ -584,7 +584,7 @@ function get_data(event, options, nodes, csp, global) {
 			for (const key in options.hooks.transport) {
 				const serialized = options.hooks.transport[key].reduce(thing);
 				if (serialized) {
-					return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
+					return `app.revive('${key}', ${devalue.uneval(serialized, replacer)})`;
 				}
 			}
 		}
