@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly resolves hooks when similarly named directory exists
+fix: correctly resolve hooks file when a similarly named directory exists
