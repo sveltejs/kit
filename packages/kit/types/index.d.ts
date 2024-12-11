@@ -729,9 +729,15 @@ declare module '@sveltejs/kit' {
 	 *
 	 * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).
 	 *
-	 * On the client, `decode` turns the encoding back into an instance of the custom type.
+	 * In the browser, `decode` turns the encoding back into an instance of the custom type.
 	 *
 	 * ```ts
+	 * import type { Transport } from '@sveltejs/kit';
+	 *
+	 * declare class MyCustomType {
+	 * 	data: any
+	 * }
+	 *
 	 * // hooks.js
 	 * export const transport: Transport = {
 	 * 	MyCustomType: {
