@@ -750,6 +750,12 @@ export type Reroute = (event: { url: URL }) => void | string;
  * In the browser, `decode` turns the encoding back into an instance of the custom type.
  *
  * ```ts
+ * import type { Transport } from '@sveltejs/kit';
+ *
+ * declare class MyCustomType {
+ * 	data: any
+ * }
+ *
  * // hooks.js
  * export const transport: Transport = {
  * 	MyCustomType: {
