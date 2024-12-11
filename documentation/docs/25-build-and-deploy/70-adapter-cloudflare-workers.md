@@ -34,7 +34,7 @@ export default {
 
 ### config
 
-Path to your custom `wrangler.toml` config file.
+Path to your custom `wrangler.toml` or `wrangler.json` config file.
 
 ### platformProxy
 
