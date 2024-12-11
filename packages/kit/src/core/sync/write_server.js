@@ -68,7 +68,8 @@ export async function get_hooks() {
 	let handleFetch;
 	let handleError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	let serialize;
+	${server_hooks ? `({ handle, handleFetch, handleError, init, serialize } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	${universal_hooks ? `({ reroute } = await import(${s(universal_hooks)}));` : ''}
@@ -79,6 +80,7 @@ export async function get_hooks() {
 		handleError,
 		reroute,
 		init,
+		serialize
 	};
 }
 
