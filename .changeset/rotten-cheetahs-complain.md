@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: adhere to Vite config minify setting when building service worker
+fix: adhere to Vite `build.minify` setting when building the service worker
