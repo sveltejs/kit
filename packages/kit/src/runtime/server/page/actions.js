@@ -267,9 +267,9 @@ function validate_action_return(data) {
 export function uneval_action_response(data, route_id, transport) {
 	const replacer = (/** @type {any} */ thing) => {
 		for (const key in transport) {
-			const serialized = transport[key].reduce(thing);
-			if (serialized) {
-				return `app.revive('${key}', ${devalue.uneval(serialized, replacer)})`;
+			const encoded = transport[key].encode(thing);
+			if (encoded) {
+				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 			}
 		}
 	};
@@ -284,11 +284,11 @@ export function uneval_action_response(data, route_id, transport) {
  * @param {import('types').ServerHooks['transport']} transport
  */
 function stringify_action_response(data, route_id, transport) {
-	const serialize = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.reduce])
+	const encoders = Object.fromEntries(
+		Object.entries(transport).map(([key, value]) => [key, value.encode])
 	);
 
-	return try_serialize(data, (value) => devalue.stringify(value, serialize), route_id);
+	return try_serialize(data, (value) => devalue.stringify(value, encoders), route_id);
 }
 
 /**

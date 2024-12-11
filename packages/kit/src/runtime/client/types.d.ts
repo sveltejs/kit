@@ -26,9 +26,9 @@ export interface SvelteKitApp {
 
 	hooks: ClientHooks;
 
-	revive: (type: string, value: any) => any;
+	decode: (type: string, value: any) => any;
 
-	revivers: Record<string, (data: any) => any>;
+	decoders: Record<string, (data: any) => any>;
 
 	root: typeof SvelteComponent;
 }

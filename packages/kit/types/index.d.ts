@@ -725,6 +725,37 @@ declare module '@sveltejs/kit' {
 	export type Reroute = (event: { url: URL }) => void | string;
 
 	/**
+	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
+	 *
+	 * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).
+	 *
+	 * On the client, `decode` turns the encoding back into an instance of the custom type.
+	 *
+	 * ```ts
+	 * // hooks.js
+	 * export const transport: Transport = {
+	 * 	MyCustomType: {
+	 * 		encode: (value) => value instanceof MyCustomType && [value.data],
+	 * 		decode: ([data]) => new MyCustomType(data)
+	 * 	}
+	 * };
+	 * ```
+	 * @since 2.11.0
+	 */
+	export type Transport = Record<string, Transporter>;
+
+	/**
+	 * A member of the [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook.
+	 */
+	export interface Transporter<
+		T = any,
+		U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+	> {
+		encode: (value: T) => false | U;
+		decode: (data: U) => T;
+	}
+
+	/**
 	 * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
 	 * rather than using `Load` directly.
 	 */

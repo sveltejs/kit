@@ -582,9 +582,9 @@ function get_data(event, options, nodes, csp, global) {
 			return `${global}.defer(${id})`;
 		} else {
 			for (const key in options.hooks.transport) {
-				const serialized = options.hooks.transport[key].reduce(thing);
-				if (serialized) {
-					return `app.revive('${key}', ${devalue.uneval(serialized, replacer)})`;
+				const encoded = options.hooks.transport[key].encode(thing);
+				if (encoded) {
+					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 				}
 			}
 		}

@@ -19,7 +19,8 @@ import {
 	Emulator,
 	Adapter,
 	ServerInit,
-	ClientInit
+	ClientInit,
+	Transporter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -105,11 +106,6 @@ export interface Deferred {
 }
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
-
-interface Transporter<T = any, U = any> {
-	reduce: (value: T) => false | U;
-	revive: (data: U) => T;
-}
 
 export interface ServerHooks {
 	handleFetch: HandleFetch;

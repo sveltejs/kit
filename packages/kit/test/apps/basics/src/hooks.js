@@ -31,10 +31,10 @@ export const reroute = ({ url }) => {
 	}
 };
 
-// TODO add a `Transport` type
+/** @type {import("@sveltejs/kit").Transport} */
 export const transport = {
 	Foo: {
-		reduce: (value) => value instanceof Foo && [value.message],
-		revive: ([message]) => new Foo(message)
+		encode: (value) => value instanceof Foo && [value.message],
+		decode: ([message]) => new Foo(message)
 	}
 };

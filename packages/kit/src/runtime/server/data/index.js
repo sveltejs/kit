@@ -198,7 +198,7 @@ export function get_data_json(event, options, nodes) {
 
 	const reducers = {
 		...Object.fromEntries(
-			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.reduce])
+			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.encode])
 		),
 		/** @param {any} thing */
 		Promise: (thing) => {

@@ -156,9 +156,9 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
 			};
 
-			export const revivers = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.revive]));
+			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
 
-			export const revive = (type, value) => revivers[type](value);
+			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`
