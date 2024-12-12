@@ -1,6 +1,7 @@
 import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';

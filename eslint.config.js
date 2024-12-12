@@ -1,6 +1,6 @@
 import svelte_config from '@sveltejs/eslint-config';
 
-/** @type {import('eslint').Linter.FlatConfig[]} */
+/** @type {import('eslint').Linter.Config[]} */
 export default [
 	...svelte_config,
 	{
@@ -11,10 +11,10 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
-			'packages/adapter-static/test/apps/*/build',
-			'packages/adapter-cloudflare/files',
-			'packages/adapter-netlify/files',
-			'packages/adapter-node/files',
+			'**/test-results',
+			'**/build',
+			'**/.custom-out-dir',
+			'packages/adapter-*/files'
 		]
 	},
 	{
@@ -26,7 +26,7 @@ export default [
 		rules: {
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
-			'@typescript-eslint/require-await': 'error',
+			'@typescript-eslint/require-await': 'error'
 		},
 		ignores: [
 			'packages/adapter-node/rollup.config.js',

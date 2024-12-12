@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -16,7 +17,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code'
+			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private/+page.svelte'
 		);
 	});
 
@@ -25,7 +26,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code'
+			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private-dynamic-import/+page.svelte'
 		);
 	});
 
@@ -34,7 +35,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code'
+			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private/+page.svelte'
 		);
 	});
 
@@ -43,7 +44,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code'
+			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private-dynamic-import/+page.svelte'
 		);
 	});
 

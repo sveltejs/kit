@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
@@ -63,9 +64,21 @@ export const options = {
 };
 
 export async function get_hooks() {
+	let handle;
+	let handleFetch;
+	let handleError;
+	let init;
+	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+
+	let reroute;
+	${universal_hooks ? `({ reroute } = await import(${s(universal_hooks)}));` : ''}
+
 	return {
-		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
-		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
+		handle,
+		handleFetch,
+		handleError,
+		reroute,
+		init,
 	};
 }
 

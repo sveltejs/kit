@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -251,6 +252,21 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
+	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			if (request.url().includes('/load/fetch-request.json')) {
+				requests.push(request);
+			}
+		});
+
+		await page.goto('/load/fetch-request-empty-headers');
+
+		console.log({ requests });
+
+		expect(requests).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([
@@ -259,7 +275,7 @@ test.describe('Load', () => {
 					predicate: (message) => {
 						return (
 							message.text() ===
-							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 						);
 					},
 					timeout: 3_000
@@ -279,7 +295,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}
@@ -1170,6 +1186,29 @@ test.describe('reroute', () => {
 	});
 });
 
+test.describe('init', () => {
+	test('init client hook is called once when the application start on the client', async ({
+		page
+	}) => {
+		/**
+		 * @type string[]
+		 */
+		const logs = [];
+		page.addListener('console', (message) => {
+			if (message.type() === 'log') {
+				logs.push(message.text());
+			}
+		});
+		const log_event = page.waitForEvent('console');
+		await page.goto('/init-hooks');
+		await log_event;
+		expect(logs).toStrictEqual(['init hooks.client.js']);
+		await page.getByRole('link').first().click();
+		await page.waitForLoadState('load');
+		expect(logs).toStrictEqual(['init hooks.client.js']);
+	});
+});
+
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
@@ -1196,5 +1235,21 @@ test.describe('INP', () => {
 		// we may need to tweak this number, and the `rate` above,
 		// depending on if this proves flaky
 		expect(time).toBeLessThan(400);
+	});
+});
+
+test.describe('binding_property_non_reactive warn', () => {
+	test('warning is not thrown from the root of svelte', async ({ page }) => {
+		let is_warning_thrown = false;
+		page.on('console', (m) => {
+			if (
+				m.type() === 'warn' &&
+				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
+			) {
+				is_warning_thrown = true;
+			}
+		});
+		await page.goto('/');
+		expect(is_warning_thrown).toBeFalsy();
 	});
 });

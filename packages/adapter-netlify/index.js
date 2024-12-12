@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } 
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
+import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -322,7 +323,7 @@ function get_publish_directory(netlify_config, builder) {
 	}
 
 	builder.log.warn(
-		'No netlify.toml found. Using default publish directory. Consult https://kit.svelte.dev/docs/adapter-netlify#usage for more details'
+		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
 	);
 }
 

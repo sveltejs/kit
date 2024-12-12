@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -34,12 +35,6 @@ test.describe('adapter', () => {
 });
 
 test.describe('Imports', () => {
-	test('imports from node_modules', async ({ page, clicknav }) => {
-		await page.goto('/imports');
-		await clicknav('[href="/imports/markdown"]');
-		expect(await page.innerHTML('p')).toBe('this is some <strong>markdown</strong>');
-	});
-
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
@@ -543,12 +538,13 @@ test.describe('Load', () => {
 	});
 
 	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		clicknav,
 		page,
 		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a');
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}

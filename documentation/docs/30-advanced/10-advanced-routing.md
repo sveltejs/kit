@@ -22,13 +22,13 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+> [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#Matching).
 
 ### 404 pages
 
 Rest parameters also allow you to render custom 404s. Given these routes...
 
-```
+```tree
 src/routes/
 ├ marx-brothers/
 │ ├ chico/
@@ -40,10 +40,10 @@ src/routes/
 
 ...the `marx-brothers/+error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`, because no route was matched. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
 
-```diff
+```tree
 src/routes/
 ├ marx-brothers/
-+| ├ [...path]/
++++| ├ [...path]/+++
 │ ├ chico/
 │ ├ harpo/
 │ ├ groucho/
@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#Shared-hooks-handleError)
 
 ## Optional parameters
 
@@ -87,16 +87,15 @@ export function match(param) {
 
 ...and augmenting your routes:
 
-```diff
--src/routes/fruits/[page]
-+src/routes/fruits/[page=fruit]
+```
+src/routes/fruits/[page+++=fruit+++]
 ```
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
 
 Each module in the `params` directory corresponds to a matcher, with the exception of `*.test.js` and `*.spec.js` files which may be used to unit test your matchers.
 
-> Matchers run both on the server and in the browser.
+> [!NOTE] Matchers run both on the server and in the browser.
 
 ## Sorting
 
@@ -113,7 +112,7 @@ src/routes/foo-abc/+page.svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
+- Parameters with [matchers](#Matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority. In other words `x/[[y]]/z` is treated equivalently to `x/z` for the purposes of sorting
 - Ties are resolved alphabetically
 
@@ -166,7 +165,7 @@ src/routes/🤪/+page.svelte
 
 The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid value between `0000` and `10ffff`. (Unlike JavaScript string escaping, there's no need to use surrogate pairs to represent code points above `ffff`.) To learn more about Unicode encodings, consult [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html).
 
-> Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
+> [!NOTE] Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
 
 ## Advanced layouts
 
@@ -176,13 +175,13 @@ By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases,
 
 Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/about` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
-```diff
+```tree
 src/routes/
-+│ (app)/
++++│ (app)/+++
 │ ├ dashboard/
 │ ├ item/
 │ └ +layout.svelte
-+│ (marketing)/
++++│ (marketing)/+++
 │ ├ about/
 │ ├ testimonials/
 │ └ +layout.svelte
@@ -194,7 +193,7 @@ You can also put a `+page` directly inside a `(group)`, for example if `/` shoul
 
 ### Breaking out of layouts
 
-The root layout applies to every page of your app — if omitted, it defaults to `<slot />`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
+The root layout applies to every page of your app — if omitted, it defaults to `{@render children()}`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
 
 In the example above, the `/admin` route does not inherit either the `(app)` or `(marketing)` layouts.
 
@@ -202,13 +201,13 @@ In the example above, the `/admin` route does not inherit either the `(app)` or 
 
 Pages can break out of the current layout hierarchy on a route-by-route basis. Suppose we have an `/item/[id]/embed` route inside the `(app)` group from the previous example:
 
-```diff
+```tree
 src/routes/
 ├ (app)/
 │ ├ item/
 │ │ ├ [id]/
 │ │ │ ├ embed/
-+│ │ │ │ └ +page.svelte
++++│ │ │ │ └ +page.svelte+++
 │ │ │ └ +layout.svelte
 │ │ └ +layout.svelte
 │ └ +layout.svelte
@@ -222,13 +221,13 @@ Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` l
 - `+page@(app).svelte` - inherits from `src/routes/(app)/+layout.svelte`
 - `+page@.svelte` - inherits from `src/routes/+layout.svelte`
 
-```diff
+```tree
 src/routes/
 ├ (app)/
 │ ├ item/
 │ │ ├ [id]/
 │ │ │ ├ embed/
-+│ │ │ │ └ +page@(app).svelte
++++│ │ │ │ └ +page@(app).svelte+++
 │ │ │ └ +layout.svelte
 │ │ └ +layout.svelte
 │ └ +layout.svelte
@@ -261,11 +260,11 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 <!--- file: src/routes/nested/route/+layout@.svelte --->
 <script>
 	import ReusableLayout from '$lib/ReusableLayout.svelte';
-	export let data;
+	let { data, children } = $props();
 </script>
 
 <ReusableLayout {data}>
-	<slot />
+	{@render children()}
 </ReusableLayout>
 ```
 
@@ -288,4 +287,4 @@ export function load(event) {
 
 ## Further reading
 
-- [Tutorial: Advanced Routing](https://learn.svelte.dev/tutorial/optional-params)
+- [Tutorial: Advanced Routing](/tutorial/kit/optional-params)
