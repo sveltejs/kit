@@ -39,6 +39,8 @@ export async function handle({ event, resolve }) {
 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
+If you need to exclude some code from running during the build or prerendering step, check that the app is not [`building`]($app-environment#building) beforehand.
+
 ### locals
 
 To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
