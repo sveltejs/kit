@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-import { applyAction } from '../client/client.js';
+import { app, applyAction } from '../client/client.js';
 
 export { applyAction };
 
@@ -29,9 +29,11 @@ export { applyAction };
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
+
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data);
+		parsed.data = devalue.parse(parsed.data, app.decoders);
 	}
+
 	return parsed;
 }
 

@@ -71,14 +71,16 @@ export async function get_hooks() {
 	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
-	${universal_hooks ? `({ reroute } = await import(${s(universal_hooks)}));` : ''}
+	let transport;
+	${universal_hooks ? `({ reroute, transport } = await import(${s(universal_hooks)}));` : ''}
 
 	return {
 		handle,
 		handleFetch,
 		handleError,
-		reroute,
 		init,
+		reroute,
+		transport
 	};
 }
 

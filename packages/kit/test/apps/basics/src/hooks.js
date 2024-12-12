@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { Foo } from './lib';
 
 const mapping = {
 	'/reroute/basic/a': '/reroute/basic/b',
@@ -27,5 +28,13 @@ export const reroute = ({ url }) => {
 
 	if (url.pathname in mapping) {
 		return mapping[url.pathname];
+	}
+};
+
+/** @type {import("@sveltejs/kit").Transport} */
+export const transport = {
+	Foo: {
+		encode: (value) => value instanceof Foo && [value.message],
+		decode: ([message]) => new Foo(message)
 	}
 };

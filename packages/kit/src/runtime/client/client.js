@@ -174,7 +174,7 @@ let container;
 /** @type {HTMLElement} */
 let target;
 /** @type {import('./types.js').SvelteKitApp} */
-let app;
+export let app;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -2493,6 +2493,7 @@ async function load_data(url, invalid) {
 		 */
 		function deserialize(data) {
 			return devalue.unflatten(data, {
+				...app.decoders,
 				Promise: (id) => {
 					return new Promise((fulfil, reject) => {
 						deferreds.set(id, { fulfil, reject });

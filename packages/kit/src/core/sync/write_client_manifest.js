@@ -152,9 +152,13 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 				${client_hooks_file ? 'init: client_hooks.init,' : ''}
-
-				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {})
+				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
+				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
 			};
+
+			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
+
+			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`
