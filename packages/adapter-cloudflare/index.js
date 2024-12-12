@@ -149,13 +149,14 @@ export default function (options = {}) {
 					if (existsSync(file)) {
 						readFileSync(file, 'utf8')
 							.split('\n')
-							.forEach((line) => acc.add(line.trimEnd()));
+							.filter((line) => line.trim())
+							.forEach((line) => acc.add(line));
 					}
 					return acc;
 				},
 				new Set()
 			);
-			writeFileSync(`${dest}/.assetsignore`, Array.from(assetsignore).sort().reverse().join('\n'));
+			writeFileSync(`${dest}/.assetsignore`, Array.from(assetsignore).sort().join('\n') + '\n');
 		},
 		async emulate() {
 			const proxy = await getPlatformProxy(options.platformProxy);
