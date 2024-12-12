@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.11.1
+### Patch Changes
+
+
+- fix: adhere to Vite `build.minify` setting when building the service worker ([#13143](https://github.com/sveltejs/kit/pull/13143))
+
 ## 2.11.0
 ### Minor Changes
 
