@@ -1,4 +1,3 @@
-
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 import { GetPlatformProxyOptions } from 'wrangler';

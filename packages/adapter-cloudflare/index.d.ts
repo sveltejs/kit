@@ -1,5 +1,3 @@
-/// <reference types="@cloudflare/workers-types" />
-
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 import { GetPlatformProxyOptions } from 'wrangler';
