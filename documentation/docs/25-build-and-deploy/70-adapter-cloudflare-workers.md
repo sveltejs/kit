@@ -34,7 +34,7 @@ export default {
 
 ### config
 
-Path to your custom `wrangler.toml` config file.
+Path to your custom `wrangler.toml` or `wrangler.json` config file.
 
 ### platformProxy
 
@@ -42,7 +42,7 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 ## Basic Configuration
 
-This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It should look something like this:
+This adapter expects to find a [wrangler.toml/wrangler.json](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It should look something like this:
 
 ```toml
 /// file: wrangler.toml
