@@ -1685,7 +1685,7 @@ declare module '@sveltejs/kit' {
 
 	interface SSRComponent {
 		default: {
-			render(props: Record<string, any>): {
+			render(props: Record<string, any>, opts: { context: Map<any, any> }): {
 				html: string;
 				head: string;
 				css: {
@@ -2219,6 +2219,12 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+
+	export {};
+}
+
+declare module '$app/state' {
+	export const page: import("@sveltejs/kit").Page;
 
 	export {};
 }

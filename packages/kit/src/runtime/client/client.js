@@ -45,6 +45,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
+import { page, update } from './state.svelte.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -228,9 +229,6 @@ let current_history_index;
 /** @type {number} */
 let current_navigation_index;
 
-/** @type {import('@sveltejs/kit').Page} */
-let page;
-
 /** @type {{}} */
 let token;
 
@@ -341,11 +339,12 @@ async function _invalidate() {
 	}
 
 	if (navigation_result.props.page) {
-		page = navigation_result.props.page;
+		Object.assign(page, navigation_result.props.page);
 	}
 	current = navigation_result.state;
 	reset_invalidation();
 	root.$set(navigation_result.props);
+	update(navigation_result.props.page);
 }
 
 function reset_invalidation() {
@@ -447,7 +446,7 @@ function initialize(result, target, hydrate) {
 	const style = document.querySelector('style[data-sveltekit]');
 	if (style) style.remove();
 
-	page = /** @type {import('@sveltejs/kit').Page} */ (result.props.page);
+	Object.assign(page, /** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
 	root = new app.root({
 		target,
@@ -1423,6 +1422,7 @@ async function navigate({
 		}
 
 		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
 		initialize(navigation_result, target, false);
@@ -1464,7 +1464,7 @@ async function navigate({
 	autoscroll = true;
 
 	if (navigation_result.props.page) {
-		page = navigation_result.props.page;
+		Object.assign(page, navigation_result.props.page);
 	}
 
 	navigating = false;
@@ -1906,7 +1906,7 @@ export function pushState(url, state) {
 	history.pushState(opts, '', resolve_url(url));
 	has_navigated = true;
 
-	page = { ...page, state };
+	page.state = state;
 	root.$set({ page });
 
 	clear_onward_history(current_history_index, current_navigation_index);
@@ -1947,7 +1947,7 @@ export function replaceState(url, state) {
 
 	history.replaceState(opts, '', resolve_url(url));
 
-	page = { ...page, state };
+	page.state = state;
 	root.$set({ page });
 }
 
@@ -1984,18 +1984,22 @@ export async function applyAction(result) {
 			current = navigation_result.state;
 
 			root.$set(navigation_result.props);
+			update(navigation_result.props.page);
 
 			tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
 		_goto(result.location, { invalidateAll: true }, 0);
 	} else {
+		page.form = result.data;
+		page.status = result.status;
+
 		/** @type {Record<string, any>} */
 		root.$set({
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page: { ...page, form: result.data, status: result.status }
+			page
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
@@ -2253,7 +2257,7 @@ function _start_router() {
 				if (scroll) scrollTo(scroll.x, scroll.y);
 
 				if (state !== page.state) {
-					page = { ...page, state };
+					page.state = state;
 					root.$set({ page });
 				}
 
@@ -2332,7 +2336,16 @@ function _start_router() {
 	 */
 	function update_url(url) {
 		current.url = url;
-		stores.page.set({ ...page, url });
+		stores.page.set({
+			data: page.data,
+			error: page.error,
+			form: page.form,
+			params: page.params,
+			route: page.route,
+			state: page.state,
+			status: page.status,
+			url
+		});
 		stores.page.notify();
 	}
 }

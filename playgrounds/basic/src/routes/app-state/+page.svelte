@@ -2,4 +2,4 @@
 	import { page } from '$app/state';
 </script>
 
-<h1>@{page.params.username}</h1>
+<h1>{page.url.href}</h1>
