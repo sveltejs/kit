@@ -186,7 +186,7 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
  */
 function validate_config(builder, config_file) {
 	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
-		builder.log.minor('Default wrangler.toml not existed. Using wrangler.json.');
+		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
 		config_file = 'wrangler.json';
 	}
 	if (existsSync(config_file)) {
