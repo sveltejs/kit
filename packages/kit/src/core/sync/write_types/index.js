@@ -465,6 +465,12 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
+	exports.push(
+		`export type ${prefix}Props = { data: ${prefix}Data; ${
+			node.server && is_page ? 'form: ActionData; ' : ''
+		}};`
+	);
+
 	return { declarations, exports, proxies };
 
 	/**
