@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.10.2
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
 ## 2.10.1
 ### Patch Changes
 
