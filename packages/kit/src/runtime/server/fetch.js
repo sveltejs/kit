@@ -1,6 +1,7 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
+import { read_implementation } from '__sveltekit/server';
 
 /**
  * @param {{
@@ -81,8 +82,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename);
-				const is_asset_html = manifest.assets.has(filename_html);
+				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset_html =
+					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
@@ -94,6 +96,16 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
+						});
+					} else if (read_implementation && file in manifest._.server_assets) {
+						const length = manifest._.server_assets[file];
+						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+
+						return new Response(read_implementation(file), {
+							headers: {
+								'Content-Length': '' + length,
+								'Content-Type': type
+							}
 						});
 					}
 
@@ -123,7 +135,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				/** @type {Response} */
 				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
@@ -132,13 +143,16 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
 					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-						const { name, value, ...options } = set_cookie_parser.parseString(str);
+						const { name, value, ...options } = set_cookie_parser.parseString(str, {
+							decodeValues: false
+						});
 
 						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
 						// options.sameSite is string, something more specific is required - type cast is safe
 						set_internal(name, value, {
 							path,
+							encode: (value) => value,
 							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
 						});
 					}
@@ -150,7 +164,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to prevent this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = server_fetch(input, init);

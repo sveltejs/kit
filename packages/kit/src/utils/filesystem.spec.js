@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { assert, expect, beforeEach, test } from 'vitest';
-import { copy, mkdirp } from './filesystem.js';
+import { copy, mkdirp, resolve_entry } from './filesystem.js';
 
 /** @type {string} */
 let source_dir;
@@ -98,4 +98,17 @@ test('replaces strings', () => {
 		readFileSync(join(dest_dir, 'foo.md'), 'utf8'),
 		'the quick brown fox jumps over the lazy dog'
 	);
+});
+
+test('ignores hooks.server folder when resolving hooks', () => {
+	write('hooks.server/index.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).null;
+});
+
+test('ignores hooks folder that has no index file when resolving hooks', () => {
+	write('hooks/not-index.js', '');
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).toBe(source_dir + '/hooks');
 });

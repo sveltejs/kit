@@ -85,7 +85,7 @@ export async function respond(request, options, manifest, state) {
 	let rerouted_path;
 	try {
 		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-	} catch (e) {
+	} catch {
 		return text('Internal Server Error', {
 			status: 500
 		});
@@ -116,7 +116,10 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (decoded.startsWith(`/${options.app_dir}`)) {
-		return text('Not found', { status: 404 });
+		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
+		const headers = new Headers();
+		headers.set('cache-control', 'public, max-age=0, must-revalidate');
+		return text('Not found', { status: 404, headers });
 	}
 
 	const is_data_request = has_data_suffix(decoded);
@@ -271,7 +274,7 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 
-			if (DEV && state.before_handle) {
+			if (state.before_handle || state.emulator?.platform) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -283,12 +286,23 @@ export async function respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (route.page) {
 					const nodes = await load_page_nodes(route.page, manifest);
-					config = get_page_config(nodes);
+					config = get_page_config(nodes) ?? config;
 					prerender = get_option(nodes, 'prerender') ?? false;
 				}
 
-				state.before_handle(event, config, prerender);
+				if (state.before_handle) {
+					state.before_handle(event, config, prerender);
+				}
+
+				if (state.emulator?.platform) {
+					event.platform = await state.emulator.platform({ config, prerender });
+				}
 			}
+		} else if (state.emulator?.platform) {
+			event.platform = await state.emulator.platform({
+				config: {},
+				prerender: !!state.prerendering?.fallback
+			});
 		}
 
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(

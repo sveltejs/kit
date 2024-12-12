@@ -56,7 +56,7 @@ function clone(element) {
  * If nothing is returned, the fallback will be used.
  *
  * If this function or its return value isn't set, it
- * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+ * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
  * - updates `$page.status`
  * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
  * - redirects in case of a redirect response
@@ -124,9 +124,13 @@ export function enhance(form_element, submit = () => {}) {
 				: clone(form_element).action
 		);
 
+		const enctype = event.submitter?.hasAttribute('formenctype')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
+			: clone(form_element).enctype;
+
 		const form_data = new FormData(form_element);
 
-		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
+		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
 					throw new Error(
@@ -161,14 +165,31 @@ export function enhance(form_element, submit = () => {}) {
 		let result;
 
 		try {
+			const headers = new Headers({
+				accept: 'application/json',
+				'x-sveltekit-action': 'true'
+			});
+
+			// do not explicitly set the `Content-Type` header when sending `FormData`
+			// or else it will interfere with the browser's header setting
+			// see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Using_FormData_Objects#sect4
+			if (enctype !== 'multipart/form-data') {
+				headers.set(
+					'Content-Type',
+					/^(:?application\/x-www-form-urlencoded|text\/plain)$/.test(enctype)
+						? enctype
+						: 'application/x-www-form-urlencoded'
+				);
+			}
+
+			// @ts-expect-error `URLSearchParams(form_data)` is kosher, but typescript doesn't know that
+			const body = enctype === 'multipart/form-data' ? form_data : new URLSearchParams(form_data);
+
 			const response = await fetch(action, {
 				method: 'POST',
-				headers: {
-					accept: 'application/json',
-					'x-sveltekit-action': 'true'
-				},
+				headers,
 				cache: 'no-store',
-				body: form_data,
+				body,
 				signal: controller.signal
 			});
 

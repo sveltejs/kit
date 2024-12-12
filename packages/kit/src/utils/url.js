@@ -144,6 +144,11 @@ export function make_trackable(url, callback, search_params_callback) {
 		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
 			return inspect(url, opts);
 		};
+
+		// @ts-ignore
+		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(url.searchParams, opts);
+		};
 	}
 
 	if (DEV || !BROWSER) {

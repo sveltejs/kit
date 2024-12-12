@@ -4,7 +4,7 @@ Automatically chooses the SvelteKit adapter for your current environment, if pos
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-auto)
+[Docs](https://svelte.dev/docs/kit/adapter-auto)
 
 ## Changelog
 

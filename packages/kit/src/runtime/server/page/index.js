@@ -16,6 +16,7 @@ import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
 import { load_page_nodes } from './load_page_nodes.js';
+import { DEV } from 'esm-env';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -99,6 +100,21 @@ export async function render_page(event, page, options, manifest, state, resolve
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
 		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
+			// if the user makes a request through a non-enhanced form, the returned value is lost
+			// because there is no SSR or client-side handling of the response
+			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
+				if (action_result.type === 'error') {
+					console.warn(
+						"The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
+					);
+				} else if (action_result.data) {
+					/// case: lost data
+					console.warn(
+						"The form action returned a value, but it isn't available in `$page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
+					);
+				}
+			}
+
 			return await render_response({
 				branch: [],
 				fetched,
@@ -146,7 +162,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								const parent = await server_promises[j];
-								if (parent) Object.assign(data, await parent.data);
+								if (parent) Object.assign(data, parent.data);
 							}
 							return data;
 						}

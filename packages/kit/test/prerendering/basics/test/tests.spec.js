@@ -203,7 +203,7 @@ test('fetches data from local endpoint', () => {
 
 test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
-	expect(content).toMatch('<h2>http://example.com</h2>');
+	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
 test('$env - includes environment variables', () => {
@@ -252,4 +252,16 @@ test('prerenders responses with immutable Headers', () => {
 test('prerenders paths with optional parameters with empty values', () => {
 	const content = read('optional-params.html');
 	expect(content).includes('Path with Value');
+});
+
+test('crawls links that start with config.prerender.origin', () => {
+	const content = read('prerender-origin/dynamic.html');
+	expect(content).toBeTruthy();
+});
+
+test('identifies missing ids', () => {
+	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
+	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
+	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
+	expect(missing_ids).toEqual(['missing-id']);
 });
