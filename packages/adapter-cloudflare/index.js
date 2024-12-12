@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -74,8 +74,6 @@ export default function (options = {}) {
 				});
 			}
 
-			copyFileSync(`${files}/.assetsignore`, `${dest}/.assetsignore`);
-
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
@@ -145,6 +143,19 @@ export default function (options = {}) {
 					}`
 				);
 			}
+
+			const assetsignore = [`${dest}/.assetsignore`, `${files}/.assetsignore`].reduce(
+				(acc, file) => {
+					if (existsSync(file)) {
+						readFileSync(file, 'utf8')
+							.split('\n')
+							.forEach((line) => acc.add(line.trimEnd()));
+					}
+					return acc;
+				},
+				new Set()
+			);
+			writeFileSync(`${dest}/.assetsignore`, Array.from(assetsignore).sort().reverse().join('\n'));
 		},
 		async emulate() {
 			const proxy = await getPlatformProxy(options.platformProxy);
