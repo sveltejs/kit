@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { posix, dirname } from 'node:path';
 import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
@@ -142,8 +142,6 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					}`
 				);
 			}
-
-			copyFileSync(`${files}/.assetsignore`, `${dirname(main)}/.assetsignore`);
 
 			builder.log.minor('Copying assets...');
 			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;
