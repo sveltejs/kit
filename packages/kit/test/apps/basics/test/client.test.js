@@ -368,8 +368,8 @@ test.describe('SPA mode / no SSR', () => {
 	});
 });
 
-test.describe('$app/stores', () => {
-	test('can use $app/stores from anywhere on client', async ({ page }) => {
+test.describe('$app/state', () => {
+	test('can use $app/state from anywhere on client', async ({ page }) => {
 		await page.goto('/store/client-access');
 		await expect(page.locator('h1')).toHaveText('undefined');
 		await page.locator('button').click();
@@ -379,19 +379,19 @@ test.describe('$app/stores', () => {
 	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
 		await page.goto('/store/data/store-update/a');
 		await app.goto('/store/data/store-update/b');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+		await expect(page.locator('p')).toHaveText('page.data was updated 0 time(s)');
 	});
 
 	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
 		await page.goto('/store/data/store-update/same-keys/same');
 		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+		await expect(page.locator('p')).toHaveText('page.data was updated 1 time(s)');
 	});
 
 	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
 		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
 		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+		await expect(page.locator('p')).toHaveText('page.data was updated 1 time(s)');
 	});
 });
 
