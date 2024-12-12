@@ -26,6 +26,10 @@ export interface SvelteKitApp {
 
 	hooks: ClientHooks;
 
+	decode: (type: string, value: any) => any;
+
+	decoders: Record<string, (data: any) => any>;
+
 	root: typeof SvelteComponent;
 }
 
@@ -54,7 +58,7 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		constructors: Array<typeof SvelteComponent>;
-		components?: Array<SvelteComponent>;
+		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
