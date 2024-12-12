@@ -76,7 +76,8 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					reroute: module.reroute || (() => {})
+					reroute: module.reroute || (() => {}),
+					serialize: module.serialize || {}
 				};
 
 				if (module.init) {
@@ -90,7 +91,8 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						reroute: () => {}
+						reroute: () => {},
+						serialize: {}
 					};
 				} else {
 					throw error;

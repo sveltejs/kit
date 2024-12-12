@@ -111,12 +111,14 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	serialize: Record<string, (value: any) => any>;
 	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	deserialize: Record<string, (value: any) => any>;
 	init?: ClientInit;
 }
 

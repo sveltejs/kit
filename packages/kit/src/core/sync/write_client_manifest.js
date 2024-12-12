@@ -147,14 +147,20 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const dictionary = ${dictionary};
 
+			const deserializers = ${client_hooks_file ? 'client_hooks.deserialize || ' : ''}{};
+
 			export const hooks = {
 				handleError: ${
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 				${client_hooks_file ? 'init: client_hooks.init,' : ''}
 
-				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {})
+				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
+
+				deserialize: deserializers
 			};
+
+			export const deserialize = (type, value) => deserializers[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`

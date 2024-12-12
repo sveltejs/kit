@@ -321,12 +321,20 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			// When resolving, the id might not yet be available due to the data
+			// be evaluated upon init of kit, so we use a timeout to retry
 			properties.push(`resolve: ({ id, data, error }) => {
-							const { fulfil, reject } = deferred.get(id);
-							deferred.delete(id);
-
-							if (error) reject(error);
-							else fulfil(data);
+							const try_to_resolve = () => {
+								if (!deferred.has(id)) {
+									setTimeout(try_to_resolve, 0);
+									return;
+								}
+								const { fulfil, reject } = deferred.get(id);
+								deferred.delete(id);
+								if (error) reject(error);
+								else fulfil(data);
+							}
+							try_to_resolve();
 						}`);
 		}
 
@@ -342,12 +350,11 @@ export async function render_response({
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
-			blocks.push(`const data = ${data};`);
-
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id)
+					/** @type {string} */ (event.route.id),
+					options.hooks.serialize
 				);
 			}
 
@@ -357,7 +364,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				'data',
+				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -532,6 +539,7 @@ function get_data(event, options, nodes, csp, global) {
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
+	const serializers = options.hooks.serialize;
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -573,6 +581,13 @@ function get_data(event, options, nodes, csp, global) {
 				);
 
 			return `${global}.defer(${id})`;
+		} else {
+			for (const key in serializers) {
+				const serialized = serializers[key](thing);
+				if (serialized) {
+					return `app.deserialize('${key}', ${devalue.uneval(serialized, replacer)})`;
+				}
+			}
 		}
 	}
 
