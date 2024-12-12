@@ -1,5 +1,4 @@
 ---
-'@sveltejs/adapter-cloudflare-workers': minor
 '@sveltejs/adapter-cloudflare': minor
 ---
 
