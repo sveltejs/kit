@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.11.0
+### Minor Changes
+
+
+- feat: transport custom types across the server/client boundary ([#13149](https://github.com/sveltejs/kit/pull/13149))
+
+
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
 ## 2.10.1
 ### Patch Changes
 
