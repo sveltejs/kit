@@ -1,10 +1,14 @@
 import { onMount } from 'svelte';
+import { updated_listener } from './utils.js';
 
 /** @type {import('@sveltejs/kit').Page} */
 export let page;
 
 /** @type {{ current: import('@sveltejs/kit').Navigation | null }} */
 export let navigating;
+
+/** @type {{ current: boolean }} */
+export let updated;
 
 // this is a bootleg way to tell if we're in old svelte or new svelte
 const is_legacy =
@@ -22,6 +26,7 @@ if (is_legacy) {
 		url: new URL('https://example.com')
 	};
 	navigating = { current: null };
+	updated = { current: false };
 } else {
 	page = new (class Page {
 		data = $state.raw({});
@@ -33,9 +38,15 @@ if (is_legacy) {
 		status = $state.raw(-1);
 		url = $state.raw(new URL('https://example.com'));
 	})();
+
 	navigating = new (class Navigating {
 		current = $state.raw(null);
 	})();
+
+	updated = new (class Updated {
+		current = $state.raw(false);
+	})();
+	updated_listener.v = () => (updated.current = true);
 }
 
 /**

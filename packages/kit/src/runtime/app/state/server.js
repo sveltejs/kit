@@ -36,3 +36,12 @@ export const navigating = {
 		return context().navigating;
 	}
 };
+
+export const updated = {
+	get current() {
+		return false;
+	},
+	check: () => {
+		throw new Error('Can only call updated.check() in the browser');
+	}
+};
