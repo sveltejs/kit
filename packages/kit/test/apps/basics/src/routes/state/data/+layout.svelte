@@ -2,8 +2,8 @@
 	import { page } from '$app/state';
 </script>
 
-<div id="">{JSON.stringify(page.data)}</div>
-<div id="">{page.error?.message}</div>
+<div id="state-data">{JSON.stringify(page.data)}</div>
+<div id="state-error">{page.error?.message}</div>
 <div id="url-hash">{page.url.hash}</div>
 
 <nav>

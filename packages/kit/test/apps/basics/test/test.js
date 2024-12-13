@@ -864,26 +864,26 @@ test.describe('$app/state', () => {
 
 		const foo = { bar: 'Custom layout' };
 
-		expect(await page.textContent('#')).toBe(
+		expect(await page.textContent('#state-data')).toBe(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
 		);
 
 		await clicknav('a[href="/state/data/zzz"]');
-		expect(await page.textContent('#')).toBe(
+		expect(await page.textContent('#state-data')).toBe(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
 		);
 
 		await clicknav('a[href="/state/data/xxx"]');
-		expect(await page.textContent('#')).toBe(
+		expect(await page.textContent('#state-data')).toBe(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#')).toBe('Params = xxx');
+		expect(await page.textContent('#state-error')).toBe('Params = xxx');
 
 		await clicknav('a[href="/state/data/yyy"]');
-		expect(await page.textContent('#')).toBe(
+		expect(await page.textContent('#state-data')).toBe(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#')).toBe('Params = yyy');
+		expect(await page.textContent('#state-error')).toBe('Params = yyy');
 	});
 
 	test('should load data after reloading by goto', async ({
@@ -898,14 +898,16 @@ test.describe('$app/state', () => {
 		await page.goto('/state/data/www');
 
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse(await page.textContent('#'))).toEqual(stuff1);
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(JSON.parse(await page.textContent('#'))).toEqual(javaScriptEnabled ? stuff2 : stuff1);
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(
+			javaScriptEnabled ? stuff2 : stuff1
+		);
 
 		await clicknav('a[href="/state/data/zzz"]');
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse(await page.textContent('#'))).toEqual(stuff3);
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff3);
 	});
 
 	test('navigating state contains from, to and type', async ({ app, page, javaScriptEnabled }) => {

@@ -1,12 +1,13 @@
 <script>
-	import { page, updated } from '$app/state';
+	import { page } from '$app/state';
+
+	let pathname = $state();
 </script>
 
-<h1>{`${updated.current}`}</h1>
+<h1>{`${pathname}`}</h1>
 
 <button
-	onclick={async () => {
-		console.log(updated.current);
-		console.log(await updated.check());
+	onclick={() => {
+		pathname = page.url.pathname;
 	}}>click</button
 >
