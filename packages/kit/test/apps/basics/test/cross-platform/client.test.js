@@ -702,13 +702,13 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('b');
 	});
 
-	test('$page.url.hash is correctly set on page load', async ({ page }) => {
+	test('page.url.hash is correctly set on page load', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestore#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('$page.url.hash is correctly set on navigation', async ({ page }) => {
+	test('page.url.hash is correctly set on navigation', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestore');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');

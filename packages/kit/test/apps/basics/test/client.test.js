@@ -85,7 +85,7 @@ test.describe('Load', () => {
 		test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 			await page.goto('/load/url-hash#please-dont-send-me-to-load');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead (500 Internal Error)"'
+				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead (500 Internal Error)"'
 			);
 		});
 	}
@@ -637,7 +637,7 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h2')).toBe(id);
 	});
 
-	test('$page.url can safely be mutated', async ({ page }) => {
+	test('page.url can safely be mutated', async ({ page }) => {
 		await page.goto('/load/mutated-url?q=initial');
 		await expect(page.getByText('initial')).toBeVisible();
 

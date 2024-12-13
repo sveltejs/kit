@@ -57,7 +57,7 @@ function clone(element) {
  *
  * If this function or its return value isn't set, it
  * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
- * - updates `$page.status`
+ * - updates `page.status`
  * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
  * - redirects in case of a redirect response
  * - redirects to the nearest error page in case of an unexpected error

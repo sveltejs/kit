@@ -620,17 +620,17 @@ declare module '@sveltejs/kit' {
 		 * /// file: +layout.svelte
 		 * <script>
 		 *   import { beforeNavigate } from '$app/navigation';
-		 *   import { updated } from '$app/stores';
+		 *   import { updated } from '$app/state';
 		 *
 		 *   beforeNavigate(({ willUnload, to }) => {
-		 *     if ($updated && !willUnload && to?.url) {
+		 *     if (updated.current && !willUnload && to?.url) {
 		 *       location.href = to.url.href;
 		 *     }
 		 *   });
 		 * </script>
 		 * ```
 		 *
-		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://svelte.dev/docs/kit/$app-stores#updated) store to `true` when it detects one.
+		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://svelte.dev/docs/kit/$app-state#updated) state to `true` when it detects one.
 		 */
 		version?: {
 			/**
@@ -2025,7 +2025,7 @@ declare module '$app/forms' {
 	 *
 	 * If this function or its return value isn't set, it
 	 * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
-	 * - updates `$page.status`
+	 * - updates `page.status`
 	 * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
 	 * - redirects in case of a redirect response
 	 * - redirects to the nearest error page in case of an unexpected error
@@ -2038,7 +2038,7 @@ declare module '$app/forms' {
 		destroy(): void;
 	};
 	/**
-	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * This action updates the `form` property of the current page with the given data and updates `page.status`.
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
@@ -2149,12 +2149,12 @@ declare module '$app/navigation' {
 	 * */
 	export function preloadCode(pathname: string): Promise<void>;
 	/**
-	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
 	 * */
 	export function pushState(url: string | URL, state: App.PageState): void;
 	/**
-	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
 	 * */
 	export function replaceState(url: string | URL, state: App.PageState): void;
@@ -2334,14 +2334,14 @@ declare namespace App {
 	export interface Locals {}
 
 	/**
-	 * Defines the common shape of the [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
+	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) and [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
 
 	/**
-	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
 	export interface PageState {}
 

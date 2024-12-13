@@ -1730,7 +1730,7 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
  * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
- * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
+ * @param {App.PageState} [opts.state] An optional object that will be available on `page.state`
  * @returns {Promise<void>}
  */
 export function goto(url, opts = {}) {
@@ -1868,7 +1868,7 @@ export function preloadCode(pathname) {
 }
 
 /**
- * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1912,7 +1912,7 @@ export function pushState(url, state) {
 }
 
 /**
- * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1951,7 +1951,7 @@ export function replaceState(url, state) {
 }
 
 /**
- * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+ * This action updates the `form` property of the current page with the given data and updates `page.status`.
  * In case of an error, it redirects to the nearest error page.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
