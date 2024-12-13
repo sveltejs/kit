@@ -2332,7 +2332,7 @@ function _start_router() {
 	 * @param {URL} url
 	 */
 	function update_url(url) {
-		current.url = url;
+		current.url = page.url = url;
 		stores.page.set({
 			data: page.data,
 			error: page.error,
