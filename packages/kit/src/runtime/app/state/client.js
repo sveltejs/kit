@@ -1,4 +1,4 @@
-import { page as _page } from '../../client/state.svelte.js';
+import { page as _page, navigating as _navigating } from '../../client/state.svelte.js';
 
 /** @type {import('@sveltejs/kit').Page} */
 export const page = {
@@ -25,5 +25,12 @@ export const page = {
 	},
 	get url() {
 		return _page.url;
+	}
+};
+
+/** @type {{ get current(): import('@sveltejs/kit').Navigation | null }} */
+export const navigating = {
+	get current() {
+		return _navigating.current;
 	}
 };

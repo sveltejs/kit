@@ -1,5 +1,5 @@
 <script>
-	import { navigating } from '$app/stores';
+	import { navigating } from '$app/state';
 </script>
 
 <nav>
@@ -9,9 +9,10 @@
 </nav>
 
 <div id="nav-status">
-	{#if $navigating}
+	{#if navigating.current}
 		<p id="navigating">
-			navigating from {$navigating.from.url.pathname} to {$navigating.to.url.pathname} ({$navigating.type})
+			navigating from {navigating.current.from.url.pathname} to {navigating.current.to.url.pathname}
+			({navigating.current.type})
 		</p>
 	{:else}
 		<p id="not-navigating">not currently navigating</p>

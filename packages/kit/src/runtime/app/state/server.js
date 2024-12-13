@@ -30,3 +30,9 @@ export const page = {
 		return context().page.url;
 	}
 };
+
+export const navigating = {
+	get current() {
+		return context().navigating;
+	}
+};

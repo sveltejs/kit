@@ -3,6 +3,9 @@ import { onMount } from 'svelte';
 /** @type {import('@sveltejs/kit').Page} */
 export let page;
 
+/** @type {{ current: import('@sveltejs/kit').Navigation | null }} */
+export let navigating;
+
 // this is a bootleg way to tell if we're in old svelte or new svelte
 const is_legacy =
 	onMount.toString().includes('$$') || /function \w+\(\) \{\}/.test(onMount.toString());
@@ -18,6 +21,7 @@ if (is_legacy) {
 		status: -1,
 		url: new URL('https://example.com')
 	};
+	navigating = { current: null };
 } else {
 	page = new (class Page {
 		data = $state.raw({});
@@ -28,6 +32,9 @@ if (is_legacy) {
 		state = $state.raw({});
 		status = $state.raw(-1);
 		url = $state.raw(new URL('https://example.com'));
+	})();
+	navigating = new (class Navigating {
+		current = $state.raw(null);
 	})();
 }
 

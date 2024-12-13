@@ -1673,7 +1673,10 @@ declare module '@sveltejs/kit' {
 
 	interface SSRComponent {
 		default: {
-			render(props: Record<string, any>, opts: { context: Map<any, any> }): {
+			render(
+				props: Record<string, any>,
+				opts: { context: Map<any, any> }
+			): {
 				html: string;
 				head: string;
 				css: {
@@ -2213,6 +2216,10 @@ declare module '$app/server' {
 
 declare module '$app/state' {
 	export const page: import("@sveltejs/kit").Page;
+
+	export const navigating: {
+		get current(): import("@sveltejs/kit").Navigation | null;
+	};
 
 	export {};
 }

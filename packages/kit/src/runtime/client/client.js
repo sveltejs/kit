@@ -45,7 +45,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
-import { page, update } from './state.svelte.js';
+import { page, update, navigating } from './state.svelte.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -213,7 +213,7 @@ let hydrated = false;
 let started = false;
 let autoscroll = true;
 let updating = false;
-let navigating = false;
+let is_navigating = false;
 let hash_navigating = false;
 /** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
 let has_navigated = false;
@@ -1236,7 +1236,7 @@ function _before_navigate({ url, type, intent, delta }) {
 		}
 	};
 
-	if (!navigating) {
+	if (!is_navigating) {
 		// Don't run the event during redirects
 		before_navigate_callbacks.forEach((fn) => fn(cancellable));
 	}
@@ -1290,10 +1290,10 @@ async function navigate({
 
 	accept();
 
-	navigating = true;
+	is_navigating = true;
 
 	if (started) {
-		stores.navigating.set(nav.navigation);
+		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
 	token = nav_token;
@@ -1464,7 +1464,7 @@ async function navigate({
 		Object.assign(page, navigation_result.props.page);
 	}
 
-	navigating = false;
+	is_navigating = false;
 
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
@@ -1476,7 +1476,7 @@ async function navigate({
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
 
-	stores.navigating.set(null);
+	stores.navigating.set((navigating.current = null));
 
 	updating = false;
 }
@@ -2021,7 +2021,7 @@ function _start_router() {
 
 		persist_state();
 
-		if (!navigating) {
+		if (!is_navigating) {
 			const nav = create_navigation(current, undefined, null, 'leave');
 
 			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
@@ -2106,7 +2106,7 @@ function _start_router() {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
-				navigating = true;
+				is_navigating = true;
 			} else {
 				event.preventDefault();
 			}
@@ -2324,7 +2324,7 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			stores.navigating.set(null);
+			stores.navigating.set((navigating.current = null));
 		}
 	});
 
