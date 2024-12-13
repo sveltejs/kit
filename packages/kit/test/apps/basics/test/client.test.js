@@ -82,7 +82,7 @@ test.describe('Load', () => {
 	});
 
 	if (process.env.DEV) {
-		test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
+		test('accessing url.hash from load errors and suggests using page state', async ({ page }) => {
 			await page.goto('/load/url-hash#please-dont-send-me-to-load');
 			expect(await page.textContent('#message')).toBe(
 				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead (500 Internal Error)"'
@@ -1006,15 +1006,15 @@ test.describe('Streaming', () => {
 });
 
 test.describe('Actions', () => {
-	test('page store has correct data', async ({ page }) => {
+	test('page state has correct data', async ({ page }) => {
 		await page.goto('/actions/enhance');
 		const pre = page.locator('pre.data1');
 
-		await expect(pre).toHaveText('prop: 0, store: 0');
+		await expect(pre).toHaveText('prop: 0, state: 0');
 		await page.locator('.form4').click();
-		await expect(pre).toHaveText('prop: 1, store: 1');
+		await expect(pre).toHaveText('prop: 1, state: 1');
 		await page.evaluate('window.svelte_tick()');
-		await expect(pre).toHaveText('prop: 1, store: 1');
+		await expect(pre).toHaveText('prop: 1, state: 1');
 	});
 });
 

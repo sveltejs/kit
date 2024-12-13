@@ -13,7 +13,7 @@
 	let count = 0;
 </script>
 
-<pre class="data1">prop: {data.enhance_counter}, store: {page.data.enhance_counter}</pre>
+<pre class="data1">prop: {data.enhance_counter}, state: {page.data.enhance_counter}</pre>
 
 <pre class="formdata1">{JSON.stringify(form)}</pre>
 <pre class="formdata2">{JSON.stringify(page.form)}</pre>
