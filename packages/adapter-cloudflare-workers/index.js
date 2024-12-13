@@ -185,14 +185,24 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
  * @returns {WranglerConfig}
  */
 function validate_config(builder, config_file) {
+	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
+		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
+		config_file = 'wrangler.json';
+	}
 	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(config_file, 'utf-8'))
-			);
+			if (config_file.endsWith('.json')) {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					JSON.parse(readFileSync(config_file, 'utf-8'))
+				);
+			} else {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					toml.parse(readFileSync(config_file, 'utf-8'))
+				);
+			}
 		} catch (err) {
 			err.message = `Error parsing ${config_file}: ${err.message}`;
 			throw err;

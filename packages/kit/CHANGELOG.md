@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 2.11.0
+### Minor Changes
+
+
+- feat: transport custom types across the server/client boundary ([#13149](https://github.com/sveltejs/kit/pull/13149))
+
+
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
+## 2.10.1
+### Patch Changes
+
+
+- fix: export `init` hook from `get_hooks` ([#13136](https://github.com/sveltejs/kit/pull/13136))
+
+## 2.10.0
+### Minor Changes
+
+
+- feat: server and client `init` hook ([#13103](https://github.com/sveltejs/kit/pull/13103))
+
+
+### Patch Changes
+
+
+- fix: prevent hooks exported from `hooks.js` from overwriting hooks from `hooks.server.js` ([#13104](https://github.com/sveltejs/kit/pull/13104))
+
 ## 2.9.1
 ### Patch Changes
 

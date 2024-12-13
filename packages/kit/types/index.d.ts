@@ -707,10 +707,59 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
+	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked before the server responds to its first request
+	 * @since 2.10.0
+	 */
+	export type ServerInit = () => MaybePromise<void>;
+
+	/**
+	 * The [`init`](https://svelte.dev/docs/kit/hooks#Shared-hooks-init) will be invoked once the app starts in the browser
+	 * @since 2.10.0
+	 */
+	export type ClientInit = () => MaybePromise<void>;
+
+	/**
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
 	export type Reroute = (event: { url: URL }) => void | string;
+
+	/**
+	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
+	 *
+	 * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).
+	 *
+	 * In the browser, `decode` turns the encoding back into an instance of the custom type.
+	 *
+	 * ```ts
+	 * import type { Transport } from '@sveltejs/kit';
+	 *
+	 * declare class MyCustomType {
+	 * 	data: any
+	 * }
+	 *
+	 * // hooks.js
+	 * export const transport: Transport = {
+	 * 	MyCustomType: {
+	 * 		encode: (value) => value instanceof MyCustomType && [value.data],
+	 * 		decode: ([data]) => new MyCustomType(data)
+	 * 	}
+	 * };
+	 * ```
+	 * @since 2.11.0
+	 */
+	export type Transport = Record<string, Transporter>;
+
+	/**
+	 * A member of the [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook.
+	 */
+	export interface Transporter<
+		T = any,
+		U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+	> {
+		encode: (value: T) => false | U;
+		decode: (data: U) => T;
+	}
 
 	/**
 	 * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
@@ -2054,7 +2103,7 @@ declare module '$app/navigation' {
 	 * */
 	export function afterNavigate(callback: (navigation: import("@sveltejs/kit").AfterNavigate) => void): void;
 	/**
-	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
 	 * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
 	 *

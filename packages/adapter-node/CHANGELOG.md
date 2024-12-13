@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.2.10
+### Patch Changes
+
+
+- chore: append http on listening address ([#13146](https://github.com/sveltejs/kit/pull/13146))
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
 ## 5.2.9
 ### Patch Changes
 

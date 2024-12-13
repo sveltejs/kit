@@ -169,8 +169,9 @@ export function from_fs(str) {
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
-		if (stats.isDirectory()) {
-			return resolve_entry(path.join(entry, 'index'));
+		const index = path.join(entry, 'index');
+		if (stats.isDirectory() && fs.existsSync(index)) {
+			return resolve_entry(index);
 		}
 
 		return entry;

@@ -105,7 +105,8 @@ export async function build_service_worker(
 				}
 			},
 			outDir: `${out}/client`,
-			emptyOutDir: false
+			emptyOutDir: false,
+			minify: vite_config.build.minify
 		},
 		configFile: false,
 		define: vite_config.define,
