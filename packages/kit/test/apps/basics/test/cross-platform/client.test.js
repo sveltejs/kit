@@ -703,19 +703,19 @@ test.describe('Routing', () => {
 	});
 
 	test('page.url.hash is correctly set on page load', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore#target');
+		await page.goto('/routing/hashes/pagestate#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
 	test('page.url.hash is correctly set on navigation', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore');
+		await page.goto('/routing/hashes/pagestate');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');
 		await page.locator('[href="#target"]').click();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.locator('[href="/routing/hashes/pagestore"]').click();
+		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
