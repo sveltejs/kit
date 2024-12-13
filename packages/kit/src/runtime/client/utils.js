@@ -234,7 +234,7 @@ export function notifiable_store(value) {
 	return { notify, set, subscribe };
 }
 
-export let updated_listener = {
+export const updated_listener = {
 	v: () => {}
 };
 
