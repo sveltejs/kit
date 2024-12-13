@@ -1,13 +1,13 @@
 <script>
-	import { getStores } from '$app/stores';
+	import { page } from '$app/state';
 
-	let pathname;
+	let pathname = $state();
 </script>
 
 <h1>{`${pathname}`}</h1>
 
 <button
-	on:click={() => {
-		getStores().page.subscribe(($page) => (pathname = $page.url.pathname))();
+	onclick={() => {
+		pathname = page.url.pathname;
 	}}>click</button
 >
