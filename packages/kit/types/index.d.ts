@@ -2274,7 +2274,7 @@ declare module '$app/state' {
 	 * - retrieve metadata about the current page, such as the URL you're on, its parameters and route info, and whether or not there was an error
 	 *
 	 * ```svelte
-	 * <!--- +layout.svelte --->
+	 * <!--- file: +layout.svelte --->
 	 * <script>
 	 * 	import { page } from '$app/state';
 	 * </script>
