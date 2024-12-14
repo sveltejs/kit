@@ -59,7 +59,7 @@ export const page = {
 };
 
 /**
- * An object with a reative `current` property.
+ * An object with a reactive `current` property.
  * When navigating starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
  * When navigating finishes, `current` reverts to `null`.
  *

@@ -2293,7 +2293,7 @@ declare module '$app/state' {
 	 * */
 	export const page: import("@sveltejs/kit").Page;
 	/**
-	 * An object with a reative `current` property.
+	 * An object with a reactive `current` property.
 	 * When navigating starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * When navigating finishes, `current` reverts to `null`.
 	 *
@@ -2327,7 +2327,7 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 *
-	 * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12-$app-stores-deprecated))
+	 * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const page: import("svelte/store").Readable<import("@sveltejs/kit").Page>;
 	/**
@@ -2337,7 +2337,7 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 *
-	 * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12-$app-stores-deprecated))
+	 * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const navigating: import("svelte/store").Readable<import("@sveltejs/kit").Navigation | null>;
 	/**
@@ -2345,7 +2345,7 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 *
-	 * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12-$app-stores-deprecated))
+	 * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const updated: import("svelte/store").Readable<boolean> & {
 		check(): Promise<boolean>;
