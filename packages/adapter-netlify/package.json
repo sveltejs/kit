@@ -49,7 +49,7 @@
 		"@netlify/functions": "^2.4.1",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^15.3.0",
+		"@rollup/plugin-node-resolve": "^16.0.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
