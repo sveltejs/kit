@@ -153,7 +153,7 @@ Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
 	/** @type {{ data: import('./$types').PageData }} */
 	let { data } = $props();
 
-+++	let wordCount = $state(data.content.split(' ').length);
++++	let wordCount = $derived(data.content.split(' ').length);
 	let estimatedReadingTime = $derived(wordCount / 250);+++
 </script>
 ```
