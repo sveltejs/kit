@@ -373,7 +373,8 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
+				message:
+					'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
 			}
 		});
 	});
