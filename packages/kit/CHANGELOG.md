@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.12.1
+### Patch Changes
+
+
+- fix: replace `navigating.current.<x>` with `navigating.<x>` ([#13174](https://github.com/sveltejs/kit/pull/13174))
+
 ## 2.12.0
 ### Minor Changes
 
