@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: improve error message when making a form action request to a route without form actions
+chore: specify the route ID in the error message during development when making a form action request to a route without form actions
