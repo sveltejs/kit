@@ -397,17 +397,25 @@ export async function render_response({
 						${global}.env = env;
 
 						Promise.all([
-							import(${s(prefixed(client.start))}),
-							import(${s(prefixed(client.app))})
-						]).then(([kit, app]) => {
+							import(${s(prefixed(client.start))}),${
+								client.app
+									? `
+							import(${s(prefixed(client.app))})`
+									: ''
+							}
+						]).then(([kit, app = kit.app]) => {
 							kit.start(${args.join(', ')});
 						});
 					});`);
 		} else {
 			blocks.push(`Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
+						import(${s(prefixed(client.start))}),${
+							client.app
+								? `
+						import(${s(prefixed(client.app))})`
+								: ''
+						}
+					]).then(([kit, app = kit.app]) => {
 						kit.start(${args.join(', ')});
 					});`);
 		}

@@ -361,6 +361,9 @@ async function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		resolveId(id, importer) {
+			if (id === '__sveltekit/APP') {
+				return `${kit.outDir}/generated/client-optimized/app.js`;
+			}
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
@@ -564,8 +567,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const ssr = /** @type {boolean} */ (config.build?.ssr);
 			if (is_build) {
-				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
@@ -606,14 +609,17 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					input['entry/start'] = `${runtime_directory}/client/entry.js`;
-					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
-
-					manifest_data.nodes.forEach((node, i) => {
-						if (node.component || node.universal) {
-							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
-						}
-					});
+					if (!svelte_config.kit.output.codeSplitJs) {
+						input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
+					} else {
+						input['entry/start'] = `${runtime_directory}/client/entry.js`;
+						input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
+						manifest_data.nodes.forEach((node, i) => {
+							if (node.component || node.universal) {
+								input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+							}
+						});
+					}
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
@@ -643,7 +649,8 @@ async function kit({ svelte_config }) {
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
-								sourcemapIgnoreList
+								sourcemapIgnoreList,
+								manualChunks: () => 'bundle.js'
 							},
 							preserveEntrySignatures: 'strict'
 						},
@@ -670,7 +677,11 @@ async function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: `${runtime_directory}/client/entry.js`
+							input: `${runtime_directory}/client/entry.js`,
+							output: {
+								format: 'esm',
+								manualChunks: () => 'bundle.js'
+							}
 						}
 					},
 					publicDir: kit.files.assets
@@ -775,7 +786,15 @@ async function kit({ svelte_config }) {
 				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					null,
+					null,
+					svelte_config.output
+				);
 
 				const metadata = await analyse({
 					manifest_path,
@@ -825,19 +844,34 @@ async function kit({ svelte_config }) {
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(`${runtime_directory}/client/entry.js`);
-				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
-				build_data.client = {
-					start: start.file,
-					app: app.file,
-					imports: [...start.imports, ...app.imports],
-					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts],
-					uses_env_dynamic_public: output.some(
-						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-					)
-				};
+				if (svelte_config.kit.output.codeSplitJs) {
+					const start = deps_of(`${runtime_directory}/client/entry.js`);
+					const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
+					build_data.client = {
+						start: start.file,
+						app: app.file,
+						imports: [...start.imports, ...app.imports],
+						stylesheets: [...start.stylesheets, ...app.stylesheets],
+						fonts: [...start.fonts, ...app.fonts],
+						uses_env_dynamic_public: output.some(
+							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+						)
+					};
+				} else {
+					const start = deps_of(`${runtime_directory}/client/bundled-entry.js`);
+
+					build_data.client = {
+						start: start.file,
+						imports: start.imports,
+						stylesheets: start.stylesheets,
+						fonts: start.fonts,
+						uses_env_dynamic_public: output.some(
+							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+						)
+					};
+				}
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
@@ -855,7 +889,15 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					client_manifest,
+					css,
+					svelte_config.kit.output
+				);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({

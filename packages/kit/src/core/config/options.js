@@ -142,7 +142,8 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload')
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload'),
+				codeSplitJs: boolean(true)
 			}),
 
 			paths: object({
