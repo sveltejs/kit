@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.12.0
+### Minor Changes
+
+
+- feat: add `$app/state` module ([#13140](https://github.com/sveltejs/kit/pull/13140))
+
+
+### Patch Changes
+
+
+- chore: specify the route ID in the error message during development when making a form action request to a route without form actions ([#13167](https://github.com/sveltejs/kit/pull/13167))
+
 ## 2.11.1
 ### Patch Changes
 
