@@ -2267,7 +2267,7 @@ declare module '$app/server' {
 
 declare module '$app/state' {
 	/**
-	 * An object with reactive property which contain page data. It serves various use cases:
+	 * An object with reactive properties which contain page data. It serves various use cases:
 	 * - retrieve the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
 	 * - retrieve the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
 	 * - retrieve the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
@@ -2288,7 +2288,7 @@ declare module '$app/state' {
 	 * {/if}
 	 * ```
 	 *
-	 * On the server, the values can only be retrieved to during component initialization. In the browser, the values can be retrieved at any time.
+	 * On the server, the values can only be retrieved during component initialization. In the browser, the values can be retrieved at any time.
 	 *
 	 * */
 	export const page: import("@sveltejs/kit").Page;
