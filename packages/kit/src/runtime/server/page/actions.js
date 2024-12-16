@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 import { json } from '../../../exports/index.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
@@ -27,8 +28,9 @@ export async function handle_action_json_request(event, options, server) {
 		const no_actions_error = new SvelteKitError(
 			405,
 			'Method Not Allowed',
-			'POST method not allowed. No actions exist for this page'
+			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
+
 		return action_json(
 			{
 				type: 'error',
@@ -153,7 +155,7 @@ export async function handle_action_request(event, server) {
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
-				'POST method not allowed. No actions exist for this page'
+				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 			)
 		};
 	}
