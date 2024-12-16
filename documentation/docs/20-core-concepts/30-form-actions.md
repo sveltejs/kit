@@ -432,6 +432,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 
 	/** @param {{ currentTarget: EventTarget & HTMLFormElement}} event */
 	async function handleSubmit(event) {
+		event.preventDefault();
 		const data = new FormData(event.currentTarget);
 
 		const response = await fetch(event.currentTarget.action, {
@@ -451,7 +452,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	}
 </script>
 
-<form method="POST" onsubmit|preventDefault={handleSubmit}>
+<form method="POST" onsubmit={handleSubmit}>
 	<!-- content -->
 </form>
 ```
