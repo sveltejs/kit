@@ -757,6 +757,7 @@ async function kit({ svelte_config }) {
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					out_dir: out,
+					asset_prefix: `${kit.appDir}/immutable/assets`,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest
