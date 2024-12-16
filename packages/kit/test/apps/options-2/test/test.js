@@ -90,7 +90,7 @@ test.describe('Service worker', () => {
 
 test.describe('codeSplitJs', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
-	test('loads a single js file', async ({ page }) => {
+	test('loads a single js file and a single css file', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
@@ -103,5 +103,6 @@ test.describe('codeSplitJs', () => {
 		]);
 
 		expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+		expect(requests.filter((req) => req.endsWith('.css')).length).toBe(1);
 	});
 });
