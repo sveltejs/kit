@@ -5,7 +5,6 @@
 <h1>Great success!</h1>
 
 <a href="/routing/a">a</a>
-<a href="/routing/a?self=1" target="_self">explicit target="_self"</a>
 <a href="/routing/ambiguous/ok.json" rel="external">ok</a>
 <a href="/routing/next-paint">next-paint</a>
 <a href="/routing/symlink-from">symlinked</a>
@@ -15,3 +14,7 @@
 <a href="/routing/b" data-sveltekit-reload>b</a>
 
 <div class="hydrate-test"></div>
+
+<a href="/routing/a?target" target="_self">_self</a>
+<a href="/routing/a?target" target="_parent">_self</a>
+<a href="/routing/a?target" target="_top">_self</a>

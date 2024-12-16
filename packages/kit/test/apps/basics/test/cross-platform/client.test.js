@@ -696,26 +696,30 @@ test.describe('Routing', () => {
 		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 
-	test('navigates to a new page without reloading for explicit target="_self"', async ({
+	test('navigates to a new page without reloading when `target` is the current browsing context', async ({
 		app,
 		page,
 		clicknav
 	}) => {
-		await page.goto('/routing');
+		const targets = ['_self', '_parent', '_top'];
 
-		await app.preloadData('/routing/a?self=1').catch((e) => {
-			// from error handler tests; ignore
-			if (!e.message.includes('Crashing now')) throw e;
-		});
+		for (const target of targets) {
+			await page.goto('/routing');
 
-		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+			await app.preloadData('/routing/a?target').catch((e) => {
+				// from error handler tests; ignore
+				if (!e.message.includes('Crashing now')) throw e;
+			});
 
-		await clicknav('a[href="/routing/a?self=1"]');
-		expect(await page.textContent('h1')).toBe('a');
+			/** @type {string[]} */
+			const requests = [];
+			page.on('request', (r) => requests.push(r.url()));
 
-		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
+			await clicknav(`a[target="${target}"]`);
+			expect(await page.textContent('h1')).toBe('a');
+
+			expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
+		}
 	});
 
 	test('navigates programmatically', async ({ page, app }) => {
