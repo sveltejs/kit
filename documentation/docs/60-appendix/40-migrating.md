@@ -115,7 +115,7 @@ const { preloading, page, session } = stores();
 
 The `page` store still exists; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
-You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`]($app-stores). If you're on Svelte 5 and SvelteKit 2.12 or higher, consider using [`$app/state`]($app-stores) instead.
+You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`]($app-stores). If you're on Svelte 5 and SvelteKit 2.12 or higher, consider using [`$app/state`]($app-state) instead.
 
 ### Routing
 
