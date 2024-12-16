@@ -6,11 +6,11 @@ import {
 import { stores } from '../../client/client.js';
 
 /**
- * An object with reactive properties which contain page data. It serves various use cases:
- * - retrieve the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
- * - retrieve the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
- * - retrieve the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
- * - retrieve metadata about the current page, such as the URL you're on, its parameters and route info, and whether or not there was an error
+ * A reactive object with information about the current page, serving several use cases:
+ * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
+ * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
+ * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
+ * - retrieving metadata such as the URL you're on, the current route and its parameters, and whether or not there was an error
  *
  * ```svelte
  * <!--- file: +layout.svelte --->
@@ -27,7 +27,7 @@ import { stores } from '../../client/client.js';
  * {/if}
  * ```
  *
- * On the server, the values can only be retrieved during component initialization. In the browser, the values can be retrieved at any time.
+ * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
  *
  * @type {import('@sveltejs/kit').Page}
  */
@@ -60,10 +60,10 @@ export const page = {
 
 /**
  * An object with a reactive `current` property.
- * When navigating starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
- * When navigating finishes, `current` reverts to `null`.
+ * When navigation starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+ * When navigation finishes, `current` reverts to `null`.
  *
- * On the server, this value can only be retrieved during component initialization. In the browser, it can be retrieved at any time.
+ * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
  * @type {{ get current(): import('@sveltejs/kit').Navigation | null; }}
  */
 export const navigating = {
