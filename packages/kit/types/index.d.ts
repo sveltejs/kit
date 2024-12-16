@@ -2293,11 +2293,8 @@ declare module '$app/state' {
 	 * */
 	export const page: import("@sveltejs/kit").Page;
 	/**
-	 * An object with a reactive `current` property.
-	 * When navigation starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
-	 * When navigation finishes, `current` reverts to `null`.
-	 *
-	 * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
+	 * An object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
 	export const navigating: import("@sveltejs/kit").Navigation | {
 		from: null;
