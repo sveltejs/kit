@@ -696,6 +696,28 @@ test.describe('Routing', () => {
 		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 
+	test('navigates to a new page without reloading for explicit target="_self"', async ({
+		app,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing');
+
+		await app.preloadData('/routing/a?self=1').catch((e) => {
+			// from error handler tests; ignore
+			if (!e.message.includes('Crashing now')) throw e;
+		});
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await clicknav('a[href="/routing/a?self=1"]');
+		expect(await page.textContent('h1')).toBe('a');
+
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
+	});
+
 	test('navigates programmatically', async ({ page, app }) => {
 		await page.goto('/routing/a');
 		await app.goto('/routing/b');
