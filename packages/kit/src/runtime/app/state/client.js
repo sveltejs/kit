@@ -59,18 +59,38 @@ export const page = {
 };
 
 /**
- * An object with a reactive `current` property.
- * When navigation starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
- * When navigation finishes, `current` reverts to `null`.
- *
- * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
- * @type {{ get current(): import('@sveltejs/kit').Navigation | null; }}
+ * An object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+ * Values are `null` when no navigation is occurring, or during server rendering.
+ * @type {import('@sveltejs/kit').Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null }}
  */
+// @ts-expect-error
 export const navigating = {
-	get current() {
-		return _navigating.current;
+	get from() {
+		return _navigating.current ? _navigating.current.from : null;
+	},
+	get to() {
+		return _navigating.current ? _navigating.current.to : null;
+	},
+	get type() {
+		return _navigating.current ? _navigating.current.type : null;
+	},
+	get willUnload() {
+		return _navigating.current ? _navigating.current.willUnload : null;
+	},
+	get delta() {
+		return _navigating.current ? _navigating.current.delta : null;
+	},
+	get complete() {
+		return _navigating.current ? _navigating.current.complete : null;
 	}
 };
+
+Object.defineProperty(navigating, 'current', {
+	get() {
+		// between 2.12.0 and 2.12.1 `navigating.current` existed
+		throw new Error('Replace navigating.current.<prop> with navigating.<prop>');
+	}
+});
 
 /**
  * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.

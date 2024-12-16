@@ -9,10 +9,10 @@
 </nav>
 
 <div id="nav-status">
-	{#if navigating.current}
+	{#if navigating.to}
 		<!-- prettier-ignore -->
 		<p id="navigating">
-			navigating from {navigating.current.from.url.pathname} to {navigating.current.to.url.pathname} ({navigating.current.type})
+			navigating from {navigating.from.url.pathname} to {navigating.to.url.pathname} ({navigating.type})
 		</p>
 	{:else}
 		<p id="not-navigating">not currently navigating</p>

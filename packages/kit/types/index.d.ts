@@ -2293,14 +2293,16 @@ declare module '$app/state' {
 	 * */
 	export const page: import("@sveltejs/kit").Page;
 	/**
-	 * An object with a reactive `current` property.
-	 * When navigation starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
-	 * When navigation finishes, `current` reverts to `null`.
-	 *
-	 * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
+	 * An object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
-	export const navigating: {
-		get current(): import("@sveltejs/kit").Navigation | null;
+	export const navigating: import("@sveltejs/kit").Navigation | {
+		from: null;
+		to: null;
+		type: null;
+		willUnload: null;
+		delta: null;
+		complete: null;
 	};
 	/**
 	 * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
