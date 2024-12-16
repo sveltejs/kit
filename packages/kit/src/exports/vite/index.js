@@ -650,7 +650,7 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: () => 'bundle.js'
+								manualChunks: svelte_config.kit.output.codeSplitJs ? undefined : () => 'bundle.js'
 							},
 							preserveEntrySignatures: 'strict'
 						},
@@ -680,7 +680,7 @@ async function kit({ svelte_config }) {
 							input: `${runtime_directory}/client/entry.js`,
 							output: {
 								format: 'esm',
-								manualChunks: () => 'bundle.js'
+								manualChunks: svelte_config.kit.output.codeSplitJs ? undefined : () => 'bundle.js'
 							}
 						}
 					},
