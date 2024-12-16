@@ -224,6 +224,16 @@ export async function render_response({
 	};
 
 	if (inline_styles.size > 0) {
+		for (const dep of inline_styles.keys()) {
+			const path = prefixed(dep);
+
+			if (!resolve_opts.load({ type: 'css', path })) {
+				inline_styles.delete(dep);
+			}
+		}
+	}
+
+	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
 
 		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
@@ -236,6 +246,10 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
+
+		if (!resolve_opts.load({ type: 'css', path })) {
+			continue;
+		}
 
 		const attributes = ['rel="stylesheet"'];
 
