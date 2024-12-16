@@ -70,7 +70,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
 
-		if (client_manifest && (node.universal || node.component) && output_config.codeSplitJs) {
+		if (client_manifest && (node.universal || node.component) && output_config.codeSplit) {
 			const entry = find_deps(
 				client_manifest,
 				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,

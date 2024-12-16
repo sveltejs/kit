@@ -143,7 +143,7 @@ const options = object(
 
 			output: object({
 				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload'),
-				codeSplitJs: boolean(true)
+				codeSplit: boolean(true)
 			}),
 
 			paths: object({

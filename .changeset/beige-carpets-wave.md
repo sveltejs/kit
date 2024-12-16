@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": minor
+'@sveltejs/kit': minor
 ---
 
-feat: add `codeSplitJs` option
+feat: add `codeSplit` option

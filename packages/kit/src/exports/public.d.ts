@@ -502,7 +502,7 @@ export interface KitConfig {
 		 * Whether to create separate JS files for each page and common component chunks or bundle everything into one file.
 		 * @default true
 		 */
-		codeSplitJs?: boolean;
+		codeSplit?: boolean;
 	};
 	paths?: {
 		/**
