@@ -90,10 +90,29 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
+			}
 
+			/** @type {{ edge: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[], lambda: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }} */
+			const mutated_routes = { edge: [], lambda: [] };
+			for (let i = 0; i < builder.routes.length; i++) {
+				/** @type {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>} */
+				const route = builder.routes[i];
+
+				if (route.config?.runtime === 'edge') {
+					mutated_routes.edge.push(route);
+				} else {
+					mutated_routes.lambda.push(route);
+				}
+			}
+
+			if (mutated_routes.edge.length) {
+				builder.routes = mutated_routes.edge;
 				await generate_edge_functions({ builder });
-			} else {
-				generate_lambda_functions({ builder, split, publish });
+			}
+
+			if (mutated_routes.lambda.length) {
+				builder.routes = mutated_routes.lambda;
+				generate_lambda_functions({ builder, publish, split });
 			}
 		},
 
@@ -204,7 +223,10 @@ function generate_lambda_functions({ builder, publish, split }) {
 	builder.copy(`${files}/esm`, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
-	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
+	const fn_config = JSON.stringify({
+		config: { nodeModuleFormat: 'esm' },
+		version: 1
+	});
 
 	builder.log.minor('Generating serverless functions...');
 
