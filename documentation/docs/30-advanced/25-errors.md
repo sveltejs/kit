@@ -52,7 +52,7 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 ```
 
 > [!LEGACY]
-> `$app/state` exists since SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 
 You can add extra properties to the error object if needed...
 

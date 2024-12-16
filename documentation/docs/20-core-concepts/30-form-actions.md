@@ -352,7 +352,7 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `page.form` and `page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, the `form` prop and the `page` state will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
+- update the `form` property, `page.form` and `page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, the `form` prop and the `page.form` state will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
 - reset the `<form>` element
 - invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response

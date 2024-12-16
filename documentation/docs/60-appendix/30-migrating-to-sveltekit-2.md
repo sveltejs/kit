@@ -176,7 +176,7 @@ As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `
 
 ## SvelteKit 2.12: $app/stores deprecated
 
-SvelteKit 2.12 introduced `$app/state` based on the [Svelte 5 runes API](/docs/svelte/what-are-runes). `$app/state` provides everything that `$app/stores` provides but with more flexibility of where and how you use it. Most importantly, the `page` object is now fine-grained, i.e. updates to `page.state` will not make listeners of `page.data` rerun.
+SvelteKit 2.12 introduced `$app/state` based on the [Svelte 5 runes API](/docs/svelte/what-are-runes). `$app/state` provides everything that `$app/stores` provides but with more flexibility as to where and how you use it. Most importantly, the `page` object is now fine-grained, e.g. updates to `page.state` will not invalidate `page.data` and vice-versa.
 
 As a consequence, `$app/stores` is deprecated and subject to be removed in SvelteKit 3. We recommend [upgrading to Svelte 5](/docs/svelte/v5-migration-guide), if you haven't already, and then migrate away from `$app/stores`. Most of the replacements should be pretty simple: Replace the `$app/stores` import with `$app/state` and remove the `$` prefixes from the usage sites.
 

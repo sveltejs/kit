@@ -33,12 +33,12 @@ The modal can be dismissed by navigating back (unsetting `page.state.showModal`)
 
 The first argument to `pushState` is the URL, relative to the current URL. To stay on the current URL, use `''`.
 
-The second argument is the new page state, which can be accessed via the [page state]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
+The second argument is the new page state, which can be accessed via the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
 
 > [!LEGACY]
-> `page.state` from `$app/state` exists since SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$page.state` from `$app/stores` instead.
+> `page.state` from `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$page.state` from `$app/stores` instead.
 
 ## Loading data for a route
 

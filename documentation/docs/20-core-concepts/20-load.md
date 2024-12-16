@@ -157,7 +157,7 @@ In some cases, we might need the opposite — a parent layout might need to acce
 Type information for `page.data` is provided by `App.PageData`.
 
 > [!LEGACY]
-> `$app/state` exists since SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 > It provides a `page` store with the same interface that you can subscribe to, e.g. `$page.data.title`.
 
 ## Universal vs server

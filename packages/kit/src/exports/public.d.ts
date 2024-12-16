@@ -648,7 +648,7 @@ export interface KitConfig {
 	 * </script>
 	 * ```
 	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://svelte.dev/docs/kit/$app-state#updated) state to `true` when it detects one.
+	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
 	 */
 	version?: {
 		/**

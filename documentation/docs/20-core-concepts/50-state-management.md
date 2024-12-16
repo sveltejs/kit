@@ -82,7 +82,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 
 ## Using state and stores with context
 
-You might wonder how we're able to use `page.data` and other [app state]($app-state) (or [app stores]($app-stores)) if we can't use global state. The answer is that app state and app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the state/store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own state/stores:
+You might wonder how we're able to use `page.data` and other [app state]($app-state) (or [app stores]($app-stores)) if we can't use global state. The answer is that app state and app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the state (or store) is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own state:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
