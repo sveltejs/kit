@@ -125,7 +125,7 @@ describe('make_trackable', (test) => {
 
 		assert.throws(
 			() => url.hash,
-			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
+			/Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead/
 		);
 	});
 

@@ -620,17 +620,17 @@ declare module '@sveltejs/kit' {
 		 * /// file: +layout.svelte
 		 * <script>
 		 *   import { beforeNavigate } from '$app/navigation';
-		 *   import { updated } from '$app/stores';
+		 *   import { updated } from '$app/state';
 		 *
 		 *   beforeNavigate(({ willUnload, to }) => {
-		 *     if ($updated && !willUnload && to?.url) {
+		 *     if (updated.current && !willUnload && to?.url) {
 		 *       location.href = to.url.href;
 		 *     }
 		 *   });
 		 * </script>
 		 * ```
 		 *
-		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://svelte.dev/docs/kit/$app-stores#updated) store to `true` when it detects one.
+		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
 		 */
 		version?: {
 			/**
@@ -1722,7 +1722,10 @@ declare module '@sveltejs/kit' {
 
 	interface SSRComponent {
 		default: {
-			render(props: Record<string, any>): {
+			render(
+				props: Record<string, any>,
+				opts: { context: Map<any, any> }
+			): {
 				html: string;
 				head: string;
 				css: {
@@ -2071,7 +2074,7 @@ declare module '$app/forms' {
 	 *
 	 * If this function or its return value isn't set, it
 	 * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
-	 * - updates `$page.status`
+	 * - updates `page.status`
 	 * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
 	 * - redirects in case of a redirect response
 	 * - redirects to the nearest error page in case of an unexpected error
@@ -2084,7 +2087,7 @@ declare module '$app/forms' {
 		destroy(): void;
 	};
 	/**
-	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * This action updates the `form` property of the current page with the given data and updates `page.status`.
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
@@ -2127,7 +2130,9 @@ declare module '$app/navigation' {
 	 * */
 	export function disableScrollHandling(): void;
 	/**
+	 * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+	 *
 	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
@@ -2193,12 +2198,12 @@ declare module '$app/navigation' {
 	 * */
 	export function preloadCode(pathname: string): Promise<void>;
 	/**
-	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
 	 * */
 	export function pushState(url: string | URL, state: App.PageState): void;
 	/**
-	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
 	 * */
 	export function replaceState(url: string | URL, state: App.PageState): void;
@@ -2260,6 +2265,54 @@ declare module '$app/server' {
 	export {};
 }
 
+declare module '$app/state' {
+	/**
+	 * A reactive object with information about the current page, serving several use cases:
+	 * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
+	 * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
+	 * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
+	 * - retrieving metadata such as the URL you're on, the current route and its parameters, and whether or not there was an error
+	 *
+	 * ```svelte
+	 * <!--- file: +layout.svelte --->
+	 * <script>
+	 * 	import { page } from '$app/state';
+	 * </script>
+	 *
+	 * <p>Currently at {page.url.pathname}</p>
+	 *
+	 * {#if page.error}
+	 * 	<span class="red">Problem detected</span>
+	 * {:else}
+	 * 	<span class="small">All systems operational</span>
+	 * {/if}
+	 * ```
+	 *
+	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
+	 *
+	 * */
+	export const page: import("@sveltejs/kit").Page;
+	/**
+	 * An object with a reactive `current` property.
+	 * When navigation starts, `current` is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * When navigation finishes, `current` reverts to `null`.
+	 *
+	 * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
+	 * */
+	export const navigating: {
+		get current(): import("@sveltejs/kit").Navigation | null;
+	};
+	/**
+	 * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+	 * */
+	export const updated: {
+		get current(): boolean;
+		check(): Promise<boolean>;
+	};
+
+	export {};
+}
+
 declare module '$app/stores' {
 	export function getStores(): {
 		
@@ -2274,6 +2327,7 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 *
+	 * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const page: import("svelte/store").Readable<import("@sveltejs/kit").Page>;
 	/**
@@ -2282,12 +2336,16 @@ declare module '$app/stores' {
 	 * When navigating finishes, its value reverts to `null`.
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+	 *
+	 * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const navigating: import("svelte/store").Readable<import("@sveltejs/kit").Navigation | null>;
 	/**
 	 * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+	 *
+	 * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
 	export const updated: import("svelte/store").Readable<boolean> & {
 		check(): Promise<boolean>;
@@ -2330,14 +2388,14 @@ declare namespace App {
 	export interface Locals {}
 
 	/**
-	 * Defines the common shape of the [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
+	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) and [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
 
 	/**
-	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
 	export interface PageState {}
 

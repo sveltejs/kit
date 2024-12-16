@@ -149,6 +149,17 @@ export async function render_response({
 		// portable as possible, but reset afterwards
 		if (paths.relative) paths.override({ base, assets });
 
+		const render_opts = {
+			context: new Map([
+				[
+					'__request__',
+					{
+						page: props.page
+					}
+				]
+			])
+		};
+
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
 			let warned = false;
@@ -168,14 +179,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, render_opts);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, render_opts);
 			} finally {
 				paths.reset();
 			}
