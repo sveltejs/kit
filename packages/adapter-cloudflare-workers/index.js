@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { posix, dirname, basename, join } from 'node:path';
 import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
@@ -40,10 +40,19 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			const { main, site, compatibility_flags } = validate_config(builder, config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
+			const dest_main = builder.getBuildDirectory(dirname(main) + '-intermediate');
+			const dest_bucket = builder.getBuildDirectory(site.bucket + '-intermediate');
+			const final_dest_main = dirname(main);
+			const final_dest_bucket = site.bucket;
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
 
-			builder.rimraf(site.bucket);
-			builder.rimraf(dirname(main));
+			builder.rimraf(dest_main);
+			builder.rimraf(dest_bucket);
+			builder.rimraf(tmp);
+
+			builder.mkdirp(dest_main);
+			builder.mkdirp(dest_bucket);
+			builder.mkdirp(tmp);
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -91,7 +100,7 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					sourcemap: 'linked',
 					target: 'es2022',
 					entryPoints: [`${tmp}/entry.js`],
-					outfile: main,
+					outfile: join(dest_main, basename(main)),
 					bundle: true,
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
@@ -106,6 +115,9 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					},
 					logLevel: 'silent'
 				});
+
+				builder.rimraf(final_dest_main);
+				renameSync(dest_main, final_dest_main);
 
 				if (result.warnings.length > 0) {
 					const formatted = await esbuild.formatMessages(result.warnings, {
@@ -144,9 +156,12 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			}
 
 			builder.log.minor('Copying assets...');
-			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;
+			const bucket_dir = `${dest_bucket}${builder.config.kit.paths.base}`;
 			builder.writeClient(bucket_dir);
 			builder.writePrerendered(bucket_dir);
+
+			builder.rimraf(final_dest_bucket);
+			renameSync(dest_bucket, final_dest_bucket);
 		},
 
 		async emulate() {
