@@ -2299,8 +2299,13 @@ declare module '$app/state' {
 	 *
 	 * On the server, this value can only be read during rendering. In the browser, it can be read at any time.
 	 * */
-	export const navigating: {
-		get current(): import("@sveltejs/kit").Navigation | null;
+	export const navigating: import("@sveltejs/kit").Navigation | {
+		from: null;
+		to: null;
+		type: null;
+		willUnload: null;
+		delta: null;
+		complete: null;
 	};
 	/**
 	 * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
