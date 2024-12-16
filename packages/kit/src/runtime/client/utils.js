@@ -135,7 +135,7 @@ export function get_link_info(a, base) {
 
 	const external =
 		!url ||
-		(!!target && target && target !== '_self') ||
+		(!!target && target === '_blank') ||
 		is_external_url(url, base) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
