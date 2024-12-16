@@ -480,6 +480,11 @@ declare module '@sveltejs/kit' {
 			 * @since 1.8.4
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+			/**
+			 * Whether to create separate JS files for each page and common component chunks or bundle everything into one file.
+			 * @default true
+			 */
+			codeSplitJs?: boolean;
 		};
 		paths?: {
 			/**
@@ -1641,7 +1646,7 @@ declare module '@sveltejs/kit' {
 		service_worker: string | null;
 		client: {
 			start: string;
-			app: string;
+			app?: string;
 			imports: string[];
 			stylesheets: string[];
 			fonts: string[];
