@@ -78,12 +78,30 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[\w-]+\.js/);
+		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/bundle\.[\w-]+\.js/);
 		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(await page.content()).not.toMatch(/navigator\.serviceWorker/);
+	});
+});
+
+test.describe('codeSplitJs', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
+	test('loads a single js file', async ({ page }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+
+		await page.goto('/basepath');
+
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
 	});
 });

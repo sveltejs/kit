@@ -10,6 +10,9 @@ const config = {
 		},
 		env: {
 			dir: '../../env'
+		},
+		output: {
+			codeSplitJs: false
 		}
 	}
 };

@@ -25,8 +25,7 @@ const config = {
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
 		output: {
-			preloadStrategy: 'preload-mjs',
-			codeSplitJs: false
+			preloadStrategy: 'preload-mjs'
 		},
 		paths: {
 			base: '/path-base',
