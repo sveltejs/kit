@@ -306,7 +306,10 @@ async function kit({ svelte_config }) {
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
 						'@sveltejs/kit'
-					]
+					],
+					resolve: {
+						conditions: ['module', 'node', 'development|production'],
+					}
 				}
 			};
 
