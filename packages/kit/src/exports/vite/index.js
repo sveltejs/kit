@@ -308,10 +308,10 @@ async function kit({ svelte_config }) {
 						'@sveltejs/kit'
 					],
 					resolve: {
-						// This is default value in Vite 6 but not Vite 5. We need it so that
-						// importing $app/state correctly resolves to the default conditional export
-						// instead of the browser condition.
-						conditions: ['module', 'node', 'development|production']
+						// We need this so that importing $app/state correctly
+						// resolves to the default conditional export instead of
+						// the browser condition on the server.
+						conditions: ['module', 'node']
 					}
 				}
 			};
