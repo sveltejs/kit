@@ -608,18 +608,16 @@ async function kit({ svelte_config }) {
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+				} else if (!svelte_config.kit.output.codeSplit) {
+					input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
 				} else {
-					if (!svelte_config.kit.output.codeSplit) {
-						input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
-					} else {
-						input['entry/start'] = `${runtime_directory}/client/entry.js`;
-						input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
-						manifest_data.nodes.forEach((node, i) => {
-							if (node.component || node.universal) {
-								input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
-							}
-						});
-					}
+					input['entry/start'] = `${runtime_directory}/client/entry.js`;
+					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
+					manifest_data.nodes.forEach((node, i) => {
+						if (node.component || node.universal) {
+							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+						}
+					});
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
