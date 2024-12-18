@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "4.3.6",
+	"version": "4.4.0",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -42,7 +42,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.21.5",
+		"esbuild": "^0.24.0",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
@@ -51,12 +51,12 @@
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^2.0.1"
+		"vitest": "^2.1.6"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

@@ -234,6 +234,10 @@ export function notifiable_store(value) {
 	return { notify, set, subscribe };
 }
 
+export const updated_listener = {
+	v: () => {}
+};
+
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
@@ -273,6 +277,7 @@ export function create_updated_store() {
 
 			if (updated) {
 				set(true);
+				updated_listener.v();
 				clearTimeout(timeout);
 			}
 

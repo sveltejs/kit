@@ -412,6 +412,48 @@ test('nested optionals', () => {
 	]);
 });
 
+test('group preceding optional parameters', () => {
+	const { nodes, routes } = create('samples/optional-group');
+
+	expect(
+		nodes
+			.map(simplify_node)
+			// for some reason linux and windows have a different order, which is why
+			// we need sort the nodes using a sort function (doesn't work either without),
+			// resulting in the following expected node order
+			.sort((a, b) => a.component?.localeCompare(b.component ?? '') ?? 1)
+	).toEqual([
+		default_error,
+		default_layout,
+		{
+			component: 'samples/optional-group/[[optional]]/(group)/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/',
+			pattern: '/^/$/'
+		},
+		{
+			id: '/[[optional]]/(group)',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) =>
+					node.component?.includes('optional-group/[[optional]]/(group)')
+				)
+			}
+		},
+		{
+			id: '/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/'
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 

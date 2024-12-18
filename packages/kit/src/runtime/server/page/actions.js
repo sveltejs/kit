@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 import { json } from '../../../exports/index.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
@@ -27,8 +28,9 @@ export async function handle_action_json_request(event, options, server) {
 		const no_actions_error = new SvelteKitError(
 			405,
 			'Method Not Allowed',
-			'POST method not allowed. No actions exist for this page'
+			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
+
 		return action_json(
 			{
 				type: 'error',
@@ -61,14 +63,22 @@ export async function handle_action_json_request(event, options, server) {
 				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
 				// because we don't use the object outside, and this way we have better code navigation
 				// through knowing where the related interface is used.
-				data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
+				data: stringify_action_response(
+					data.data,
+					/** @type {string} */ (event.route.id),
+					options.hooks.transport
+				)
 			});
 		} else {
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
+				data: stringify_action_response(
+					data,
+					/** @type {string} */ (event.route.id),
+					options.hooks.transport
+				)
 			});
 		}
 	} catch (e) {
@@ -145,7 +155,7 @@ export async function handle_action_request(event, server) {
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
-				'POST method not allowed. No actions exist for this page'
+				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 			)
 		};
 	}
@@ -254,18 +264,33 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
+ * @param {import('types').ServerHooks['transport']} transport
  */
-export function uneval_action_response(data, route_id) {
-	return try_deserialize(data, devalue.uneval, route_id);
+export function uneval_action_response(data, route_id, transport) {
+	const replacer = (/** @type {any} */ thing) => {
+		for (const key in transport) {
+			const encoded = transport[key].encode(thing);
+			if (encoded) {
+				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+			}
+		}
+	};
+
+	return try_serialize(data, (value) => devalue.uneval(value, replacer), route_id);
 }
 
 /**
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
+ * @param {import('types').ServerHooks['transport']} transport
  */
-function stringify_action_response(data, route_id) {
-	return try_deserialize(data, devalue.stringify, route_id);
+function stringify_action_response(data, route_id, transport) {
+	const encoders = Object.fromEntries(
+		Object.entries(transport).map(([key, value]) => [key, value.encode])
+	);
+
+	return try_serialize(data, (value) => devalue.stringify(value, encoders), route_id);
 }
 
 /**
@@ -273,7 +298,7 @@ function stringify_action_response(data, route_id) {
  * @param {(data: any) => string} fn
  * @param {string} route_id
  */
-function try_deserialize(data, fn, route_id) {
+function try_serialize(data, fn, route_id) {
 	try {
 		return fn(data);
 	} catch (e) {

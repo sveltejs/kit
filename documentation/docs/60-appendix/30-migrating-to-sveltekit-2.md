@@ -173,3 +173,21 @@ SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependenc
 `svelte-migrate` will update your `package.json` for you.
 
 As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `tsconfig.json` extends from) now uses `"moduleResolution": "bundler"` (which is recommended by the TypeScript team, as it properly resolves types from packages with an `exports` map in package.json) and `verbatimModuleSyntax` (which replaces the existing `importsNotUsedAsValues ` and `preserveValueImports` flags — if you have those in your `tsconfig.json`, remove them. `svelte-migrate` will do this for you).
+
+## SvelteKit 2.12: $app/stores deprecated
+
+SvelteKit 2.12 introduced `$app/state` based on the [Svelte 5 runes API](/docs/svelte/what-are-runes). `$app/state` provides everything that `$app/stores` provides but with more flexibility as to where and how you use it. Most importantly, the `page` object is now fine-grained, e.g. updates to `page.state` will not invalidate `page.data` and vice-versa.
+
+As a consequence, `$app/stores` is deprecated and subject to be removed in SvelteKit 3. We recommend [upgrading to Svelte 5](/docs/svelte/v5-migration-guide), if you haven't already, and then migrate away from `$app/stores`. Most of the replacements should be pretty simple: Replace the `$app/stores` import with `$app/state` and remove the `$` prefixes from the usage sites.
+
+```svelte
+<script>
+	---import { page } from '$app/stores';---
+	+++import { page } from '$app/state';+++
+</script>
+
+---{$page.data}---
++++{page.data}+++
+```
+
+Use `npx sv migrate app-state` to auto-migrate most of your `$app/stores` usages inside `.svelte` components.

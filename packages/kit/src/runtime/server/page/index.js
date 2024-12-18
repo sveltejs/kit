@@ -110,7 +110,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 				} else if (action_result.data) {
 					/// case: lost data
 					console.warn(
-						"The form action returned a value, but it isn't available in `$page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
+						"The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
 					);
 				}
 			}

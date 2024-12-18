@@ -79,7 +79,7 @@ export async function render_response({
 
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'failure'
-			? action_result.data ?? null
+			? (action_result.data ?? null)
 			: null;
 
 	/** @type {string} */
@@ -149,6 +149,17 @@ export async function render_response({
 		// portable as possible, but reset afterwards
 		if (paths.relative) paths.override({ base, assets });
 
+		const render_opts = {
+			context: new Map([
+				[
+					'__request__',
+					{
+						page: props.page
+					}
+				]
+			])
+		};
+
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
 			let warned = false;
@@ -168,14 +179,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, render_opts);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, render_opts);
 			} finally {
 				paths.reset();
 			}
@@ -321,12 +332,20 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			// When resolving, the id might not yet be available due to the data
+			// be evaluated upon init of kit, so we use a timeout to retry
 			properties.push(`resolve: ({ id, data, error }) => {
-							const { fulfil, reject } = deferred.get(id);
-							deferred.delete(id);
-
-							if (error) reject(error);
-							else fulfil(data);
+							const try_to_resolve = () => {
+								if (!deferred.has(id)) {
+									setTimeout(try_to_resolve, 0);
+									return;
+								}
+								const { fulfil, reject } = deferred.get(id);
+								deferred.delete(id);
+								if (error) reject(error);
+								else fulfil(data);
+							}
+							try_to_resolve();
 						}`);
 		}
 
@@ -342,12 +361,11 @@ export async function render_response({
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
-			blocks.push(`const data = ${data};`);
-
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id)
+					/** @type {string} */ (event.route.id),
+					options.hooks.transport
 				);
 			}
 
@@ -357,7 +375,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				'data',
+				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -573,6 +591,13 @@ function get_data(event, options, nodes, csp, global) {
 				);
 
 			return `${global}.defer(${id})`;
+		} else {
+			for (const key in options.hooks.transport) {
+				const encoded = options.hooks.transport[key].encode(thing);
+				if (encoded) {
+					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+				}
+			}
 		}
 	}
 

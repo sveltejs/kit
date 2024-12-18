@@ -1,0 +1,9 @@
+{
+	"type": "module",
+	"exports": {
+		".": {
+			"browser": "./client.js",
+			"default": "./server.js"
+		}
+	}
+}

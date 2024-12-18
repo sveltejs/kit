@@ -168,7 +168,7 @@ function disable_hash(url) {
 	Object.defineProperty(url, 'hash', {
 		get() {
 			throw new Error(
-				'Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead'
+				'Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead'
 			);
 		}
 	});

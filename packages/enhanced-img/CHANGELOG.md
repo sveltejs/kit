@@ -1,5 +1,26 @@
 # @sveltejs/enhanced-img
 
+## 0.4.4
+### Patch Changes
+
+
+- fix: handle duplicate SVG images ([`8073d7c7dcc391d406c658729221a18ac6f18102`](https://github.com/sveltejs/kit/commit/8073d7c7dcc391d406c658729221a18ac6f18102))
+
+## 0.4.3
+### Patch Changes
+
+
+- fix: properly handle multiple SVGs ([#13127](https://github.com/sveltejs/kit/pull/13127))
+
+## 0.4.2
+### Patch Changes
+
+
+- feat: set intrinsic width and height for SVGs ([#13126](https://github.com/sveltejs/kit/pull/13126))
+
+
+- perf: directly inline values since Svelte no longer inlines variables into template ([#13035](https://github.com/sveltejs/kit/pull/13035))
+
 ## 0.4.1
 ### Patch Changes
 

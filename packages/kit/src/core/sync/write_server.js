@@ -64,9 +64,23 @@ export const options = {
 };
 
 export async function get_hooks() {
+	let handle;
+	let handleFetch;
+	let handleError;
+	let init;
+	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+
+	let reroute;
+	let transport;
+	${universal_hooks ? `({ reroute, transport } = await import(${s(universal_hooks)}));` : ''}
+
 	return {
-		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
-		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
+		handle,
+		handleFetch,
+		handleError,
+		init,
+		reroute,
+		transport
 	};
 }
 
