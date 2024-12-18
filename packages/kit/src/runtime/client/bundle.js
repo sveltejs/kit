@@ -1,3 +1,5 @@
+/* if `bundleStrategy === 'single'`, this file is used as the entry point */
+
 import * as kit from './entry.js';
 
 // @ts-expect-error

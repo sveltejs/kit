@@ -78,7 +78,7 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/bundle\.[\w-]+\.js/);
+		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
 		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 

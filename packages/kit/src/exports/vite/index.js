@@ -610,7 +610,7 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
-					input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
+					input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/entry.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
@@ -856,7 +856,7 @@ async function kit({ svelte_config }) {
 						)
 					};
 				} else {
-					const start = deps_of(`${runtime_directory}/client/bundled-entry.js`);
+					const start = deps_of(`${runtime_directory}/client/bundle.js`);
 
 					build_data.client = {
 						start: start.file,
