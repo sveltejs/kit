@@ -361,9 +361,10 @@ async function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		resolveId(id, importer) {
-			if (id === '__sveltekit/APP') {
+			if (id === '__sveltekit/manifest') {
 				return `${kit.outDir}/generated/client-optimized/app.js`;
 			}
+
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.

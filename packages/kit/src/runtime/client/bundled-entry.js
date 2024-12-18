@@ -1,7 +1,7 @@
 import * as kit from './entry.js';
 
 // @ts-expect-error
-import * as app from '__sveltekit/APP';
+import * as app from '__sveltekit/manifest';
 
 /**
  *
