@@ -10,34 +10,34 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('hash based navigation', () => {
 	test('navigation works', async ({ page }) => {
 		await page.goto('/');
-		expect(await page.textContent('p')).toBe('home');
+		await expect(page.locator('p')).toHaveText('home');
 
 		await page.locator('a[href="/a"]').click();
-		expect(await page.textContent('p')).toBe('a');
+		await expect(page.locator('p')).toHaveText('a');
 		let url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a');
 
 		await page.locator('button[data-goto]').click();
-		expect(await page.textContent('p')).toBe('b');
+		await expect(page.locator('p')).toHaveText('b');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
 		await page.locator('a[href="/a#b"]').click();
-		expect(await page.textContent('p')).toBe('a');
+		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a#b');
 
 		await page.locator('button[data-push]').click();
-		expect(await page.textContent('p')).toBe('a');
+		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
 		await page.locator('button[data-replace]').click();
-		expect(await page.textContent('p')).toBe('a');
+		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a#b');
@@ -45,6 +45,6 @@ test.describe('hash based navigation', () => {
 
 	test('navigates to correct page on load', async ({ page }) => {
 		await page.goto('/#/a');
-		expect(await page.textContent('p')).toBe('a');
+		await expect(page.locator('p')).toHaveText('a');
 	});
 });
