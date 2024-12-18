@@ -18,13 +18,25 @@ test.describe('hash based navigation', () => {
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a');
 
-		await page.locator('button').click();
+		await page.locator('button[data-goto]').click();
 		expect(await page.textContent('p')).toBe('b');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
 		await page.locator('a[href="/a#b"]').click();
+		expect(await page.textContent('p')).toBe('a');
+		url = new URL(page.url());
+		expect(url.pathname).toBe('/');
+		expect(url.hash).toBe('#/a#b');
+
+		await page.locator('button[data-push]').click();
+		expect(await page.textContent('p')).toBe('a');
+		url = new URL(page.url());
+		expect(url.pathname).toBe('/');
+		expect(url.hash).toBe('#/b');
+
+		await page.locator('button[data-replace]').click();
 		expect(await page.textContent('p')).toBe('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');

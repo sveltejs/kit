@@ -1392,13 +1392,7 @@ async function navigate({
 		};
 
 		const fn = replace_state ? history.replaceState : history.pushState;
-		let visible_url = url;
-		if (app.hash) {
-			visible_url = new URL(url.href);
-			visible_url.hash = `${get_url_path(url.pathname)}${url.hash}`;
-			visible_url.pathname = base;
-		}
-		fn.call(history, entry, '', visible_url);
+		fn.call(history, entry, '', get_navbar_url(url));
 
 		if (!replace_state) {
 			clear_onward_history(current_history_index, current_navigation_index);
@@ -1503,6 +1497,20 @@ async function navigate({
 	stores.navigating.set((navigating.current = null));
 
 	updating = false;
+}
+
+/**
+ * Returns the URL as is visible in the browser navbar, taking into account the hash mode.
+ * @param {URL} url
+ */
+function get_navbar_url(url) {
+	if (app.hash) {
+		url = new URL(url.href);
+		url.hash = `${get_url_path(url.pathname)}${url.hash}`;
+		url.pathname = base;
+	}
+
+	return url;
 }
 
 /**
@@ -1926,7 +1934,7 @@ export function pushState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', resolve_url(url));
+	history.pushState(opts, '', get_navbar_url(resolve_url(url)));
 	has_navigated = true;
 
 	page.state = state;
@@ -1968,7 +1976,7 @@ export function replaceState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', resolve_url(url));
+	history.replaceState(opts, '', get_navbar_url(resolve_url(url)));
 
 	page.state = state;
 	root.$set({ page });
