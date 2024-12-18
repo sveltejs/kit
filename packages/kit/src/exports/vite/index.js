@@ -608,7 +608,7 @@ async function kit({ svelte_config }) {
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
-				} else if (!svelte_config.kit.output.codeSplit) {
+				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -648,7 +648,8 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: svelte_config.kit.output.codeSplit ? undefined : () => 'bundle'
+								manualChunks:
+									svelte_config.kit.output.bundleStrategy === 'single' ? () => 'bundle' : undefined
 							},
 							preserveEntrySignatures: 'strict'
 						},
@@ -678,7 +679,9 @@ async function kit({ svelte_config }) {
 							input: `${runtime_directory}/client/entry.js`,
 							output: {
 								format: 'esm',
-								manualChunks: svelte_config.kit.output.codeSplit ? undefined : () => 'bundle'
+								// TODO is this necessary? it's already a single file, because of the string input
+								manualChunks:
+									svelte_config.kit.output.bundleStrategy === 'single' ? () => 'bundle' : undefined
 							}
 						}
 					},
@@ -843,7 +846,7 @@ async function kit({ svelte_config }) {
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
 
-				if (svelte_config.kit.output.codeSplit) {
+				if (svelte_config.kit.output.bundleStrategy === 'split') {
 					const start = deps_of(`${runtime_directory}/client/entry.js`);
 					const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 

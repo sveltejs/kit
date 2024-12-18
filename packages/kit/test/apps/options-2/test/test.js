@@ -88,7 +88,7 @@ test.describe('Service worker', () => {
 	});
 });
 
-test.describe('codeSplit', () => {
+test.describe("bundleStrategy: 'single'", () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
 	test('loads a single js file and a single css file', async ({ page }) => {
 		/** @type {string[]} */

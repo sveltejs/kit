@@ -392,7 +392,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		// `client.app` is a proxy for `codeSplit: true`
+		// `client.app` is a proxy for `bundleStrategy !== 'single'`
 		const boot = client.app
 			? `Promise.all([
 						import(${s(prefixed(client.start))}),

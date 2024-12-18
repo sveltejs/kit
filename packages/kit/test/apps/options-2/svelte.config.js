@@ -12,7 +12,7 @@ const config = {
 			dir: '../../env'
 		},
 		output: {
-			codeSplit: false
+			bundleStrategy: 'single'
 		}
 	}
 };

@@ -499,11 +499,11 @@ export interface KitConfig {
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 		/**
-		 * If `true`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
-		 * If `false`, creates just one .js bundle and one .css file containing code for the entire app.
-		 * @default true
+		 * If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
+		 * If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+		 * @default 'split'
 		 */
-		codeSplit?: boolean;
+		bundleStrategy?: 'split' | 'single';
 	};
 	paths?: {
 		/**

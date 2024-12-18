@@ -92,7 +92,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { preloadStrategy: 'modulepreload', codeSplit: true },
+		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
 		outDir: join(prefix, '.svelte-kit'),
 		serviceWorker: {
 			register: true
