@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-import { applyAction } from '../client/client.js';
+import { app, applyAction } from '../client/client.js';
 
 export { applyAction };
 
@@ -29,9 +29,11 @@ export { applyAction };
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
+
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data);
+		parsed.data = devalue.parse(parsed.data, app.decoders);
 	}
+
 	return parsed;
 }
 
@@ -57,7 +59,7 @@ function clone(element) {
  *
  * If this function or its return value isn't set, it
  * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
- * - updates `$page.status`
+ * - updates `page.status`
  * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
  * - redirects in case of a redirect response
  * - redirects to the nearest error page in case of an unexpected error

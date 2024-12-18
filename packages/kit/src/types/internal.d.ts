@@ -17,7 +17,10 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	ServerInit,
+	ClientInit,
+	Transporter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -109,11 +112,15 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	transport: Record<string, Transporter>;
+	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	transport: Record<string, Transporter>;
+	init?: ClientInit;
 }
 
 export interface Env {
@@ -299,7 +306,10 @@ export interface ServerMetadata {
 
 export interface SSRComponent {
 	default: {
-		render(props: Record<string, any>): {
+		render(
+			props: Record<string, any>,
+			opts: { context: Map<any, any> }
+		): {
 			html: string;
 			head: string;
 			css: {

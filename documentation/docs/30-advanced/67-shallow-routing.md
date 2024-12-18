@@ -12,7 +12,7 @@ SvelteKit makes this possible with the [`pushState`]($app-navigation#pushState) 
 <!--- file: +page.svelte --->
 <script>
 	import { pushState } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Modal from './Modal.svelte';
 
 	function showModal() {
@@ -22,20 +22,23 @@ SvelteKit makes this possible with the [`pushState`]($app-navigation#pushState) 
 	}
 </script>
 
-{#if $page.state.showModal}
+{#if page.state.showModal}
 	<Modal close={() => history.back()} />
 {/if}
 ```
 
-The modal can be dismissed by navigating back (unsetting `$page.state.showModal`) or by interacting with it in a way that causes the `close` callback to run, which will navigate back programmatically.
+The modal can be dismissed by navigating back (unsetting `page.state.showModal`) or by interacting with it in a way that causes the `close` callback to run, which will navigate back programmatically.
 
 ## API
 
 The first argument to `pushState` is the URL, relative to the current URL. To stay on the current URL, use `''`.
 
-The second argument is the new page state, which can be accessed via the [page store]($app-stores#page) as `$page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
+The second argument is the new page state, which can be accessed via the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
+
+> [!LEGACY]
+> `page.state` from `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$page.state` from `$app/stores` instead.
 
 ## Loading data for a route
 
@@ -47,7 +50,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 <!--- file: src/routes/photos/+page.svelte --->
 <script>
 	import { preloadData, pushState, goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Modal from './Modal.svelte';
 	import PhotoPage from './[id]/+page.svelte';
 
@@ -85,17 +88,17 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 	</a>
 {/each}
 
-{#if $page.state.selected}
+{#if page.state.selected}
 	<Modal onclose={() => history.back()}>
 		<!-- pass page data to the +page.svelte component,
 		     just like SvelteKit would on navigation -->
-		<PhotoPage data={$page.state.selected} />
+		<PhotoPage data={page.state.selected} />
 	</Modal>
 {/if}
 ```
 
 ## Caveats
 
-During server-side rendering, `$page.state` is always an empty object. The same is true for the first page the user lands on — if the user reloads the page (or returns from another document), state will _not_ be applied until they navigate.
+During server-side rendering, `page.state` is always an empty object. The same is true for the first page the user lands on — if the user reloads the page (or returns from another document), state will _not_ be applied until they navigate.
 
 Shallow routing is a feature that requires JavaScript to work. Be mindful when using it and try to think of sensible fallback behavior in case JavaScript isn't available.

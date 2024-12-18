@@ -4,9 +4,9 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
 import MagicString from 'magic-string';
-import { walk } from 'zimmerframe';
-import { VERSION } from 'svelte/compiler';
+import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
+import { walk } from 'zimmerframe';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
@@ -44,13 +44,6 @@ export function image(opts) {
 			const imports = new Map();
 
 			/**
-			 * Vite name to declaration name
-			 * e.g. __VITE_ASSET_0__ => __DECLARED_ASSET_0__
-			 * @type {Map<string, string>}
-			 */
-			const consts = new Map();
-
-			/**
 			 * @param {import('svelte/compiler').AST.RegularElement} node
 			 * @param {AST.Text | AST.ExpressionTag} src_attribute
 			 * @returns {Promise<void>}
@@ -78,51 +71,53 @@ export function image(opts) {
 				const original_url = src_attribute.raw.trim();
 				let url = original_url;
 
-				const sizes = get_attr_value(node, 'sizes');
-				const width = get_attr_value(node, 'width');
-				url += url.includes('?') ? '&' : '?';
-				if (sizes && 'raw' in sizes) {
-					url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
-				}
-				if (width && 'raw' in width) {
-					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
-				}
-				url += 'enhanced';
-
 				if (OPTIMIZABLE.test(url)) {
-					// resolves the import so that we can build the entire picture template string and don't
-					// need any logic blocks
-					const resolved_id = (await opts.plugin_context.resolve(url, filename))?.id;
-					if (!resolved_id) {
-						const file_path = url.substring(0, url.indexOf('?'));
-						if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
-							throw new Error(
-								`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
-							);
-						}
+					const sizes = get_attr_value(node, 'sizes');
+					const width = get_attr_value(node, 'width');
+					url += url.includes('?') ? '&' : '?';
+					if (sizes && 'raw' in sizes) {
+						url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
+					}
+					if (width && 'raw' in width) {
+						url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
+					}
+					url += 'enhanced';
+				}
+
+				// resolves the import so that we can build the entire picture template string and don't
+				// need any logic blocks
+				const resolved_id = (await opts.plugin_context.resolve(url, filename))?.id;
+				if (!resolved_id) {
+					const query_index = url.indexOf('?');
+					const file_path = query_index >= 0 ? url.substring(0, query_index) : url;
+					if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
 						throw new Error(
-							`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+							`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
 						);
 					}
+					throw new Error(
+						`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+					);
+				}
 
+				if (OPTIMIZABLE.test(url)) {
 					let image = images.get(resolved_id);
 					if (!image) {
 						image = await process(resolved_id, opts);
 						images.set(resolved_id, image);
 					}
-					s.update(node.start, node.end, img_to_picture(consts, content, node, image));
+					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
-					// e.g. <img src="./foo.svg" /> => <img src={__IMPORTED_ASSET_0__} />
-					const name = '__IMPORTED_ASSET_' + imports.size + '__';
-					const { start, end } = src_attribute;
-					// update src with reference to imported asset
-					s.update(
-						is_quote(content, start - 1) ? start - 1 : start,
-						is_quote(content, end) ? end + 1 : end,
-						`{${name}}`
-					);
-					// update `enhanced:img` to `img`
-					s.update(node.start + 1, node.start + 1 + 'enhanced:img'.length, 'img');
+					const metadata = await sharp(resolved_id).metadata();
+					// this must come after the await so that we don't hand off processing between getting
+					// the imports.size and incrementing the imports.size
+					const name = imports.get(original_url) || '__IMPORTED_ASSET_' + imports.size + '__';
+					const new_markup = `<img ${serialize_img_attributes(content, node.attributes, {
+						src: `{${name}}`,
+						width: metadata.width || 0,
+						height: metadata.height || 0
+					})} />`;
+					s.update(node.start, node.end, new_markup);
 					imports.set(original_url, name);
 				}
 			}
@@ -160,7 +155,7 @@ export function image(opts) {
 
 			await Promise.all(pending_ast_updates);
 
-			// add imports and consts to <script module> block
+			// add imports
 			let text = '';
 			if (imports.size) {
 				for (const [path, import_name] of imports.entries()) {
@@ -168,19 +163,11 @@ export function image(opts) {
 				}
 			}
 
-			if (consts.size) {
-				for (const [vite_name, declaration_name] of consts.entries()) {
-					text += `\tconst ${declaration_name} = "${vite_name}";\n`;
-				}
-			}
-
-			if (ast.module) {
+			if (ast.instance) {
 				// @ts-ignore
-				s.appendLeft(ast.module.content.start, text);
+				s.appendLeft(ast.instance.content.start, text);
 			} else {
-				s.prepend(
-					`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`
-				);
+				s.prepend(`<script>${text}</script>\n`);
 			}
 
 			return {
@@ -189,15 +176,6 @@ export function image(opts) {
 			};
 		}
 	};
-}
-
-/**
- * @param {string} content
- * @param {number} index
- * @returns {boolean}
- */
-function is_quote(content, index) {
-	return content.charAt(index) === '"' || content.charAt(index) === "'";
 }
 
 /**
@@ -318,12 +296,11 @@ function stringToNumber(param) {
 }
 
 /**
- * @param {Map<string,string>} consts
  * @param {string} content
  * @param {import('svelte/compiler').AST.RegularElement} node
  * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(consts, content, node, image) {
+function img_to_picture(content, node, image) {
 	/** @type {import('../types/internal.ts').Attribute[]} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
@@ -338,11 +315,11 @@ function img_to_picture(consts, content, node, image) {
 	let res = '<picture>';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset=${to_value(consts, srcset)}${sizes_string} type="image/${format}" />`;
+		res += `<source srcset=${to_value(srcset)}${sizes_string} type="image/${format}" />`;
 	}
 
 	res += `<img ${serialize_img_attributes(content, attributes, {
-		src: to_value(consts, image.img.src),
+		src: to_value(image.img.src),
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
@@ -351,20 +328,11 @@ function img_to_picture(consts, content, node, image) {
 }
 
 /**
- * @param {Map<string, string>} consts
  * @param {string} src
  */
-function to_value(consts, src) {
-	if (src.startsWith('__VITE_ASSET__')) {
-		let var_name = consts.get(src);
-		if (!var_name) {
-			var_name = '__DECLARED_ASSET_' + consts.size + '__';
-			consts.set(src, var_name);
-		}
-		return `{${var_name}}`;
-	}
-
-	return `"${src}"`;
+function to_value(src) {
+	// __VITE_ASSET__ needs to be contained in double quotes to work with Vite asset plugin
+	return src.startsWith('__VITE_ASSET__') ? `{"${src}"}` : `"${src}"`;
 }
 
 /**

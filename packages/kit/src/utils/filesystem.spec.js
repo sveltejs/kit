@@ -105,3 +105,10 @@ test('ignores hooks.server folder when resolving hooks', () => {
 
 	expect(resolve_entry(source_dir + '/hooks')).null;
 });
+
+test('ignores hooks folder that has no index file when resolving hooks', () => {
+	write('hooks/not-index.js', '');
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).toBe(source_dir + '/hooks');
+});
