@@ -1,5 +1,8 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { setup } from '../../../../setup.js';
+
+	setup();
 
 	let { children } = $props();
 </script>
