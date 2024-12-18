@@ -567,8 +567,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
-			const ssr = /** @type {boolean} */ (config.build?.ssr);
 			if (is_build) {
+				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
