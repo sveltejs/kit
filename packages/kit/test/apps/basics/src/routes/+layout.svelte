@@ -7,6 +7,8 @@
 	setup();
 </script>
 
+<svelte:html lang="en" />
+
 <slot />
 
 <footer>{data.foo.bar}</footer>

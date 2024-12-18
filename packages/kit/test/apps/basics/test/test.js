@@ -1532,3 +1532,10 @@ test.describe('Serialization', () => {
 		expect(await page.textContent('h1')).toBe('It works!');
 	});
 });
+
+test.describe('svelte:html', () => {
+	test('server-renders correctly', async ({ page }) => {
+		await page.goto('/');
+		expect(page.locator('html')).toHaveAttribute('lang', 'en');
+	});
+});
