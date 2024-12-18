@@ -676,13 +676,7 @@ async function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: `${runtime_directory}/client/entry.js`,
-							output: {
-								format: 'esm',
-								// TODO is this necessary? it's already a single file, because of the string input
-								manualChunks:
-									svelte_config.kit.output.bundleStrategy === 'single' ? () => 'bundle' : undefined
-							}
+							input: `${runtime_directory}/client/entry.js`
 						}
 					},
 					publicDir: kit.files.assets
