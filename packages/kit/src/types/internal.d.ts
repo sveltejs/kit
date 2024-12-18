@@ -76,7 +76,7 @@ export interface BuildData {
 		uses_env_dynamic_public: boolean;
 		inline?: {
 			script: string;
-			style: string;
+			style: string | undefined;
 		};
 	} | null;
 	server_manifest: import('vite').Manifest;

@@ -873,14 +873,18 @@ async function kit({ svelte_config }) {
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = output.find(
-							(chunk) =>
-								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
+						const style = /** @type {import('rollup').OutputAsset} */ (
+							output.find(
+								(chunk) =>
+									chunk.type === 'asset' &&
+									chunk.names.length === 1 &&
+									chunk.names[0] === 'style.css'
+							)
 						);
 
 						build_data.client.inline = {
 							script: read(`${out}/client/${start.file}`),
-							style: style?.source
+							style: /** @type {string | undefined} */ (style?.source)
 						};
 					}
 				}
