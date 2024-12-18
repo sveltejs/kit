@@ -182,12 +182,12 @@ export function resolve_entry(entry) {
 
 	if (fs.existsSync(dir)) {
 		const base = path.basename(entry);
-		const files = fs.readdirSync(dir, { withFileTypes: true });
+		const files = fs.readdirSync(dir);
 		const found = files.find((file) => {
-			return file.isFile() && file.name.replace(/\.(js|ts)$/, '') === base;
+			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
 		});
 
-		if (found) return path.join(dir, found.name);
+		if (found) return path.join(dir, found);
 	}
 
 	return null;

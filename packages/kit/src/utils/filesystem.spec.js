@@ -118,3 +118,9 @@ test('ignores hooks folder when resolving universal hooks', () => {
 
 	expect(resolve_entry(source_dir + '/hooks')).null;
 });
+
+test('resolves entries that have an extension', () => {
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks.js')).toBe(source_dir + '/hooks.js');
+});
