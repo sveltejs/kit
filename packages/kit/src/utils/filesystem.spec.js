@@ -1,6 +1,6 @@
 import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import path, { dirname, join } from 'node:path';
 import { assert, expect, beforeEach, test } from 'vitest';
 import { copy, mkdirp, resolve_entry } from './filesystem.js';
 
@@ -110,7 +110,7 @@ test('ignores hooks folder that has no index file when resolving hooks', () => {
 	write('hooks/not-index.js', '');
 	write('hooks.js', '');
 
-	expect(resolve_entry(source_dir + '/hooks')).toBe(source_dir + '/hooks.js');
+	expect(resolve_entry(source_dir + '/hooks')).toBe(path.join(source_dir, 'hooks.js'));
 });
 
 test('ignores hooks folder when resolving universal hooks', () => {
@@ -122,5 +122,5 @@ test('ignores hooks folder when resolving universal hooks', () => {
 test('resolves entries that have an extension', () => {
 	write('hooks.js', '');
 
-	expect(resolve_entry(source_dir + '/hooks.js')).toBe(source_dir + '/hooks.js');
+	expect(resolve_entry(source_dir + '/hooks.js')).toBe(path.join(source_dir, 'hooks.js'));
 });
