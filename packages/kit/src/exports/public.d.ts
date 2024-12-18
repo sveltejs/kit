@@ -501,7 +501,10 @@ export interface KitConfig {
 		/**
 		 * If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
 		 * If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+		 *
+		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks)inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
 		 * @default 'split'
+		 * @since 2.13.0
 		 */
 		bundleStrategy?: 'split' | 'single';
 	};
