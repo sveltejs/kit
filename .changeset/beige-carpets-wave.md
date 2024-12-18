@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add `codeSplit` option
+feat: add `bundleStrategy: 'split' | 'single'` option
