@@ -631,26 +631,30 @@ async function kit({ svelte_config }) {
 				const client_base =
 					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
 
+				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
+				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
+
 				new_config = {
 					base: ssr ? assets_base(kit) : client_base,
 					build: {
 						copyPublicDir: !ssr,
-						cssCodeSplit: true,
+						cssCodeSplit: svelte_config.kit.output.bundleStrategy === 'split',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
-							input,
+							input: inline ? input['bundle'] : input,
 							output: {
-								format: 'esm',
+								format: inline ? 'iife' : 'esm',
+								name: `__sveltekit_${version_hash}.app`,
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks:
-									svelte_config.kit.output.bundleStrategy === 'single' ? () => 'bundle' : undefined
+								manualChunks: split ? undefined : () => 'bundle',
+								inlineDynamicImports: false
 							},
 							preserveEntrySignatures: 'strict'
 						},
@@ -867,6 +871,18 @@ async function kit({ svelte_config }) {
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
+
+					if (svelte_config.kit.output.bundleStrategy === 'inline') {
+						const style = output.find(
+							(chunk) =>
+								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
+						);
+
+						build_data.client.inline = {
+							script: read(`${out}/client/${start.file}`),
+							style: style?.source
+						};
+					}
 				}
 
 				const css = output.filter(

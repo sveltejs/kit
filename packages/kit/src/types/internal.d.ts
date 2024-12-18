@@ -74,6 +74,10 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		inline?: {
+			script: string;
+			style: string;
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }

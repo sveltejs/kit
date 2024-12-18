@@ -506,7 +506,7 @@ export interface KitConfig {
 		 * @default 'split'
 		 * @since 2.13.0
 		 */
-		bundleStrategy?: 'split' | 'single';
+		bundleStrategy?: 'split' | 'single' | 'inline';
 	};
 	paths?: {
 		/**

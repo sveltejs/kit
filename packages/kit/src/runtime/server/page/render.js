@@ -197,7 +197,7 @@ export async function render_response({
 			for (const url of node.stylesheets) stylesheets.add(url);
 			for (const url of node.fonts) fonts.add(url);
 
-			if (node.inline_styles) {
+			if (node.inline_styles && !client.inline) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
 		}
@@ -222,6 +222,10 @@ export async function render_response({
 		}
 		return `${assets}/${path}`;
 	};
+
+	if (client.inline?.style) {
+		head += `\n\t<style>${client.inline.style}</style>`;
+	}
 
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
@@ -392,15 +396,19 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		// `client.app` is a proxy for `bundleStrategy !== 'single'`
-		const boot = client.app
-			? `Promise.all([
+		// `client.app` is a proxy for `bundleStrategy === 'split'`
+		const boot = client.inline
+			? `${client.inline.script}
+
+					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+			: client.app
+				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
 						kit.start(app, ${args.join(', ')});
 					});`
-			: `import(${s(prefixed(client.start))}).then((app) => {
+				: `import(${s(prefixed(client.start))}).then((app) => {
 						app.start(${args.join(', ')})
 					});`;
 
