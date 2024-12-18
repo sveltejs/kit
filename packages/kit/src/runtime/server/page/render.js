@@ -354,7 +354,7 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['app', 'element'];
+		const args = ['element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
@@ -392,15 +392,16 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const boot = `Promise.all([
-						import(${s(prefixed(client.start))}),${
-							client.app
-								? `
-						import(${s(prefixed(client.app))})`
-								: ''
-						}
-					]).then(([kit, app = kit.app]) => {
-						kit.start(${args.join(', ')});
+		// `client.app` is a proxy for `codeSplit: true`
+		const boot = client.app
+			? `Promise.all([
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))})
+					]).then(([kit, app]) => {
+						kit.start(app, ${args.join(', ')});
+					});`
+			: `import(${s(prefixed(client.start))}).then((app) => {
+						app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {

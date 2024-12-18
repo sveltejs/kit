@@ -1,4 +1,8 @@
-export * from './entry.js';
+import * as kit from './entry.js';
 
 // @ts-expect-error
-export * as app from '__sveltekit/APP';
+import * as app from '__sveltekit/APP';
+
+export function start(element, options) {
+	kit.start(app, element, options);
+}
