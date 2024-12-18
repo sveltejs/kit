@@ -144,10 +144,7 @@ export default function (options = {}) {
 				);
 			}
 
-			writeFileSync(
-				`${dest}/.assetsignore`,
-				generate_assetsignore(`${dest}/.assetsignore`, `${files}/.assetsignore`)
-			);
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 		async emulate() {
 			const proxy = await getPlatformProxy(options.platformProxy);
@@ -269,16 +266,12 @@ ${rules}
 `.trimEnd();
 }
 
-/**
- * @param {string[]} sources
- */
-function generate_assetsignore(...sources) {
-	return sources
-		.reduce((acc, file) => {
-			if (existsSync(file)) {
-				acc.push(readFileSync(file, 'utf8'));
-			}
-			return acc;
-		}, [])
-		.join('\n');
+function generate_assetsignore() {
+	// this comes from https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates-experimental/svelte/templates/static/.assetsignore
+	return `
+_worker.js
+_routes.json
+_headers
+_redirects
+`;
 }
