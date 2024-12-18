@@ -259,6 +259,10 @@ const options = object(
 				})
 			}),
 
+			router: object({
+				type: list(['history', 'hash'])
+			}),
+
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))

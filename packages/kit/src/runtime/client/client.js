@@ -306,9 +306,20 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	if (hydrate) {
+		// We're not checking for app.hash here, because in case of hydration there URL is already pathname'd.
+		// This could happen in case of prerendering parts of your app (which are hydrated) and then navigating
+		// to other parts, which are not prerendered.
 		await _hydrate(target, hydrate);
 	} else {
-		goto(location.href, { replaceState: true });
+		if (app.hash) {
+			const [pathname, hash] = location.hash.slice(1).split('#');
+			const visible_url = new URL(location.href);
+			visible_url.pathname = base + (pathname ?? '');
+			visible_url.hash = hash ?? '';
+			goto(visible_url.href, { replaceState: true });
+		} else {
+			goto(location.href, { replaceState: true });
+		}
 	}
 
 	_start_router();
@@ -1381,7 +1392,13 @@ async function navigate({
 		};
 
 		const fn = replace_state ? history.replaceState : history.pushState;
-		fn.call(history, entry, '', url);
+		let visible_url = url;
+		if (app.hash) {
+			visible_url = new URL(url.href);
+			visible_url.hash = `${get_url_path(url.pathname)}${url.hash}`;
+			visible_url.pathname = base;
+		}
+		fn.call(history, entry, '', visible_url);
 
 		if (!replace_state) {
 			clear_onward_history(current_history_index, current_navigation_index);
@@ -1437,7 +1454,11 @@ async function navigate({
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
-		const deep_linked = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+		const deep_linked =
+			url.hash &&
+			document.getElementById(
+				decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1))
+			);
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
