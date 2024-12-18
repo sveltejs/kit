@@ -170,22 +170,24 @@ export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
 		const index = path.join(entry, 'index');
-		if (stats.isDirectory() && fs.existsSync(index)) {
+
+		if (stats.isFile()) {
+			return entry;
+		} else if (fs.existsSync(index)) {
 			return resolve_entry(index);
 		}
+	}
 
-		return entry;
-	} else {
-		const dir = path.dirname(entry);
+	const dir = path.dirname(entry);
 
-		if (fs.existsSync(dir)) {
-			const base = path.basename(entry);
-			const files = fs.readdirSync(dir);
+	if (fs.existsSync(dir)) {
+		const base = path.basename(entry);
+		const files = fs.readdirSync(dir, { withFileTypes: true });
+		const found = files.find((file) => {
+			return file.isFile() && file.name.replace(/\.(js|ts)$/, '') === base;
+		});
 
-			const found = files.find((file) => file.replace(/\.(js|ts)$/, '') === base);
-
-			if (found) return path.join(dir, found);
-		}
+		if (found) return path.join(dir, found.name);
 	}
 
 	return null;
