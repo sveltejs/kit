@@ -638,7 +638,7 @@ async function kit({ svelte_config }) {
 					base: ssr ? assets_base(kit) : client_base,
 					build: {
 						copyPublicDir: !ssr,
-						cssCodeSplit: svelte_config.kit.output.bundleStrategy === 'split',
+						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
