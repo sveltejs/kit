@@ -1741,7 +1741,7 @@ export function goto(url, opts = {}) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
 
-	url = resolve_url(url);
+	url = new URL(resolve_url(url));
 
 	if (url.origin !== origin) {
 		return Promise.reject(
