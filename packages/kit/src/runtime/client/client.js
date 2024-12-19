@@ -321,7 +321,7 @@ export async function start(_app, _target, hydrate) {
  * @param {URL | string} incoming
  */
 function normalize_url(incoming) {
-	let url = resolve_url(incoming);
+	const url = resolve_url(incoming);
 
 	if (!app.hash) return url;
 
