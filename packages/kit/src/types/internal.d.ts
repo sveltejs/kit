@@ -69,11 +69,15 @@ export interface BuildData {
 	service_worker: string | null;
 	client: {
 		start: string;
-		app: string;
+		app?: string;
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		inline?: {
+			script: string;
+			style: string | undefined;
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
