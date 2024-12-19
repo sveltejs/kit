@@ -12,9 +12,7 @@ import { method_not_allowed } from './utils.js';
  */
 export async function render_endpoint(event, mod, state) {
 	if (DEV && event.request.headers.get('x-sveltekit-action') === 'true') {
-		throw new Error(
-			'use:enhance should only be used with SvelteKit form actions'
-		);
+		throw new Error('use:enhance should only be used with SvelteKit form actions');
 	}
 
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
