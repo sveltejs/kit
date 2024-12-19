@@ -608,6 +608,18 @@ export interface KitConfig {
 		 */
 		origin?: string;
 	};
+	router?: {
+		/**
+		 * What type of client-side router to use.
+		 * - `'history'` means standard routing, pushing the URLs as-is to the browser history.
+		 * - `'hash'` also uses the history API, but the URL is transformed such that the pathname becomes part of the hash.
+		 *   For example if you navigate to `/about`, the URL will become `/#/about`.
+		 *   This is useful in scenarios where you can't configure your server to serve the same content for all URLs.
+		 *
+		 * @default "history"
+		 */
+		type?: 'history' | 'hash';
+	};
 	serviceWorker?: {
 		/**
 		 * Whether to automatically register the service worker, if it exists.
