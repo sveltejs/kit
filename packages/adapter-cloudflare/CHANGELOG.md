@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.9.0
+### Minor Changes
+
+
+- feat: generate `.assetsignore` file for use with Cloudflare Workers Static Assets ([#13109](https://github.com/sveltejs/kit/pull/13109))
+
 ## 4.8.0
 ### Minor Changes
 
