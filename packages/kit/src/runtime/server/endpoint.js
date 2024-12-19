@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
@@ -10,6 +11,10 @@ import { method_not_allowed } from './utils.js';
  * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, mod, state) {
+	if (DEV && event.request.headers.get('x-sveltekit-action') === 'true') {
+		throw new Error('use:enhance should only be used with SvelteKit form actions');
+	}
+
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
