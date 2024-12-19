@@ -57,6 +57,8 @@ export default function (options = {}) {
 					flag: 'a'
 				});
 			}
+			
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
 			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
 				replace: {
