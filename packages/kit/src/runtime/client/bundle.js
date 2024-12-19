@@ -1,4 +1,4 @@
-/* if `bundleStrategy === 'single'`, this file is used as the entry point */
+/* if `bundleStrategy` is 'single' or 'inline', this file is used as the entry point */
 
 import * as kit from './entry.js';
 
