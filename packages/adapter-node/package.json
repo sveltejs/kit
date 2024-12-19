@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.2.9",
+	"version": "5.2.11",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -53,7 +53,7 @@
 	"dependencies": {
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^15.3.0",
+		"@rollup/plugin-node-resolve": "^16.0.0",
 		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {

@@ -102,7 +102,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 ## Anatomy of an action
 
-Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
+Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `page.form` app-wide until the next update.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -156,7 +156,7 @@ export const actions = {
 
 ### Validation errors
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `page.status` and the data through `form`:
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -352,7 +352,7 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
+- update the `form` property, `page.form` and `page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, the `form` prop and the `page.form` state will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
 - reset the `<form>` element
 - invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
@@ -411,7 +411,7 @@ If you return a callback, you may need to reproduce part of the default `use:enh
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
+- `success`, `failure` — sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location, { invalidateAll: true })`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
@@ -430,8 +430,9 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	/** @type {{ form: import('./$types').ActionData }} */
 	let { form } = $props();
 
-	/** @param {{ currentTarget: EventTarget & HTMLFormElement}} event */
+	/** @param {SubmitEvent & { currentTarget: EventTarget & HTMLFormElement}} event */
 	async function handleSubmit(event) {
+		event.preventDefault();
 		const data = new FormData(event.currentTarget);
 
 		const response = await fetch(event.currentTarget.action, {
@@ -451,7 +452,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	}
 </script>
 
-<form method="POST" onsubmit|preventDefault={handleSubmit}>
+<form method="POST" onsubmit={handleSubmit}>
 	<!-- content -->
 </form>
 ```

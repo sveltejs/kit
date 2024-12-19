@@ -1,5 +1,68 @@
 # @sveltejs/kit
 
+## 2.12.2
+### Patch Changes
+
+
+- fix: correctly resolve no hooks file when a similarly named directory exists ([#13188](https://github.com/sveltejs/kit/pull/13188))
+
+
+- fix: correctly resolve `$app/state` on the server with Vite 5 ([#13192](https://github.com/sveltejs/kit/pull/13192))
+
+## 2.12.1
+### Patch Changes
+
+
+- fix: replace `navigating.current.<x>` with `navigating.<x>` ([#13174](https://github.com/sveltejs/kit/pull/13174))
+
+## 2.12.0
+### Minor Changes
+
+
+- feat: add `$app/state` module ([#13140](https://github.com/sveltejs/kit/pull/13140))
+
+
+### Patch Changes
+
+
+- chore: specify the route ID in the error message during development when making a form action request to a route without form actions ([#13167](https://github.com/sveltejs/kit/pull/13167))
+
+## 2.11.1
+### Patch Changes
+
+
+- fix: adhere to Vite `build.minify` setting when building the service worker ([#13143](https://github.com/sveltejs/kit/pull/13143))
+
+## 2.11.0
+### Minor Changes
+
+
+- feat: transport custom types across the server/client boundary ([#13149](https://github.com/sveltejs/kit/pull/13149))
+
+
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
+## 2.10.1
+### Patch Changes
+
+
+- fix: export `init` hook from `get_hooks` ([#13136](https://github.com/sveltejs/kit/pull/13136))
+
+## 2.10.0
+### Minor Changes
+
+
+- feat: server and client `init` hook ([#13103](https://github.com/sveltejs/kit/pull/13103))
+
+
+### Patch Changes
+
+
+- fix: prevent hooks exported from `hooks.js` from overwriting hooks from `hooks.server.js` ([#13104](https://github.com/sveltejs/kit/pull/13104))
+
 ## 2.9.1
 ### Patch Changes
 

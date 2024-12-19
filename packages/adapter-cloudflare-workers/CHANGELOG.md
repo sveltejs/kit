@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.7.0
+### Minor Changes
+
+
+- feat: support `wrangler.json` config file ([#13151](https://github.com/sveltejs/kit/pull/13151))
+
+
+### Patch Changes
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
 ## 2.6.0
 ### Minor Changes
 
