@@ -421,6 +421,13 @@ test.describe('$app/state', () => {
 		await app.goto('/state/data/state-update/same-keys');
 		await expect(page.locator('p')).toHaveText('page.data was updated 1 time(s)');
 	});
+
+	test('page.url does update when used with goto', async ({ page }) => {
+		await page.goto('/state/url');
+		await expect(page.locator('p')).toHaveText('undefined');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('test');
+	})
 });
 
 test.describe('Invalidation', () => {
