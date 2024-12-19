@@ -45,9 +45,12 @@ export const page = {
 };
 
 export const navigating = {
-	get current() {
-		return (__SVELTEKIT_DEV__ ? context_dev('navigating.current') : context()).navigating;
-	}
+	from: null,
+	to: null,
+	type: null,
+	willUnload: null,
+	delta: null,
+	complete: null
 };
 
 export const updated = {
