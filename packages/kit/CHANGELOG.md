@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.13.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'split' | 'single'` option ([#13173](https://github.com/sveltejs/kit/pull/13173))
+
 ## 2.12.2
 ### Patch Changes
 
