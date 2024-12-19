@@ -322,7 +322,7 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const intent = get_navigation_intent(current.url, true);
+	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
 	// Also solves an edge case where a preload is triggered, the navigation for it
@@ -1168,14 +1168,14 @@ async function load_root_error_page({ status, error, url, route }) {
  * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
-function get_navigation_intent(url, invalidating) {
+async function get_navigation_intent(url, invalidating) {
 	if (!url) return undefined;
 	if (is_external_url(url, base)) return;
 
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted = (await app.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1279,7 +1279,7 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
@@ -1529,15 +1529,15 @@ function setup_preload() {
 		const target = /** @type {Element} */ (event.target);
 
 		clearTimeout(mousemove_timeout);
-		mousemove_timeout = setTimeout(() => {
-			preload(target, 2);
+		mousemove_timeout = setTimeout(async () => {
+			await preload(target, 2);
 		}, 20);
 	});
 
 	/** @param {Event} event */
-	function tap(event) {
+	async function tap(event) {
 		if (event.defaultPrevented) return;
-		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		await preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1559,7 +1559,7 @@ function setup_preload() {
 	 * @param {Element} element
 	 * @param {number} priority
 	 */
-	function preload(element, priority) {
+	async function preload(element, priority) {
 		const a = find_anchor(element, container);
 		if (!a) return;
 
@@ -1573,19 +1573,19 @@ function setup_preload() {
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(url, false);
+				const intent = await get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
-						_preload_data(intent).then((result) => {
-							if (result.type === 'loaded' && result.state.error) {
-								console.warn(
-									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://svelte.dev/docs/kit/link-options for more info'
-								);
-							}
-						});
+						const results = await _preload_data(intent);
+
+						if (results.type === 'loaded' && results.state.error) {
+							console.warn(
+								`Preloading data for ${intent.url.pathname} failed with the following error: ${results.state.error.message}\n` +
+									'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+									'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+									'See https://svelte.dev/docs#preload for more info'
+							);
+						}
 					} else {
 						_preload_data(intent);
 					}
@@ -1820,7 +1820,7 @@ export async function preloadData(href) {
 	}
 
 	const url = resolve_url(href);
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
@@ -2375,7 +2375,7 @@ async function _hydrate(
 	if (!__SVELTEKIT_EMBEDDED__) {
 		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
 		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+		({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
