@@ -354,7 +354,7 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['app', 'element'];
+		const args = ['element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
@@ -392,24 +392,26 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
+		// `client.app` is a proxy for `bundleStrategy !== 'single'`
+		const boot = client.app
+			? `Promise.all([
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))})
+					]).then(([kit, app]) => {
+						kit.start(app, ${args.join(', ')});
+					});`
+			: `import(${s(prefixed(client.start))}).then((app) => {
+						app.start(${args.join(', ')})
+					});`;
+
 		if (load_env_eagerly) {
 			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
 						${global}.env = env;
 
-						Promise.all([
-							import(${s(prefixed(client.start))}),
-							import(${s(prefixed(client.app))})
-						]).then(([kit, app]) => {
-							kit.start(${args.join(', ')});
-						});
+						${boot.replace(/\n/g, '\n\t')}
 					});`);
 		} else {
-			blocks.push(`Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
-						kit.start(${args.join(', ')});
-					});`);
+			blocks.push(boot);
 		}
 
 		if (options.service_worker) {
