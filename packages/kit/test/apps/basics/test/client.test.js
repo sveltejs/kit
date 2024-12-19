@@ -427,7 +427,7 @@ test.describe('$app/state', () => {
 		await expect(page.locator('p')).toHaveText('undefined');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('test');
-	})
+	});
 });
 
 test.describe('Invalidation', () => {
