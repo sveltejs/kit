@@ -158,6 +158,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
 
+			export const hash = ${JSON.stringify(kit.router.type === 'hash')};
+
 			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
