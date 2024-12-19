@@ -12,7 +12,7 @@ test.describe('hash based navigation', () => {
 		await page.goto('/');
 		await expect(page.locator('p')).toHaveText('home');
 
-		await page.locator('a[href="/a"]').click();
+		await page.locator('a[href="/#/a"]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		let url = new URL(page.url());
 		expect(url.pathname).toBe('/');
@@ -24,7 +24,7 @@ test.describe('hash based navigation', () => {
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
-		await page.locator('a[href="/a#b"]').click();
+		await page.locator('a[href="/#/a#b"]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
@@ -46,5 +46,11 @@ test.describe('hash based navigation', () => {
 	test('navigates to correct page on load', async ({ page }) => {
 		await page.goto('/#/a');
 		await expect(page.locator('p')).toHaveText('a');
+	});
+
+	test('route id and params are correct', async ({ page }) => {
+		await page.goto('/#/b/123');
+		await expect(page.locator('p')).toHaveText('{"slug":"123"} /b/[slug] /');
+		await expect(page.locator('div')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
 	});
 });

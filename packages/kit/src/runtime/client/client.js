@@ -26,7 +26,8 @@ import {
 	origin,
 	scroll_state,
 	notifiable_store,
-	create_updated_store
+	create_updated_store,
+	convert_from_hash
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -306,23 +307,25 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	if (hydrate) {
-		// We're not checking for app.hash here, because in case of hydration there URL is already pathname'd.
-		// This could happen in case of prerendering parts of your app (which are hydrated) and then navigating
-		// to other parts, which are not prerendered.
 		await _hydrate(target, hydrate);
 	} else {
-		if (app.hash) {
-			const [pathname, hash] = location.hash.slice(1).split('#');
-			const visible_url = new URL(location.href);
-			visible_url.pathname = base + (pathname ?? '');
-			visible_url.hash = hash ?? '';
-			goto(visible_url.href, { replaceState: true });
-		} else {
-			goto(location.href, { replaceState: true });
-		}
+		goto(location.href, { replaceState: true });
 	}
 
 	_start_router();
+}
+
+/**
+ * First resolves string to a full URL, if necessary.
+ * Then, if hash based routing is enabled, converts the URL to a non-hash URL.
+ * @param {URL | string} incoming
+ */
+function normalize_url(incoming) {
+	let url = resolve_url(incoming);
+
+	if (!app.hash) return url;
+
+	return new URL(convert_from_hash(url.href));
 }
 
 async function _invalidate() {
@@ -821,13 +824,14 @@ function create_data_node(node, previous) {
 }
 
 /**
- *
  * @param {URL | null} old_url
  * @param {URL} new_url
  */
 function diff_search_params(old_url, new_url) {
+	new_url = normalize_url(new_url);
 	if (!old_url) return new Set(new_url.searchParams.keys());
 
+	old_url = normalize_url(old_url);
 	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
 
 	for (const key of changed) {
@@ -886,7 +890,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
-	const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+	const url_changed = current.url ? id !== get_route_id(current.url) : false;
 	const route_changed = current.route ? route.id !== current.route.id : false;
 	const search_params_changed = diff_search_params(current.url, url);
 
@@ -1180,13 +1184,15 @@ async function load_root_error_page({ status, error, url, route }) {
  * @param {boolean} invalidating
  */
 function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
-	if (is_external_url(url, base)) return;
+	if (!url) return;
+	if (is_external_url(url, base, app.hash)) return;
 
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted = convert_from_hash(
+			app.hooks.reroute({ url: new URL(url) }) ?? normalize_url(url).pathname
+		);
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1206,7 +1212,7 @@ function get_navigation_intent(url, invalidating) {
 		const params = route.exec(path);
 
 		if (params) {
-			const id = url.pathname + url.search;
+			const id = get_route_id(url);
 			/** @type {import('./types.js').NavigationIntent} */
 			const intent = {
 				id,
@@ -1223,6 +1229,12 @@ function get_navigation_intent(url, invalidating) {
 /** @param {string} pathname */
 function get_url_path(pathname) {
 	return decode_pathname(pathname.slice(base.length) || '/');
+}
+
+/** @param {URL} url */
+function get_route_id(url) {
+	url = normalize_url(url);
+	return url.pathname + url.search;
 }
 
 /**
@@ -1314,19 +1326,42 @@ async function navigate({
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base)) {
-			return await native_navigation(url);
-		}
-		navigation_result = await server_fallback(
-			url,
-			{ id: null },
-			await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+		if (is_external_url(url, base, app.hash)) {
+			if (DEV && app.hash) {
+				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+				// they would end up here in an endless loop. Fall back to error page in that case
+				navigation_result = await server_fallback(
+					url,
+					{ id: null },
+					await handle_error(
+						new SvelteKitError(
+							404,
+							'Not Found',
+							`Not found: ${url.pathname} (did you forget the hash?)`
+						),
+						{
+							url,
+							params: {},
+							route: { id: null }
+						}
+					),
+					404
+				);
+			} else {
+				return await native_navigation(url);
+			}
+		} else {
+			navigation_result = await server_fallback(
 				url,
-				params: {},
-				route: { id: null }
-			}),
-			404
-		);
+				{ id: null },
+				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
+				404
+			);
+		}
 	}
 
 	// if this is an internal navigation intent, use the normalized
@@ -1392,7 +1427,7 @@ async function navigate({
 		};
 
 		const fn = replace_state ? history.replaceState : history.pushState;
-		fn.call(history, entry, '', get_navbar_url(url));
+		fn.call(history, entry, '', url);
 
 		if (!replace_state) {
 			clear_onward_history(current_history_index, current_navigation_index);
@@ -1500,20 +1535,6 @@ async function navigate({
 }
 
 /**
- * Returns the URL as is visible in the browser navbar, taking into account the hash mode.
- * @param {URL} url
- */
-function get_navbar_url(url) {
-	if (app.hash) {
-		url = new URL(url.href);
-		url.hash = `${get_url_path(url.pathname)}${url.hash}`;
-		url.pathname = base;
-	}
-
-	return url;
-}
-
-/**
  * Does a full page reload if it wouldn't result in an endless loop in the SPA case
  * @param {URL} url
  * @param {{ id: string | null }} route
@@ -1592,13 +1613,13 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 		if (!a) return;
 
-		const { url, external, download } = get_link_info(a, base);
+		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
 
 		const options = get_router_options(a);
 
 		// we don't want to preload data for a page we're already on
-		const same_url = url && current.url.pathname + current.url.search === url.pathname + url.search;
+		const same_url = url && get_route_id(current.url) === get_route_id(url);
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
@@ -1629,7 +1650,7 @@ function setup_preload() {
 		observer.disconnect();
 
 		for (const a of container.querySelectorAll('a')) {
-			const { url, external, download } = get_link_info(a, base);
+			const { url, external, download } = get_link_info(a, base, app.hash);
 			if (external || download) continue;
 
 			const options = get_router_options(a);
@@ -1934,7 +1955,7 @@ export function pushState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', get_navbar_url(resolve_url(url)));
+	history.pushState(opts, '', url);
 	has_navigated = true;
 
 	page.state = state;
@@ -1976,7 +1997,7 @@ export function replaceState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', get_navbar_url(resolve_url(url)));
+	history.replaceState(opts, '', url);
 
 	page.state = state;
 	root.$set({ page });
@@ -2102,7 +2123,7 @@ function _start_router() {
 		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 		if (!a) return;
 
-		const { url, external, target, download } = get_link_info(a, base);
+		const { url, external, target, download } = get_link_info(a, base, app.hash);
 		if (!url) return;
 
 		// bail out before `beforeNavigate` if link opens in a different tab
@@ -2132,8 +2153,8 @@ function _start_router() {
 
 		if (download) return;
 
-		const [nonhash, hash] = url.href.split('#');
-		const same_pathname = nonhash === strip_hash(location);
+		const [nonhash, hash] = normalize_url(url).href.split('#');
+		const same_pathname = nonhash === strip_hash(normalize_url(location.href));
 
 		// Ignore the following but fire beforeNavigate
 		if (external || (options.reload && (!same_pathname || !hash))) {
@@ -2227,11 +2248,12 @@ function _start_router() {
 
 		if (method !== 'get') return;
 
+		// It is impossible to use form actions with hash router, so we just ignore handling them here
 		const url = new URL(
 			(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 		);
 
-		if (is_external_url(url, base)) return;
+		if (is_external_url(url, base, false)) return;
 
 		const event_form = /** @type {HTMLFormElement} */ (event.target);
 
@@ -2273,7 +2295,8 @@ function _start_router() {
 			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
-			const is_hash_change = strip_hash(location) === strip_hash(current.url);
+			const is_hash_change =
+				strip_hash(normalize_url(location.href)) === strip_hash(normalize_url(current.url));
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 

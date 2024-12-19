@@ -12,6 +12,9 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
+	},
+	optimizeDeps: {
+		exclude: ['svelte']
 	}
 };
 
