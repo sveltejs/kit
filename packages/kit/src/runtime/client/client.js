@@ -2354,15 +2354,7 @@ function _start_router() {
 
 /**
  * @param {HTMLElement} target
- * @param {{
- *   status: number;
- *   error: App.Error | null;
- *   node_ids: number[];
- *   params: Record<string, string>;
- *   route: { id: string | null };
- *   data: Array<import('types').ServerDataNode | null>;
- *   form: Record<string, any> | null;
- * }} opts
+ * @param {import('./types.js').HydrateOptions} opts
  */
 async function _hydrate(
 	target,

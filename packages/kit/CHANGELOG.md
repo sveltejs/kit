@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.13.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'split' | 'single'` option ([#13173](https://github.com/sveltejs/kit/pull/13173))
+
+## 2.12.2
+### Patch Changes
+
+
+- fix: correctly resolve no hooks file when a similarly named directory exists ([#13188](https://github.com/sveltejs/kit/pull/13188))
+
+
+- fix: correctly resolve `$app/state` on the server with Vite 5 ([#13192](https://github.com/sveltejs/kit/pull/13192))
+
 ## 2.12.1
 ### Patch Changes
 
