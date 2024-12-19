@@ -1955,7 +1955,7 @@ export function pushState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', url);
+	history.pushState(opts, '', resolve_url(url));
 	has_navigated = true;
 
 	page.state = state;
@@ -1997,7 +1997,7 @@ export function replaceState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', url);
+	history.replaceState(opts, '', resolve_url(url));
 
 	page.state = state;
 	root.$set({ page });
