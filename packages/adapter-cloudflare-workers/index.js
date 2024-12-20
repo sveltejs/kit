@@ -33,7 +33,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml', platformProxy = {}, exports } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {}, handlers } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -59,7 +59,8 @@ export default function ({ config = 'wrangler.toml', platformProxy = {}, exports
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					HANDLERS: './_handlers.js'
 				}
 			});
 
@@ -79,13 +80,13 @@ export default function ({ config = 'wrangler.toml', platformProxy = {}, exports
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
-			if (exports) {
+			if (handlers) {
 				writeFileSync(
-					`${tmp}/_exports.js`,
-					`import * as exports from "${resolve(cwd(), exports)}";\n\n` + 'export default exports;'
+					`${tmp}/_handlers.js`,
+					`import handlers from "${resolve(cwd(), handlers)}";\n\n` + 'export default handlers;'
 				);
 			} else {
-				writeFileSync(`${tmp}/_exports.js`, 'export default {};');
+				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
 			}
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];

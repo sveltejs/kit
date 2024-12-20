@@ -11,10 +11,10 @@ declare module 'MANIFEST' {
 	export const base_path: string;
 }
 
-declare module 'EXPORTS' {
+declare module 'HANDLERS' {
 	import { ExportedHandler } from '@cloudflare/workers-types';
 
-	const exports: Omit<ExportedHandler, 'fetch'>;
+	const handlers: Omit<ExportedHandler, 'fetch'>;
 
-	export default exports;
+	export default handlers;
 }

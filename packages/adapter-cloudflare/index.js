@@ -75,21 +75,21 @@ export default function (options = {}) {
 				});
 			}
 
-			if (options.exports) {
+			if (options.handlers) {
 				writeFileSync(
-					`${tmp}/_exports.js`,
-					`import * as exports from "${path.resolve(process.cwd(), options.exports)}";\n\n` +
-						'export default exports;'
+					`${tmp}/_handlers.js`,
+					`import handlers from "${path.resolve(process.cwd(), options.handlers)}";\n\n` +
+						'export default handlers;'
 				);
 			} else {
-				writeFileSync(`${tmp}/_exports.js`, 'export default {};');
+				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
 			}
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js',
-					EXPORTS: './_exports.js'
+					HANDLERS: './_handlers.js'
 				}
 			});
 
