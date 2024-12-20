@@ -6,6 +6,7 @@ export default function plugin(options?: AdapterOptions): Adapter;
 
 export interface AdapterOptions {
 	config?: string;
+	exports?: string;
 	/**
 	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
 	 * during development and preview.
