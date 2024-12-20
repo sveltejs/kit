@@ -2363,6 +2363,12 @@ function _start_router() {
 				'',
 				location.href
 			);
+		} else if (app.hash) {
+			// Check if this is an actual navigation disguised as a hash change
+			const url = normalize_url(location.href);
+			if (url.hash !== location.hash) {
+				navigate({ type: 'goto', url: new URL(location.href) });
+			}
 		}
 	});
 
