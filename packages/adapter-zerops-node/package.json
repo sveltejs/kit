@@ -1,0 +1,41 @@
+{
+	"name": "@sveltejs/adapter-zerops-node",
+	"version": "1.0.0", 
+	"description": "Adapter for building SvelteKit applications on Zerops with Node.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/adapter-zerops-node"
+	},
+	"license": "MIT",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"types": "index.d.ts",
+	"files": [
+		"files",
+		"index.js", 
+		"index.d.ts"
+	],
+	"scripts": {
+		"lint": "prettier --check . --config ../../.prettierrc",
+		"format": "prettier --write . --config ../../.prettierrc",
+		"check": "tsc"
+	},
+	"dependencies": {
+		"esbuild": "^0.19.11"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@types/node": "^18.19.3",
+		"typescript": "^5.3.3"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^2.0.0"
+	}
+} 

@@ -1,0 +1,38 @@
+{
+	"name": "@sveltejs/adapter-zerops-static",
+	"version": "1.0.0",
+	"description": "SvelteKit adapter for static deployments on Zerops",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/adapter-zerops-static"
+	},
+	"license": "MIT",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"types": "index.d.ts",
+	"files": [
+		"files",
+		"index.js",
+		"index.d.ts"
+	],
+	"scripts": {
+		"lint": "prettier --check . --config ../../.prettierrc",
+		"format": "prettier --write . --config ../../.prettierrc",
+		"check": "tsc"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@types/node": "^18.19.3",
+		"typescript": "^5.3.3"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^2.0.0"
+	}
+} 
