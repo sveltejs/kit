@@ -520,7 +520,17 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 		props: {
 			// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 			constructors: compact(branch).map((branch_node) => branch_node.node.component),
-			page
+			// we need to assign a new page object so that subscribers are correctly notified
+			page: {
+				data: page.data,
+				error: page.error,
+				form: page.form,
+				params: page.params,
+				route: page.route,
+				state: page.state,
+				status: page.status,
+				url: page.url
+			}
 		}
 	};
 
@@ -848,7 +858,20 @@ function preload_error({ error, url, route, params }) {
 			params,
 			branch: []
 		},
-		props: { page, constructors: [] }
+		props: {
+			// we need to assign a new page object so that subscribers are correctly notified
+			page: {
+				data: page.data,
+				error: page.error,
+				form: page.form,
+				params: page.params,
+				route: page.route,
+				state: page.state,
+				status: page.status,
+				url: page.url
+			},
+			constructors: []
+		}
 	};
 }
 
@@ -1909,7 +1932,19 @@ export function pushState(url, state) {
 	has_navigated = true;
 
 	page.state = state;
-	root.$set({ page });
+	root.$set({
+		// we need to assign a new page object so that subscribers are correctly notified
+		page: {
+			data: page.data,
+			error: page.error,
+			form: page.form,
+			params: page.params,
+			route: page.route,
+			state: page.state,
+			status: page.status,
+			url: page.url
+		}
+	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
 }
@@ -1950,7 +1985,19 @@ export function replaceState(url, state) {
 	history.replaceState(opts, '', resolve_url(url));
 
 	page.state = state;
-	root.$set({ page });
+	root.$set({
+		// we need to assign a new page object so that subscribers are correctly notified
+		page: {
+			data: page.data,
+			error: page.error,
+			form: page.form,
+			params: page.params,
+			route: page.route,
+			state: page.state,
+			status: page.status,
+			url: page.url
+		}
+	});
 }
 
 /**
@@ -2001,7 +2048,17 @@ export async function applyAction(result) {
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page
+			// we need to assign a new page object so that subscribers are correctly notified
+			page: {
+				data: page.data,
+				error: page.error,
+				form: page.form,
+				params: page.params,
+				route: page.route,
+				state: page.state,
+				status: page.status,
+				url: page.url
+			}
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
@@ -2253,15 +2310,14 @@ function _start_router() {
 				// This happens with hash links and `pushState`/`replaceState`. The
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
+				if (state !== page.state) {
+					page.state = state;
+				}
+
 				update_url(url);
 
 				scroll_positions[current_history_index] = scroll_state();
 				if (scroll) scrollTo(scroll.x, scroll.y);
-
-				if (state !== page.state) {
-					page.state = state;
-					root.$set({ page });
-				}
 
 				current_history_index = history_index;
 				return;
