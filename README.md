@@ -16,6 +16,8 @@ Web development, streamlined. Read the [documentation](https://svelte.dev/docs/k
 | [@sveltejs/adapter-node](packages/adapter-node)                             | [Changelog](packages/adapter-node/CHANGELOG.md)               |
 | [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
 | [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
+| [@sveltejs/adapter-zerops-node](packages/adapter-zerops-node)                 | [Changelog](packages/adapter-zerops-node/CHANGELOG.md)       |
+| [@sveltejs/adapter-zerops-static](packages/adapter-zerops-static)         | [Changelog](packages/adapter-zerops-static/CHANGELOG.md)     |
 | [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
 | [@sveltejs/enhanced-img](packages/enhanced-img)                             | [Changelog](packages/enhanced-img/CHANGELOG.md)               |
 | [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
