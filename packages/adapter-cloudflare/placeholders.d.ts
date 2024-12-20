@@ -12,9 +12,9 @@ declare module 'MANIFEST' {
 }
 
 declare module 'EXPORTS' {
-	import { Module } from 'worktop/cfw';
+	import { ExportedHandler } from '@cloudflare/workers-types';
 
-	const exports: Omit<Module.Worker, 'fetch'>;
+	const exports: Omit<ExportedHandler, 'fetch'>;
 
 	export default exports;
 }

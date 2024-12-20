@@ -76,11 +76,10 @@ export default function (options = {}) {
 			}
 
 			if (options.exports) {
-				const exports_file = path.posix.relative(process.cwd(), options.exports);
 				writeFileSync(
 					`${tmp}/_exports.js`,
-					`import * as exports from "${exports_file}";
-					export default exports;`
+					`import * as exports from "${path.resolve(process.cwd(), options.exports)}";\n\n` +
+						'export default exports;'
 				);
 			} else {
 				writeFileSync(`${tmp}/_exports.js`, 'export default {};');
