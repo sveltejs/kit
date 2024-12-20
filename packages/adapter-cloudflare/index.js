@@ -1,5 +1,6 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
+import * as process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 import { getPlatformProxy } from 'wrangler';
@@ -74,10 +75,22 @@ export default function (options = {}) {
 				});
 			}
 
+			if (options.exports) {
+				const exports_file = path.posix.relative(process.cwd(), options.exports);
+				writeFileSync(
+					`${tmp}/_exports.js`,
+					`import * as exports from "${exports_file}";
+					export default exports;`
+				);
+			} else {
+				writeFileSync(`${tmp}/_exports.js`, 'export default {};');
+			}
+
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					EXPORTS: './_exports.js'
 				}
 			});
 

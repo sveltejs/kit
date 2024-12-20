@@ -18,6 +18,11 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
+	 * 
+	 */
+	exports?: string;
+
+	/**
 	 * Customize the automatically-generated `_routes.json` file.
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */

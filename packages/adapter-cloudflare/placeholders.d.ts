@@ -10,3 +10,11 @@ declare module 'MANIFEST' {
 	export const app_path: string;
 	export const base_path: string;
 }
+
+declare module 'EXPORTS' {
+	import { Module } from 'worktop/cfw';
+
+	const exports: Omit<Module.Worker, 'fetch'>;
+
+	export default exports;
+}

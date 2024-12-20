@@ -1,5 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import * as exports from 'EXPORTS';
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
@@ -11,6 +12,7 @@ const version_file = `${app_path}/version.json`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
+	...exports,
 	async fetch(req, env, context) {
 		// @ts-ignore
 		await server.init({ env });
