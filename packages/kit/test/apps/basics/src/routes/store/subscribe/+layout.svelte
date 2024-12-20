@@ -8,7 +8,6 @@
 	let count = $state(0);
 
 	page.subscribe(() => {
-    console.log('$page notified')
 		count += 1;
 	});
 </script>
@@ -17,7 +16,7 @@
 
 <button
 	onclick={() => {
-    invalidate('/state/subscribe')
+		invalidate('/state/subscribe');
 	}}>invalidate</button
 >
 
