@@ -1212,7 +1212,7 @@ function get_navigation_intent(url, invalidating) {
 		return undefined;
 	}
 
-	const path = get_url_path(new URL(rerouted, url));
+	const path = get_url_path(rerouted);
 
 	for (const route of routes) {
 		const params = route.exec(path);

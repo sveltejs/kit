@@ -8,7 +8,7 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('hash based navigation', () => {
-	test('server rendering is disabled', async ({ page, request, javaScriptEnabled }) => {
+	test('server rendering is disabled', async ({ request }) => {
 		const response = await request.get('/');
 		const text = await response.text();
 
