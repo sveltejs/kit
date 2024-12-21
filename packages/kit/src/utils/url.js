@@ -101,8 +101,9 @@ const tracked_url_properties = /** @type {const} */ ([
  * @param {URL} url
  * @param {() => void} callback
  * @param {(search_param: string) => void} search_params_callback
+ * @param {boolean} allow_hash
  */
-export function make_trackable(url, callback, search_params_callback) {
+export function make_trackable(url, callback, search_params_callback, allow_hash) {
 	const tracked = new URL(url);
 
 	Object.defineProperty(tracked, 'searchParams', {
@@ -151,7 +152,7 @@ export function make_trackable(url, callback, search_params_callback) {
 		};
 	}
 
-	if (DEV || !BROWSER) {
+	if ((DEV || !BROWSER) && !allow_hash) {
 		disable_hash(tracked);
 	}
 

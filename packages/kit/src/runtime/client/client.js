@@ -680,7 +680,8 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					if (is_tracking) {
 						uses.search_params.add(param);
 					}
-				}
+				},
+				app.hash
 			),
 			async fetch(resource, init) {
 				/** @type {URL | string} */
