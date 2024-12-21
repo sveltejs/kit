@@ -12,6 +12,8 @@ Official adapters exist for a variety of platforms — these are documented on t
 - [`@sveltejs/adapter-node`](adapter-node) for Node servers
 - [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
+- [`@sveltejs/adapter-zerops-node`](adapter-zerops-node) for Zerops
+- [`@sveltejs/adapter-zerops-static`](adapter-zerops-static) for Zerops
 
 Additional [community-provided adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) exist for other platforms.
 
