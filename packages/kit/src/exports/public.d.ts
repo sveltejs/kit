@@ -611,14 +611,12 @@ export interface KitConfig {
 	router?: {
 		/**
 		 * What type of client-side router to use.
-		 * - `'history'` means standard routing, pushing the URLs as-is to the browser history.
-		 * - `'hash'` also uses the history API, but the URL is transformed such that the pathname becomes part of the hash.
-		 *   For example if you navigate to `/about`, the URL will become `/#/about`.
-		 *   This is useful in scenarios where you can't configure your server to serve the same content for all URLs.
+		 * - `'pathname'` is the default and means the current URL pathname determines the route
+		 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
 		 *
-		 * @default "history"
+		 * @default "pathname"
 		 */
-		type?: 'history' | 'hash';
+		type?: 'pathname' | 'hash';
 	};
 	serviceWorker?: {
 		/**

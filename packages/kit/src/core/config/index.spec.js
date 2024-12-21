@@ -95,7 +95,7 @@ const get_defaults = (prefix = '') => ({
 		output: { preloadStrategy: 'modulepreload' },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
-			type: 'history'
+			type: 'pathname'
 		},
 		serviceWorker: {
 			register: true

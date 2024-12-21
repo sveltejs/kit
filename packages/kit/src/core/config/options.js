@@ -260,7 +260,7 @@ const options = object(
 			}),
 
 			router: object({
-				type: list(['history', 'hash'])
+				type: list(['pathname', 'hash'])
 			}),
 
 			serviceWorker: object({
