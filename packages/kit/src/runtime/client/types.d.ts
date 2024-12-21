@@ -1,5 +1,13 @@
 import { SvelteComponent } from 'svelte';
-import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
+import {
+	ClientHooks,
+	CSRPageNode,
+	CSRPageNodeLoader,
+	CSRRoute,
+	ServerDataNode,
+	TrailingSlash,
+	Uses
+} from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
 
 export interface SvelteKitApp {
@@ -92,4 +100,14 @@ export interface NavigationState {
 	params: Record<string, string>;
 	route: CSRRoute | null;
 	url: URL;
+}
+
+export interface HydrateOptions {
+	status: number;
+	error: App.Error | null;
+	node_ids: number[];
+	params: Record<string, string>;
+	route: { id: string | null };
+	data: Array<ServerDataNode | null>;
+	form: Record<string, any> | null;
 }

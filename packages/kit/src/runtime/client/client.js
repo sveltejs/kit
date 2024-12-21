@@ -1924,7 +1924,7 @@ export function preloadCode(pathname) {
 		}
 
 		if (!routes.find((route) => route.exec(get_url_path(url)))) {
-			throw new Error(`'${url.pathname}' did not match any routes`);
+			throw new Error(`'${pathname}' did not match any routes`);
 		}
 	}
 
@@ -2416,15 +2416,7 @@ function _start_router() {
 
 /**
  * @param {HTMLElement} target
- * @param {{
- *   status: number;
- *   error: App.Error | null;
- *   node_ids: number[];
- *   params: Record<string, string>;
- *   route: { id: string | null };
- *   data: Array<import('types').ServerDataNode | null>;
- *   form: Record<string, any> | null;
- * }} opts
+ * @param {import('./types.js').HydrateOptions} opts
  */
 async function _hydrate(
 	target,
