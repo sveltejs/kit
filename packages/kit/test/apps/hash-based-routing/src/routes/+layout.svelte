@@ -9,6 +9,8 @@
 
 <a href="/#/a">to a</a>
 <a href="/#/a#b">to a#b</a>
+<a href="/#/reroute-a">to rerouted</a>
+<a href="/#/reroute-b">to rerouted</a>
 <button data-goto onclick={() => goto('/#/b')}>goto b</button>
 <button data-push onclick={() => pushState('/#/b', {})}>pushState b</button>
 <button data-replace onclick={() => replaceState('/#/a#b', {})}>replaceState a#b</button>
