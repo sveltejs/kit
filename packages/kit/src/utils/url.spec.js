@@ -129,6 +129,21 @@ describe('make_trackable', (test) => {
 		);
 	});
 
+	test('does not throw an error when its hash property is accessed if it is allowed', () => {
+		let tracked = false;
+		const url = make_trackable(
+			new URL('https://svelte.dev/docs/kit'),
+			() => {
+				tracked = true;
+			},
+			() => {},
+			true
+		);
+
+		url.hash;
+		assert.ok(tracked);
+	});
+
 	test('track each search param separately if accessed directly', () => {
 		let tracked = false;
 		const tracked_search_params = new Set();
