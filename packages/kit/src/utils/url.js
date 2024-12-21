@@ -86,18 +86,6 @@ export function strip_hash({ href }) {
 }
 
 /**
- * URL properties that could change during the lifetime of the page,
- * which excludes things like `origin`
- */
-const tracked_url_properties = /** @type {const} */ ([
-	'href',
-	'pathname',
-	'search',
-	'toString',
-	'toJSON'
-]);
-
-/**
  * @param {URL} url
  * @param {() => void} callback
  * @param {(search_param: string) => void} search_params_callback
@@ -128,10 +116,18 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		configurable: true
 	});
 
+	/**
+	 * URL properties that could change during the lifetime of the page,
+	 * which excludes things like `origin`
+	 */
+	const tracked_url_properties = ['href', 'pathname', 'search', 'toString', 'toJSON'];
+	if (allow_hash) tracked_url_properties.push('hash');
+
 	for (const property of tracked_url_properties) {
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
+				// @ts-expect-error
 				return url[property];
 			},
 
