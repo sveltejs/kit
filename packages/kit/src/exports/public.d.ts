@@ -624,6 +624,7 @@ export interface KitConfig {
 		 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
 		 *
 		 * @default "pathname"
+		 * @since 2.14.0
 		 */
 		type?: 'pathname' | 'hash';
 	};
