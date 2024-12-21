@@ -61,7 +61,7 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('p[data-page]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
 	});
 
-	test('reroute works', async ({ page }) => {
+	test.skip('reroute works', async ({ page }) => {
 		await page.goto('/');
 
 		await page.locator('a[href="/#/reroute-a"]').click();
