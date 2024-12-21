@@ -8,11 +8,11 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('hash based navigation', () => {
-	test('server rendering is disabled', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) {
-			await page.goto('/');
-			await expect(page.locator('p')).toHaveCount(0);
-		}
+	test('server rendering is disabled', async ({ page, request, javaScriptEnabled }) => {
+		const response = await request.get('/');
+		const text = await response.text();
+
+		expect(text).not.toContain('<p');
 	});
 
 	test('navigation works', async ({ page }) => {
@@ -59,9 +59,14 @@ test.describe('hash based navigation', () => {
 		await page.goto('/#/b/123');
 		await expect(page.locator('p[data-data]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
 		await expect(page.locator('p[data-page]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
+
+		await page.goto('/');
+		await page.locator('a[href="/#/b/456"]').click();
+		await expect(page.locator('p[data-data]')).toHaveText('{"slug":"456"} /b/[slug] /#/b/456');
+		await expect(page.locator('p[data-page]')).toHaveText('{"slug":"456"} /b/[slug] /#/b/456');
 	});
 
-	test.skip('reroute works', async ({ page }) => {
+	test('reroute works', async ({ page }) => {
 		await page.goto('/');
 
 		await page.locator('a[href="/#/reroute-a"]').click();

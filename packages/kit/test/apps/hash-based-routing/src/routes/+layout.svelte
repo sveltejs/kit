@@ -7,12 +7,15 @@
 	let { children } = $props();
 </script>
 
-<a href="/#/a">to a</a>
-<a href="/#/a#b">to a#b</a>
-<a href="/#/reroute-a">to rerouted</a>
-<a href="/#/reroute-b">to rerouted</a>
-<button data-goto onclick={() => goto('/#/b')}>goto b</button>
-<button data-push onclick={() => pushState('/#/b', {})}>pushState b</button>
-<button data-replace onclick={() => replaceState('/#/a#b', {})}>replaceState a#b</button>
+<a href="/">/</a>
+<a href="/#/a">/#/a</a>
+<a href="/#/a#b">/#/a#b</a>
+<a href="/#/b/123">/#/b/123</a>
+<a href="/#/b/456">/#/b/456</a>
+<a href="/#/reroute-a">/#/reroute-a</a>
+<a href="/#/reroute-b">/#/reroute-b</a>
+<button data-goto onclick={() => goto('/#/b')}>goto /#/b</button>
+<button data-push onclick={() => pushState('/#/b', {})}>pushState /#/b</button>
+<button data-replace onclick={() => replaceState('/#/a#b', {})}>replaceState /#/a#b</button>
 
 {@render children()}

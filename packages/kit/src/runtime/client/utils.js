@@ -146,14 +146,6 @@ export function get_link_info(a, base, uses_hash_router) {
 }
 
 /**
- * https://example.com/#/path?foo#bar -> https://example.com/path?foo#bar
- * @param {string} href
- */
-export function convert_from_hash(href) {
-	return href.replace(/\/#\//, '/');
-}
-
-/**
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {

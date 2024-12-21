@@ -26,8 +26,7 @@ import {
 	origin,
 	scroll_state,
 	notifiable_store,
-	create_updated_store,
-	convert_from_hash
+	create_updated_store
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -315,19 +314,6 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-/**
- * First resolves string to a full URL, if necessary.
- * Then, if hash based routing is enabled, converts the URL to a non-hash URL.
- * @param {URL | string} incoming
- */
-function normalize_url(incoming) {
-	const url = resolve_url(incoming);
-
-	if (!app.hash) return url;
-
-	return new URL(convert_from_hash(url.href));
-}
-
 async function _invalidate() {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
@@ -438,9 +424,9 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {string} pathname */
-async function _preload_code(pathname) {
-	const route = routes.find((route) => route.exec(get_url_path(pathname)));
+/** @param {URL} url */
+async function _preload_code(url) {
+	const route = routes.find((route) => route.exec(get_url_path(url)));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -842,10 +828,8 @@ function create_data_node(node, previous) {
  * @param {URL} new_url
  */
 function diff_search_params(old_url, new_url) {
-	new_url = normalize_url(new_url);
 	if (!old_url) return new Set(new_url.searchParams.keys());
 
-	old_url = normalize_url(old_url);
 	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
 
 	for (const key of changed) {
@@ -1204,9 +1188,17 @@ function get_navigation_intent(url, invalidating) {
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
-		rerouted = convert_from_hash(
-			app.hooks.reroute({ url: new URL(url) }) ?? normalize_url(url).pathname
-		);
+		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
+
+		if (typeof rerouted === 'string') {
+			if (app.hash) {
+				url.hash = rerouted;
+			} else {
+				url.pathname = rerouted;
+			}
+
+			rerouted = url;
+		}
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1220,7 +1212,7 @@ function get_navigation_intent(url, invalidating) {
 		return undefined;
 	}
 
-	const path = get_url_path(rerouted);
+	const path = get_url_path(new URL(rerouted, url));
 
 	for (const route of routes) {
 		const params = route.exec(path);
@@ -1240,15 +1232,18 @@ function get_navigation_intent(url, invalidating) {
 	}
 }
 
-/** @param {string} pathname */
-function get_url_path(pathname) {
-	return decode_pathname(pathname.slice(base.length) || '/');
+/** @param {URL} url */
+function get_url_path(url) {
+	return (
+		decode_pathname(
+			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
+		) || '/'
+	);
 }
 
 /** @param {URL} url */
 function get_route_id(url) {
-	url = normalize_url(url);
-	return url.pathname + url.search;
+	return (app.hash ? url.hash.replace(/^#/, '') : url.pathname) + url.search;
 }
 
 /**
@@ -1611,7 +1606,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					_preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1655,7 +1650,7 @@ function setup_preload() {
 					}
 				}
 			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1675,7 +1670,7 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1919,6 +1914,8 @@ export function preloadCode(pathname) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
+	const url = new URL(pathname, current.url);
+
 	if (DEV) {
 		if (!pathname.startsWith(base)) {
 			throw new Error(
@@ -1926,12 +1923,12 @@ export function preloadCode(pathname) {
 			);
 		}
 
-		if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
-			throw new Error(`'${pathname}' did not match any routes`);
+		if (!routes.find((route) => route.exec(get_url_path(url)))) {
+			throw new Error(`'${url.pathname}' did not match any routes`);
 		}
 	}
 
-	return _preload_code(pathname);
+	return _preload_code(url);
 }
 
 /**
@@ -2167,8 +2164,8 @@ function _start_router() {
 
 		if (download) return;
 
-		const [nonhash, hash] = normalize_url(url).href.split('#');
-		const same_pathname = nonhash === strip_hash(normalize_url(location.href));
+		const [nonhash, hash] = (app.hash ? url.hash.replace(/^#/, '') : url.href).split('#');
+		const same_pathname = nonhash === strip_hash(location);
 
 		// Ignore the following but fire beforeNavigate
 		if (external || (options.reload && (!same_pathname || !hash))) {
@@ -2309,8 +2306,7 @@ function _start_router() {
 			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
-			const is_hash_change =
-				strip_hash(normalize_url(location.href)) === strip_hash(normalize_url(current.url));
+			const is_hash_change = strip_hash(location) === strip_hash(current.url);
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
@@ -2379,7 +2375,7 @@ function _start_router() {
 			);
 		} else if (app.hash) {
 			// Check if this is an actual navigation disguised as a hash change
-			const url = normalize_url(location.href);
+			const url = location.href;
 			if (url.hash !== location.hash) {
 				navigate({ type: 'goto', url: new URL(location.href) });
 			}
