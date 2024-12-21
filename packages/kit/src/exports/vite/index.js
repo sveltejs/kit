@@ -778,6 +778,7 @@ async function kit({ svelte_config }) {
 				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
 
 				const metadata = await analyse({
+					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
 					server_manifest,
