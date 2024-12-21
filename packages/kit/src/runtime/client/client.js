@@ -610,6 +610,19 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 	if (DEV) {
 		validate_page_exports(node.universal);
+
+		if (node.universal && app.hash) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${route.id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
 	}
 
 	if (node.universal?.load) {
@@ -653,7 +666,8 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					if (is_tracking) {
 						uses.search_params.add(param);
 					}
-				}
+				},
+				app.hash
 			),
 			async fetch(resource, init) {
 				/** @type {URL | string} */
@@ -810,7 +824,6 @@ function create_data_node(node, previous) {
 }
 
 /**
- *
  * @param {URL | null} old_url
  * @param {URL} new_url
  */
@@ -1169,8 +1182,8 @@ async function load_root_error_page({ status, error, url, route }) {
  * @param {boolean} invalidating
  */
 function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
-	if (is_external_url(url, base)) return;
+	if (!url) return;
+	if (is_external_url(url, base, app.hash)) return;
 
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
@@ -1178,7 +1191,12 @@ function get_navigation_intent(url, invalidating) {
 		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
 
 		if (typeof rerouted === 'string') {
-			url.pathname = rerouted;
+			if (app.hash) {
+				url.hash = rerouted;
+			} else {
+				url.pathname = rerouted;
+			}
+
 			rerouted = url;
 		}
 	} catch (e) {
@@ -1216,12 +1234,16 @@ function get_navigation_intent(url, invalidating) {
 
 /** @param {URL} url */
 function get_url_path(url) {
-	return decode_pathname(url.pathname.slice(base.length) || '/');
+	return (
+		decode_pathname(
+			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
+		) || '/'
+	);
 }
 
 /** @param {URL} url */
 function get_page_key(url) {
-	return url.pathname + url.search;
+	return (app.hash ? url.hash.replace(/^#/, '') : url.pathname) + url.search;
 }
 
 /**
@@ -1313,19 +1335,42 @@ async function navigate({
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base)) {
-			return await native_navigation(url);
-		}
-		navigation_result = await server_fallback(
-			url,
-			{ id: null },
-			await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+		if (is_external_url(url, base, app.hash)) {
+			if (DEV && app.hash) {
+				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+				// they would end up here in an endless loop. Fall back to error page in that case
+				navigation_result = await server_fallback(
+					url,
+					{ id: null },
+					await handle_error(
+						new SvelteKitError(
+							404,
+							'Not Found',
+							`Not found: ${url.pathname} (did you forget the hash?)`
+						),
+						{
+							url,
+							params: {},
+							route: { id: null }
+						}
+					),
+					404
+				);
+			} else {
+				return await native_navigation(url);
+			}
+		} else {
+			navigation_result = await server_fallback(
 				url,
-				params: {},
-				route: { id: null }
-			}),
-			404
-		);
+				{ id: null },
+				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
+				404
+			);
+		}
 	}
 
 	// if this is an internal navigation intent, use the normalized
@@ -1447,7 +1492,11 @@ async function navigate({
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
-		const deep_linked = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+		const deep_linked =
+			url.hash &&
+			document.getElementById(
+				decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1))
+			);
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
@@ -1573,7 +1622,7 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 		if (!a) return;
 
-		const { url, external, download } = get_link_info(a, base);
+		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
 
 		const options = get_router_options(a);
@@ -1610,7 +1659,7 @@ function setup_preload() {
 		observer.disconnect();
 
 		for (const a of container.querySelectorAll('a')) {
-			const { url, external, download } = get_link_info(a, base);
+			const { url, external, download } = get_link_info(a, base, app.hash);
 			if (external || download) continue;
 
 			const options = get_router_options(a);
@@ -2085,7 +2134,7 @@ function _start_router() {
 		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 		if (!a) return;
 
-		const { url, external, target, download } = get_link_info(a, base);
+		const { url, external, target, download } = get_link_info(a, base, app.hash);
 		if (!url) return;
 
 		// bail out before `beforeNavigate` if link opens in a different tab
@@ -2115,7 +2164,7 @@ function _start_router() {
 
 		if (download) return;
 
-		const [nonhash, hash] = url.href.split('#');
+		const [nonhash, hash] = (app.hash ? url.hash.replace(/^#/, '') : url.href).split('#');
 		const same_pathname = nonhash === strip_hash(location);
 
 		// Ignore the following but fire beforeNavigate
@@ -2210,11 +2259,12 @@ function _start_router() {
 
 		if (method !== 'get') return;
 
+		// It is impossible to use form actions with hash router, so we just ignore handling them here
 		const url = new URL(
 			(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 		);
 
-		if (is_external_url(url, base)) return;
+		if (is_external_url(url, base, false)) return;
 
 		const event_form = /** @type {HTMLFormElement} */ (event.target);
 
@@ -2323,6 +2373,13 @@ function _start_router() {
 				'',
 				location.href
 			);
+		} else if (app.hash) {
+			// If the user edits the hash via the browser URL bar, it
+			// (surprisingly!) mutates `current.url`, allowing us to
+			// detect it and trigger a navigation
+			if (current.url.hash === location.hash) {
+				navigate({ type: 'goto', url: current.url });
+			}
 		}
 	});
 
