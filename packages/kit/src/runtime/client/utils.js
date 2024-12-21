@@ -303,12 +303,21 @@ export function create_updated_store() {
  * - uses hash router and pathname is more than base
  * @param {URL} url
  * @param {string} base
- * @param {boolean} has_pathname_in_hash
+ * @param {boolean} hash_routing
  */
-export function is_external_url(url, base, has_pathname_in_hash) {
-	return (
-		url.origin !== origin ||
-		!url.pathname.startsWith(base) ||
-		(has_pathname_in_hash && url.pathname !== (base || '/'))
-	);
+export function is_external_url(url, base, hash_routing) {
+	if (url.origin !== origin || !url.pathname.startsWith(base)) {
+		return true;
+	}
+
+	if (hash_routing) {
+		if (url.pathname === base + '/') return false;
+
+		// be lenient if serving from filesystem
+		if (url.protocol === 'file:' && url.pathname === base + '/index.html') return false;
+
+		return true;
+	}
+
+	return false;
 }
