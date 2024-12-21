@@ -424,9 +424,9 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {string} pathname */
-async function _preload_code(pathname) {
-	const route = routes.find((route) => route.exec(get_url_path(pathname)));
+/** @param {URL} url */
+async function _preload_code(url) {
+	const route = routes.find((route) => route.exec(get_url_path(url)));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1175,7 +1175,12 @@ function get_navigation_intent(url, invalidating) {
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
+
+		if (typeof rerouted === 'string') {
+			url.pathname = rerouted;
+			rerouted = url;
+		}
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1209,9 +1214,9 @@ function get_navigation_intent(url, invalidating) {
 	}
 }
 
-/** @param {string} pathname */
-function get_url_path(pathname) {
-	return decode_pathname(pathname.slice(base.length) || '/');
+/** @param {URL} url */
+function get_url_path(url) {
+	return decode_pathname(url.pathname.slice(base.length) || '/');
 }
 
 /**
@@ -1547,7 +1552,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					_preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1591,7 +1596,7 @@ function setup_preload() {
 					}
 				}
 			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1611,7 +1616,7 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1855,6 +1860,8 @@ export function preloadCode(pathname) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
+	const url = new URL(pathname, current.url);
+
 	if (DEV) {
 		if (!pathname.startsWith(base)) {
 			throw new Error(
@@ -1862,12 +1869,12 @@ export function preloadCode(pathname) {
 			);
 		}
 
-		if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
+		if (!routes.find((route) => route.exec(get_url_path(url)))) {
 			throw new Error(`'${pathname}' did not match any routes`);
 		}
 	}
 
-	return _preload_code(pathname);
+	return _preload_code(url);
 }
 
 /**
