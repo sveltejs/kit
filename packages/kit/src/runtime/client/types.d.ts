@@ -38,6 +38,11 @@ export interface SvelteKitApp {
 
 	decoders: Record<string, (data: any) => any>;
 
+	/**
+	 * Whether or not we're using hash-based routing
+	 */
+	hash: boolean;
+
 	root: typeof SvelteComponent;
 }
 

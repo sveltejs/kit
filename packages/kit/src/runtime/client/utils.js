@@ -122,8 +122,9 @@ export function find_anchor(element, target) {
 /**
  * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
+ * @param {boolean} uses_hash_router
  */
-export function get_link_info(a, base) {
+export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
@@ -136,7 +137,7 @@ export function get_link_info(a, base) {
 	const external =
 		!url ||
 		!!target ||
-		is_external_url(url, base) ||
+		is_external_url(url, base, uses_hash_router) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
 	const download = url?.origin === origin && a.hasAttribute('download');
@@ -296,9 +297,18 @@ export function create_updated_store() {
 }
 
 /**
+ * Is external if
+ * - origin different
+ * - path doesn't start with base
+ * - uses hash router and pathname is more than base
  * @param {URL} url
  * @param {string} base
+ * @param {boolean} has_pathname_in_hash
  */
-export function is_external_url(url, base) {
-	return url.origin !== origin || !url.pathname.startsWith(base);
+export function is_external_url(url, base, has_pathname_in_hash) {
+	return (
+		url.origin !== origin ||
+		!url.pathname.startsWith(base) ||
+		(has_pathname_in_hash && url.pathname !== (base || '/'))
+	);
 }

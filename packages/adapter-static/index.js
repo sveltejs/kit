@@ -7,7 +7,7 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!options?.fallback) {
+			if (!options?.fallback && builder.config.kit.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
