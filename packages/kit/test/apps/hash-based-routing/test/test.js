@@ -57,7 +57,7 @@ test.describe('hash based navigation', () => {
 
 	test('route id and params are correct', async ({ page }) => {
 		await page.goto('/#/b/123');
-		await expect(page.locator('p[data-data]')).toHaveText('{"slug":"123"} /b/[slug] /');
+		await expect(page.locator('p[data-data]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
 		await expect(page.locator('p[data-page]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
 	});
 });
