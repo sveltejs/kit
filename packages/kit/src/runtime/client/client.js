@@ -875,7 +875,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
-	const url_changed = current.url ? id !== get_route_id(current.url) : false;
+	const url_changed = current.url ? id !== get_page_key(current.url) : false;
 	const route_changed = current.route ? route.id !== current.route.id : false;
 	const search_params_changed = diff_search_params(current.url, url);
 
@@ -1200,7 +1200,7 @@ function get_navigation_intent(url, invalidating) {
 		const params = route.exec(path);
 
 		if (params) {
-			const id = get_route_id(url);
+			const id = get_page_key(url);
 			/** @type {import('./types.js').NavigationIntent} */
 			const intent = {
 				id,
@@ -1220,7 +1220,7 @@ function get_url_path(url) {
 }
 
 /** @param {URL} url */
-function get_route_id(url) {
+function get_page_key(url) {
 	return url.pathname + url.search;
 }
 
@@ -1579,7 +1579,7 @@ function setup_preload() {
 		const options = get_router_options(a);
 
 		// we don't want to preload data for a page we're already on
-		const same_url = url && get_route_id(current.url) === get_route_id(url);
+		const same_url = url && get_page_key(current.url) === get_page_key(url);
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
