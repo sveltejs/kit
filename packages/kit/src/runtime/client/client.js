@@ -2373,6 +2373,13 @@ function _start_router() {
 				'',
 				location.href
 			);
+		} else if (app.hash) {
+			// If the user edits the hash via the browser URL bar, it
+			// (surprisingly!) mutates `current.url`, allowing us to
+			// detect it and trigger a navigation
+			if (current.url.hash === location.hash) {
+				navigate({ type: 'goto', url: current.url });
+			}
 		}
 	});
 
