@@ -31,12 +31,7 @@ export interface SvelteKitApp {
 	decoders: Record<string, (data: any) => any>;
 
 	/**
-	 * Whether or not hash based navigation is used.
-	 * Note that hash based routing should be opaque to most of SvelteKit,
-	 * i.e. only on initial navigation should the hash be converted to a regular pathname,
-	 * and upon navigation end, the pathname should be converted into a hash.
-	 * That way, the rest of the app can work with regular URLs and you can switch to hash based routing
-	 * without having to adjust the rest of the app.
+	 * Whether or not we're using hash-based routing
 	 */
 	hash: boolean;
 
