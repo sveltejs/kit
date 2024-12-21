@@ -271,6 +271,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					config.kit.moduleExtensions
 				);
 
+				if (config.kit.router.type === 'hash' && item.kind === 'server') {
+					throw new Error(
+						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
+					);
+				}
+
 				/**
 				 * @param {string} type
 				 * @param {string} existing_file

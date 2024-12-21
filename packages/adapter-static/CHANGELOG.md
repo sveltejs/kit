@@ -1,5 +1,17 @@
 # @sveltejs/adapter-static
 
+## 3.0.8
+### Patch Changes
+
+
+- fix: use optional chaining when checking router type ([#13218](https://github.com/sveltejs/kit/pull/13218))
+
+## 3.0.7
+### Patch Changes
+
+
+- fix: allow dynamic routes with missing fallback in hash mode ([#13213](https://github.com/sveltejs/kit/pull/13213))
+
 ## 3.0.6
 ### Patch Changes
 

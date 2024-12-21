@@ -797,6 +797,7 @@ async function kit({ svelte_config }) {
 				);
 
 				const metadata = await analyse({
+					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
 					server_manifest,
@@ -917,6 +918,7 @@ async function kit({ svelte_config }) {
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
+					hash: kit.router.type === 'hash',
 					out,
 					manifest_path,
 					metadata,

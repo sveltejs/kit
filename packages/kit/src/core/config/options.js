@@ -260,6 +260,10 @@ const options = object(
 				})
 			}),
 
+			router: object({
+				type: list(['pathname', 'hash'])
+			}),
+
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
