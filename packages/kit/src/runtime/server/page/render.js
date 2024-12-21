@@ -95,16 +95,21 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative && !state.prerendering?.fallback) {
-		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+	if (paths.relative) {
+		if (!state.prerendering?.fallback) {
+			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
-		base = segments.map(() => '..').join('/') || '.';
+			base = segments.map(() => '..').join('/') || '.';
 
-		// resolve e.g. '../..' against current location, then remove trailing slash
-		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+			// resolve e.g. '../..' against current location, then remove trailing slash
+			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
-		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-			assets = base;
+			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
+				assets = base;
+			}
+		} else if (options.hash_routing) {
+			// we have to assume that we're in the right place
+			base_expression = `new URL('.', location).pathname.slice(0, -1)`;
 		}
 	}
 
