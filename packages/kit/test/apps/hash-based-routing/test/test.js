@@ -8,6 +8,13 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('hash based navigation', () => {
+	test('server rendering is disabled', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) {
+			await page.goto('/');
+			await expect(page.locator('p')).toHaveCount(0);
+		}
+	});
+
 	test('navigation works', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('p')).toHaveText('home');

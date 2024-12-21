@@ -624,6 +624,19 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 	if (DEV) {
 		validate_page_exports(node.universal);
+
+		if (node.universal && app.hash) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${route.id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
 	}
 
 	if (node.universal?.load) {
