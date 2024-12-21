@@ -488,7 +488,7 @@ declare module '@sveltejs/kit' {
 			 * @default 'split'
 			 * @since 2.13.0
 			 */
-			bundleStrategy?: 'split' | 'single';
+			bundleStrategy?: 'split' | 'single' | 'inline';
 		};
 		paths?: {
 			/**
@@ -1666,6 +1666,10 @@ declare module '@sveltejs/kit' {
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
+			inline?: {
+				script: string;
+				style: string | undefined;
+			};
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}
