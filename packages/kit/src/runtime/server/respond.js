@@ -33,6 +33,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
+import { validateHeaders } from './validate-headers.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -187,6 +188,11 @@ export async function respond(request, options, manifest, state) {
 		request,
 		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
+			// @ts-expect-error
+			if (globalThis.__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
 				const value = new_headers[key];
