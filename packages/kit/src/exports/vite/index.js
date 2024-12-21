@@ -860,6 +860,7 @@ async function kit({ svelte_config }) {
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
+					hash: kit.router.type === 'hash',
 					out,
 					manifest_path,
 					metadata,

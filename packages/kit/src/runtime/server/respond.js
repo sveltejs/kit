@@ -81,7 +81,7 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
-	if (options.hash_routing && url.pathname !== base + '/') {
+	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
 		return text('Not found', { status: 404 });
 	}
 
