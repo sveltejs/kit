@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
+import { posix, dirname, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
+import { cwd } from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +33,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {}, handlers } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -58,7 +59,8 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					HANDLERS: './_handlers.js'
 				}
 			});
 
@@ -77,6 +79,15 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+
+			if (handlers) {
+				writeFileSync(
+					`${tmp}/_handlers.js`,
+					`import handlers from "${resolve(cwd(), handlers)}";\n\n` + 'export default handlers;'
+				);
+			} else {
+				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
+			}
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
 			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {

@@ -7,6 +7,10 @@ export default function plugin(options?: AdapterOptions): Adapter;
 export interface AdapterOptions {
 	config?: string;
 	/**
+	 * Path to a file with additional handlers which will be added to the generated worker.
+	 */
+	handlers?: string;
+	/**
 	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
 	 * during development and preview.
 	 */
