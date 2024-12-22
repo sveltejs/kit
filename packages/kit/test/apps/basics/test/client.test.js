@@ -1184,7 +1184,9 @@ test.describe('reroute', () => {
 	test('Apply reroute during client side navigation', async ({ page }) => {
 		await page.goto('/reroute/basic');
 		await page.click("a[href='/reroute/basic/a']");
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
 	});
 
 	test('Apply reroute after client-only redirects', async ({ page }) => {

@@ -72,13 +72,13 @@ test.describe('hash based navigation', () => {
 		await page.locator('a[href="/#/reroute-a"]').click();
 		await expect(page.locator('p')).toHaveText('rerouted');
 		let url = new URL(page.url());
-		expect(url.hash).toBe('#/rerouted');
+		expect(url.hash).toBe('#/reroute-a');
 
 		await page.goto('/');
 
 		await page.locator('a[href="/#/reroute-b"]').click();
 		await expect(page.locator('p')).toHaveText('rerouted');
 		url = new URL(page.url());
-		expect(url.hash).toBe('#/rerouted');
+		expect(url.hash).toBe('#/reroute-b');
 	});
 });
