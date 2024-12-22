@@ -109,7 +109,7 @@ export async function render_response({
 			}
 		} else if (options.hash_routing) {
 			// we have to assume that we're in the right place
-			base_expression = 'new URL('.', location).pathname.slice(0, -1)';
+			base_expression = "new URL('.', location).pathname.slice(0, -1)";
 		}
 	}
 
