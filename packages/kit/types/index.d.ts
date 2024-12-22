@@ -604,6 +604,7 @@ declare module '@sveltejs/kit' {
 			 * What type of client-side router to use.
 			 * - `'pathname'` is the default and means the current URL pathname determines the route
 			 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
+			 *   It comes with some caveats: you can't use server-side rendering (or indeed any server logic), and you have to make sure that the links in your app all start with /#/, or they won't work. Beyond that, everything works exactly like a normal SvelteKit app.
 			 *
 			 * @default "pathname"
 			 * @since 2.14.0
