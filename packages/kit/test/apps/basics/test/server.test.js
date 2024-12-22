@@ -642,7 +642,9 @@ test.describe('Miscellaneous', () => {
 test.describe('reroute', () => {
 	test('Apply reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/basic/a');
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
 	});
 
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {

@@ -1191,13 +1191,15 @@ function get_navigation_intent(url, invalidating) {
 		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
 
 		if (typeof rerouted === 'string') {
+			const tmp = new URL(url); // do not mutate the incoming URL
+
 			if (app.hash) {
-				url.hash = rerouted;
+				tmp.hash = rerouted;
 			} else {
-				url.pathname = rerouted;
+				tmp.pathname = rerouted;
 			}
 
-			rerouted = url;
+			rerouted = tmp;
 		}
 	} catch (e) {
 		if (DEV) {
