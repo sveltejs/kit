@@ -1189,7 +1189,7 @@ async function get_navigation_intent(url, invalidating) {
 	let rerouted;
 	try {
 		rerouted = (await app.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
-    
+
 		if (typeof rerouted === 'string') {
 			const tmp = new URL(url); // do not mutate the incoming URL
 
