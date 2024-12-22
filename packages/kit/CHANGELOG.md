@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.14.1
+### Patch Changes
+
+
+- fix: do not mutate URL during reroute logic ([#13222](https://github.com/sveltejs/kit/pull/13222))
+
 ## 2.14.0
 ### Minor Changes
 
