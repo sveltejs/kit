@@ -1958,17 +1958,22 @@ export function pushState(url, state) {
 	}
 
 	update_scroll_positions(current_history_index);
+	url = resolve_url(url);
+	const change = page.url.href !== url.href ? 1 : 0;
 
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
-		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		[NAVIGATION_INDEX]: (current_navigation_index += change),
+		[PAGE_URL_KEY]: url.href,
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', resolve_url(url));
+	history.pushState(opts, '', url);
 	has_navigated = true;
 
+	if (change) {
+		page.url = url;
+	}
 	page.state = state;
 	root.$set({ page });
 

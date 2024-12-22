@@ -428,6 +428,25 @@ test.describe('$app/state', () => {
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('test');
 	});
+
+	test('page.url does update when used with pushState', async ({ page }) => {
+		await page.goto('/state/url/before');
+
+		await expect(page.locator('h1')).toHaveText('/state/url/before');
+		await expect(page.locator('h2')).toHaveText('page.url was updated 1 time(s)');
+
+		await page.locator('button.before').click();
+		await expect(page.locator('h1')).toHaveText('/state/url/before');
+		await expect(page.locator('h2')).toHaveText('page.url was updated 1 time(s)');
+
+		await page.locator('button.after').click();
+		await expect(page.locator('h1')).toHaveText('/state/url/after');
+		await expect(page.locator('h2')).toHaveText('page.url was updated 2 time(s)');
+
+		await page.locator('button.after').click();
+		await expect(page.locator('h1')).toHaveText('/state/url/after');
+		await expect(page.locator('h2')).toHaveText('page.url was updated 2 time(s)');
+	});
 });
 
 test.describe('Invalidation', () => {
@@ -1113,7 +1132,7 @@ test.describe('Shallow routing', () => {
 
 		await page.goForward();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
-		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('h1')).toHaveText('a');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
