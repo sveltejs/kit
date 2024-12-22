@@ -311,10 +311,14 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	if (hash_routing) {
-		if (url.pathname === base + '/') return false;
+		if (url.pathname === base + '/') {
+			return false;
+		}
 
 		// be lenient if serving from filesystem
-		if (url.protocol === 'file:' && url.pathname === base + '/index.html') return false;
+		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
+			return false;
+		}
 
 		return true;
 	}
