@@ -481,14 +481,15 @@ declare module '@sveltejs/kit' {
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 			/**
-			 * If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
-			 * If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+			 * - If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
+			 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+			 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
 			 *
 			 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks)inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
 			 * @default 'split'
 			 * @since 2.13.0
 			 */
-			bundleStrategy?: 'split' | 'single';
+			bundleStrategy?: 'split' | 'single' | 'inline';
 		};
 		paths?: {
 			/**
@@ -604,6 +605,7 @@ declare module '@sveltejs/kit' {
 			 * What type of client-side router to use.
 			 * - `'pathname'` is the default and means the current URL pathname determines the route
 			 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
+			 *   It comes with some caveats: you can't use server-side rendering (or indeed any server logic), and you have to make sure that the links in your app all start with /#/, or they won't work. Beyond that, everything works exactly like a normal SvelteKit app.
 			 *
 			 * @default "pathname"
 			 * @since 2.14.0
@@ -1666,6 +1668,10 @@ declare module '@sveltejs/kit' {
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
+			inline?: {
+				script: string;
+				style: string | undefined;
+			};
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}
