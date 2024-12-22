@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.15.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'inline'` option ([#13193](https://github.com/sveltejs/kit/pull/13193))
+
 ## 2.14.1
 ### Patch Changes
 
