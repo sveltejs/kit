@@ -81,14 +81,16 @@ export default function ({ config = 'wrangler.toml', platformProxy = {}, handler
 			);
 
 			if (handlers) {
+				// TODO: find a more robust way to resolve files relative to svelte.config.js
 				const handlers_file = resolve(cwd(), handlers);
 				writeFileSync(
 					`${tmp}/_handlers.js`,
 					`import handlers from "${handlers_file}";\n\n` +
-						`export * from "${handlers_file}"` +
+						`export * from "${handlers_file}";\n\n` +
 						'export default handlers;'
 				);
 			} else {
+				// The handlers file must export a plain object as its default export.
 				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
 			}
 
