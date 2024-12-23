@@ -81,9 +81,12 @@ export default function ({ config = 'wrangler.toml', platformProxy = {}, handler
 			);
 
 			if (handlers) {
+				const handlers_file = resolve(cwd(), handlers);
 				writeFileSync(
 					`${tmp}/_handlers.js`,
-					`import handlers from "${resolve(cwd(), handlers)}";\n\n` + 'export default handlers;'
+					`import handlers from "${handlers_file}";\n\n` +
+						`export * from "${handlers_file}"` +
+						'export default handlers;'
 				);
 			} else {
 				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
