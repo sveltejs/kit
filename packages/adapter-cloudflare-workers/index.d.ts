@@ -7,7 +7,7 @@ export default function plugin(options?: AdapterOptions): Adapter;
 export interface AdapterOptions {
 	config?: string;
 	/**
-	 * Path to a file with additional handlers which will be added to the generated worker.
+	 * Path to a file with additional {@link https://developers.cloudflare.com/workers/runtime-apis/handlers/ | handlers} and (optionally) {@link https://developers.cloudflare.com/durable-objects/ | Durable Objects} to be exported from the file the adapter generates.
 	 */
 	handlers?: string;
 	/**

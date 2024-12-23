@@ -36,6 +36,14 @@ export default {
 
 Path to your custom `wrangler.toml` or `wrangler.json` config file.
 
+### handlers
+
+Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) and (optionally) [Durable Objects](https://developers.cloudflare.com/durable-objects/) to be exported from the file the adapter generates. This allows you to, for example, include handlers for scheduled or queue triggers alongside the fetch handler your SvelteKit app.
+
+> [!NOTE] The adapter expects the `handlers` file to have a default export. If you only want to export a Durable Object, add `export default {};` to the file.
+
+> [!NOTE] The adapter will overwrite any [fetch handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/) exported from the `handlers` file in the generated worker. Most uses for a fetch handler are covered by endpoints or server hooks, so you should use those instead.
+
 ### platformProxy
 
 Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
