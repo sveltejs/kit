@@ -133,6 +133,8 @@ If you have a [service worker](https://svelte.dev/docs/kit/service-workers) and 
 You'll need to exclude the `_headers` and `_redirects` files from your service worker using the [`config.kit.serviceWorker.files`](configuration#serviceWorker) option.
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
 
 /** @type {import('@sveltejs/kit').Config} */
