@@ -18,11 +18,6 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * A path to a file with additional handlers which will be added to the generated worker.
-	 */
-	handlers?: string;
-
-	/**
 	 * Customize the automatically-generated `_routes.json` file.
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */
