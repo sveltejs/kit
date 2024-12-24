@@ -297,6 +297,7 @@ export interface ServerMetadataRoute {
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
+		ssr: boolean;
 	};
 	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;

@@ -139,7 +139,8 @@ async function analyse({
 			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
-				methods: page_methods
+				methods: page_methods,
+				ssr: !!page?.ssr
 			},
 			api: {
 				methods: api_methods
@@ -208,7 +209,8 @@ function analyse_page(layouts, leaf) {
 		config: get_page_config([...layouts, leaf]),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: get_option([...layouts, leaf], 'prerender') ?? false
+		prerender: get_option([...layouts, leaf], 'prerender') ?? false,
+		ssr: get_option([...layouts, leaf], 'ssr') ?? true
 	};
 }
 

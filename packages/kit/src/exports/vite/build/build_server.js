@@ -12,8 +12,9 @@ import { normalizePath } from 'vite';
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {import('types').ServerMetadata | null} metadata
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
+export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config, metadata) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -27,6 +28,18 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
 				stylesheet_lookup.set(asset.fileName, index);
+			}
+		});
+	}
+
+	/** @type {Map<number, boolean>} */
+	const ssr_lookup = new Map();
+
+	if (metadata) {
+		manifest_data.routes.forEach((route) => {
+			const route_metadata = metadata.routes.get(route.id);
+			if (route.page?.leaf && route_metadata) {
+				ssr_lookup.set(route.page.leaf, route_metadata.page.ssr);
 			}
 		});
 	}
@@ -49,7 +62,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		const fonts = [];
 
-		if (node.component && client_manifest) {
+		if (node.component && client_manifest && ssr_lookup.get(i) !== false) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${

@@ -793,7 +793,8 @@ async function kit({ svelte_config }) {
 					server_manifest,
 					null,
 					null,
-					svelte_config.output
+					svelte_config.output,
+					null
 				);
 
 				const metadata = await analyse({
@@ -913,7 +914,8 @@ async function kit({ svelte_config }) {
 					server_manifest,
 					client_manifest,
 					css,
-					svelte_config.kit.output
+					svelte_config.kit.output,
+					metadata
 				);
 
 				// ...and prerender
