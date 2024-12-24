@@ -3,6 +3,7 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
+import { basename } from 'node:path';
 
 /**
  * @param {string} out
@@ -17,11 +18,12 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
+	/** @type {Map<string, string>} */
 	const stylesheet_lookup = new Map();
 
 	if (css) {
 		/** @type {Set<string>} */
-		const client_stylesheets = new Set([]);
+		const client_stylesheets = new Set();
 		for (const key in client_manifest) {
 			const file = client_manifest[key];
 			if (file.css?.[0]) {
@@ -29,33 +31,34 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			}
 		}
 
-		/** @type {string[]} */
-		const server_stylesheets = [];
-		for (const key in server_manifest) {
-			const file = server_manifest[key];
-			if (file.css?.[0]) {
-				server_stylesheets.push(file.css[0]);
+		/** @type {Map<number, string>} */
+		const server_stylesheets = new Map();
+
+		const component_stylesheet_map = new Map(Object.values(server_manifest).map((file) => [file.src, file.css?.[0]]));
+
+		manifest_data.nodes.forEach((node, i) => {
+			const server_stylesheet = component_stylesheet_map.get(node.component);
+			if (node.component && server_stylesheet) {
+				server_stylesheets.set(i, server_stylesheet);
 			}
-		}
+		});
 
 		// ignore dynamically imported stylesheets since we can't inline those
 		css.filter(asset => client_stylesheets.has(asset.fileName))
-		// sort the client stylesheets so they can be mapped to the server stylesheets
-		.sort((a, b) => {
-			return a.fileName.localeCompare(b.fileName);
-		}).forEach((asset, i) => {
-			if (asset.source.length < kit.inlineStyleThreshold) {
-				const index = stylesheet_lookup.size;
-				const file = `${out}/server/stylesheets/${index}.js`;
+			.forEach((asset) => {
+				if (asset.source.length < kit.inlineStyleThreshold) {
+					const [index] = basename(asset.fileName).split('.');
+					const server_stylesheet = server_stylesheets.get(+index);
+					const file = `${out}/server/stylesheets/${index}.js`;
 
-				// we need to inline the server stylesheet instead of the client one
-				// so that asset paths are correct on document load
-				const source = fs.readFileSync(`${out}/server/${server_stylesheets[i]}`, 'utf-8');
+					// we need to inline the server stylesheet instead of the client one
+					// so that asset paths are correct on document load
+					const source = fs.readFileSync(`${out}/server/${server_stylesheet}`, 'utf-8');
 
-				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(source)};`);
-				stylesheet_lookup.set(asset.fileName, index);
-			}
-		});
+					fs.writeFileSync(file, `// ${server_stylesheet}\nexport default ${s(source)};`);
+					stylesheet_lookup.set(asset.fileName, index);
+				}
+			});
 	}
 
 	manifest_data.nodes.forEach((node, i) => {
