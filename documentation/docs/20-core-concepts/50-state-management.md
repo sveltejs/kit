@@ -110,7 +110,7 @@ You might wonder how we're able to use `page.data` and other [app state]($app-st
 <p>Welcome {user().name}</p>
 ```
 
-> [!NOTE] We're passing a function into `setContext` to keep reactivity across boundaries. Read more about it [here](https://svelte.dev/docs/svelte/$state#Passing-state-into-functions)
+> [!NOTE] We're passing a function into `setContext` to keep reactivity across boundaries. Read more about it [here](/docs/svelte/$state#Passing-state-into-functions)
 
 > [!LEGACY]
 > You also use stores from `svelte/store` for this, but when using Svelte 5 it is recommended to make use of universal reactivity instead.
