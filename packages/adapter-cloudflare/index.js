@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync, renameSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -31,7 +31,8 @@ export default function (options = {}) {
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const dest = builder.getBuildDirectory('cloudflare');
+			const dest = builder.getBuildDirectory('cloudflare-intermediate');
+			const final_dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			builder.rimraf(dest);
@@ -107,6 +108,9 @@ export default function (options = {}) {
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					logLevel: 'silent'
 				});
+
+				builder.rimraf(final_dest);
+				renameSync(dest, final_dest);
 
 				if (result.warnings.length > 0) {
 					const formatted = await esbuild.formatMessages(result.warnings, {
