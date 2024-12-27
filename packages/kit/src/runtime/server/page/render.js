@@ -228,19 +228,18 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	if (client.inline?.style) {
-		head += `\n\t<style>${client.inline.style}</style>`;
-	}
+	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
+	const style = client.inline
+		? client.inline?.style
+		: Array.from(inline_styles.values()).join('\n');
 
-	if (inline_styles.size > 0) {
-		const content = Array.from(inline_styles.values()).join('\n');
-
+	if (style) {
 		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		csp.add_style(content);
+		csp.add_style(style);
 
-		head += `\n\t<style${attributes.join('')}>${content}</style>`;
+		head += `\n\t<style${attributes.join('')}>${style}</style>`;
 	}
 
 	for (const dep of stylesheets) {
