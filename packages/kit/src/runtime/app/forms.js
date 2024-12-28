@@ -117,6 +117,11 @@ export function enhance(form_element, submit = () => {}) {
 			: clone(form_element).method;
 		if (method !== 'post') return;
 
+		const skip =
+			event.submitter?.getAttribute('data-sveltekit-reload') ??
+			form_element.getAttribute('data-sveltekit-reload');
+		if (skip === 'true') return;
+
 		event.preventDefault();
 
 		const action = new URL(
