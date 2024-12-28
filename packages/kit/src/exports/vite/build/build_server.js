@@ -59,13 +59,19 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
+			imports.push(
+				`import * as universal from '../${
+					resolve_symlinks(server_manifest, node.universal).chunk.file
+				}';`
+			);
 			exports.push('export { universal };');
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
 		if (node.server) {
-			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
+			imports.push(
+				`import * as server from '../${resolve_symlinks(server_manifest, node.server).chunk.file}';`
+			);
 			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
