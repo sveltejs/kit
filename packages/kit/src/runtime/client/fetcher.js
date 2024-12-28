@@ -90,6 +90,7 @@ export function initial_fetch(resource, opts) {
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
+		script.remove(); // In case multiple script tags match the same selector
 		let { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
