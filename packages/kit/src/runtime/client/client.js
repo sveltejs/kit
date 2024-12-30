@@ -376,7 +376,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidated?: Array<((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -393,6 +393,10 @@ async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
+			}
+
+			if (options.invalidated) {
+				invalidated.push(...options.invalidated);
 			}
 		}
 	});
@@ -1794,6 +1798,7 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
  * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
+ * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -1814,7 +1819,30 @@ export function goto(url, opts = {}) {
 		);
 	}
 
-	return _goto(url, opts, 0);
+	/**
+	 * @type {{
+	 *   replaceState?: boolean;
+	 *   noScroll?: boolean;
+	 *   keepFocus?: boolean;
+	 *   invalidateAll?: boolean;
+	 *   invalidated?: Array<((url: URL) => boolean)>;
+	 *   state?: Record<string, any>
+	 * }}
+	 */
+	const options = opts;
+
+	if (opts.invalidate) {
+		options.invalidated = opts.invalidate.map((resource) => {
+			if (typeof resource === 'function') {
+				return resource;
+			} else {
+				const { href } = new URL(resource, location.href);
+				return (url) => url.href === href;
+			}
+		});
+	}
+
+	return _goto(url, options, 0);
 }
 
 /**

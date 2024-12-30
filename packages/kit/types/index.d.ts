@@ -2169,6 +2169,7 @@ declare module '$app/navigation' {
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
 		invalidateAll?: boolean | undefined;
+		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
 	} | undefined): Promise<void>;
 	/**
