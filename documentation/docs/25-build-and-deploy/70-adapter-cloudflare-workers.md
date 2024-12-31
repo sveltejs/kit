@@ -62,7 +62,7 @@ export default {
   },
   // additional handlers go here
 }
-``
+```
 
 > [!NOTE] The adapter expects the `handlers` file to have a default export. If you only want to export a Durable Object, add `export default {};` to the file.
 
