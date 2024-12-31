@@ -29,8 +29,12 @@ export interface CspOpts {
 	prerender: boolean;
 }
 
+export interface CustomCookieSerializeOptions extends CookieSerializeOptions {
+	path: string;
+}
+
 export interface Cookie {
 	name: string;
 	value: string;
-	options: CookieSerializeOptions & { path: string };
+	options: CustomCookieSerializeOptions;
 }
