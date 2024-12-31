@@ -142,7 +142,8 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload')
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
 			paths: object({
@@ -257,6 +258,10 @@ const options = object(
 
 					return origin;
 				})
+			}),
+
+			router: object({
+				type: list(['pathname', 'hash'])
 			}),
 
 			serviceWorker: object({

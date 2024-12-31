@@ -23,6 +23,9 @@
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
 				"**/.svelte-kit/**",
+				"**/.custom-out-dir/**",
+				"**/build/**",
+				"**/test-results/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
@@ -30,7 +33,7 @@
 				"packages/kit/src/core/postbuild/fixtures/**/*"
 			],
 			"options": {
-				"requirePragma": true
+				"rangeEnd": 0
 			}
 		}
 	]

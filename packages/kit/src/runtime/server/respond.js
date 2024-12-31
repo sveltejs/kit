@@ -81,6 +81,10 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
+		return text('Not found', { status: 404 });
+	}
+
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
@@ -416,7 +420,7 @@ export async function respond(request, options, manifest, state) {
 				};
 			}
 
-			if (state.prerendering?.fallback) {
+			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
 					options,

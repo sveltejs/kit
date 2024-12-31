@@ -27,11 +27,11 @@
 		"svelte2tsx": "~0.7.16"
 	},
 	"devDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
 		"@types/semver": "^7.5.6",
 		"prettier": "^3.1.1",
-		"svelte": "^4.2.10",
+		"svelte": "^5.2.9",
 		"svelte-preprocess": "^6.0.0",
 		"typescript": "^5.3.3",
 		"uvu": "^0.5.6"

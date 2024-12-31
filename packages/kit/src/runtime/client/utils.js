@@ -122,8 +122,9 @@ export function find_anchor(element, target) {
 /**
  * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
+ * @param {boolean} uses_hash_router
  */
-export function get_link_info(a, base) {
+export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
@@ -136,7 +137,7 @@ export function get_link_info(a, base) {
 	const external =
 		!url ||
 		!!target ||
-		is_external_url(url, base) ||
+		is_external_url(url, base, uses_hash_router) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
 	const download = url?.origin === origin && a.hasAttribute('download');
@@ -234,6 +235,10 @@ export function notifiable_store(value) {
 	return { notify, set, subscribe };
 }
 
+export const updated_listener = {
+	v: () => {}
+};
+
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
@@ -273,6 +278,7 @@ export function create_updated_store() {
 
 			if (updated) {
 				set(true);
+				updated_listener.v();
 				clearTimeout(timeout);
 			}
 
@@ -291,9 +297,31 @@ export function create_updated_store() {
 }
 
 /**
+ * Is external if
+ * - origin different
+ * - path doesn't start with base
+ * - uses hash router and pathname is more than base
  * @param {URL} url
  * @param {string} base
+ * @param {boolean} hash_routing
  */
-export function is_external_url(url, base) {
-	return url.origin !== origin || !url.pathname.startsWith(base);
+export function is_external_url(url, base, hash_routing) {
+	if (url.origin !== origin || !url.pathname.startsWith(base)) {
+		return true;
+	}
+
+	if (hash_routing) {
+		if (url.pathname === base + '/') {
+			return false;
+		}
+
+		// be lenient if serving from filesystem
+		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
 }
