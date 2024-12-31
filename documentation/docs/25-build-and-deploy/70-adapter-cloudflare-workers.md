@@ -44,6 +44,7 @@ Path to a file with additional [handlers](https://developers.cloudflare.com/work
 The handlers file should export a default object with any additional handlers, and any Durable Objects as named exports. Example below:
 
 ```js
+// @errors: 2307 2377 7006
 /// file: src/handlers.js
 // export your durable objects here
 import { DurableObject } from "cloudflare:workers";
