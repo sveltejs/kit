@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Add ability to invalidate a custom identifier on goto()
+feat: add ability to invalidate a custom identifier on `goto()`
