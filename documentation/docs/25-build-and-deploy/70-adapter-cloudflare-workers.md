@@ -47,24 +47,18 @@ This adapter expects to find a [wrangler.toml/wrangler.json](https://developers.
 ```toml
 /// file: wrangler.toml
 name = "<your-service-name>"
-account_id = "<your-account-id>"
 
-main = "./.cloudflare/worker.js"
-site.bucket = "./.cloudflare/public"
+main = "./.cloudflare/server/worker.js"
+assets = { directory = ".svelte-kit/cloudflare/client" }
 
 build.command = "npm run build"
 
 compatibility_date = "2021-11-12"
-workers_dev = true
 ```
 
-`<your-service-name>` can be anything. `<your-account-id>` can be found by logging into your [Cloudflare dashboard](https://dash.cloudflare.com) and grabbing it from the end of the URL:
+`<your-service-name>` can be anything.
 
-```
-https://dash.cloudflare.com/<your-account-id>
-```
-
-> [!NOTE] You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
+> [!NOTE] You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `assets`) to your `.gitignore`.
 
 You will need to install [wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
 
@@ -83,12 +77,25 @@ wrangler deploy
 
 If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#Options-config).
 
-If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
+If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add the "nodejs_compat" flag to `wrangler.toml`:
 
 ```toml
 /// file: wrangler.toml
 compatibility_flags = [ "nodejs_compat" ]
 ```
+
+## Unbundled deployment
+
+If you would like to deploy your worker [without bundling](https://developers.cloudflare.com/workers/wrangler/configuration/#bundling) it, you will need to add the following `rules` key to `wrangler.toml` so that the additional modules are included in your deployment.
+
+```toml
+/// file: wrangler.toml
+rules = [
+	{ type = "ESModule", globs = ["**/*.js"] }
+]
+```
+
+Finally, run `wrangler deploy --no-bundle` to prevent Wrangler from bundling your code.
 
 ## Runtime APIs
 
