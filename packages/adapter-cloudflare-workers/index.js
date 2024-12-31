@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
+import { dirname } from 'node:path';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
@@ -22,20 +22,22 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 		adapt(builder) {
 			const { main, assets } = validate_config(builder, config);
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const outDir = dirname(main);
-			const relativePath = posix.relative(outDir, builder.getServerDirectory());
+			const out_dir = dirname(main);
+			const manifest_filename = 'server-manifest.js';
 
 			builder.log.minor('Generating worker...');
 
 			// Clear out old files
 			builder.rimraf(assets.directory);
-			builder.rimraf(outDir);
+			builder.rimraf(out_dir);
+
+			builder.writeServer(out_dir);
 
 			// Create the entry-point for the Worker
 			builder.copy(`${files}/entry.js`, main, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js',
+					SERVER: './index.js',
+					MANIFEST: `./${manifest_filename}.js`,
 					ASSETS: assets.binding || 'ASSETS'
 				}
 			});
@@ -49,8 +51,8 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 				]);
 			}
 			writeFileSync(
-				`${outDir}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`${out_dir}/${manifest_filename}`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n\n` +
 					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
@@ -132,6 +134,12 @@ function validate_config(builder, config_file) {
 			);
 		}
 
+		if (wrangler_config.main.endsWith('index.js')) {
+			throw new Error(
+				`You cannot specify the main option file as index.js in ${config_file} because it will overwrite the server entry file. Please rename it to something else. e.g., worker.js`
+			)
+		}
+
 		return wrangler_config;
 	}
 
@@ -145,7 +153,7 @@ function validate_config(builder, config_file) {
 
 		name = "<your-site-name>"
 		account_id = "<your-account-id>"
-		main = ".svelte-kit/cloudflare/server/index.js"
+		main = ".svelte-kit/cloudflare/server/worker.js"
 		assets = { directory = ".svelte-kit/cloudflare/client" }
 		build.command = "npm run build"
 		compatibility_date = "2021-11-12"`
