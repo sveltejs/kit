@@ -137,7 +137,7 @@ function validate_config(builder, config_file) {
 		if (wrangler_config.main.endsWith('index.js')) {
 			throw new Error(
 				`You cannot specify the main option file as index.js in ${config_file} because it will overwrite the server entry file. Please rename it to something else. e.g., worker.js`
-			)
+			);
 		}
 
 		return wrangler_config;
