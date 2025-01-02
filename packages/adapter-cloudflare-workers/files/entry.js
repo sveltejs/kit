@@ -1,7 +1,11 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import handlers from 'HANDLERS';
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
+
+export * from 'HANDLERS';
+
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
@@ -12,6 +16,7 @@ const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
 export default {
+	...handlers,
 	/**
 	 * @param {Request} req
 	 * @param {any} env
