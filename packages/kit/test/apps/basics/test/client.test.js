@@ -394,6 +394,60 @@ test.describe('$app/stores', () => {
 		await app.goto('/store/data/store-update/same-keys');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
 	});
+
+	test('page subscribers are notified when invalidate is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'invalidate' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'invalidate' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when replaceState is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'replaceState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'replaceState' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when pushState is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when goto is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'goto' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'goto' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when applyAction is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'applyAction' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'applyAction' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified only once after popstate', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('3');
+	});
 });
 
 test.describe('$app/state', () => {
