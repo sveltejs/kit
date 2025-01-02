@@ -12,7 +12,7 @@ export let updated;
 
 // this is a bootleg way to tell if we're in old svelte or new svelte
 const is_legacy =
-	onMount.toString().includes('$$') || /function \w+\(\) \{\}/.test(onMount.toString());
+	onMount.toString().includes('$$') || /function \w+\(\) \{\s?\}/.test(onMount.toString());
 
 if (is_legacy) {
 	page = {
