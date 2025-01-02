@@ -55,6 +55,23 @@ test.describe('paths', () => {
 	});
 });
 
+test.describe('trailing slash', () => {
+	if (!process.env.DEV) {
+		test('trailing slash server prerendered without server load', async ({
+			page,
+			clicknav,
+			javaScriptEnabled
+		}) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/basepath/trailing-slash-server');
+
+			await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
+			expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+		});
+	}
+});
+
 test.describe('Service worker', () => {
 	if (process.env.DEV) return;
 
