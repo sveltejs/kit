@@ -11,7 +11,7 @@ import {
 import { BROWSER } from 'esm-env';
 
 /**
- * A reactive object with information about the current page, serving several use cases:
+ * A read-only reactive object with information about the current page, serving several use cases:
  * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
  * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
  * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
@@ -39,7 +39,7 @@ import { BROWSER } from 'esm-env';
 export const page = BROWSER ? client_page : server_page;
 
 /**
- * An object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+ * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
  * Values are `null` when no navigation is occurring, or during server rendering.
  * @type {import('@sveltejs/kit').Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null }}
  */
@@ -47,7 +47,7 @@ export const page = BROWSER ? client_page : server_page;
 export const navigating = BROWSER ? client_navigating : server_navigating;
 
 /**
- * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
  * @type {{ get current(): boolean; check(): Promise<boolean>; }}
  */
 export const updated = BROWSER ? client_updated : server_updated;
