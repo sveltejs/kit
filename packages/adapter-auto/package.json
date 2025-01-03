@@ -36,13 +36,15 @@
 	"scripts": {
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"check": "tsc"
+		"check": "tsc",
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
-		"typescript": "^5.3.3"
+		"typescript": "^5.3.3",
+		"vitest": "^2.1.6"
 	},
 	"dependencies": {
 		"import-meta-resolve": "^4.1.0"
