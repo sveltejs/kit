@@ -86,9 +86,18 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	// reroute could alter the given URL, so we pass a copy
+	const url_copy = new URL(url);
+
+	const is_data_request = has_data_suffix(url.pathname);
+	if (is_data_request) {
+		url_copy.pathname = strip_data_suffix(url_copy.pathname) || '/';
+		url_copy.searchParams.delete(TRAILING_SLASH_PARAM);
+		url_copy.searchParams.delete(INVALIDATED_PARAM);
+	}
+
 	let rerouted_path;
 	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted_path = options.hooks.reroute({ url: url_copy }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
@@ -126,11 +135,13 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	const is_data_request = has_data_suffix(decoded);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 	if (is_data_request) {
-		decoded = strip_data_suffix(decoded) || '/';
+		// if reroute doesn't return anything, the decoded URL still has the data suffix
+		if (has_data_suffix(decoded)) {
+			decoded = strip_data_suffix(decoded) || '/';
+		}
 		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
