@@ -68,6 +68,8 @@ Occasionally, we need to tell SvelteKit not to handle a link, but allow the brow
 
 Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](page-options#prerender).
 
+Forms with the `use:enhance` action can skip using the enhanced behavior by adding a `data-sveltekit-reload` attribute to the form element or the submit button.
+
 ## data-sveltekit-replacestate
 
 Sometimes you don't want navigation to create a new entry in the browser's session history. Adding a `data-sveltekit-replacestate` attribute to a link...

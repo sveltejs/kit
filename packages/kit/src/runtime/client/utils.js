@@ -52,7 +52,7 @@ const valid_link_options = /** @type {const} */ ({
  * @param {Element} element
  * @param {T} name
  */
-function link_option(element, name) {
+export function link_option(element, name) {
 	const value = /** @type {ValidLinkOptions<T> | null} */ (
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
