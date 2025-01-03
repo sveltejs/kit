@@ -2054,7 +2054,7 @@ export async function applyAction(result) {
 			tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
-		_goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
 		page.form = result.data;
 		page.status = result.status;
