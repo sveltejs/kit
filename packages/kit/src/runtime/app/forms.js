@@ -2,6 +2,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
 import { app, applyAction } from '../client/client.js';
+import { link_option } from '../client/utils.js';
 
 export { applyAction };
 
@@ -117,10 +118,15 @@ export function enhance(form_element, submit = () => {}) {
 			: clone(form_element).method;
 		if (method !== 'post') return;
 
-		const skip =
-			event.submitter?.getAttribute('data-sveltekit-reload') ??
-			form_element.getAttribute('data-sveltekit-reload');
-		if (skip === 'true') return;
+		/** @type {import('../client/utils.js').ValidLinkOptions<'reload'> | null} */
+		let reload = null;
+		if (event.submitter) {
+			reload = link_option(event.submitter, 'reload');
+		}
+		if (reload === null) {
+			reload = link_option(form_element, 'reload');
+		}
+		if (reload === '' || reload === 'true') return;
 
 		event.preventDefault();
 
