@@ -191,14 +191,18 @@ const components = [];
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
 let load_cache = null;
 
-/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
-const before_navigate_callbacks = [];
+/**
+ * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
+ * do not re-assign as some closures keep references to these Sets
+ */
+/** @type {Set<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
+const before_navigate_callbacks = new Set();
 
-/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
-const on_navigate_callbacks = [];
+/** @type {Set<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+const on_navigate_callbacks = new Set();
 
-/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
-let after_navigate_callbacks = [];
+/** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
+const after_navigate_callbacks = new Set();
 
 /** @type {import('./types.js').NavigationState} */
 let current = {
@@ -1460,7 +1464,7 @@ async function navigate({
 
 		const after_navigate = (
 			await Promise.all(
-				on_navigate_callbacks.map((fn) =>
+				Array.from(on_navigate_callbacks, (fn) =>
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
 			)
@@ -1468,14 +1472,16 @@ async function navigate({
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
-				after_navigate_callbacks = after_navigate_callbacks.filter(
-					// @ts-ignore
-					(fn) => !after_navigate.includes(fn)
-				);
+				after_navigate.forEach((fn) => {
+					after_navigate_callbacks.delete(fn);
+				});
 			}
 
 			after_navigate.push(cleanup);
-			after_navigate_callbacks.push(...after_navigate);
+
+			after_navigate.forEach((fn) => {
+				after_navigate_callbacks.add(fn);
+			});
 		}
 
 		root.$set(navigation_result.props);
@@ -1677,7 +1683,7 @@ function setup_preload() {
 		}
 	}
 
-	after_navigate_callbacks.push(after_navigate);
+	after_navigate_callbacks.add(after_navigate);
 	after_navigate();
 }
 
@@ -1706,16 +1712,15 @@ function handle_error(error, event) {
 
 /**
  * @template {Function} T
- * @param {T[]} callbacks
+ * @param {Set<T>} callbacks
  * @param {T} callback
  */
 function add_navigation_callback(callbacks, callback) {
 	onMount(() => {
-		callbacks.push(callback);
+		callbacks.add(callback);
 
 		return () => {
-			const i = callbacks.indexOf(callback);
-			callbacks.splice(i, 1);
+			callbacks.delete(callback);
 		};
 	});
 }
