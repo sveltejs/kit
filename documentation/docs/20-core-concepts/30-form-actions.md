@@ -359,7 +359,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - render the nearest `+error` boundary if an error occurs
 - [reset focus](accessibility#Focus-management) to the appropriate element
 
-You can add the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) attribute on the `<form>` or the `<button>` to opt-out of this behavior and instead let the browser handle the form submission.
+You can add the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) attribute on the `<form>` or the `<button>` (or a parent element) to opt-out of this behavior and instead let the browser handle the form submission.
 
 ### Customising use:enhance
 

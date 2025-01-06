@@ -52,7 +52,7 @@ const valid_link_options = /** @type {const} */ ({
  * @param {Element} element
  * @param {T} name
  */
-export function link_option(element, name) {
+function link_option(element, name) {
 	const value = /** @type {ValidLinkOptions<T> | null} */ (
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
@@ -146,7 +146,7 @@ export function get_link_info(a, base, uses_hash_router) {
 }
 
 /**
- * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
+ * @param {HTMLFormElement | HTMLAnchorElement | HTMLButtonElement | SVGAElement} element
  */
 export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'keepfocus'> | null} */

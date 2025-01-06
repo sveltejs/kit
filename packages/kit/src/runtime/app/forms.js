@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
 import { app, applyAction } from '../client/client.js';
-import { link_option } from '../client/utils.js';
+import { get_router_options } from '../client/utils.js';
 
 export { applyAction };
 
@@ -118,15 +118,15 @@ export function enhance(form_element, submit = () => {}) {
 			: clone(form_element).method;
 		if (method !== 'post') return;
 
-		/** @type {import('../client/utils.js').ValidLinkOptions<'reload'> | null} */
-		let reload = null;
+		/** @type {boolean | undefined} */
+		let reload;
 		if (event.submitter) {
-			reload = link_option(event.submitter, 'reload');
+			reload = get_router_options(/** @type {HTMLButtonElement} */ (event.submitter)).reload;
 		}
-		if (reload === null) {
-			reload = link_option(form_element, 'reload');
+		if (reload === undefined) {
+			reload = get_router_options(form_element).reload;
 		}
-		if (reload === '' || reload === 'true') return;
+		if (reload) return;
 
 		event.preventDefault();
 
