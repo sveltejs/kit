@@ -256,6 +256,14 @@ test.describe('Navigation lifecycle functions', () => {
 			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
+
+	test('afterNavigate properly removed', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
+
+		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
 });
 
 test.describe('Scrolling', () => {
