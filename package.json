@@ -20,7 +20,7 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.8",
+		"@changesets/cli": "^2.27.11",
 		"@sveltejs/eslint-config": "^8.1.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"eslint": "^9.6.0",
@@ -29,7 +29,7 @@
 		"prettier-plugin-svelte": "^3.1.2",
 		"typescript-eslint": "^8.0.0"
 	},
-	"packageManager": "pnpm@9.15.0",
+	"packageManager": "pnpm@9.15.2",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}
