@@ -70,7 +70,10 @@ export async function render_page(event, page, options, manifest, state, resolve
 			}
 		}
 
-		const should_prerender_data = nodes.some((node) => node?.server?.load);
+		const should_prerender_data = nodes.some(
+			// prerender in case of trailingSlash because the client retrieves that value from the server
+			(node) => node?.server?.load || node?.server?.trailingSlash !== undefined
+		);
 		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
