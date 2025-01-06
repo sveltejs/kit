@@ -1724,7 +1724,7 @@ function add_navigation_callback(callbacks, callback) {
 }
 
 /**
- * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+ * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
  * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
