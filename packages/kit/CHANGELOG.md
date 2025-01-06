@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.15.2
+### Patch Changes
+
+
+- fix: correctly notify page store subscribers ([#13205](https://github.com/sveltejs/kit/pull/13205))
+
+
+- fix: prerender data when there is no server load but the `trailingSlash` option is set from the server ([#13262](https://github.com/sveltejs/kit/pull/13262))
+
+
+- fix: correctly remove navigation callbacks when returning function in onNavigate ([#13241](https://github.com/sveltejs/kit/pull/13241))
+
 ## 2.15.1
 ### Patch Changes
 
