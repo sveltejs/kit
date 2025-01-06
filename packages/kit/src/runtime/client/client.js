@@ -2688,11 +2688,11 @@ function create_navigation(current, intent, url, type) {
 
 /**
  * TODO: remove this in 3.0 when the page store is also removed
- * 
+ *
  * We need to assign a new page object so that subscribers are correctly notified.
  * However, spreading `{ ...page }` returns an empty object so we manually
  * assign to each property instead.
- * 
+ *
  * @param {import('@sveltejs/kit').Page} page
  */
 function clone_page(page) {
