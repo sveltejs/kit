@@ -109,7 +109,8 @@ export async function render_response({
 			}
 		} else if (options.hash_routing) {
 			// we have to assume that we're in the right place
-			base_expression = "new URL('.', location).pathname.slice(0, -1)";
+			// if we are not on an http protocol (eg: about: protocol on iframes) we default to an empty string. Otherwise an error would be thrown by the URL constructor
+			base_expression = `location.protocol.slice(0, 4) === "http" ? new URL(${s(base)}, location).pathname.slice(0, -1) : ""`;
 		}
 	}
 

@@ -315,6 +315,11 @@ export function is_external_url(url, base, hash_routing) {
 			return false;
 		}
 
+		// be lenient if serving from an iframe via srcdoc
+		if (url.protocol === 'about:') {
+			return false;
+		}
+
 		// be lenient if serving from filesystem
 		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
 			return false;
