@@ -117,6 +117,11 @@ declare module '@sveltejs/kit' {
 		generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
 
 		/**
+		 * Generate a Content Security Policy header string which can be used to define static header files for adapters like adapter-cloudflare
+		 */
+		generateCspHeaderValue(): string | null;
+
+		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
 		 * @param name path to the file, relative to the build directory
 		 */

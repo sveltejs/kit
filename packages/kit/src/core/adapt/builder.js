@@ -12,6 +12,7 @@ import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
+import { Csp } from '../../runtime/server/page/csp.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -190,6 +191,14 @@ export function create_builder({
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true)
 			});
+		},
+
+		generateCspHeaderValue() {
+			if (!config.kit.csp.directives) return null;
+
+			const csp = new Csp(config.kit.csp, { prerender: false });
+
+			return csp.csp_provider.get_header(false);
 		},
 
 		getBuildDirectory(name) {
