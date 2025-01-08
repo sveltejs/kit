@@ -585,7 +585,7 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	/** @param {string} matcher */
 	const path_to_matcher = (matcher) =>
-		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher)));
+		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
 
 	return `{ ${params
 		.map(
