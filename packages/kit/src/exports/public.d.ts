@@ -514,7 +514,7 @@ export interface KitConfig {
 		 * import { defineConfig } from 'vite';
 		 *
 		 * export default defineConfig({
-		 * 	 plugins: [sveltekit()],
+		 *   plugins: [sveltekit()],
 		 *   build: {
 		 *     // inline all imported assets
 		 *     assetsInlineLimit: Infinity
