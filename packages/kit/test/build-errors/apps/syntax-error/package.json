@@ -3,8 +3,8 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "svelte-kit sync --ne && vite dev",
+		"build": "svelte-kit sync --ne && vite build",
 		"preview": "vite preview"
 	},
 	"devDependencies": {

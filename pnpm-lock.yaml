@@ -372,9 +372,6 @@ importers:
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
-      tiny-glob:
-        specifier: ^0.2.9
-        version: 0.2.9
     devDependencies:
       '@playwright/test':
         specifier: ^1.44.1

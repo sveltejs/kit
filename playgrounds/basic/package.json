@@ -3,8 +3,8 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build && npm run package",
+		"dev": "svelte-kit sync --ne && vite dev",
+		"build": "svelte-kit sync --ne && vite build && npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "npm run package",

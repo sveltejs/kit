@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.2-next.0",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "svelte-kit sync --ne && vite dev",
+		"build": "svelte-kit sync --ne && vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",

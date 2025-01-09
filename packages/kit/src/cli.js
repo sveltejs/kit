@@ -27,7 +27,8 @@ prog
 	.command('sync')
 	.describe('Synchronise generated type definitions')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
-	.action(async ({ mode }) => {
+	.option('--ne', 'Run only if the output files do not exist')
+	.action(async ({ mode, ne }) => {
 		if (!fs.existsSync('svelte.config.js')) {
 			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
 			return;
@@ -35,6 +36,9 @@ prog
 
 		try {
 			const config = await load_config();
+			if (ne && fs.existsSync('.svelte-kit/tsconfig.json')) {
+				return;
+			}
 			const sync = await import('./core/sync/sync.js');
 			sync.all_types(config, mode);
 		} catch (error) {

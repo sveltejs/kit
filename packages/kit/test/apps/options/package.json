@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev -c vite.custom.config.js",
-		"build": "vite build -c vite.custom.config.js --mode custom",
+		"dev": "svelte-kit sync --ne && vite dev -c vite.custom.config.js",
+		"build": "svelte-kit sync --ne && vite build -c vite.custom.config.js --mode custom",
 		"preview": "vite preview -c vite.custom.config.js",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
