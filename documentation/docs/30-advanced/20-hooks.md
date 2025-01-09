@@ -39,7 +39,7 @@ export async function handle({ event, resolve }) {
 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
-If you need to exclude some code from running during the build or prerendering step, check that the app is not [`building`]($app-environment#building) beforehand.
+During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-environment#building) beforehand.
 
 ### locals
 
