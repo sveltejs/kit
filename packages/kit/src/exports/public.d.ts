@@ -499,11 +499,41 @@ export interface KitConfig {
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 		/**
+		 * The bundle strategy option affects how your app's JavaScript and CSS files are loaded.
 		 * - If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
 		 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
 		 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
 		 *
-		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks)inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+		 *
+		 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
+		 *
+		 * ```js
+		 * /// file: vite.config.js
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * import { defineConfig } from 'vite';
+		 *
+		 * export default defineConfig({
+		 *   plugins: [sveltekit()],
+		 *   build: {
+		 *     // inline all imported assets
+		 *     assetsInlineLimit: Infinity
+		 *   }
+		 * });
+		 * ```
+		 *
+		 * ```svelte
+		 * /// file: src/routes/+layout.svelte
+		 * <script>
+		 *   // import the asset through Vite
+		 *   import favicon from './favicon.png';
+		 * </script>
+		 *
+		 * <svelte:head>
+		 *   <!-- this asset will be inlined as a base64 URL -->
+		 *   <link rel="icon" href={favicon} />
+		 * </svelte:head>
+		 * ```
 		 * @default 'split'
 		 * @since 2.13.0
 		 */
