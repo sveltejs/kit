@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -34,12 +35,6 @@ test.describe('adapter', () => {
 });
 
 test.describe('Imports', () => {
-	test('imports from node_modules', async ({ page, clicknav }) => {
-		await page.goto('/imports');
-		await clicknav('[href="/imports/markdown"]');
-		expect(await page.innerHTML('p')).toBe('this is some <strong>markdown</strong>');
-	});
-
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
@@ -543,12 +538,13 @@ test.describe('Load', () => {
 	});
 
 	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		clicknav,
 		page,
 		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a', { noWaitAfter: true });
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
@@ -558,7 +554,7 @@ test.describe('Load', () => {
 		);
 	});
 
-	test('Logging $page.url during prerendering works', async ({ page }) => {
+	test('Logging page.url during prerendering works', async ({ page }) => {
 		await page.goto('/prerendering/log-url');
 
 		expect(await page.textContent('p')).toBe('error: false');
@@ -732,6 +728,7 @@ test.describe('$app/paths', () => {
 	});
 });
 
+// TODO SvelteKit 3: remove these tests
 test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
@@ -837,6 +834,130 @@ test.describe('$app/stores', () => {
 		javaScriptEnabled
 	}) => {
 		const href = `${baseURL}/store/data/zzz`;
+		await page.goto(href);
+
+		expect(await page.textContent('#url-hash')).toBe('');
+
+		if (javaScriptEnabled) {
+			for (const urlHash of ['#1', '#2', '#5', '#8']) {
+				await page.evaluate(
+					({ href, urlHash }) => {
+						location.href = `${href}${urlHash}`;
+					},
+					{ href, urlHash }
+				);
+
+				expect(await page.textContent('#url-hash')).toBe(urlHash);
+			}
+		}
+	});
+});
+
+test.describe('$app/state', () => {
+	test('can access page.url', async ({ baseURL, page }) => {
+		await page.goto('/origin');
+		expect(await page.textContent('h1')).toBe(baseURL);
+	});
+
+	test('page state contains data', async ({ page, clicknav }) => {
+		await page.goto('/state/data/www');
+
+		const foo = { bar: 'Custom layout' };
+
+		expect(await page.textContent('#state-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
+		);
+
+		await clicknav('a[href="/state/data/zzz"]');
+		expect(await page.textContent('#state-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
+		);
+
+		await clicknav('a[href="/state/data/xxx"]');
+		expect(await page.textContent('#state-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+		);
+		expect(await page.textContent('#state-error')).toBe('Params = xxx');
+
+		await clicknav('a[href="/state/data/yyy"]');
+		expect(await page.textContent('#state-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+		);
+		expect(await page.textContent('#state-error')).toBe('Params = yyy');
+	});
+
+	test('should load data after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/state/data/foo?reset=true');
+		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
+		const stuff2 = { ...stuff1, foo: true, number: 2 };
+		const stuff3 = { ...stuff2 };
+		await page.goto('/state/data/www');
+
+		await clicknav('a[href="/state/data/foo"]');
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff1);
+
+		await clicknav('#reload-button');
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(
+			javaScriptEnabled ? stuff2 : stuff1
+		);
+
+		await clicknav('a[href="/state/data/zzz"]');
+		await clicknav('a[href="/state/data/foo"]');
+		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff3);
+	});
+
+	test('navigating state contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
+		await page.goto('/state/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await app.preloadCode('/state/navigating/b');
+
+			const res = await Promise.all([
+				page.click('a[href="/state/navigating/b"]'),
+				page.textContent('#navigating')
+			]);
+
+			expect(res[1]).toBe('navigating from /state/navigating/a to /state/navigating/b (link)');
+
+			await page.waitForSelector('#not-navigating');
+			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+			await Promise.all([
+				expect(page.locator('#navigating')).toHaveText(
+					'navigating from /state/navigating/b to /state/navigating/a (popstate)'
+				),
+				page.goBack()
+			]);
+		}
+	});
+
+	test('navigating state clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/state/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await page.click('a[href="/state/navigating/c"]');
+			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
+			await page.click('a[href="/state/navigating/a"]');
+
+			await page.waitForSelector('#not-navigating', { timeout: 5000 });
+			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		}
+	});
+
+	test('should update page state when URL hash is changed through the address bar', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const href = `${baseURL}/state/data/zzz`;
 		await page.goto(href);
 
 		expect(await page.textContent('#url-hash')).toBe('');
@@ -1138,6 +1259,57 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance button with formenctype', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		const fileInput = page.locator('input[type="file"].form-file-input');
+
+		await fileInput.setInputFiles({
+			name: 'test-file.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('this is test')
+		});
+
+		await page.locator('button.form-file-submit').click();
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+		await expect(page.locator('pre.formdata2')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+	});
+
+	test('use:enhance has `application/x-www-form-urlencoded` as default value for `ContentType` request header', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+
+		await page.locator('input[name="username"]').fill('foo');
+
+		const [request] = await Promise.all([
+			page.waitForRequest('/actions/enhance?/login'),
+			page.locator('button.form1').click()
+		]);
+
+		const requestHeaders = await request.allHeaders();
+
+		expect(requestHeaders['content-type']).toBe('application/x-www-form-urlencoded');
+
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name="username"]')).toHaveValue('');
+	});
+
 	test('use:enhance does not clear form on second submit', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
@@ -1199,7 +1371,7 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test('$page.status reflects error status', async ({ page }) => {
+	test('page.status reflects error status', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		await Promise.all([
@@ -1330,5 +1502,33 @@ test.describe.serial('Cookies API', () => {
 		await page.goto('/cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
+	});
+});
+
+test.describe('Serialization', () => {
+	test('A custom data type can be serialized/deserialized', async ({ page, clicknav }) => {
+		await page.goto('/serialization-basic');
+		expect(await page.textContent('h1')).toBe('It works!');
+
+		await clicknav('[href="/serialization-basic/child"]');
+		expect(await page.textContent('h1')).toBe('Client-side navigation also works!');
+	});
+
+	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
+		await page.goto('/serialization-form');
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('It works!');
+
+		// Test navigating to the basic page works as intended
+		await page.locator('a').first();
+		expect(await page.textContent('h1')).toBe('It works!');
+	});
+
+	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
+		page
+	}) => {
+		await page.goto('/serialization-form2');
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('It works!');
 	});
 });

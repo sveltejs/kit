@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
@@ -35,7 +36,7 @@ prog
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			await sync.all_types(config, mode);
+			sync.all_types(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

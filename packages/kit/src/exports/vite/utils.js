@@ -3,6 +3,7 @@ import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { escape_html } from '../../utils/escape.js';
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
@@ -89,11 +90,17 @@ export function not_found(req, res, base) {
 	if (type === 'text/html') {
 		res.setHeader('Content-Type', 'text/html');
 		res.end(
-			`The server is configured with a public base URL of ${base} - did you mean to visit <a href="${prefixed}">${prefixed}</a> instead?`
+			`The server is configured with a public base URL of ${escape_html(
+				base
+			)} - did you mean to visit <a href="${escape_html(prefixed, true)}">${escape_html(
+				prefixed
+			)}</a> instead?`
 		);
 	} else {
 		res.end(
-			`The server is configured with a public base URL of ${base} - did you mean to visit ${prefixed} instead?`
+			`The server is configured with a public base URL of ${escape_html(
+				base
+			)} - did you mean to visit ${escape_html(prefixed)} instead?`
 		);
 	}
 }

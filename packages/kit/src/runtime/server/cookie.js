@@ -1,6 +1,9 @@
 import { parse, serialize } from 'cookie';
 import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
 
+// eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
+const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
+
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
  * when we detect that there's likely cookie misusage due to wrong paths
@@ -64,8 +67,7 @@ export function get_cookies(request, url, trailing_slash) {
 				return c.value;
 			}
 
-			const decoder = opts?.decode || decodeURIComponent;
-			const req_cookies = parse(header, { decode: decoder });
+			const req_cookies = parse(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -92,8 +94,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieParseOptions} opts
 		 */
 		getAll(opts) {
-			const decoder = opts?.decode || decodeURIComponent;
-			const cookies = parse(header, { decode: decoder });
+			const cookies = parse(header, { decode: opts?.decode });
 
 			for (const c of Object.values(new_cookies)) {
 				if (
@@ -113,6 +114,16 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
+			// TODO: remove this check in 3.0
+			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
+			if (illegal_characters) {
+				console.warn(
+					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(
+						' and '
+					)}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
+				);
+			}
+
 			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
