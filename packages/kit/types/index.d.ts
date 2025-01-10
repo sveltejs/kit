@@ -633,7 +633,7 @@ declare module '@sveltejs/kit' {
 			 * - `(details) => void` — a custom error handler that takes a `details` object with a `routes` property which contains all routes that haven't been prerendered. If you `throw` from this function, the build will fail
 			 *
 			 * The default behavior is to fail the build. This may be undesireable when you know that some of your routes may never be reached under certain
-			 * circumstances such as a CMS not returning data for a specific area, resulting in the resulting routes never being reached.
+			 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
 			 *
 			 * @default "fail"
 			 * @since 2.5.0
