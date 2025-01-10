@@ -209,7 +209,7 @@ export interface PrerenderEntryGeneratorMismatchHandler {
 }
 
 export interface PrerenderEntryMissingRoutesHandler {
-	(details: { notPrerenderedRoutes: string[]; message: string }): void;
+	(details: { routes: string[]; message: string }): void;
 }
 
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;

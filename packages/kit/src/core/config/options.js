@@ -245,7 +245,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleNotPrerenderedRoutes` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleNotPrerenderedRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
