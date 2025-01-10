@@ -4,11 +4,14 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 
+	let ticker = 0;
 	async function update() {
+		ticker += 1;
 		await fetch('/load/cache-control/default/increment');
-		invalidate('/load/cache-control/default/count');
+		await invalidate('/load/cache-control/default/count');
+		ticker += 1;
 	}
 </script>
 
-<p>Count is {data.count}</p>
-<button on:click={update}>update</button>
+<p class="counter">Count is {data.count}</p>
+<button on:click={update} data-ticker={ticker}>update</button>

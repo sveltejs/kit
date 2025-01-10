@@ -51,6 +51,8 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
 	return () => {
 		// Remove the base middleware. It screws with the URL.
 		// It also only lets through requests beginning with the base path, so that requests beginning
@@ -129,6 +131,13 @@ export async function preview(vite, vite_config, svelte_config) {
 				let filename = normalizePath(
 					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
 				);
+
+				try {
+					filename = decodeURI(filename);
+				} catch {
+					// malformed URI
+				}
+
 				let prerendered = is_file(filename);
 
 				if (!prerendered) {
@@ -176,7 +185,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers['host'];
+			const host = req.headers[':authority'] || req.headers.host;
 
 			const request = await getRequest({
 				base: `${protocol}://${host}`,
@@ -191,7 +200,14 @@ export async function preview(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(join(dir, file));
+						}
+
+						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+					},
+					emulator
 				})
 			);
 		});

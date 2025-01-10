@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { config } from '../../utils.js';
 
 export default {

@@ -17,12 +17,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": [
-		"postinstall.js",
-		"scripts/**/*",
-		"src/**/*",
-		"src/types/**/*",
-		"../../sites/kit.svelte.dev/scripts/extract-types.js"
-	],
+	"include": ["*.js", "scripts/**/*", "src/**/*", "src/types/**/*"],
 	"exclude": ["./**/write_types/test/**"]
 }

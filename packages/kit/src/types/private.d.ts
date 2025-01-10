@@ -73,7 +73,6 @@ export namespace Csp {
 	type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
 	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 	type Sources = Source[];
-	type UriPath = `${HttpDelineator}${string}`;
 }
 
 export interface CspDirectives {
@@ -113,7 +112,7 @@ export interface CspDirectives {
 	'form-action'?: Array<Csp.Source | Csp.ActionSource>;
 	'frame-ancestors'?: Array<Csp.HostSource | Csp.SchemeSource | Csp.FrameSource>;
 	'navigate-to'?: Array<Csp.Source | Csp.ActionSource>;
-	'report-uri'?: Csp.UriPath[];
+	'report-uri'?: string[];
 	'report-to'?: string[];
 
 	'require-trusted-types-for'?: Array<'script'>;
