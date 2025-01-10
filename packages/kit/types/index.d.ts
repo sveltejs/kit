@@ -1673,7 +1673,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface PrerenderEntryMissingRoutesHandler {
-		(details: { notPrerenderedRoutes: string[]; message: string }): void;
+		(details: { routes: string[]; message: string }): void;
 	}
 
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
