@@ -1901,6 +1901,14 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+	 *
+	 * Most common status codes:
+	 *  * `303 See Other`: redirect as a `GET` request
+	 *  * `307 Temporary Redirect`: redirect will keep the request method
+	 *  * `308 Permanent Redirect`: redirect will keep the request method, SEO will be transferred to the new page
+	 *
+	 * [See all redirect status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages)
+	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
 	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
