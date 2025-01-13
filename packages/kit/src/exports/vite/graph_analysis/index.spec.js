@@ -102,6 +102,7 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 	);
 });
 
+// nginx does not process URLs containing the sequence `:$`
 test('":$" is not in virtual module ids', () => {
 	assert.notInclude(Object.values(module_ids).join(''), ':$');
 });
