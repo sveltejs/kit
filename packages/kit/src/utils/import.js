@@ -12,13 +12,8 @@ export async function resolve_peer_dependency(dependency) {
 		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
 		return await import(resolved).catch(() => import(dependency));
 	} catch {
-		// fall back to import relative to this package
-		try {
-			return await import(dependency);
-		} catch {
-			throw new Error(
-				`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
-			);
-		}
+		throw new Error(
+			`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
+		);
 	}
 }
