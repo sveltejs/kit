@@ -1142,7 +1142,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
-		// TODO: display static fallback page
+		// TODO: this falls back to the server when a server exists, but what about SPA mode?
 		throw error;
 	}
 }
