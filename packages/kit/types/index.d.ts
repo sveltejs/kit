@@ -632,7 +632,7 @@ declare module '@sveltejs/kit' {
 			 * - `'warn'` — continue, but print a warning
 			 * - `(details) => void` — a custom error handler that takes a `details` object with a `routes` property which contains all routes that haven't been prerendered. If you `throw` from this function, the build will fail
 			 *
-			 * The default behavior is to fail the build. This may be undesireable when you know that some of your routes may never be reached under certain
+			 * The default behavior is to fail the build. This may be undesirable when you know that some of your routes may never be reached under certain
 			 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
 			 *
 			 * @default "fail"
