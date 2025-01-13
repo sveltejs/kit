@@ -68,6 +68,7 @@ export async function build_service_worker(
 		name: 'service-worker-build-virtual-modules',
 		async resolveId(id) {
 			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
+				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
 		},
