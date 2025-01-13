@@ -10,7 +10,7 @@ export async function resolve_peer_dependency(dependency) {
 	try {
 		// @ts-expect-error the types are wrong
 		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
-		return await import(resolved);
+		return await import(resolved).catch(() => import(dependency));
 	} catch {
 		// fall back to import relative to this package
 		try {
