@@ -636,7 +636,7 @@ declare module '@sveltejs/kit' {
 			 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
 			 *
 			 * @default "fail"
-			 * @since 2.5.0
+			 * @since 2.16.0
 			 */
 			handleNotPrerenderedRoutes?: PrerenderMissingRoutesHandlerValue;
 			/**
