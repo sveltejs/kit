@@ -1153,32 +1153,41 @@ async function load_root_error_page({ status, error, url, route }) {
 		}
 	}
 
-	const root_layout = await load_node({
-		loader: default_layout_loader,
-		url,
-		params,
-		route,
-		parent: () => Promise.resolve({}),
-		server_data_node: create_data_node(server_data_node)
-	});
+	try {
+		const root_layout = await load_node({
+			loader: default_layout_loader,
+			url,
+			params,
+			route,
+			parent: () => Promise.resolve({}),
+			server_data_node: create_data_node(server_data_node)
+		});
 
-	/** @type {import('./types.js').BranchNode} */
-	const root_error = {
-		node: await default_error_loader(),
-		loader: default_error_loader,
-		universal: null,
-		server: null,
-		data: null
-	};
+		/** @type {import('./types.js').BranchNode} */
+		const root_error = {
+			node: await default_error_loader(),
+			loader: default_error_loader,
+			universal: null,
+			server: null,
+			data: null
+		};
 
-	return get_navigation_result_from_branch({
-		url,
-		params,
-		branch: [root_layout, root_error],
-		status,
-		error,
-		route: null
-	});
+		return get_navigation_result_from_branch({
+			url,
+			params,
+			branch: [root_layout, root_error],
+			status,
+			error,
+			route: null
+		});
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return _goto(new URL(error.location, location.href), {}, 0);
+		}
+
+		// TODO: this falls back to the server when a server exists, but what about SPA mode?
+		throw error;
+	}
 }
 
 /**
