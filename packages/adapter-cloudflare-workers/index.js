@@ -32,7 +32,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml' } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -73,9 +73,9 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
@@ -86,7 +86,8 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			try {
 				const result = await esbuild.build({
 					platform: 'browser',
-					conditions: ['worker', 'browser'],
+					// https://github.com/cloudflare/workers-sdk/blob/a12b2786ce745f24475174bcec994ad691e65b0f/packages/wrangler/src/deployment-bundle/bundle.ts#L35-L36
+					conditions: ['workerd', 'worker', 'browser'],
 					sourcemap: 'linked',
 					target: 'es2022',
 					entryPoints: [`${tmp}/entry.js`],
@@ -96,7 +97,12 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					format: 'esm',
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					logLevel: 'silent'
 				});
@@ -144,7 +150,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 		},
 
 		async emulate() {
-			const proxy = await getPlatformProxy();
+			const proxy = await getPlatformProxy(platformProxy);
 			const platform = /** @type {App.Platform} */ ({
 				env: proxy.env,
 				context: proxy.ctx,
@@ -179,14 +185,24 @@ export default function ({ config = 'wrangler.toml' } = {}) {
  * @returns {WranglerConfig}
  */
 function validate_config(builder, config_file) {
+	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
+		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
+		config_file = 'wrangler.json';
+	}
 	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(config_file, 'utf-8'))
-			);
+			if (config_file.endsWith('.json')) {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					JSON.parse(readFileSync(config_file, 'utf-8'))
+				);
+			} else {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					toml.parse(readFileSync(config_file, 'utf-8'))
+				);
+			}
 		} catch (err) {
 			err.message = `Error parsing ${config_file}: ${err.message}`;
 			throw err;

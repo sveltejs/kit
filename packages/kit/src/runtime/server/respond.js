@@ -81,11 +81,15 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
+		return text('Not found', { status: 404 });
+	}
+
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
 		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-	} catch (e) {
+	} catch {
 		return text('Internal Server Error', {
 			status: 500
 		});
@@ -116,7 +120,10 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (decoded.startsWith(`/${options.app_dir}`)) {
-		return text('Not found', { status: 404 });
+		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
+		const headers = new Headers();
+		headers.set('cache-control', 'public, max-age=0, must-revalidate');
+		return text('Not found', { status: 404, headers });
 	}
 
 	const is_data_request = has_data_suffix(decoded);
@@ -295,6 +302,11 @@ export async function respond(request, options, manifest, state) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
+		} else if (state.emulator?.platform) {
+			event.platform = await state.emulator.platform({
+				config: {},
+				prerender: !!state.prerendering?.fallback
+			});
 		}
 
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
@@ -408,7 +420,7 @@ export async function respond(request, options, manifest, state) {
 				};
 			}
 
-			if (state.prerendering?.fallback) {
+			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
 					options,

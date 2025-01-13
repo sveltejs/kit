@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	app: async ({ page }, use) => {
+	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
 			/**
@@ -66,7 +67,37 @@ export const test = base.extend({
 			}
 		}
 
-		use(clicknav);
+		await use(clicknav);
+	},
+
+	scroll_to: async ({ page }, use) => {
+		/**
+		 * @param {number} x
+		 * @param {number} y
+		 */
+		async function scroll_to(x, y) {
+			// The browser will do this for us, but we need to do it pre-emptively
+			// so that we can check the scroll location.
+			// Otherwise, we'd be checking a decimal number against an integer.
+			x = Math.trunc(x);
+			y = Math.trunc(y);
+			const watcher = page.waitForFunction(
+				/** @param {{ x: number, y: number }} opt */ (opt) =>
+					// check if the scroll position reached the desired or maximum position
+					window.scrollX ===
+						Math.min(opt.x, document.documentElement.offsetWidth - window.innerWidth) &&
+					window.scrollY ===
+						Math.min(opt.y, document.documentElement.offsetHeight - window.innerHeight),
+				{ x, y }
+			);
+			await page.evaluate(
+				/** @param {{ x: number, y: number }} opt */ (opt) => window.scrollTo(opt.x, opt.y),
+				{ x, y }
+			);
+			await watcher;
+		}
+
+		await use(scroll_to);
 	},
 
 	in_view: async ({ page }, use) => {
@@ -77,7 +108,7 @@ export const test = base.extend({
 			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
-		use(in_view);
+		await use(in_view);
 	},
 
 	get_computed_style: async ({ page }, use) => {
@@ -85,7 +116,7 @@ export const test = base.extend({
 		 * @param {string} selector
 		 * @param {string} prop
 		 */
-		async function get_computed_style(selector, prop) {
+		function get_computed_style(selector, prop) {
 			return page.$eval(
 				selector,
 				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),
@@ -101,25 +132,37 @@ export const test = base.extend({
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
 			// @ts-expect-error
-			const page_fn = page[fn];
-			if (!page_fn) {
+			const original_page_fn = page[fn];
+			if (!original_page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
 			}
+
 			// @ts-expect-error
-			page[fn] = async function (...args) {
-				const res = await page_fn.call(page, ...args);
-				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-					await page.waitForSelector('body.started', { timeout: 15000 });
+			async function modified_fn(...args) {
+				try {
+					const res = await original_page_fn.apply(page, args);
+					if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
+						await page.waitForSelector('body.started', { timeout: 15000 });
+					}
+					return res;
+				} catch (e) {
+					// Exclude this function from the stack trace so that it points to the failing test
+					// instead of this file.
+					// @ts-expect-error
+					Error.captureStackTrace(e, modified_fn);
+					throw e;
 				}
-				return res;
-			};
+			}
+
+			// @ts-expect-error
+			page[fn] = modified_fn;
 		});
 
 		await use(page);
 	},
 
 	// eslint-disable-next-line no-empty-pattern
-	read_errors: ({}, use) => {
+	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -128,7 +171,7 @@ export const test = base.extend({
 			return errors[path];
 		}
 
-		use(read_errors);
+		await use(read_errors);
 	},
 
 	// eslint-disable-next-line no-empty-pattern
@@ -242,7 +285,7 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
+		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
 	retries: process.env.CI ? 2 : 0,

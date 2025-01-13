@@ -48,7 +48,7 @@ function is_static_file(request) {
 
 	try {
 		file = decodeURIComponent(file);
-	} catch (err) {
+	} catch {
 		// ignore
 	}
 
@@ -56,6 +56,8 @@ function is_static_file(request) {
 	return (
 		manifest.assets.has(file) ||
 		manifest.assets.has(file + '/index.html') ||
+		file in manifest._.server_assets ||
+		file + '/index.html' in manifest._.server_assets ||
 		prerendered.has(pathname || '/')
 	);
 }

@@ -1,4 +1,5 @@
 import * as http from 'node:http';
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -127,6 +128,15 @@ test.describe('CSP', () => {
 
 		await page.goto(`/path-base/csp?port=${port}`);
 		expect(await page.evaluate('window.pwned')).toBe(undefined);
+	});
+
+	test('ensure CSP header in stream response', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+		const response = await page.goto('/path-base/csp-with-stream');
+		expect(response.headers()['content-security-policy']).toMatch(
+			/require-trusted-types-for 'script'/
+		);
+		expect(await page.textContent('h2')).toBe('Moo Deng!');
 	});
 
 	test("quotes 'script'", async ({ page }) => {

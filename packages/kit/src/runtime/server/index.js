@@ -15,6 +15,9 @@ const prerender_env_handler = {
 	}
 };
 
+/** @type {Promise<any>} */
+let init_promise;
+
 export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
@@ -63,7 +66,9 @@ export class Server {
 			set_read_implementation(read);
 		}
 
-		if (!this.#options.hooks) {
+		// During DEV and for some adapters this function might be called in quick succession,
+		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
+		await (init_promise ??= (async () => {
 			try {
 				const module = await get_hooks();
 
@@ -71,8 +76,13 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					reroute: module.reroute || (() => {})
+					reroute: module.reroute || (() => {}),
+					transport: module.transport || {}
 				};
+
+				if (module.init) {
+					await module.init();
+				}
 			} catch (error) {
 				if (DEV) {
 					this.#options.hooks = {
@@ -81,13 +91,14 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						reroute: () => {}
+						reroute: () => {},
+						transport: {}
 					};
 				} else {
 					throw error;
 				}
 			}
-		}
+		})());
 	}
 
 	/**

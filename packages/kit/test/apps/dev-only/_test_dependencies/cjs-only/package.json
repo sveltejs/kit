@@ -1,0 +1,10 @@
+{
+	"version": "1.0.0",
+	"private": true,
+	"name": "e2e-test-dep-cjs-only",
+	"main": "index.js",
+	"files": [
+		"index.js"
+	],
+	"type": "commonjs"
+}

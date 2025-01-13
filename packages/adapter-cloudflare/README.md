@@ -1,10 +1,10 @@
 # adapter-cloudflare
 
-[Adapter](https://kit.svelte.dev/docs/building-your-app) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
+[Adapter](https://svelte.dev/docs/kit/building-your-app) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-cloudflare)
+[Docs](https://svelte.dev/docs/kit/adapter-cloudflare)
 
 ## Changelog
 

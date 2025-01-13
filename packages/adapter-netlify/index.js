@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } 
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
+import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -96,7 +97,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, split, publish });
+				generate_lambda_functions({ builder, split, publish });
 			}
 		},
 
@@ -174,7 +175,14 @@ async function generate_edge_functions({ builder }) {
 		platform: 'browser',
 		sourcemap: 'linked',
 		target: 'es2020',
-
+		loader: {
+			'.wasm': 'copy',
+			'.woff': 'copy',
+			'.woff2': 'copy',
+			'.ttf': 'copy',
+			'.eot': 'copy',
+			'.otf': 'copy'
+		},
 		// Node built-ins are allowed, but must be prefixed with `node:`
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
 		external: builtinModules.map((id) => `node:${id}`),
@@ -189,7 +197,7 @@ async function generate_edge_functions({ builder }) {
  * @param { string } params.publish
  * @param { boolean } params.split
  */
-async function generate_lambda_functions({ builder, publish, split }) {
+function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
@@ -322,7 +330,7 @@ function get_publish_directory(netlify_config, builder) {
 	}
 
 	builder.log.warn(
-		'No netlify.toml found. Using default publish directory. Consult https://kit.svelte.dev/docs/adapter-netlify#usage for more details'
+		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
 	);
 }
 
