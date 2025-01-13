@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
@@ -10,19 +11,33 @@ const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
-	const major = process.version.slice(1).split('.')[0];
-	if (major === '18') return 'nodejs18.x';
-	if (major === '20') return 'nodejs20.x';
+	const major = Number(process.version.slice(1).split('.')[0]);
 
-	throw new Error(
-		`Unsupported Node.js version: ${process.version}. Please use Node 18 or Node 20 to build your project, or explicitly specify a runtime in your adapter configuration.`
-	);
+	// If we're building on Vercel, we know that the version will be fine because Vercel
+	// provides Node (and Vercel won't provide something it doesn't support).
+	// Also means we're not on the hook for updating the adapter every time a new Node
+	// version is added to Vercel.
+	if (!process.env.VERCEL) {
+		if (major < 18 || major > 22) {
+			throw new Error(
+				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 18, 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+
+		if (major % 2 !== 0) {
+			throw new Error(
+				`Unsupported Node.js version: ${process.version}. Please use an even-numbered Node version to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+	}
+
+	return `nodejs${major}.x`;
 };
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
 
-/** @type {import('.').default} **/
+/** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
 		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
@@ -69,8 +84,8 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').ServerlessConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
+			 * @param {import('./index.js').ServerlessConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
 				const dir = `${dirs.functions}/${name}.func`;
@@ -99,8 +114,8 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').EdgeConfig>[]} routes
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
@@ -134,7 +149,12 @@ const plugin = function (defaults = {}) {
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
 						loader: {
-							'.wasm': 'copy'
+							'.wasm': 'copy',
+							'.woff': 'copy',
+							'.woff2': 'copy',
+							'.ttf': 'copy',
+							'.eot': 'copy',
+							'.otf': 'copy'
 						}
 					});
 
@@ -146,7 +166,8 @@ const plugin = function (defaults = {}) {
 
 						console.error(formatted.join('\n'));
 					}
-				} catch (error) {
+				} catch (err) {
+					const error = /** @type {import('esbuild').BuildFailure} */ (err);
 					for (const e of error.errors) {
 						for (const node of e.notes) {
 							const match =
@@ -192,7 +213,7 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
-			/** @type {Map<string, { i: number, config: import('.').Config, routes: import('@sveltejs/kit').RouteDefinition<import('.').Config>[] }>} */
+			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
 
 			/** @type {Map<string, { hash: string, route_id: string }>} */
@@ -201,7 +222,7 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
-			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
 			/** @type {Set<string>} */
@@ -220,7 +241,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 18)) {
+				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 18)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
@@ -395,7 +416,7 @@ const plugin = function (defaults = {}) {
 	};
 };
 
-/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
+/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
@@ -424,7 +445,7 @@ function write(file, data) {
 // This function is duplicated in adapter-static
 /**
  * @param {import('@sveltejs/kit').Builder} builder
- * @param {import('.').Config} config
+ * @param {import('./index.js').Config} config
  * @param {string} dir
  */
 function static_vercel_config(builder, config, dir) {
@@ -434,10 +455,20 @@ function static_vercel_config(builder, config, dir) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
-	/** @type {import('./index').ImagesConfig} */
+	/** @type {import('./index.js').ImagesConfig | undefined} */
 	const images = config.images;
 
-	for (const [src, redirect] of builder.prerendered.redirects) {
+	for (let [src, redirect] of builder.prerendered.redirects) {
+		if (src.replace(/\/$/, '') === redirect.location.replace(/\/$/, '')) {
+			// ignore the extreme edge case of a `/foo` -> `/foo/` redirect,
+			// which would only arise if the response was generated by a
+			// `handle` hook or outside the app altogether (since you
+			// can't declaratively create both routes)
+		} else {
+			// redirect both `/foo` and `/foo/` to `redirect.location`
+			src = src.replace(/\/?$/, '/?');
+		}
+
 		prerendered_redirects.push({
 			src,
 			headers: {
@@ -531,7 +562,7 @@ function static_vercel_config(builder, config, dir) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {import('.').ServerlessConfig} config
+ * @param {import('./index.js').ServerlessConfig} config
  */
 async function create_function_bundle(builder, entry, dir, config) {
 	fs.rmSync(dir, { force: true, recursive: true });

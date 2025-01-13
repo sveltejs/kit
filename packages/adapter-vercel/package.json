@@ -1,14 +1,22 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "5.3.0",
+	"version": "5.5.2",
 	"description": "A SvelteKit adapter that creates a Vercel app",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"svelte",
+		"sveltekit",
+		"vercel"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-vercel"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"exports": {
 		".": {
@@ -31,15 +39,15 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@vercel/nft": "^0.26.1",
-		"esbuild": "^0.20.2"
+		"@vercel/nft": "^0.29.0",
+		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@types/node": "^18.19.48",
 		"typescript": "^5.3.3",
-		"vitest": "^1.5.0"
+		"vitest": "^2.1.6"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

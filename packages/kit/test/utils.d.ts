@@ -4,9 +4,10 @@ import {
 	PlaywrightTestOptions,
 	PlaywrightWorkerArgs,
 	PlaywrightWorkerOptions,
-	TestType
+	TestType,
+	Page
 } from '@playwright/test';
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'node:http';
 import { Plugin } from 'vite';
 
 export const test: TestType<
@@ -20,7 +21,8 @@ export const test: TestType<
 				preloadCode(...urls: string[]): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
-			clicknav(selector: string, options?: { timeout?: number }): Promise<void>;
+			clicknav(selector: string, options?: Parameters<Page['waitForNavigation']>[0]): Promise<void>;
+			scroll_to(x: number, y: number): Promise<void>;
 			in_view(selector: string): Promise<boolean>;
 			get_computed_style(selector: string, prop: string): Promise<string>;
 			/**
@@ -30,11 +32,11 @@ export const test: TestType<
 			start_server(
 				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;
-			page: PlaywrightTestArgs['page'] & {
+			page: Page & {
 				goto: (
 					url: string,
-					opts?: Parameters<PlaywrightTestArgs['page']['goto']>[1] & { wait_for_started?: boolean }
-				) => ReturnType<PlaywrightTestArgs['page']['goto']>;
+					opts?: Parameters<Page['goto']>[1] & { wait_for_started?: boolean }
+				) => ReturnType<Page['goto']>;
 			};
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions

@@ -19,6 +19,7 @@ if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
+	// eslint-disable-next-line @typescript-eslint/require-await
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
@@ -52,7 +53,7 @@ if (DEV && BROWSER) {
 
 		if (in_load_heuristic && !used_kit_fetch) {
 			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		}
 

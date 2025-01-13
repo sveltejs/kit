@@ -19,14 +19,25 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
+  pkg-pr-new:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpx pkg-pr-new publish --comment=off ./packages/*
   lint-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3.0.0
+      - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -45,12 +56,15 @@ jobs:
           - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
+          - node-version: 22
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3.0.0
+      - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -59,6 +73,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
@@ -106,7 +122,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3.0.0
+      - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -115,6 +131,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:cross-platform:${{ matrix.mode }}
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
@@ -130,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3.0.0
+      - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: 18

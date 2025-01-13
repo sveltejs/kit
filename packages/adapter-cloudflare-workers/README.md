@@ -6,7 +6,7 @@ SvelteKit adapter that creates a Cloudflare Workers site using a function for dy
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-cloudflare-workers)
+[Docs](https://svelte.dev/docs/kit/adapter-cloudflare-workers)
 
 ## Changelog
 

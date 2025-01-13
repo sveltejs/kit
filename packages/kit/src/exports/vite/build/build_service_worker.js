@@ -66,14 +66,14 @@ export async function build_service_worker(
 	 */
 	const sw_virtual_modules = {
 		name: 'service-worker-build-virtual-modules',
-		async resolveId(id) {
+		resolveId(id) {
 			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
 		},
 
-		async load(id) {
+		load(id) {
 			if (!id.startsWith('\0virtual:')) return;
 
 			if (id === service_worker) {
@@ -109,7 +109,8 @@ export async function build_service_worker(
 				}
 			},
 			outDir: `${out}/client`,
-			emptyOutDir: false
+			emptyOutDir: false,
+			minify: vite_config.build.minify
 		},
 		configFile: false,
 		define: vite_config.define,

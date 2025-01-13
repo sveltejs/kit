@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
 
@@ -110,7 +111,7 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 export function validate_config(config) {
 	if (typeof config !== 'object') {
 		throw new Error(
-			'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
+			'svelte.config.js must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 		);
 	}
 

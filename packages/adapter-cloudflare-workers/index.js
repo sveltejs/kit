@@ -73,9 +73,9 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
@@ -97,7 +97,12 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					format: 'esm',
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					logLevel: 'silent'
 				});
@@ -180,14 +185,24 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
  * @returns {WranglerConfig}
  */
 function validate_config(builder, config_file) {
+	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
+		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
+		config_file = 'wrangler.json';
+	}
 	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(config_file, 'utf-8'))
-			);
+			if (config_file.endsWith('.json')) {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					JSON.parse(readFileSync(config_file, 'utf-8'))
+				);
+			} else {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					toml.parse(readFileSync(config_file, 'utf-8'))
+				);
+			}
 		} catch (err) {
 			err.message = `Error parsing ${config_file}: ${err.message}`;
 			throw err;

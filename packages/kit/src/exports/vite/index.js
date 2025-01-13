@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 
-import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -34,7 +34,7 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { pathToFileURL } from 'node:url';
+import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
 
@@ -93,7 +93,7 @@ const warning_preprocessor = {
 
 				const message =
 					`\n${colors.bold().red(path.relative('.', filename))}\n` +
-					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://kit.svelte.dev/docs/page-options for more information.`;
+					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
 					console.log(message);
@@ -124,23 +124,6 @@ const warning_preprocessor = {
 };
 
 /**
- * Resolve a dependency relative to the current working directory,
- * rather than relative to this package
- * @param {string} dependency
- */
-async function resolve_peer_dependency(dependency) {
-	try {
-		// @ts-expect-error the types are wrong
-		const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
-		return import(resolved);
-	} catch (e) {
-		throw new Error(
-			`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
-		);
-	}
-}
-
-/**
  * Returns the SvelteKit Vite plugins.
  * @returns {Promise<import('vite').Plugin[]>}
  */
@@ -164,6 +147,7 @@ export async function sveltekit() {
 		preprocess,
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
+			// @ts-ignore - ignore this property when running `pnpm check` against Svelte 5 in the ecosystem CI
 			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
@@ -242,7 +226,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -293,6 +277,10 @@ async function kit({ svelte_config }) {
 					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
+					entries: [
+						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
+						`!${kit.files.routes}/**/+*server.*`
+					],
 					exclude: [
 						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
@@ -335,7 +323,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 				}
 			} else {
 				new_config.define = {
@@ -365,11 +353,18 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {Map<string, string>} */
+	const import_map = new Map();
+
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		async resolveId(id, importer) {
+		resolveId(id, importer) {
+			if (id === '__sveltekit/manifest') {
+				return `${kit.outDir}/generated/client-optimized/app.js`;
+			}
+
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
@@ -391,6 +386,8 @@ async function kit({ svelte_config }) {
 						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
+
+				import_map.set(id, importer);
 			}
 
 			// treat $env/static/[public|private] as virtual
@@ -403,7 +400,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		async load(id, options) {
+		load(id, options) {
 			const browser = !options?.ssr;
 
 			const global = is_build
@@ -421,7 +418,18 @@ async function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
+
+					const illegal_module = strip_virtual_prefix(relative);
+
+					if (import_map.has(illegal_module)) {
+						const importer = path.relative(
+							cwd,
+							/** @type {string} */ (import_map.get(illegal_module))
+						);
+						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
+					}
+
+					throw new Error(`Cannot import ${illegal_module} into client-side code`);
 				}
 			}
 
@@ -539,7 +547,7 @@ async function kit({ svelte_config }) {
 
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			handler(_options) {
 				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
@@ -566,7 +574,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config) {
+		config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
@@ -611,10 +619,11 @@ async function kit({ svelte_config }) {
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
+					input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/entry.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
-
 					manifest_data.nodes.forEach((node, i) => {
 						if (node.component || node.universal) {
 							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
@@ -632,24 +641,30 @@ async function kit({ svelte_config }) {
 				const client_base =
 					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
 
+				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
+				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
+
 				new_config = {
 					base: ssr ? assets_base(kit) : client_base,
 					build: {
 						copyPublicDir: !ssr,
-						cssCodeSplit: true,
+						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
-							input,
+							input: inline ? input['bundle'] : input,
 							output: {
-								format: 'esm',
+								format: inline ? 'iife' : 'esm',
+								name: `__sveltekit_${version_hash}.app`,
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
-								sourcemapIgnoreList
+								sourcemapIgnoreList,
+								manualChunks: split ? undefined : () => 'bundle',
+								inlineDynamicImports: false
 							},
 							preserveEntrySignatures: 'strict'
 						},
@@ -781,9 +796,18 @@ async function kit({ svelte_config }) {
 				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					null,
+					null,
+					svelte_config.output
+				);
 
 				const metadata = await analyse({
+					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
 					server_manifest,
@@ -831,19 +855,50 @@ async function kit({ svelte_config }) {
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(`${runtime_directory}/client/entry.js`);
-				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
-				build_data.client = {
-					start: start.file,
-					app: app.file,
-					imports: [...start.imports, ...app.imports],
-					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts],
-					uses_env_dynamic_public: output.some(
-						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-					)
-				};
+				if (svelte_config.kit.output.bundleStrategy === 'split') {
+					const start = deps_of(`${runtime_directory}/client/entry.js`);
+					const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
+					build_data.client = {
+						start: start.file,
+						app: app.file,
+						imports: [...start.imports, ...app.imports],
+						stylesheets: [...start.stylesheets, ...app.stylesheets],
+						fonts: [...start.fonts, ...app.fonts],
+						uses_env_dynamic_public: output.some(
+							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+						)
+					};
+				} else {
+					const start = deps_of(`${runtime_directory}/client/bundle.js`);
+
+					build_data.client = {
+						start: start.file,
+						imports: start.imports,
+						stylesheets: start.stylesheets,
+						fonts: start.fonts,
+						uses_env_dynamic_public: output.some(
+							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+						)
+					};
+
+					if (svelte_config.kit.output.bundleStrategy === 'inline') {
+						const style = /** @type {import('rollup').OutputAsset} */ (
+							output.find(
+								(chunk) =>
+									chunk.type === 'asset' &&
+									chunk.names.length === 1 &&
+									chunk.names[0] === 'style.css'
+							)
+						);
+
+						build_data.client.inline = {
+							script: read(`${out}/client/${start.file}`),
+							style: /** @type {string | undefined} */ (style?.source)
+						};
+					}
+				}
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
@@ -861,10 +916,19 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					client_manifest,
+					css,
+					svelte_config.kit.output
+				);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
+					hash: kit.router.type === 'hash',
 					out,
 					manifest_path,
 					metadata,
@@ -892,7 +956,13 @@ async function kit({ svelte_config }) {
 					await build_service_worker(
 						out,
 						kit,
-						vite_config,
+						{
+							...vite_config,
+							build: {
+								...vite_config.build,
+								minify: initial_config.build?.minify ?? 'esbuild'
+							}
+						},
 						manifest_data,
 						service_worker_entry_file,
 						prerendered,
@@ -923,7 +993,7 @@ async function kit({ svelte_config }) {
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
-						const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+						const link = colors.bold().cyan('https://svelte.dev/docs/kit/adapters');
 						console.log(
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);

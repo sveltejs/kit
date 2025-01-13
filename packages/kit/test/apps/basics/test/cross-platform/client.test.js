@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -49,10 +50,10 @@ test.describe('a11y', () => {
 			expect(has_live_region).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
+			expect(await page.innerText('[aria-live]')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+			expect(await page.innerText('[aria-live]')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_live_region).toBeFalsy();
 		}
@@ -76,6 +77,7 @@ test.describe('a11y', () => {
 		).toBe(1);
 
 		await clicknav('[href="/selection/b"]');
+
 		expect(
 			await page.evaluate(() => {
 				const selection = getSelection();
@@ -98,7 +100,7 @@ test.describe('a11y', () => {
 	});
 
 	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.active = null;
 			window.addEventListener('focusin', () => window.active = document.activeElement);
 		`);
@@ -106,8 +108,13 @@ test.describe('a11y', () => {
 		await page.goto('/accessibility/autofocus/a');
 		await clicknav('[href="/"]');
 
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		expect(
+			await page.evaluate(
+				// @ts-expect-error
+				() => window.active?.nodeName
+			)
+		).toBe('BODY');
+		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
 	});
 });
 
@@ -214,16 +221,18 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking a download link', async ({ page }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('a[download]');
-		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+		const download = page.waitForEvent('download');
+		await page.locator('a[download]').click();
+		await (await download).cancel();
 
-		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await expect(page.locator('pre')).toHaveText('0 false undefined');
 
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
+		await page.locator('a[href="/navigation-lifecycle/before-navigate/a"]').click();
+
+		await expect(page.locator('pre')).toHaveText('1 false link');
 	});
 
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
@@ -247,6 +256,14 @@ test.describe('Navigation lifecycle functions', () => {
 			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
+
+	test('afterNavigate properly removed', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
+
+		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -268,6 +285,19 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#non-ascii-anchor');
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
+	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
+		page,
+		in_view,
+		clicknav,
+		scroll_to
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		await scroll_to(0, 50);
+		await page.locator('#non-ascii-anchor').click();
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
 
@@ -319,26 +349,25 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
-	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
+	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+
+		await expect(page).toHaveURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-
-		expect(page.url()).toBe(baseURL + '/anchor');
+		await expect(page).toHaveURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
 		page,
-		clicknav
+		clicknav,
+		scroll_to
 	}) => {
 		await page.goto('/scroll/cross-document/a');
 
@@ -347,7 +376,7 @@ test.describe('Scrolling', () => {
 		if (!rect) throw new Error('Could not determine bounding box');
 
 		const target_scroll_y = rect.y + rect.height - height;
-		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
+		await scroll_to(0, target_scroll_y);
 
 		await page.locator('[href="/scroll/cross-document/b"]').click();
 		expect(await page.textContent('h1')).toBe('b');
@@ -420,7 +449,8 @@ test.describe('Scrolling', () => {
 	test('scroll positions are recovered on reloading the page', async ({
 		page,
 		app,
-		browserName
+		browserName,
+		scroll_to
 	}) => {
 		// No idea why the workaround below works only in dev mode
 		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
@@ -430,9 +460,9 @@ test.describe('Scrolling', () => {
 		}
 
 		await page.goto('/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 		await app.goto('/anchor/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 
 		await page.reload();
 		if (browserName === 'firefox') {
@@ -440,10 +470,11 @@ test.describe('Scrolling', () => {
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack();
 		}
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await page.waitForFunction(() => window.scrollY === 1000);
 
+		const waiter = page.waitForFunction(() => window.scrollY === 1000);
 		await page.goBack();
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await waiter;
 	});
 
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
@@ -453,26 +484,32 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 
-	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+	test('clicking # or #top takes you to the top of the current page', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/top');
 
 		for (const href of ['#', '#top']) {
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 		}
 	});
 
-	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+	test('Scroll position is correct after going back from a shallow route', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/push-state');
 		await page.locator('#subpage-link').click();
 		await page.locator('#back-button').click();
 
-		await page.evaluate(() => window.scrollTo(0, 9999));
+		await scroll_to(0, 9999);
 
 		const scroll = await page.evaluate(() => window.scrollY);
 		expect(scroll).toBeGreaterThan(0);
@@ -587,18 +624,15 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
+		expect(requests).toContain(`${baseURL}/routing/preloading/preloaded.json`);
 
 		requests = [];
 		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
-		try {
-			await app.preloadData('https://example.com');
-			throw new Error('Error was not thrown');
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
-		}
+		await expect(app.preloadData('https://example.com')).rejects.toThrowError(
+			'Attempted to preload a URL that does not belong to this app'
+		);
 	});
 
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
@@ -609,6 +643,19 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
 		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
+	});
+
+	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#preload"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+
+		await clicknav('[href="/routing/hashes/a"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+
+		await clicknav('[href="#preload"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
@@ -663,25 +710,49 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('b');
 	});
 
-	test('$page.url.hash is correctly set on page load', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore#target');
+	test('page.url.hash is correctly set on page load', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('$page.url.hash is correctly set on navigation', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore');
+	test('page.url.hash is correctly set on navigation', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');
 		await page.locator('[href="#target"]').click();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.locator('[href="/routing/hashes/pagestore"]').click();
+		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('clicking on a hash link focuses the associated element', async ({ page }) => {
+		await page.goto('/routing/hashes/focus');
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+		// check it still works when the hash is already present in the URL
+		await page.locator('a[href="#example"]').click();
+		await expect(page.getByRole('textbox')).toBeFocused();
+	});
+
+	test('backwards navigation works after clicking a hash link with data-sveltekit-reload', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/data-sveltekit/reload/hash');
+		await page.locator('a[href="#example"]').click();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
@@ -693,8 +764,9 @@ test.describe('Routing', () => {
 		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
+		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 	});
 
 	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
@@ -746,6 +818,7 @@ test.describe('Routing', () => {
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
 		await page.goto('/routing/form-get');
+
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');
@@ -761,6 +834,34 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
+	});
+
+	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Inside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
+	});
+
+	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
+		await page.goto('/routing/form-target-blank');
+
+		let tabs = page.context().pages();
+		expect(tabs.length === 1);
+
+		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
+		await page.locator('button', { hasText: 'Outside form' }).click();
+		await new_tab;
+
+		tabs = page.context().pages();
+		expect(tabs.length > 1);
 	});
 
 	test('ignores links with no href', async ({ page }) => {
@@ -872,7 +973,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		});
 	}

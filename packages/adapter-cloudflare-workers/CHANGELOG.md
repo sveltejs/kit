@@ -1,5 +1,98 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.7.0
+### Minor Changes
+
+
+- feat: support `wrangler.json` config file ([#13151](https://github.com/sveltejs/kit/pull/13151))
+
+
+### Patch Changes
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
+## 2.6.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 2.5.6
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 2.5.5
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+- Updated dependencies [[`df48fc6ede3859beabaae9fd7c6f722215bb8a42`](https://github.com/sveltejs/kit/commit/df48fc6ede3859beabaae9fd7c6f722215bb8a42), [`5780deba8e3ebd0e2b0abea029068ad0c6daf6ad`](https://github.com/sveltejs/kit/commit/5780deba8e3ebd0e2b0abea029068ad0c6daf6ad), [`6f9aefdb8699fc126d76a88471602cb9a80822eb`](https://github.com/sveltejs/kit/commit/6f9aefdb8699fc126d76a88471602cb9a80822eb), [`8aa95b4b3431e79f62f580abdcdcb157b4de86cd`](https://github.com/sveltejs/kit/commit/8aa95b4b3431e79f62f580abdcdcb157b4de86cd)]:
+  - @sveltejs/kit@2.7.0
+
+## 2.5.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 2.5.3
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 2.5.2
+### Patch Changes
+
+
+- fix: correctly return static assets if base path is set ([#12075](https://github.com/sveltejs/kit/pull/12075))
+
+## 2.5.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
+## 2.5.0
+### Minor Changes
+
+
+- chore(deps): upgrade to esbuild 0.21 ([#12415](https://github.com/sveltejs/kit/pull/12415))
+
+
+### Patch Changes
+
+- Updated dependencies [[`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4), [`5645614f497931f587b7cb8b3c885fce892a6a72`](https://github.com/sveltejs/kit/commit/5645614f497931f587b7cb8b3c885fce892a6a72), [`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4)]:
+  - @sveltejs/kit@2.5.18
+
+## 2.4.1
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
 ## 2.4.0
 
 ### Minor Changes
