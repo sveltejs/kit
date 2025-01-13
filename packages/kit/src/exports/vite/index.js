@@ -38,6 +38,13 @@ import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
 
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+if (!pkg.scripts?.prepare?.includes('svelte-kit')) {
+	console.warn(
+		colors.yellow('Add "prepare": "svelte-kit sync" to the "scripts" of your package.json')
+	);
+}
+
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
