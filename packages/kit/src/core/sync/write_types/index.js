@@ -270,6 +270,14 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
 			);
 		}
+
+		if (route.leaf.component) {
+			if (route.leaf.server) {
+				exports.push('export type PageProps = { data: PageData; form: ActionData }');
+			} else {
+				exports.push('export type PageProps = { data: PageData }');
+			}
+		}
 	}
 
 	if (route.layout) {
@@ -333,6 +341,12 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
 		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+
+		if (route.layout.component) {
+			exports.push(
+				'export type LayoutProps = { data: LayoutData; children: import("svelte").Snippet }'
+			);
+		}
 	}
 
 	if (route.endpoint) {
