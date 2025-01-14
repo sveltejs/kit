@@ -152,7 +152,7 @@ export const actions = {
 ```
 
 > [!LEGACY]
-> `PageProps` was added in 2.16.0, in earlier versions you can type the `data` and `form` properties individually:
+> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` and `form` properties individually:
 > ```js
 > /// file: +page.svelte
 > /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */

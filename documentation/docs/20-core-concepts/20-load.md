@@ -33,7 +33,7 @@ export function load({ params }) {
 ```
 
 > [!LEGACY]
-> Before version 2.16.0, the props of a page/layout have to be typed individually:
+> Before version 2.16.0, the props of a page and layout had to be typed individually:
 > ```js
 > /// file: +page.svelte
 > /** @type {{ data: import('./$types').PageData }} */
@@ -119,7 +119,7 @@ export async function load() {
 ```
 
 > [!LEGACY]
-> `LayoutProps` was added in 2.16.0, in earlier versions props can be typed like so:
+> `LayoutProps` was added in 2.16.0. In earlier versions, properties had to be typed individually:
 > ```js
 > /// file: +layout.svelte
 > /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */

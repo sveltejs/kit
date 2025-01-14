@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: provide PageProps, LayoutProps types
+feat: provide `PageProps` and `LayoutProps` types
