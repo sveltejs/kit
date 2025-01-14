@@ -38,13 +38,6 @@ import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
 
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-if (!pkg.scripts?.prepare?.includes('svelte-kit')) {
-	console.warn(
-		colors.yellow('Add "prepare": "svelte-kit sync" to the "scripts" of your package.json')
-	);
-}
-
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
@@ -160,6 +153,15 @@ export async function sveltekit() {
 		},
 		...svelte_config.vitePlugin
 	};
+
+	// TODO: remove this after some migration period. perhaps mention this migration in the SvelteKit
+	// 3 migration guide and remove the warning then
+	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
+	if (!pkg.scripts?.prepare?.includes('svelte-kit')) {
+		svelte_config.onwarn(
+			colors.yellow('Add "prepare": "svelte-kit sync" to the "scripts" of your package.json')
+		);
+	}
 
 	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
 
