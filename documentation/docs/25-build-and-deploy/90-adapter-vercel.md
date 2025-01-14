@@ -140,7 +140,7 @@ export function load() {
 ```svelte
 <!--- file: +layout.svelte --->
 <script>
-	/** @type {{ data: import('./$types').LayoutServerData }} */
+	/** @type {import('./$types').LayoutProps} */
 	let { data } = $props();
 </script>
 

@@ -84,6 +84,37 @@ export async function load({ params, fetch }) {
 }
 ```
 
+The return types of the load functions are then available through the `$types` module as `PageData` and `LayoutData` respectively, while the union of the return values of all `Actions` is available as `ActionData`. Starting with version 2.16.0, two additional helper types are provided. `PageProps` defines `data: PageData`, as well as `form: ActionData`, when there are actions defined. `LayoutProps` defines `data: LayoutData`, as well as `children: Snippet`:
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	/** @type {import('./$types').PageProps} */
+	let { data, form } = $props();
+</script>
+```
+
+> [!LEGACY]
+> Before 2.16.0:
+> ```svelte
+> <!--- file: src/routes/+page.svelte --->
+> <script>
+> 	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+> 	let { data, form } = $props();
+> </script>
+> ```
+>
+> Using Svelte 4:
+> ```svelte
+> <!--- file: src/routes/+page.svelte --->
+> <script>
+>   /** @type {import('./$types').PageData} */
+>   export let data
+>   /** @type {import('./$types').ActionData} */
+>   export let form
+> </script>
+> ```
+
 > [!NOTE] For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outDir)):
 >
 > `{ "extends": "./.svelte-kit/tsconfig.json" }`
