@@ -170,4 +170,4 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
+If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering. Alternatively, if you're using the [`gh-pages`](https://www.npmjs.com/package/gh-pages) cli, you should add the `--nojekyll` flag.
