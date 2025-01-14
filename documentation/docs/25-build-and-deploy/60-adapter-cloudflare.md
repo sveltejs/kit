@@ -120,7 +120,7 @@ However, they will have no effect on responses dynamically rendered by SvelteKit
 
 ### Further reading
 
-You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-site).
+You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-kit-site).
 
 ### Accessing the file system
 
