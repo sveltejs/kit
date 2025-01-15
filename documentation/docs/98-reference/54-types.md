@@ -109,9 +109,9 @@ The return types of the load functions are then available through the `$types` m
 > <!--- file: src/routes/+page.svelte --->
 > <script>
 >   /** @type {import('./$types').PageData} */
->   export let data
+>   export let data;
 >   /** @type {import('./$types').ActionData} */
->   export let form
+>   export let form;
 > </script>
 > ```
 
