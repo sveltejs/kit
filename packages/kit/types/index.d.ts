@@ -16,7 +16,7 @@ declare module '@sveltejs/kit' {
 		 * This function is called after SvelteKit has built your app.
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
-		adapt(builder: Builder): MaybePromise<void>;
+		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
 		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 		 */
@@ -31,7 +31,7 @@ declare module '@sveltejs/kit' {
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering
 		 */
-		emulate?(): MaybePromise<Emulator>;
+		emulate?: () => MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -76,9 +76,9 @@ declare module '@sveltejs/kit' {
 		/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 		log: Logger;
 		/** Remove `dir` and all its contents. */
-		rimraf(dir: string): void;
+		rimraf: (dir: string) => void;
 		/** Create `dir` and any required parent directories. */
-		mkdirp(dir: string): void;
+		mkdirp: (dir: string) => void;
 
 		/** The fully resolved `svelte.config.js`. */
 		config: ValidatedConfig;
@@ -93,59 +93,59 @@ declare module '@sveltejs/kit' {
 		 * @param fn A function that groups a set of routes into an entry point
 		 * @deprecated Use `builder.routes` instead
 		 */
-		createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+		createEntries: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 		/**
 		 * Find all the assets imported by server files belonging to `routes`
 		 */
-		findServerAssets(routes: RouteDefinition[]): string[];
+		findServerAssets: (routes: RouteDefinition[]) => string[];
 
 		/**
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
 		 */
-		generateFallback(dest: string): Promise<void>;
+		generateFallback: (dest: string) => Promise<void>;
 
 		/**
 		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
 		 */
-		generateEnvModule(): void;
+		generateEnvModule: () => void;
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 		 */
-		generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
+		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
 		 * @param name path to the file, relative to the build directory
 		 */
-		getBuildDirectory(name: string): string;
+		getBuildDirectory: (name: string) => string;
 		/** Get the fully resolved path to the directory containing client-side assets, including the contents of your `static` directory. */
-		getClientDirectory(): string;
+		getClientDirectory: () => string;
 		/** Get the fully resolved path to the directory containing server-side code. */
-		getServerDirectory(): string;
+		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
-		getAppPath(): string;
+		getAppPath: () => string;
 
 		/**
 		 * Write client assets to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writeClient(dest: string): string[];
+		writeClient: (dest: string) => string[];
 		/**
 		 * Write prerendered files to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writePrerendered(dest: string): string[];
+		writePrerendered: (dest: string) => string[];
 		/**
 		 * Write server-side code to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writeServer(dest: string): string[];
+		writeServer: (dest: string) => string[];
 		/**
 		 * Copy a file or directory.
 		 * @param from the source file or directory
@@ -154,20 +154,20 @@ declare module '@sveltejs/kit' {
 		 * @param opts.replace a map of strings to replace
 		 * @returns an array of files that were copied
 		 */
-		copy(
+		copy: (
 			from: string,
 			to: string,
 			opts?: {
 				filter?(basename: string): boolean;
 				replace?: Record<string, string>;
 			}
-		): string[];
+		) => string[];
 
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
 		 */
-		compress(directory: string): Promise<void>;
+		compress: (directory: string) => Promise<void>;
 	}
 
 	export interface Config {
@@ -197,13 +197,13 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -215,11 +215,11 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set(
+		set: (
 			name: string,
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
-		): void;
+		) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -228,7 +228,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
+		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -241,11 +241,11 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		serialize(
+		serialize: (
 			name: string,
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
-		): string;
+		) => string;
 	}
 
 	/**
@@ -720,7 +720,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+		resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
 	}) => MaybePromise<Response>;
 
 	/**
@@ -875,14 +875,14 @@ declare module '@sveltejs/kit' {
 		 *
 		 * `setHeaders` has no effect when a `load` function runs in the browser.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * `await parent()` returns data from parent `+layout.js` `load` functions.
 		 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -920,7 +920,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: Array<`${string}:${string}`>): void;
+		depends: (...deps: Array<`${string}:${string}`>) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -934,7 +934,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	export interface NavigationEvent<
@@ -1029,7 +1029,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Call this to prevent the navigation from starting.
 		 */
-		cancel(): void;
+		cancel: () => void;
 	}
 
 	/**
@@ -1143,7 +1143,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The client's IP address, set by the adapter.
 		 */
-		getClientAddress(): string;
+		getClientAddress: () => string;
 		/**
 		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
 		 */
@@ -1191,7 +1191,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
 		 */
@@ -1224,20 +1224,20 @@ declare module '@sveltejs/kit' {
 		 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 		 * @param input the html chunk and the info if this is the last chunk
 		 */
-		transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+		transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 		/**
 		 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 		 * By default, none will be included.
 		 * @param name header name
 		 * @param value header value
 		 */
-		filterSerializedResponseHeaders?(name: string, value: string): boolean;
+		filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 		/**
 		 * Determines what should be added to the `<head>` tag to preload it.
 		 * By default, `js` and `css` files will be preloaded.
 		 * @param input the type of the file and its path
 		 */
-		preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 	}
 
 	export interface RouteDefinition<Config = any> {
@@ -1279,7 +1279,7 @@ declare module '@sveltejs/kit' {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
-			matchers(): Promise<Record<string, ParamMatcher>>;
+			matchers: () => Promise<Record<string, ParamMatcher>>;
 			/** A `[file]: size` map of all assets imported by server code */
 			server_assets: Record<string, number>;
 		};
@@ -1306,7 +1306,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -1344,7 +1344,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: string[]): void;
+		depends: (...deps: string[]) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -1358,7 +1358,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	/**
@@ -1429,7 +1429,7 @@ declare module '@sveltejs/kit' {
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
-		cancel(): void;
+		cancel: () => void;
 	}) => MaybePromise<
 		| void
 		| ((opts: {
@@ -1442,7 +1442,7 @@ declare module '@sveltejs/kit' {
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 				 */
-				update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
+				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
 		  }) => void)
 	>;
 
