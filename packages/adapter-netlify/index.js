@@ -126,10 +126,42 @@ async function generate_edge_functions({ builder }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
+	builder.log.minor('Generating Edge Function...');
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+
+	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
+		replace: {
+			'0SERVER': `${relativePath}/index.js`,
+			MANIFEST: './manifest.js'
+		}
+	});
+
+	const manifest = builder.generateManifest({
+		relativePath
+	});
+
+	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
+
+	/** @type {{ assets: Set<string> }} */
+	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
+
 	const path = '/*';
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
 	const excludedPath = [
 		// Contains static files
 		`/${builder.getAppPath()}/*`,
+		...builder.prerendered.paths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		}),
 		// Should not be served by SvelteKit at all
 		'/.netlify/*'
 	];
@@ -145,27 +177,6 @@ async function generate_edge_functions({ builder }) {
 		],
 		version: 1
 	};
-
-	builder.log.minor('Generating Edge Function...');
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
-
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
-		replace: {
-			'0SERVER': `${relativePath}/index.js`,
-			MANIFEST: './manifest.js'
-		}
-	});
-
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
-	writeFileSync(
-		`${tmp}/manifest.js`,
-		`export const manifest = ${manifest};\n\nexport const prerendered = new Set(${JSON.stringify(
-			builder.prerendered.paths
-		)});\n`
-	);
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
