@@ -8,13 +8,7 @@ import {
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
-import {
-	initial_fetch,
-	lock_fetch,
-	native_fetch,
-	subsequent_fetch,
-	unlock_fetch
-} from './fetcher.js';
+import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import * as storage from './session-storage.js';
 import {
@@ -2548,7 +2542,9 @@ async function load_data(url, invalid) {
 	}
 	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
-	const res = await native_fetch(data_url.href);
+	// use window.fetch directly to allow using a 3rd party-patched fetch implementation
+	const fetcher = DEV ? dev_fetch : window.fetch;
+	const res = await fetcher(data_url.href, {});
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level

@@ -252,6 +252,23 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
+	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		const logs = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'log') {
+				logs.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch/patching-server-load');
+
+		await page.getByText('Go To Page with Server Load').click();
+
+		expect(await page.textContent('h1')).toBe('server load data');
+
+		expect(logs).toContain('Called a patched window.fetch for server load request');
+	});
+
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
 		const requests = [];
 		page.on('request', (request) => {
