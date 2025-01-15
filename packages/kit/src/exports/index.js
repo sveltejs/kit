@@ -86,7 +86,7 @@ export function isHttpError(e, status) {
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  *
  * Most common status codes:
- *  * `303 See Other`: redirect as a `GET` request
+ *  * `303 See Other`: redirect as a `GET` request (often used after a form POST request)
  *  * `307 Temporary Redirect`: redirect will keep the request method
  *  * `308 Permanent Redirect`: redirect will keep the request method, SEO will be transferred to the new page
  *
