@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-respect `replaceState` on external navigation
+fix: respect `replaceState` on external navigation
