@@ -1,4 +1,4 @@
-import process, { execPath } from 'node:process';
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
