@@ -5,7 +5,7 @@ import { b64_decode } from '../utils.js';
 let loading = 0;
 
 /** @type {typeof fetch} */
-export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
+const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
