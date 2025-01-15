@@ -1,5 +1,29 @@
 # @sveltejs/adapter-cloudflare
 
+## 5.0.0
+### Major Changes
+
+
+- feat: remove esbuild step ([#13132](https://github.com/sveltejs/kit/pull/13132))
+
+
+### Patch Changes
+
+- Updated dependencies [[`12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f`](https://github.com/sveltejs/kit/commit/12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f), [`528af75f846f971ef64e4d109ac5e22fca046b90`](https://github.com/sveltejs/kit/commit/528af75f846f971ef64e4d109ac5e22fca046b90)]:
+  - @sveltejs/kit@2.15.1
+
+## 4.9.0
+### Minor Changes
+
+
+- feat: generate `.assetsignore` file for use with Cloudflare Workers Static Assets ([#13109](https://github.com/sveltejs/kit/pull/13109))
+
+
+### Patch Changes
+
+- Updated dependencies [[`20f2720aa3455f38fa2630a33d52f7532da27fce`](https://github.com/sveltejs/kit/commit/20f2720aa3455f38fa2630a33d52f7532da27fce)]:
+  - @sveltejs/kit@2.13.0
+
 ## 4.8.0
 ### Minor Changes
 

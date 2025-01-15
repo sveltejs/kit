@@ -498,6 +498,46 @@ export interface KitConfig {
 		 * @since 1.8.4
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+		/**
+		 * The bundle strategy option affects how your app's JavaScript and CSS files are loaded.
+		 * - If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
+		 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+		 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
+		 *
+		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+		 *
+		 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
+		 *
+		 * ```js
+		 * /// file: vite.config.js
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * import { defineConfig } from 'vite';
+		 *
+		 * export default defineConfig({
+		 *   plugins: [sveltekit()],
+		 *   build: {
+		 *     // inline all imported assets
+		 *     assetsInlineLimit: Infinity
+		 *   }
+		 * });
+		 * ```
+		 *
+		 * ```svelte
+		 * /// file: src/routes/+layout.svelte
+		 * <script>
+		 *   // import the asset through Vite
+		 *   import favicon from './favicon.png';
+		 * </script>
+		 *
+		 * <svelte:head>
+		 *   <!-- this asset will be inlined as a base64 URL -->
+		 *   <link rel="icon" href={favicon} />
+		 * </svelte:head>
+		 * ```
+		 * @default 'split'
+		 * @since 2.13.0
+		 */
+		bundleStrategy?: 'split' | 'single' | 'inline';
 	};
 	paths?: {
 		/**
@@ -608,6 +648,18 @@ export interface KitConfig {
 		 */
 		origin?: string;
 	};
+	router?: {
+		/**
+		 * What type of client-side router to use.
+		 * - `'pathname'` is the default and means the current URL pathname determines the route
+		 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
+		 *   It comes with some caveats: you can't use server-side rendering (or indeed any server logic), and you have to make sure that the links in your app all start with /#/, or they won't work. Beyond that, everything works exactly like a normal SvelteKit app.
+		 *
+		 * @default "pathname"
+		 * @since 2.14.0
+		 */
+		type?: 'pathname' | 'hash';
+	};
 	serviceWorker?: {
 		/**
 		 * Whether to automatically register the service worker, if it exists.
@@ -638,17 +690,17 @@ export interface KitConfig {
 	 * /// file: +layout.svelte
 	 * <script>
 	 *   import { beforeNavigate } from '$app/navigation';
-	 *   import { updated } from '$app/stores';
+	 *   import { updated } from '$app/state';
 	 *
 	 *   beforeNavigate(({ willUnload, to }) => {
-	 *     if ($updated && !willUnload && to?.url) {
+	 *     if (updated.current && !willUnload && to?.url) {
 	 *       location.href = to.url.href;
 	 *     }
 	 *   });
 	 * </script>
 	 * ```
 	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](https://svelte.dev/docs/kit/$app-stores#updated) store to `true` when it detects one.
+	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
 	 */
 	version?: {
 		/**
@@ -741,6 +793,43 @@ export type ClientInit = () => MaybePromise<void>;
  * @since 2.3.0
  */
 export type Reroute = (event: { url: URL }) => void | string;
+
+/**
+ * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
+ *
+ * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).
+ *
+ * In the browser, `decode` turns the encoding back into an instance of the custom type.
+ *
+ * ```ts
+ * import type { Transport } from '@sveltejs/kit';
+ *
+ * declare class MyCustomType {
+ * 	data: any
+ * }
+ *
+ * // hooks.js
+ * export const transport: Transport = {
+ * 	MyCustomType: {
+ * 		encode: (value) => value instanceof MyCustomType && [value.data],
+ * 		decode: ([data]) => new MyCustomType(data)
+ * 	}
+ * };
+ * ```
+ * @since 2.11.0
+ */
+export type Transport = Record<string, Transporter>;
+
+/**
+ * A member of the [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook.
+ */
+export interface Transporter<
+	T = any,
+	U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+> {
+	encode: (value: T) => false | U;
+	decode: (data: U) => T;
+}
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))

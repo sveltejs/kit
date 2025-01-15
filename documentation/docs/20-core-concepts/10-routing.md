@@ -53,7 +53,7 @@ Pages can receive data from `load` functions via the `data` prop.
 > [!LEGACY]
 > In Svelte 4, you'd use `export let data` instead
 
-> [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+> [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 ### +page.js
 
@@ -132,11 +132,14 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 ```svelte
 <!--- file: src/routes/blog/[slug]/+error.svelte --->
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
-<h1>{$page.status}: {$page.error.message}</h1>
+<h1>{page.status}: {page.error.message}</h1>
 ```
+
+> [!LEGACY]
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
@@ -301,6 +304,8 @@ You can use the [`error`](@sveltejs-kit#error), [`redirect`](@sveltejs-kit#redir
 If an error is thrown (either `error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
 
 > [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
+
+> [!NOTE] `+layout` files have no effect on `+server.js` files. If you want to run some logic before each request, add it to the server [`handle`](hooks#Server-hooks-handle) hook.
 
 ### Receiving data
 

@@ -39,6 +39,8 @@ export async function handle({ event, resolve }) {
 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
+During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-environment#building) beforehand.
+
 ### locals
 
 To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
@@ -289,6 +291,23 @@ export function reroute({ url }) {
 The `lang` parameter will be correctly derived from the returned pathname.
 
 Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
+
+### transport
+
+This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns `false` for anything that isn't an instance of the type) and a corresponding `decode` function:
+
+```js
+/// file: src/hooks.js
+import { Vector } from '$lib/math';
+
+/** @type {import('@sveltejs/kit').Transport} */
+export const transport = {
+	Vector: {
+		encode: (value) => value instanceof Vector && [value.x, value.y],
+		decode: ([x, y]) => new Vector(x, y)
+	}
+};
+```
 
 
 ## Further reading

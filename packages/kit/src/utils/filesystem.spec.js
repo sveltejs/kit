@@ -101,7 +101,26 @@ test('replaces strings', () => {
 });
 
 test('ignores hooks.server folder when resolving hooks', () => {
-	write('hooks.server/index.js', '');
+	write(join('hooks.server', 'index.js'), '');
 
 	expect(resolve_entry(source_dir + '/hooks')).null;
+});
+
+test('ignores hooks folder that has no index file when resolving hooks', () => {
+	write(join('hooks', 'not-index.js'), '');
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).toBe(join(source_dir, 'hooks.js'));
+});
+
+test('ignores hooks folder when resolving universal hooks', () => {
+	write(join('hooks', 'hooks.server.js'), '');
+
+	expect(resolve_entry(source_dir + '/hooks')).null;
+});
+
+test('resolves entries that have an extension', () => {
+	write('hooks.js', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.js'))).toBe(join(source_dir, 'hooks.js'));
 });
