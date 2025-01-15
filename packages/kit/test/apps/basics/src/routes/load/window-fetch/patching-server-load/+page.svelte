@@ -2,7 +2,6 @@
 	import { browser } from '$app/environment';
 
 	if (browser) {
-		console.log('patching window.fetch');
 		const original_fetch = window.fetch;
 		window.fetch = (input, init) => {
 			console.log('Called a patched window.fetch for server load request');

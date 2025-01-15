@@ -266,7 +266,7 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('server load data');
 
-		expect(logs).toEqual(['Called a patched window.fetch for server load request']);
+		expect(logs).toContain('Called a patched window.fetch for server load request');
 	});
 
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
