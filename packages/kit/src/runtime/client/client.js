@@ -2544,7 +2544,6 @@ async function load_data(url, invalid) {
 
 	// use window.fetch directly to allow using a 3rd party-patched fetch implementation
 	const fetcher = DEV ? dev_fetch : window.fetch;
-	// const fetcher = native_fetch;
 	const res = await fetcher(data_url.href, {});
 
 	if (!res.ok) {
