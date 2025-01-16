@@ -306,7 +306,7 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(location.href, { replaceState: true });
+		goto(app.hash ? decodeURIComponent(location.href) : location.href, { replaceState: true });
 	}
 
 	_start_router();
@@ -2395,7 +2395,7 @@ function _start_router() {
 			// (surprisingly!) mutates `current.url`, allowing us to
 			// detect it and trigger a navigation
 			if (current.url.hash === location.hash) {
-				navigate({ type: 'goto', url: current.url });
+				navigate({ type: 'goto', url: new URL(decodeURIComponent(current.url.href)) });
 			}
 		}
 	});
