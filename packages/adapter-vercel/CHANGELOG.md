@@ -1,5 +1,62 @@
 # @sveltejs/adapter-vercel
 
+## 5.5.2
+### Patch Changes
+
+
+- chore: upgrade `@vercel/nft` to 0.27.9 ([#13129](https://github.com/sveltejs/kit/pull/13129))
+
+- Updated dependencies [[`9fc5ff3339e543b956f7ce5eb31267fa73ee332a`](https://github.com/sveltejs/kit/commit/9fc5ff3339e543b956f7ce5eb31267fa73ee332a), [`85b57168189fa16fe966434ec50cc19425cab275`](https://github.com/sveltejs/kit/commit/85b57168189fa16fe966434ec50cc19425cab275)]:
+  - @sveltejs/kit@2.10.0
+
+## 5.5.1
+### Patch Changes
+
+
+- chore: upgrade @vercel/nft to 0.27.7 ([#13082](https://github.com/sveltejs/kit/pull/13082))
+
+- Updated dependencies [[`78404dfe1eb346723eefc183278b85f25485b419`](https://github.com/sveltejs/kit/commit/78404dfe1eb346723eefc183278b85f25485b419)]:
+  - @sveltejs/kit@2.9.1
+
+## 5.5.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 5.4.8
+### Patch Changes
+
+
+- chore: support building with Node 22 ([#13043](https://github.com/sveltejs/kit/pull/13043))
+
+- Updated dependencies [[`570562b74d9e9f295d9b617478088a650f51e96b`](https://github.com/sveltejs/kit/commit/570562b74d9e9f295d9b617478088a650f51e96b), [`1358cccd52190df3c74bdd8970dbfb06ffc4ec72`](https://github.com/sveltejs/kit/commit/1358cccd52190df3c74bdd8970dbfb06ffc4ec72)]:
+  - @sveltejs/kit@2.8.2
+
+## 5.4.7
+### Patch Changes
+
+
+- fix: disregard presence/absence of trailing slash in prerendered redirect ([#12966](https://github.com/sveltejs/kit/pull/12966))
+
+- Updated dependencies [[`92b2686314a7dbebee1761c3da7719d599f003c7`](https://github.com/sveltejs/kit/commit/92b2686314a7dbebee1761c3da7719d599f003c7)]:
+  - @sveltejs/kit@2.8.0
+
+## 5.4.6
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
 ## 5.4.5
 ### Patch Changes
 

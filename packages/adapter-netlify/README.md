@@ -4,7 +4,7 @@ A SvelteKit adapter that creates a Netlify app.
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-netlify)
+[Docs](https://svelte.dev/docs/kit/adapter-netlify)
 
 ## Changelog
 

@@ -4,7 +4,7 @@
 	let pathname;
 </script>
 
-<h1>{pathname}</h1>
+<h1>{`${pathname}`}</h1>
 
 <button
 	on:click={() => {

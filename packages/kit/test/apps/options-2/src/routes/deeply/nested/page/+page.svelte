@@ -6,3 +6,9 @@
 
 <p data-testid="base">base: {base}</p>
 <p data-testid="assets">assets: {assets}</p>
+
+<style>
+	p {
+		color: red;
+	}
+</style>

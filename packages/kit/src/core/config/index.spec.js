@@ -92,8 +92,11 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { preloadStrategy: 'modulepreload' },
+		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
 		outDir: join(prefix, '.svelte-kit'),
+		router: {
+			type: 'pathname'
+		},
 		serviceWorker: {
 			register: true
 		},
@@ -209,7 +212,7 @@ test('fails if kit.appDir is only slash', () => {
 				appDir: '/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if kit.appDir starts with slash', () => {
@@ -219,7 +222,7 @@ test('fails if kit.appDir starts with slash', () => {
 				appDir: '/_app'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if kit.appDir ends with slash', () => {
@@ -229,7 +232,7 @@ test('fails if kit.appDir ends with slash', () => {
 				appDir: '_app/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -242,7 +245,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
@@ -254,7 +257,7 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
@@ -267,7 +270,7 @@ test('fails if paths.assets is relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets has trailing slash', () => {
@@ -279,7 +282,7 @@ test('fails if paths.assets has trailing slash', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if prerender.entries are invalid', () => {
@@ -373,6 +376,6 @@ test('errors on loading config with incorrect default export', async () => {
 
 	assert.equal(
 		message,
-		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
+		'svelte.config.js must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
 });

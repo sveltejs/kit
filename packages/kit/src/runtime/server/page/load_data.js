@@ -244,7 +244,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 			}
 		} else {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
-			const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
+			const mode = input instanceof Request ? input.mode : (init?.mode ?? 'cors');
 			if (mode === 'no-cors') {
 				response = new Response('', {
 					status: response.status,
@@ -348,7 +348,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
 						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route.id})`
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
 						);
 					}
 				}

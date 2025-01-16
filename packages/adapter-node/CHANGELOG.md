@@ -1,5 +1,38 @@
 # @sveltejs/adapter-node
 
+## 5.2.11
+### Patch Changes
+
+
+- chore(deps): update dependency @rollup/plugin-node-resolve to v16 ([#13164](https://github.com/sveltejs/kit/pull/13164))
+
+- Updated dependencies [[`19823dd716568140011eaa86110bb8868f0e2513`](https://github.com/sveltejs/kit/commit/19823dd716568140011eaa86110bb8868f0e2513), [`5d30191d13a596bda50e27e54522c10f3f6461e3`](https://github.com/sveltejs/kit/commit/5d30191d13a596bda50e27e54522c10f3f6461e3)]:
+  - @sveltejs/kit@2.12.2
+
+## 5.2.10
+### Patch Changes
+
+
+- chore: append http on listening address ([#13146](https://github.com/sveltejs/kit/pull/13146))
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
+## 5.2.9
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 5.2.8
+### Patch Changes
+
+
+- chore: upgrade @rollup/plugin-commonjs to 28.0.1 ([#12817](https://github.com/sveltejs/kit/pull/12817))
+
 ## 5.2.7
 ### Patch Changes
 

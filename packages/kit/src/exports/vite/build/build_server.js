@@ -11,8 +11,9 @@ import { normalizePath } from 'vite';
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('vite').Rollup.OutputAsset[] | null} css
+ * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css) {
+export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -58,18 +59,24 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
+			imports.push(
+				`import * as universal from '../${
+					resolve_symlinks(server_manifest, node.universal).chunk.file
+				}';`
+			);
 			exports.push('export { universal };');
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
 		if (node.server) {
-			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
+			imports.push(
+				`import * as server from '../${resolve_symlinks(server_manifest, node.server).chunk.file}';`
+			);
 			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
 
-		if (client_manifest && (node.universal || node.component)) {
+		if (client_manifest && (node.universal || node.component) && output_config.bundleStrategy === 'split') {
 			const entry = find_deps(
 				client_manifest,
 				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,

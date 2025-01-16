@@ -70,7 +70,10 @@ export async function render_page(event, page, options, manifest, state, resolve
 			}
 		}
 
-		const should_prerender_data = nodes.some((node) => node?.server?.load);
+		const should_prerender_data = nodes.some(
+			// prerender in case of trailingSlash because the client retrieves that value from the server
+			(node) => node?.server?.load || node?.server?.trailingSlash !== undefined
+		);
 		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
@@ -105,12 +108,12 @@ export async function render_page(event, page, options, manifest, state, resolve
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
 				if (action_result.type === 'error') {
 					console.warn(
-						"The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://kit.svelte.dev/docs/form-actions#progressive-enhancement-use-enhance"
+						"The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
 					);
 				} else if (action_result.data) {
 					/// case: lost data
 					console.warn(
-						"The form action returned a value, but it isn't available in `$page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://kit.svelte.dev/docs/form-actions#progressive-enhancement-use-enhance"
+						"The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
 					);
 				}
 			}
