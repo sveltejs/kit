@@ -1200,6 +1200,7 @@ function get_navigation_url(url) {
 	if (is_external_url(url, base, app.hash)) return;
 
 	// reroute could alter the given URL, so we pass a copy
+	let rerouted;
 	try {
 		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
 
