@@ -428,8 +428,8 @@ async function _preload_data(intent) {
 
 /** @param {URL} url */
 async function _preload_code(url) {
-  url = get_navigation_url(url);
-  if (!url) return;
+	url = get_navigation_url(url);
+	if (!url) return;
 
 	const route = routes.find((route) => route.exec(get_url_path(url)));
 
