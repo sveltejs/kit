@@ -433,7 +433,7 @@ Tips:
 							cwd,
 							/** @type {string} */ (import_map.get(illegal_module))
 						);
-						throw new Error(`${error_prefix}\nImported by: ${importer}${error_suffix}`);
+						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
 
 					throw new Error(`${error_prefix}${error_suffix}`);
