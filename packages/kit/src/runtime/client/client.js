@@ -1196,9 +1196,6 @@ async function load_root_error_page({ status, error, url, route }) {
  * @param {URL} url
  */
 function get_navigation_url(url) {
-	if (!url) return;
-	if (is_external_url(url, base, app.hash)) return;
-
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
