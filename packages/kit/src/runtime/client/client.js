@@ -374,7 +374,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -391,6 +391,10 @@ async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
+			}
+
+			if (options.invalidate) {
+				options.invalidate.forEach(push_invalidated);
 			}
 		}
 	});
@@ -1805,6 +1809,7 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
  * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
+ * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -1851,14 +1856,21 @@ export function invalidate(resource) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
+	push_invalidated(resource);
+
+	return _invalidate();
+}
+
+/**
+ * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ */
+function push_invalidated(resource) {
 	if (typeof resource === 'function') {
 		invalidated.push(resource);
 	} else {
 		const { href } = new URL(resource, location.href);
 		invalidated.push((url) => url.href === href);
 	}
-
-	return _invalidate();
 }
 
 /**

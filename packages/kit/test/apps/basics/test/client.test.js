@@ -673,6 +673,83 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
+	test('+page(.server).js is re-run when server dep is invalidated following goto', async ({
+		page
+	}) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).toBe(next_layout);
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
+	test('+page.js is re-run when shared dep is invalidated following goto', async ({ page }) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).toBe(next_layout);
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
+	test('Specified dependencies are re-run following goto', async ({ page }) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.specified');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).not.toBe(next_layout);
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
 	test('Parameter use is tracked even for routes that do not use the parameters', async ({
 		page,
 		clicknav
