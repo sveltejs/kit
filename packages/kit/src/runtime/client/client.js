@@ -376,7 +376,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidated?: Array<((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -395,8 +395,8 @@ async function _goto(url, options, redirect_count, nav_token) {
 				force_invalidation = true;
 			}
 
-			if (options.invalidated) {
-				invalidated.push(...options.invalidated);
+			if (options.invalidate) {
+				options.invalidate.forEach(push_invalidated);
 			}
 		}
 	});
@@ -1819,30 +1819,7 @@ export function goto(url, opts = {}) {
 		);
 	}
 
-	/**
-	 * @type {{
-	 *   replaceState?: boolean;
-	 *   noScroll?: boolean;
-	 *   keepFocus?: boolean;
-	 *   invalidateAll?: boolean;
-	 *   invalidated?: Array<((url: URL) => boolean)>;
-	 *   state?: Record<string, any>
-	 * }}
-	 */
-	const options = opts;
-
-	if (opts.invalidate) {
-		options.invalidated = opts.invalidate.map((resource) => {
-			if (typeof resource === 'function') {
-				return resource;
-			} else {
-				const { href } = new URL(resource, location.href);
-				return (url) => url.href === href;
-			}
-		});
-	}
-
-	return _goto(url, options, 0);
+	return _goto(url, opts, 0);
 }
 
 /**
@@ -1868,14 +1845,21 @@ export function invalidate(resource) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
+	push_invalidated(resource);
+
+	return _invalidate();
+}
+
+/**
+ * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ */
+function push_invalidated(resource) {
 	if (typeof resource === 'function') {
 		invalidated.push(resource);
 	} else {
 		const { href } = new URL(resource, location.href);
 		invalidated.push((url) => url.href === href);
 	}
-
-	return _invalidate();
 }
 
 /**
