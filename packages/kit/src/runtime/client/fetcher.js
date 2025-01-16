@@ -5,7 +5,7 @@ import { b64_decode } from '../utils.js';
 let loading = 0;
 
 /** @type {typeof fetch} */
-export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
+const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -137,7 +137,7 @@ export function subsequent_fetch(resource, resolved, opts) {
  * @param {RequestInfo | URL} resource
  * @param {RequestInit & Record<string, any> | undefined} opts
  */
-function dev_fetch(resource, opts) {
+export function dev_fetch(resource, opts) {
 	const patched_opts = { ...opts };
 	// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
 	Object.defineProperty(patched_opts, '__sveltekit_fetch__', {

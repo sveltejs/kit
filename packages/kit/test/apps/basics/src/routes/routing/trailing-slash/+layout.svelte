@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <ul data-sveltekit-preload-data="hover">
@@ -8,6 +8,6 @@
 	<li><a href="/routing/trailing-slash/never/">/never/</a></li>
 </ul>
 
-<p>{$page.url.pathname}</p>
+<p>{page.url.pathname}</p>
 
 <slot />

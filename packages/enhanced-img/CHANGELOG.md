@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.4.4
+### Patch Changes
+
+
+- fix: handle duplicate SVG images ([`8073d7c7dcc391d406c658729221a18ac6f18102`](https://github.com/sveltejs/kit/commit/8073d7c7dcc391d406c658729221a18ac6f18102))
+
 ## 0.4.3
 ### Patch Changes
 

@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 5.2.11
+### Patch Changes
+
+
+- chore(deps): update dependency @rollup/plugin-node-resolve to v16 ([#13164](https://github.com/sveltejs/kit/pull/13164))
+
+- Updated dependencies [[`19823dd716568140011eaa86110bb8868f0e2513`](https://github.com/sveltejs/kit/commit/19823dd716568140011eaa86110bb8868f0e2513), [`5d30191d13a596bda50e27e54522c10f3f6461e3`](https://github.com/sveltejs/kit/commit/5d30191d13a596bda50e27e54522c10f3f6461e3)]:
+  - @sveltejs/kit@2.12.2
+
+## 5.2.10
+### Patch Changes
+
+
+- chore: append http on listening address ([#13146](https://github.com/sveltejs/kit/pull/13146))
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
 ## 5.2.9
 ### Patch Changes
 
