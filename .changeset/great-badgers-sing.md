@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix symlinks handling for routes
+fix: resolve symlinks when handling routes
