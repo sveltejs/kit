@@ -55,6 +55,14 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('p')).toHaveText('a');
 	});
 
+	test('navigation works with URL encoded characters', async ({ page }) => {
+		await page.goto('/#/%23test');
+		await expect(page.locator('p')).toHaveText('home');
+		// hashchange event
+		await page.goto('/#/a%23test');
+		await expect(page.locator('p')).toHaveText('a');
+	});
+
 	test('route id and params are correct', async ({ page }) => {
 		await page.goto('/#/b/123');
 		await expect(page.locator('p[data-data]')).toHaveText('{"slug":"123"} /b/[slug] /#/b/123');
