@@ -16,5 +16,5 @@
 <div class="hydrate-test"></div>
 
 <a href="/routing/a?target" target="_self">_self</a>
-<a href="/routing/a?target" target="_parent">_self</a>
-<a href="/routing/a?target" target="_top">_self</a>
+<a href="/routing/a?target" target="_parent">_parent</a>
+<a href="/routing/a?target" target="_top">_top</a>
