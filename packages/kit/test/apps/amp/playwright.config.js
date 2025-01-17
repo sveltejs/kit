@@ -1,7 +1,8 @@
-import { config } from '../../utils.js';
+import { app_ports, create_config } from '../../utils.js';
 
+const config = create_config(app_ports['test-amp']);
 if (config.webServer) {
-	if (config.webServer instanceof Array) {
+	if (Array.isArray(config.webServer)) {
 		throw new Error('Expected a single web server');
 	}
 	config.webServer.timeout = 45000; // AMP validator needs a long time to get moving

@@ -1,6 +1,5 @@
 import {
 	PlaywrightTestArgs,
-	PlaywrightTestConfig,
 	PlaywrightTestOptions,
 	PlaywrightWorkerArgs,
 	PlaywrightWorkerOptions,
@@ -8,16 +7,15 @@ import {
 	Page
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { Plugin } from 'vite';
 
-export const test: TestType<
+export type CustomTestType = TestType<
 	PlaywrightTestArgs &
 		PlaywrightTestOptions & {
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
-				beforeNavigate(url: URL): void | boolean;
-				afterNavigate(url: URL): void;
+				beforeNavigate(callback: () => void): void;
+				afterNavigate(callback: () => void): void;
 				preloadCode(...urls: string[]): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
@@ -41,7 +39,3 @@ export const test: TestType<
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
-
-export const config: PlaywrightTestConfig;
-
-export const plugin: () => Plugin;

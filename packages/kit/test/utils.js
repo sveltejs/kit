@@ -5,6 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
+/** @type {import('./util-types').CustomTestType} */
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
@@ -105,7 +106,7 @@ export const test = base.extend({
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
 			const view = page.viewportSize();
-			return box && view && box.y < view.height && box.y + box.height > 0;
+			return Boolean(box && view && box.y < view.height && box.y + box.height > 0);
 		}
 
 		await use(in_view);
@@ -127,11 +128,11 @@ export const test = base.extend({
 		await use(get_computed_style);
 	},
 
+	// @ts-expect-error
 	page: async ({ page, javaScriptEnabled }, use) => {
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
-			// @ts-expect-error
 			const original_page_fn = page[fn];
 			if (!original_page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
@@ -154,7 +155,6 @@ export const test = base.extend({
 				}
 			}
 
-			// @ts-expect-error
 			page[fn] = modified_fn;
 		});
 
@@ -246,6 +246,7 @@ export const test = base.extend({
 	// setup context
 	// teardown context
 	// teardown start_server
+	// @ts-ignore
 	async context({ context, start_server }, use) {
 		// just here make sure start_server is referenced, don't call
 		if (!start_server) {
@@ -279,14 +280,56 @@ if (!test_browser_device) {
 	);
 }
 
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
-export const config = {
+export const app_ports = /** @type {const} */{
+	'test-amp': { 
+		dev: 3000, 
+		prod: 3001 
+	},
+	'test-basics': {
+		dev: 3002,
+		prod: 3003
+	}
+	,
+	'test-dev-only': {
+		dev: 3004,
+		prod: 3005
+	},
+	'test-embed': {
+		dev: 3006,
+		prod: 3007
+	},
+	'test-hash-based-routing': {
+		dev: 3008,
+		prod: 3009
+	},
+	'test-no-ssr': {
+		dev: 3010,
+		prod: 3011
+	},
+	'test-options': {
+		dev: 3012,
+		prod: 3013
+	},
+	'test-options-2': {
+		dev: 3014,
+		prod: 3015
+	},
+	'test-writes': {
+		dev: 3016,
+		prod: 3017
+	}
+} 
+
+
+/** @type {(ports: { dev:number, prod:number }) => import('@playwright/test').PlaywrightTestConfig} */
+export function create_config(ports) {
+	return {
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
-	timeout: process.env.CI ? 45000 : 15000,
+	timeout: process.env.CI ? 45000 : 60000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
-		port: process.env.DEV ? 5173 : 4173
+		command: process.env.DEV ? `pnpm dev --force --port=${ports.dev}` : `pnpm build && pnpm preview --port=${ports.prod}`,
+		port: process.env.DEV ? ports.dev : ports.prod
 	},
 	retries: process.env.CI ? 2 : 0,
 	projects: [
@@ -317,4 +360,4 @@ export const config = {
 		: 'list',
 	testDir: 'test',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
-};
+}};

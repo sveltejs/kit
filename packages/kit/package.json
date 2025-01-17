@@ -68,7 +68,7 @@
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
-		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test:integration": "pnpm -r --filter=\"./test/**\" test",
 		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:unit": "vitest --config kit.vitest.config.js run",
