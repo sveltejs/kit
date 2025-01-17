@@ -13,6 +13,7 @@
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
+		"@fontsource/libre-barcode-128-text": "^5.1.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"cross-env": "^7.0.3",
