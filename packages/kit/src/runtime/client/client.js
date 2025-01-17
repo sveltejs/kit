@@ -426,9 +426,15 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {URL} url */
+/**
+ * @param {URL} url
+ * @returns {Promise<void>}
+ */
 async function _preload_code(url) {
-	const route = routes.find((route) => route.exec(get_url_path(url)));
+	const rerouted = get_rerouted_url(url);
+	if (!rerouted) return;
+
+	const route = routes.find((route) => route.exec(get_url_path(rerouted)));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1189,16 +1195,11 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
- * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
- * returns undefined.
- * @param {URL | undefined} url
- * @param {boolean} invalidating
+ * Resolve the relative rerouted URL for a client-side navigation
+ * @param {URL} url
+ * @returns {URL | undefined}
  */
-function get_navigation_intent(url, invalidating) {
-	if (!url) return;
-	if (is_external_url(url, base, app.hash)) return;
-
+function get_rerouted_url(url) {
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
@@ -1225,8 +1226,25 @@ function get_navigation_intent(url, invalidating) {
 		}
 
 		// fall back to native navigation
-		return undefined;
+		return;
 	}
+
+	return rerouted;
+}
+
+/**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
+ * @param {URL | undefined} url
+ * @param {boolean} invalidating
+ */
+function get_navigation_intent(url, invalidating) {
+	if (!url) return;
+	if (is_external_url(url, base, app.hash)) return;
+
+	const rerouted = get_rerouted_url(url);
+	if (!rerouted) return;
 
 	const path = get_url_path(rerouted);
 
@@ -1942,13 +1960,20 @@ export function preloadCode(pathname) {
 	const url = new URL(pathname, current.url);
 
 	if (DEV) {
-		if (!pathname.startsWith(base)) {
+		if (!pathname.startsWith('/')) {
 			throw new Error(
-				`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
 			);
 		}
 
-		if (!routes.find((route) => route.exec(get_url_path(url)))) {
+		if (!pathname.startsWith(base)) {
+			throw new Error(
+				`pathname passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+			);
+		}
+
+		const rerouted = get_rerouted_url(url);
+		if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
 			throw new Error(`'${pathname}' did not match any routes`);
 		}
 	}
