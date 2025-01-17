@@ -43,21 +43,47 @@ jobs:
       - run: pnpm run lint
       - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
+  list-kit-test-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      package_shards: ${{ steps.set-package-groups.outputs.package_shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - name: List and group test packages
+        id: set-package-groups
+        run: |
+          package_shards=$(                                                                                            
+            pnpm -r --filter="./packages/kit/test/**" exec sh -c '
+            if [ "$(pnpm pkg get scripts.test 2>/dev/null)" != "{}" ]; then
+              pnpm pkg get name | sed -e "s/^\"//; s/\"$//"
+            fi
+            ' | sort | uniq | jq -Rsc '
+            split("\n") | map(select(. != "")) | . as $list | 
+            [range(0; length; 4) | 
+              {
+                name: ("Shard " + (. / 4 | tostring)),
+                filters: ($list[.:(.+4)] | map("--filter=" + .) | join(" ")),
+                packages: $list[.:(.+4)]
+              }
+            ]
+            '
+          )
+          echo "package_shards=$package_shards" >> $GITHUB_OUTPUT
+          echo "Generated package shards:"
+          echo "$package_shards" | jq .
   test-kit:
+    needs: list-kit-test-packages
+    name: test-kit (node ${{ matrix.node-version }}, ${{ matrix.e2e-browser }}, ${{ matrix.package_shards.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        package_shards: ${{ fromJson(needs.list-kit-test-packages.outputs.package_shards) }}
+        node-version: [18, 20, 22]
         include:
-          - node-version: 18
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-          - node-version: 20
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-          - node-version: 22
-            os: ubuntu-latest
+          - os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
@@ -69,10 +95,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install ${{ matrix.e2e-browser }}
-      - run: pnpm run sync-all
-      - run: pnpm test:kit
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright
+        run: pnpm playwright install ${{ matrix.e2e-browser }}
+      - name: Run tests
+        run: |
+          pnpm run sync-all
+          pnpm ${{ matrix.package_shards.filters }} test
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -84,39 +114,69 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-${{ matrix.package_shards.name }}
           path: test-results.tar.gz
+  test-kit-results:
+    if: always()
+    needs: test-kit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.test-kit.result }}" = "success" ]; then
+            echo "All tests passed successfully!"
+            exit 0
+          else
+            echo "Some tests failed. Please check the individual job results."
+            exit 1
+          fi
+  list-kit-test-cross-browser-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.set-packages.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - name: List test packages
+        id: set-packages
+        run: |
+          packages=$(
+            pnpm -r --filter="./packages/kit/test/**" exec sh -c '
+              if [ "$(pnpm pkg get scripts.test:cross-platform:build 2>/dev/null)" != "{}" ]; then 
+                echo "build:$(pnpm pkg get name | sed -e "s/^\"//; s/\"$//")"                           
+              fi
+              if [ "$(pnpm pkg get scripts.test:cross-platform:dev 2>/dev/null)" != "{}" ]; then 
+                echo "dev:$(pnpm pkg get name | sed -e "s/^\"//; s/\"$//")"                           
+              fi
+              ' | sort | uniq | jq -Rsc '
+              . | split("\n") | map(select(. != "")) | map(split(":") | {mode: .[0], package: .[1]})
+            '
+          )
+          echo "packages=$packages" >> $GITHUB_OUTPUT
+          echo "Generated packages:"
+          echo "$packages" | jq .
   test-kit-cross-browser:
+    needs: list-kit-test-cross-browser-packages
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
+        node-version: [20]
+        package-details: ${{fromJson(needs.list-kit-test-cross-browser-packages.outputs.packages)}}
         include:
-          - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+          - os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
-            mode: 'dev'
-          - node-version: 18
-            os: ubuntu-latest
+          - os: ubuntu-latest
             e2e-browser: 'firefox'
-            mode: 'dev'
-          - node-version: 18
-            os: macOS-latest
+          - os: macOS-latest
             e2e-browser: 'webkit'
-            mode: 'dev'
-          - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+          - os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
-            mode: 'build'
-          - node-version: 18
-            os: ubuntu-latest
+          - os: ubuntu-latest
             e2e-browser: 'firefox'
-            mode: 'build'
-          - node-version: 18
-            os: macOS-latest
+          - os: macOS-latest
             e2e-browser: 'webkit'
-            mode: 'build'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
@@ -130,20 +190,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
-      - run: pnpm test:cross-platform:${{ matrix.mode }}
+      - run: pnpm --filter="${{ matrix.package-details.package }}" test:cross-platform:${{ matrix.package-details.mode }}
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.package-details.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           retention-days: 3
-          name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
-          path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
+          name: test-failure-cross-platform-${{ matrix.package-details.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          path: test-results-cross-platform-${{ matrix.package-details.mode }}.tar.gz
+  test-kit-cross-browser-results:
+    if: always()
+    needs: test-kit-cross-browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.test-kit-cross-browser.result }}" = "success" ]; then
+            echo "All tests passed successfully!"
+            exit 0
+          else
+            echo "Some tests failed. Please check the individual job results."
+            exit 1
+          fi
   test-others:
     runs-on: ubuntu-latest
     steps:
