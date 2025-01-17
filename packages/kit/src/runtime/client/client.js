@@ -426,12 +426,15 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {URL} url */
+/**
+ * @param {URL} url
+ * @returns {Promise<void>}
+ */
 async function _preload_code(url) {
-	url = get_navigation_url(url);
-	if (!url) return;
+	const navigation_url = get_navigation_url(url);
+	if (!navigation_url) return;
 
-	const route = routes.find((route) => route.exec(get_url_path(url)));
+	const route = routes.find((route) => route.exec(get_url_path(navigation_url)));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1194,6 +1197,7 @@ async function load_root_error_page({ status, error, url, route }) {
 /**
  * Resolve the relative rerouted URL for a client-side navigation from the URL
  * @param {URL} url
+ * @returns {URL | undefined}
  */
 function get_navigation_url(url) {
 	// reroute could alter the given URL, so we pass a copy
@@ -1222,8 +1226,10 @@ function get_navigation_url(url) {
 		}
 
 		// fall back to native navigation
-		return undefined;
+		return;
 	}
+
+	return rerouted;
 }
 
 /**
@@ -1235,7 +1241,7 @@ function get_navigation_url(url) {
  */
 function get_navigation_intent(url, invalidating) {
 	if (!url) return;
-	if (is_external_url(url, base)) return;
+	if (is_external_url(url, base, app.hash)) return;
 
 	const rerouted = get_navigation_url(url);
 	if (!rerouted) return;
