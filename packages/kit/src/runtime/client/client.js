@@ -1961,7 +1961,9 @@ export function preloadCode(pathname) {
 
 	if (DEV) {
 		if (!pathname.startsWith('/')) {
-			throw new Error('argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"');
+			throw new Error(
+				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
+			);
 		}
 
 		if (!pathname.startsWith(base)) {
