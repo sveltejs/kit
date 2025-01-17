@@ -81,19 +81,25 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
-	// reroute could alter the given URL, so we pass a copy
-	const url_copy = new URL(url);
-
 	const is_data_request = has_data_suffix(url.pathname);
+	/** @type {boolean[] | undefined} */
+	let invalidated_data_nodes;
 	if (is_data_request) {
-		url_copy.pathname = strip_data_suffix(url_copy.pathname) || '/';
-		url_copy.searchParams.delete(TRAILING_SLASH_PARAM);
-		url_copy.searchParams.delete(INVALIDATED_PARAM);
+		url.pathname =
+			strip_data_suffix(url.pathname) +
+				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		url.searchParams.delete(TRAILING_SLASH_PARAM);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
+		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
+	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
-		rerouted_path = options.hooks.reroute({ url: url_copy }) ?? url.pathname;
+		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
@@ -129,24 +135,6 @@ export async function respond(request, options, manifest, state) {
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
-	}
-
-	/** @type {boolean[] | undefined} */
-	let invalidated_data_nodes;
-	if (is_data_request) {
-		// if reroute doesn't return anything, the decoded URL still has the data suffix
-		if (has_data_suffix(decoded)) {
-			decoded = strip_data_suffix(decoded) || '/';
-		}
-		url.pathname =
-			strip_data_suffix(url.pathname) +
-				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
-		url.searchParams.delete(TRAILING_SLASH_PARAM);
-		invalidated_data_nodes = url.searchParams
-			.get(INVALIDATED_PARAM)
-			?.split('')
-			.map((node) => node === '1');
-		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
 	if (!state.prerendering?.fallback) {
