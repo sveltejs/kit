@@ -6,6 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
 		"test:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test",
