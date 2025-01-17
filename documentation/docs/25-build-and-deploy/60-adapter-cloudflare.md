@@ -112,7 +112,7 @@ For testing the build, you should use [wrangler](https://developers.cloudflare.c
 
 Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](routing#server) in your SvelteKit app.
 
-The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
+The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the project root folder.
 
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
 
@@ -125,27 +125,3 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 ### Accessing the file system
 
 You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#prerender) the routes in question.
-
-### Service workers
-
-If you have a [service worker](https://svelte.dev/docs/kit/service-workers) and you've included the `_headers` and `_redirects` files in the `/static` directory, your service worker may fail to register if it tries to add all of the files from the `/static` directory to the cache. This is because the two files cannot be accessed publicly after your app has been deployed to Cloudflare Pages.
-
-You'll need to exclude the `_headers` and `_redirects` files from your service worker using the [`config.kit.serviceWorker.files`](configuration#serviceWorker) option.
-
-```js
-// @errors: 2307
-/// file: svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter()
-		serviceWorker: {
-			files: (filename) => !/\.DS_Store|_headers|_redirects/.test(filename)
-		}
-	}
-};
-
-export default config;
-```
