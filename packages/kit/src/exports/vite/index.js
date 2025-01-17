@@ -424,7 +424,7 @@ async function kit({ svelte_config }) {
 					const error_prefix = `Cannot import ${illegal_module} into client-side code. This could leak sensitive information.`;
 					const error_suffix = `
 Tips:
- - To resolve this error, ensure that no exports from ${illegal_module} is not used, even transitively, in client-side code.
+ - To resolve this error, ensure that no exports from ${illegal_module} are used, even transitively, in client-side code.
  - If you're only using the import as a type, change it to \`import type\`.
  - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`
 
