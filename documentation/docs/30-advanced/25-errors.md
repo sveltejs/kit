@@ -40,22 +40,24 @@ export async function load({ params }) {
 }
 ```
 
-This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
+This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `page.error` is the object provided as the second argument to `error(...)`.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
-<h1>{$page.error.message}</h1>
+<h1>{page.error.message}</h1>
 ```
+
+> [!LEGACY]
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 
 You can add extra properties to the error object if needed...
 
 ```js
-import { error } from '@sveltejs/kit';
-
+// @filename: ambient.d.ts
 declare global {
 	namespace App {
 		interface Error {
@@ -64,7 +66,10 @@ declare global {
 		}
 	}
 }
+export {}
 
+// @filename: index.js
+import { error } from '@sveltejs/kit';
 // ---cut---
 error(404, {
 	message: 'Not found',

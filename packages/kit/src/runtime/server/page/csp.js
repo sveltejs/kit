@@ -186,10 +186,6 @@ class BaseProvider {
 			this.#style_src.push(source);
 		}
 
-		if (this.#style_src_needs_csp) {
-			this.#style_src.push(source);
-		}
-
 		if (this.#style_src_attr_needs_csp) {
 			this.#style_src_attr.push(source);
 		}

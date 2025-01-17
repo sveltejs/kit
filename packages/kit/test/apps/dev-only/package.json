@@ -24,7 +24,7 @@
 		"e2e-test-dep-page-universal": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-server": "file:./_test_dependencies/cjs-only",
 		"svelte": "^5.2.9",
-		"svelte-check": "^4.0.1",
+		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "^6.0.1"
 	},

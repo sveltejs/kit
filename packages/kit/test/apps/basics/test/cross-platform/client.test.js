@@ -256,6 +256,14 @@ test.describe('Navigation lifecycle functions', () => {
 			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
+
+	test('afterNavigate properly removed', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
+
+		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -702,20 +710,20 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('b');
 	});
 
-	test('$page.url.hash is correctly set on page load', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore#target');
+	test('page.url.hash is correctly set on page load', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('$page.url.hash is correctly set on navigation', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore');
+	test('page.url.hash is correctly set on navigation', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');
 		await page.locator('[href="#target"]').click();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.locator('[href="/routing/hashes/pagestore"]').click();
+		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
