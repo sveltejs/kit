@@ -11,10 +11,14 @@ export async function resolve_peer_dependency(dependency) {
 	try {
 		// @ts-expect-error the types are wrong
 		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
-		return await import(resolved).catch(() => import(dependency));
+		return await import(resolved);
 	} catch {
-		throw new Error(
-			`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
-		);
+		try {
+			return await import(dependency);
+		} catch {
+			throw new Error(
+				`Could not resolve peer dependency "${dependency}" relative to your project — please install it and try again.`
+			);
+		}
 	}
 }
