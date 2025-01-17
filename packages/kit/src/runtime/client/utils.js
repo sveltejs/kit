@@ -136,7 +136,7 @@ export function get_link_info(a, base, uses_hash_router) {
 
 	const external =
 		!url ||
-		target === '_blank' ||
+		(target  || '_self') !== '_self' ||
 		is_external_url(url, base, uses_hash_router) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
