@@ -2809,6 +2809,7 @@ function clone_page(page) {
  */
 function decode_hash(url) {
 	const new_url = new URL(url);
+	// Safari, for some reason, does change # to %23, when entered through the address bar
 	new_url.hash = decodeURIComponent(url.hash);
 	return new_url;
 }
