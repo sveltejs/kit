@@ -98,7 +98,7 @@ export async function respond(request, options, manifest, state) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
-  }
+	}
 
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
