@@ -56,10 +56,10 @@ test.describe('hash based navigation', () => {
 	});
 
 	test('navigation works with URL encoded characters', async ({ page }) => {
-		await page.goto('/#/%23test');
+		await page.goto('/?query=%23abc#/%23test');
 		await expect(page.locator('p')).toHaveText('home');
 		// hashchange event
-		await page.goto('/#/a%23test');
+		await page.goto('/?query=%23abc#/a%23test');
 		await expect(page.locator('p')).toHaveText('a');
 	});
 
