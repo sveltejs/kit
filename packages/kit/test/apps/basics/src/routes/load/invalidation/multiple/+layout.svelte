@@ -1,6 +1,6 @@
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { increment_layout, increment_page } from './state';
 
 	/** @param {string} str */
@@ -24,6 +24,6 @@
 <button class="page" on:click={() => update('page')}>Invalidate page</button>
 <button class="all" on:click={() => update('all')}>Invalidate all</button>
 
-<p>layout: {$page.data.count_layout}, page: {$page.data.count_page}</p>
+<p>layout: {page.data.count_layout}, page: {page.data.count_page}</p>
 
 <slot />

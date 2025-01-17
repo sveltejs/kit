@@ -1,5 +1,143 @@
 # @sveltejs/kit
 
+## 2.15.3
+### Patch Changes
+
+
+- fix: fix race-condition when not using SSR when pressing back before initial load ([#12925](https://github.com/sveltejs/kit/pull/12925))
+
+
+- fix: remove ":$" from virtual module ids to allow dev server to work with proxies ([#12157](https://github.com/sveltejs/kit/pull/12157))
+
+
+- fix: upgrade esm-env to remove warning when NODE_ENV is not set ([#13291](https://github.com/sveltejs/kit/pull/13291))
+
+
+- fix: handle `Redirect` thrown from root layout load function when client-side navigating to a non-existent page ([#12005](https://github.com/sveltejs/kit/pull/12005))
+
+
+- fix: make param matchers generated type import end with `.js` ([#13286](https://github.com/sveltejs/kit/pull/13286))
+
+## 2.15.2
+### Patch Changes
+
+
+- fix: correctly notify page store subscribers ([#13205](https://github.com/sveltejs/kit/pull/13205))
+
+
+- fix: prerender data when there is no server load but the `trailingSlash` option is set from the server ([#13262](https://github.com/sveltejs/kit/pull/13262))
+
+
+- fix: correctly remove navigation callbacks when returning function in onNavigate ([#13241](https://github.com/sveltejs/kit/pull/13241))
+
+## 2.15.1
+### Patch Changes
+
+
+- fix: add CSP hashes/nonces to inline styles when using `bundleStrategy: 'inline'` ([#13232](https://github.com/sveltejs/kit/pull/13232))
+
+
+- fix: silence dev/prod warning during sync ([#13244](https://github.com/sveltejs/kit/pull/13244))
+
+## 2.15.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'inline'` option ([#13193](https://github.com/sveltejs/kit/pull/13193))
+
+## 2.14.1
+### Patch Changes
+
+
+- fix: do not mutate URL during reroute logic ([#13222](https://github.com/sveltejs/kit/pull/13222))
+
+## 2.14.0
+### Minor Changes
+
+
+- feat: add hash-based routing option ([#13191](https://github.com/sveltejs/kit/pull/13191))
+
+
+### Patch Changes
+
+
+- fix: create new URL when calling `goto(...)`, to handle case where URL is mutated ([#13196](https://github.com/sveltejs/kit/pull/13196))
+
+## 2.13.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'split' | 'single'` option ([#13173](https://github.com/sveltejs/kit/pull/13173))
+
+## 2.12.2
+### Patch Changes
+
+
+- fix: correctly resolve no hooks file when a similarly named directory exists ([#13188](https://github.com/sveltejs/kit/pull/13188))
+
+
+- fix: correctly resolve `$app/state` on the server with Vite 5 ([#13192](https://github.com/sveltejs/kit/pull/13192))
+
+## 2.12.1
+### Patch Changes
+
+
+- fix: replace `navigating.current.<x>` with `navigating.<x>` ([#13174](https://github.com/sveltejs/kit/pull/13174))
+
+## 2.12.0
+### Minor Changes
+
+
+- feat: add `$app/state` module ([#13140](https://github.com/sveltejs/kit/pull/13140))
+
+
+### Patch Changes
+
+
+- chore: specify the route ID in the error message during development when making a form action request to a route without form actions ([#13167](https://github.com/sveltejs/kit/pull/13167))
+
+## 2.11.1
+### Patch Changes
+
+
+- fix: adhere to Vite `build.minify` setting when building the service worker ([#13143](https://github.com/sveltejs/kit/pull/13143))
+
+## 2.11.0
+### Minor Changes
+
+
+- feat: transport custom types across the server/client boundary ([#13149](https://github.com/sveltejs/kit/pull/13149))
+
+
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
+## 2.10.1
+### Patch Changes
+
+
+- fix: export `init` hook from `get_hooks` ([#13136](https://github.com/sveltejs/kit/pull/13136))
+
+## 2.10.0
+### Minor Changes
+
+
+- feat: server and client `init` hook ([#13103](https://github.com/sveltejs/kit/pull/13103))
+
+
+### Patch Changes
+
+
+- fix: prevent hooks exported from `hooks.js` from overwriting hooks from `hooks.server.js` ([#13104](https://github.com/sveltejs/kit/pull/13104))
+
+## 2.9.1
+### Patch Changes
+
+
+- fix: correctly match route groups preceding optional parameters ([#13099](https://github.com/sveltejs/kit/pull/13099))
+
 ## 2.9.0
 ### Minor Changes
 

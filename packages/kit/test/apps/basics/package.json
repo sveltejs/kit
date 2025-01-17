@@ -6,6 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
 		"test:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test",
@@ -18,7 +19,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"cross-env": "^7.0.3",
 		"svelte": "^5.2.9",
-		"svelte-check": "^4.0.1",
+		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "^6.0.1"
 	},

@@ -81,6 +81,10 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
+		return text('Not found', { status: 404 });
+	}
+
 	const is_data_request = has_data_suffix(url.pathname);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
@@ -94,7 +98,7 @@ export async function respond(request, options, manifest, state) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
-	}
+  }
 
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
@@ -415,7 +419,7 @@ export async function respond(request, options, manifest, state) {
 				};
 			}
 
-			if (state.prerendering?.fallback) {
+			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
 					options,

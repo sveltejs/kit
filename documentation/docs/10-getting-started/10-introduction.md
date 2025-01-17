@@ -6,7 +6,7 @@ title: Introduction
 
 > [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](/tutorial/kit).
 >
-> If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+> If you get stuck, reach out for help in the [Discord chatroom](/chat).
 
 ## What is SvelteKit?
 

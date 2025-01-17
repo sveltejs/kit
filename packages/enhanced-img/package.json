@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/enhanced-img",
-	"version": "0.4.1",
+	"version": "0.4.4",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
@@ -37,6 +37,7 @@
 	"types": "types/index.d.ts",
 	"dependencies": {
 		"magic-string": "^0.30.5",
+		"sharp": "^0.33.5",
 		"svelte-parse-markup": "^0.1.5",
 		"vite-imagetools": "^7.0.1",
 		"zimmerframe": "^1.1.2"
