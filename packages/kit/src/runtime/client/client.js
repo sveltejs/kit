@@ -306,7 +306,9 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(app.hash ? decodeURIComponent(location.href) : location.href, { replaceState: true });
+		goto(app.hash ? decode_hash(new URL(location.href)) : location.href, {
+			replaceState: true
+		});
 	}
 
 	_start_router();
@@ -2407,7 +2409,7 @@ function _start_router() {
 			// (surprisingly!) mutates `current.url`, allowing us to
 			// detect it and trigger a navigation
 			if (current.url.hash === location.hash) {
-				navigate({ type: 'goto', url: new URL(decodeURIComponent(current.url.href)) });
+				navigate({ type: 'goto', url: decode_hash(current.url) });
 			}
 		}
 	});
@@ -2799,6 +2801,16 @@ function clone_page(page) {
 		status: page.status,
 		url: page.url
 	};
+}
+
+/**
+ * @param {URL} url
+ * @returns {URL}
+ */
+function decode_hash(url) {
+	const new_url = new URL(url);
+	new_url.hash = decodeURIComponent(url.hash);
+	return new_url;
 }
 
 if (DEV) {
