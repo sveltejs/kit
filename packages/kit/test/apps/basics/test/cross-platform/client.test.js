@@ -627,7 +627,9 @@ test.describe('Prefetching', () => {
 				await app.preloadCode('https://example.com');
 				throw new Error('Error was not thrown');
 			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch("'https://example.com' did not match any routes");
+				expect(e.message).toMatch(
+					'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
+				);
 			}
 		}
 	});
