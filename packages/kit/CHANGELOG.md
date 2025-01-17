@@ -9,7 +9,7 @@
 
 - feat: remove the `postinstall` script to support pnpm 10 ([#13304](https://github.com/sveltejs/kit/pull/13304))
   
-  NOTE: users should add `"prepare": "svelte-kit sync`" to their `package.json` in order to avoid the following warning upon first running Vite:
+  NOTE: users should add `"preprepare": "svelte-kit sync`" to their `package.json` in order to avoid the following warning upon first running Vite:
   ```
   ▲ [WARNING] Cannot find base config file "./.svelte-kit/tsconfig.json" [tsconfig.json]
   
