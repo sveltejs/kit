@@ -28,7 +28,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
-		"publint": "^0.2.0",
+		"publint": "^0.3.0",
 		"svelte": "^5.2.9",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.0",

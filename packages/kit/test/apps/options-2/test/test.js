@@ -1,4 +1,6 @@
+import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -55,8 +57,36 @@ test.describe('paths', () => {
 	});
 });
 
+test.describe('trailing slash', () => {
+	if (!process.env.DEV) {
+		test('trailing slash server prerendered without server load', async ({
+			page,
+			clicknav,
+			javaScriptEnabled
+		}) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/basepath/trailing-slash-server');
+
+			await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
+			expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+		});
+	}
+});
+
 test.describe('Service worker', () => {
-	if (process.env.DEV) return;
+	if (process.env.DEV) {
+		test('import proxy /basepath/service-worker.js', async ({ request }) => {
+			const __dirname = path.dirname(fileURLToPath(import.meta.url));
+			const response = await request.get('/basepath/service-worker.js');
+			const content = await response.text();
+			expect(content).toEqual(
+				`import '${path.join('/basepath', '/@fs', __dirname, '../src/service-worker.js')}';`
+			);
+		});
+
+		return;
+	}
 
 	test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		const response = await request.get('/basepath/service-worker.js');

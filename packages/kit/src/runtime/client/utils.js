@@ -311,7 +311,7 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	if (hash_routing) {
-		if (url.pathname === base + '/') {
+		if (url.pathname === base + '/' || url.pathname === base + '/index.html') {
 			return false;
 		}
 

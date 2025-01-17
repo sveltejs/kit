@@ -15,9 +15,9 @@ import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
-import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
+import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
+import { get_config_aliases, get_env, normalize_id, strip_virtual_prefix } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -376,8 +376,14 @@ async function kit({ svelte_config }) {
 					parsed_importer.name === parsed_service_worker.name;
 
 				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
+					const normalized_cwd = vite.normalizePath(cwd);
+					const normalized_lib = vite.normalizePath(kit.files.lib);
 					throw new Error(
-						`Cannot import ${id} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+						`Cannot import ${normalize_id(
+							id,
+							normalized_lib,
+							normalized_cwd
+						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
 
@@ -385,7 +391,11 @@ async function kit({ svelte_config }) {
 			}
 
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '$service-worker') {
+				// ids with :$ don't work with reverse proxies like nginx
+				return `\0virtual:${id.substring(1)}`;
+			}
+			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
 		},
@@ -649,7 +659,7 @@ async function kit({ svelte_config }) {
 								format: inline ? 'iife' : 'esm',
 								name: `__sveltekit_${version_hash}.app`,
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
@@ -666,7 +676,7 @@ async function kit({ svelte_config }) {
 						rollupOptions: {
 							output: {
 								entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-								chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+								chunkFileNames: `${prefix}/workers/chunks/[hash].js`,
 								assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
 								hoistTransitiveImports: false
 							}
