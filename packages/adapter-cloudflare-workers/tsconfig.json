@@ -13,5 +13,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["**/*.js", "placeholders.d.ts"]
+	"include": ["**/*.js", "internal.d.ts"]
 }

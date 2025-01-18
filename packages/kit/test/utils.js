@@ -41,10 +41,10 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
-			 * @param {string[]} urls
+			 * @param {string} pathname
 			 * @returns {Promise<void>}
 			 */
-			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
 
 			/**
 			 * @param {string} url
@@ -280,16 +280,15 @@ if (!test_browser_device) {
 	);
 }
 
-export const app_ports = /** @type {const} */{
-	'test-amp': { 
-		dev: 3000, 
-		prod: 3001 
+export const app_ports = /** @type {const} */ {
+	'test-amp': {
+		dev: 3000,
+		prod: 3001
 	},
 	'test-basics': {
 		dev: 3002,
 		prod: 3003
-	}
-	,
+	},
 	'test-dev-only': {
 		dev: 3004,
 		prod: 3005
@@ -318,46 +317,48 @@ export const app_ports = /** @type {const} */{
 		dev: 3016,
 		prod: 3017
 	}
-} 
-
+};
 
 /** @type {(ports: { dev:number, prod:number }) => import('@playwright/test').PlaywrightTestConfig} */
 export function create_config(ports) {
 	return {
-	forbidOnly: !!process.env.CI,
-	// generous timeouts on CI
-	timeout: process.env.CI ? 45000 : 60000,
-	webServer: {
-		command: process.env.DEV ? `pnpm dev --force --port=${ports.dev}` : `pnpm build && pnpm preview --port=${ports.prod}`,
-		port: process.env.DEV ? ports.dev : ports.prod
-	},
-	retries: process.env.CI ? 2 : 0,
-	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
+		forbidOnly: !!process.env.CI,
+		// generous timeouts on CI
+		timeout: process.env.CI ? 45000 : 60000,
+		webServer: {
+			command: process.env.DEV
+				? `pnpm dev --force --port=${ports.dev}`
+				: `pnpm build && pnpm preview --port=${ports.prod}`,
+			port: process.env.DEV ? ports.dev : ports.prod
 		},
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
-			use: {
-				javaScriptEnabled: false
+		retries: process.env.CI ? 2 : 0,
+		projects: [
+			{
+				name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
+				use: {
+					javaScriptEnabled: true
+				}
+			},
+			{
+				name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
+				use: {
+					javaScriptEnabled: false
+				}
 			}
-		}
-	],
-	use: {
-		...test_browser_device,
-		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure'
-	},
-	workers: process.env.CI ? 2 : undefined,
-	reporter: process.env.CI
-		? [
-				['dot'],
-				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
-			]
-		: 'list',
-	testDir: 'test',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
-}};
+		],
+		use: {
+			...test_browser_device,
+			screenshot: 'only-on-failure',
+			trace: 'retain-on-failure'
+		},
+		workers: process.env.CI ? 2 : undefined,
+		reporter: process.env.CI
+			? [
+					['dot'],
+					[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
+				]
+			: 'list',
+		testDir: 'test',
+		testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	};
+}

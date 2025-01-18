@@ -375,9 +375,6 @@ importers:
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
-      tiny-glob:
-        specifier: ^0.2.9
-        version: 0.2.9
     devDependencies:
       '@playwright/test':
         specifier: ^1.44.1
@@ -598,6 +595,9 @@ importers:
 
   packages/kit/test/apps/options:
     devDependencies:
+      '@fontsource/libre-barcode-128-text':
+        specifier: ^5.1.0
+        version: 5.1.0
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1593,6 +1593,9 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
+
+  '@fontsource/libre-barcode-128-text@5.1.0':
+    resolution: {integrity: sha512-MC7foQFRT0NDcsqBWQua2T3gs/fh/uTowTxfoPqGQWjqroiMxRZhQh7jerjnpcI+Xi3yR5bwCo6W2uwCza1FRw==}
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -4056,6 +4059,8 @@ snapshots:
   '@eslint/object-schema@2.1.4': {}
 
   '@fastify/busboy@2.1.1': {}
+
+  '@fontsource/libre-barcode-128-text@5.1.0': {}
 
   '@humanwhocodes/module-importer@1.0.1': {}
 
