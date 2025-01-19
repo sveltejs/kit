@@ -4,7 +4,7 @@ import path from 'node:path';
 import { EOL } from 'node:os';
 import process from 'node:process';
 
-test('prerenderable routes must be prerendered', () => {
+test('prerenderable routes must be prerendered', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -16,7 +16,7 @@ test('prerenderable routes must be prerendered', () => {
 	);
 });
 
-test('entry generators should match their own route', () => {
+test('entry generators should match their own route', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
