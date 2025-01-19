@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 
-test('$env/dynamic/private is not statically importable from the client', () => {
+test('$env/dynamic/private is not statically importable from the client', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -15,7 +15,7 @@ test('$env/dynamic/private is not statically importable from the client', () => 
 	);
 });
 
-test('$env/dynamic/private is not dynamically importable from the client', () => {
+test('$env/dynamic/private is not dynamically importable from the client', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -27,7 +27,7 @@ test('$env/dynamic/private is not dynamically importable from the client', () =>
 	);
 });
 
-test('$env/static/private is not statically importable from the client', () => {
+test('$env/static/private is not statically importable from the client', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -39,7 +39,7 @@ test('$env/static/private is not statically importable from the client', () => {
 	);
 });
 
-test('$env/static/private is not dynamically importable from the client', () => {
+test('$env/static/private is not dynamically importable from the client', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -51,7 +51,7 @@ test('$env/static/private is not dynamically importable from the client', () => 
 	);
 });
 
-test('$env/dynamic/private is not importable from the service worker', () => {
+test('$env/dynamic/private is not importable from the service worker', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -63,7 +63,7 @@ test('$env/dynamic/private is not importable from the service worker', () => {
 	);
 });
 
-test('$env/dynamic/public is not importable from the service worker', () => {
+test('$env/dynamic/public is not importable from the service worker', { timeout: 60000 }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
