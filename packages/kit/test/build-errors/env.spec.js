@@ -3,29 +3,37 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 
-test('$env/dynamic/private is not statically importable from the client', { timeout: 60000 }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-dynamic-env'),
-				stdio: 'pipe',
-				timeout: 60000
-			}),
-		/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
-	);
-});
+test(
+	'$env/dynamic/private is not statically importable from the client',
+	{ timeout: 60000 },
+	() => {
+		assert.throws(
+			() =>
+				execSync('pnpm build', {
+					cwd: path.join(process.cwd(), 'apps/private-dynamic-env'),
+					stdio: 'pipe',
+					timeout: 60000
+				}),
+			/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
+		);
+	}
+);
 
-test('$env/dynamic/private is not dynamically importable from the client', { timeout: 60000 }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-dynamic-env-dynamic-import'),
-				stdio: 'pipe',
-				timeout: 60000
-			}),
-		/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
-	);
-});
+test(
+	'$env/dynamic/private is not dynamically importable from the client',
+	{ timeout: 60000 },
+	() => {
+		assert.throws(
+			() =>
+				execSync('pnpm build', {
+					cwd: path.join(process.cwd(), 'apps/private-dynamic-env-dynamic-import'),
+					stdio: 'pipe',
+					timeout: 60000
+				}),
+			/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
+		);
+	}
+);
 
 test('$env/static/private is not statically importable from the client', { timeout: 60000 }, () => {
 	assert.throws(
@@ -39,17 +47,21 @@ test('$env/static/private is not statically importable from the client', { timeo
 	);
 });
 
-test('$env/static/private is not dynamically importable from the client', { timeout: 60000 }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-static-env-dynamic-import'),
-				stdio: 'pipe',
-				timeout: 60000
-			}),
-		/.*Cannot import \$env\/static\/private into client-side code:.*/gs
-	);
-});
+test(
+	'$env/static/private is not dynamically importable from the client',
+	{ timeout: 60000 },
+	() => {
+		assert.throws(
+			() =>
+				execSync('pnpm build', {
+					cwd: path.join(process.cwd(), 'apps/private-static-env-dynamic-import'),
+					stdio: 'pipe',
+					timeout: 60000
+				}),
+			/.*Cannot import \$env\/static\/private into client-side code:.*/gs
+		);
+	}
+);
 
 test('$env/dynamic/private is not importable from the service worker', { timeout: 60000 }, () => {
 	assert.throws(
