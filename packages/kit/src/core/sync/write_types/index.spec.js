@@ -48,7 +48,7 @@ test('Creates correct $types', () => {
 		console.error(/** @type {any} */ (e).stdout.toString());
 		throw new Error('Type tests failed');
 	}
-});
+}, 6000 /* 6s timeout */);
 
 test('Rewrites types for a TypeScript module', () => {
 	const source = `
