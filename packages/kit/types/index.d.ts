@@ -2356,6 +2356,17 @@ declare module '$app/state' {
 	 * {/if}
 	 * ```
 	 *
+	 * Changes to `page` are available exclusively with runes. (The legacy reactivity syntax will not reflect any changes)
+	 *
+	 * ```svelte
+	 * <!--- file: +page.svelte --->
+	 * <script>
+	 * 	import { page } from '$app/state';
+	 * 	const id = $derived(page.params.id); // This will correctly update id for usage on this page
+	 * 	$: badId = page.params.id; // Do not use; will never update after initial load
+	 * </script>
+	 * ```
+	 *
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
 	 *
 	 * */
