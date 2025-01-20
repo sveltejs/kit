@@ -508,10 +508,9 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (state.error && event.isSubRequest) {
-				request.headers.append('x-sveltekit-error', 'true');
-				return await fetch(request, {
-					headers: request.headers
-				});
+				const headers = new Headers(request.headers);
+				headers.set('x-sveltekit-error', 'true');
+				return await fetch(request, { headers });
 			}
 
 			if (state.error) {
