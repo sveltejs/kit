@@ -1,5 +1,5 @@
 ---
-'@sveltejs/package': minor
+'@sveltejs/package': patch
 ---
 
-fix resolving alias
+fix: resolve aliases more robustly
