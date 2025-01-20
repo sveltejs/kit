@@ -5,7 +5,7 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage, isRunnableDevEnvironment } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -32,6 +32,12 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  */
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
+
+	const viteEnv = vite.environments.ssr;
+
+	if (!isRunnableDevEnvironment(viteEnv)) {
+		throw new Error('Cannot use sveltekit in a non-runnable vite environment');
+	}
 
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -64,9 +70,13 @@ export async function dev(vite, vite_config, svelte_config) {
 	let manifest_error = null;
 
 	/** @param {string} url */
-	async function loud_ssr_load_module(url) {
+	async function load_ssr_load_module(url) {
+		if (!isRunnableDevEnvironment(viteEnv)) {
+			throw new Error('Cannot load SSR module in non-runnable vite environment');
+		}
+
 		try {
-			return await vite.ssrLoadModule(url, { fixStacktrace: true });
+			return await viteEnv.runner.import(url);
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
@@ -93,9 +103,9 @@ export async function dev(vite, vite_config, svelte_config) {
 	async function resolve(id) {
 		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
 
-		const module = await loud_ssr_load_module(url);
+		const module = await load_ssr_load_module(url);
 
-		const module_node = await vite.moduleGraph.getModuleByUrl(url);
+		const module_node = await viteEnv.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
 		return { module, module_node, url };
@@ -150,7 +160,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						/** @type {import('types').SSRNode} */
 						const result = {};
 
-						/** @type {import('vite').ModuleNode[]} */
+						/** @type {import('vite').EnvironmentModuleNode[]} */
 						const module_nodes = [];
 
 						result.index = index;
@@ -190,11 +200,11 @@ export async function dev(vite, vite_config, svelte_config) {
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 						// components/stylesheets loaded via import() during `load` are included
 						result.inline_styles = async () => {
-							/** @type {Set<import('vite').ModuleNode>} */
+							/** @type {Set<import('vite').EnvironmentModuleNode>} */
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
-								await find_deps(vite, module_node, deps);
+								await find_deps(vite, module_node, deps, viteEnv);
 							}
 
 							/** @type {Record<string, string>} */
@@ -236,7 +246,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							endpoint: endpoint
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
-										return await loud_ssr_load_module(url);
+										return await load_ssr_load_module(url);
 									}
 								: null,
 							endpoint_id: endpoint?.file
@@ -569,39 +579,45 @@ function remove_static_middlewares(server) {
 
 /**
  * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').ModuleNode} node
- * @param {Set<import('vite').ModuleNode>} deps
+ * @param {import('vite').EnvironmentModuleNode} node
+ * @param {Set<import('vite').EnvironmentModuleNode>} deps
+ * @param {import('vite').DevEnvironment} viteEnv
  */
-async function find_deps(vite, node, deps) {
+async function find_deps(vite, node, deps, viteEnv) {
+	// TODO (43081j): maybe throw an error?
+	if (!isRunnableDevEnvironment(viteEnv)) {
+		return;
+	}
+
 	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @type {Promise<void>[]} */
 	const branches = [];
 
-	/** @param {import('vite').ModuleNode} node */
+	/** @param {import('vite').EnvironmentModuleNode} node */
 	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
-			await find_deps(vite, node, deps);
+			await find_deps(vite, node, deps, viteEnv);
 		}
 	}
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await vite.moduleGraph.getModuleByUrl(url);
+		const node = await viteEnv.moduleGraph.getModuleByUrl(url);
 
 		if (node) {
 			await add(node);
 		}
 	}
 
-	if (node.ssrTransformResult) {
-		if (node.ssrTransformResult.deps) {
-			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+	if (node.transformResult) {
+		if (node.transformResult.deps) {
+			node.transformResult.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
 
-		if (node.ssrTransformResult.dynamicDeps) {
-			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+		if (node.transformResult.dynamicDeps) {
+			node.transformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
