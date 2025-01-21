@@ -44,7 +44,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
 		"typescript": "^5.3.3",
-		"vitest": "^2.1.6"
+		"vitest": "^3.0.1"
 	},
 	"dependencies": {
 		"import-meta-resolve": "^4.1.0"

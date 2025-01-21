@@ -303,6 +303,22 @@ if (!process.env.DEV) {
 			expect(await page.content()).not.toMatch('navigator.serviceWorker');
 		});
 	});
+
+	test.describe('inlineStyleThreshold', () => {
+		test('loads asset', async ({ page }) => {
+			let fontLoaded = false;
+
+			page.on('response', (response) => {
+				if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
+					fontLoaded = response.ok();
+				}
+			});
+
+			await page.goto('/path-base/inline-assets');
+
+			expect(fontLoaded).toBeTruthy();
+		});
+	});
 }
 
 test.describe('Vite options', () => {

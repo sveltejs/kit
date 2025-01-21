@@ -1070,31 +1070,31 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The shape of the `$page` store
+	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
 		Params extends Record<string, string> = Record<string, string>,
 		RouteId extends string | null = string | null
 	> {
 		/**
-		 * The URL of the current page
+		 * The URL of the current page.
 		 */
 		url: URL;
 		/**
-		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
 		params: Params;
 		/**
-		 * Info about the current route
+		 * Info about the current route.
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
 			 */
 			id: RouteId;
 		};
 		/**
-		 * Http status code of the current page
+		 * HTTP status code of the current page.
 		 */
 		status: number;
 		/**
@@ -2354,6 +2354,17 @@ declare module '$app/state' {
 	 * {:else}
 	 * 	<span class="small">All systems operational</span>
 	 * {/if}
+	 * ```
+	 *
+	 * Changes to `page` are available exclusively with runes. (The legacy reactivity syntax will not reflect any changes)
+	 *
+	 * ```svelte
+	 * <!--- file: +page.svelte --->
+	 * <script>
+	 * 	import { page } from '$app/state';
+	 * 	const id = $derived(page.params.id); // This will correctly update id for usage on this page
+	 * 	$: badId = page.params.id; // Do not use; will never update after initial load
+	 * </script>
 	 * ```
 	 *
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.

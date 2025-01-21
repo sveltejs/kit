@@ -824,6 +824,36 @@ test.describe('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-preload-code', async ({ page }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		// eager
+		await page.goto('/data-sveltekit/preload-code');
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// viewport
+		requests.length = 0;
+		page.locator('#viewport').scrollIntoViewIfNeeded();
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// hover
+		requests.length = 0;
+		await page.locator('#hover').dispatchEvent('mousemove');
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// tap
+		requests.length = 0;
+		await page.locator('#tap').dispatchEvent('touchstart');
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+	});
+
 	test('data-sveltekit-preload-data', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -1368,6 +1398,12 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+
+	test('reroute works with invalidate', async ({ page }) => {
+		await page.goto('/reroute/invalidate/a');
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('data request: true');
 	});
 });
 

@@ -6,6 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "cross-env DEV=true playwright test"
 	},
