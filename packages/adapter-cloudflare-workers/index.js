@@ -5,8 +5,7 @@ import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
 
-// @ts-ignore
-/** @type {import('wrangler') | undefined} */
+/** @type {import('./wrangler.js') | undefined} */
 let wrangler;
 try {
 	// @ts-ignore

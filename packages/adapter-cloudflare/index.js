@@ -2,8 +2,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// @ts-ignore
-/** @type {import('wrangler') | undefined} */
+/** @type {import('./wrangler.js') | undefined} */
 let wrangler;
 try {
 	// @ts-ignore
