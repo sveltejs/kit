@@ -130,6 +130,12 @@ export function get_link_info(a, base, uses_hash_router) {
 
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+		// if the hash doesn't start with `#/` then it's probably linking to an id on the current page
+		if (uses_hash_router && url.hash.match(/^#[^/]/)) {
+			const route = location.hash.split('#')[1] || '/';
+			url.hash = `#${route}${url.hash}`;
+		}
 	} catch {}
 
 	const target = a instanceof SVGAElement ? a.target.baseVal : a.target;
