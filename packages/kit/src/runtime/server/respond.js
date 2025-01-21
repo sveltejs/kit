@@ -508,6 +508,8 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (state.error && event.isSubRequest) {
+        // avoid overwriting the headers. This could be a same origin fetch request
+        // to an external service from the root layout while rendering an error page
 				const headers = new Headers(request.headers);
 				headers.set('x-sveltekit-error', 'true');
 				return await fetch(request, { headers });
