@@ -44,7 +44,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@vercel/edge": "^1.1.2",
+		"@vercel/edge": "^1.2.1",
 		"@vercel/nft": "^0.29.0",
 		"esbuild": "^0.24.0"
 	},
