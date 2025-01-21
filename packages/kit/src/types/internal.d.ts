@@ -74,6 +74,10 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		inline?: {
+			script: string;
+			style: string | undefined;
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -370,6 +374,7 @@ export interface SSROptions {
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
+	hash_routing: boolean;
 	hooks: ServerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];

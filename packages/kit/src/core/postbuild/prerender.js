@@ -13,6 +13,7 @@ import { crawl } from './crawl.js';
 import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
+import generate_fallback from './fallback.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -24,6 +25,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
 
 /**
  * @param {{
+ *   hash: boolean;
  *   out: string;
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
@@ -31,7 +33,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   env: Record<string, string>
  * }} opts
  */
-async function prerender({ out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -97,6 +99,23 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
+
+	if (hash) {
+		const fallback = await generate_fallback({
+			manifest_path,
+			env
+		});
+
+		const file = output_filename('/', true);
+		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
+
+		mkdirp(dirname(dest));
+		writeFileSync(dest, fallback);
+
+		prerendered.pages.set('/', { file });
+
+		return { prerendered, prerender_map };
+	}
 
 	const emulator = await config.adapter?.emulate?.();
 

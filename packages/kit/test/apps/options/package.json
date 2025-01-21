@@ -6,12 +6,14 @@
 		"dev": "vite dev -c vite.custom.config.js",
 		"build": "vite build -c vite.custom.config.js --mode custom",
 		"preview": "vite preview -c vite.custom.config.js",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
+		"@fontsource/libre-barcode-128-text": "^5.1.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"cross-env": "^7.0.3",
