@@ -3,4 +3,4 @@
 "@sveltejs/adapter-vercel": minor
 ---
 
-fix: run `reroute` in an edge middleware before invoking an individual function
+fix: run `reroute` in an edge middleware before invoking a split function
