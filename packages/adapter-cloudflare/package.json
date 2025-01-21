@@ -58,8 +58,5 @@
 		"wrangler": {
 			"optional": true
 		}
-	},
-	"publishConfig": {
-		"access": "public"
 	}
 }
