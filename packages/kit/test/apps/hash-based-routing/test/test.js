@@ -89,4 +89,13 @@ test.describe('hash based navigation', () => {
 		url = new URL(page.url());
 		expect(url.hash).toBe('#/reroute-b');
 	});
+
+	test('relative anchor works', async ({ page }) => {
+		await page.goto('/#/anchor');
+
+		await page.locator('a[href="#test"]').click();
+		await expect(page.locator('#test')).toHaveText('#test');
+		const url = new URL(page.url());
+		expect(url.hash).toBe('#/anchor#test');
+	});
 });
