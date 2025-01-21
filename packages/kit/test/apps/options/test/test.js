@@ -130,6 +130,15 @@ test.describe('CSP', () => {
 		expect(await page.evaluate('window.pwned')).toBe(undefined);
 	});
 
+	test('ensure CSP header in stream response', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+		const response = await page.goto('/path-base/csp-with-stream');
+		expect(response.headers()['content-security-policy']).toMatch(
+			/require-trusted-types-for 'script'/
+		);
+		expect(await page.textContent('h2')).toBe('Moo Deng!');
+	});
+
 	test("quotes 'script'", async ({ page }) => {
 		const response = await page.goto('/path-base');
 		expect(response.headers()['content-security-policy']).toMatch(
@@ -292,6 +301,22 @@ if (!process.env.DEV) {
 		test('does not register service worker if none created', async ({ page }) => {
 			await page.goto('/path-base/');
 			expect(await page.content()).not.toMatch('navigator.serviceWorker');
+		});
+	});
+
+	test.describe('inlineStyleThreshold', () => {
+		test('loads asset', async ({ page }) => {
+			let fontLoaded = false;
+
+			page.on('response', (response) => {
+				if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
+					fontLoaded = response.ok();
+				}
+			});
+
+			await page.goto('/path-base/inline-assets');
+
+			expect(fontLoaded).toBeTruthy();
 		});
 	});
 }

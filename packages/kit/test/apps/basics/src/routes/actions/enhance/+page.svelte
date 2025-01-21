@@ -1,6 +1,6 @@
 <script>
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -13,10 +13,10 @@
 	let count = 0;
 </script>
 
-<pre class="data1">prop: {data.enhance_counter}, store: {$page.data.enhance_counter}</pre>
+<pre class="data1">prop: {data.enhance_counter}, state: {page.data.enhance_counter}</pre>
 
 <pre class="formdata1">{JSON.stringify(form)}</pre>
-<pre class="formdata2">{JSON.stringify($page.form)}</pre>
+<pre class="formdata2">{JSON.stringify(page.form)}</pre>
 
 <form method="post" action="?/login" use:enhance>
 	<input type="hidden" name="action" value="DOM clobbering" />

@@ -1,7 +1,8 @@
-import fs from 'node:fs';
-import { sequence } from '@sveltejs/kit/hooks';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
+import { _set_from_init } from './routes/init-hooks/+page.server';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -153,4 +154,8 @@ export async function handleFetch({ request, fetch }) {
 	}
 
 	return fetch(request);
+}
+
+export function init() {
+	_set_from_init();
 }
