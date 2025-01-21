@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.16.1
+### Patch Changes
+
+
+- fix: avoid overwriting headers for sub-requests made while loading the error page ([#13341](https://github.com/sveltejs/kit/pull/13341))
+
+
+- fix: correctly resolve index file entrypoints such as `src/service-worker/index.js` ([#13354](https://github.com/sveltejs/kit/pull/13354))
+
+
+- fix: correctly handle relative anchors when using the hash router ([#13356](https://github.com/sveltejs/kit/pull/13356))
+
 ## 2.16.0
 ### Minor Changes
 
