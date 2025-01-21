@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.8
+### Patch Changes
+
+
+- fix: resolve aliases more robustly ([#13351](https://github.com/sveltejs/kit/pull/13351))
+
 ## 2.3.7
 ### Patch Changes
 
