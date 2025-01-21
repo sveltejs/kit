@@ -1,11 +1,11 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 
-	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 
-<h1>{page.params.rest}</h1>
+<h1>{$page.params.rest}</h1>
 <h2>{data.rest}</h2>
 
 <a href="/routing/rest/xyz/abc/qwe/deep.json" rel="external">deep</a>

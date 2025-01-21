@@ -1,8 +1,8 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 </script>
 
-<h1>{decodeURIComponent(page.url.pathname.split('/').pop())}</h1>
+<h1>{decodeURIComponent($page.url.pathname.split('/').pop())}</h1>
 <slot />
 
 <a href="/encoded/escape-sequences/:-)">:-)</a>

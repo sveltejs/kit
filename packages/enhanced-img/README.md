@@ -6,7 +6,7 @@ A Vite plugin which runs a Svelte preprocessor to locate images and then transfo
 
 ## Docs
 
-[Docs](https://svelte.dev/docs/kit/images)
+[Docs](https://kit.svelte.dev/docs/images)
 
 ## Changelog
 

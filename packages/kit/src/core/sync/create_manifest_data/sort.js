@@ -136,8 +136,7 @@ function split_route_id(id) {
 	return get_route_segments(
 		id
 			// remove all [[optional]] parts unless they're at the very end
-			// or it ends with a route group
-			.replace(/\[\[[^\]]+\]\](?!(?:\/\([^/]+\))*$)/g, '')
+			.replace(/\[\[[^\]]+\]\](?!$)/g, '')
 	).filter(Boolean);
 }
 

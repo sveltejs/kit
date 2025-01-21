@@ -19,18 +19,6 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  pkg-pr-new:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: pnpx pkg-pr-new publish --comment=off ./packages/*
   lint-all:
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +26,7 @@ jobs:
       - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '18.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -55,9 +43,6 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
           - node-version: 20
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-          - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:

@@ -102,7 +102,7 @@ describe('make_trackable', (test) => {
 	test('makes URL properties trackable', () => {
 		let tracked = false;
 		const url = make_trackable(
-			new URL('https://svelte.dev/docs/kit'),
+			new URL('https://kit.svelte.dev/docs'),
 			() => {
 				tracked = true;
 			},
@@ -118,37 +118,22 @@ describe('make_trackable', (test) => {
 
 	test('throws an error when its hash property is accessed', () => {
 		const url = make_trackable(
-			new URL('https://svelte.dev/docs/kit'),
+			new URL('https://kit.svelte.dev/docs'),
 			() => {},
 			() => {}
 		);
 
 		assert.throws(
 			() => url.hash,
-			/Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead/
+			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
 		);
-	});
-
-	test('does not throw an error when its hash property is accessed if it is allowed', () => {
-		let tracked = false;
-		const url = make_trackable(
-			new URL('https://svelte.dev/docs/kit'),
-			() => {
-				tracked = true;
-			},
-			() => {},
-			true
-		);
-
-		url.hash;
-		assert.ok(tracked);
 	});
 
 	test('track each search param separately if accessed directly', () => {
 		let tracked = false;
 		const tracked_search_params = new Set();
 		const url = make_trackable(
-			new URL('https://svelte.dev/docs/kit'),
+			new URL('https://kit.svelte.dev/docs'),
 			() => {
 				tracked = true;
 			},
@@ -176,7 +161,7 @@ describe('make_trackable', (test) => {
 
 describe('disable_search', (test) => {
 	test('throws an error when its search property is accessed', () => {
-		const url = new URL('https://svelte.dev/docs/kit');
+		const url = new URL('https://kit.svelte.dev/docs');
 		disable_search(url);
 
 		/** @type {Array<keyof URL>} */

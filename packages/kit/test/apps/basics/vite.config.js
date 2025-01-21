@@ -10,7 +10,7 @@ const config = {
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
 		// the reload confuses Playwright
-		include: ['cookie']
+		include: ['cookie', 'marked']
 	},
 	plugins: [sveltekit()],
 	server: {

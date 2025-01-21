@@ -1,0 +1,4 @@
+{
+	"title": "SvelteKit demo app",
+	"description": "A demo app showcasing some of the features of SvelteKit - play a word guessing game that works without JavaScript!"
+}

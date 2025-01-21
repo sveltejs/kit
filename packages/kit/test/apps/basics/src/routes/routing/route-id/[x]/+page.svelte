@@ -1,9 +1,9 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 
-	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 
 <h1>route.id in load: {data.route.id}</h1>
-<h2>route.id in store: {page.route.id}</h2>
+<h2>route.id in store: {$page.route.id}</h2>

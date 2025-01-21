@@ -11,7 +11,7 @@ To do this, export a `snapshot` object with `capture` and `restore` methods from
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-	let comment = $state('');
+	let comment = '';
 
 	/** @type {import('./$types').Snapshot<string>} */
 	export const snapshot = {
@@ -31,4 +31,4 @@ When you navigate away from this page, the `capture` function is called immediat
 
 The data must be serializable as JSON so that it can be persisted to `sessionStorage`. This allows the state to be restored when the page is reloaded, or when the user navigates back from a different site.
 
-> [!NOTE] Avoid returning very large objects from `capture` — once captured, objects will be retained in memory for the duration of the session, and in extreme cases may be too large to persist to `sessionStorage`.
+> Avoid returning very large objects from `capture` — once captured, objects will be retained in memory for the duration of the session, and in extreme cases may be too large to persist to `sessionStorage`.

@@ -7,19 +7,19 @@ export const adapters = [
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
 		module: '@sveltejs/adapter-vercel',
-		version: '5'
+		version: '4'
 	},
 	{
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
-		version: '5'
+		version: '3'
 	},
 	{
 		name: 'Netlify',
 		test: () => !!process.env.NETLIFY,
 		module: '@sveltejs/adapter-netlify',
-		version: '4'
+		version: '3'
 	},
 	{
 		name: 'Azure Static Web Apps',

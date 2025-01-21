@@ -1,7 +1,7 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 
-	const title = $derived(`${page.status}: ${page.error.message}`);
+	$: title = `${$page.status}: ${$page.error.message}`;
 </script>
 
 <h1>{title}</h1>

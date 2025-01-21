@@ -10,9 +10,6 @@ const config = {
 		},
 		env: {
 			dir: '../../env'
-		},
-		output: {
-			bundleStrategy: 'single'
 		}
 	}
 };

@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 </script>
 
-<pre style:color="red">{page.error?.message}</pre>
+<pre style:color="red">{$page.error?.message}</pre>

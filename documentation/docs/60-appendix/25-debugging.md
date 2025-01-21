@@ -2,7 +2,7 @@
 title: Breakpoint Debugging
 ---
 
-In addition to the [`@debug`](../svelte/@debug) tag, you can also debug Svelte and SvelteKit projects using breakpoints within various tools and development environments. This includes both frontend and backend code.
+In addition to the [`@debug`](https://svelte.dev/docs/special-tags#debug) tag, you can also debug Svelte and SvelteKit projects using breakpoints within various tools and development environments. This includes both frontend and backend code.
 
 The following guides assume your JavaScript runtime environment is Node.js.
 
@@ -54,7 +54,7 @@ If you use a different editor, these community guides might be useful for you:
 
 It's possible to debug Node.js applications using a browser-based debugger.
 
-> [!NOTE] Note this only works with debugging client-side SvelteKit source maps.
+> Note this only works with debugging client-side SvelteKit source maps.
 
 1. Run the `--inspect` flag when starting the Vite server with Node.js. For instance: `NODE_OPTIONS="--inspect" npm run dev`
 2. Open your site in a new tab. Typically at `localhost:5173`.

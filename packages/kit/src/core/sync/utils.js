@@ -3,8 +3,15 @@ import path from 'node:path';
 import { mkdirp } from '../../utils/filesystem.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
-/** @type {{ VERSION: string }} */
-const { VERSION } = await resolve_peer_dependency('svelte/compiler');
+/** @type {string} */
+let VERSION;
+
+try {
+	({ VERSION } = await resolve_peer_dependency('svelte/compiler'));
+} catch {
+	// we can end up here from e.g. unit tests. this is the simplest fix
+	({ VERSION } = await import('svelte/compiler'));
+}
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();

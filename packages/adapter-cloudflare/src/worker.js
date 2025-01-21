@@ -33,10 +33,7 @@ const worker = {
 		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
 			is_static_asset =
-				manifest.assets.has(filename) ||
-				manifest.assets.has(filename + '/index.html') ||
-				filename in manifest._.server_assets ||
-				filename + '/index.html' in manifest._.server_assets;
+				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';

@@ -1,9 +1,12 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 
-	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
-	let { data, form } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	/** @type {import('./$types').ActionData} */
+	export let form;
 </script>
 
 <h1>{data.get_message} / {form?.errors?.post_message}</h1>
-<h2>status: {page.status}</h2>
+<h2>status: {$page.status}</h2>

@@ -3,14 +3,12 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 
-const timeout = 60_000;
-
-test('$lib/*.server.* is not statically importable from the client', { timeout }, () => {
+test('$lib/*.server.* is not statically importable from the client', () => {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(process.cwd(), 'apps/syntax-error'),
 			stdio: 'pipe',
-			timeout
+			timeout: 60000
 		});
 	} catch (err) {
 		assert.ok(

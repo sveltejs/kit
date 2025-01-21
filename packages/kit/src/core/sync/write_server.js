@@ -42,7 +42,6 @@ export const options = {
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
-	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
@@ -65,23 +64,9 @@ export const options = {
 };
 
 export async function get_hooks() {
-	let handle;
-	let handleFetch;
-	let handleError;
-	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
-
-	let reroute;
-	let transport;
-	${universal_hooks ? `({ reroute, transport } = await import(${s(universal_hooks)}));` : ''}
-
 	return {
-		handle,
-		handleFetch,
-		handleError,
-		init,
-		reroute,
-		transport
+		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
+		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
 	};
 }
 

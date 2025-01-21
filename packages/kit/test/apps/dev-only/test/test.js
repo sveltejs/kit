@@ -17,7 +17,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private/+page.svelte'
+			'Cannot import $env/dynamic/private into client-side code'
 		);
 	});
 
@@ -26,7 +26,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private-dynamic-import/+page.svelte'
+			'Cannot import $env/dynamic/private into client-side code'
 		);
 	});
 
@@ -35,7 +35,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private/+page.svelte'
+			'Cannot import $env/static/private into client-side code'
 		);
 	});
 
@@ -44,7 +44,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private-dynamic-import/+page.svelte'
+			'Cannot import $env/static/private into client-side code'
 		);
 	});
 

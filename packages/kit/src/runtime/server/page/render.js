@@ -79,7 +79,7 @@ export async function render_response({
 
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'failure'
-			? (action_result.data ?? null)
+			? action_result.data ?? null
 			: null;
 
 	/** @type {string} */
@@ -95,21 +95,16 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative) {
-		if (!state.prerendering?.fallback) {
-			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+	if (paths.relative && !state.prerendering?.fallback) {
+		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
-			base = segments.map(() => '..').join('/') || '.';
+		base = segments.map(() => '..').join('/') || '.';
 
-			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+		// resolve e.g. '../..' against current location, then remove trailing slash
+		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
-			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-				assets = base;
-			}
-		} else if (options.hash_routing) {
-			// we have to assume that we're in the right place
-			base_expression = "new URL('.', location).pathname.slice(0, -1)";
+		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
+			assets = base;
 		}
 	}
 
@@ -154,17 +149,6 @@ export async function render_response({
 		// portable as possible, but reset afterwards
 		if (paths.relative) paths.override({ base, assets });
 
-		const render_opts = {
-			context: new Map([
-				[
-					'__request__',
-					{
-						page: props.page
-					}
-				]
-			])
-		};
-
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
 			let warned = false;
@@ -184,14 +168,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = options.root.render(props);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = options.root.render(props);
 			} finally {
 				paths.reset();
 			}
@@ -202,7 +186,7 @@ export async function render_response({
 			for (const url of node.stylesheets) stylesheets.add(url);
 			for (const url of node.fonts) fonts.add(url);
 
-			if (node.inline_styles && !client.inline) {
+			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
 		}
@@ -228,18 +212,15 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
-	const style = client.inline
-		? client.inline?.style
-		: Array.from(inline_styles.values()).join('\n');
+	if (inline_styles.size > 0) {
+		const content = Array.from(inline_styles.values()).join('\n');
 
-	if (style) {
 		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		csp.add_style(style);
+		csp.add_style(content);
 
-		head += `\n\t<style${attributes.join('')}>${style}</style>`;
+		head += `\n\t<style${attributes.join('')}>${content}</style>`;
 	}
 
 	for (const dep of stylesheets) {
@@ -284,7 +265,6 @@ export async function render_response({
 		event,
 		options,
 		branch.map((b) => b.server_data),
-		csp,
 		global
 	);
 
@@ -301,19 +281,17 @@ export async function render_response({
 			modulepreloads.add(`${options.app_dir}/env.js`);
 		}
 
-		if (!client.inline) {
-			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
-				(path) => resolve_opts.preload({ type: 'js', path })
-			);
+		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+			(path) => resolve_opts.preload({ type: 'js', path })
+		);
 
-			for (const path of included_modulepreloads) {
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (options.preload_strategy !== 'modulepreload') {
-					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-				} else if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
+		for (const path of included_modulepreloads) {
+			// see the kit.output.preloadStrategy option for details on why we have multiple options here
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			if (options.preload_strategy !== 'modulepreload') {
+				head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+			} else if (state.prerendering) {
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
 		}
 
@@ -342,20 +320,12 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
-			// When resolving, the id might not yet be available due to the data
-			// be evaluated upon init of kit, so we use a timeout to retry
 			properties.push(`resolve: ({ id, data, error }) => {
-							const try_to_resolve = () => {
-								if (!deferred.has(id)) {
-									setTimeout(try_to_resolve, 0);
-									return;
-								}
-								const { fulfil, reject } = deferred.get(id);
-								deferred.delete(id);
-								if (error) reject(error);
-								else fulfil(data);
-							}
-							try_to_resolve();
+							const { fulfil, reject } = deferred.get(id);
+							deferred.delete(id);
+
+							if (error) reject(error);
+							else fulfil(data);
 						}`);
 		}
 
@@ -364,18 +334,19 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['element'];
+		const args = ['app', 'element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
+			blocks.push(`const data = ${data};`);
+
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
+					/** @type {string} */ (event.route.id)
 				);
 			}
 
@@ -385,7 +356,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data: ${data}`,
+				'data',
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -402,30 +373,24 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		// `client.app` is a proxy for `bundleStrategy === 'split'`
-		const boot = client.inline
-			? `${client.inline.script}
-
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
-			: client.app
-				? `Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
-						kit.start(app, ${args.join(', ')});
-					});`
-				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
-					});`;
-
 		if (load_env_eagerly) {
 			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
 						${global}.env = env;
 
-						${boot.replace(/\n/g, '\n\t')}
+						Promise.all([
+							import(${s(prefixed(client.start))}),
+							import(${s(prefixed(client.app))})
+						]).then(([kit, app]) => {
+							kit.start(${args.join(', ')});
+						});
 					});`);
 		} else {
-			blocks.push(boot);
+			blocks.push(`Promise.all([
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))})
+					]).then(([kit, app]) => {
+						kit.start(${args.join(', ')});
+					});`);
 		}
 
 		if (options.service_worker) {
@@ -514,7 +479,7 @@ export async function render_response({
 		if (page_config.csr) {
 			if (transformed.split('<!--').length < html.split('<!--').length) {
 				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
-				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
+				// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
 				console.warn(
 					"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
 				);
@@ -546,7 +511,9 @@ export async function render_response({
 					type: 'bytes'
 				}),
 				{
-					headers
+					headers: {
+						'content-type': 'text/html'
+					}
 				}
 			);
 }
@@ -557,11 +524,10 @@ export async function render_response({
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
- * @param {import('./csp.js').Csp} csp
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, options, nodes, csp, global) {
+function get_data(event, options, nodes, global) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -600,20 +566,12 @@ function get_data(event, options, nodes, csp, global) {
 							str = devalue.uneval({ id, data, error }, replacer);
 						}
 
-						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
+						push(`<script>${global}.resolve(${str})</script>\n`);
 						if (count === 0) done();
 					}
 				);
 
 			return `${global}.defer(${id})`;
-		} else {
-			for (const key in options.hooks.transport) {
-				const encoded = options.hooks.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-				}
-			}
 		}
 	}
 

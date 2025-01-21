@@ -2,7 +2,7 @@
 
 # SvelteKit
 
-Web development, streamlined. Read the [documentation](https://svelte.dev/docs/kit) to get started.
+Web development, streamlined. Read the [documentation](https://kit.svelte.dev/docs) to get started.
 
 ### Packages
 
@@ -20,6 +20,7 @@ Web development, streamlined. Read the [documentation](https://svelte.dev/docs/k
 | [@sveltejs/enhanced-img](packages/enhanced-img)                             | [Changelog](packages/enhanced-img/CHANGELOG.md)               |
 | [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
 | [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
+| [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
 
 [Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.
 

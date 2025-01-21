@@ -1,5 +1,4 @@
 import adapter from '../../../../adapter-static/index.js';
-import { writeFileSync } from 'node:fs';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -8,10 +7,7 @@ const config = {
 
 		prerender: {
 			handleHttpError: 'warn',
-			origin: 'http://prerender.origin',
-			handleMissingId: ({ id }) => {
-				writeFileSync('./missing_ids/index.jsonl', JSON.stringify(id) + ',', 'utf-8');
-			}
+			origin: 'http://prerender.origin'
 		}
 	}
 };

@@ -1,9 +1,9 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 
-	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 
 <h1>{data.message}</h1>
-<h2>{page.url.origin}</h2>
+<h2>{$page.url.origin}</h2>

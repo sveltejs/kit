@@ -16,11 +16,12 @@
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
+		"start": "cd sites/kit.svelte.dev && npm run dev",
 		"build": "pnpm --filter @sveltejs/* -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.11",
+		"@changesets/cli": "^2.27.8",
 		"@stylistic/eslint-plugin-js": "^2.3.0",
 		"@sveltejs/eslint-config": "^8.1.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
@@ -29,11 +30,9 @@
 		"eslint-plugin-n": "^17.9.0",
 		"eslint-plugin-svelte": "^2.41.0",
 		"playwright": "^1.44.1",
-		"prettier": "^3.1.1",
-		"prettier-plugin-svelte": "^3.1.2",
 		"typescript-eslint": "^8.0.0"
 	},
-	"packageManager": "pnpm@9.15.4",
+	"packageManager": "pnpm@9.12.0",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}

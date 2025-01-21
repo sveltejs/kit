@@ -47,10 +47,10 @@ test('succeeds when acao header present on cors', async () => {
 	assert.equal(text, 'foo');
 });
 
-test('errors when no acao header present on cors', async () => {
+test('errors when no acao header present on cors', () => {
 	const fetch = create_fetch({});
 
-	await expect(async () => {
+	expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
 	}).rejects.toThrowError(

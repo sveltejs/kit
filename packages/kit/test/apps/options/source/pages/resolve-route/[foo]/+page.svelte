@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 </script>
 
-<h2>{page.params.foo}</h2>
+<h2>{$page.params.foo}</h2>

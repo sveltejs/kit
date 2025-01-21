@@ -23,17 +23,15 @@
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
 				"**/.svelte-kit/**",
-				"**/.custom-out-dir/**",
-				"**/build/**",
-				"**/test-results/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
-				"packages/kit/src/core/postbuild/fixtures/**/*"
+				"packages/kit/src/core/postbuild/fixtures/**/*",
+				"packages/migrate/migrations/routes/*/samples.md"
 			],
 			"options": {
-				"rangeEnd": 0
+				"requirePragma": true
 			}
 		}
 	]

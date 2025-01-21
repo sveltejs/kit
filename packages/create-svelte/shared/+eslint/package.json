@@ -1,0 +1,8 @@
+{
+	"devDependencies": {
+		"@types/eslint": "^9.6.0",
+		"eslint": "^9.0.0",
+		"eslint-plugin-svelte": "^2.36.0",
+		"globals": "^15.0.0"
+	}
+}

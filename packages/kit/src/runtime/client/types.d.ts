@@ -1,13 +1,5 @@
 import { SvelteComponent } from 'svelte';
-import {
-	ClientHooks,
-	CSRPageNode,
-	CSRPageNodeLoader,
-	CSRRoute,
-	ServerDataNode,
-	TrailingSlash,
-	Uses
-} from 'types';
+import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
 
 export interface SvelteKitApp {
@@ -33,15 +25,6 @@ export interface SvelteKitApp {
 	matchers: Record<string, ParamMatcher>;
 
 	hooks: ClientHooks;
-
-	decode: (type: string, value: any) => any;
-
-	decoders: Record<string, (data: any) => any>;
-
-	/**
-	 * Whether or not we're using hash-based routing
-	 */
-	hash: boolean;
 
 	root: typeof SvelteComponent;
 }
@@ -71,7 +54,7 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		constructors: Array<typeof SvelteComponent>;
-		components?: SvelteComponent[];
+		components?: Array<SvelteComponent>;
 		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
@@ -100,14 +83,4 @@ export interface NavigationState {
 	params: Record<string, string>;
 	route: CSRRoute | null;
 	url: URL;
-}
-
-export interface HydrateOptions {
-	status: number;
-	error: App.Error | null;
-	node_ids: number[];
-	params: Record<string, string>;
-	route: { id: string | null };
-	data: Array<ServerDataNode | null>;
-	form: Record<string, any> | null;
 }

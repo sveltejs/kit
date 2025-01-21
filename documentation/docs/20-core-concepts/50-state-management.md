@@ -20,7 +20,7 @@ export function load() {
 	return { user };
 }
 
-/** @satisfies {import('./$types').Actions} */
+/** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request }) => {
 		const data = await request.formData();
@@ -36,11 +36,11 @@ export const actions = {
 
 The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
 
-Instead, you should _authenticate_ the user using [`cookies`](load#Cookies) and persist the data to a database.
+Instead, you should _authenticate_ the user using [`cookies`](load#cookies) and persist the data to a database.
 
 ## No side-effects in load
 
-For the same reason, your `load` functions should be _pure_ — no side-effects (except maybe the occasional `console.log(...)`). For example, you might be tempted to write to a store or global state inside a `load` function so that you can use the value in your components:
+For the same reason, your `load` functions should be _pure_ — no side-effects (except maybe the occasional `console.log(...)`). For example, you might be tempted to write to a store inside a `load` function so that you can use the store value in your components:
 
 ```js
 /// file: +page.js
@@ -64,37 +64,40 @@ export async function load({ fetch }) {
 
 As with the previous example, this puts one user's information in a place that is shared by _all_ users. Instead, just return the data...
 
-```js
+```diff
 /// file: +page.js
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	const response = await fetch('/api/user');
 
-+++	return {
-		user: await response.json()
-	};+++
++	return {
++		user: await response.json()
++	};
 }
 ```
 
-...and pass it around to the components that need it, or use [`page.data`](load#page.data).
+...and pass it around to the components that need it, or use [`$page.data`](load#$page-data).
 
 If you're not using SSR, then there's no risk of accidentally exposing one user's data to another. But you should still avoid side-effects in your `load` functions — your application will be much easier to reason about without them.
 
-## Using state and stores with context
+## Using stores with context
 
-You might wonder how we're able to use `page.data` and other [app state]($app-state) (or [app stores]($app-stores)) if we can't use global state. The answer is that app state and app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the state (or store) is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own state:
+You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
 <script>
 	import { setContext } from 'svelte';
+	import { writable } from 'svelte/store';
 
-	/** @type {import('./$types').LayoutProps} */
-	let { data } = $props();
+	/** @type {import('./$types').LayoutData} */
+	export let data;
 
-	// Pass a function referencing our state
-	// to the context for child components to access
-	setContext('user', () => data.user);
+	// Create a store and update it when necessary...
+	const user = writable();
+	$: user.set(data.user);
+
+	// ...and add it to the context for child components to access
+	setContext('user', user);
 </script>
 ```
 
@@ -107,15 +110,10 @@ You might wonder how we're able to use `page.data` and other [app state]($app-st
 	const user = getContext('user');
 </script>
 
-<p>Welcome {user().name}</p>
+<p>Welcome {$user.name}</p>
 ```
 
-> [!NOTE] We're passing a function into `setContext` to keep reactivity across boundaries. Read more about it [here](/docs/svelte/$state#Passing-state-into-functions)
-
-> [!LEGACY]
-> You also use stores from `svelte/store` for this, but when using Svelte 5 it is recommended to make use of universal reactivity instead.
-
-Updating the value of context-based state in deeper-level pages or components while the page is being rendered via SSR will not affect the value in the parent component because it has already been rendered by the time the state value is updated. In contrast, on the client (when CSR is enabled, which is the default) the value will be propagated and components, pages, and layouts higher in the hierarchy will react to the new value. Therefore, to avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
+Updating the value of a context-based store in deeper-level pages or components while the page is being rendered via SSR will not affect the value in the parent component because it has already been rendered by the time the store value is updated. In contrast, on the client (when CSR is enabled, which is the default) the value will be propagated and components, pages, and layouts higher in the hierarchy will react to the new value. Therefore, to avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
 
 If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
 
@@ -126,8 +124,8 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 
 	// THIS CODE IS BUGGY!
 	const wordCount = data.content.split(' ').length;
@@ -144,36 +142,32 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 
 ...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the layout, page and any other components within to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will update (as it would with any other Svelte component) and, because the code isn't rerunning, lifecycle methods like `onMount` and `onDestroy` won't rerun and `estimatedReadingTime` won't be recalculated.
 
-Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
+Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
-```svelte
+```diff
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 
-+++	let wordCount = $derived(data.content.split(' ').length);
-	let estimatedReadingTime = $derived(wordCount / 250);+++
++	$: wordCount = data.content.split(' ').length;
++	$: estimatedReadingTime = wordCount / 250;
 </script>
 ```
 
-> [!NOTE] If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate]($app-navigation#afterNavigate) and [beforeNavigate]($app-navigation#beforeNavigate) respectively.
+> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate](modules#$app-navigation-afternavigate) and [beforeNavigate](modules#$app-navigation-beforenavigate) respectively.
 
 Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
 
 ```svelte
-<script>
-	import { page } from '$app/state';
-</script>
-
-{#key page.url.pathname}
+{#key $page.url.pathname}
 	<BlogPost title={data.title} content={data.title} />
 {/key}
 ```
 
 ## Storing state in the URL
 
-If you have state that should survive a reload and/or affect SSR, such as filters or sorting rules on a table, URL search parameters (like `?sort=price&order=ascending`) are a good place to put them. You can put them in `<a href="...">` or `<form action="...">` attributes, or set them programmatically via `goto('?key=value')`. They can be accessed inside `load` functions via the `url` parameter, and inside components via `page.url.searchParams`.
+If you have state that should survive a reload and/or affect SSR, such as filters or sorting rules on a table, URL search parameters (like `?sort=price&order=ascending`) are a good place to put them. You can put them in `<a href="...">` or `<form action="...">` attributes, or set them programmatically via `goto('?key=value')`. They can be accessed inside `load` functions via the `url` parameter, and inside components via `$page.url.searchParams`.
 
 ## Storing ephemeral state in snapshots
 

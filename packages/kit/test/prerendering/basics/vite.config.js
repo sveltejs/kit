@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-/** @type {import('vitest/config').UserConfig} */
+/** @type {import('vite').UserConfig} */
 const config = {
 	build: {
 		minify: false
@@ -21,10 +21,6 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
-	},
-
-	test: {
-		globalSetup: './globalSetup.js'
 	}
 };
 

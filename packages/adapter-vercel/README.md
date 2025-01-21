@@ -4,7 +4,7 @@ A SvelteKit adapter that creates a Vercel app.
 
 ## Docs
 
-[Docs](https://svelte.dev/docs/kit/adapter-vercel)
+[Docs](https://kit.svelte.dev/docs/adapter-vercel)
 
 ## Changelog
 

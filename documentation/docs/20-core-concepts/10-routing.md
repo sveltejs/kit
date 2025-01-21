@@ -8,7 +8,7 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 - `src/routes/about` creates an `/about` route
 - `src/routes/blog/[slug]` creates a route with a _parameter_, `slug`, that can be used to load data dynamically when a user requests a page like `/blog/hello-world`
 
-> [!NOTE] You can change `src/routes` to a different directory by editing the [project config](configuration).
+> You can change `src/routes` to a different directory by editing the [project config](configuration).
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
@@ -22,7 +22,7 @@ We'll introduce these files in a moment in more detail, but here are a few simpl
 
 ### +page.svelte
 
-A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](glossary#SSR)) for the initial request and in the browser ([CSR](glossary#CSR)) for subsequent navigation.
+A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](glossary#ssr)) for the initial request and in the browser ([CSR](glossary#csr)) for subsequent navigation.
 
 ```svelte
 <!--- file: src/routes/+page.svelte --->
@@ -37,25 +37,18 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 <a href="/">Home</a>
 ```
 
-Pages can receive data from `load` functions via the `data` prop.
-
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 
 <h1>{data.title}</h1>
 <div>{@html data.content}</div>
 ```
 
-> [!LEGACY]
-> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` property manually with `PageData` instead, see [$types](#\$types).
->
-> In Svelte 4, you'd use `export let data` instead.
-
-> [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+> Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 ### +page.js
 
@@ -90,7 +83,7 @@ You can find more information about these in [page options](page-options).
 
 ### +page.server.js
 
-If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables]($env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
+If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](modules#$env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -134,14 +127,11 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 ```svelte
 <!--- file: src/routes/blog/[slug]/+error.svelte --->
 <script>
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 </script>
 
-<h1>{page.status}: {page.error.message}</h1>
+<h1>{$page.status}: {$page.error.message}</h1>
 ```
-
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
@@ -149,7 +139,7 @@ If the error occurs inside a `load` function in `+layout(.server).js`, the close
 
 If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
-> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#Server-hooks-handle) or a [+server.js](#server) request handler.
+> `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#server-hooks-handle) or a [+server.js](#server) request handler.
 
 You can read more about error handling [here](errors).
 
@@ -163,29 +153,21 @@ But in many apps, there are elements that should be visible on _every_ page, suc
 
 To create a layout that applies to every page, make a file called `src/routes/+layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this...
 
-```svelte
-<script>
-	let { children } = $props();
-</script>
-
-{@render children()}
+```html
+<slot></slot>
 ```
 
-...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `@render` tag for the page content. For example, let's add a nav bar:
+...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
-```svelte
-<!--- file: src/routes/+layout.svelte --->
-<script>
-	let { children } = $props();
-</script>
-
+```html
+/// file: src/routes/+layout.svelte
 <nav>
 	<a href="/">Home</a>
 	<a href="/about">About</a>
 	<a href="/settings">Settings</a>
 </nav>
 
-{@render children()}
+<slot></slot>
 ```
 
 If we create pages for `/`, `/about` and `/settings`...
@@ -214,8 +196,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 ```svelte
 <!--- file: src/routes/settings/+layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutProps} */
-	let { data, children } = $props();
+	/** @type {import('./$types').LayoutData} */
+	export let data;
 </script>
 
 <h1>Settings</h1>
@@ -226,15 +208,12 @@ We can create a layout that only applies to pages below `/settings` (while inher
 	{/each}
 </div>
 
-{@render children()}
+<slot></slot>
 ```
-
-> [!LEGACY]
-> `LayoutProps` was added in 2.16.0. In earlier versions, you had to [type the properties manually instead](#\$types).
 
 You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
 
-By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#Advanced-layouts) can help you.
+By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
 
@@ -260,14 +239,14 @@ Data returned from a layout's `load` function is also available to all its child
 ```svelte
 <!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 
 	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
 </script>
 ```
 
-> [!NOTE] Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently rerun [`load`](load) functions when necessary.
+> Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently rerun [`load`](load) functions when necessary.
 
 ### +layout.server.js
 
@@ -304,13 +283,11 @@ export function GET({ url }) {
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
 
-You can use the [`error`](@sveltejs-kit#error), [`redirect`](@sveltejs-kit#redirect) and [`json`](@sveltejs-kit#json) methods from `@sveltejs/kit` for convenience (but you don't have to).
+You can use the [`error`](modules#sveltejs-kit-error), [`redirect`](modules#sveltejs-kit-redirect) and [`json`](modules#sveltejs-kit-json) methods from `@sveltejs/kit` for convenience (but you don't have to).
 
 If an error is thrown (either `error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
 
-> [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
-
-> [!NOTE] `+layout` files have no effect on `+server.js` files. If you want to run some logic before each request, add it to the server [`handle`](hooks#Server-hooks-handle) hook.
+> When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 
 ### Receiving data
 
@@ -340,7 +317,7 @@ By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.j
 <input type="number" bind:value={b}> =
 {total}
 
-<button onclick={add}>Calculate</button>
+<button on:click={add}>Calculate</button>
 ```
 
 ```js
@@ -354,9 +331,9 @@ export async function POST({ request }) {
 }
 ```
 
-> [!NOTE] In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
+> In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
 
-> [!NOTE] If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
+> If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
 
 ### Fallback method handler
 
@@ -379,7 +356,7 @@ export async function fallback({ request }) {
 }
 ```
 
-> [!NOTE] For `HEAD` requests, the `GET` handler takes precedence over the `fallback` handler.
+> For `HEAD` requests, the `GET` handler takes precedence over the `fallback` handler.
 
 ### Content negotiation
 
@@ -393,47 +370,30 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `let { data } = $props()` with `PageProps` (or `LayoutProps`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `export let data` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 ```
-
-> [!NOTE]
-> The `PageProps` and `LayoutProps` types, added in 2.16.0, are a shortcut for typing the `data` prop as `PageData` or `LayoutData`, as well as other props, such as `form` for pages, or `children` for layouts. In earlier versions, you had to type these properties manually. For example, for a page:
->
-> ```js
-> /// file: +page.svelte
-> /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
-> let { data, form } = $props();
-> ```
->
-> Or, for a layout:
->
-> ```js
-> /// file: +layout.svelte
-> /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
-> let { data, children } = $props();
-> ```
 
 In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `LayoutLoad` or `LayoutServerLoad` (for `+page.js`, `+page.server.js`, `+layout.js` and `+layout.server.js` respectively) ensures that `params` and the return value are correctly typed.
 
 If you're using VS Code or any IDE that supports the language server protocol and TypeScript plugins then you can omit these types _entirely_! Svelte's IDE tooling will insert the correct types for you, so you'll get type checking without writing them yourself. It also works with our command line tool `svelte-check`.
 
-You can read more about omitting `$types` in our [blog post](/blog/zero-config-type-safety) about it.
+You can read more about omitting `$types` in our [blog post](https://svelte.dev/blog/zero-config-type-safety) about it.
 
 ## Other files
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
-If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`]($lib).
+If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`](modules#$lib).
 
 ## Further reading
 
-- [Tutorial: Routing](/tutorial/kit/pages)
-- [Tutorial: API routes](/tutorial/kit/get-handlers)
+- [Tutorial: Routing](https://learn.svelte.dev/tutorial/pages)
+- [Tutorial: API routes](https://learn.svelte.dev/tutorial/get-handlers)
 - [Docs: Advanced routing](advanced-routing)

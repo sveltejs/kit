@@ -86,12 +86,23 @@ export function strip_hash({ href }) {
 }
 
 /**
+ * URL properties that could change during the lifetime of the page,
+ * which excludes things like `origin`
+ */
+const tracked_url_properties = /** @type {const} */ ([
+	'href',
+	'pathname',
+	'search',
+	'toString',
+	'toJSON'
+]);
+
+/**
  * @param {URL} url
  * @param {() => void} callback
  * @param {(search_param: string) => void} search_params_callback
- * @param {boolean} [allow_hash]
  */
-export function make_trackable(url, callback, search_params_callback, allow_hash = false) {
+export function make_trackable(url, callback, search_params_callback) {
 	const tracked = new URL(url);
 
 	Object.defineProperty(tracked, 'searchParams', {
@@ -116,18 +127,10 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		configurable: true
 	});
 
-	/**
-	 * URL properties that could change during the lifetime of the page,
-	 * which excludes things like `origin`
-	 */
-	const tracked_url_properties = ['href', 'pathname', 'search', 'toString', 'toJSON'];
-	if (allow_hash) tracked_url_properties.push('hash');
-
 	for (const property of tracked_url_properties) {
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				// @ts-expect-error
 				return url[property];
 			},
 
@@ -141,14 +144,9 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
 			return inspect(url, opts);
 		};
-
-		// @ts-ignore
-		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
-			return inspect(url.searchParams, opts);
-		};
 	}
 
-	if ((DEV || !BROWSER) && !allow_hash) {
+	if (DEV || !BROWSER) {
 		disable_hash(tracked);
 	}
 
@@ -165,7 +163,7 @@ function disable_hash(url) {
 	Object.defineProperty(url, 'hash', {
 		get() {
 			throw new Error(
-				'Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead'
+				'Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead'
 			);
 		}
 	});

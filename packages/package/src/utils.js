@@ -17,9 +17,10 @@ const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
 export function resolve_aliases(input, file, content, aliases) {
 	/**
 	 * @param {string} match
+	 * @param {string} _
 	 * @param {string} import_path
 	 */
-	const replace_import_path = (match, import_path) => {
+	const replace_import_path = (match, _, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
 			if (!import_path.startsWith(alias)) continue;
 
@@ -32,26 +33,8 @@ export function resolve_aliases(input, file, content, aliases) {
 		return match;
 	};
 
-	// import/export ... from ...
-	content = content.replace(
-		/\b(import|export)\s+([\w*\s{},]*)\s+from\s+(['"])([^'";]+)\3/g,
-		(_, keyword, specifier, quote, import_path) =>
-			replace_import_path(
-				`${keyword} ${specifier} from ${quote}${import_path}${quote}`,
-				import_path
-			)
-	);
-
-	// import(...)
-	content = content.replace(/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g, (_, quote, import_path) =>
-		replace_import_path(`import(${quote}${import_path}${quote})`, import_path)
-	);
-
-	// import '...'
-	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (_, quote, import_path) =>
-		replace_import_path(`import ${quote}${import_path}${quote}`, import_path)
-	);
-
+	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
+	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
 	return content;
 }
 
