@@ -4,7 +4,7 @@ title: Integrations
 
 ## `vitePreprocess`
 
-Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) in your project will allow you to use the various flavors of JS and CSS that Vite supports: TypeScript, PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
+Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) in your project will allow you to use the various flavors of CSS that Vite supports: PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
 
 ```js
 // svelte.config.js
@@ -15,13 +15,21 @@ export default {
 };
 ```
 
+You will also need to use a preprocessor if you're using TypeScript with Svelte 4. TypeScript is supported natively in Svelte 5 if you're using only the type syntax. To use more complex TypeScript syntax in Svelte 5, you will need still need a preprocessor and can use `vitePreprocess({ script: true })`.
+
 ## Adders
 
-Run `npx svelte-add` to setup many different complex integrations with a single command including:
-- CSS - Tailwind, Bootstrap, Bulma
-- database - Drizzle ORM
-- markdown - mdsvex
-- Storybook
+Run `npx sv add` to setup many different complex integrations with a single command including:
+- prettier (formatting)
+- eslint (linting)
+- vitest (unit testing)
+- playwright (e2e testing)
+- lucia (auth)
+- tailwind (CSS)
+- drizzle (DB)
+- paraglide (i18n)
+- mdsvex (markdown)
+- storybook (frontend workshop)
 
 ## Directory
 
@@ -41,4 +49,4 @@ Since SvelteKit projects are built with Vite, you can use Vite plugins to enhanc
 
 ## Integration FAQs
 
-The SvelteKit FAQ has a [how to do X with SvelteKit](./faq#how-do-i-use-x-with-sveltekit), which may be helpful if you still have questions.
+The SvelteKit FAQ has a [how to do X with SvelteKit](./faq#How-do-I-use-X-with-SvelteKit), which may be helpful if you still have questions.

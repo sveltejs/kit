@@ -5,8 +5,11 @@ import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
 
+// @ts-ignore
+/** @type {import('wrangler') | undefined} */
 let wrangler;
 try {
+	// @ts-ignore
 	wrangler = await import('wrangler');
 } catch {}
 
@@ -155,29 +158,37 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 
 		emulate: !wrangler
 			? undefined
-			: async function () {
-					const proxy = await getPlatformProxy(platformProxy);
-					const platform = /** @type {App.Platform} */ ({
-						env: proxy.env,
-						context: proxy.ctx,
-						caches: proxy.caches,
-						cf: proxy.cf
-					});
-
-					/** @type {Record<string, any>} */
-					const env = {};
-					const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-
-					for (const key in proxy.env) {
-						Object.defineProperty(env, key, {
-							get: () => {
-								throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-							}
+			: () => {
+					// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
+					// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
+					const getting_platform = (async () => {
+						const proxy = await wrangler.getPlatformProxy(platformProxy);
+						const platform = /** @type {App.Platform} */ ({
+							env: proxy.env,
+							context: proxy.ctx,
+							caches: proxy.caches,
+							cf: proxy.cf
 						});
-					}
+
+						/** @type {Record<string, any>} */
+						const env = {};
+						const prerender_platform = /** @type {App.Platform} */ (
+							/** @type {unknown} */ ({ env })
+						);
+
+						for (const key in proxy.env) {
+							Object.defineProperty(env, key, {
+								get: () => {
+									throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+								}
+							});
+						}
+						return { platform, prerender_platform };
+					})();
 
 					return {
-						platform: ({ prerender }) => {
+						platform: async ({ prerender }) => {
+							const { platform, prerender_platform } = await getting_platform;
 							return prerender ? prerender_platform : platform;
 						}
 					};
@@ -191,14 +202,24 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
  * @returns {WranglerConfig}
  */
 function validate_config(builder, config_file) {
+	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
+		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
+		config_file = 'wrangler.json';
+	}
 	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(config_file, 'utf-8'))
-			);
+			if (config_file.endsWith('.json')) {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					JSON.parse(readFileSync(config_file, 'utf-8'))
+				);
+			} else {
+				wrangler_config = /** @type {WranglerConfig} */ (
+					toml.parse(readFileSync(config_file, 'utf-8'))
+				);
+			}
 		} catch (err) {
 			err.message = `Error parsing ${config_file}: ${err.message}`;
 			throw err;
