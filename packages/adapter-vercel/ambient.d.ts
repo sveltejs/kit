@@ -1,4 +1,4 @@
-import type { RequestContext } from './index.js';
+import { RequestContext } from './index.js';
 
 declare global {
 	namespace App {
@@ -10,5 +10,3 @@ declare global {
 		}
 	}
 }
-
-export {};
