@@ -1,5 +1,85 @@
 # @sveltejs/kit
 
+## 2.16.0
+### Minor Changes
+
+
+- feat: add ability to invalidate a custom identifier on `goto()` ([#13256](https://github.com/sveltejs/kit/pull/13256))
+
+
+- feat: remove the `postinstall` script to support pnpm 10 ([#13304](https://github.com/sveltejs/kit/pull/13304))
+  
+  NOTE: users should add `"prepare": "svelte-kit sync`" to their `package.json` in order to avoid the following warning upon first running Vite:
+  ```
+  ▲ [WARNING] Cannot find base config file "./.svelte-kit/tsconfig.json" [tsconfig.json]
+  
+      tsconfig.json:2:12:
+        2 │   "extends": "./.svelte-kit/tsconfig.json",
+          ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ```
+
+- feat: provide `PageProps` and `LayoutProps` types ([#13308](https://github.com/sveltejs/kit/pull/13308))
+
+
+### Patch Changes
+
+
+- perf: shorten chunk file names ([#13003](https://github.com/sveltejs/kit/pull/13003))
+
+
+- fix: strip internal data before passing URL to `reroute` ([#13092](https://github.com/sveltejs/kit/pull/13092))
+
+
+- fix: support absolute URLs and reroutes with `data-sveltekit-preload-code="viewport"` ([#12217](https://github.com/sveltejs/kit/pull/12217))
+
+
+- fix: use current `window.fetch` for server load fetch requests ([#13315](https://github.com/sveltejs/kit/pull/13315))
+
+
+- fix: resolve symlinks when handling routes ([#12740](https://github.com/sveltejs/kit/pull/12740))
+
+
+- fix: prevent infinite reload when using the hash router and previewing `/index.html` ([#13296](https://github.com/sveltejs/kit/pull/13296))
+
+
+- fix: service worker base path in dev mode ([#12577](https://github.com/sveltejs/kit/pull/12577))
+
+
+- chore: error during development when using `use:enhance` with `+server` ([#13197](https://github.com/sveltejs/kit/pull/13197))
+
+
+- chore: add most common status codes to `redirect()` JS documentation ([#13301](https://github.com/sveltejs/kit/pull/13301))
+
+
+- fix: correctly link to assets inlined by the `inlineStyleThreshold` option ([#13068](https://github.com/sveltejs/kit/pull/13068))
+
+
+- fix: fall back to importing dynamic dependencies relative to SvelteKit package ([#12532](https://github.com/sveltejs/kit/pull/12532))
+
+
+- fix: use arrow function types over bound funcs ([#12955](https://github.com/sveltejs/kit/pull/12955))
+
+
+- fix: correctly navigate when hash router is enabled and the browser encodes extra hashes ([#13321](https://github.com/sveltejs/kit/pull/13321))
+
+## 2.15.3
+### Patch Changes
+
+
+- fix: fix race-condition when not using SSR when pressing back before initial load ([#12925](https://github.com/sveltejs/kit/pull/12925))
+
+
+- fix: remove ":$" from virtual module ids to allow dev server to work with proxies ([#12157](https://github.com/sveltejs/kit/pull/12157))
+
+
+- fix: upgrade esm-env to remove warning when NODE_ENV is not set ([#13291](https://github.com/sveltejs/kit/pull/13291))
+
+
+- fix: handle `Redirect` thrown from root layout load function when client-side navigating to a non-existent page ([#12005](https://github.com/sveltejs/kit/pull/12005))
+
+
+- fix: make param matchers generated type import end with `.js` ([#13286](https://github.com/sveltejs/kit/pull/13286))
+
 ## 2.15.2
 ### Patch Changes
 

@@ -462,7 +462,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(`import '${to_fs(resolved)}';`);
+						res.end(`import '${svelte_config.kit.paths.base}${to_fs(resolved)}';`);
 					} else {
 						res.writeHead(404);
 						res.end('not found');

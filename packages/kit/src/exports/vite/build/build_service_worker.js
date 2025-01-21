@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
-import { get_config_aliases, strip_virtual_prefix, get_env } from '../utils.js';
+import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
 import { create_static_module } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
@@ -68,7 +68,8 @@ export async function build_service_worker(
 		name: 'service-worker-build-virtual-modules',
 		resolveId(id) {
 			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
-				return `\0virtual:${id}`;
+				// ids with :$ don't work with reverse proxies like nginx
+				return `\0virtual:${id.substring(1)}`;
 			}
 		},
 
@@ -83,7 +84,10 @@ export async function build_service_worker(
 				return create_static_module('$env/static/public', env.public);
 			}
 
-			const stripped = strip_virtual_prefix(id);
+			const normalized_cwd = vite.normalizePath(process.cwd());
+			const normalized_lib = vite.normalizePath(kit.files.lib);
+			const relative = normalize_id(id, normalized_lib, normalized_cwd);
+			const stripped = strip_virtual_prefix(relative);
 			throw new Error(
 				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 			);
