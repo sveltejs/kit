@@ -29,6 +29,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - run: pnpx pkg-pr-new publish --comment=off ./packages/*
   lint-all:
     runs-on: ubuntu-latest

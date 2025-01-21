@@ -252,6 +252,23 @@ test.describe('Load', () => {
 		expect(logs).toContain('Called a patched window.fetch');
 	});
 
+	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		const logs = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'log') {
+				logs.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch/patching-server-load');
+
+		await page.getByText('Go To Page with Server Load').click();
+
+		expect(await page.textContent('h1')).toBe('server load data');
+
+		expect(logs).toContain('Called a patched window.fetch for server load request');
+	});
+
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
 		const requests = [];
 		page.on('request', (request) => {
@@ -393,6 +410,60 @@ test.describe('$app/stores', () => {
 		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
 		await app.goto('/store/data/store-update/same-keys');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+	});
+
+	test('page subscribers are notified when invalidate is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'invalidate' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'invalidate' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when replaceState is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'replaceState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'replaceState' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when pushState is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when goto is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'goto' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'goto' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified when applyAction is called', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'applyAction' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.locator('button', { hasText: 'applyAction' }).click();
+		await expect(page.locator('p')).toHaveText('3');
+	});
+
+	test('page subscribers are notified only once after popstate', async ({ page }) => {
+		await page.goto('/store/subscribe');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.locator('button', { hasText: 'pushState' }).click();
+		await expect(page.locator('p')).toHaveText('2');
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('3');
 	});
 });
 
@@ -602,6 +673,83 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
+	test('+page(.server).js is re-run when server dep is invalidated following goto', async ({
+		page
+	}) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).toBe(next_layout);
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
+	test('+page.js is re-run when shared dep is invalidated following goto', async ({ page }) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).toBe(next_layout);
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
+	test('Specified dependencies are re-run following goto', async ({ page }) => {
+		await page.goto('/load/invalidation/depends-goto');
+		const layout = await page.textContent('p.layout');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(layout).toBeDefined();
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.specified');
+		await page.evaluate(() => window.promise);
+		const next_layout = await page.textContent('p.layout');
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(layout).not.toBe(next_layout);
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.layout')).toBe(next_layout);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
+	});
+
 	test('Parameter use is tracked even for routes that do not use the parameters', async ({
 		page,
 		clicknav
@@ -676,6 +824,36 @@ test.describe('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-preload-code', async ({ page }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		// eager
+		await page.goto('/data-sveltekit/preload-code');
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// viewport
+		requests.length = 0;
+		page.locator('#viewport').scrollIntoViewIfNeeded();
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// hover
+		requests.length = 0;
+		await page.locator('#hover').dispatchEvent('mousemove');
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+
+		// tap
+		requests.length = 0;
+		await page.locator('#tap').dispatchEvent('touchstart');
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		expect(requests.length).toBeGreaterThanOrEqual(1);
+	});
+
 	test('data-sveltekit-preload-data', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -1220,6 +1398,12 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+
+	test('reroute works with invalidate', async ({ page }) => {
+		await page.goto('/reroute/invalidate/a');
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('data request: true');
 	});
 });
 

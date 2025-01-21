@@ -57,8 +57,7 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 You can add extra properties to the error object if needed...
 
 ```js
-import { error } from '@sveltejs/kit';
-
+// @filename: ambient.d.ts
 declare global {
 	namespace App {
 		interface Error {
@@ -67,7 +66,10 @@ declare global {
 		}
 	}
 }
+export {}
 
+// @filename: index.js
+import { error } from '@sveltejs/kit';
 // ---cut---
 error(404, {
 	message: 'Not found',

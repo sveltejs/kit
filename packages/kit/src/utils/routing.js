@@ -1,5 +1,4 @@
-// @ts-ignore - need to publish types for sub-package imports
-import BROWSER from 'esm-env/browser';
+import { BROWSER } from 'esm-env';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
