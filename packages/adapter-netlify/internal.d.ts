@@ -10,6 +10,7 @@ declare module 'MANIFEST' {
 }
 
 declare module '__HOOKS__' {
+	// eslint-disable-next-line no-duplicate-imports
 	import { Reroute } from '@sveltejs/kit';
 
 	export const reroute: Reroute;
