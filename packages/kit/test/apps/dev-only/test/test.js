@@ -16,7 +16,8 @@ test.describe.serial('Illegal imports', () => {
 		await page.goto('/illegal-imports/env/dynamic-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
 Imported by: src/routes/illegal-imports/env/dynamic-private/+page.svelte.
 Tips:
  - To resolve this error, ensure that no exports from $env/dynamic/private are used, even transitively, in client-side code.
@@ -28,7 +29,8 @@ Tips:
 		await page.goto('/illegal-imports/env/dynamic-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
 Imported by: src/routes/illegal-imports/env/dynamic-private-dynamic-import/+page.svelte.
 Tips:
  - To resolve this error, ensure that no exports from $env/dynamic/private are used, even transitively, in client-side code.
@@ -40,7 +42,8 @@ Tips:
 		await page.goto('/illegal-imports/env/static-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
 Imported by: src/routes/illegal-imports/env/static-private/+page.svelte.
 Tips:
  - To resolve this error, ensure that no exports from $env/static/private are used, even transitively, in client-side code.
@@ -52,7 +55,8 @@ Tips:
 		await page.goto('/illegal-imports/env/static-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
 Imported by: src/routes/illegal-imports/env/static-private-dynamic-import/+page.svelte.
 Tips:
  - To resolve this error, ensure that no exports from $env/static/private are used, even transitively, in client-side code.
@@ -64,7 +68,8 @@ Tips:
 		await page.goto('/illegal-imports/server-only-modules/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
 Tips:
  - To resolve this error, ensure that no exports from src/routes/illegal-imports/server-only-modules/illegal.server.js are used, even transitively, in client-side code.
  - If you're only using the import as a type, change it to \`import type\`.
@@ -75,7 +80,8 @@ Tips:
 		await page.goto('/illegal-imports/server-only-modules/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
 Tips:
  - To resolve this error, ensure that no exports from src/routes/illegal-imports/server-only-modules/illegal.server.js are used, even transitively, in client-side code.
  - If you're only using the import as a type, change it to \`import type\`.
@@ -86,7 +92,8 @@ Tips:
 		await page.goto('/illegal-imports/server-only-folder/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
 Tips:
  - To resolve this error, ensure that no exports from $lib/server/blah/private.js are used, even transitively, in client-side code.
  - If you're only using the import as a type, change it to \`import type\`.
@@ -97,7 +104,8 @@ Tips:
 		await page.goto('/illegal-imports/server-only-folder/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
 Tips:
  - To resolve this error, ensure that no exports from $lib/server/blah/private.js are used, even transitively, in client-side code.
  - If you're only using the import as a type, change it to \`import type\`.
