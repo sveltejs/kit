@@ -16,72 +16,56 @@ test.describe.serial('Illegal imports', () => {
 		await page.goto('/illegal-imports/env/dynamic-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private/+page.svelte'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('$env/dynamic/private is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/dynamic-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code: src/routes/illegal-imports/env/dynamic-private-dynamic-import/+page.svelte'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('$env/static/private is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/static-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private/+page.svelte'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('$env/static/private is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/static-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code: src/routes/illegal-imports/env/static-private-dynamic-import/+page.svelte'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('server-only module is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('server-only module is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('server-only folder is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-folder/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/private.js into client-side code'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 
 	test('server-only folder is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-folder/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/private.js into client-side code'
-		);
+		expect(await page.textContent('.message-body')).toMatchSnapshot();
 	});
 });
 
