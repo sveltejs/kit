@@ -421,15 +421,22 @@ async function kit({ svelte_config }) {
 
 					const illegal_module = strip_virtual_prefix(relative);
 
+					const error_prefix = `Cannot import ${illegal_module} into client-side code. This could leak sensitive information.`;
+					const error_suffix = `
+Tips:
+ - To resolve this error, ensure that no exports from ${illegal_module} are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`;
+
 					if (import_map.has(illegal_module)) {
 						const importer = path.relative(
 							cwd,
 							/** @type {string} */ (import_map.get(illegal_module))
 						);
-						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
+						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
 
-					throw new Error(`Cannot import ${illegal_module} into client-side code`);
+					throw new Error(`${error_prefix}${error_suffix}`);
 				}
 			}
 
