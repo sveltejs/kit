@@ -62,13 +62,13 @@ export async function handle({ event, resolve }) {
 
 	const response = await resolve(event);
 
-	try {
-		response.headers.set('x-custom-header', 'potato');
-	} catch {
-		// Response objects can have immutable headers.
-		// Modifying immutable headers throws a TypeError.
-		// e.g. Response.redirect() returned from an endpoint.
-	}
+	// Note that modifying response headers isn't always safe.
+	// Response objects can have immutable headers
+	// (e.g. Response.redirect() returned from an endpoint).
+	// Modifying immutable headers throws a TypeError.
+	// In that case, clone the response or avoid creating a
+	// response object with immutable headers.
+	response.headers.set('x-custom-header', 'potato');
 
 	return response;
 }
