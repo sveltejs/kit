@@ -1,5 +1,14 @@
 # @sveltejs/package
 
+## 2.3.9
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency for more up-to-date `d.ts` output ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+
+- fix: adjust declaration map paths ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
 ## 2.3.8
 ### Patch Changes
 
