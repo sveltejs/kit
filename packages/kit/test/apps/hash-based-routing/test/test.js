@@ -94,6 +94,7 @@ test.describe('hash based navigation', () => {
 		await page.goto('/#/anchor');
 
 		await page.locator('a[href="#test"]').click();
+		await page.waitForURL('#/anchor#test');
 		await expect(page.locator('#test')).toHaveText('#test');
 		const url = new URL(page.url());
 		expect(url.hash).toBe('#/anchor#test');
