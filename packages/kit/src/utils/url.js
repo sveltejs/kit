@@ -200,8 +200,6 @@ function allow_nodejs_console_log(url) {
 	}
 }
 
-// These constants/functions are duplicated in adapter-vercel and adapter-netlify
-
 const DATA_SUFFIX = '/__data.json';
 const HTML_DATA_SUFFIX = '.html__data.json';
 

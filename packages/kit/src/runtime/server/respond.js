@@ -29,7 +29,7 @@ import {
 import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, ORIGINAL_PATH_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
@@ -85,6 +85,17 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404 });
 	}
 
+	/** @type {string | undefined} */
+	let rerouted_path = undefined;
+
+	// if reroute already ran in an edge middleware we need to restore the original path
+	const original_path = url.searchParams.get(ORIGINAL_PATH_PARAM);
+	if (original_path) {
+		rerouted_path = url.pathname;
+		url.pathname = original_path;
+		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+	}
+
 	const is_data_request = has_data_suffix(url.pathname);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
@@ -100,16 +111,18 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	// reroute could alter the given URL, so we pass a copy
-	let rerouted_path;
-	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
+	if (!rerouted_path) {
+		try {
+			// reroute could alter the given URL, so we pass a copy
+			rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		}
 	}
 
+	/** @type {string} */
 	let decoded;
 	try {
 		decoded = decode_pathname(rerouted_path);

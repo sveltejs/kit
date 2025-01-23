@@ -95,14 +95,11 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			} else {
 				generate_lambda_functions({ builder, split, publish });
 
-				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
-				const hooks_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+				/** @type {string | void} */
+				let reroute_path;
 
-				const has_reroute_hook =
-					existsSync(hooks_path) && (await import(hooks_path).then((m) => 'reroute' in m));
-
-				if (split && has_reroute_hook) {
-					await generate_reroute_middleware({ builder, hooks_path });
+				if (split && (reroute_path = await builder.getReroutePath())) {
+					await generate_reroute_middleware({ builder, reroute_path });
 				}
 			}
 		},
@@ -161,9 +158,9 @@ async function generate_edge_functions({ builder }) {
 /**
  * @param {object} params
  * @param {import('@sveltejs/kit').Builder} params.builder
- * @param {string} params.hooks_path
+ * @param {string} params.reroute_path
  */
-async function generate_reroute_middleware({ builder, hooks_path }) {
+async function generate_reroute_middleware({ builder, reroute_path }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
@@ -174,7 +171,7 @@ async function generate_reroute_middleware({ builder, hooks_path }) {
 
 	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
 		replace: {
-			__HOOKS__: hooks_path
+			__HOOKS__: reroute_path
 		}
 	});
 

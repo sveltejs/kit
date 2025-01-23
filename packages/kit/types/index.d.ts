@@ -127,6 +127,11 @@ declare module '@sveltejs/kit' {
 		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
+		/**
+		 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
+		 * @since 2.17.0
+		 */
+		getReroutePath:  () => Promise<string | void>;
 
 		/**
 		 * Write client assets to `dest`.
@@ -1966,6 +1971,19 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * If your deployment platform supports splitting your app into multiple functions,
+	 * you should run this in a middleware that runs before the main handler
+	 * to reroute the request to the correct function.
+	 *
+	 * @since 2.17.0
+	 */
+	export function applyReroute(url: URL, reroute: import("@sveltejs/kit").Reroute): URL | void;
 
 	export {};
 }

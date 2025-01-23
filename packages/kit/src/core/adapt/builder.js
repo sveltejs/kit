@@ -208,6 +208,26 @@ export function create_builder({
 			return build_data.app_path;
 		},
 
+		async getReroutePath() {
+			const hooks = build_data.manifest_data.hooks.universal;
+			console.log(build_data.manifest_data.hooks)
+			if (!hooks) return;
+
+			const hooks_path = `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks]}`;
+
+			console.log({
+				hooks_path,
+				exists: existsSync(hooks_path)
+			})
+
+			const has_reroute_hook =
+				existsSync(hooks_path) && (await import(hooks_path).then((m) => 'reroute' in m));
+
+			if (has_reroute_hook) {
+				return hooks_path;
+			}
+		},
+
 		writeClient(dest) {
 			return copy(`${config.kit.outDir}/output/client`, dest, {
 				// avoid making vite build artefacts public

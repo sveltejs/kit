@@ -227,8 +227,9 @@ const plugin = function (defaults = {}) {
 			/**
 			 * @param {string} name
 			 * @param {import('./index.js').Config} config
+			 * @param {Record<string, string>=} alias
 			 */
-			async function generate_edge_middleware(name, config) {
+			async function generate_edge_middleware(name, config, alias) {
 				const tmp = builder.getBuildDirectory('vercel-tmp');
 
 				const dest = `${tmp}/${name}.js`;
@@ -238,9 +239,7 @@ const plugin = function (defaults = {}) {
 				await bundle_edge_function(
 					{
 						entryPoints: [dest],
-						alias: {
-							__HOOKS__: hooks_output_path
-						}
+						alias
 					},
 					name,
 					config
@@ -348,21 +347,19 @@ const plugin = function (defaults = {}) {
 
 			const singular = groups.size === 1;
 
-			const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
-			const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+			/** @type {string | void} */
+			let reroute_path;
 
-			const has_reroute_hook =
-				fs.existsSync(hooks_output_path) &&
-				(await import(hooks_output_path).then((m) => 'reroute' in m));
-
-			if (!singular && has_reroute_hook) {
+			if (!singular && (reroute_path = await builder.getReroutePath())) {
 				static_config.routes.push({
 					src: '/.*',
 					middlewarePath: 'reroute',
 					continue: true
 				});
 
-				await generate_edge_middleware('reroute', defaults);
+				await generate_edge_middleware('reroute', defaults, {
+					__HOOKS__: reroute_path
+				});
 			}
 
 			for (const group of groups.values()) {

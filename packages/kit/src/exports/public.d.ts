@@ -145,6 +145,11 @@ export interface Builder {
 	getServerDirectory: () => string;
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
+	/**
+	 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
+	 * @since 2.17.0
+	 */
+	getReroutePath:  () => Promise<string | void>;
 
 	/**
 	 * Write client assets to `dest`.
