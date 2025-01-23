@@ -22,7 +22,7 @@
 			console.log(messages);
 		};
 
-		socket2 = new WebSocket(`${base}/diff-socket`);
+		socket2 = new WebSocket(`${base}/reject-socket`);
 		console.log(socket2);
 		socket2.onopen = () => {
 			console.log('websocket connected');
@@ -54,6 +54,6 @@
 
 <div>
 	{#each messages as message}
-		<p>{message}</p>
+		<p>message from server: {message}</p>
 	{/each}
 </div>

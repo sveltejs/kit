@@ -18,6 +18,10 @@ export async function render_endpoint(event, mod, state) {
 		handler = mod.GET;
 	}
 
+	console.log('mod', mod);
+	console.log('method', method);
+	console.log('handler', handler);
+
 	if (!handler) {
 		return method_not_allowed(mod, method);
 	}

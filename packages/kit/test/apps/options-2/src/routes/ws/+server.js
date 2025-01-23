@@ -1,19 +1,20 @@
+import { error, accept } from "@sveltejs/kit";
+
 let sockets = [];
 
 export const socket = {
 	upgrade(req) {
-		console.log(`[ws] upgrading ${req.url}...`);
-		return {
-			headers: {}
-		};
+		console.log(`[ws] rejecting ${req.url}...`);
+		return accept();
 	},
 
 	open(peer) {
 		console.log(`[ws] open: ${peer}`);
+		// console.log(peer);
 	},
 
 	message(peer, message) {
-		console.log('[ws] message', message.text());
+		console.log('[ws] message from client:', message.text());
 		if (message.text().includes('ping')) {
 			peer.send('pong - from /ws');
 		}

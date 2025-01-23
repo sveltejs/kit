@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { validate_server_exports } from '../../utils/exports.js';
 import { exec } from '../../utils/routing.js';
 import { decode_pathname, decode_params } from '../../utils/url.js';
@@ -8,11 +8,11 @@ import { base } from '__sveltekit/paths';
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {(info: Request | import('crossws').Peer) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
+ * @returns {(info: RequestInit | import('crossws').Peer) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
  */
 export function resolve(options, manifest, state) {
 	return async (info) => {
-		/** @type {Request} */
+		/** @type {RequestInit} */
 		let request;
 
 		// These types all need to be straightened out
@@ -107,43 +107,6 @@ export function resolve(options, manifest, state) {
 							params,
 							platform: state.platform,
 							request: req,
-							socket: {
-								/**
-								 * Accept a WebSocket Upgrade request
-								 * @param {RequestInit} init
-								 * @returns {RequestInit}
-								 */
-								accept: (init) => {
-									return { ...init };
-								},
-								/**
-								 * Reject a WebSocket Upgrade request
-								 * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-								 * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-								 * @return {Response} A Response object
-								 * @throws {Error} If the provided status is invalid (not between 400 and 599).
-								 */
-								reject: (status, body) => {
-									if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
-										throw new Error(
-											`HTTP error status codes must be between 400 and 599 — ${status} is invalid`
-										);
-									}
-
-									try {
-										const jsonBody = JSON.stringify(body);
-										return new Response(jsonBody, {
-											status,
-											headers: {
-												'content-type': 'application/json'
-											}
-										});
-									} catch (e) {
-										console.error(e);
-										throw new Error('Failed to serialize error body');
-									}
-								}
-							},
 							route: { id: route?.id ?? null },
 							setHeaders: (new_headers) => {
 								for (const key in new_headers) {
