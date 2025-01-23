@@ -1,7 +1,13 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy } from 'wrangler';
+
+/** @type {import('./wrangler.js') | undefined} */
+let wrangler;
+try {
+	// @ts-ignore
+	wrangler = await import('wrangler');
+} catch {}
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
@@ -67,39 +73,43 @@ export default function (options = {}) {
 				}
 			});
 		},
-		emulate() {
-			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
-			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
-			const getting_platform = (async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
-				const platform = /** @type {App.Platform} */ ({
-					env: proxy.env,
-					context: proxy.ctx,
-					caches: proxy.caches,
-					cf: proxy.cf
-				});
+		emulate: !wrangler
+			? undefined
+			: () => {
+					// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
+					// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
+					const getting_platform = (async () => {
+						const proxy = await wrangler.getPlatformProxy(options.platformProxy);
+						const platform = /** @type {App.Platform} */ ({
+							env: proxy.env,
+							context: proxy.ctx,
+							caches: proxy.caches,
+							cf: proxy.cf
+						});
 
-				/** @type {Record<string, any>} */
-				const env = {};
-				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+						/** @type {Record<string, any>} */
+						const env = {};
+						const prerender_platform = /** @type {App.Platform} */ (
+							/** @type {unknown} */ ({ env })
+						);
 
-				for (const key in proxy.env) {
-					Object.defineProperty(env, key, {
-						get: () => {
-							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+						for (const key in proxy.env) {
+							Object.defineProperty(env, key, {
+								get: () => {
+									throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+								}
+							});
 						}
-					});
-				}
-				return { platform, prerender_platform };
-			})();
+						return { platform, prerender_platform };
+					})();
 
-			return {
-				platform: async ({ prerender }) => {
-					const { platform, prerender_platform } = await getting_platform;
-					return prerender ? prerender_platform : platform;
+					return {
+						platform: async ({ prerender }) => {
+							const { platform, prerender_platform } = await getting_platform;
+							return prerender ? prerender_platform : platform;
+						}
+					};
 				}
-			};
-		}
 	};
 }
 
