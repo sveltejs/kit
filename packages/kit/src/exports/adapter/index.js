@@ -9,7 +9,7 @@ import { has_data_suffix, strip_data_suffix } from '../../utils/url.js';
  * If your deployment platform supports splitting your app into multiple functions,
  * you should run this in a middleware that runs before the main handler
  * to reroute the request to the correct function.
- * 
+ *
  * @param {URL} url
  * @param {import("@sveltejs/kit").Reroute} reroute
  * @returns {URL | void}
@@ -27,7 +27,7 @@ export function applyReroute(url, reroute) {
 		url_copy.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-  // reroute could alter the given URL, so we pass a copy
+	// reroute could alter the given URL, so we pass a copy
 	const pathname = reroute({ url: url_copy });
 
 	if (pathname) {
