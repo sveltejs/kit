@@ -1079,8 +1079,8 @@ importers:
         specifier: ^7.5.4
         version: 7.6.3
       svelte2tsx:
-        specifier: ~0.7.16
-        version: 0.7.18(svelte@5.2.9)(typescript@5.6.3)
+        specifier: ~0.7.33
+        version: 0.7.33(svelte@5.2.9)(typescript@5.6.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.1
@@ -3418,8 +3418,8 @@ packages:
       typescript:
         optional: true
 
-  svelte2tsx@0.7.18:
-    resolution: {integrity: sha512-PCOhH7uQaV472ZvNAcnkvShjFRMMkKUc/eNJImQMH9T4CyHeQpdatedFrEjaMCsweFb/oo3a6bv4qtdfaCPw8g==}
+  svelte2tsx@0.7.33:
+    resolution: {integrity: sha512-geogGkzfciwteiKvlbaDBnKOitWuh6e1n2f5KLBBXEfZgui9gy5yRlOBYtNEkdwciO4MC9fTM/EyltsiQrOPNQ==}
     peerDependencies:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
       typescript: ^4.9.4 || ^5.0.0
@@ -5849,7 +5849,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.1)
       typescript: 5.6.3
 
-  svelte2tsx@0.7.18(svelte@5.2.9)(typescript@5.6.3):
+  svelte2tsx@0.7.33(svelte@5.2.9)(typescript@5.6.3):
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
