@@ -145,12 +145,6 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
-	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
-
 	await bundle_edge_function({ builder, name: 'render' });
 }
 
@@ -185,6 +179,10 @@ async function generate_reroute_middleware({ builder, reroute_path }) {
  */
 async function bundle_edge_function({ builder, name }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+	const manifest = builder.generateManifest({ relativePath });
+	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
