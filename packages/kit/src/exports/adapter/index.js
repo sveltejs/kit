@@ -1,7 +1,4 @@
-import {
-	INVALIDATED_PARAM,
-	TRAILING_SLASH_PARAM
-} from '../../runtime/shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../../runtime/shared.js';
 import { add_data_suffix, has_data_suffix, strip_data_suffix } from '../../utils/url.js';
 
 /**

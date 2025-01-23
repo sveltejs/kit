@@ -99,17 +99,17 @@ export async function respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
-	
-	// reroute could alter the given URL, so we pass a copy
+
 	/** @type {string} */
 	let rerouted_path;
-		try {
-			rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-		} catch {
-			return text('Internal Server Error', {
-				status: 500
-			});
-		}
+	try {
+		// reroute could alter the given URL, so we pass a copy
+		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch {
+		return text('Internal Server Error', {
+			status: 500
+		});
+	}
 
 	/** @type {string} */
 	let decoded;
