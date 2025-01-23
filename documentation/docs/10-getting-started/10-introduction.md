@@ -4,6 +4,8 @@ title: Introduction
 
 ## Before we begin
 
+Something that changes the docs
+
 > [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](/tutorial/kit).
 >
 > If you get stuck, reach out for help in the [Discord chatroom](/chat).
