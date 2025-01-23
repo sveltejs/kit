@@ -151,42 +151,6 @@ async function generate_edge_functions({ builder }) {
 
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
-	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
-
-	const path = '/*';
-	// We only need to specify paths without the trailing slash because
-	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
-		// Contains static files
-		`/${builder.getAppPath()}/*`,
-		...builder.prerendered.paths,
-		...Array.from(assets).flatMap((asset) => {
-			if (asset.endsWith('/index.html')) {
-				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
-			}
-			return `${builder.config.kit.paths.base}/${asset}`;
-		}),
-		// Should not be served by SvelteKit at all
-		'/.netlify/*'
-	];
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				path,
-				excludedPath
-			}
-		],
-		version: 1
-	};
-
 	await bundle_edge_function({ builder, name: 'render' });
 }
 
@@ -244,18 +208,37 @@ async function bundle_edge_function({ builder, name }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
-	// Don't match the static directory
-	const pattern = '^/.*$';
+	/** @type {{ assets: Set<string> }} */
+	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
 
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
+	const path = '/*';
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
+	const excludedPath = [
+		// Contains static files
+		`/${builder.getAppPath()}/*`,
+		...builder.prerendered.paths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		}),
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
+	];
 
 	/** @type {HandlerManifest} */
 	const edge_manifest = {
 		functions: [
 			{
 				function: name,
-				pattern
+				path,
+				excludedPath
 			}
 		],
 		version: 1
