@@ -1,9 +1,9 @@
 <script>
-	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	let messages = [];
 	let socket1, socket2;
-	if (browser) {
+	onMount(() => {
 		socket1 = new WebSocket(`${base}/ws`);
 		console.log(socket1);
 		socket1.onerror = (event) => {
@@ -36,7 +36,7 @@
 			messages = [...messages, event.data];
 			console.log(messages);
 		};
-	}
+	});
 </script>
 
 <h1>Messages:</h1>
