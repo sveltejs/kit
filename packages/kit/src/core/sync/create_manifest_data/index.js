@@ -83,9 +83,10 @@ function create_matchers(config, cwd) {
 	const matchers = {};
 	if (fs.existsSync(config.kit.files.params)) {
 		for (const file of fs.readdirSync(config.kit.files.params)) {
+			if (config.kit.testExtensions.find((ext) => file.endsWith(ext))) continue;
+
 			const ext = path.extname(file);
-			if (config.kit.testExtensions.includes(ext) || !config.kit.moduleExtensions.includes(ext))
-				continue;
+			if (!config.kit.moduleExtensions.includes(ext)) continue;
 			const type = file.slice(0, -ext.length);
 
 			if (/^\w+$/.test(type)) {
