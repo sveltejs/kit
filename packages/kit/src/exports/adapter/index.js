@@ -1,9 +1,8 @@
 import {
 	INVALIDATED_PARAM,
-	ORIGINAL_PATH_PARAM,
 	TRAILING_SLASH_PARAM
 } from '../../runtime/shared.js';
-import { has_data_suffix, strip_data_suffix } from '../../utils/url.js';
+import { add_data_suffix, has_data_suffix, strip_data_suffix } from '../../utils/url.js';
 
 /**
  * If your deployment platform supports splitting your app into multiple functions,
@@ -28,12 +27,11 @@ export function applyReroute(url, reroute) {
 	}
 
 	// reroute could alter the given URL, so we pass a copy
-	const pathname = reroute({ url: url_copy });
+	const reroute_path = reroute({ url: url_copy });
 
-	if (pathname) {
+	if (reroute_path) {
 		const new_url = new URL(url);
-		new_url.searchParams.set(ORIGINAL_PATH_PARAM, url.pathname);
-		new_url.pathname = pathname;
+		new_url.pathname = is_data_request ? add_data_suffix(reroute_path) : reroute_path;
 		return new_url;
 	}
 }
