@@ -131,7 +131,7 @@ declare module '@sveltejs/kit' {
 		 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
 		 * @since 2.17.0
 		 */
-		getReroutePath:  () => Promise<string | void>;
+		getReroutePath: () => Promise<string | void>;
 
 		/**
 		 * Write client assets to `dest`.
