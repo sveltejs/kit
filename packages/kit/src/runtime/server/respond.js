@@ -33,6 +33,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
+import { dictionary } from '__SERVER__/internal.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -83,6 +84,17 @@ export async function respond(request, options, manifest, state) {
 
 	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
 		return text('Not found', { status: 404 });
+	}
+
+	/**
+	 * If the request is for a route resolution, first modify the URL, then continue as normal
+	 * for rerouting and route matching, then return the route object as a JS file.
+	 */
+	const is_route_resolution_request =
+		url.pathname === '/_app/routes.js' || url.pathname.startsWith('/_app/routes/');
+
+	if (is_route_resolution_request) {
+		url.pathname = url.pathname.slice('/_app/routes'.length, -3) || '/';
 	}
 
 	const is_data_request = has_data_suffix(url.pathname);
@@ -155,6 +167,31 @@ export async function respond(request, options, manifest, state) {
 				params = decode_params(matched);
 				break;
 			}
+		}
+	}
+
+	if (is_route_resolution_request) {
+		const headers = new Headers({
+			'content-type': 'application/javascript; charset=utf-8'
+		});
+
+		if (route) {
+			const stringified_route = JSON.stringify(dictionary[route.id], (_, value) => {
+				if (typeof value === 'function') {
+					// Vite replaces our raw `import(...)` we've written to the manifest with the correct path,
+					// but also transforms `import` to `__vite_ssr_dynamic_import__`, which we gotta undo here
+					return value
+						.toString()
+						.replace(/\(\)\s*=>\s*\w+\(['"](.*?)['"]\)/g, "() => import('$1')");
+				}
+				return value;
+			}).replace(/"(\(\) => import\('.*?'\))"/g, '$1');
+			return text(
+				`export const route = ${stringified_route}; export const params = ${JSON.stringify(params)};`,
+				{ headers }
+			);
+		} else {
+			return text('', { headers });
 		}
 	}
 
