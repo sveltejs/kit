@@ -29,7 +29,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
-import { AdapterInstance, Hooks, Peer } from 'crossws';
+import { Hooks } from 'crossws';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -146,7 +146,6 @@ export class InternalServer extends Server {
 			emulator?: Emulator;
 		}
 	): Promise<Response>;
-	resolve(): (info: RequestInit | Peer) => Partial<Hooks> | Promise<Partial<Hooks>>;
 }
 
 export interface ManifestData {

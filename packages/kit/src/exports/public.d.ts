@@ -19,7 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-import { AdapterInstance, Hooks } from 'crossws';
+import { ResolveHooks } from 'crossws';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -1278,6 +1278,7 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+	resolve(): ResolveHooks;
 }
 
 export interface ServerInitOptions {
