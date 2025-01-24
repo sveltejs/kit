@@ -829,7 +829,6 @@ Tips:
 					kit,
 					manifest_data,
 					`${kit.outDir}/generated/client-optimized`,
-					`${out}/server`,
 					metadata.nodes
 				);
 

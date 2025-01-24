@@ -121,6 +121,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			return await render_response({
 				branch: [],
 				fetched,
+				page,
 				page_config: {
 					ssr: false,
 					csr: get_option(nodes, 'csr') ?? true
@@ -256,6 +257,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 								manifest,
 								state,
 								resolve_opts,
+								page,
 								page_config: { ssr: true, csr: true },
 								status,
 								error,
@@ -308,6 +310,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			manifest,
 			state,
 			resolve_opts,
+			page,
 			page_config: {
 				csr: get_option(nodes, 'csr') ?? true,
 				ssr
@@ -325,6 +328,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			event,
 			options,
 			manifest,
+			page,
 			state,
 			status: 500,
 			error: e,

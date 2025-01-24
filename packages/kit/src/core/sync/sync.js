@@ -28,7 +28,7 @@ export function create(config) {
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(config.kit, manifest_data, `${output}/client`, `${output}/server`);
+	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output);
 	write_root(manifest_data, output);
 	write_all_types(config, manifest_data);

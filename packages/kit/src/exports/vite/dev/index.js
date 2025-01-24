@@ -155,8 +155,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						result.index = index;
 
-						// these are unused in dev, it's easier to include them
-						result.imports = [];
+						// these are unused in dev (except imports[0], which is the entry point for the given node and used for server side routing)
+						result.imports = [
+							// remove leading slash because it's not present in prod, so we need to prepend it in the runtime
+							`${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${index}.js`.slice(1)
+						];
 						result.stylesheets = [];
 						result.fonts = [];
 

@@ -18,6 +18,7 @@ import { get_status } from '../../../utils/error.js';
  *   status: number;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
+ *   page?: import('types').PageNodeIndexes;
  * }} opts
  */
 export async function respond_with_error({
@@ -27,7 +28,8 @@ export async function respond_with_error({
 	state,
 	status,
 	error,
-	resolve_opts
+	resolve_opts,
+	page
 }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
@@ -86,6 +88,7 @@ export async function respond_with_error({
 			options,
 			manifest,
 			state,
+			page,
 			page_config: {
 				ssr,
 				csr

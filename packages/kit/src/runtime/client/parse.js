@@ -56,3 +56,22 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 		return id === undefined ? id : [layouts_with_server_load.has(id), nodes[id]];
 	}
 }
+
+/**
+ * @param {import('types').CSRRouteServer} input
+ * @param {import('types').CSRPageNodeLoader[]} app_nodes Will be modified if a new node is loaded that's not already in the array
+ * @returns {import('types').CSRRoute}
+ */
+export function parse_server_route({ nodes, id, leaf, layouts, errors }, app_nodes) {
+	return {
+		id,
+		exec: () => {
+			throw new Error('shouldnt be called');
+		},
+		// By writing to app_nodes only when a loader at that index is not already defined,
+		// we ensure that loaders have referential equality when they load the same node.
+		errors: errors.map((n) => (n ? (app_nodes[n] ||= nodes[n]) : undefined)),
+		layouts: layouts.map((n) => (n ? [n[0], (app_nodes[n[1]] ||= nodes[n[1]])] : undefined)),
+		leaf: [leaf[0], (app_nodes[leaf[1]] ||= nodes[leaf[1]])]
+	};
+}

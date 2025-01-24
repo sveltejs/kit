@@ -13,6 +13,7 @@ import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
+import { create_stringified_csr_server_route } from './server_routing.js';
 
 // TODO rename this function/module
 
@@ -31,6 +32,7 @@ const encoder = new TextEncoder();
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
+ *   page: import('types').PageNodeIndexes | undefined;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
@@ -45,6 +47,7 @@ export async function render_response({
 	options,
 	manifest,
 	state,
+	page,
 	page_config,
 	status,
 	error = null,
@@ -396,6 +399,17 @@ export async function render_response({
 
 			if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+			}
+			// TODO optionize
+			else if (
+				true &&
+				// undefined in case of 404
+				page
+			) {
+				hydrate.push(
+					`params: ${devalue.uneval(event.params)}`,
+					`route: ${await create_stringified_csr_server_route(event.route.id, page, manifest)}`
+				);
 			}
 
 			const indent = '\t'.repeat(load_env_eagerly ? 7 : 6);

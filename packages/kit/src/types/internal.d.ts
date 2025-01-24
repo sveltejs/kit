@@ -106,6 +106,17 @@ export type CSRRoute = {
 	nodes?: Record<string, CSRPageNodeLoader>;
 };
 
+/**
+ * Definition of a client side route as transported via `_app/routes/...` when using server routing.
+ */
+export type CSRRouteServer = {
+	id: string;
+	errors: Array<number | undefined>;
+	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, node_id: number];
+	nodes: Record<string, CSRPageNodeLoader>;
+};
+
 export interface Deferred {
 	fulfil: (value: any) => void;
 	reject: (error: Error) => void;
@@ -330,13 +341,13 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `components` array in client/manifest.js */
+	/** index into the `nodes` array in the generated `client/app.js` */
 	index: number;
-	/** external JS files */
+	/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 	imports: string[];
-	/** external CSS files */
+	/** external CSS files that are loaded on the client */
 	stylesheets: string[];
-	/** external font files */
+	/** external font files that are loaded on the client */
 	fonts: string[];
 	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;

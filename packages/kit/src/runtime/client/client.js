@@ -9,7 +9,7 @@ import {
 	normalize_path
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse } from './parse.js';
+import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -1247,6 +1247,7 @@ async function get_navigation_intent(url, invalidating) {
 
 	// TODO app.server_routing or whatever
 	if (true) {
+		/** @type {{ route: import('types').CSRRouteServer, params: Record<string, string>} | {}} */
 		const { route, params } = await import(
 			// TODO .js ?
 			new URL(
@@ -1254,6 +1255,7 @@ async function get_navigation_intent(url, invalidating) {
 				location.href
 			).href
 		);
+
 		if (!route) return;
 
 		const id = get_page_key(url);
@@ -1263,34 +1265,34 @@ async function get_navigation_intent(url, invalidating) {
 			invalidating,
 			// route.exec is missing but it's not used anywhere except route matching,
 			// which happened on the server in this case, so it's fine
-			route,
+			route: parse_server_route(route, app.nodes),
 			params,
 			url
 		};
-		{
-			const x = intent;
-			const rerouted = get_rerouted_url(url);
-			if (!rerouted) return;
+		// {
+		// 	const x = intent;
+		// 	const rerouted = get_rerouted_url(url);
+		// 	if (!rerouted) return;
 
-			const path = get_url_path(rerouted);
-			for (const route of routes) {
-				const params = route.exec(path);
+		// 	const path = get_url_path(rerouted);
+		// 	for (const route of routes) {
+		// 		const params = route.exec(path);
 
-				if (params) {
-					const id = get_page_key(url);
-					/** @type {import('./types.js').NavigationIntent} */
-					const intent = {
-						id,
-						invalidating,
-						route,
-						params: decode_params(params),
-						url
-					};
-					console.log('original', intent, 'vs', x);
-					break;
-				}
-			}
-		}
+		// 		if (params) {
+		// 			const id = get_page_key(url);
+		// 			/** @type {import('./types.js').NavigationIntent} */
+		// 			const intent = {
+		// 				id,
+		// 				invalidating,
+		// 				route,
+		// 				params: decode_params(params),
+		// 				url
+		// 			};
+		// 			console.log('original', intent, 'vs', x);
+		// 			break;
+		// 		}
+		// 	}
+		// }
 		return intent;
 	}
 
@@ -2534,8 +2536,17 @@ async function _hydrate(
 
 	const url = new URL(location.href);
 
-	// TODO `|| server side routing`
-	if (!__SVELTEKIT_EMBEDDED__) {
+	/** @type {import('types').CSRRoute | undefined} */
+	let parsed_route;
+
+	// TODO optionize
+	if (true) {
+		// undefined in case of 404
+		if (route) {
+			// @ts-expect-error route is the full object in case of server routing
+			parsed_route = parse_server_route(route, app.nodes);
+		}
+	} else if (!__SVELTEKIT_EMBEDDED__) {
 		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
 		// of determining the params on the client side.
 		({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
@@ -2554,9 +2565,7 @@ async function _hydrate(
 			}
 
 			return load_node({
-				// TODO branch on routing style
-				// TODO avoid route request on initial load when server routing; put app.nodes into render.js instead
-				loader: /** @type {import('types').CSRRoute} */ (route).nodes?.[n] ?? app.nodes[n],
+				loader: app.nodes[n],
 				url,
 				params,
 				route,
@@ -2574,14 +2583,8 @@ async function _hydrate(
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
-		/** @type {import('types').CSRRoute | undefined} */
-		let parsed_route;
-
 		// TODO optionize
-		if (true) {
-			// @ts-expect-error get_navigation_intent called above returns a full route
-			parsed_route = route.id !== null ? route : undefined;
-		} else {
+		if (false) {
 			parsed_route = routes.find(({ id }) => id === route.id);
 
 			// server-side will have compacted the branch, reinstate empty slots

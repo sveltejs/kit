@@ -33,7 +33,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
-import { dictionary } from '__SERVER__/internal.js';
+import { create_stringified_csr_server_route } from './page/server_routing.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -175,19 +175,10 @@ export async function respond(request, options, manifest, state) {
 			'content-type': 'application/javascript; charset=utf-8'
 		});
 
-		if (route) {
-			const stringified_route = JSON.stringify(dictionary[route.id], (_, value) => {
-				if (typeof value === 'function') {
-					// Vite replaces our raw `import(...)` we've written to the manifest with the correct path,
-					// but also transforms `import` to `__vite_ssr_dynamic_import__`, which we gotta undo here
-					return value
-						.toString()
-						.replace(/\(\)\s*=>\s*\w+\(['"](.*?)['"]\)/g, "() => import('$1')");
-				}
-				return value;
-			}).replace(/"(\(\) => import\('.*?'\))"/g, '$1');
+		if (route?.page) {
+			const csr_route = await create_stringified_csr_server_route(route.id, route.page, manifest);
 			return text(
-				`export const route = ${stringified_route}; export const params = ${JSON.stringify(params)};`,
+				`export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`,
 				{ headers }
 			);
 		} else {
@@ -462,6 +453,7 @@ export async function respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
+					page: route?.page ?? undefined,
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
