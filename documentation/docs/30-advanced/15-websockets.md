@@ -118,7 +118,7 @@ The WebSocket API is documented in [more detail here](https://developer.mozilla.
 
 ## Compatibility
 
-SvelteKit uses `crossws` to handle websocket connections. This package has a well documented [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the peer object in different runtime environments, Please refer to their documentation for more information.
+SvelteKit uses [`unjs/crossws`](https://crossws.unjs.io) to handle websocket connections. This package has a well-documented [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the peer object in different runtime environments, Please refer to their documentation for more information.
 
 ## Adapter Integrations
 
