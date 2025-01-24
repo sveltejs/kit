@@ -105,7 +105,7 @@ export function redirect(status, location) {
 /**
  * Rejects a websocket upgrade request. When called during request handling, SvelteKit will throw a rejection response.
  * Make sure you're not catching the thrown rejection, which would prevent SvelteKit from handling it.
- * @param {400 | 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409 | 410 | 411 | 412 | 413 | 414 | 415 | 416 | 417 | 418 | 421 | 422 | 423 | 424 | 425 | 426 | 428 | 429 | 431 | 451 | 500 | 501 | 502 | 503 | 504 | 505 | 506 | 507 | 508 | 510 | 511 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 400-599.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {string} message The message to send to the client.
  * @throws {Response} This error instructs SvelteKit to reject the websocket upgrade request.
  * @throws {Error} If the provided status is invalid.
