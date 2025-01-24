@@ -2,7 +2,7 @@ import process from 'node:process';
 import { handler, resolve } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
-import http from 'http';
+import http from 'node:http';
 import crossws from 'crossws/adapters/node';
 
 export const path = env('SOCKET_PATH', false);

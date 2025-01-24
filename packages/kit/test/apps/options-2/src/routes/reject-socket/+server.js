@@ -1,7 +1,5 @@
 import { error } from '@sveltejs/kit';
 
-let sockets = [];
-
 export const socket = {
 	upgrade(req) {
 		console.log(`[ws] upgrading ${req.url}...`);
