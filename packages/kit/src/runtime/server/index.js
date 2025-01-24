@@ -67,7 +67,6 @@ export class Server {
 			set_read_implementation(read);
 		}
 
-
 		// During DEV and for some adapters this function might be called in quick succession,
 		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
 		await (init_promise ??= (async () => {

@@ -1,4 +1,4 @@
-import { accept } from "@sveltejs/kit";
+import { accept } from '@sveltejs/kit';
 
 let sockets = [];
 

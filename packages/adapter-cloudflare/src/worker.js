@@ -1,8 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
-import crossws from "crossws/adapters/cloudflare";
-
+import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
 
@@ -21,7 +20,7 @@ const worker = {
 			resolve: server.resolve()
 		});
 
-		if (req.headers.get("upgrade") === "websocket") {
+		if (req.headers.get('upgrade') === 'websocket') {
 			return ws.handleUpgrade(req, env, context);
 		}
 

@@ -34,7 +34,7 @@ let shutdown_timeout_id;
 let idle_timeout_id;
 
 const httpServer = http.createServer();
-const server = polka({server: httpServer}).use(handler);
+const server = polka({ server: httpServer }).use(handler);
 
 const ws = crossws({
 	resolve: resolve()
@@ -43,7 +43,6 @@ const ws = crossws({
 httpServer.on('upgrade', (req, socket, head) => {
 	ws.handleUpgrade(req, socket, head);
 });
-
 
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
