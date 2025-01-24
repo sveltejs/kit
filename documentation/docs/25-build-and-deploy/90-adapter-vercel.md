@@ -125,7 +125,7 @@ Making a `GET` or `HEAD` request with `x-prerender-revalidate: <token>` will for
 Note that the `BYPASS_TOKEN` string must be at least 32 characters long. You could generate one using the JavaScript console like so:
 
 ```js
-btoa(Math.random().toString() + Math.random().toString()).substring(0,32);
+crypto.randomUUID();
 ```
 
 Set this string as an environment variable on Vercel by logging in and going to your project then Settings > Environment Variables. For "Key" put `BYPASS_TOKEN` and for "value" use the string generated above, then hit "Save".
