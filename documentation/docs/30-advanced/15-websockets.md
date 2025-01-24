@@ -4,7 +4,7 @@ title: WebSockets
 
 ## The `socket` object
 
-Websockets are a way to open a bi-directional communication channel between the client and the server.
+[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between the client and server.
 
 SvelteKit accepts a `socket` object in `+server.js` files that you can use to handle websocket connections to different routes in your app.
 
