@@ -17,6 +17,12 @@ export class HttpError {
 	toString() {
 		return JSON.stringify(this.body);
 	}
+
+	response() {
+		return new Response(this.toString(), {
+			status: this.status
+		});
+	}
 }
 
 export class Redirect {
