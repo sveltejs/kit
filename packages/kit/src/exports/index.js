@@ -102,36 +102,16 @@ export function redirect(status, location) {
 	);
 }
 
-/**
- * Rejects a websocket upgrade request. When called during request handling, SvelteKit will throw a rejection response.
- * Make sure you're not catching the thrown rejection, which would prevent SvelteKit from handling it.
- * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {string} message The message to send to the client.
- * @throws {Response} This error instructs SvelteKit to reject the websocket upgrade request.
- * @throws {Error} If the provided status is invalid.
- * @return {never}
- */
-export function reject(status, message) {
-	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
-		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
-	}
-
-	throw new Response(message, {
-		status,
-		headers: {
-			'Content-Type': 'text/plain'
-		}
-	});
-}
+export const acceptResponse = new Response(null, {
+	status: 200,
+});
 
 /**
  * Accepts a websocket upgrade request. When called during request handling, SvelteKit will accept the websocket upgrade request.
  * @return {Response} This response instructs SvelteKit to accept the websocket upgrade request.
  */
 export function accept() {
-	return new Response(null, {
-		status: 200,
-	});
+	return acceptResponse;
 }
 
 /**
