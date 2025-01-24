@@ -102,6 +102,8 @@ export type CSRRoute = {
 	errors: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
 	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
+	/** Set in case of server side routing */
+	nodes?: Record<string, CSRPageNodeLoader>;
 };
 
 export interface Deferred {

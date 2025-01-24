@@ -10,6 +10,7 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
 		const { pattern, params } = parse_route_id(id);
 
+		/** @type {import('types').CSRRoute} */
 		const route = {
 			id,
 			/** @param {string} path */

@@ -322,7 +322,7 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const intent = get_navigation_intent(current.url, true);
+	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
 	// Also solves an edge case where a preload is triggered, the navigation for it
@@ -433,6 +433,7 @@ async function _preload_data(intent) {
  * @returns {Promise<void>}
  */
 async function _preload_code(url) {
+	// TODO server routing
 	const rerouted = get_rerouted_url(url);
 	if (!rerouted) return;
 
@@ -587,8 +588,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 }
 
 /**
- * Call the load function of the given node, if it exists.
- * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+ * Call the universal load function of the given node, if it exists.
  *
  * @param {{
  *   loader: import('types').CSRPageNodeLoader;
@@ -1241,9 +1241,58 @@ function get_rerouted_url(url) {
  * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
-function get_navigation_intent(url, invalidating) {
+async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
+
+	// TODO app.server_routing or whatever
+	if (true) {
+		const { route, params } = await import(
+			// TODO .js ?
+			new URL(
+				base + '/_app/routes' + (url.pathname === '/' ? '.js' : url.pathname + '.js'),
+				location.href
+			).href
+		);
+		if (!route) return;
+
+		const id = get_page_key(url);
+		/** @type {import('./types.js').NavigationIntent} */
+		const intent = {
+			id,
+			invalidating,
+			// route.exec is missing but it's not used anywhere except route matching,
+			// which happened on the server in this case, so it's fine
+			route,
+			params,
+			url
+		};
+		{
+			const x = intent;
+			const rerouted = get_rerouted_url(url);
+			if (!rerouted) return;
+
+			const path = get_url_path(rerouted);
+			for (const route of routes) {
+				const params = route.exec(path);
+
+				if (params) {
+					const id = get_page_key(url);
+					/** @type {import('./types.js').NavigationIntent} */
+					const intent = {
+						id,
+						invalidating,
+						route,
+						params: decode_params(params),
+						url
+					};
+					console.log('original', intent, 'vs', x);
+					break;
+				}
+			}
+		}
+		return intent;
+	}
 
 	const rerouted = get_rerouted_url(url);
 	if (!rerouted) return;
@@ -1347,7 +1396,7 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
@@ -1621,6 +1670,8 @@ if (import.meta.hot) {
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {Element} */
+	let current_a;
 
 	container.addEventListener('mousemove', (event) => {
 		const target = /** @type {Element} */ (event.target);
@@ -1656,9 +1707,11 @@ function setup_preload() {
 	 * @param {Element} element
 	 * @param {number} priority
 	 */
-	function preload(element, priority) {
+	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a) return;
+		if (!a || a === current_a) return;
+
+		current_a = a;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
@@ -1670,7 +1723,7 @@ function setup_preload() {
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(url, false);
+				const intent = await get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
 						_preload_data(intent).then((result) => {
@@ -1924,7 +1977,7 @@ export async function preloadData(href) {
 	}
 
 	const url = resolve_url(href);
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
@@ -1954,7 +2007,7 @@ export async function preloadData(href) {
  * @param {string} pathname
  * @returns {Promise<void>}
  */
-export function preloadCode(pathname) {
+export async function preloadCode(pathname) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
@@ -1974,6 +2027,7 @@ export function preloadCode(pathname) {
 			);
 		}
 
+		// TODO can't do this with server routing?
 		const rerouted = get_rerouted_url(url);
 		if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
 			throw new Error(`'${pathname}' did not match any routes`);
@@ -2480,10 +2534,11 @@ async function _hydrate(
 
 	const url = new URL(location.href);
 
+	// TODO `|| server side routing`
 	if (!__SVELTEKIT_EMBEDDED__) {
 		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
 		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+		({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
@@ -2499,7 +2554,9 @@ async function _hydrate(
 			}
 
 			return load_node({
-				loader: app.nodes[n],
+				// TODO branch on routing style
+				// TODO avoid route request on initial load when server routing; put app.nodes into render.js instead
+				loader: /** @type {import('types').CSRRoute} */ (route).nodes?.[n] ?? app.nodes[n],
 				url,
 				params,
 				route,
@@ -2517,15 +2574,24 @@ async function _hydrate(
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
-		const parsed_route = routes.find(({ id }) => id === route.id);
+		/** @type {import('types').CSRRoute | undefined} */
+		let parsed_route;
 
-		// server-side will have compacted the branch, reinstate empty slots
-		// so that error boundaries can be lined up correctly
-		if (parsed_route) {
-			const layouts = parsed_route.layouts;
-			for (let i = 0; i < layouts.length; i++) {
-				if (!layouts[i]) {
-					branch.splice(i, 0, undefined);
+		// TODO optionize
+		if (true) {
+			// @ts-expect-error get_navigation_intent called above returns a full route
+			parsed_route = route.id !== null ? route : undefined;
+		} else {
+			parsed_route = routes.find(({ id }) => id === route.id);
+
+			// server-side will have compacted the branch, reinstate empty slots
+			// so that error boundaries can be lined up correctly
+			if (parsed_route) {
+				const layouts = parsed_route.layouts;
+				for (let i = 0; i < layouts.length; i++) {
+					if (!layouts[i]) {
+						branch.splice(i, 0, undefined);
+					}
 				}
 			}
 		}
