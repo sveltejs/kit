@@ -4,7 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-	import type { Hooks } from 'crossws';
+	import type { Hooks, ResolveHooks } from 'crossws';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1158,6 +1158,7 @@ declare module '@sveltejs/kit' {
 		constructor(manifest: SSRManifest);
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
+		resolve(): ResolveHooks;
 	}
 
 	export interface ServerInitOptions {
