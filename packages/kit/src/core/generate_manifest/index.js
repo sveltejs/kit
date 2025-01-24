@@ -14,11 +14,12 @@ import { find_server_assets } from './find_server_assets.js';
  * build process, to power routing, etc.
  * @param {{
  *   build_data: import('types').BuildData;
+ *   prerendered: import('types').Prerendered | null;
  *   relative_path: string;
  *   routes: import('types').RouteData[];
  * }} opts
  */
-export function generate_manifest({ build_data, relative_path, routes }) {
+export function generate_manifest({ build_data, prerendered, relative_path, routes }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -113,6 +114,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 						`;
 					}).filter(Boolean).join(',\n')}
 				],
+				prerendered_routes: new Set(${s(prerendered === null ? [] : prerendered.paths)}),
 				matchers: async () => {
 					${Array.from(
 						matchers,

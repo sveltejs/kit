@@ -222,6 +222,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						return result;
 					};
 				}),
+				prerendered_routes: new Set(),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;

@@ -1297,6 +1297,7 @@ export interface SSRManifest {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
+		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code */
 		server_assets: Record<string, number>;
