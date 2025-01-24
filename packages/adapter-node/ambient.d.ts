@@ -4,6 +4,7 @@ declare module 'ENV' {
 
 declare module 'HANDLER' {
 	export const handler: import('polka').Middleware;
+	export const resolve: () => import('crossws').ResolveHooks;
 }
 
 declare module 'MANIFEST' {

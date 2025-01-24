@@ -212,3 +212,5 @@ export const handler = sequence(
 		ssr
 	].filter(Boolean)
 );
+
+export const resolve = server.resolve;
