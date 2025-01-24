@@ -1,4 +1,4 @@
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../../runtime/shared.js';
+import { INVALIDATED_PARAM, ORIGINAL_PATH_PARAM, TRAILING_SLASH_PARAM } from '../../runtime/shared.js';
 import { add_data_suffix, has_data_suffix, strip_data_suffix } from '../../utils/url.js';
 
 /**
@@ -28,6 +28,7 @@ export function applyReroute(url, reroute) {
 
 	if (reroute_path) {
 		const new_url = new URL(url);
+		new_url.searchParams.set(ORIGINAL_PATH_PARAM, url.pathname);
 		new_url.pathname = is_data_request ? add_data_suffix(reroute_path) : reroute_path;
 		return new_url;
 	}
