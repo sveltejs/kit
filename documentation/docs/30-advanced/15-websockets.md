@@ -109,6 +109,7 @@ export const socket = {
 To connect to a WebSocket endpoint in SvelteKit, you can use the native `WebSocket` class in the browser.
 
 ```js
+// To connect to src/routes/ws/+server.js
 const socket = new WebSocket(`/ws`);
 ```
 
