@@ -33,6 +33,7 @@ import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
+export { dictionary } from './route_resolution_dictionary.js';
 
 export const options = {
 	app_dir: ${s(config.kit.appDir)},
