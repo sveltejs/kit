@@ -45,11 +45,11 @@ import { error, accept } from "@sveltejs/kit";
 
 export const socket = {
 	upgrade(req) {
-		 // Accept the WebSocket connection with a return
+		// Accept the WebSocket connection with a return
 		return accept();
 
-        // Reject the WebSocket connection with a standard SvelteKit error
-        error(401, 'unauthorized');
+		// Reject the WebSocket connection with a standard SvelteKit error
+		error(401, 'unauthorized');
 	}
     
     // ...
