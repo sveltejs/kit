@@ -141,7 +141,7 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !manifest._.prerendered_routes.has(decoded)) {
+	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 

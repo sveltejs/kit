@@ -112,6 +112,14 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
+				if (manifest._.prerendered_routes.has(decoded)) {
+					// the prerendered logic is different for each adapter,
+					// (except maybe for prerendered redirects)
+					// so we need to make an actual HTTP request
+					// We do it here to avoid calling server-side hooks for prerendered routes
+					return await fetch(request);
+				}
+
 				if (credentials !== 'omit') {
 					const cookie = get_cookie_header(url, request.headers.get('cookie'));
 					if (cookie) {
