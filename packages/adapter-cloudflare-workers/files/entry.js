@@ -2,6 +2,8 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
+import crossws from "crossws/adapters/cloudflare";
+
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
@@ -19,6 +21,14 @@ export default {
 	 */
 	async fetch(req, env, context) {
 		await server.init({ env });
+
+		const ws = crossws({
+			resolve: server.resolve()
+		  });
+
+		if (req.headers.get("upgrade") === "websocket") {
+			return ws.handleUpgrade(req, env, context);
+		}
 
 		const url = new URL(req.url);
 
