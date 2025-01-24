@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "3.3.1",
+	"version": "4.0.0",
 	"description": "Automatically chooses the SvelteKit adapter for your current environment, if possible.",
 	"keywords": [
 		"adapter",
@@ -36,13 +36,15 @@
 	"scripts": {
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"check": "tsc"
+		"check": "tsc",
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/node": "^18.19.48",
-		"typescript": "^5.3.3"
+		"typescript": "^5.3.3",
+		"vitest": "^3.0.1"
 	},
 	"dependencies": {
 		"import-meta-resolve": "^4.1.0"

@@ -51,7 +51,7 @@ if (socket_activation) {
 	});
 } else {
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path ? path : host + ':' + port}`);
+		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
 

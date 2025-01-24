@@ -1,5 +1,50 @@
 # @sveltejs/adapter-cloudflare
 
+## 5.0.1
+### Patch Changes
+
+
+- fix: prevent vitest from hanging ([#12830](https://github.com/sveltejs/kit/pull/12830))
+
+- Updated dependencies [[`1bedcc1cfc1f2d85946c1423f60faa8a2a56148b`](https://github.com/sveltejs/kit/commit/1bedcc1cfc1f2d85946c1423f60faa8a2a56148b), [`e201fa9380a00e072a80a2dcab56de3d77e5b67c`](https://github.com/sveltejs/kit/commit/e201fa9380a00e072a80a2dcab56de3d77e5b67c), [`f3f08582d41b08c3fd1daf742e5703d9cdca7823`](https://github.com/sveltejs/kit/commit/f3f08582d41b08c3fd1daf742e5703d9cdca7823), [`d4bcfccb4503b12fe76140dbb6cfddc81f9419fc`](https://github.com/sveltejs/kit/commit/d4bcfccb4503b12fe76140dbb6cfddc81f9419fc), [`d09bc033123903f359c1ad6fd3a6d8d7fc19298a`](https://github.com/sveltejs/kit/commit/d09bc033123903f359c1ad6fd3a6d8d7fc19298a)]:
+  - @sveltejs/kit@2.15.3
+
+## 5.0.0
+### Major Changes
+
+
+- feat: remove esbuild step ([#13132](https://github.com/sveltejs/kit/pull/13132))
+
+
+### Patch Changes
+
+- Updated dependencies [[`12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f`](https://github.com/sveltejs/kit/commit/12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f), [`528af75f846f971ef64e4d109ac5e22fca046b90`](https://github.com/sveltejs/kit/commit/528af75f846f971ef64e4d109ac5e22fca046b90)]:
+  - @sveltejs/kit@2.15.1
+
+## 4.9.0
+### Minor Changes
+
+
+- feat: generate `.assetsignore` file for use with Cloudflare Workers Static Assets ([#13109](https://github.com/sveltejs/kit/pull/13109))
+
+
+### Patch Changes
+
+- Updated dependencies [[`20f2720aa3455f38fa2630a33d52f7532da27fce`](https://github.com/sveltejs/kit/commit/20f2720aa3455f38fa2630a33d52f7532da27fce)]:
+  - @sveltejs/kit@2.13.0
+
+## 4.8.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
 ## 4.7.4
 ### Patch Changes
 

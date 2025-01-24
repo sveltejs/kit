@@ -82,10 +82,12 @@ export async function POST({ request, platform }) {
 
 > [!NOTE] SvelteKit's built-in `$env` module should be preferred for environment variables.
 
-To include type declarations for your bindings, reference them in your `src/app.d.ts`:
+To make these types available to your app, install `@cloudflare/workers-types` and reference them in your `src/app.d.ts`:
 
-```dts
+```ts
 /// file: src/app.d.ts
++++import { KVNamespace, DurableObjectNamespace } from '@cloudflare/workers-types';+++
+
 declare global {
 	namespace App {
 		interface Platform {
@@ -118,7 +120,7 @@ However, they will have no effect on responses dynamically rendered by SvelteKit
 
 ### Further reading
 
-You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-site).
+You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-kit-site).
 
 ### Accessing the file system
 

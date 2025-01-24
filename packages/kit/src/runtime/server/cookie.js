@@ -55,7 +55,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
 			const c = new_cookies[name];
@@ -67,8 +67,7 @@ export function get_cookies(request, url, trailing_slash) {
 				return c.value;
 			}
 
-			const decoder = opts?.decode || decodeURIComponent;
-			const req_cookies = parse(header, { decode: decoder });
+			const req_cookies = parse(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -92,11 +91,10 @@ export function get_cookies(request, url, trailing_slash) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		getAll(opts) {
-			const decoder = opts?.decode || decodeURIComponent;
-			const cookies = parse(header, { decode: decoder });
+			const cookies = parse(header, { decode: opts?.decode });
 
 			for (const c of Object.values(new_cookies)) {
 				if (

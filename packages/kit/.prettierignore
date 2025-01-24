@@ -1,3 +1,8 @@
 test/build-errors/apps/syntax-error/src/routes/+page.svelte
 /types
 src/runtime/components/svelte-5/layout.svelte
+.svelte-kit
+.custom-out-dir
+build
+test-results
+/test/apps/basics/test/errors.json

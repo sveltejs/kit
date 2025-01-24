@@ -1,5 +1,62 @@
 # @sveltejs/adapter-vercel
 
+## 5.5.3
+### Patch Changes
+
+
+- fix: include ambient type declarations ([#12088](https://github.com/sveltejs/kit/pull/12088))
+
+- Updated dependencies [[`d440c68acac67ed64eea4b9bda267e229303db7b`](https://github.com/sveltejs/kit/commit/d440c68acac67ed64eea4b9bda267e229303db7b), [`6774ebc34330b12ae8c0cae08e98b577d819fffb`](https://github.com/sveltejs/kit/commit/6774ebc34330b12ae8c0cae08e98b577d819fffb), [`777c8ef11f17d2ab48aee0f2347c051663da5826`](https://github.com/sveltejs/kit/commit/777c8ef11f17d2ab48aee0f2347c051663da5826), [`f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2`](https://github.com/sveltejs/kit/commit/f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2), [`34a03ff16af29e917abebb649b31eadfc40a98a0`](https://github.com/sveltejs/kit/commit/34a03ff16af29e917abebb649b31eadfc40a98a0), [`1c77e283896058084c1cb5752d9ec207987a585e`](https://github.com/sveltejs/kit/commit/1c77e283896058084c1cb5752d9ec207987a585e), [`04958cca5905aaeeff367c9e4a5ce6e90fc64779`](https://github.com/sveltejs/kit/commit/04958cca5905aaeeff367c9e4a5ce6e90fc64779), [`9dc5c0e3e01a3c07010e9996688169be68e1dde8`](https://github.com/sveltejs/kit/commit/9dc5c0e3e01a3c07010e9996688169be68e1dde8), [`00e1a7621de554054d068e4525a9e505d1c2e588`](https://github.com/sveltejs/kit/commit/00e1a7621de554054d068e4525a9e505d1c2e588), [`9fcd1e7574197fa6e7ac000a030378d877cb8837`](https://github.com/sveltejs/kit/commit/9fcd1e7574197fa6e7ac000a030378d877cb8837), [`e541a4057a00f5ab6740fb51b7f88f17776da50a`](https://github.com/sveltejs/kit/commit/e541a4057a00f5ab6740fb51b7f88f17776da50a), [`37f72fbb075b481de8263f62c77125333735f382`](https://github.com/sveltejs/kit/commit/37f72fbb075b481de8263f62c77125333735f382), [`b60707ca8e755be95c86490122aa1b792b9bd6be`](https://github.com/sveltejs/kit/commit/b60707ca8e755be95c86490122aa1b792b9bd6be), [`699f4405c752261cf46c1ad32e4dbadceaffc75b`](https://github.com/sveltejs/kit/commit/699f4405c752261cf46c1ad32e4dbadceaffc75b), [`e2a4538c48295cde06f64fb8c7f0b333fbf95496`](https://github.com/sveltejs/kit/commit/e2a4538c48295cde06f64fb8c7f0b333fbf95496), [`a91ba1f326b6e244503de9a010771d942b461dad`](https://github.com/sveltejs/kit/commit/a91ba1f326b6e244503de9a010771d942b461dad)]:
+  - @sveltejs/kit@2.16.0
+
+## 5.5.2
+### Patch Changes
+
+
+- chore: upgrade `@vercel/nft` to 0.27.9 ([#13129](https://github.com/sveltejs/kit/pull/13129))
+
+- Updated dependencies [[`9fc5ff3339e543b956f7ce5eb31267fa73ee332a`](https://github.com/sveltejs/kit/commit/9fc5ff3339e543b956f7ce5eb31267fa73ee332a), [`85b57168189fa16fe966434ec50cc19425cab275`](https://github.com/sveltejs/kit/commit/85b57168189fa16fe966434ec50cc19425cab275)]:
+  - @sveltejs/kit@2.10.0
+
+## 5.5.1
+### Patch Changes
+
+
+- chore: upgrade @vercel/nft to 0.27.7 ([#13082](https://github.com/sveltejs/kit/pull/13082))
+
+- Updated dependencies [[`78404dfe1eb346723eefc183278b85f25485b419`](https://github.com/sveltejs/kit/commit/78404dfe1eb346723eefc183278b85f25485b419)]:
+  - @sveltejs/kit@2.9.1
+
+## 5.5.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 5.4.8
+### Patch Changes
+
+
+- chore: support building with Node 22 ([#13043](https://github.com/sveltejs/kit/pull/13043))
+
+- Updated dependencies [[`570562b74d9e9f295d9b617478088a650f51e96b`](https://github.com/sveltejs/kit/commit/570562b74d9e9f295d9b617478088a650f51e96b), [`1358cccd52190df3c74bdd8970dbfb06ffc4ec72`](https://github.com/sveltejs/kit/commit/1358cccd52190df3c74bdd8970dbfb06ffc4ec72)]:
+  - @sveltejs/kit@2.8.2
+
+## 5.4.7
+### Patch Changes
+
+
+- fix: disregard presence/absence of trailing slash in prerendered redirect ([#12966](https://github.com/sveltejs/kit/pull/12966))
+
+- Updated dependencies [[`92b2686314a7dbebee1761c3da7719d599f003c7`](https://github.com/sveltejs/kit/commit/92b2686314a7dbebee1761c3da7719d599f003c7)]:
+  - @sveltejs/kit@2.8.0
+
 ## 5.4.6
 ### Patch Changes
 

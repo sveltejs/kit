@@ -42,7 +42,7 @@ Pages can receive data from `load` functions via the `data` prop.
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 
@@ -51,9 +51,11 @@ Pages can receive data from `load` functions via the `data` prop.
 ```
 
 > [!LEGACY]
-> In Svelte 4, you'd use `export let data` instead
+> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` property manually with `PageData` instead, see [$types](#\$types).
+>
+> In Svelte 4, you'd use `export let data` instead.
 
-> [!NOTE] Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+> [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 ### +page.js
 
@@ -132,11 +134,14 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 ```svelte
 <!--- file: src/routes/blog/[slug]/+error.svelte --->
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
-<h1>{$page.status}: {$page.error.message}</h1>
+<h1>{page.status}: {page.error.message}</h1>
 ```
+
+> [!LEGACY]
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
 
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
@@ -169,7 +174,7 @@ To create a layout that applies to every page, make a file called `src/routes/+l
 ...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `@render` tag for the page content. For example, let's add a nav bar:
 
 ```svelte
-<!---- file: src/routes/+layout.svelte --->
+<!--- file: src/routes/+layout.svelte --->
 <script>
 	let { children } = $props();
 </script>
@@ -209,7 +214,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 ```svelte
 <!--- file: src/routes/settings/+layout.svelte --->
 <script>
-	/** @type {{ data: import('./$types').LayoutData, children: import('svelte').Snippet }} */
+	/** @type {import('./$types').LayoutProps} */
 	let { data, children } = $props();
 </script>
 
@@ -223,6 +228,9 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 {@render children()}
 ```
+
+> [!LEGACY]
+> `LayoutProps` was added in 2.16.0. In earlier versions, you had to [type the properties manually instead](#\$types).
 
 You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
 
@@ -252,7 +260,7 @@ Data returned from a layout's `load` function is also available to all its child
 ```svelte
 <!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
@@ -302,6 +310,8 @@ If an error is thrown (either `error(...)` or an unexpected error), the response
 
 > [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 
+> [!NOTE] `+layout` files have no effect on `+server.js` files. If you want to run some logic before each request, add it to the server [`handle`](hooks#Server-hooks-handle) hook.
+
 ### Receiving data
 
 By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.js` files can be used to create a complete API:
@@ -330,7 +340,7 @@ By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.j
 <input type="number" bind:value={b}> =
 {total}
 
-<button on:click={add}>Calculate</button>
+<button onclick={add}>Calculate</button>
 ```
 
 ```js
@@ -383,15 +393,32 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `let { data } = $props()` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `let { data } = $props()` with `PageProps` (or `LayoutProps`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 ```
+
+> [!NOTE]
+> The `PageProps` and `LayoutProps` types, added in 2.16.0, are a shortcut for typing the `data` prop as `PageData` or `LayoutData`, as well as other props, such as `form` for pages, or `children` for layouts. In earlier versions, you had to type these properties manually. For example, for a page:
+>
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+> let { data, form } = $props();
+> ```
+>
+> Or, for a layout:
+>
+> ```js
+> /// file: +layout.svelte
+> /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+> let { data, children } = $props();
+> ```
 
 In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `LayoutLoad` or `LayoutServerLoad` (for `+page.js`, `+page.server.js`, `+layout.js` and `+layout.server.js` respectively) ensures that `params` and the return value are correctly typed.
 

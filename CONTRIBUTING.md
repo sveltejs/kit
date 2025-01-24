@@ -22,7 +22,7 @@ pnpm install
 
 You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to SvelteKit locally.
 
-### Linking
+### Linking local changes
 
 If you want to test against an existing project, you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) in that project:
 
@@ -37,6 +37,14 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 		}
 	}
 }
+```
+
+### Testing PR changes
+
+Each pull request will be built and published via [pkg.pr.new/](https://pkg.pr.new/). You can test the change by installing the package with your PR number:
+
+```
+npm add https://pkg.pr.new/sveltejs/kit/@sveltejs/kit@YOUR_PR_NUMBER_GOES_HERE
 ```
 
 ## Code structure

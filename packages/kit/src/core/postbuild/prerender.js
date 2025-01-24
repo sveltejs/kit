@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
-import { escape_html_attr } from '../../utils/escape.js';
+import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
@@ -13,6 +13,7 @@ import { crawl } from './crawl.js';
 import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
+import generate_fallback from './fallback.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -24,6 +25,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
 
 /**
  * @param {{
+ *   hash: boolean;
  *   out: string;
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
@@ -31,7 +33,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   env: Record<string, string>
  * }} opts
  */
-async function prerender({ out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -97,6 +99,23 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
+
+	if (hash) {
+		const fallback = await generate_fallback({
+			manifest_path,
+			env
+		});
+
+		const file = output_filename('/', true);
+		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
+
+		mkdirp(dirname(dest));
+		writeFileSync(dest, fallback);
+
+		prerendered.pages.set('/', { file });
+
+		return { prerendered, prerender_map };
+	}
 
 	const emulator = await config.adapter?.emulate?.();
 
@@ -359,9 +378,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 						dest,
 						`<script>location.href=${devalue.uneval(
 							location
-						)};</script><meta http-equiv="refresh" content=${escape_html_attr(
-							`0;url=${location}`
-						)}>`
+						)};</script><meta http-equiv="refresh" content="${escape_html(
+							`0;url=${location}`,
+							true
+						)}">`
 					);
 
 					written.add(file);

@@ -14,15 +14,19 @@ import toml from '@iarna/toml';
  */
 
 /**
+ * TODO(serhalp) Replace this custom type with an import from `@netlify/edge-functions`,
+ * once that type is fixed to include `excludedPath` and `function`.
  * @typedef {{
  *	 functions: Array<
  *		 | {
  *				 function: string;
  *				 path: string;
+ *				 excludedPath?: string | string[];
  *		   }
  *		 | {
  *				 function: string;
  *				 pattern: string;
+ *				 excludedPattern?: string | string[];
  *		   }
  *	 >;
  *	 version: 1;
@@ -122,23 +126,6 @@ async function generate_edge_functions({ builder }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
-	// Don't match the static directory
-	const pattern = '^/.*$';
-
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				pattern
-			}
-		],
-		version: 1
-	};
-
 	builder.log.minor('Generating Edge Function...');
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
@@ -153,12 +140,43 @@ async function generate_edge_functions({ builder }) {
 		relativePath
 	});
 
-	writeFileSync(
-		`${tmp}/manifest.js`,
-		`export const manifest = ${manifest};\n\nexport const prerendered = new Set(${JSON.stringify(
-			builder.prerendered.paths
-		)});\n`
-	);
+	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
+
+	/** @type {{ assets: Set<string> }} */
+	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
+
+	const path = '/*';
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
+	const excludedPath = [
+		// Contains static files
+		`/${builder.getAppPath()}/*`,
+		...builder.prerendered.paths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		}),
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
+	];
+
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			{
+				function: 'render',
+				path,
+				excludedPath
+			}
+		],
+		version: 1
+	};
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],

@@ -7,7 +7,7 @@ import {
 	TestType,
 	Page
 } from '@playwright/test';
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'node:http';
 import { Plugin } from 'vite';
 
 export const test: TestType<
@@ -18,10 +18,11 @@ export const test: TestType<
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(url: URL): void | boolean;
 				afterNavigate(url: URL): void;
-				preloadCode(...urls: string[]): Promise<void>;
+				preloadCode(pathname: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
 			clicknav(selector: string, options?: Parameters<Page['waitForNavigation']>[0]): Promise<void>;
+			scroll_to(x: number, y: number): Promise<void>;
 			in_view(selector: string): Promise<boolean>;
 			get_computed_style(selector: string, prop: string): Promise<string>;
 			/**

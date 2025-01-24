@@ -187,7 +187,7 @@ You can read more about that feature [here](https://www.typescriptlang.org/docs/
 
 ## Best practices
 
-You should avoid using SvelteKit-specific modules like `$app/environment` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use `import { BROWSER } from 'esm-env'` ([see esm-env docs](https://github.com/benmccann/esm-env)). You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/stores`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos and so on.
+You should avoid using SvelteKit-specific modules like `$app/environment` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use `import { BROWSER } from 'esm-env'` ([see esm-env docs](https://github.com/benmccann/esm-env)). You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/state`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos and so on.
 
 Ensure that you add [aliases](configuration#alias) via `svelte.config.js` (not `vite.config.js` or `tsconfig.json`), so that they are processed by `svelte-package`.
 
@@ -215,6 +215,23 @@ You should think carefully about whether or not the changes you make to your pac
 			"default": "./dist/bar.js"
 		}+++
 	}
+}
+```
+
+## Source maps
+
+You can create so-called declaration maps (`d.ts.map` files) by setting `"declarationMap": true` in your `tsconfig.json`. This will allow editors such as VS Code to go to the original `.ts` or `.svelte` file when using features like _Go to Definition_. This means you also need to publish your source files alongside your dist folder in a way that the relative path inside the declaration files leads to a file on disk. Assuming that you have all your library code inside `src/lib` as suggested by Svelte's CLI, this is as simple as adding `src/lib` to `files` in your `package.json`:
+
+```json
+{
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*",
+		+++"src/lib",
+		"!src/lib/**/*.test.*",
+		"!src/lib/**/*.spec.*"+++
+	]
 }
 ```
 

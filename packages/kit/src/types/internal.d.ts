@@ -17,7 +17,10 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter
+	Adapter,
+	ServerInit,
+	ClientInit,
+	Transporter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -67,11 +70,15 @@ export interface BuildData {
 	service_worker: string | null;
 	client: {
 		start: string;
-		app: string;
+		app?: string;
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		inline?: {
+			script: string;
+			style: string | undefined;
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -110,11 +117,15 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
+	transport: Record<string, Transporter>;
+	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
+	transport: Record<string, Transporter>;
+	init?: ClientInit;
 }
 
 export interface Env {
@@ -302,7 +313,10 @@ export interface ServerMetadata {
 
 export interface SSRComponent {
 	default: {
-		render(props: Record<string, any>): {
+		render(
+			props: Record<string, any>,
+			opts: { context: Map<any, any> }
+		): {
 			html: string;
 			head: string;
 			css: {
@@ -363,6 +377,7 @@ export interface SSROptions {
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
+	hash_routing: boolean;
 	hooks: ServerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
