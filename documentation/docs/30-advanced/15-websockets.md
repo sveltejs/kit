@@ -112,7 +112,7 @@ To connect to a WebSocket endpoint in SvelteKit, you can use the native `WebSock
 const socket = new WebSocket(`/ws`);
 ```
 
-The WebSocket API is documented in [more detail here](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
+See [the WebSocket documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket) for more details.
 
 ## Compatibility
 
