@@ -78,7 +78,6 @@ export default function (options = {}) {
 					caches: proxy.caches,
 					cf: proxy.cf
 				});
-		
 				/** @type {Record<string, any>} */
 				const env = {};
 				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
