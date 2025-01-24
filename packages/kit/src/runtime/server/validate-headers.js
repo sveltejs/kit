@@ -18,7 +18,7 @@ const VALID_CACHE_CONTROL_DIRECTIVES = new Set([
 ]);
 
 const CONTENT_TYPE_PATTERN =
-	/^(application|audio|font|image|model|text|video|x-[a-z]+)\/[-+.\w]+$/i;
+	/^(application|audio|example|font|haptics|image|message|model|multipart|text|video|x-[a-z]+)\/[-+.\w]+$/i;
 
 /** @type {Record<string, (value: string) => void>} */
 const HEADER_VALIDATORS = {

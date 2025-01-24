@@ -50,6 +50,11 @@ describe('validateHeaders', () => {
 				expect.stringContaining('cache-control header contains empty directives')
 			);
 		});
+
+		test('accepts multiple cache-control values', () => {
+			validateHeaders({ 'cache-control': 'max-age=3600, s-maxage=7200' });
+			expect(console.warn).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('content-type header', () => {
@@ -89,10 +94,24 @@ describe('validateHeaders', () => {
 				expect.stringContaining('Invalid content-type value "bad/type"')
 			);
 		});
+
+		test('handles case-insensitive content-types', () => {
+			validateHeaders({ 'content-type': 'TEXT/HTML; charset=utf-8' });
+			expect(console.warn).not.toHaveBeenCalled();
+		});
 	});
 
 	test('allows unknown headers', () => {
 		validateHeaders({ 'x-custom-header': 'some-value' });
+		expect(console.warn).not.toHaveBeenCalled();
+	});
+
+	test('handles multiple headers simultaneously', () => {
+		validateHeaders({
+			'cache-control': 'max-age=3600',
+			'content-type': 'text/html',
+			'x-custom': 'value'
+		});
 		expect(console.warn).not.toHaveBeenCalled();
 	});
 });
