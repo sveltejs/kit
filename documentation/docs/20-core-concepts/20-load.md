@@ -2,6 +2,8 @@
 title: Loading data
 ---
 
+change docs
+
 Before a [`+page.svelte`](routing#page-page.svelte) component (and its containing [`+layout.svelte`](routing#layout-layout.svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
 
 ## Page data
