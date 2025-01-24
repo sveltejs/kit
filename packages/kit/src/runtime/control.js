@@ -12,16 +12,13 @@ export class HttpError {
 		} else {
 			this.body = { message: `Error: ${status}` };
 		}
+		this.response = new Response(this.toString(), {
+			status: this.status
+		});
 	}
 
 	toString() {
 		return JSON.stringify(this.body);
-	}
-
-	response() {
-		return new Response(this.toString(), {
-			status: this.status
-		});
 	}
 }
 

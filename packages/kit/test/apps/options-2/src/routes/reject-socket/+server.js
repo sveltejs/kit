@@ -1,11 +1,11 @@
-import { reject } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 let sockets = [];
 
 export const socket = {
 	upgrade(req) {
 		console.log(`[ws] upgrading ${req.url}...`);
-		reject(401, 'rejected');
+		error(401, 'rejected');
 	},
 
 	open(peer) {
