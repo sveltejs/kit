@@ -4,25 +4,30 @@ import { exec } from '../../utils/routing.js';
 import { decode_pathname, decode_params } from '../../utils/url.js';
 import { base } from '__sveltekit/paths';
 
+/** @type {Partial<import('crossws').Hooks>} */
+const noHooks = {};
+
 /**
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {(info: RequestInit | import('crossws').Peer) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
+ * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>}
  */
 export function resolve(options, manifest, state) {
 	return async (info) => {
 		/** @type {RequestInit} */
 		let request;
 
-		// These types all need to be straightened out
-		if (info.request) {
+		// Check if info is a Peer object
+		if ('request' in info) {
 			request = info.request;
 		} else {
 			request = info;
 		}
 
 		/** URL but stripped from the potential `/__data.json` suffix and its search param  */
+		console.log(request);
+		// @ts-expect-error URL is actually valid on this type, I think due to the NodeReqProxy used.
 		const url = new URL(request.url);
 
 		// reroute could alter the given URL, so we pass a copy
@@ -30,7 +35,7 @@ export function resolve(options, manifest, state) {
 		try {
 			rerouted_path = options.hooks.reroute({ url }) ?? url.pathname;
 		} catch {
-			return {};
+			return noHooks;
 		}
 
 		let decoded;
@@ -38,7 +43,8 @@ export function resolve(options, manifest, state) {
 			decoded = decode_pathname(rerouted_path);
 		} catch (e) {
 			console.error(e);
-			return {};
+
+			return noHooks;
 		}
 
 		if (base && decoded.startsWith(base)) {
@@ -69,7 +75,8 @@ export function resolve(options, manifest, state) {
 			}
 		} catch (e) {
 			console.error(e);
-			return {};
+
+			return noHooks;
 		}
 
 		/** @type {Record<string, string>} */
@@ -87,7 +94,8 @@ export function resolve(options, manifest, state) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
 				}
 
-				return {
+				/** @type {Partial<import('crossws').Hooks>} */
+				const hooks = {
 					...node.socket,
 					upgrade: async (req) => {
 						/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -137,6 +145,7 @@ export function resolve(options, manifest, state) {
 							event,
 							resolve: async (event) => {
 								if (node.socket && node.socket.upgrade) {
+									//@ts-expect-error The upgrade hook SHOULD only ever return a response or throw an HttpError
 									return await node.socket.upgrade(event.request);
 								} else {
 									return new Response('Not Implemented', { status: 501 });
@@ -147,10 +156,15 @@ export function resolve(options, manifest, state) {
 						return response ?? new Response('Not Implemented', { status: 501 });
 					}
 				};
+
+				return hooks;
 			}
 		} catch (e) {
 			console.error(e);
-			return {};
+
+			return noHooks;
 		}
+
+		return noHooks;
 	};
 }
