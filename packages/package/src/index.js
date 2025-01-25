@@ -78,6 +78,7 @@ export async function watch(options) {
 	let timeout;
 
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
+	/** @type {Promise<void>} */
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
 	watcher.on('all', (type, filepath) => {
