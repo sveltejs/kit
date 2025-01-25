@@ -1280,8 +1280,6 @@ async function get_navigation_intent(url, invalidating) {
 		const intent = {
 			id,
 			invalidating,
-			// route.exec is missing but it's not used anywhere except route matching,
-			// which happened on the server in this case, so it's fine
 			route: parse_server_route(route, app.nodes),
 			params,
 			url
@@ -2516,6 +2514,8 @@ async function _hydrate(
 		if (route) {
 			// @ts-expect-error route is the full object in case of server routing
 			parsed_route = parse_server_route(route, app.nodes);
+		} else {
+			route = { id: null };
 		}
 	} else if (!__SVELTEKIT_EMBEDDED__) {
 		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
