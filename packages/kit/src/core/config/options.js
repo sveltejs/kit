@@ -58,236 +58,255 @@ const options = object(
 			return input;
 		}),
 
-		kit: object({
-			adapter: validate(null, (input, keypath) => {
-				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
+		kit: object(
+			{
+				adapter: validate(null, (input, keypath) => {
+					if (typeof input !== 'object' || !input.adapt) {
+						let message = `${keypath} should be an object with an "adapt" method`;
 
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
+						if (Array.isArray(input) || typeof input === 'string') {
+							// for the early adapter adopters
+							message += ', rather than the name of an adapter';
+						}
 
-					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
-				}
-
-				return input;
-			}),
-
-			alias: validate({}, (input, keypath) => {
-				if (typeof input !== 'object') {
-					throw new Error(`${keypath} should be an object`);
-				}
-
-				for (const key in input) {
-					assert_string(input[key], `${keypath}.${key}`);
-				}
-
-				return input;
-			}),
-
-			appDir: validate('_app', (input, keypath) => {
-				assert_string(input, keypath);
-
-				if (input) {
-					if (input.startsWith('/') || input.endsWith('/')) {
-						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
-						);
-					}
-				} else {
-					throw new Error(`${keypath} cannot be empty`);
-				}
-
-				return input;
-			}),
-
-			csp: object({
-				mode: list(['auto', 'hash', 'nonce']),
-				directives,
-				reportOnly: directives
-			}),
-
-			csrf: object({
-				checkOrigin: boolean(true)
-			}),
-
-			embedded: boolean(false),
-
-			env: object({
-				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
-			}),
-
-			files: object({
-				assets: string('static'),
-				hooks: object({
-					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
-				}),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html'))
-			}),
-
-			inlineStyleThreshold: number(0),
-
-			moduleExtensions: string_array(['.js', '.ts']),
-
-			outDir: string('.svelte-kit'),
-
-			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
-				bundleStrategy: list(['split', 'single', 'inline'])
-			}),
-
-			paths: object({
-				base: validate('', (input, keypath) => {
-					assert_string(input, keypath);
-
-					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
-						throw new Error(
-							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
-						);
+						throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
 					}
 
 					return input;
 				}),
-				assets: validate('', (input, keypath) => {
+
+				alias: validate({}, (input, keypath) => {
+					if (typeof input !== 'object') {
+						throw new Error(`${keypath} should be an object`);
+					}
+
+					for (const key in input) {
+						assert_string(input[key], `${keypath}.${key}`);
+					}
+
+					return input;
+				}),
+
+				appDir: validate('_app', (input, keypath) => {
 					assert_string(input, keypath);
 
 					if (input) {
-						if (!/^[a-z]+:\/\//.test(input)) {
+						if (input.startsWith('/') || input.endsWith('/')) {
 							throw new Error(
-								`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
+								"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
 							);
 						}
-
-						if (input.endsWith('/')) {
-							throw new Error(
-								`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
-							);
-						}
+					} else {
+						throw new Error(`${keypath} cannot be empty`);
 					}
 
 					return input;
 				}),
-				relative: boolean(true)
-			}),
 
-			prerender: object({
-				concurrency: number(1),
-				crawl: boolean(true),
-				entries: validate(['*'], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
-					}
-
-					input.forEach((page) => {
-						if (page !== '*' && page[0] !== '/') {
-							throw new Error(
-								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
-							);
-						}
-					});
-
-					return input;
+				csp: object({
+					mode: list(['auto', 'hash', 'nonce']),
+					directives,
+					reportOnly: directives
 				}),
 
-				handleHttpError: validate(
-					(/** @type {any} */ { message }) => {
-						throw new Error(
-							message +
-								'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
-						);
-					},
-					(input, keypath) => {
-						if (typeof input === 'function') return input;
-						if (['fail', 'warn', 'ignore'].includes(input)) return input;
-						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-					}
-				),
+				csrf: object({
+					checkOrigin: boolean(true)
+				}),
 
-				handleMissingId: validate(
-					(/** @type {any} */ { message }) => {
-						throw new Error(
-							message +
-								'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
-						);
-					},
-					(input, keypath) => {
-						if (typeof input === 'function') return input;
-						if (['fail', 'warn', 'ignore'].includes(input)) return input;
-						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-					}
-				),
+				embedded: boolean(false),
 
-				handleEntryGeneratorMismatch: validate(
-					(/** @type {any} */ { message }) => {
-						throw new Error(
-							message +
-								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
-						);
-					},
-					(input, keypath) => {
-						if (typeof input === 'function') return input;
-						if (['fail', 'warn', 'ignore'].includes(input)) return input;
-						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-					}
-				),
+				env: object({
+					dir: string(process.cwd()),
+					publicPrefix: string('PUBLIC_'),
+					privatePrefix: string('')
+				}),
 
-				origin: validate('http://sveltekit-prerender', (input, keypath) => {
-					assert_string(input, keypath);
+				files: object({
+					assets: string('static'),
+					hooks: object({
+						client: string(join('src', 'hooks.client')),
+						server: string(join('src', 'hooks.server')),
+						universal: string(join('src', 'hooks'))
+					}),
+					lib: string(join('src', 'lib')),
+					params: string(join('src', 'params')),
+					routes: string(join('src', 'routes')),
+					serviceWorker: string(join('src', 'service-worker')),
+					appTemplate: string(join('src', 'app.html')),
+					errorTemplate: string(join('src', 'error.html'))
+				}),
 
-					let origin;
+				inlineStyleThreshold: number(0),
 
-					try {
-						origin = new URL(input).origin;
-					} catch {
-						throw new Error(`${keypath} must be a valid origin`);
-					}
+				moduleExtensions: string_array(['.js', '.ts']),
 
-					if (input !== origin) {
-						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
-					}
+				outDir: string('.svelte-kit'),
 
-					return origin;
+				output: object({
+					preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+					bundleStrategy: list(['split', 'single', 'inline'])
+				}),
+
+				paths: object({
+					base: validate('', (input, keypath) => {
+						assert_string(input, keypath);
+
+						if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
+							throw new Error(
+								`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
+							);
+						}
+
+						return input;
+					}),
+					assets: validate('', (input, keypath) => {
+						assert_string(input, keypath);
+
+						if (input) {
+							if (!/^[a-z]+:\/\//.test(input)) {
+								throw new Error(
+									`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
+								);
+							}
+
+							if (input.endsWith('/')) {
+								throw new Error(
+									`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
+								);
+							}
+						}
+
+						return input;
+					}),
+					relative: boolean(true)
+				}),
+
+				prerender: object({
+					concurrency: number(1),
+					crawl: boolean(true),
+					entries: validate(['*'], (input, keypath) => {
+						if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+							throw new Error(`${keypath} must be an array of strings`);
+						}
+
+						input.forEach((page) => {
+							if (page !== '*' && page[0] !== '/') {
+								throw new Error(
+									`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+								);
+							}
+						});
+
+						return input;
+					}),
+
+					handleHttpError: validate(
+						(/** @type {any} */ { message }) => {
+							throw new Error(
+								message +
+									'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
+							);
+						},
+						(input, keypath) => {
+							if (typeof input === 'function') return input;
+							if (['fail', 'warn', 'ignore'].includes(input)) return input;
+							throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+						}
+					),
+
+					handleMissingId: validate(
+						(/** @type {any} */ { message }) => {
+							throw new Error(
+								message +
+									'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
+							);
+						},
+						(input, keypath) => {
+							if (typeof input === 'function') return input;
+							if (['fail', 'warn', 'ignore'].includes(input)) return input;
+							throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+						}
+					),
+
+					handleEntryGeneratorMismatch: validate(
+						(/** @type {any} */ { message }) => {
+							throw new Error(
+								message +
+									'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
+							);
+						},
+						(input, keypath) => {
+							if (typeof input === 'function') return input;
+							if (['fail', 'warn', 'ignore'].includes(input)) return input;
+							throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+						}
+					),
+
+					origin: validate('http://sveltekit-prerender', (input, keypath) => {
+						assert_string(input, keypath);
+
+						let origin;
+
+						try {
+							origin = new URL(input).origin;
+						} catch {
+							throw new Error(`${keypath} must be a valid origin`);
+						}
+
+						if (input !== origin) {
+							throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
+						}
+
+						return origin;
+					})
+				}),
+
+				router: object({
+					type: list(['pathname', 'hash']),
+					resolution: list(['client', 'server'])
+				}),
+
+				serviceWorker: object({
+					register: boolean(true),
+					files: fun((filename) => !/\.DS_Store/.test(filename))
+				}),
+
+				typescript: object({
+					config: fun((config) => config)
+				}),
+
+				version: object({
+					name: string(Date.now().toString()),
+					pollInterval: number(0)
 				})
-			}),
-
-			router: object({
-				type: list(['pathname', 'hash'])
-			}),
-
-			serviceWorker: object({
-				register: boolean(true),
-				files: fun((filename) => !/\.DS_Store/.test(filename))
-			}),
-
-			typescript: object({
-				config: fun((config) => config)
-			}),
-
-			version: object({
-				name: string(Date.now().toString()),
-				pollInterval: number(0)
-			})
-		})
+			},
+			false,
+			(options) => {
+				if (options.router.resolution === 'server') {
+					if (options.router.type === 'hash') {
+						throw new Error('Cannot use router.resolution=server with router.type=hash');
+					}
+					if (options.output.bundleStrategy !== 'split') {
+						throw new Error(
+							'Cannot use router.resolution=server with output.bundleStrategy=inline or output.bundleStrategy=single'
+						);
+					}
+				}
+				return options;
+			}
+		)
 	},
 	true
 );
 
 /**
- * @param {Record<string, Validator>} children
+ * @template {string} Keys
+ * @param {Record<Keys, Validator>} children
  * @param {boolean} [allow_unknown]
+ * @param {(obj: Record<Keys, any>) => Record<Keys, any>} [post_validator]
  * @returns {Validator}
  */
-function object(children, allow_unknown = false) {
+function object(children, allow_unknown = false, post_validator = (obj) => obj) {
 	return (input, keypath) => {
 		/** @type {Record<string, any>} */
 		const output = {};
@@ -318,7 +337,7 @@ function object(children, allow_unknown = false) {
 			output[key] = validator(input && input[key], `${keypath}.${key}`);
 		}
 
-		return output;
+		return post_validator(output);
 	};
 }
 
