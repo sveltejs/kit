@@ -2554,7 +2554,7 @@ async function _hydrate(
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
-		if (!__SVELTEKIT_CLIENT_ROUTING__) {
+		if (__SVELTEKIT_CLIENT_ROUTING__) {
 			parsed_route = routes.find(({ id }) => id === route.id);
 
 			// server-side will have compacted the branch, reinstate empty slots
