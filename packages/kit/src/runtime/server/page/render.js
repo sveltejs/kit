@@ -397,12 +397,8 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (options.embedded) {
-				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
-			}
-			// TODO optionize
-			else if (
-				true &&
+			if (
+				options.server_routing &&
 				// undefined in case of 404
 				page
 			) {
@@ -410,6 +406,8 @@ export async function render_response({
 					`params: ${devalue.uneval(event.params)}`,
 					`route: ${await create_stringified_csr_server_route(event.route.id, page, manifest)}`
 				);
+			} else if (options.embedded) {
+				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
 			const indent = '\t'.repeat(load_env_eagerly ? 7 : 6);

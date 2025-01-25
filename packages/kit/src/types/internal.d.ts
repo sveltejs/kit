@@ -403,6 +403,8 @@ export interface SSROptions {
 		error(values: { message: string; status: number }): string;
 	};
 	version_hash: string;
+	/** True if `config.kit.router.resolution === 'server'` */
+	server_routing: boolean;
 }
 
 export interface PageNodeIndexes {

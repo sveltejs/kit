@@ -62,7 +62,8 @@ export const options = {
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
 	},
-	version_hash: ${s(hash(config.kit.version.name))}
+	version_hash: ${s(hash(config.kit.version.name))},
+	server_routing: ${config.kit.router.resolution === 'server'},
 };
 
 export async function get_hooks() {
@@ -119,6 +120,8 @@ export function write_server(config, output) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	// Contains the stringified version of
+	/** @type {import('types').SSROptions} */
 	write_if_changed(
 		`${output}/server/internal.js`,
 		server_template({

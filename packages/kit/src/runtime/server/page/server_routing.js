@@ -12,7 +12,7 @@ export async function create_stringified_csr_server_route(id, page, manifest) {
 
 	const nodes = `{ ${[...errors, ...layouts, leaf]
 		.filter((n) => !!n)
-		.map((n) => `'${n.index}': () => import('${n.imports[0]}')`)
+		.map((n) => `'${n.index}': () => import('/${n.imports[0]}')`)
 		.join(', ')} }`;
 
 	// stringified version of

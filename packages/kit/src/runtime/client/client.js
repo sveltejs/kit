@@ -158,7 +158,7 @@ async function update_service_worker() {
 
 function noop() {}
 
-/** @type {import('types').CSRRoute[]} */
+/** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
@@ -265,7 +265,7 @@ export async function start(_app, _target, hydrate) {
 
 	await _app.hooks.init?.();
 
-	routes = parse(_app);
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -433,11 +433,7 @@ async function _preload_data(intent) {
  * @returns {Promise<void>}
  */
 async function _preload_code(url) {
-	// TODO server routing
-	const rerouted = get_rerouted_url(url);
-	if (!rerouted) return;
-
-	const route = routes.find((route) => route.exec(get_url_path(rerouted)));
+	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1245,11 +1241,31 @@ async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
 
-	// TODO app.server_routing or whatever
-	if (true) {
-		/** @type {{ route: import('types').CSRRouteServer, params: Record<string, string>} | {}} */
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		const rerouted = get_rerouted_url(url);
+		if (!rerouted) return;
+
+		const path = get_url_path(rerouted);
+
+		for (const route of routes) {
+			const params = route.exec(path);
+
+			if (params) {
+				const id = get_page_key(url);
+				/** @type {import('./types.js').NavigationIntent} */
+				const intent = {
+					id,
+					invalidating,
+					route,
+					params: decode_params(params),
+					url
+				};
+				return intent;
+			}
+		}
+	} else {
+		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
-			// TODO .js ?
 			new URL(
 				base + '/_app/routes' + (url.pathname === '/' ? '.js' : url.pathname + '.js'),
 				location.href
@@ -1269,53 +1285,7 @@ async function get_navigation_intent(url, invalidating) {
 			params,
 			url
 		};
-		// {
-		// 	const x = intent;
-		// 	const rerouted = get_rerouted_url(url);
-		// 	if (!rerouted) return;
-
-		// 	const path = get_url_path(rerouted);
-		// 	for (const route of routes) {
-		// 		const params = route.exec(path);
-
-		// 		if (params) {
-		// 			const id = get_page_key(url);
-		// 			/** @type {import('./types.js').NavigationIntent} */
-		// 			const intent = {
-		// 				id,
-		// 				invalidating,
-		// 				route,
-		// 				params: decode_params(params),
-		// 				url
-		// 			};
-		// 			console.log('original', intent, 'vs', x);
-		// 			break;
-		// 		}
-		// 	}
-		// }
 		return intent;
-	}
-
-	const rerouted = get_rerouted_url(url);
-	if (!rerouted) return;
-
-	const path = get_url_path(rerouted);
-
-	for (const route of routes) {
-		const params = route.exec(path);
-
-		if (params) {
-			const id = get_page_key(url);
-			/** @type {import('./types.js').NavigationIntent} */
-			const intent = {
-				id,
-				invalidating,
-				route,
-				params: decode_params(params),
-				url
-			};
-			return intent;
-		}
 	}
 }
 
@@ -2029,10 +1999,11 @@ export async function preloadCode(pathname) {
 			);
 		}
 
-		// TODO can't do this with server routing?
-		const rerouted = get_rerouted_url(url);
-		if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
-			throw new Error(`'${pathname}' did not match any routes`);
+		if (__SVELTEKIT_CLIENT_ROUTING__) {
+			const rerouted = get_rerouted_url(url);
+			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
+				throw new Error(`'${pathname}' did not match any routes`);
+			}
 		}
 	}
 
@@ -2539,8 +2510,7 @@ async function _hydrate(
 	/** @type {import('types').CSRRoute | undefined} */
 	let parsed_route;
 
-	// TODO optionize
-	if (true) {
+	if (!__SVELTEKIT_CLIENT_ROUTING__) {
 		// undefined in case of 404
 		if (route) {
 			// @ts-expect-error route is the full object in case of server routing
@@ -2583,8 +2553,7 @@ async function _hydrate(
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
-		// TODO optionize
-		if (false) {
+		if (!__SVELTEKIT_CLIENT_ROUTING__) {
 			parsed_route = routes.find(({ id }) => id === route.id);
 
 			// server-side will have compacted the branch, reinstate empty slots

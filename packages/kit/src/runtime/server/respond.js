@@ -171,6 +171,10 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (is_route_resolution_request) {
+		if (!options.server_routing) {
+			return text('Server routing disabled', { status: 400 });
+		}
+
 		const headers = new Headers({
 			'content-type': 'application/javascript; charset=utf-8'
 		});
