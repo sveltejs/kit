@@ -203,7 +203,9 @@ declare module '@sveltejs/kit' {
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string | undefined }>;
+		getAll: (
+			opts?: import('cookie').ParseOptions
+		) => Array<{ name: string; value: string | undefined }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
