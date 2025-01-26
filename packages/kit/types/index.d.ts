@@ -197,13 +197,13 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+		get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -1952,7 +1952,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 	class HttpError_1 {
-
+		
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -1961,7 +1961,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-
+		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2396,11 +2396,11 @@ declare module '$app/state' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-
+		
 		page: typeof page;
-
+		
 		navigating: typeof navigating;
-
+		
 		updated: typeof updated;
 	};
 	/**
