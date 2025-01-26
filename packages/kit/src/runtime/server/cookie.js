@@ -160,7 +160,7 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {string | null} header
 	 */
 	function get_cookie_header(destination, header) {
-		/** @type {Record<string, string>} */
+		/** @type {Record<string, string | undefined>} */
 		const combined_cookies = {
 			// cookies sent by the user agent have lowest precedence
 			...initial_cookies
