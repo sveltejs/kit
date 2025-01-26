@@ -218,7 +218,7 @@ declare module '@sveltejs/kit' {
 		set: (
 			name: string,
 			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
+			opts: import('cookie').SerializeOptions & { path: string }
 		) => void;
 
 		/**
@@ -228,7 +228,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: import('cookie').SerializeOptions & { path: string }) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -244,7 +244,7 @@ declare module '@sveltejs/kit' {
 		serialize: (
 			name: string,
 			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
+			opts: import('cookie').SerializeOptions & { path: string }
 		) => string;
 	}
 
@@ -1952,7 +1952,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 	class HttpError_1 {
-		
+
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -1961,7 +1961,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-		
+
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2396,11 +2396,11 @@ declare module '$app/state' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-		
+
 		page: typeof page;
-		
+
 		navigating: typeof navigating;
-		
+
 		updated: typeof updated;
 	};
 	/**

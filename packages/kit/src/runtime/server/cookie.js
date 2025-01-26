@@ -39,7 +39,7 @@ export function get_cookies(request, url, trailing_slash) {
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
-	/** @type {import('cookie').CookieSerializeOptions} */
+	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
 		sameSite: 'lax',

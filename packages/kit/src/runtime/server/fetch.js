@@ -153,7 +153,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						set_internal(name, value, {
 							path,
 							encode: (value) => value,
-							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+							.../** @type {import('cookie').SerializeOptions} */ (options)
 						});
 					}
 				}
