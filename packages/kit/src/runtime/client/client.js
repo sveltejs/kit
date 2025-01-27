@@ -322,6 +322,7 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
+	const nav_token = (token = {});
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -330,7 +331,6 @@ async function _invalidate() {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || nav_token !== token) return;
 
@@ -1367,11 +1367,15 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
+	const prev_token = token;
+	token = nav_token;
+
 	const intent = await get_navigation_intent(url, false);
 	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
 		block();
+		if (token === nav_token) prev_token = token;
 		return;
 	}
 
@@ -1387,7 +1391,6 @@ async function navigate({
 		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
-	token = nav_token;
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
