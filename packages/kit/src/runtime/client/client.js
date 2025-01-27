@@ -1375,7 +1375,7 @@ async function navigate({
 
 	if (!nav) {
 		block();
-		if (token === nav_token) prev_token = token;
+		if (token === nav_token) token = prev_token;
 		return;
 	}
 
