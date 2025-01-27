@@ -13,7 +13,11 @@ import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
-import { create_stringified_csr_server_route } from './server_routing.js';
+import {
+	create_server_routing_response,
+	create_stringified_csr_server_route,
+	regular_route_to_route_resolution
+} from './server_routing.js';
 
 // TODO rename this function/module
 
@@ -397,15 +401,18 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (
-				options.server_routing &&
-				// undefined in case of 404
-				page
-			) {
-				hydrate.push(
-					`params: ${devalue.uneval(event.params)}`,
-					`route: ${await create_stringified_csr_server_route(event.route.id, page, manifest)}`
-				);
+			if (options.server_routing) {
+				if (page /* undefined in case of 404 */) {
+					const route = await create_stringified_csr_server_route(event.route.id, page, manifest);
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
+				}
+
+				if (state.prerendering) {
+					state.prerendering.dependencies.set(
+						regular_route_to_route_resolution(event.url, options),
+						await create_server_routing_response(event.route.id, page, event.params, manifest)
+					);
+				}
 			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}

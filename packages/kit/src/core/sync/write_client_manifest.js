@@ -10,7 +10,7 @@ import colors from 'kleur';
  * @param {import('types').ValidatedKitConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
- * @param {Array<{ has_server_load: boolean }>} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
+ * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
  */
 export function write_client_manifest(kit, manifest_data, output, metadata) {
 	const client_routing = kit.router.resolution === 'client';
@@ -170,9 +170,11 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
 
-			export const hash = ${JSON.stringify(kit.router.type === 'hash')};
+			export const hash = ${s(kit.router.type === 'hash')};
 
 			export const decode = (type, value) => decoders[type](value);
+
+			export const app_dir = ${s(kit.appDir)};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`

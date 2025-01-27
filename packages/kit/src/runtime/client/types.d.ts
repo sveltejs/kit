@@ -55,6 +55,11 @@ export interface SvelteKitApp {
 	 */
 	hash: boolean;
 
+	/**
+	 * Corresponds to the `kit.appDir` config value. Only used for server routing.
+	 */
+	app_dir: string;
+
 	root: typeof SvelteComponent;
 }
 

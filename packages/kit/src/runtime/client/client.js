@@ -1268,7 +1268,7 @@ async function get_navigation_intent(url, invalidating) {
 		const { route, params } = await import(
 			/* @vite-ignore */
 			new URL(
-				base + '/_app/routes' + (url.pathname === '/' ? '.js' : url.pathname + '.js'),
+				base + `/${app.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js'),
 				location.href
 			).href
 		);

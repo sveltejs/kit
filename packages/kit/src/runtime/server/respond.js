@@ -33,7 +33,11 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
-import { create_stringified_csr_server_route } from './page/server_routing.js';
+import {
+	create_server_routing_response,
+	is_route_resolution_request as _is_route_resolution_request,
+	route_resolution_to_regular_route
+} from './page/server_routing.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -90,11 +94,10 @@ export async function respond(request, options, manifest, state) {
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for rerouting and route matching, then return the route object as a JS file.
 	 */
-	const is_route_resolution_request =
-		url.pathname === '/_app/routes.js' || url.pathname.startsWith('/_app/routes/');
+	const is_route_resolution_request = _is_route_resolution_request(url, options);
 
 	if (is_route_resolution_request) {
-		url.pathname = url.pathname.slice('/_app/routes'.length, -3) || '/';
+		url.pathname = route_resolution_to_regular_route(url, options);
 	}
 
 	const is_data_request = has_data_suffix(url.pathname);
@@ -175,19 +178,13 @@ export async function respond(request, options, manifest, state) {
 			return text('Server routing disabled', { status: 400 });
 		}
 
-		const headers = new Headers({
-			'content-type': 'application/javascript; charset=utf-8'
-		});
-
-		if (route?.page) {
-			const csr_route = await create_stringified_csr_server_route(route.id, route.page, manifest);
-			return text(
-				`export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`,
-				{ headers }
-			);
-		} else {
-			return text('', { headers });
-		}
+		const { response } = await create_server_routing_response(
+			route?.id ?? null,
+			route?.page,
+			params,
+			manifest
+		);
+		return response;
 	}
 
 	/** @type {import('types').TrailingSlash | void} */
