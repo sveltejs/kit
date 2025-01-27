@@ -2509,7 +2509,15 @@ async function _hydrate(
 	/** @type {import('types').CSRRoute | undefined} */
 	let parsed_route;
 
-	if (!__SVELTEKIT_CLIENT_ROUTING__) {
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		if (!__SVELTEKIT_EMBEDDED__) {
+			// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+			// of determining the params on the client side.
+			({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
+		}
+
+		parsed_route = routes.find(({ id }) => id === route.id);
+	} else {
 		// undefined in case of 404
 		if (route) {
 			// @ts-expect-error route is the full object in case of server routing
@@ -2518,10 +2526,6 @@ async function _hydrate(
 			route = { id: null };
 			params = {};
 		}
-	} else if (!__SVELTEKIT_EMBEDDED__) {
-		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
-		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
@@ -2555,17 +2559,13 @@ async function _hydrate(
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
-		if (__SVELTEKIT_CLIENT_ROUTING__) {
-			parsed_route = routes.find(({ id }) => id === route.id);
-
-			// server-side will have compacted the branch, reinstate empty slots
-			// so that error boundaries can be lined up correctly
-			if (parsed_route) {
-				const layouts = parsed_route.layouts;
-				for (let i = 0; i < layouts.length; i++) {
-					if (!layouts[i]) {
-						branch.splice(i, 0, undefined);
-					}
+		// server-side will have compacted the branch, reinstate empty slots
+		// so that error boundaries can be lined up correctly
+		if (parsed_route) {
+			const layouts = parsed_route.layouts;
+			for (let i = 0; i < layouts.length; i++) {
+				if (!layouts[i]) {
+					branch.splice(i, 0, undefined);
 				}
 			}
 		}
