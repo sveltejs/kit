@@ -863,7 +863,8 @@ test.describe('Routing', () => {
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
 
-		// expect(requests).toEqual([]); // TODO the only request here is the one to the server route endpoint in case it's enabled. Fine?
+		// Filter out server routing endpoint request
+		expect(requests.filter((r) => !r.includes('_app/routes'))).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');

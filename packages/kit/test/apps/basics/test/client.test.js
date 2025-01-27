@@ -228,13 +228,14 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/fetch-cache-control"]');
 
 		// 3. Come back to the original page (client side)
+		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request));
+		page.on('request', (request) => requests.push(request.url()));
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
-		// 4. We expect the same data and no new request because it was cached.
+		// 4. We expect the same data and no new request (except a navigation request in case of server routing) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
-		expect(requests).toEqual([]);
+		expect(requests.filter((r) => !r.includes('_app/routes'))).toEqual([]);
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
