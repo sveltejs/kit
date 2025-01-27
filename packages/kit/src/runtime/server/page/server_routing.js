@@ -22,7 +22,7 @@ export async function create_stringified_csr_server_route(id, page, manifest) {
 		`{\n\tid: ${s(id)}`,
 		`errors: [${errors.map((n) => (n ? n.index : 'undefined')).join(', ')}]`,
 		`layouts: [${layouts.map((n) => (n ? `[${has_server_load(n)}, ${n.index}]` : 'undefined')).join(', ')}]`,
-		`leaf: [${has_server_load(leaf)}, ${page.leaf}]`,
+		`leaf: [${has_server_load(leaf)}, ${leaf.index}]`,
 		`nodes: ${nodes}\n}`
 	].join(',\n\t');
 }
