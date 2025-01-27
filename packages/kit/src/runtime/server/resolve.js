@@ -26,7 +26,6 @@ export function resolve(options, manifest, state) {
 		}
 
 		/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-		console.log(request);
 		// @ts-expect-error URL is actually valid on this type, I think due to the NodeReqProxy used.
 		const url = new URL(request.url);
 
