@@ -315,7 +315,10 @@ export interface ServerMetadataRoute {
 }
 
 export interface ServerMetadata {
-	nodes: Array<{ has_server_load: boolean }>;
+	nodes: Array<{
+		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value */
+		has_server_load: boolean;
+	}>;
 	routes: Map<string, ServerMetadataRoute>;
 }
 

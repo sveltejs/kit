@@ -2516,6 +2516,7 @@ async function _hydrate(
 			parsed_route = parse_server_route(route, app.nodes);
 		} else {
 			route = { id: null };
+			params = {};
 		}
 	} else if (!__SVELTEKIT_EMBEDDED__) {
 		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation

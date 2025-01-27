@@ -1,4 +1,5 @@
 import { s } from '../../../utils/misc.js';
+import { has_server_load } from '../../../utils/routing.js';
 import { load_page_and_error_nodes } from './load_page_nodes.js';
 
 /**
@@ -20,8 +21,8 @@ export async function create_stringified_csr_server_route(id, page, manifest) {
 	return [
 		`{\n\tid: ${s(id)}`,
 		`errors: [${errors.map((n) => (n ? n.index : 'undefined')).join(', ')}]`,
-		`layouts: [${layouts.map((n) => (n ? `[${!!n.server?.load}, ${n.index}]` : 'undefined')).join(', ')}]`,
-		`leaf: [${!!leaf.server?.load}, ${page.leaf}]`,
+		`layouts: [${layouts.map((n) => (n ? `[${has_server_load(n)}, ${n.index}]` : 'undefined')).join(', ')}]`,
+		`leaf: [${has_server_load(leaf)}, ${page.leaf}]`,
 		`nodes: ${nodes}\n}`
 	].join(',\n\t');
 }
