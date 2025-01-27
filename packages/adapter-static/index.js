@@ -7,6 +7,12 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
+			if (builder.config.kit.router?.resolution === 'server') {
+				throw new Error(
+					'adapter-static cannot be used with `router.resolution: "server"`, as this config requires a server to handle dynamic requests'
+				);
+			}
+
 			if (!options?.fallback && builder.config.kit.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
