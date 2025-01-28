@@ -260,6 +260,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
 
+						console.error('route_server', route.id, !!route.page);
 						const endpoint = route.endpoint;
 
 						return {
