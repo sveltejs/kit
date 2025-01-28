@@ -113,6 +113,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		}
 	`;
 
+	console.log('client manifest:', dictionary);
+
 	if (!client_routing) {
 		dictionary = '{}';
 		const root_layout = layouts_with_server_load.has(0);
