@@ -395,14 +395,17 @@ const plugin = function (defaults = {}) {
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the server router, becaue it does not rely on the server routing manifest)
 				await generate_edge_function(
-					'_app/routes',
+					`${builder.config.kit.appDir}/routes`,
 					{
 						...defaults,
 						runtime: 'edge'
 					},
 					[]
 				);
-				static_config.routes.push({ src: '/_app/routes(\\.js|/.*)', dest: `/_app/routes` });
+				static_config.routes.push({
+					src: `/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
+					dest: `/${builder.config.kit.appDir}/routes`
+				});
 			}
 
 			// Catch-all route must come at the end, otherwise it will swallow all other routes,
