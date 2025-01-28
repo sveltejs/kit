@@ -893,6 +893,7 @@ Tips:
 
 						build_data.client.routes = compact(
 							manifest_data.routes.map((route) => {
+								console.log('route', route.id, !!route.page);
 								if (!route.page) return;
 
 								return {

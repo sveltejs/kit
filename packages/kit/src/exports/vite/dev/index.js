@@ -153,6 +153,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							? undefined
 							: compact(
 									manifest_data.routes.map((route) => {
+										console.log('route', route.id, !!route.page);
 										if (!route.page) return;
 
 										return {
