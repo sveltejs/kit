@@ -1,3 +1,4 @@
+import { base } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
@@ -10,8 +11,8 @@ import { decode_params } from '../../../utils/url.js';
  */
 export function is_route_resolution_request(url, options) {
 	return (
-		url.pathname === `/${options.app_dir}/routes.js` ||
-		url.pathname.startsWith(`/${options.app_dir}/routes/`)
+		url.pathname === `${base}/${options.app_dir}/routes.js` ||
+		url.pathname.startsWith(`${base}/${options.app_dir}/routes/`)
 	);
 }
 
@@ -21,7 +22,7 @@ export function is_route_resolution_request(url, options) {
  * @returns {string}
  */
 export function route_resolution_to_regular_route(url, options) {
-	return url.pathname.slice(`/${options.app_dir}/routes`.length, -3) || '/';
+	return url.pathname.slice(`${base}/${options.app_dir}/routes`.length, -3) || '/';
 }
 
 /**
@@ -30,7 +31,9 @@ export function route_resolution_to_regular_route(url, options) {
  * @returns {string}
  */
 export function regular_route_to_route_resolution(url, options) {
-	return `/${options.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js');
+	return (
+		`${base}/${options.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js')
+	);
 }
 
 /**
