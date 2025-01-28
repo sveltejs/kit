@@ -101,6 +101,17 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 		}
 	}
 
+	if (validated.kit.router.resolution === 'server') {
+		if (validated.kit.router.type === 'hash') {
+			throw new Error('Cannot use router.resolution=server with router.type=hash');
+		}
+		if (validated.kit.output.bundleStrategy !== 'split') {
+			throw new Error(
+				'Cannot use router.resolution=server with output.bundleStrategy=inline or output.bundleStrategy=single'
+			);
+		}
+	}
+
 	return validated;
 }
 

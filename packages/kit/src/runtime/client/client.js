@@ -1236,6 +1236,7 @@ function get_rerouted_url(url) {
  * returns undefined.
  * @param {URL | undefined} url
  * @param {boolean} invalidating
+ * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
 async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
@@ -1251,16 +1252,13 @@ async function get_navigation_intent(url, invalidating) {
 			const params = route.exec(path);
 
 			if (params) {
-				const id = get_page_key(url);
-				/** @type {import('./types.js').NavigationIntent} */
-				const intent = {
-					id,
+				return {
+					id: get_page_key(url),
 					invalidating,
 					route,
 					params: decode_params(params),
 					url
 				};
-				return intent;
 			}
 		}
 	} else {
@@ -1275,16 +1273,13 @@ async function get_navigation_intent(url, invalidating) {
 
 		if (!route) return;
 
-		const id = get_page_key(url);
-		/** @type {import('./types.js').NavigationIntent} */
-		const intent = {
-			id,
+		return {
+			id: get_page_key(url),
 			invalidating,
 			route: parse_server_route(route, app.nodes),
 			params,
 			url
 		};
-		return intent;
 	}
 }
 

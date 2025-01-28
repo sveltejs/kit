@@ -70,6 +70,8 @@ export function parse_server_route({ nodes, id, leaf, layouts, errors }, app_nod
 		},
 		// By writing to app_nodes only when a loader at that index is not already defined,
 		// we ensure that loaders have referential equality when they load the same node.
+		// Code elsewhere in client.js relies on this referential equality to determine
+		// if a loader is different and should therefore (re-)run.
 		errors: errors.map((n) => (n ? (app_nodes[n] ||= nodes[n]) : undefined)),
 		layouts: layouts.map((n) => (n ? [n[0], (app_nodes[n[1]] ||= nodes[n[1]])] : undefined)),
 		leaf: [leaf[0], (app_nodes[leaf[1]] ||= nodes[leaf[1]])]

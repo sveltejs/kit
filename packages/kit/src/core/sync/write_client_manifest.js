@@ -49,6 +49,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node));
 			return `() => import('./nodes/${i}')`;
 		})
+		// If route resolution happens on the server, we only need the root layout and root error page
+		// upfront, the rest is loaded on demand as the user navigates the app
 		.slice(0, client_routing ? manifest_data.nodes.length : 2)
 		.join(',\n');
 
