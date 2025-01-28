@@ -263,7 +263,7 @@ const options = object(
 
 				router: object({
 					type: list(['pathname', 'hash']),
-					resolution: list(['client', 'server'], 'server')
+					resolution: list(['client', 'server'])
 				}),
 
 				serviceWorker: object({
@@ -283,14 +283,14 @@ const options = object(
 			false,
 			(options) => {
 				if (options.router.resolution === 'server') {
-					// if (options.router.type === 'hash') {
-					// 	throw new Error('Cannot use router.resolution=server with router.type=hash');
-					// }
-					// if (options.output.bundleStrategy !== 'split') {
-					// 	throw new Error(
-					// 		'Cannot use router.resolution=server with output.bundleStrategy=inline or output.bundleStrategy=single'
-					// 	);
-					// }
+					if (options.router.type === 'hash') {
+						throw new Error('Cannot use router.resolution=server with router.type=hash');
+					}
+					if (options.output.bundleStrategy !== 'split') {
+						throw new Error(
+							'Cannot use router.resolution=server with output.bundleStrategy=inline or output.bundleStrategy=single'
+						);
+					}
 				}
 				return options;
 			}
