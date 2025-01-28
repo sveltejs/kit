@@ -412,7 +412,7 @@ export async function render_response({
 						create_server_routing_response(
 							event.route.id,
 							event.params,
-							new URL(route_resolution_url),
+							new URL(route_resolution_url, event.url),
 							manifest
 						)
 					);
