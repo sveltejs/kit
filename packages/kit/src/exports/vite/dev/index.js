@@ -142,7 +142,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							? undefined
 							: manifest_data.nodes.map((node, i) => {
 									if (node.component || node.universal) {
-										return `${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
+										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
 									}
 								}),
 					routes:
