@@ -322,6 +322,19 @@ export async function render_response({
 			}
 		}
 
+		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+			const route_resolution_url = regular_route_to_route_resolution(event.url, options);
+			state.prerendering.dependencies.set(
+				route_resolution_url,
+				create_server_routing_response(
+					event.route.id,
+					event.params,
+					new URL(route_resolution_url, event.url),
+					manifest
+				)
+			);
+		}
+
 		const blocks = [];
 
 		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
@@ -403,19 +416,6 @@ export async function render_response({
 				if (event.route.id) {
 					const route = create_stringified_csr_server_route(event.route.id, event.url, manifest);
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
-				}
-
-				if (state.prerendering) {
-					const route_resolution_url = regular_route_to_route_resolution(event.url, options);
-					state.prerendering.dependencies.set(
-						route_resolution_url,
-						create_server_routing_response(
-							event.route.id,
-							event.params,
-							new URL(route_resolution_url, event.url),
-							manifest
-						)
-					);
 				}
 			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);

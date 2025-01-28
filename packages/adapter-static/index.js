@@ -7,13 +7,6 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (builder.config.kit.router?.resolution === 'server' && options?.fallback) {
-				throw new Error(
-					'adapter-static with a fallback page cannot be used with `router.resolution: "server"`, ' +
-						'as this combination of configs requires a server to handle dynamic route resolution requests'
-				);
-			}
-
 			if (!options?.fallback && builder.config.kit.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
