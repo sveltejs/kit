@@ -36,9 +36,9 @@ export function regular_route_to_route_resolution(url, options) {
 /**
  * @param {import('types').SSRClientRoute | string} route
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @returns {Promise<string>}
+ * @returns {string}
  */
-export async function create_stringified_csr_server_route(route, manifest) {
+export function create_stringified_csr_server_route(route, manifest) {
 	if (typeof route === 'string') {
 		route = /** @type {import('types').SSRClientRoute} */ (
 			/** @type {import('types').SSRClientRoute[]} */ (manifest._.client.routes).find(
@@ -97,23 +97,22 @@ export async function resolve_route(resolved_path, manifest) {
 		}
 	}
 
-	const { response } = await create_server_routing_response(route, params, manifest);
-	return response;
+	return create_server_routing_response(route, params, manifest).response;
 }
 
 /**
  * @param {import('types').SSRClientRoute | string | null} route
  * @param {Partial<Record<string, string>>} params
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @returns {Promise<{response: Response, body: string}>}
+ * @returns {{response: Response, body: string}}
  */
-export async function create_server_routing_response(route, params, manifest) {
+export function create_server_routing_response(route, params, manifest) {
 	const headers = new Headers({
 		'content-type': 'application/javascript; charset=utf-8'
 	});
 
 	if (route) {
-		const csr_route = await create_stringified_csr_server_route(route, manifest);
+		const csr_route = create_stringified_csr_server_route(route, manifest);
 		const body = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
 
 		return { response: text(body, { headers }), body };
