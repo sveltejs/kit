@@ -2,7 +2,7 @@ import { base } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
-import { decode_params } from '../../../utils/url.js';
+import { decode_params, to_route_resolution } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
 
 /**
@@ -32,9 +32,7 @@ export function route_resolution_to_regular_route(url, options) {
  * @returns {string}
  */
 export function regular_route_to_route_resolution(url, options) {
-	return (
-		`${base}/${options.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js')
-	);
+	return to_route_resolution(url, base, options.app_dir);
 }
 
 /**

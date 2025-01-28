@@ -222,3 +222,19 @@ export function strip_data_suffix(pathname) {
 
 	return pathname.slice(0, -DATA_SUFFIX.length);
 }
+
+/**
+ * Convert a regular URL to a route to send to SvelteKit's server routing resolution endpoint
+ * @param {URL} url
+ * @param {string} base
+ * @param {string} app_dir
+ * @returns {string}
+ */
+export function to_route_resolution(url, base, app_dir) {
+	return (
+		`${base}/${app_dir}/routes` +
+		(url.pathname === '/'
+			? '.js'
+			: url.pathname.slice(0, url.pathname.endsWith('/') ? -1 : undefined) + '.js')
+	);
+}

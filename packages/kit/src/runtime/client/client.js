@@ -6,7 +6,8 @@ import {
 	decode_pathname,
 	strip_hash,
 	make_trackable,
-	normalize_path
+	normalize_path,
+	to_route_resolution
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
@@ -1265,7 +1266,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			base + `/${app.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js')
+			to_route_resolution(url, base, app.app_dir)
 		);
 
 		if (!route) return;
