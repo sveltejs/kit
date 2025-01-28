@@ -29,7 +29,11 @@ export default function create_manifest_data({
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 	console.error(
 		'created_manifest_data',
-		routes.map((r) => r.id)
+		JSON.stringify(
+			routes.map((r) => r.id),
+			null,
+			2
+		)
 	);
 
 	for (const route of routes) {
