@@ -107,6 +107,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 							if (param.matcher) matchers.add(param.matcher);
 						});
 
+						console.error('server_manifest_route', route.id);
+
 						return dedent`
 							{
 								id: ${s(route.id)},
