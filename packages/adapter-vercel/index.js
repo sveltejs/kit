@@ -390,6 +390,7 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
+			// optional chaining to support older versions that don't have this setting yet
 			if (builder.config.kit.router?.resolution === 'server') {
 				// Create a separate edge function just for the server router.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
@@ -403,8 +404,8 @@ const plugin = function (defaults = {}) {
 					[]
 				);
 				static_config.routes.push({
-					src: `/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
-					dest: `/${builder.config.kit.appDir}/routes`
+					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
+					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes`
 				});
 			}
 
