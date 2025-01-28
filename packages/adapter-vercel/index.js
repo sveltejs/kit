@@ -390,6 +390,21 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
+			if (builder.config.kit.router?.resolution === 'server') {
+				// Create a separate edge function just for the server router.
+				// By omitting all routes we're ensuring it's small (the routes will still be available
+				// to the server router, becaue it does not rely on the server routing manifest)
+				await generate_edge_function(
+					'_app/routes',
+					{
+						...defaults,
+						runtime: 'edge'
+					},
+					[]
+				);
+				static_config.routes.push({ src: '/_app/routes(\\.js|/.*)', dest: `/_app/routes` });
+			}
+
 			// Catch-all route must come at the end, otherwise it will swallow all other routes,
 			// including ISR aliases if there is only one function
 			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
