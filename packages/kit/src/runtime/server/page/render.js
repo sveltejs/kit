@@ -401,14 +401,20 @@ export async function render_response({
 
 			if (manifest._.client.routes) {
 				if (event.route.id) {
-					const route = create_stringified_csr_server_route(event.route.id, manifest);
+					const route = create_stringified_csr_server_route(event.route.id, event.url, manifest);
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
 				}
 
 				if (state.prerendering) {
+					const route_resolution_url = regular_route_to_route_resolution(event.url, options);
 					state.prerendering.dependencies.set(
-						regular_route_to_route_resolution(event.url, options),
-						create_server_routing_response(event.route.id, event.params, manifest)
+						route_resolution_url,
+						create_server_routing_response(
+							event.route.id,
+							event.params,
+							new URL(route_resolution_url),
+							manifest
+						)
 					);
 				}
 			} else if (options.embedded) {

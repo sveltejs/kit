@@ -90,20 +90,19 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404 });
 	}
 
+	/** @type {boolean[] | undefined} */
+	let invalidated_data_nodes;
+
 	/**
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for path resolution, then return the route object as a JS file.
 	 */
 	const is_route_resolution_request = _is_route_resolution_request(url, options);
+	const is_data_request = has_data_suffix(url.pathname);
 
 	if (is_route_resolution_request) {
 		url.pathname = route_resolution_to_regular_route(url, options);
-	}
-
-	const is_data_request = has_data_suffix(url.pathname);
-	/** @type {boolean[] | undefined} */
-	let invalidated_data_nodes;
-	if (is_data_request) {
+	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
@@ -145,6 +144,10 @@ export async function respond(request, options, manifest, state) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
+	if (is_route_resolution_request) {
+		return resolve_route(resolved_path, new URL(request.url), manifest);
+	}
+
 	if (resolved_path === `/${options.app_dir}/env.js`) {
 		return get_public_env(request);
 	}
@@ -154,10 +157,6 @@ export async function respond(request, options, manifest, state) {
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
-	}
-
-	if (is_route_resolution_request) {
-		return resolve_route(resolved_path, manifest);
 	}
 
 	if (!state.prerendering?.fallback) {

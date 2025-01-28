@@ -3,6 +3,7 @@ import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
 import { decode_params } from '../../../utils/url.js';
+import { get_relative_path } from '../../utils.js';
 
 /**
  * @param {URL} url
@@ -38,10 +39,11 @@ export function regular_route_to_route_resolution(url, options) {
 
 /**
  * @param {import('types').SSRClientRoute | string} route
+ * @param {URL} url
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {string}
  */
-export function create_stringified_csr_server_route(route, manifest) {
+export function create_stringified_csr_server_route(route, url, manifest) {
 	if (typeof route === 'string') {
 		route = /** @type {import('types').SSRClientRoute} */ (
 			/** @type {import('types').SSRClientRoute[]} */ (manifest._.client.routes).find(
@@ -54,10 +56,7 @@ export function create_stringified_csr_server_route(route, manifest) {
 
 	const nodes = `{ ${[...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
 		.filter((n) => typeof n === 'number')
-		.map(
-			(n) =>
-				`'${n}': () => ${manifest._.client.nodes?.[n] ? `import('/${manifest._.client.nodes[n]}')` : 'Promise.resolve({})'}`
-		)
+		.map((n) => `'${n}': () => ${create_client_import(manifest._.client.nodes?.[n], url)}`)
 		.join(', ')} }`;
 
 	// stringified version of
@@ -72,11 +71,31 @@ export function create_stringified_csr_server_route(route, manifest) {
 }
 
 /**
+ * @param {string | undefined} import_path
+ * @param {URL} url
+ */
+function create_client_import(import_path, url) {
+	if (!import_path) return 'Promise.resolve({})';
+
+	// During DEV, Vite will make the paths absolute (e.g. /@fs/...)
+	if (import_path[0] === '/') {
+		return `import('${import_path}')`;
+	}
+
+	// During PROD, they're root-relative, and we make them relative to the requested
+	// server routing route to support IPFS, the internet archive, etc.
+	let path = get_relative_path(url.pathname, `${base}/${import_path}`);
+	if (path[0] !== '.') path = `./${path}`;
+	return `import('${path}')`;
+}
+
+/**
  * @param {string} resolved_path
+ * @param {URL} url
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {Promise<Response>}
  */
-export async function resolve_route(resolved_path, manifest) {
+export async function resolve_route(resolved_path, url, manifest) {
 	if (!manifest._.client.routes) {
 		return text('Server routing disabled', { status: 400 });
 	}
@@ -100,22 +119,23 @@ export async function resolve_route(resolved_path, manifest) {
 		}
 	}
 
-	return create_server_routing_response(route, params, manifest).response;
+	return create_server_routing_response(route, params, url, manifest).response;
 }
 
 /**
  * @param {import('types').SSRClientRoute | string | null} route
  * @param {Partial<Record<string, string>>} params
+ * @param {URL} url
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {{response: Response, body: string}}
  */
-export function create_server_routing_response(route, params, manifest) {
+export function create_server_routing_response(route, params, url, manifest) {
 	const headers = new Headers({
 		'content-type': 'application/javascript; charset=utf-8'
 	});
 
 	if (route) {
-		const csr_route = create_stringified_csr_server_route(route, manifest);
+		const csr_route = create_stringified_csr_server_route(route, url, manifest);
 		const body = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
 
 		return { response: text(body, { headers }), body };
