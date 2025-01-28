@@ -881,6 +881,24 @@ Tips:
 						)
 					};
 
+					build_data.client.routes = compact(
+						manifest_data.routes.map((route) => {
+							console.error('route', route.id, !!route.page);
+							if (!route.page) return;
+
+							return {
+								id: route.id,
+								pattern: route.pattern,
+								params: route.params,
+								layouts: route.page.layouts.map((l) =>
+									l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
+								),
+								errors: route.page.errors,
+								leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
+							};
+						})
+					);
+
 					if (svelte_config.kit.router.resolution === 'server') {
 						build_data.client.nodes = manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
@@ -890,24 +908,6 @@ Tips:
 								).chunk.file;
 							}
 						});
-
-						build_data.client.routes = compact(
-							manifest_data.routes.map((route) => {
-								console.error('route', route.id, !!route.page);
-								if (!route.page) return;
-
-								return {
-									id: route.id,
-									pattern: route.pattern,
-									params: route.params,
-									layouts: route.page.layouts.map((l) =>
-										l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
-									),
-									errors: route.page.errors,
-									leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
-								};
-							})
-						);
 					}
 				} else {
 					const start = deps_of(`${runtime_directory}/client/bundle.js`);

@@ -148,26 +148,23 @@ export async function dev(vite, vite_config, svelte_config) {
 										);
 									}
 								}),
-					routes:
-						svelte_config.kit.router.resolution === 'client'
-							? undefined
-							: compact(
-									manifest_data.routes.map((route) => {
-										console.error('route', route.id, !!route.page);
-										if (!route.page) return;
+					routes: compact(
+						manifest_data.routes.map((route) => {
+							console.error('route', route.id, !!route.page);
+							if (!route.page) return;
 
-										return {
-											id: route.id,
-											pattern: route.pattern,
-											params: route.params,
-											layouts: route.page.layouts.map((l) =>
-												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
-											),
-											errors: route.page.errors,
-											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
-										};
-									})
-								)
+							return {
+								id: route.id,
+								pattern: route.pattern,
+								params: route.params,
+								layouts: route.page.layouts.map((l) =>
+									l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+								),
+								errors: route.page.errors,
+								leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+							};
+						})
+					)
 				},
 				server_assets: new Proxy(
 					{},
