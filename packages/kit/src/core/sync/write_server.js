@@ -62,7 +62,6 @@ export const options = {
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
 	},
 	version_hash: ${s(hash(config.kit.version.name))},
-	server_routing: ${config.kit.router.resolution === 'server'},
 };
 
 export async function get_hooks() {

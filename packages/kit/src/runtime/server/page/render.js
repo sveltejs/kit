@@ -36,7 +36,6 @@ const encoder = new TextEncoder();
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
- *   page: import('types').PageNodeIndexes | undefined;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
@@ -51,7 +50,6 @@ export async function render_response({
 	options,
 	manifest,
 	state,
-	page,
 	page_config,
 	status,
 	error = null,
@@ -401,16 +399,16 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (options.server_routing) {
-				if (page /* undefined in case of 404 */) {
-					const route = await create_stringified_csr_server_route(event.route.id, page, manifest);
+			if (manifest._.client.routes) {
+				if (event.route.id) {
+					const route = await create_stringified_csr_server_route(event.route.id, manifest);
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
 				}
 
 				if (state.prerendering) {
 					state.prerendering.dependencies.set(
 						regular_route_to_route_resolution(event.url, options),
-						await create_server_routing_response(event.route.id, page, event.params, manifest)
+						await create_server_routing_response(event.route.id, event.params, manifest)
 					);
 				}
 			} else if (options.embedded) {

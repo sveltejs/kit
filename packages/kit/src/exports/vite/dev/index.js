@@ -136,7 +136,37 @@ export async function dev(vite, vite_config, svelte_config) {
 					imports: [],
 					stylesheets: [],
 					fonts: [],
-					uses_env_dynamic_public: true
+					uses_env_dynamic_public: true,
+					nodes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: manifest_data.nodes.map((node, i) => {
+									if (node.component || node.universal) {
+										// remove leading slash because it's not present in prod, so we need to prepend it in the runtime
+										return `${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`.slice(
+											1
+										);
+									}
+								}),
+					routes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: compact(
+									manifest_data.routes.map((route) => {
+										if (!route.page) return;
+
+										return {
+											id: route.id,
+											pattern: route.pattern,
+											params: route.params,
+											layouts: route.page.layouts.map((l) =>
+												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+											),
+											errors: route.page.errors,
+											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+										};
+									})
+								)
 				},
 				server_assets: new Proxy(
 					{},

@@ -34,7 +34,7 @@ import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
 import {
-	create_server_routing_response,
+	resolve_route,
 	is_route_resolution_request as _is_route_resolution_request,
 	route_resolution_to_regular_route
 } from './page/server_routing.js';
@@ -92,7 +92,7 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for rerouting and route matching, then return the route object as a JS file.
+	 * for path resolution, then return the route object as a JS file.
 	 */
 	const is_route_resolution_request = _is_route_resolution_request(url, options);
 
@@ -115,19 +115,19 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	// reroute could alter the given URL, so we pass a copy
-	let rerouted_path;
+	let resolved_path;
+
 	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		// reroute could alter the given URL, so we pass a copy
+		resolved_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
 		});
 	}
 
-	let decoded;
 	try {
-		decoded = decode_pathname(rerouted_path);
+		resolved_path = decode_pathname(resolved_path);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
@@ -139,21 +139,25 @@ export async function respond(request, options, manifest, state) {
 	let params = {};
 
 	if (base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(base)) {
+		if (!resolved_path.startsWith(base)) {
 			return text('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(base.length) || '/';
+		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	if (decoded === `/${options.app_dir}/env.js`) {
+	if (resolved_path === `/${options.app_dir}/env.js`) {
 		return get_public_env(request);
 	}
 
-	if (decoded.startsWith(`/${options.app_dir}`)) {
+	if (resolved_path.startsWith(`/${options.app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
+	}
+
+	if (is_route_resolution_request) {
+		return resolve_route(resolved_path, manifest);
 	}
 
 	if (!state.prerendering?.fallback) {
@@ -161,7 +165,7 @@ export async function respond(request, options, manifest, state) {
 		const matchers = await manifest._.matchers();
 
 		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(decoded);
+			const match = candidate.pattern.exec(resolved_path);
 			if (!match) continue;
 
 			const matched = exec(match, candidate.params, matchers);
@@ -171,20 +175,6 @@ export async function respond(request, options, manifest, state) {
 				break;
 			}
 		}
-	}
-
-	if (is_route_resolution_request) {
-		if (!options.server_routing) {
-			return text('Server routing disabled', { status: 400 });
-		}
-
-		const { response } = await create_server_routing_response(
-			route?.id ?? null,
-			route?.page,
-			params,
-			manifest
-		);
-		return response;
 	}
 
 	/** @type {import('types').TrailingSlash | void} */
@@ -454,7 +444,6 @@ export async function respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					page: route?.page ?? undefined,
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,

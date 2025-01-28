@@ -1,7 +1,7 @@
-import { s } from '../../../utils/misc.js';
-import { has_server_load } from '../../../utils/routing.js';
-import { load_page_and_error_nodes } from './load_page_nodes.js';
 import { text } from '../../../exports/index.js';
+import { s } from '../../../utils/misc.js';
+import { exec } from '../../../utils/routing.js';
+import { decode_params } from '../../../utils/url.js';
 
 /**
  * @param {URL} url
@@ -34,44 +34,86 @@ export function regular_route_to_route_resolution(url, options) {
 }
 
 /**
- * @param {string | null} id
- * @param {import('types').PageNodeIndexes} page
+ * @param {import('types').SSRClientRoute | string} route
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {Promise<string>}
  */
-export async function create_stringified_csr_server_route(id, page, manifest) {
-	const { errors, layouts, leaf } = await load_page_and_error_nodes(page, manifest);
+export async function create_stringified_csr_server_route(route, manifest) {
+	if (typeof route === 'string') {
+		route = /** @type {import('types').SSRClientRoute} */ (
+			/** @type {import('types').SSRClientRoute[]} */ (manifest._.client.routes).find(
+				(r) => r.id === route
+			)
+		);
+	}
 
-	const nodes = `{ ${[...errors, ...layouts, leaf]
-		.filter((n) => !!n)
-		.map((n) => `'${n.index}': () => import('/${n.imports[0]}')`)
+	const { errors, layouts, leaf } = route;
+
+	const nodes = `{ ${[...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
+		.filter((n) => typeof n === 'number')
+		.map(
+			(n) =>
+				`'${n}': () => ${manifest._.client.nodes?.[n] ? `import('/${manifest._.client.nodes[n]}')` : 'Promise.resolve({})'}`
+		)
 		.join(', ')} }`;
 
 	// stringified version of
 	/** @type {import('types').CSRRouteServer} */
 	return [
-		`{\n\tid: ${s(id)}`,
-		`errors: [${errors.map((n) => (n ? n.index : 'undefined')).join(', ')}]`,
-		`layouts: [${layouts.map((n) => (n ? `[${has_server_load(n)}, ${n.index}]` : 'undefined')).join(', ')}]`,
-		`leaf: [${has_server_load(leaf)}, ${leaf.index}]`,
+		`{\n\tid: ${s(route.id)}`,
+		`errors: ${s(route.errors)}`,
+		`layouts: ${s(route.layouts)}`,
+		`leaf: ${s(route.leaf)}`,
 		`nodes: ${nodes}\n}`
 	].join(',\n\t');
 }
 
 /**
- * @param {string | null} id
- * @param {import('types').PageNodeIndexes | null | undefined} page
+ * @param {string} resolved_path
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @returns {Promise<Response>}
+ */
+export async function resolve_route(resolved_path, manifest) {
+	if (!manifest._.client.routes) {
+		return text('Server routing disabled', { status: 400 });
+	}
+
+	/** @type {import('types').SSRClientRoute | null} */
+	let route = null;
+	/** @type {Record<string, string>} */
+	let params = {};
+
+	const matchers = await manifest._.matchers();
+
+	for (const candidate of manifest._.client.routes) {
+		const match = candidate.pattern.exec(resolved_path);
+		if (!match) continue;
+
+		const matched = exec(match, candidate.params, matchers);
+		if (matched) {
+			route = candidate;
+			params = decode_params(matched);
+			break;
+		}
+	}
+
+	const { response } = await create_server_routing_response(route, params, manifest);
+	return response;
+}
+
+/**
+ * @param {import('types').SSRClientRoute | string | null} route
  * @param {Partial<Record<string, string>>} params
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {Promise<{response: Response, body: string}>}
  */
-export async function create_server_routing_response(id, page, params, manifest) {
+export async function create_server_routing_response(route, params, manifest) {
 	const headers = new Headers({
 		'content-type': 'application/javascript; charset=utf-8'
 	});
 
-	if (page) {
-		const csr_route = await create_stringified_csr_server_route(id, page, manifest);
+	if (route) {
+		const csr_route = await create_stringified_csr_server_route(route, manifest);
 		const body = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
 
 		return { response: text(body, { headers }), body };

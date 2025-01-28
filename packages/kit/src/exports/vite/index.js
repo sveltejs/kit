@@ -13,7 +13,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { assets_base, find_deps } from './build/utils.js';
+import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -35,6 +35,7 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
+import { compact } from '../../utils/array.js';
 
 const cwd = process.cwd();
 
@@ -879,6 +880,34 @@ Tips:
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
+
+					if (svelte_config.kit.router.resolution === 'server') {
+						build_data.client.nodes = manifest_data.nodes.map((node, i) => {
+							if (node.component || node.universal) {
+								return resolve_symlinks(
+									client_manifest,
+									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`
+								).chunk.file;
+							}
+						});
+
+						build_data.client.routes = compact(
+							manifest_data.routes.map((route) => {
+								if (!route.page) return;
+
+								return {
+									id: route.id,
+									pattern: route.pattern,
+									params: route.params,
+									layouts: route.page.layouts.map((l) =>
+										l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
+									),
+									errors: route.page.errors,
+									leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
+								};
+							})
+						);
+					}
 				} else {
 					const start = deps_of(`${runtime_directory}/client/bundle.js`);
 
