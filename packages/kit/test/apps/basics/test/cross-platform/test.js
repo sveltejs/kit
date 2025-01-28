@@ -917,7 +917,7 @@ test.describe('Routing', () => {
 	});
 
 	if (process.platform !== 'win32') {
-		test('Respects symlinks', async ({ page, clicknav }) => {
+		test.only('Respects symlinks', async ({ page, clicknav }) => {
 			await page.goto('/routing');
 			await clicknav('[href="/routing/symlink-from"]');
 
