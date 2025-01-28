@@ -1265,10 +1265,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			new URL(
-				base + `/${app.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js'),
-				location.href
-			).href
+			base + `/${app.app_dir}/routes` + (url.pathname === '/' ? '.js' : url.pathname + '.js')
 		);
 
 		if (!route) return;
