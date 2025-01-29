@@ -414,7 +414,11 @@ export async function render_response({
 
 			if (manifest._.client.routes) {
 				if (event.route.id) {
-					const route = create_stringified_csr_server_route(event.route.id, event.url, manifest);
+					const route = create_stringified_csr_server_route(
+						event.route.id,
+						event.url,
+						manifest
+					).replaceAll('\n', '\n\t\t\t\t\t\t\t'); // make output after it's put together with the rest more readable
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
 				}
 			} else if (options.embedded) {
