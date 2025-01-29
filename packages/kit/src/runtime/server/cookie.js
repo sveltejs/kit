@@ -105,7 +105,11 @@ export function get_cookies(request, url, trailing_slash) {
 				}
 			}
 
-			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
+			return /** @type {Array<{ name: string; value: string }>} */ (
+				Object.entries(cookies)
+					.filter(([, value]) => value != null)
+					.map(([name, value]) => ({ name, value }))
+			);
 		},
 
 		/**
