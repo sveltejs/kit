@@ -23,7 +23,7 @@ export function is_route_resolution_request(url, options) {
  * @returns {string}
  */
 export function route_resolution_to_regular_route(url, options) {
-	return url.pathname.slice(`${base}/${options.app_dir}/routes`.length, -3) || '/';
+	return base + (url.pathname.slice(`${base}/${options.app_dir}/routes`.length, -3) || '/');
 }
 
 /**

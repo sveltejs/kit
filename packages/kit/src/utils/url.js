@@ -231,10 +231,9 @@ export function strip_data_suffix(pathname) {
  * @returns {string}
  */
 export function to_route_resolution(url, base, app_dir) {
+	const pathname = url.pathname.slice(base.length);
 	return (
 		`${base}/${app_dir}/routes` +
-		(url.pathname === '/'
-			? '.js'
-			: url.pathname.slice(0, url.pathname.endsWith('/') ? -1 : undefined) + '.js')
+		(pathname === '/' ? '.js' : pathname.slice(0, pathname.endsWith('/') ? -1 : undefined) + '.js')
 	);
 }
