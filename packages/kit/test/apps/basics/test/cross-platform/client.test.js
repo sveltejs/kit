@@ -863,7 +863,7 @@ test.describe('Routing', () => {
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
 
-		// Filter out server routing endpoint request
+		// Filter out server-side route resolution request
 		expect(requests.filter((r) => !r.includes('_app/routes'))).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');

@@ -233,7 +233,7 @@ test.describe('Load', () => {
 		page.on('request', (request) => requests.push(request.url()));
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
-		// 4. We expect the same data and no new request (except a navigation request in case of server routing) because it was cached.
+		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
 		expect(requests.filter((r) => !r.includes('_app/routes'))).toEqual([]);
 	});

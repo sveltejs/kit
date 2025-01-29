@@ -224,7 +224,7 @@ export function strip_data_suffix(pathname) {
 }
 
 /**
- * Convert a regular URL to a route to send to SvelteKit's server routing resolution endpoint
+ * Convert a regular URL to a route to send to SvelteKit's server-side route resolution endpoint
  * @param {URL} url
  * @param {string} base
  * @param {string} app_dir

@@ -56,7 +56,7 @@ export interface SvelteKitApp {
 	hash: boolean;
 
 	/**
-	 * Corresponds to the `kit.appDir` config value. Only used for server routing.
+	 * Corresponds to the `kit.appDir` config value. Only used in case of router.resolution=server.
 	 */
 	app_dir: string;
 

@@ -81,8 +81,8 @@ export interface BuildData {
 		 */
 		nodes?: (string | undefined)[];
 		/**
-		 * Contains the client routing manifest in a form suitable for the server which is used for server side route resolution.
-		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server routing manifest).
+		 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
 		 * Only set in case of `router.resolution === 'server'`.
 		 */
 		routes?: SSRClientRoute[];
@@ -121,7 +121,7 @@ export type CSRRoute = {
 };
 
 /**
- * Definition of a client side route as transported via `_app/routes/...` when using server routing.
+ * Definition of a client side route as transported via `_app/routes/...` when using server-side route resolution.
  */
 export type CSRRouteServer = {
 	id: string;

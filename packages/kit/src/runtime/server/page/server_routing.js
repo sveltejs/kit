@@ -87,7 +87,7 @@ function create_client_import(import_path, url) {
 		return `import('${assets}/${import_path}')`;
 	}
 
-	// Else we make them relative to the requested server routing route
+	// Else we make them relative to the server-side route resolution request
 	// to support IPFS, the internet archive, etc.
 	let path = get_relative_path(url.pathname, `${assets || base}/${import_path}`);
 	if (path[0] !== '.') path = `./${path}`;
@@ -102,7 +102,7 @@ function create_client_import(import_path, url) {
  */
 export async function resolve_route(resolved_path, url, manifest) {
 	if (!manifest._.client.routes) {
-		return text('Server routing disabled', { status: 400 });
+		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
 	/** @type {import('types').SSRClientRoute | null} */

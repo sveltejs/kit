@@ -2516,7 +2516,7 @@ async function _hydrate(
 	} else {
 		// undefined in case of 404
 		if (route) {
-			// @ts-expect-error route is the full object in case of server routing
+			// @ts-expect-error route is the full object in case of server-side route resolution
 			parsed_route = parse_server_route(route, app.nodes);
 		} else {
 			route = { id: null };
