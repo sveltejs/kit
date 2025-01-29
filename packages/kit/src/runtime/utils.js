@@ -48,10 +48,8 @@ export function get_relative_path(from, to) {
 		to_parts.shift();
 	}
 
-	if (from_parts.length) {
-		let i = from_parts.length;
-		while (i--) from_parts[i] = '..';
-	}
+	let i = from_parts.length;
+	while (i--) from_parts[i] = '..';
 
 	return from_parts.concat(to_parts).join('/');
 }
