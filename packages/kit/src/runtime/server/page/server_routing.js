@@ -1,4 +1,4 @@
-import { base } from '__sveltekit/paths';
+import { base, assets } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
@@ -80,9 +80,16 @@ function create_client_import(import_path, url) {
 		return `import('${import_path}')`;
 	}
 
-	// During PROD, they're root-relative, and we make them relative to the requested
-	// server routing route to support IPFS, the internet archive, etc.
-	let path = get_relative_path(url.pathname, `${base}/${import_path}`);
+	// During PROD, they're root-relative
+
+	// If assets is set to an absolute URL, get it from there
+	if (assets && assets[0] !== '/') {
+		return `import('${assets}/${import_path}')`;
+	}
+
+	// Else we make them relative to the requested server routing route
+	// to support IPFS, the internet archive, etc.
+	let path = get_relative_path(url.pathname, `${assets || base}/${import_path}`);
 	if (path[0] !== '.') path = `./${path}`;
 	return `import('${path}')`;
 }
