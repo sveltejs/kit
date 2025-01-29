@@ -23,24 +23,26 @@ const CONTENT_TYPE_PATTERN =
 /** @type {Record<string, (value: string) => void>} */
 const HEADER_VALIDATORS = {
 	'cache-control': (value) => {
-		const parts = value.split(',');
-		if (parts.some((part) => !part.trim())) {
-			throw new Error('cache-control header contains empty directives');
+		const error_suffix = `(While parsing "${value}".)`;
+		const parts = value.split(',').map((part) => part.trim());
+		if (parts.some((part) => !part)) {
+			throw new Error(`\`cache-control\` header contains empty directives. ${error_suffix}`);
 		}
 
-		const directives = parts.map((part) => part.trim().split('=')[0].toLowerCase());
+		const directives = parts.map((part) => part.split('=')[0].toLowerCase());
 		const invalid = directives.find((directive) => !VALID_CACHE_CONTROL_DIRECTIVES.has(directive));
 		if (invalid) {
 			throw new Error(
-				`Invalid cache-control directive "${invalid}". Did you mean one of: ${[...VALID_CACHE_CONTROL_DIRECTIVES].join(', ')}`
+				`Invalid cache-control directive "${invalid}". Did you mean one of: ${[...VALID_CACHE_CONTROL_DIRECTIVES].join(', ')}? ${error_suffix}`
 			);
 		}
 	},
 
 	'content-type': (value) => {
 		const type = value.split(';')[0].trim();
+		const error_suffix = `(While parsing "${value}".)`;
 		if (!CONTENT_TYPE_PATTERN.test(type)) {
-			throw new Error(`Invalid content-type value "${type}"`);
+			throw new Error(`Invalid content-type value "${type}". ${error_suffix}`);
 		}
 	}
 };
