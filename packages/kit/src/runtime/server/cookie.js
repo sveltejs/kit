@@ -29,7 +29,9 @@ function validate_options(options) {
  */
 export function get_cookies(request, url, trailing_slash) {
 	const header = request.headers.get('cookie') ?? '';
-	const initial_cookies = parse(header, { decode: (value) => value });
+	const initial_cookies = /** @type {Record<string, string>} */ (
+		parse(header, { decode: (value) => value })
+	);
 
 	const normalized_url = normalize_path(url.pathname, trailing_slash);
 
@@ -151,7 +153,7 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {string | null} header
 	 */
 	function get_cookie_header(destination, header) {
-		/** @type {Record<string, string | undefined>} */
+		/** @type {Record<string, string>} */
 		const combined_cookies = {
 			// cookies sent by the user agent have lowest precedence
 			...initial_cookies
@@ -169,7 +171,9 @@ export function get_cookies(request, url, trailing_slash) {
 
 		// explicit header has highest precedence
 		if (header) {
-			const parsed = parse(header, { decode: (value) => value });
+			const parsed = /** @type {Record<string, string>} */ (
+				parse(header, { decode: (value) => value })
+			);
 			for (const name in parsed) {
 				combined_cookies[name] = parsed[name];
 			}
