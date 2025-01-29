@@ -14,7 +14,7 @@ import { find_server_assets } from './find_server_assets.js';
  * build process, to power routing, etc.
  * @param {{
  *   build_data: import('types').BuildData;
- *   prerendered: import('types').Prerendered | null;
+ *   prerendered: string[];
  *   relative_path: string;
  *   routes: import('types').RouteData[];
  * }} opts
@@ -114,7 +114,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 						`;
 					}).filter(Boolean).join(',\n')}
 				],
-				prerendered_routes: new Set(${s(prerendered === null ? [] : prerendered.paths)}),
+				prerendered_routes: new Set(${s(prerendered)}),
 				matchers: async () => {
 					${Array.from(
 						matchers,
