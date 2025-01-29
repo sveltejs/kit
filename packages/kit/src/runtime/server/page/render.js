@@ -419,7 +419,7 @@ export async function render_response({
 						event.url,
 						manifest
 					).replaceAll('\n', '\n\t\t\t\t\t\t\t'); // make output after it's put together with the rest more readable
-					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${route}`);
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${route}`);
 				}
 			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
