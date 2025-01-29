@@ -119,7 +119,9 @@ export function validate_config(config) {
 
 	if (validated.kit.router.resolution === 'server') {
 		if (validated.kit.router.type === 'hash') {
-			throw new Error("The `router.resolution` option cannot be 'server' if `router.type` is 'hash'");
+			throw new Error(
+				"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
+			);
 		}
 		if (validated.kit.output.bundleStrategy !== 'split') {
 			throw new Error(
