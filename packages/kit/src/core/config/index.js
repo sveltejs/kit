@@ -119,11 +119,11 @@ export function validate_config(config) {
 
 	if (validated.kit.router.resolution === 'server') {
 		if (validated.kit.router.type === 'hash') {
-			throw new Error('Cannot use router.resolution=server with router.type=hash');
+			throw new Error("The `router.resolution` option cannot be 'server' if `router.type` is 'hash'");
 		}
 		if (validated.kit.output.bundleStrategy !== 'split') {
 			throw new Error(
-				'Cannot use router.resolution=server with output.bundleStrategy=inline or output.bundleStrategy=single'
+				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
 			);
 		}
 	}

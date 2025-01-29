@@ -660,21 +660,22 @@ export interface KitConfig {
 		 */
 		type?: 'pathname' | 'hash';
 		/**
-		 * Where to determine the route to load when navigating to a new page.
+		 * How to determine which route to load when navigating to a new page.
 		 *
-		 * By default, SvelteKit will load a routing manifest to the client containing information about all possible routes.
-		 * When a link is clicked, the `reroute` hook (if any) is invoked and then this manifest is used to determine what components to load and which data loaders to run.
-		 * Because everything happens on the client, this decision can be made synchronously and therefore very fast. The drawback is that the manifest needs to be
+		 * By default, SvelteKit will serve a route manifest to the browser.
+		 * When navigating, this manifest is used (along with the `reroute` hook, if it exists) to determine which components to load and which `load` functions to run.
+		 * Because everything happens on the client, this decision can be made immediately. The drawback is that the manifest needs to be
 		 * loaded and parsed before the first navigation can happen, which may have an impact if your app contains many routes.
 		 *
-		 * SvelteKit also provides the option to determine the route on the server. This means that for every navigation, the server will be asked to determine the route.
+		 * Alternatively, SvelteKit can determine the route on the server. This means that for every navigation to a path that has not yet been visited, the server will be asked to determine the route.
 		 * This has several advantages:
 		 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
-		 * - Because the client manifest is not loaded, people cannot use it to determine all possible routes in your app
-		 * - Because there's a server request for each navigation, you have the ability to intercept these calls for example through a middleware, and for example do A/B testing opaque to SvelteKit
-		 * The drawback is that the server request may take a bit longer than a synchronous client-side route determination, though note that for each unique pathname the server will only be asked once.
+		 * - The list of routes is hidden from public view
+		 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
+
+		 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
 		 *
-		 * > [!NOTE] When using server-side route resolution and prerendering, the resolution request for a prerendered page will be prerendered as well.
+		 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
 		 *
 		 * @default "client"
 		 * @since 2.17.0

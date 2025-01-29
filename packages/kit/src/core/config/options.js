@@ -284,8 +284,7 @@ const options = object(
 );
 
 /**
- * @template {string} Keys
- * @param {Record<Keys, Validator>} children
+ * @param {Record<string, Validator>} children
  * @param {boolean} [allow_unknown]
  * @returns {Validator}
  */

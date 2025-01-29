@@ -61,7 +61,7 @@ export const options = {
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
 	},
-	version_hash: ${s(hash(config.kit.version.name))},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export async function get_hooks() {
