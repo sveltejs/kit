@@ -112,7 +112,10 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
-				if (manifest._.prerendered_routes.has(decoded)) {
+				if (
+					manifest._.prerendered_routes.has(decoded) ||
+					(decoded.at(-1) === '/' && manifest._.prerendered_routes.has(decoded.slice(0, -1)))
+				) {
 					// the prerendered logic is different for each adapter,
 					// (except maybe for prerendered redirects)
 					// so we need to make an actual HTTP request
