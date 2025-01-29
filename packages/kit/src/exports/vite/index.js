@@ -881,6 +881,9 @@ Tips:
 						)
 					};
 
+					// In case of server-side route resolution, we create a purpose-built route manifest that is
+					// similar to that on the client, with as much information computed upfront so that we
+					// don't need to include any code of the actual routes in the server bundle.
 					if (svelte_config.kit.router.resolution === 'server') {
 						build_data.client.nodes = manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
