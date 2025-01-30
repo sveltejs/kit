@@ -795,6 +795,7 @@ Tips:
 					manifest_path,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: [],
 						relative_path: '.',
 						routes: manifest_data.routes
 					})};\n`
@@ -917,6 +918,7 @@ Tips:
 					manifest_path,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: [],
 						relative_path: '.',
 						routes: manifest_data.routes
 					})};\n`
@@ -948,6 +950,7 @@ Tips:
 					`${out}/server/manifest.js`,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: prerendered.paths,
 						relative_path: '.',
 						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
 					})};\n`
