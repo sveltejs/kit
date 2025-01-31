@@ -1,1 +1,5 @@
-export { config as default } from '../../utils.js';
+import { app_ports, create_config } from '../../utils.js';
+
+const config = create_config(app_ports['test-options']);
+
+export default config;

@@ -1,5 +1,5 @@
 {
-	"name": "prerenderable-incorrect-fragment",
+	"name": "prerender-entry-generator-mismatch",
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {

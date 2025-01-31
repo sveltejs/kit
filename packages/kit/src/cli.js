@@ -16,7 +16,6 @@ function handle_error(e) {
 	if (error.stack) {
 		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
 	}
-
 	process.exit(1);
 }
 
