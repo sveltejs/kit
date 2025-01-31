@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: revert the changes from #13197 to error during development when using `use:enhance` with `+server`
+chore: don't error during development when using `use:enhance` with `+server` as some third party libraries make it possible to POST forms to it
