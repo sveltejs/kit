@@ -350,7 +350,7 @@ const plugin = function (defaults = {}) {
 			/** @type {string | void} */
 			let reroute_path;
 
-			if (!singular && (reroute_path = await builder.getReroutePath())) {
+			if (!singular && (reroute_path = await builder.getReroutePath?.())) {
 				static_config.routes.push({
 					src: '/.*',
 					middlewarePath: 'reroute',

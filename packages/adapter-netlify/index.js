@@ -102,7 +102,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				/** @type {string | void} */
 				let reroute_path;
 
-				if (split && (reroute_path = await builder.getReroutePath())) {
+				if (split && (reroute_path = await builder.getReroutePath?.())) {
 					await generate_reroute_middleware({ builder, reroute_path });
 				}
 			}
