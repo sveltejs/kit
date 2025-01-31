@@ -29,7 +29,7 @@ import {
 import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, ORIGINAL_PATH_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
@@ -59,8 +59,15 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
-	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
+	// URL but stripped from the potential `/__data.json` suffix and its search param
 	const url = new URL(request.url);
+
+	// if the url has been rewritten by a middleware, we need to restore the original path
+	const original_path = url.searchParams.get(ORIGINAL_PATH_PARAM);
+	if (original_path) {
+		url.pathname = original_path;
+		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+	}
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -102,9 +109,10 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	// reroute could alter the given URL, so we pass a copy
+	/** @type {string} */
 	let rerouted_path;
 	try {
+		// reroute could alter the given URL, so we pass a copy
 		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
@@ -112,6 +120,7 @@ export async function respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string} */
 	let decoded;
 	try {
 		decoded = decode_pathname(rerouted_path);
