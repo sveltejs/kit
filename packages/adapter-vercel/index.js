@@ -398,11 +398,12 @@ const plugin = function (defaults = {}) {
 				await generate_edge_function(
 					`${builder.config.kit.appDir}/routes`,
 					{
-						...defaults,
+						external: 'external' in defaults ? defaults.external : undefined,
 						runtime: 'edge'
 					},
 					[]
 				);
+
 				static_config.routes.push({
 					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
 					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes`
