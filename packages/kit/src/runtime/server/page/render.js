@@ -302,6 +302,8 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+
 		if (client.uses_env_dynamic_public && state.prerendering) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
@@ -328,12 +330,7 @@ export async function render_response({
 
 			state.prerendering.dependencies.set(
 				pathname,
-				create_server_routing_response(
-					event.route.id,
-					event.params,
-					new URL(pathname, event.url),
-					manifest
-				)
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
 			);
 		}
 
@@ -415,13 +412,13 @@ export async function render_response({
 			}
 
 			if (manifest._.client.routes) {
-				if (event.route.id) {
-					const route = create_stringified_csr_server_route(
-						event.route.id,
+				if (route) {
+					const stringified = create_stringified_csr_server_route(
+						route,
 						event.url,
 						manifest
 					).replaceAll('\n', '\n\t\t\t\t\t\t\t'); // make output after it's put together with the rest more readable
-					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${route}`);
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
 				}
 			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);

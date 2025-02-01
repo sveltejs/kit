@@ -6,20 +6,12 @@ import { decode_params } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
 
 /**
- * @param {import('types').SSRClientRoute | string} route
+ * @param {import('types').SSRClientRoute} route
  * @param {URL} url
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {string}
  */
 export function create_stringified_csr_server_route(route, url, manifest) {
-	if (typeof route === 'string') {
-		route = /** @type {import('types').SSRClientRoute} */ (
-			/** @type {import('types').SSRClientRoute[]} */ (manifest._.client.routes).find(
-				(r) => r.id === route
-			)
-		);
-	}
-
 	const { errors, layouts, leaf } = route;
 
 	const nodes = `{ ${[...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
@@ -96,7 +88,7 @@ export async function resolve_route(resolved_path, url, manifest) {
 }
 
 /**
- * @param {import('types').SSRClientRoute | string | null} route
+ * @param {import('types').SSRClientRoute | null} route
  * @param {Partial<Record<string, string>>} params
  * @param {URL} url
  * @param {import('@sveltejs/kit').SSRManifest} manifest
