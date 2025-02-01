@@ -1,4 +1,4 @@
-import { base, assets, app_dir } from '__sveltekit/paths';
+import { base, assets } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
@@ -7,29 +7,11 @@ import { get_relative_path } from '../../utils.js';
 import { add_resolution_prefix } from '../../pathname.js';
 
 /**
- * @param {string} pathname
- * @returns {boolean}
- */
-export function has_resolution_prefix(pathname) {
-	return (
-		pathname === `${base}/${app_dir}/route.js` || pathname.startsWith(`${base}/${app_dir}/route/`)
-	);
-}
-
-/**
- * @param {string} pathname
- * @returns {string}
- */
-export function strip_resolution_prefix(pathname) {
-	return base + (pathname.slice(`${base}/${app_dir}/route`.length, -3) || '/');
-}
-
-/**
  * @param {URL} url
  * @returns {string}
  */
 export function regular_route_to_route_resolution(url) {
-	return add_resolution_prefix(url.pathname, base, app_dir);
+	return add_resolution_prefix(url.pathname);
 }
 
 /**

@@ -1,3 +1,5 @@
+import { base, app_dir } from '__sveltekit/paths';
+
 const DATA_SUFFIX = '/__data.json';
 const HTML_DATA_SUFFIX = '.html__data.json';
 
@@ -21,16 +23,32 @@ export function strip_data_suffix(pathname) {
 	return pathname.slice(0, -DATA_SUFFIX.length);
 }
 
+const ROUTE_PREFIX = `${base}/${app_dir}/route`;
+
+/**
+ * @param {string} pathname
+ * @returns {boolean}
+ */
+export function has_resolution_prefix(pathname) {
+	return pathname === `${ROUTE_PREFIX}.js` || pathname.startsWith(`${ROUTE_PREFIX}/`);
+}
+
 /**
  * Convert a regular URL to a route to send to SvelteKit's server-side route resolution endpoint
  * @param {string} pathname
- * @param {string} base
- * @param {string} app_dir
  * @returns {string}
  */
-export function add_resolution_prefix(pathname, base, app_dir) {
+export function add_resolution_prefix(pathname) {
 	let normalized = pathname.slice(base.length);
 	if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
 
-	return `${base}/${app_dir}/route${normalized}.js`;
+	return `${ROUTE_PREFIX}${normalized}.js`;
+}
+
+/**
+ * @param {string} pathname
+ * @returns {string}
+ */
+export function strip_resolution_prefix(pathname) {
+	return base + (pathname.slice(ROUTE_PREFIX.length, -3) || '/');
 }
