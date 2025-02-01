@@ -14,10 +14,10 @@ import { get_relative_path } from '../../utils.js';
 export function generate_route_object(route, url, manifest) {
 	const { errors, layouts, leaf } = route;
 
-	const nodes = `{ ${[...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
+	const nodes = [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
 		.filter((n) => typeof n === 'number')
 		.map((n) => `'${n}': () => ${create_client_import(manifest._.client.nodes?.[n], url)}`)
-		.join(', ')} }`;
+		.join(',\n\t\t');
 
 	// stringified version of
 	/** @type {import('types').CSRRouteServer} */
@@ -26,7 +26,7 @@ export function generate_route_object(route, url, manifest) {
 		`errors: ${s(route.errors)}`,
 		`layouts: ${s(route.layouts)}`,
 		`leaf: ${s(route.leaf)}`,
-		`nodes: ${nodes}\n}`
+		`nodes: {\n\t\t${nodes}\n\t}\n}`
 	].join(',\n\t');
 }
 
