@@ -235,7 +235,7 @@ test.describe('Load', () => {
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
-		expect(requests.filter((r) => !r.includes('_app/routes'))).toEqual([]);
+		expect(requests.filter((r) => !r.includes('_app/route'))).toEqual([]);
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {

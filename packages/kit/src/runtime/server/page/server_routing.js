@@ -12,8 +12,8 @@ import { get_relative_path } from '../../utils.js';
  */
 export function is_route_resolution_request(url, options) {
 	return (
-		url.pathname === `${base}/${options.app_dir}/routes.js` ||
-		url.pathname.startsWith(`${base}/${options.app_dir}/routes/`)
+		url.pathname === `${base}/${options.app_dir}/route.js` ||
+		url.pathname.startsWith(`${base}/${options.app_dir}/route/`)
 	);
 }
 
@@ -23,7 +23,7 @@ export function is_route_resolution_request(url, options) {
  * @returns {string}
  */
 export function route_resolution_to_regular_route(url, options) {
-	return base + (url.pathname.slice(`${base}/${options.app_dir}/routes`.length, -3) || '/');
+	return base + (url.pathname.slice(`${base}/${options.app_dir}/route`.length, -3) || '/');
 }
 
 /**
