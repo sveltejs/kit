@@ -7,7 +7,7 @@ import {
 	strip_hash,
 	make_trackable,
 	normalize_path,
-	to_route_resolution
+	add_resolution_prefix
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
@@ -1266,7 +1266,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			to_route_resolution(url, base, app.app_dir)
+			add_resolution_prefix(url, base, app.app_dir)
 		);
 
 		if (!route) return;

@@ -35,8 +35,8 @@ import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
 import {
 	resolve_route,
-	is_route_resolution_request as _is_route_resolution_request,
-	route_resolution_to_regular_route
+	has_resolution_prefix,
+	strip_resolution_prefix
 } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 
@@ -99,11 +99,11 @@ export async function respond(request, options, manifest, state) {
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for path resolution, then return the route object as a JS file.
 	 */
-	const is_route_resolution_request = _is_route_resolution_request(url, options);
+	const is_route_resolution_request = has_resolution_prefix(url, options);
 	const is_data_request = has_data_suffix(url.pathname);
 
 	if (is_route_resolution_request) {
-		url.pathname = route_resolution_to_regular_route(url, options);
+		url.pathname = strip_resolution_prefix(url, options);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +

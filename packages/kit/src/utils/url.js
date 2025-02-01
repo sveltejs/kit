@@ -230,7 +230,7 @@ export function strip_data_suffix(pathname) {
  * @param {string} app_dir
  * @returns {string}
  */
-export function to_route_resolution(url, base, app_dir) {
+export function add_resolution_prefix(url, base, app_dir) {
 	const pathname = url.pathname.slice(base.length);
 	return (
 		`${base}/${app_dir}/route` +

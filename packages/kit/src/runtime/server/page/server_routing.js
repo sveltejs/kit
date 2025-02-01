@@ -2,7 +2,7 @@ import { base, assets } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
-import { decode_params, to_route_resolution } from '../../../utils/url.js';
+import { decode_params, add_resolution_prefix } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
 
 /**
@@ -10,7 +10,7 @@ import { get_relative_path } from '../../utils.js';
  * @param {import('types').SSROptions} options
  * @returns {boolean}
  */
-export function is_route_resolution_request(url, options) {
+export function has_resolution_prefix(url, options) {
 	return (
 		url.pathname === `${base}/${options.app_dir}/route.js` ||
 		url.pathname.startsWith(`${base}/${options.app_dir}/route/`)
@@ -22,7 +22,7 @@ export function is_route_resolution_request(url, options) {
  * @param {import('types').SSROptions} options
  * @returns {string}
  */
-export function route_resolution_to_regular_route(url, options) {
+export function strip_resolution_prefix(url, options) {
 	return base + (url.pathname.slice(`${base}/${options.app_dir}/route`.length, -3) || '/');
 }
 
@@ -32,7 +32,7 @@ export function route_resolution_to_regular_route(url, options) {
  * @returns {string}
  */
 export function regular_route_to_route_resolution(url, options) {
-	return to_route_resolution(url, base, options.app_dir);
+	return add_resolution_prefix(url, base, options.app_dir);
 }
 
 /**
