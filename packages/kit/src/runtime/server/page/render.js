@@ -13,10 +13,7 @@ import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
-import {
-	create_server_routing_response,
-	create_stringified_csr_server_route
-} from './server_routing.js';
+import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_prefix } from '../../pathname.js';
 
 // TODO rename this function/module
@@ -413,11 +410,10 @@ export async function render_response({
 
 			if (manifest._.client.routes) {
 				if (route) {
-					const stringified = create_stringified_csr_server_route(
-						route,
-						event.url,
-						manifest
-					).replaceAll('\n', '\n\t\t\t\t\t\t\t'); // make output after it's put together with the rest more readable
+					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+						'\n',
+						'\n\t\t\t\t\t\t\t'
+					); // make output after it's put together with the rest more readable
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
 				}
 			} else if (options.embedded) {

@@ -11,7 +11,7 @@ import { get_relative_path } from '../../utils.js';
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {string}
  */
-export function create_stringified_csr_server_route(route, url, manifest) {
+export function generate_route_object(route, url, manifest) {
 	const { errors, layouts, leaf } = route;
 
 	const nodes = `{ ${[...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
@@ -100,7 +100,7 @@ export function create_server_routing_response(route, params, url, manifest) {
 	});
 
 	if (route) {
-		const csr_route = create_stringified_csr_server_route(route, url, manifest);
+		const csr_route = generate_route_object(route, url, manifest);
 		const body = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
 
 		return { response: text(body, { headers }), body };
