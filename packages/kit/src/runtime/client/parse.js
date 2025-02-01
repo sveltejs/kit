@@ -65,9 +65,7 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 export function parse_server_route({ nodes, id, leaf, layouts, errors }, app_nodes) {
 	return {
 		id,
-		exec: () => {
-			throw new Error('shouldnt be called');
-		},
+		exec: () => ({}), // dummy function; exec already happened on the server
 		// By writing to app_nodes only when a loader at that index is not already defined,
 		// we ensure that loaders have referential equality when they load the same node.
 		// Code elsewhere in client.js relies on this referential equality to determine
