@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // this file needs a custom name so that the numerous test subprojects don't all pick it up
