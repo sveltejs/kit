@@ -51,15 +51,13 @@ function create_client_import(import_path, url) {
 	}
 
 	// During PROD, they're root-relative
-
-	// If assets is set to an absolute URL, get it from there
-	if (assets && assets[0] !== '/') {
+	if (assets !== '') {
 		return `import('${assets}/${import_path}')`;
 	}
 
 	// Else we make them relative to the server-side route resolution request
 	// to support IPFS, the internet archive, etc.
-	let path = get_relative_path(url.pathname, `${assets || base}/${import_path}`);
+	let path = get_relative_path(url.pathname, `${base}/${import_path}`);
 	if (path[0] !== '.') path = `./${path}`;
 	return `import('${path}')`;
 }
