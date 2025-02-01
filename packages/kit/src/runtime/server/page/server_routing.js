@@ -6,22 +6,21 @@ import { decode_params, add_resolution_prefix } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
 
 /**
- * @param {URL} url
+ * @param {string} pathname
  * @returns {boolean}
  */
-export function has_resolution_prefix(url) {
+export function has_resolution_prefix(pathname) {
 	return (
-		url.pathname === `${base}/${app_dir}/route.js` ||
-		url.pathname.startsWith(`${base}/${app_dir}/route/`)
+		pathname === `${base}/${app_dir}/route.js` || pathname.startsWith(`${base}/${app_dir}/route/`)
 	);
 }
 
 /**
- * @param {URL} url
+ * @param {string} pathname
  * @returns {string}
  */
-export function strip_resolution_prefix(url) {
-	return base + (url.pathname.slice(`${base}/${app_dir}/route`.length, -3) || '/');
+export function strip_resolution_prefix(pathname) {
+	return base + (pathname.slice(`${base}/${app_dir}/route`.length, -3) || '/');
 }
 
 /**

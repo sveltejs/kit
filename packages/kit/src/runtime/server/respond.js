@@ -99,11 +99,11 @@ export async function respond(request, options, manifest, state) {
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for path resolution, then return the route object as a JS file.
 	 */
-	const is_route_resolution_request = has_resolution_prefix(url);
+	const is_route_resolution_request = has_resolution_prefix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
 
 	if (is_route_resolution_request) {
-		url.pathname = strip_resolution_prefix(url);
+		url.pathname = strip_resolution_prefix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
