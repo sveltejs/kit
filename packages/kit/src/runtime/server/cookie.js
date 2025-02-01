@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
-import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { add_data_suffix } from '../pathname.js';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;

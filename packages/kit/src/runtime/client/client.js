@@ -1,13 +1,11 @@
 import { BROWSER, DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	add_data_suffix,
 	decode_params,
 	decode_pathname,
 	strip_hash,
 	make_trackable,
-	normalize_path,
-	add_resolution_prefix
+	normalize_path
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
@@ -41,6 +39,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
+import { add_data_suffix, add_resolution_prefix } from '../pathname.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 

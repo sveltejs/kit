@@ -2,8 +2,9 @@ import { base, assets, app_dir } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
-import { decode_params, add_resolution_prefix } from '../../../utils/url.js';
+import { decode_params } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
+import { add_resolution_prefix } from '../../pathname.js';
 
 /**
  * @param {string} pathname

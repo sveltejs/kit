@@ -323,7 +323,7 @@ export async function render_response({
 		}
 
 		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
-			const route_resolution_url = regular_route_to_route_resolution(event.url, options);
+			const route_resolution_url = regular_route_to_route_resolution(event.url);
 			state.prerendering.dependencies.set(
 				route_resolution_url,
 				create_server_routing_response(

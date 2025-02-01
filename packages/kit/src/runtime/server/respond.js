@@ -6,14 +6,7 @@ import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
-import {
-	decode_pathname,
-	decode_params,
-	disable_search,
-	has_data_suffix,
-	normalize_path,
-	strip_data_suffix
-} from '../../utils/url.js';
+import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -39,6 +32,7 @@ import {
 	strip_resolution_prefix
 } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
+import { has_data_suffix, strip_data_suffix } from '../pathname.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
