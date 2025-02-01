@@ -482,12 +482,14 @@ Tips:
 						return dedent`
 							export const base = ${global}?.base ?? ${s(base)};
 							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
+							export const app_dir = ${s(kit.appDir)};
 						`;
 					}
 
 					return dedent`
 						export let base = ${s(base)};
 						export let assets = ${assets ? s(assets) : 'base'};
+						export const app_dir = ${s(kit.appDir)};
 
 						export const relative = ${svelte_config.kit.paths.relative};
 

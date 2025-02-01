@@ -176,8 +176,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decode = (type, value) => decoders[type](value);
 
-			export const app_dir = ${s(kit.appDir)};
-
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`
 	);

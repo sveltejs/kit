@@ -303,7 +303,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		if (client.uses_env_dynamic_public && state.prerendering) {
-			modulepreloads.add(`${options.app_dir}/env.js`);
+			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
 		if (!client.inline) {
@@ -446,7 +446,7 @@ export async function render_response({
 					});`;
 
 		if (load_env_eagerly) {
-			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
+			blocks.push(`import(${s(`${base}/${paths.app_dir}/env.js`)}).then(({ env }) => {
 						${global}.env = env;
 
 						${boot.replace(/\n/g, '\n\t')}

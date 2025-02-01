@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import { base } from '__sveltekit/paths';
+import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -99,11 +99,11 @@ export async function respond(request, options, manifest, state) {
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for path resolution, then return the route object as a JS file.
 	 */
-	const is_route_resolution_request = has_resolution_prefix(url, options);
+	const is_route_resolution_request = has_resolution_prefix(url);
 	const is_data_request = has_data_suffix(url.pathname);
 
 	if (is_route_resolution_request) {
-		url.pathname = strip_resolution_prefix(url, options);
+		url.pathname = strip_resolution_prefix(url);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -150,11 +150,11 @@ export async function respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${options.app_dir}/env.js`) {
+	if (resolved_path === `/${app_dir}/env.js`) {
 		return get_public_env(request);
 	}
 
-	if (resolved_path.startsWith(`/${options.app_dir}`)) {
+	if (resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');

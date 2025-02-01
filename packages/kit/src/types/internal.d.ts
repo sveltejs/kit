@@ -397,7 +397,6 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	app_dir: string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;

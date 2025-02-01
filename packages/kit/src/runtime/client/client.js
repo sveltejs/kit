@@ -23,7 +23,7 @@ import {
 	notifiable_store,
 	create_updated_store
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base, app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -1266,7 +1266,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			add_resolution_prefix(url.pathname, base, app.app_dir)
+			add_resolution_prefix(url.pathname, base, app_dir)
 		);
 
 		if (!route) return;
