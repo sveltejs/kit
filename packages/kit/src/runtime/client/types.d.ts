@@ -4,6 +4,7 @@ import {
 	CSRPageNode,
 	CSRPageNodeLoader,
 	CSRRoute,
+	CSRRouteServer,
 	ServerDataNode,
 	TrailingSlash,
 	Uses
@@ -125,6 +126,8 @@ export interface HydrateOptions {
 	node_ids: number[];
 	params: Record<string, string>;
 	route: { id: string | null };
+	/** Only used when `router.resolution=server`; can then still be undefined in case of 404 */
+	server_route?: CSRRouteServer;
 	data: Array<ServerDataNode | null>;
 	form: Record<string, any> | null;
 }

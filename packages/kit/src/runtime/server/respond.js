@@ -38,8 +38,10 @@ import {
 	is_route_resolution_request as _is_route_resolution_request,
 	route_resolution_to_regular_route
 } from './page/server_routing.js';
+import { validateHeaders } from './validate-headers.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
+/* global __SVELTEKIT_DEV__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -204,6 +206,10 @@ export async function respond(request, options, manifest, state) {
 		request,
 		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
+			if (__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
 				const value = new_headers[key];

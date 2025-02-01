@@ -68,7 +68,7 @@ export interface BuildData {
 	out_dir: string;
 	service_worker: string | null;
 	client: {
-		/** Path the client entry point */
+		/** Path to the client entry point */
 		start: string;
 		/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
 		app?: string;

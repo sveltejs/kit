@@ -2496,7 +2496,7 @@ function _start_router() {
  */
 async function _hydrate(
 	target,
-	{ status = 200, error, node_ids, params, route, data: server_data_nodes, form }
+	{ status = 200, error, node_ids, params, route, server_route, data: server_data_nodes, form }
 ) {
 	hydrated = true;
 
@@ -2515,9 +2515,8 @@ async function _hydrate(
 		parsed_route = routes.find(({ id }) => id === route.id);
 	} else {
 		// undefined in case of 404
-		if (route) {
-			// @ts-expect-error route is the full object in case of server-side route resolution
-			parsed_route = parse_server_route(route, app.nodes);
+		if (server_route) {
+			parsed_route = route = parse_server_route(server_route, app.nodes);
 		} else {
 			route = { id: null };
 			params = {};
