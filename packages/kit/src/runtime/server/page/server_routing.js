@@ -4,15 +4,6 @@ import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
 import { decode_params } from '../../../utils/url.js';
 import { get_relative_path } from '../../utils.js';
-import { add_resolution_prefix } from '../../pathname.js';
-
-/**
- * @param {URL} url
- * @returns {string}
- */
-export function regular_route_to_route_resolution(url) {
-	return add_resolution_prefix(url.pathname);
-}
 
 /**
  * @param {import('types').SSRClientRoute | string} route
