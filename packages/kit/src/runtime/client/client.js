@@ -1266,7 +1266,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			add_resolution_prefix(url, base, app.app_dir)
+			add_resolution_prefix(url.pathname, base, app.app_dir)
 		);
 
 		if (!route) return;

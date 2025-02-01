@@ -225,15 +225,14 @@ export function strip_data_suffix(pathname) {
 
 /**
  * Convert a regular URL to a route to send to SvelteKit's server-side route resolution endpoint
- * @param {URL} url
+ * @param {string} pathname
  * @param {string} base
  * @param {string} app_dir
  * @returns {string}
  */
-export function add_resolution_prefix(url, base, app_dir) {
-	const pathname = url.pathname.slice(base.length);
-	return (
-		`${base}/${app_dir}/route` +
-		(pathname === '/' ? '.js' : pathname.slice(0, pathname.endsWith('/') ? -1 : undefined) + '.js')
-	);
+export function add_resolution_prefix(pathname, base, app_dir) {
+	let normalized = pathname.slice(base.length);
+	if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
+
+	return `${base}/${app_dir}/route${normalized}.js`;
 }

@@ -32,7 +32,7 @@ export function strip_resolution_prefix(url, options) {
  * @returns {string}
  */
 export function regular_route_to_route_resolution(url, options) {
-	return add_resolution_prefix(url, base, options.app_dir);
+	return add_resolution_prefix(url.pathname, base, options.app_dir);
 }
 
 /**
