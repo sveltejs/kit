@@ -96,6 +96,7 @@ export function resolve(options, manifest, state) {
 				/** @type {Partial<import('crossws').Hooks>} */
 				const hooks = {
 					...node.socket,
+					// @ts-ignore the crossws types here may be wrong, or at least not accurate for this use case, as its only ever returning responses for us.
 					upgrade: async (req) => {
 						/** @type {import('@sveltejs/kit').RequestEvent} */
 						const event = {
@@ -113,6 +114,7 @@ export function resolve(options, manifest, state) {
 							locals: {},
 							params,
 							platform: state.platform,
+							// @ts-expect-error this usage of request is valid, but the typing is a bit wonky
 							request: req,
 							route: { id: route?.id ?? null },
 							setHeaders: (new_headers) => {
