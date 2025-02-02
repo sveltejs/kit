@@ -96,7 +96,6 @@ export function resolve(options, manifest, state) {
 				/** @type {Partial<import('crossws').Hooks>} */
 				const hooks = {
 					...node.socket,
-					// @ts-ignore the crossws types here may be wrong, or at least not accurate for this use case, as its only ever returning responses for us.
 					upgrade: async (req) => {
 						/** @type {import('@sveltejs/kit').RequestEvent} */
 						const event = {
@@ -144,6 +143,7 @@ export function resolve(options, manifest, state) {
 
 						const response = await options.hooks.handle({
 							event,
+							// @ts-ignore the crossws types here may be wrong, or at least not accurate for this use case, as its only ever returning responses for us.
 							resolve: async (event) => {
 								if (node.socket && node.socket.upgrade) {
 									//@ts-expect-error The upgrade hook SHOULD only ever return a response or throw an HttpError
