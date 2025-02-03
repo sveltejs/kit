@@ -6,7 +6,7 @@ title: WebSockets
 
 [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between the client and server.
 
-SvelteKit accepts a `socket` object in `+server.js` files that you can use to handle WebSocket connections to different routes in your app.
+A `+server.js` file can export a `socket` object to handle WebSocket connections.
 
 The shape of this socket object directly corresponds to the [Hooks](https://crossws.unjs.io/guide/hooks) type in `crossws` as this is the package being used to handle cross-platform WebSocket connections.
 
