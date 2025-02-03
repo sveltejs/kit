@@ -44,7 +44,7 @@
 	},
 	"devDependencies": {
 		"@types/estree": "^1.0.5",
-		"@types/node": "^18.19.48",
+		"@types/node": "^20.17.16",
 		"rollup": "^4.27.4",
 		"svelte": "^5.2.9",
 		"typescript": "^5.3.3",
