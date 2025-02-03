@@ -6,7 +6,6 @@
 		"strict": true,
 		"target": "esnext",
 		"module": "esnext",
-		"lib": ["es2022"],
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
 	}
