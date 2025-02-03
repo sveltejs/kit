@@ -394,7 +394,7 @@ const plugin = function (defaults = {}) {
 			if (builder.config.kit.router?.resolution === 'server') {
 				// Create a separate edge function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
-				// to the route resolution, becaue it does not rely on the server routing manifest)
+				// to the route resolution, because it does not rely on the server routing manifest)
 				await generate_edge_function(
 					`${builder.config.kit.appDir}/route`,
 					{
