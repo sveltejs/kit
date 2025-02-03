@@ -12,6 +12,9 @@ export class HttpError {
 		} else {
 			this.body = { message: `Error: ${status}` };
 		}
+		this.response = new Response(this.toString(), {
+			status: this.status
+		});
 	}
 
 	toString() {

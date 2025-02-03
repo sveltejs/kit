@@ -29,6 +29,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { Hooks } from 'crossws';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -161,6 +162,7 @@ export interface Env {
 
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
+	options: SSROptions;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -430,6 +432,7 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	socket?: Partial<Hooks>;
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;

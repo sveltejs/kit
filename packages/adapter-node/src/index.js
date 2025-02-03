@@ -1,7 +1,8 @@
 import process from 'node:process';
-import { handler } from 'HANDLER';
+import { handler, resolve } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
+import crossws from 'crossws/adapters/node';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -32,6 +33,12 @@ let shutdown_timeout_id;
 let idle_timeout_id;
 
 const server = polka().use(handler);
+
+const ws = crossws({
+	resolve
+});
+
+server.server.on('upgrade', ws.handleUpgrade);
 
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {

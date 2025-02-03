@@ -1,6 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
+import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
 
@@ -11,9 +12,20 @@ const version_file = `${app_path}/version.json`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
+	// @ts-ignore wtf is Cloudflare doing to these types
 	async fetch(req, env, context) {
 		// @ts-ignore
 		await server.init({ env });
+
+		const ws = crossws({
+			resolve: server.resolve()
+		});
+
+		if (req.headers.get('upgrade') === 'websocket') {
+			// @ts-ignore wtf is Cloudflare doing to these types
+			return ws.handleUpgrade(req, env, context);
+		}
+
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));

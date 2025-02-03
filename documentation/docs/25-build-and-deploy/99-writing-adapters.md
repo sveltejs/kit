@@ -58,3 +58,5 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+To add WebSockets to a SvelteKit adapter, you will need to handle upgrading the connection within the adapter. The crossws [adapter integration guides](https://crossws.unjs.io/adapters) may be a helpful reference.
