@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
@@ -11,6 +11,18 @@ export default function (options = {}) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
 					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
 				);
 			}
 
@@ -50,7 +62,15 @@ export default function (options = {}) {
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
+			if (existsSync('_headers')) {
+				copyFileSync('_headers', `${dest}/_headers`);
+			}
+
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
+
+			if (existsSync('_redirects')) {
+				copyFileSync('_redirects', `${dest}/_redirects`);
+			}
 
 			if (builder.prerendered.redirects.size > 0) {
 				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {

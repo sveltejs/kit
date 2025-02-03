@@ -112,7 +112,7 @@ For testing the build, you should use [wrangler](https://developers.cloudflare.c
 
 Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](routing#server) in your SvelteKit app.
 
-The `_headers` and `_redirects` files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
+The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the project root folder.
 
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
 
