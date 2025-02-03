@@ -127,7 +127,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.getAppPath()}/*`;
+				return [`/${builder.getAppPath()}/immutable/*`, `/${builder.getAppPath()}/version.json`];
 			}
 
 			if (rule === '<files>') {
