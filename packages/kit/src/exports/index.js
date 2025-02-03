@@ -110,7 +110,7 @@ export function redirect(status, location) {
 	);
 }
 
-export const acceptResponse = new Response(null, {
+const acceptResponse = new Response(null, {
 	status: 200
 });
 
