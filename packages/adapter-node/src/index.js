@@ -32,16 +32,13 @@ let shutdown_timeout_id;
 /** @type {NodeJS.Timeout | void} */
 let idle_timeout_id;
 
-const httpServer = http.createServer();
-const server = polka({ server: httpServer }).use(handler);
+const server = polka().use(handler);
 
 const ws = crossws({
 	resolve
 });
 
-httpServer.on('upgrade', (req, socket, head) => {
-	ws.handleUpgrade(req, socket, head);
-});
+server.server.on('upgrade', ws.handleUpgrade);
 
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
