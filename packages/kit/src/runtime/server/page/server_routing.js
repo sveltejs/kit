@@ -1,4 +1,4 @@
-import { base, assets } from '__sveltekit/paths';
+import { base, assets, relative } from '__sveltekit/paths';
 import { text } from '../../../exports/index.js';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
@@ -45,6 +45,10 @@ function create_client_import(import_path, url) {
 	// During PROD, they're root-relative
 	if (assets !== '') {
 		return `import('${assets}/${import_path}')`;
+	}
+
+	if (!relative) {
+		return `import('${base}/${import_path}')`;
 	}
 
 	// Else we make them relative to the server-side route resolution request
