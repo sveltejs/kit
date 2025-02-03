@@ -41,7 +41,7 @@
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20241106.0",
-		"crossws": "^0.3.2",
+		"crossws": "^0.3.3",
 		"esbuild": "^0.24.0",
 		"worktop": "0.8.0-next.18"
 	},
