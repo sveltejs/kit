@@ -37,7 +37,7 @@ const httpServer = http.createServer();
 const server = polka({ server: httpServer }).use(handler);
 
 const ws = crossws({
-	resolve: resolve()
+	resolve
 });
 
 httpServer.on('upgrade', (req, socket, head) => {

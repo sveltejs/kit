@@ -12,6 +12,7 @@ const version_file = `${app_path}/version.json`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
+	// @ts-ignore wtf is Cloudflare doing to these types
 	async fetch(req, env, context) {
 		// @ts-ignore
 		await server.init({ env });
@@ -21,6 +22,7 @@ const worker = {
 		});
 
 		if (req.headers.get('upgrade') === 'websocket') {
+			// @ts-ignore wtf is Cloudflare doing to these types
 			return ws.handleUpgrade(req, env, context);
 		}
 

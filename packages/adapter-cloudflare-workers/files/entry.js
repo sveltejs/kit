@@ -27,6 +27,7 @@ export default {
 		});
 
 		if (req.headers.get('upgrade') === 'websocket') {
+			// @ts-ignore wtf is Cloudflare doing to these types
 			return ws.handleUpgrade(req, env, context);
 		}
 

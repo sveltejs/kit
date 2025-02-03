@@ -38,7 +38,7 @@
 		"check": "tsc --skipLibCheck"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20231121.0",
+		"@cloudflare/workers-types": "^4.20250129.0",
 		"@iarna/toml": "^2.2.5",
 		"crossws": "^0.3.2",
 		"esbuild": "^0.24.0"
@@ -47,7 +47,7 @@
 		"@cloudflare/kv-asset-handler": "^0.3.0",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
-		"typescript": "^5.7.3"
+		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
