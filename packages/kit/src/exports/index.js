@@ -115,8 +115,8 @@ export const acceptResponse = new Response(null, {
 });
 
 /**
- * Accepts a websocket upgrade request. When called during request handling, SvelteKit will accept the websocket upgrade request.
- * @return {Response} This response instructs SvelteKit to accept the websocket upgrade request.
+ * Accepts a WebSocket upgrade request. When called during request handling, SvelteKit will accept the WebSocket upgrade request.
+ * @return {Response} This response instructs SvelteKit to accept the WebSocket upgrade request.
  */
 export function accept() {
 	return acceptResponse;
