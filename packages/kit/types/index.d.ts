@@ -1713,6 +1713,7 @@ declare module '@sveltejs/kit' {
 		app_path: string;
 		manifest_data: ManifestData;
 		out_dir: string;
+		asset_prefix: string;
 		service_worker: string | null;
 		client: {
 			/** Path to the client entry point */
