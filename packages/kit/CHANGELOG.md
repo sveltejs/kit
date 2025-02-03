@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.17.1
+### Patch Changes
+
+
+- fix: make route resolution imports root-relative if `paths.relative` option is `false` ([#13412](https://github.com/sveltejs/kit/pull/13412))
+
 ## 2.17.0
 ### Minor Changes
 
