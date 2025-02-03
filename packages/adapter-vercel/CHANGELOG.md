@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 5.6.1
+### Patch Changes
+
+
+- fix: correct edge function path for route resolution endpoint ([#13409](https://github.com/sveltejs/kit/pull/13409))
+
 ## 5.6.0
 ### Minor Changes
 
