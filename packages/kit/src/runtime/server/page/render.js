@@ -209,7 +209,17 @@ export async function render_response({
 			}
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null } };
+		rendered = { head: '', html: '', css: { code: '', map: null }, htmlAttributes: '' };
+	}
+
+	if (
+		!options.app_template_contains_svelte_htmlAttributes &&
+		// @ts-expect-error only exists in later versions of Svelte 5
+		rendered.htmlAttributes
+	) {
+		console.warn(
+			'One or more components used `<svelte:html>` to output attributes to the HTML tag but app.html does not contain %svelte.htmlAttributes% to render them. The attributes will be ignored.'
+		);
 	}
 
 	let head = '';
@@ -514,6 +524,9 @@ export async function render_response({
 	head += rendered.head;
 
 	const html = options.templates.app({
+		// @ts-expect-error only exists in later versions of Svelte 5
+		html_attributes: rendered.htmlAttributes ?? '',
+
 		head,
 		body,
 		assets,
