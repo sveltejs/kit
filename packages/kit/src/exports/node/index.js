@@ -146,8 +146,7 @@ export async function setResponse(res, response) {
 				key,
 				key === 'set-cookie'
 					? set_cookie_parser.splitCookiesString(
-							// This is absurd but necessary, TODO: investigate why
-							/** @type {string}*/ (response.headers.get(key))
+							value
 						)
 					: value
 			);

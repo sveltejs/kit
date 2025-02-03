@@ -317,7 +317,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				const { pathname, search, hash } = new URL(href, 'http://localhost');
 
 				if (search) {
-					// TODO warn that query strings have no effect on statically-exported pages
+					log.warn(`Query parameters in ${href} will have no affect on prerendering`);
 				}
 
 				if (hash) {
