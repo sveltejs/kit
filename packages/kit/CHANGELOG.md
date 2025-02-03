@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.17.0
+### Minor Changes
+
+
+- feat: validate values for `cache-control` and `content-type` headers in dev mode ([#13114](https://github.com/sveltejs/kit/pull/13114))
+
+
+- feat: support server-side route resolution ([#13379](https://github.com/sveltejs/kit/pull/13379))
+
+
+### Patch Changes
+
+
+- chore: don't error during development when using `use:enhance` with `+server` as some third party libraries make it possible to POST forms to it ([#13397](https://github.com/sveltejs/kit/pull/13397))
+
+
+- fix: skip hooks for server fetch to prerendered routes ([#13377](https://github.com/sveltejs/kit/pull/13377))
+
+
+- fix: ignore non-entry-point CSS files during inlining ([#13395](https://github.com/sveltejs/kit/pull/13395))
+
+
+- fix: default server fetch to use prerendered paths ([#13377](https://github.com/sveltejs/kit/pull/13377))
+
 ## 2.16.1
 ### Patch Changes
 
