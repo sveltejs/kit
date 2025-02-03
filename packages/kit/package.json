@@ -69,6 +69,8 @@
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
+		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
+		"test:server-side-route-resolution:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
 		"test:unit": "vitest --config kit.vitest.config.js run",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",

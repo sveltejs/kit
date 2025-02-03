@@ -641,6 +641,28 @@ declare module '@sveltejs/kit' {
 			 * @since 2.14.0
 			 */
 			type?: 'pathname' | 'hash';
+			/**
+			 * How to determine which route to load when navigating to a new page.
+			 *
+			 * By default, SvelteKit will serve a route manifest to the browser.
+			 * When navigating, this manifest is used (along with the `reroute` hook, if it exists) to determine which components to load and which `load` functions to run.
+			 * Because everything happens on the client, this decision can be made immediately. The drawback is that the manifest needs to be
+			 * loaded and parsed before the first navigation can happen, which may have an impact if your app contains many routes.
+			 *
+			 * Alternatively, SvelteKit can determine the route on the server. This means that for every navigation to a path that has not yet been visited, the server will be asked to determine the route.
+			 * This has several advantages:
+			 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
+			 * - The list of routes is hidden from public view
+			 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
+
+			 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
+			 *
+			 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
+			 *
+			 * @default "client"
+			 * @since 2.17.0
+			 */
+			resolution?: 'client' | 'server';
 		};
 		serviceWorker?: {
 			/**
@@ -1693,12 +1715,28 @@ declare module '@sveltejs/kit' {
 		out_dir: string;
 		service_worker: string | null;
 		client: {
+			/** Path to the client entry point */
 			start: string;
+			/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
 			app?: string;
+			/** JS files that the client entry point relies on */
 			imports: string[];
+			/**
+			 * JS files that represent the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			nodes?: (string | undefined)[];
+			/**
+			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			routes?: SSRClientRoute[];
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
+			/** Only set in case of `bundleStrategy === 'inline'` */
 			inline?: {
 				script: string;
 				style: string | undefined;
@@ -1721,11 +1759,11 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
-		/** The +page.svelte */
+		/** The +page/layout.svelte */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
-		/** The +page.js/.ts */
+		/** The +page/layout.js/.ts */
 		universal?: string;
-		/** The +page.server.js/ts */
+		/** The +page/layout.server.js/ts */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
@@ -1797,13 +1835,13 @@ declare module '@sveltejs/kit' {
 
 	interface SSRNode {
 		component: SSRComponentLoader;
-		/** index into the `components` array in client/manifest.js */
+		/** index into the `nodes` array in the generated `client/app.js` */
 		index: number;
-		/** external JS files */
+		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 		imports: string[];
-		/** external CSS files */
+		/** external CSS files that are loaded on the client */
 		stylesheets: string[];
-		/** external font files */
+		/** external font files that are loaded on the client */
 		fonts: string[];
 		/** inlined styles */
 		inline_styles?(): MaybePromise<Record<string, string>>;
@@ -1858,6 +1896,15 @@ declare module '@sveltejs/kit' {
 		page: PageNodeIndexes | null;
 		endpoint: (() => Promise<SSREndpoint>) | null;
 		endpoint_id?: string;
+	}
+
+	interface SSRClientRoute {
+		id: string;
+		pattern: RegExp;
+		params: RouteParam[];
+		errors: Array<number | undefined>;
+		layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+		leaf: [has_server_load: boolean, node_id: number];
 	}
 
 	type ValidatedConfig = Config & {

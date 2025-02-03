@@ -1,7 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	add_data_suffix,
 	decode_params,
 	decode_pathname,
 	strip_hash,
@@ -9,7 +8,7 @@ import {
 	normalize_path
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse } from './parse.js';
+import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -40,6 +39,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
+import { add_data_suffix, add_resolution_prefix } from '../pathname.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -158,7 +158,7 @@ async function update_service_worker() {
 
 function noop() {}
 
-/** @type {import('types').CSRRoute[]} */
+/** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
@@ -265,7 +265,7 @@ export async function start(_app, _target, hydrate) {
 
 	await _app.hooks.init?.();
 
-	routes = parse(_app);
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -322,7 +322,8 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const intent = get_navigation_intent(current.url, true);
+	const nav_token = (token = {});
+	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
 	// Also solves an edge case where a preload is triggered, the navigation for it
@@ -330,7 +331,6 @@ async function _invalidate() {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || nav_token !== token) return;
 
@@ -433,10 +433,7 @@ async function _preload_data(intent) {
  * @returns {Promise<void>}
  */
 async function _preload_code(url) {
-	const rerouted = get_rerouted_url(url);
-	if (!rerouted) return;
-
-	const route = routes.find((route) => route.exec(get_url_path(rerouted)));
+	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -587,8 +584,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 }
 
 /**
- * Call the load function of the given node, if it exists.
- * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+ * Call the universal load function of the given node, if it exists.
  *
  * @param {{
  *   loader: import('types').CSRPageNodeLoader;
@@ -1240,31 +1236,47 @@ function get_rerouted_url(url) {
  * returns undefined.
  * @param {URL | undefined} url
  * @param {boolean} invalidating
+ * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
-function get_navigation_intent(url, invalidating) {
+async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
 
-	const rerouted = get_rerouted_url(url);
-	if (!rerouted) return;
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		const rerouted = get_rerouted_url(url);
+		if (!rerouted) return;
 
-	const path = get_url_path(rerouted);
+		const path = get_url_path(rerouted);
 
-	for (const route of routes) {
-		const params = route.exec(path);
+		for (const route of routes) {
+			const params = route.exec(path);
 
-		if (params) {
-			const id = get_page_key(url);
-			/** @type {import('./types.js').NavigationIntent} */
-			const intent = {
-				id,
-				invalidating,
-				route,
-				params: decode_params(params),
-				url
-			};
-			return intent;
+			if (params) {
+				return {
+					id: get_page_key(url),
+					invalidating,
+					route,
+					params: decode_params(params),
+					url
+				};
+			}
 		}
+	} else {
+		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
+		const { route, params } = await import(
+			/* @vite-ignore */
+			add_resolution_prefix(url.pathname)
+		);
+
+		if (!route) return;
+
+		return {
+			id: get_page_key(url),
+			invalidating,
+			route: parse_server_route(route, app.nodes),
+			params,
+			url
+		};
 	}
 }
 
@@ -1347,11 +1359,15 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
-	const intent = get_navigation_intent(url, false);
+	const prev_token = token;
+	token = nav_token;
+
+	const intent = await get_navigation_intent(url, false);
 	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
 		block();
+		if (token === nav_token) token = prev_token;
 		return;
 	}
 
@@ -1367,7 +1383,6 @@ async function navigate({
 		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
-	token = nav_token;
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
@@ -1621,6 +1636,8 @@ if (import.meta.hot) {
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {Element} */
+	let current_a;
 
 	container.addEventListener('mousemove', (event) => {
 		const target = /** @type {Element} */ (event.target);
@@ -1656,9 +1673,11 @@ function setup_preload() {
 	 * @param {Element} element
 	 * @param {number} priority
 	 */
-	function preload(element, priority) {
+	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a) return;
+		if (!a || a === current_a) return;
+
+		current_a = a;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
@@ -1670,7 +1689,7 @@ function setup_preload() {
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(url, false);
+				const intent = await get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
 						_preload_data(intent).then((result) => {
@@ -1924,7 +1943,7 @@ export async function preloadData(href) {
 	}
 
 	const url = resolve_url(href);
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
@@ -1954,7 +1973,7 @@ export async function preloadData(href) {
  * @param {string} pathname
  * @returns {Promise<void>}
  */
-export function preloadCode(pathname) {
+export async function preloadCode(pathname) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
@@ -1974,9 +1993,11 @@ export function preloadCode(pathname) {
 			);
 		}
 
-		const rerouted = get_rerouted_url(url);
-		if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
-			throw new Error(`'${pathname}' did not match any routes`);
+		if (__SVELTEKIT_CLIENT_ROUTING__) {
+			const rerouted = get_rerouted_url(url);
+			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
+				throw new Error(`'${pathname}' did not match any routes`);
+			}
 		}
 	}
 
@@ -2474,16 +2495,31 @@ function _start_router() {
  */
 async function _hydrate(
 	target,
-	{ status = 200, error, node_ids, params, route, data: server_data_nodes, form }
+	{ status = 200, error, node_ids, params, route, server_route, data: server_data_nodes, form }
 ) {
 	hydrated = true;
 
 	const url = new URL(location.href);
 
-	if (!__SVELTEKIT_EMBEDDED__) {
-		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
-		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+	/** @type {import('types').CSRRoute | undefined} */
+	let parsed_route;
+
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		if (!__SVELTEKIT_EMBEDDED__) {
+			// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+			// of determining the params on the client side.
+			({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
+		}
+
+		parsed_route = routes.find(({ id }) => id === route.id);
+	} else {
+		// undefined in case of 404
+		if (server_route) {
+			parsed_route = route = parse_server_route(server_route, app.nodes);
+		} else {
+			route = { id: null };
+			params = {};
+		}
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
@@ -2516,8 +2552,6 @@ async function _hydrate(
 
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
-
-		const parsed_route = routes.find(({ id }) => id === route.id);
 
 		// server-side will have compacted the branch, reinstate empty slots
 		// so that error boundaries can be lined up correctly

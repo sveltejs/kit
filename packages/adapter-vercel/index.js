@@ -390,6 +390,26 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
+			// optional chaining to support older versions that don't have this setting yet
+			if (builder.config.kit.router?.resolution === 'server') {
+				// Create a separate edge function just for server-side route resolution.
+				// By omitting all routes we're ensuring it's small (the routes will still be available
+				// to the route resolution, becaue it does not rely on the server routing manifest)
+				await generate_edge_function(
+					`${builder.config.kit.appDir}/routes`,
+					{
+						external: 'external' in defaults ? defaults.external : undefined,
+						runtime: 'edge'
+					},
+					[]
+				);
+
+				static_config.routes.push({
+					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
+					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes`
+				});
+			}
+
 			// Catch-all route must come at the end, otherwise it will swallow all other routes,
 			// including ISR aliases if there is only one function
 			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
