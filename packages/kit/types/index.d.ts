@@ -1919,8 +1919,8 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
 	/**
-	 * Accepts a websocket upgrade request. When called during request handling, SvelteKit will accept the websocket upgrade request.
-	 * @return {Response} This response instructs SvelteKit to accept the websocket upgrade request.
+	 * Accepts a WebSocket upgrade request. When called during request handling, SvelteKit will accept the WebSocket upgrade request.
+	 * @return {Response} This response instructs SvelteKit to accept the WebSocket upgrade request.
 	 */
 	export function accept(): Response;
 	/**
