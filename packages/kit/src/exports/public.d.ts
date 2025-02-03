@@ -19,7 +19,6 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-import { ResolveHooks } from 'crossws';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -1278,7 +1277,7 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
-	resolve(): ResolveHooks;
+	resolve(): import('crossws').ResolveHooks;
 }
 
 export interface ServerInitOptions {
@@ -1465,6 +1464,12 @@ export type SubmitFunction<
 			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
 	  }) => void)
 >;
+
+/**
+ * Shape of the `export const socket = {..}` object in `+page.server.js`.
+ * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+ */
+export type Socket = import('crossws').Hooks;
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.

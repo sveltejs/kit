@@ -11,6 +11,7 @@ SvelteKit accepts a `socket` object in `+server.js` files that you can use to ha
 The shape of this socket object directly corresponds to the [Hooks](https://crossws.unjs.io/guide/hooks) type in `crossws` as this is the package being used to handle cross-platform WebSocket connections.
 
 ```js
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	upgrade(req) {
         // ...
@@ -43,6 +44,7 @@ Additionally, SvelteKit provides a WebSocket specific `accept` helper function a
 ```js
 import { error, accept } from "@sveltejs/kit";
 
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	upgrade(req) {
 		// Accept the WebSocket connection with a return
@@ -61,6 +63,7 @@ export const socket = {
 The `open` hook is called when a WebSocket connection is opened. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object as a parameter.
 
 ```js
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	open(peer) {
 		// ...
@@ -73,6 +76,7 @@ export const socket = {
 The `message` hook is called when a message is received from the client. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the [message](https://crossws.unjs.io/guide/message) as parameters.
 
 ```js
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	message(peer, message) {
 		// ...
@@ -85,6 +89,7 @@ export const socket = {
 The `close` hook is called when a WebSocket connection is closed. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the close event as parameters.
 
 ```js
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	close(peer, event) {
 		// ...
@@ -97,6 +102,7 @@ export const socket = {
 The `error` hook is called when a WebSocket connection error occurs. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the error as parameters.
 
 ```js
+/** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	error(peer, error) {
 		// ...
