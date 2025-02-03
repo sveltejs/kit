@@ -1466,7 +1466,7 @@ export type SubmitFunction<
 >;
 
 /**
- * Shape of the `export const socket = {..}` object in `+page.server.js`.
+ * Shape of the `export const socket = {..}` object in `+server.js`.
  * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
  */
 export type Socket = import('crossws').Hooks;
