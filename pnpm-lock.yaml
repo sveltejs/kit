@@ -61,7 +61,7 @@ importers:
         specifier: ^4.20241106.0
         version: 4.20250129.0
       crossws:
-        specifier: ^0.3.2
+        specifier: ^0.3.3
         version: 0.3.3
       esbuild:
         specifier: ^0.24.0
@@ -95,7 +95,7 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       crossws:
-        specifier: ^0.3.2
+        specifier: ^0.3.3
         version: 0.3.3
       esbuild:
         specifier: ^0.24.0
@@ -191,7 +191,7 @@ importers:
         specifier: ^20.17.16
         version: 20.17.16
       crossws:
-        specifier: ^0.3.2
+        specifier: ^0.3.3
         version: 0.3.3
       polka:
         specifier: ^1.0.0-next.28
