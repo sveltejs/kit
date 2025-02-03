@@ -28,6 +28,11 @@ export const test = base.extend({
 			invalidate: (url) => page.evaluate((/** @type {string} */ url) => invalidate(url), url),
 
 			/**
+			 * @returns {Promise<void>}
+			 */
+			invalidateAll: () => page.evaluate(() => invalidateAll()),
+
+			/**
 			 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
 			 * @returns {Promise<void>}
 			 */
