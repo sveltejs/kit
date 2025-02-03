@@ -1956,7 +1956,6 @@ declare module '@sveltejs/kit' {
 	 * @param e The object to check.
 	 * */
 	export function isActionFailure(e: unknown): e is ActionFailure;
-	export const acceptResponse: Response;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
