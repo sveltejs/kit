@@ -164,7 +164,10 @@ Others are required for SvelteKit to work properly, and should also be left unto
 /// file: .svelte-kit/tsconfig.json
 {
 	"compilerOptions": {
-		// ???
+		// this ensures that types are explicitly
+		// imported with `import type`, which is
+		// necessary as Svelte/Vite cannot
+		// otherwise compile components correctly
 		"verbatimModuleSyntax": true,
 
 		// Vite compiles one TypeScript module
@@ -172,7 +175,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 		// the entire module graph
 		"isolatedModules": true,
 
-		// ???
+		// Tell TS it's used only for type-checking
 		"noEmit": true,
 
 		// This ensures both `vite build`
