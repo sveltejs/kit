@@ -396,7 +396,7 @@ const plugin = function (defaults = {}) {
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, becaue it does not rely on the server routing manifest)
 				await generate_edge_function(
-					`${builder.config.kit.appDir}/routes`,
+					`${builder.config.kit.appDir}/route`,
 					{
 						external: 'external' in defaults ? defaults.external : undefined,
 						runtime: 'edge'
@@ -405,8 +405,8 @@ const plugin = function (defaults = {}) {
 				);
 
 				static_config.routes.push({
-					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes(\\.js|/.*)`,
-					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/routes`
+					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route(\\.js|/.*)`,
+					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route`
 				});
 			}
 
