@@ -1430,7 +1430,7 @@ export interface HttpError {
 }
 
 /**
- * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function
+ * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function.
  */
 export interface Redirect {
 	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
@@ -1470,6 +1470,18 @@ export type SubmitFunction<
  * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
  */
 export type Socket = import('crossws').Hooks;
+
+/**
+ * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
+ * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+ */
+export type Peer = import('crossws').Peer;
+
+/**
+ * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
+ * See [Message](https://crossws.unjs.io/guide/message) for more information.
+ */
+export type Message = import('crossws').Message;
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
