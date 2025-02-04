@@ -21,7 +21,7 @@ let init_promise;
 
 export class Server {
 	/** @type {import('types').SSROptions} */
-	options;
+	#options;
 
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	#manifest;
@@ -29,7 +29,7 @@ export class Server {
 	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
-		this.options = options;
+		this.#options = options;
 		this.#manifest = manifest;
 
 		set_manifest(manifest);
@@ -48,8 +48,8 @@ export class Server {
 
 		// set env, in case it's used in initialisation
 		const prefixes = {
-			public_prefix: this.options.env_public_prefix,
-			private_prefix: this.options.env_private_prefix
+			public_prefix: this.#options.env_public_prefix,
+			private_prefix: this.#options.env_private_prefix
 		};
 
 		const private_env = filter_private_env(env, prefixes);
@@ -73,7 +73,7 @@ export class Server {
 			try {
 				const module = await get_hooks();
 
-				this.options.hooks = {
+				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
@@ -86,7 +86,7 @@ export class Server {
 				}
 			} catch (error) {
 				if (DEV) {
-					this.options.hooks = {
+					this.#options.hooks = {
 						handle: () => {
 							throw error;
 						},
@@ -107,7 +107,7 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		return respond(request, this.options, this.#manifest, {
+		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
@@ -120,7 +120,7 @@ export class Server {
 	 * @returns {(info: Request) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
 	 */
 	resolve(options) {
-		return resolve(this.options, this.#manifest, {
+		return resolve(this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
