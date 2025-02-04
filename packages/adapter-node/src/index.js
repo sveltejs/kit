@@ -38,8 +38,6 @@ const ws = crossws({
 	resolve
 });
 
-server.server.on('upgrade', ws.handleUpgrade);
-
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
@@ -49,6 +47,9 @@ if (socket_activation) {
 		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
+
+// Register the upgrade handler after the listen call, so the internal server is available
+server.server.on('upgrade', ws.handleUpgrade);
 
 /** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
 function graceful_shutdown(reason) {
