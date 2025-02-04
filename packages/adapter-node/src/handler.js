@@ -213,4 +213,4 @@ export const handler = sequence(
 	].filter(Boolean)
 );
 
-export const resolve = server.resolve;
+export const resolve = server.resolve();
