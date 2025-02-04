@@ -86,9 +86,6 @@ export function resolve(options, manifest, state) {
 		try {
 			// determine whether we need to redirect to add/remove a trailing slash
 			if (route && route.endpoint) {
-				// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
-				// regardless of the `trailingSlash` route option
-
 				const node = await route.endpoint();
 
 				if (DEV) {
