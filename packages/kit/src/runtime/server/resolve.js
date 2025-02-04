@@ -84,7 +84,6 @@ export function resolve(options, manifest, state) {
 		const headers = {};
 
 		try {
-			// determine whether we need to redirect to add/remove a trailing slash
 			if (route && route.endpoint) {
 				const node = await route.endpoint();
 
