@@ -46,7 +46,10 @@ export function resolve(options, manifest, state) {
 			return noHooks;
 		}
 
-		if (base && decoded.startsWith(base)) {
+		if (base) {
+			if (!decoded.startsWith(base)) {
+				return noHooks;
+			}
 			decoded = decoded.slice(base.length) || '/';
 		}
 
