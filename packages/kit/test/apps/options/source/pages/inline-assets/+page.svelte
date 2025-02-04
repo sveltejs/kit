@@ -1,8 +1,13 @@
 <script>
+	import SharedCSS from '$lib/SharedCSS.svelte';
 	import '@fontsource/libre-barcode-128-text';
 </script>
 
-<p>Hello world!</p>
+<p>
+	Test that the fontsource is referenced correctly, while the shared CSS in SharedCSS doesn't cause
+	problems
+</p>
+<SharedCSS />
 
 <style>
 	p {

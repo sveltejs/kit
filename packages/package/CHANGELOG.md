@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.10
+### Patch Changes
+
+
+- chore: update to chokidar 4.0.3 ([#13381](https://github.com/sveltejs/kit/pull/13381))
+
 ## 2.3.9
 ### Patch Changes
 
