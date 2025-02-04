@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: make `<build>` route exclusion rule only exclude static assets
+fix: exclude the dynamic route `/_app/env.js` from the adapter config `routes.exclude` special value `<build>` 
