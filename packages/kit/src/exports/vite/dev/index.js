@@ -419,7 +419,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	return async () => {
+	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
@@ -429,33 +429,12 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
-		// we have to import `Server` before calling `set_assets`
-		const { Server } = /** @type {import('types').ServerModule} */ (
-			await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
-		);
-
-		const { set_fix_stack_trace } = await vite.ssrLoadModule(`${runtime_base}/shared-server.js`);
-		set_fix_stack_trace(fix_stack_trace);
-
-		const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
-		set_assets(assets);
-
-		const server = new Server(manifest);
-
-		// we have to initialize the server before we can call the resolve function to populate the webhook resolver in the websocket handler
-		await server.init({
-			env,
-			read: (file) => createReadableStream(from_fs(file))
-		});
-
-		/** @type {import('crossws/adapters/node').NodeAdapter} */
-		const ws = crossws({
-			resolve: server.resolve()
-		});
+		/** @type {import('crossws/adapters/node').NodeAdapter | undefined} */
+		let ws;
 
 		vite.httpServer?.on('upgrade', (req, socket, head) => {
 			if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
-				ws.handleUpgrade(req, socket, head);
+				ws?.handleUpgrade(req, socket, head);
 			}
 		});
 
@@ -501,6 +480,31 @@ export async function dev(vite, vite_config, svelte_config) {
 
 					return;
 				}
+
+				// we have to import `Server` before calling `set_assets`
+				const { Server } = /** @type {import('types').ServerModule} */ (
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+				);
+
+				const { set_fix_stack_trace } = await vite.ssrLoadModule(
+					`${runtime_base}/shared-server.js`
+				);
+				set_fix_stack_trace(fix_stack_trace);
+
+				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+				set_assets(assets);
+
+				const server = new Server(manifest);
+
+				// we have to initialize the server before we can call the resolve function to populate the webhook resolver in the websocket handler
+				await server.init({
+					env,
+					read: (file) => createReadableStream(from_fs(file))
+				});
+
+				ws = crossws({
+					resolve: server.resolve()
+				});
 
 				const request = await getRequest({
 					base,
