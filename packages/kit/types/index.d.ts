@@ -654,8 +654,10 @@ declare module '@sveltejs/kit' {
 			 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
 			 * - The list of routes is hidden from public view
 			 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
-
+			 *
 			 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
+			 *
+			 * > [!NOTE] When using `reroute` inside `hooks.server.js`, you _must_ use server-side route resolution.
 			 *
 			 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
 			 *
