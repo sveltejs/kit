@@ -114,8 +114,13 @@ export async function respond(request, options, manifest, state) {
 	let resolved_path;
 
 	try {
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		// reroute could alter the given arguments, so we pass copies
+		resolved_path =
+			(await options.hooks.reroute({
+				url: new URL(url),
+				headers: new Headers(request.headers),
+				cookies: { get: get_cookies(request, url, 'never').cookies.get }
+			})) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500

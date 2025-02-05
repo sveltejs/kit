@@ -817,6 +817,20 @@ export type ClientInit = () => MaybePromise<void>;
 export type Reroute = (event: { url: URL }) => void | string;
 
 /**
+ * The [`reroute`](https://svelte.dev/docs/kit/hooks#Server-hooks-reroute) hook on the server allows you to modify the URL before it is used to determine which route to render.
+ * In contrast to the universal [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook, it
+ * - is allowed to be async (though you should take extra caution to not do long running operations here, as it will delay navigation)
+ * - also receives headers and cookies (though you cannot modify them)
+ *
+ * @since 2.18.0
+ */
+export type ServerReroute = (event: {
+	url: URL;
+	headers: Omit<Headers, 'set' | 'delete' | 'append'>;
+	cookies: { get: Cookies['get'] };
+}) => MaybePromise<void | string>;
+
+/**
  * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
  *
  * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).

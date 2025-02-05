@@ -147,6 +147,33 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
+### reroute
+
+This function runs before `handle` and allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters. In order to use this hook, you need to opt in to [server-side route resolution](configuration#router), which means a server request is made before each navigation in order to invoke the server `reroute` hook.
+
+In contrast to the [universal `reroute` hook](#universal-hooks-reroute), it
+
+- is allowed to be async (though you should take extra caution to not do long running operations here, as it will delay navigation)
+- also receives headers and cookies (though you cannot modify them)
+
+For example, you might have two variants of a page via `src/routes/sale/variant-a/+page.svelte` and `src/routes/sale/variant-b/+page.svelte`, which should be accessible as `/sale` and want to use a cookie to determine what variant of the sales page to load. You could implement this with `reroute`:
+
+```js
+/// file: src/hooks.js
+// @errors: 2345
+// @errors: 2304
+
+/** @type {import('@sveltejs/kit').Reroute} */
+export function reroute({ url, cookies }) {
+	if (url.pathname === '/sale') {
+		const variant = cookies.get('sales-variant') ?? 'variant-a';
+		return `/sale/${variant}`;
+	}
+}
+```
+
+Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
+
 ## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
@@ -272,6 +299,11 @@ The following can be added to `src/hooks.js`. Universal hooks run on both server
 ### reroute
 
 This function runs before `handle` and allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
+
+In contrast to the [server `reroute` hook](#server-hooks-reroute), it
+
+- must be synchronous
+- only receives the URL
 
 For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
 
