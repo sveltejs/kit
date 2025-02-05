@@ -12,6 +12,8 @@ export class HttpError {
 		} else {
 			this.body = { message: `Error: ${status}` };
 		}
+		// used by unjs/crossws to reject a websocket connection
+		// see https://github.com/unjs/crossws/blob/bc55c9765f436316213e9a3b907522cc86013a8c/src/hooks.ts#L69
 		this.response = new Response(this.toString(), {
 			status: this.status
 		});
