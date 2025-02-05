@@ -13,7 +13,7 @@ importers:
         version: 2.27.11
       '@sveltejs/eslint-config':
         specifier: ^8.1.0
-        version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)
+        version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.7.3))(typescript@5.7.3)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
@@ -31,7 +31,7 @@ importers:
         version: 3.2.7(prettier@3.3.3)(svelte@5.2.9)
       typescript-eslint:
         specifier: ^8.0.0
-        version: 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+        version: 8.4.0(eslint@9.6.0)(typescript@5.7.3)
 
   packages/adapter-auto:
     dependencies:
@@ -49,8 +49,8 @@ importers:
         specifier: ^20.17.16
         version: 20.17.17
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vitest:
         specifier: ^3.0.1
         version: 3.0.1(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -83,8 +83,8 @@ importers:
         specifier: ^8.5.10
         version: 8.5.10
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
 
   packages/adapter-cloudflare-workers:
     dependencies:
@@ -114,8 +114,8 @@ importers:
         specifier: ^20.17.16
         version: 20.17.17
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
 
   packages/adapter-netlify:
     dependencies:
@@ -157,8 +157,8 @@ importers:
         specifier: ^4.14.2
         version: 4.30.1
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vitest:
         specifier: ^3.0.1
         version: 3.0.1(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -200,8 +200,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vitest:
         specifier: ^3.0.1
         version: 3.0.1(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -227,8 +227,8 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -291,8 +291,8 @@ importers:
         specifier: ^20.17.16
         version: 20.17.17
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vitest:
         specifier: ^3.0.1
         version: 3.0.1(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -304,8 +304,8 @@ importers:
         version: link:../kit
     devDependencies:
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
 
   packages/create-svelte: {}
 
@@ -340,8 +340,8 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9
       typescript:
-        specifier: ^5.6.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -405,7 +405,7 @@ importers:
         version: 2.4.7
       dts-buddy:
         specifier: ^0.5.4
-        version: 0.5.4(typescript@5.6.3)
+        version: 0.5.4(typescript@5.7.3)
       rollup:
         specifier: ^4.14.2
         version: 4.30.1
@@ -414,10 +414,10 @@ importers:
         version: 5.2.9
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.6.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -447,10 +447,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -471,10 +471,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -525,10 +525,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -549,10 +549,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -573,10 +573,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -597,10 +597,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -624,10 +624,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -651,10 +651,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -675,10 +675,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -705,10 +705,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -729,10 +729,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -753,10 +753,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -774,10 +774,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -795,10 +795,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -819,10 +819,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -840,10 +840,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -861,10 +861,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -882,10 +882,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -903,10 +903,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -924,10 +924,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -945,10 +945,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -966,10 +966,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -987,10 +987,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -1008,10 +1008,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -1032,10 +1032,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -1056,10 +1056,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.4
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -1083,7 +1083,7 @@ importers:
         version: 7.6.3
       svelte2tsx:
         specifier: ~0.7.33
-        version: 0.7.33(svelte@5.2.9)(typescript@5.6.3)
+        version: 0.7.33(svelte@5.2.9)(typescript@5.7.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.1
@@ -1102,10 +1102,10 @@ importers:
         version: 5.2.9
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.6.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
@@ -1162,10 +1162,10 @@ importers:
         version: 5.2.9
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3)
+        version: 4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3)
       typescript:
-        specifier: ^5.5.0
-        version: 5.6.3
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)
@@ -2396,8 +2396,8 @@ packages:
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
 
-  enhanced-resolve@5.18.0:
-    resolution: {integrity: sha512-0/r0MySGYG8YqlayBZ6MuCfECmHFdJ5qyPh8s8wa5Hnm6SaFLSK1VYCbj+NKp090Nm1caZhD+QTnmxO7esYGyQ==}
+  enhanced-resolve@5.18.1:
+    resolution: {integrity: sha512-ZSW3ma5GkcQBIpwZTSRAI8N71Uuwgs93IezB7mf7R60tC8ZbJideoDNKjHn2O9KIlx6rkGTTEk1xUCK2E1Y2Yg==}
     engines: {node: '>=10.13.0'}
 
   enquirer@2.4.1:
@@ -3251,6 +3251,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.1:
+    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   set-cookie-parser@2.6.0:
     resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
 
@@ -3506,8 +3511,8 @@ packages:
       typescript:
         optional: true
 
-  typescript@5.6.3:
-    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
+  typescript@5.7.3:
+    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4381,7 +4386,7 @@ snapshots:
       eslint-visitor-keys: 4.2.0
       espree: 10.3.0
 
-  '@sveltejs/eslint-config@8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)':
+  '@sveltejs/eslint-config@8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.9.0(eslint@9.6.0))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.7.3))(typescript@5.7.3)':
     dependencies:
       '@stylistic/eslint-plugin-js': 2.1.0(eslint@9.6.0)
       eslint: 9.6.0
@@ -4389,8 +4394,8 @@ snapshots:
       eslint-plugin-n: 17.9.0(eslint@9.6.0)
       eslint-plugin-svelte: 2.41.0(eslint@9.6.0)(svelte@5.2.9)
       globals: 15.14.0
-      typescript: 5.6.3
-      typescript-eslint: 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+      typescript: 5.7.3
+      typescript-eslint: 8.4.0(eslint@9.6.0)(typescript@5.7.3)
 
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.2.9)(vite@6.0.11(@types/node@20.17.17)(lightningcss@1.24.1)))(svelte@5.2.9)(vite@6.0.11(@types/node@20.17.17)(lightningcss@1.24.1))':
     dependencies:
@@ -4458,34 +4463,34 @@ snapshots:
     dependencies:
       '@types/node': 20.17.17
 
-  '@typescript-eslint/eslint-plugin@8.4.0(@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.6.3))(eslint@9.6.0)(typescript@5.6.3)':
+  '@typescript-eslint/eslint-plugin@8.4.0(@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.7.3))(eslint@9.6.0)(typescript@5.7.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+      '@typescript-eslint/parser': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
       '@typescript-eslint/scope-manager': 8.4.0
-      '@typescript-eslint/type-utils': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+      '@typescript-eslint/type-utils': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
+      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
       '@typescript-eslint/visitor-keys': 8.4.0
       eslint: 9.6.0
       graphemer: 1.4.0
       ignore: 5.3.2
       natural-compare: 1.4.0
-      ts-api-utils: 1.3.0(typescript@5.6.3)
+      ts-api-utils: 1.3.0(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.6.3)':
+  '@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.4.0
       '@typescript-eslint/types': 8.4.0
-      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.7.3)
       '@typescript-eslint/visitor-keys': 8.4.0
       debug: 4.4.0
       eslint: 9.6.0
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
@@ -4494,21 +4499,21 @@ snapshots:
       '@typescript-eslint/types': 8.4.0
       '@typescript-eslint/visitor-keys': 8.4.0
 
-  '@typescript-eslint/type-utils@8.4.0(eslint@9.6.0)(typescript@5.6.3)':
+  '@typescript-eslint/type-utils@8.4.0(eslint@9.6.0)(typescript@5.7.3)':
     dependencies:
-      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.7.3)
+      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
       debug: 4.4.0
-      ts-api-utils: 1.3.0(typescript@5.6.3)
+      ts-api-utils: 1.3.0(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - eslint
       - supports-color
 
   '@typescript-eslint/types@8.4.0': {}
 
-  '@typescript-eslint/typescript-estree@8.4.0(typescript@5.6.3)':
+  '@typescript-eslint/typescript-estree@8.4.0(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/types': 8.4.0
       '@typescript-eslint/visitor-keys': 8.4.0
@@ -4517,18 +4522,18 @@ snapshots:
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.6.3
-      ts-api-utils: 1.3.0(typescript@5.6.3)
+      ts-api-utils: 1.3.0(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.4.0(eslint@9.6.0)(typescript@5.6.3)':
+  '@typescript-eslint/utils@8.4.0(eslint@9.6.0)(typescript@5.7.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.4.1(eslint@9.6.0)
       '@typescript-eslint/scope-manager': 8.4.0
       '@typescript-eslint/types': 8.4.0
-      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.4.0(typescript@5.7.3)
       eslint: 9.6.0
     transitivePeerDependencies:
       - supports-color
@@ -4803,7 +4808,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.5.4(typescript@5.6.3):
+  dts-buddy@0.5.4(typescript@5.7.3):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.0
@@ -4813,8 +4818,8 @@ snapshots:
       magic-string: 0.30.17
       sade: 1.8.1
       tiny-glob: 0.2.9
-      ts-api-utils: 1.3.0(typescript@5.6.3)
-      typescript: 5.6.3
+      ts-api-utils: 1.3.0(typescript@5.7.3)
+      typescript: 5.7.3
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only: {}
 
@@ -4824,7 +4829,7 @@ snapshots:
 
   emoji-regex@9.2.2: {}
 
-  enhanced-resolve@5.18.0:
+  enhanced-resolve@5.18.1:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.2.1
@@ -4894,7 +4899,7 @@ snapshots:
   eslint-compat-utils@0.5.1(eslint@9.6.0):
     dependencies:
       eslint: 9.6.0
-      semver: 7.6.3
+      semver: 7.7.1
 
   eslint-config-prettier@9.1.0(eslint@9.6.0):
     dependencies:
@@ -4910,14 +4915,14 @@ snapshots:
   eslint-plugin-n@17.9.0(eslint@9.6.0):
     dependencies:
       '@eslint-community/eslint-utils': 4.4.1(eslint@9.6.0)
-      enhanced-resolve: 5.18.0
+      enhanced-resolve: 5.18.1
       eslint: 9.6.0
       eslint-plugin-es-x: 7.8.0(eslint@9.6.0)
       get-tsconfig: 4.10.0
       globals: 15.14.0
       ignore: 5.3.2
       minimatch: 9.0.5
-      semver: 7.6.3
+      semver: 7.7.1
 
   eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9):
     dependencies:
@@ -4931,7 +4936,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.1)
       postcss-safe-parser: 6.0.0(postcss@8.5.1)
       postcss-selector-parser: 6.1.2
-      semver: 7.6.3
+      semver: 7.7.1
       svelte-eslint-parser: 0.39.2(svelte@5.2.9)
     optionalDependencies:
       svelte: 5.2.9
@@ -5688,6 +5693,8 @@ snapshots:
 
   semver@7.6.3: {}
 
+  semver@7.7.1: {}
+
   set-cookie-parser@2.6.0: {}
 
   sharp@0.33.5:
@@ -5807,7 +5814,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.6.3):
+  svelte-check@4.1.1(picomatch@4.0.2)(svelte@5.2.9)(typescript@5.7.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 4.0.3
@@ -5815,7 +5822,7 @@ snapshots:
       picocolors: 1.1.1
       sade: 1.8.1
       svelte: 5.2.9
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - picomatch
 
@@ -5833,7 +5840,7 @@ snapshots:
     dependencies:
       svelte: 5.2.9
 
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.6.3):
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.1))(postcss@8.5.1)(svelte@5.2.9)(typescript@5.7.3):
     dependencies:
       detect-indent: 6.1.0
       strip-indent: 3.0.0
@@ -5841,14 +5848,14 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.1
       postcss-load-config: 3.1.4(postcss@8.5.1)
-      typescript: 5.6.3
+      typescript: 5.7.3
 
-  svelte2tsx@0.7.33(svelte@5.2.9)(typescript@5.6.3):
+  svelte2tsx@0.7.33(svelte@5.2.9)(typescript@5.7.3):
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 5.2.9
-      typescript: 5.6.3
+      typescript: 5.7.3
 
   svelte@5.2.9:
     dependencies:
@@ -5914,9 +5921,9 @@ snapshots:
     dependencies:
       regexparam: 3.0.0
 
-  ts-api-utils@1.3.0(typescript@5.6.3):
+  ts-api-utils@1.3.0(typescript@5.7.3):
     dependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
 
   tslib@2.6.2: {}
 
@@ -5924,18 +5931,18 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
 
-  typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.6.3):
+  typescript-eslint@8.4.0(eslint@9.6.0)(typescript@5.7.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.4.0(@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.6.3))(eslint@9.6.0)(typescript@5.6.3)
-      '@typescript-eslint/parser': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.6.3)
+      '@typescript-eslint/eslint-plugin': 8.4.0(@typescript-eslint/parser@8.4.0(eslint@9.6.0)(typescript@5.7.3))(eslint@9.6.0)(typescript@5.7.3)
+      '@typescript-eslint/parser': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
+      '@typescript-eslint/utils': 8.4.0(eslint@9.6.0)(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - eslint
       - supports-color
 
-  typescript@5.6.3: {}
+  typescript@5.7.3: {}
 
   ufo@1.5.4: {}
 
