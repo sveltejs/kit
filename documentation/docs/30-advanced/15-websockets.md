@@ -8,7 +8,7 @@ title: WebSockets
 
 A `+server.js` file can export a `socket` object to handle WebSocket connections.
 
-The shape of this socket object directly corresponds to the [Hooks](https://crossws.unjs.io/guide/hooks) type in `crossws` as this is the package being used to handle cross-platform WebSocket connections.
+In the `socket` object, you can define several [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -39,28 +39,30 @@ export const socket = {
 
 The `upgrade` hook is called when a WebSocket connection is established, and can be used to accept or reject the connection attempt.
 
-Additionally, SvelteKit provides a WebSocket specific `accept` helper function alongside the existing `error` function used for HTTP errors to easily accept or reject connections.
+Additionally, you can use the [`accept`](@sveltejs-kit#accept) or [`error`](@sveltejs-kit#error) functions imported from `@sveltejs/kit` to easily accept or reject connections. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
 
 ```js
-import { error, accept } from "@sveltejs/kit";
+import { accept, error } from "@sveltejs/kit";
 
 /** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
 	upgrade(req) {
-		// Accept the WebSocket connection with a return
-		return accept();
+		if (req.headers.get('origin') !== 'allowed_origin') {
+			// Reject the WebSocket connection by throwing an error
+			error(401, 'unauthorized');
+		}
 
-		// Reject the WebSocket connection with a standard SvelteKit error
-		error(401, 'unauthorized');
+		// Accept the WebSocket connection by returning a response
+		return accept();
 	}
-    
-    // ...
+
+	// ...
 };
 ```
 
 ### Open
 
-The `open` hook is called when a WebSocket connection is opened. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object as a parameter.
+The `open` hook is called when a WebSocket connection is opened. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, as a parameter.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -73,7 +75,7 @@ export const socket = {
 
 ### Message
 
-The `message` hook is called when a message is received from the client. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the [message](https://crossws.unjs.io/guide/message) as parameters.
+The `message` hook is called when a message is received from the client. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the [message](https://crossws.unjs.io/guide/message) object, containing data from the client, as parameters.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -86,7 +88,7 @@ export const socket = {
 
 ### Close
 
-The `close` hook is called when a WebSocket connection is closed. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the close event as parameters.
+The `close` hook is called when a WebSocket connection is closed. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the close event object, containing the [WebSocket connection close code](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code#value) and reason, as parameters.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -99,7 +101,7 @@ export const socket = {
 
 ### Error
 
-The `error` hook is called when a WebSocket connection error occurs. It receives the [peer](https://crossws.unjs.io/guide/peer) WebSocket object and the error as parameters.
+The `error` hook is called when a WebSocket connection error occurs. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the error as parameters.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -112,15 +114,31 @@ export const socket = {
 
 ## Connecting from the client
 
-To connect to a WebSocket endpoint in SvelteKit, you can use the native `WebSocket` class in the browser.
+To connect to a WebSocket endpoint, you can use the [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket) constructor in the browser.
 
-```js
-// To connect to src/routes/ws/+server.js
-const socket = new WebSocket(`/ws`);
+```svelte
+<script>
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		// To connect to src/routes/ws/+server.js
+		const socket = new WebSocket(`/ws`);
+
+		socket.addEventListener("open", (event) => {
+			socket.send("Hello Server!");
+		});
+
+		// ...
+
+		return () => {
+			socket.close();
+		}
+	});
+</script>
 ```
 
-See [the WebSocket documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket) for more details.
+See [the WebSocket documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) for more details.
 
 ## Compatibility
 
-SvelteKit uses [`unjs/crossws`](https://crossws.unjs.io) to handle WebSocket connections. Please refer to their [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the `Peer` object in different runtime environments.
+SvelteKit uses [`unjs/crossws`](https://crossws.unjs.io) to handle cross-platform WebSocket connections. Please refer to their [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the `peer` object in different runtime environments.
