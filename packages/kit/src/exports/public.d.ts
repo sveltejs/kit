@@ -659,6 +659,28 @@ export interface KitConfig {
 		 * @since 2.14.0
 		 */
 		type?: 'pathname' | 'hash';
+		/**
+		 * How to determine which route to load when navigating to a new page.
+		 *
+		 * By default, SvelteKit will serve a route manifest to the browser.
+		 * When navigating, this manifest is used (along with the `reroute` hook, if it exists) to determine which components to load and which `load` functions to run.
+		 * Because everything happens on the client, this decision can be made immediately. The drawback is that the manifest needs to be
+		 * loaded and parsed before the first navigation can happen, which may have an impact if your app contains many routes.
+		 *
+		 * Alternatively, SvelteKit can determine the route on the server. This means that for every navigation to a path that has not yet been visited, the server will be asked to determine the route.
+		 * This has several advantages:
+		 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
+		 * - The list of routes is hidden from public view
+		 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
+
+		 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
+		 *
+		 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
+		 *
+		 * @default "client"
+		 * @since 2.17.0
+		 */
+		resolution?: 'client' | 'server';
 	};
 	serviceWorker?: {
 		/**
@@ -1298,6 +1320,7 @@ export interface SSRManifest {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
+		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code */
 		server_assets: Record<string, number>;

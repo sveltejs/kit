@@ -1,3 +1,4 @@
+import { building, dev } from '$app/environment';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
@@ -134,6 +135,15 @@ export const handle = sequence(
 			redirect(303, '/actions/enhance');
 		}
 
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (!dev && !building && event.url.pathname === '/prerendering/prerendered-endpoint/api') {
+			error(
+				500,
+				`Server hooks should not be called for prerendered endpoints: isSubRequest=${event.isSubRequest}`
+			);
+		}
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
