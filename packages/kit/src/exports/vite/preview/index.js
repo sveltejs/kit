@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import crossws from 'crossws/adapters/node';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
@@ -49,6 +50,10 @@ export async function preview(vite, vite_config, svelte_config) {
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
 		read: (file) => createReadableStream(`${dir}/${file}`)
+	});
+
+	const ws = crossws({
+		resolve: server.resolve()
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
@@ -183,6 +188,10 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
+		vite.middlewares.on('upgrade', (req, socket, head) => {
+			ws.handleUpgrade(req, socket, head);
+		});
+
 		// SSR
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
@@ -191,6 +200,11 @@ export async function preview(vite, vite_config, svelte_config) {
 				base: `${protocol}://${host}`,
 				request: req
 			});
+
+			if (request.headers.get('upgrade') === 'websocket') {
+				vite.middlewares.emit('upgrade', req, req.socket, Buffer.from(''));
+				return;
+			}
 
 			setResponse(
 				res,
