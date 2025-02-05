@@ -49,7 +49,7 @@ export const socket = {
 	upgrade(req) {
 		if (req.headers.get('origin') !== 'allowed_origin') {
 			// Reject the WebSocket connection by throwing an error
-			error(401, 'unauthorized');
+			error(403, 'Forbidden');
 		}
 
 		// Accept the WebSocket connection by returning a response
