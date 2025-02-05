@@ -20,7 +20,7 @@
 		"dropcss": "^1.0.16",
 		"svelte": "^5.2.9",
 		"svelte-check": "^4.1.1",
-		"typescript": "^5.3.3",
+		"typescript": "^5.5.4",
 		"vite": "^6.0.11"
 	},
 	"type": "module"
