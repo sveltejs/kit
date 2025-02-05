@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
-import crossws from 'crossws/adapters/node';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import crossws from 'crossws/adapters/node';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
@@ -558,6 +558,11 @@ export async function dev(vite, vite_config, svelte_config) {
 						error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' })
 					);
 
+					return;
+				}
+
+				if (request.headers.get('upgrade') === 'websocket') {
+					vite.httpServer?.emit('upgrade', req, req.socket, Buffer.from(''));
 					return;
 				}
 

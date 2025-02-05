@@ -12,9 +12,17 @@ import { method_not_allowed } from './utils.js';
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
+	// if we've ended up here, the request probably doesn't have the Upgrade: websocket header
+	if (method === 'GET' && !mod.GET && mod.socket?.upgrade) {
+		return new Response('Expected Upgrade: websocket', {
+			status: 426,
+			headers: { upgrade: 'websocket' }
+		});
+	}
+
 	let handler = mod[method] || mod.fallback;
 
-	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
+	if (method === 'HEAD' && !mod.HEAD && mod.GET) {
 		handler = mod.GET;
 	}
 
