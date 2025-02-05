@@ -129,10 +129,6 @@ To connect to a WebSocket endpoint, you can use the [`WebSocket`](https://develo
 		});
 
 		// ...
-
-		return () => {
-			socket.close();
-		}
 	});
 </script>
 ```
