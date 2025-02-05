@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 
+/** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(req) {
 		console.log(`[ws] upgrading ${req.url}...`);
