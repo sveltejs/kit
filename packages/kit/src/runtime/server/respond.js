@@ -59,6 +59,8 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
+	// this will always return a Response object unless we set the upgrade param to true
+	// and an endpoint with a socket handler exists
 	return /** @type {Promise<Response>} */ (handle_request(request, options, manifest, state));
 }
 
