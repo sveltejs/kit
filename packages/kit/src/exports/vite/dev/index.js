@@ -548,7 +548,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
 				ws = crossws({
-					resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address }),
+					resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address })
 				});
 
 				if (manifest_error) {
