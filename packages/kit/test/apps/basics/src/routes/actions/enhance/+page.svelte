@@ -37,9 +37,7 @@
 	use:enhance={({ controller }) => {
 		previous?.abort();
 		previous = controller;
-		return () => {
-			count++;
-		};
+		return () => count++;
 	}}
 >
 	<button class="form2">Submit</button>
