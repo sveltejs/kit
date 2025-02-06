@@ -1449,6 +1449,7 @@ async function navigate({
 			});
 		} else {
 			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			nav.fulfil(undefined);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
