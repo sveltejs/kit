@@ -215,7 +215,7 @@ export const handler = sequence(
 );
 
 const ws = crossws({
-	resolve: server.resolve(),
+	resolve: server.resolve()
 });
 
 export const upgradeHandler = ws.handleUpgrade;
