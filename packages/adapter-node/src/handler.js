@@ -2,6 +2,7 @@ import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import crossws from 'crossws/adapters/node';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
@@ -213,4 +214,8 @@ export const handler = sequence(
 	].filter(Boolean)
 );
 
-export const resolve = server.resolve();
+const ws = crossws({
+	resolve: server.resolve(),
+});
+
+export const upgradeHandler = ws.handleUpgrade;

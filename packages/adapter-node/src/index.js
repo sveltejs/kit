@@ -1,8 +1,7 @@
 import process from 'node:process';
-import { handler, resolve } from 'HANDLER';
+import { handler, upgradeHandler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
-import crossws from 'crossws/adapters/node';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -34,10 +33,6 @@ let idle_timeout_id;
 
 const server = polka().use(handler);
 
-const ws = crossws({
-	resolve
-});
-
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
@@ -49,7 +44,7 @@ if (socket_activation) {
 }
 
 // Register the upgrade handler after the listen call, so the internal server is available
-server.server.on('upgrade', ws.handleUpgrade);
+server.server.on('upgrade', upgradeHandler);
 
 /** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
 function graceful_shutdown(reason) {
