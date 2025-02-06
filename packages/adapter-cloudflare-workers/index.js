@@ -22,19 +22,19 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 		adapt(builder) {
 			const { main, assets } = validate_config(builder, config);
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const outDir = dirname(main);
-			const relativePath = posix.relative(outDir, builder.getServerDirectory());
+			const out_dir = dirname(main);
+			const relative_path = posix.relative(out_dir, builder.getServerDirectory());
 
 			builder.log.minor('Generating worker...');
 
 			// Clear out old files
 			builder.rimraf(assets.directory);
-			builder.rimraf(outDir);
+			builder.rimraf(out_dir);
 
 			// Create the entry-point for the Worker
 			builder.copy(`${files}/entry.js`, main, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
+					SERVER: `${relative_path}/index.js`,
 					MANIFEST: './manifest.js',
 					ASSETS: assets.binding || 'ASSETS'
 				}
@@ -49,8 +49,8 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 				]);
 			}
 			writeFileSync(
-				`${outDir}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`${out_dir}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: relative_path })};\n\n` +
 					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
