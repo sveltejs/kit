@@ -47,7 +47,12 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		css.filter(asset => client_stylesheets.has(asset.fileName))
 			.forEach((asset) => {
 				if (asset.source.length < kit.inlineStyleThreshold) {
+					// We know that the names for entry points are numbers.
 					const [index] = basename(asset.fileName).split('.');
+					// There can also be other CSS files from shared components
+					// for example, which we need to ignore here.
+					if (isNaN(+index)) return;
+
 					const server_stylesheet = server_stylesheets.get(+index);
 					const file = `${out}/server/stylesheets/${index}.js`;
 

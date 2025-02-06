@@ -205,7 +205,7 @@ export function enhance(form_element, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
-		callback({
+		await callback({
 			action,
 			formData: form_data,
 			formElement: form_element,

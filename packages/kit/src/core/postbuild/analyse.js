@@ -13,7 +13,7 @@ import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { resolve_route } from '../../utils/routing.js';
+import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -88,7 +88,7 @@ async function analyse({
 		}
 
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+			has_server_load: has_server_load(node)
 		};
 	}
 

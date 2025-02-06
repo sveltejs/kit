@@ -265,3 +265,11 @@ export function resolve_route(id, params) {
 			.join('/')
 	);
 }
+
+/**
+ * @param {import('types').SSRNode} node
+ * @returns {boolean}
+ */
+export function has_server_load(node) {
+	return node.server?.load !== undefined || node.server?.trailingSlash !== undefined;
+}

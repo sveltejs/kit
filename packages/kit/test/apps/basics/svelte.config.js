@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
@@ -28,6 +30,9 @@ const config = {
 
 		version: {
 			name: 'TEST_VERSION'
+		},
+		router: {
+			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
 		}
 	}
 };

@@ -136,7 +136,34 @@ export async function dev(vite, vite_config, svelte_config) {
 					imports: [],
 					stylesheets: [],
 					fonts: [],
-					uses_env_dynamic_public: true
+					uses_env_dynamic_public: true,
+					nodes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: manifest_data.nodes.map((node, i) => {
+									if (node.component || node.universal) {
+										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
+									}
+								}),
+					routes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: compact(
+									manifest_data.routes.map((route) => {
+										if (!route.page) return;
+
+										return {
+											id: route.id,
+											pattern: route.pattern,
+											params: route.params,
+											layouts: route.page.layouts.map((l) =>
+												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+											),
+											errors: route.page.errors,
+											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+										};
+									})
+								)
 				},
 				server_assets: new Proxy(
 					{},
@@ -222,6 +249,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						return result;
 					};
 				}),
+				prerendered_routes: new Set(),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;

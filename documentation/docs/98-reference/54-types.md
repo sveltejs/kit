@@ -127,15 +127,34 @@ The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. So
 /// file: .svelte-kit/tsconfig.json
 {
 	"compilerOptions": {
-		"baseUrl": "..",
 		"paths": {
-			"$lib": "src/lib",
-			"$lib/*": "src/lib/*"
+			"$lib": ["../src/lib"],
+			"$lib/*": ["../src/lib/*"]
 		},
 		"rootDirs": ["..", "./types"]
 	},
-	"include": ["../src/**/*.js", "../src/**/*.ts", "../src/**/*.svelte"],
-	"exclude": ["../node_modules/**", "./**"]
+	"include": [
+		"ambient.d.ts",
+		"non-ambient.d.ts",
+		"./types/**/$types.d.ts",
+		"../vite.config.js",
+		"../vite.config.ts",
+		"../src/**/*.js",
+		"../src/**/*.ts",
+		"../src/**/*.svelte",
+		"../tests/**/*.js",
+		"../tests/**/*.ts",
+		"../tests/**/*.svelte"
+	],
+	"exclude": [
+		"../node_modules/**",
+		"../src/service-worker.js",
+		"../src/service-worker/**/*.js",
+		"../src/service-worker.ts",
+		"../src/service-worker/**/*.ts",
+		"../src/service-worker.d.ts",
+		"../src/service-worker/**/*.d.ts"
+	]
 }
 ```
 
@@ -147,24 +166,22 @@ Others are required for SvelteKit to work properly, and should also be left unto
 	"compilerOptions": {
 		// this ensures that types are explicitly
 		// imported with `import type`, which is
-		// necessary as svelte-preprocess cannot
+		// necessary as Svelte/Vite cannot
 		// otherwise compile components correctly
-		"importsNotUsedAsValues": "error",
+		"verbatimModuleSyntax": true,
 
 		// Vite compiles one TypeScript module
 		// at a time, rather than compiling
 		// the entire module graph
 		"isolatedModules": true,
 
-		// TypeScript cannot 'see' when you
-		// use an imported value in your
-		// markup, so we need this
-		"preserveValueImports": true,
+		// Tell TS it's used only for type-checking
+		"noEmit": true,
 
 		// This ensures both `vite build`
 		// and `svelte-package` work correctly
 		"lib": ["esnext", "DOM", "DOM.Iterable"],
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"module": "esnext",
 		"target": "esnext"
 	}

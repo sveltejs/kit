@@ -1,19 +1,12 @@
 import { DEV } from 'esm-env';
-import { base } from '__sveltekit/paths';
+import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
-import {
-	decode_pathname,
-	decode_params,
-	disable_search,
-	has_data_suffix,
-	normalize_path,
-	strip_data_suffix
-} from '../../utils/url.js';
+import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -33,8 +26,17 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
+import { resolve_route } from './page/server_routing.js';
+import { validateHeaders } from './validate-headers.js';
+import {
+	has_data_suffix,
+	has_resolution_prefix,
+	strip_data_suffix,
+	strip_resolution_prefix
+} from '../pathname.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
+/* global __SVELTEKIT_DEV__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -85,10 +87,19 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404 });
 	}
 
-	const is_data_request = has_data_suffix(url.pathname);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
-	if (is_data_request) {
+
+	/**
+	 * If the request is for a route resolution, first modify the URL, then continue as normal
+	 * for path resolution, then return the route object as a JS file.
+	 */
+	const is_route_resolution_request = has_resolution_prefix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+
+	if (is_route_resolution_request) {
+		url.pathname = strip_resolution_prefix(url.pathname);
+	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
@@ -100,19 +111,19 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	// reroute could alter the given URL, so we pass a copy
-	let rerouted_path;
+	let resolved_path;
+
 	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		// reroute could alter the given URL, so we pass a copy
+		resolved_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
 		});
 	}
 
-	let decoded;
 	try {
-		decoded = decode_pathname(rerouted_path);
+		resolved_path = decode_pathname(resolved_path);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
@@ -124,17 +135,21 @@ export async function respond(request, options, manifest, state) {
 	let params = {};
 
 	if (base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(base)) {
+		if (!resolved_path.startsWith(base)) {
 			return text('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(base.length) || '/';
+		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	if (decoded === `/${options.app_dir}/env.js`) {
+	if (is_route_resolution_request) {
+		return resolve_route(resolved_path, new URL(request.url), manifest);
+	}
+
+	if (resolved_path === `/${app_dir}/env.js`) {
 		return get_public_env(request);
 	}
 
-	if (decoded.startsWith(`/${options.app_dir}`)) {
+	if (resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
@@ -146,7 +161,7 @@ export async function respond(request, options, manifest, state) {
 		const matchers = await manifest._.matchers();
 
 		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(decoded);
+			const match = candidate.pattern.exec(resolved_path);
 			if (!match) continue;
 
 			const matched = exec(match, candidate.params, matchers);
@@ -186,6 +201,10 @@ export async function respond(request, options, manifest, state) {
 		request,
 		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
+			if (__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
 				const value = new_headers[key];
@@ -508,11 +527,11 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (state.error && event.isSubRequest) {
-				return await fetch(request, {
-					headers: {
-						'x-sveltekit-error': 'true'
-					}
-				});
+				// avoid overwriting the headers. This could be a same origin fetch request
+				// to an external service from the root layout while rendering an error page
+				const headers = new Headers(request.headers);
+				headers.set('x-sveltekit-error', 'true');
+				return await fetch(request, { headers });
 			}
 
 			if (state.error) {
