@@ -447,6 +447,12 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	/** @type {import('crossws').ResolveHooks | undefined} */
+	let resolve_websocket_hooks = undefined;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+	});
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -457,15 +463,12 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
-		/** @type {import('crossws/adapters/node').NodeAdapter | undefined} */
-		let ws;
-
 		vite.httpServer?.on(
 			'upgrade',
 			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
 				(req, socket, head) => {
 					if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
-						ws?.handleUpgrade(req, socket, head);
+						ws.handleUpgrade(req, socket, head);
 					}
 				}
 			)
@@ -546,9 +549,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					throw new Error('Could not determine clientAddress');
 				};
 
-				// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
-				ws = crossws({
-					resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address })
+				resolve_websocket_hooks = server.resolveWebSocketHooks({
+					getClientAddress: get_client_address
 				});
 
 				if (manifest_error) {

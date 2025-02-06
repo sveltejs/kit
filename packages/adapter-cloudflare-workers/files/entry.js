@@ -14,7 +14,11 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
-let ws = crossws();
+/** @type {import('crossws').ResolveHooks | undefined} */
+let resolve_websocket_hooks = undefined;
+const ws = crossws({
+	resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+});
 
 export default {
 	/**
@@ -40,13 +44,10 @@ export default {
 		await server.init({ env });
 
 		if (req.headers.get('upgrade') === 'websocket') {
-			// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
-			ws = crossws({
-				resolve: server.resolveWebSocketHooks(
-					// @ts-ignore
-					options
-				)
-			});
+			resolve_websocket_hooks = server.resolveWebSocketHooks(
+				// @ts-ignore
+				options
+			);
 			return ws.handleUpgrade(
 				// @ts-ignore wtf is Cloudflare doing to these types
 				req,

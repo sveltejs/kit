@@ -218,7 +218,11 @@ export const handler = sequence(
 	].filter(Boolean)
 );
 
-let ws = crossws();
+/** @type {import('crossws').ResolveHooks | undefined} */
+let resolve_websocket_hooks = undefined;
+const ws = crossws({
+	resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+});
 
 /**
  * @param {import('node:http').IncomingMessage} req
@@ -226,9 +230,6 @@ let ws = crossws();
  * @param {Buffer} head
  */
 export function upgradeHandler(req, socket, head) {
-	// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
-	ws = crossws({
-		resolve: server.resolveWebSocketHooks(get_options(req))
-	});
+	resolve_websocket_hooks = server.resolveWebSocketHooks(get_options(req));
 	ws.handleUpgrade(req, socket, head);
 }

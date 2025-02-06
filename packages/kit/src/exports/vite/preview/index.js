@@ -54,7 +54,11 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	let ws = crossws();
+	/** @type {import('crossws').ResolveHooks | undefined} */
+	let resolve_websocket_hooks = undefined;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -190,9 +194,8 @@ export async function preview(vite, vite_config, svelte_config) {
 			'upgrade',
 			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
 				(req, socket, head) => {
-					// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
-					ws = crossws({
-						resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address(req) })
+					resolve_websocket_hooks = server.resolveWebSocketHooks({
+						getClientAddress: get_client_address(req)
 					});
 					ws.handleUpgrade(req, socket, head);
 				}
