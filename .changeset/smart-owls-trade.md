@@ -4,12 +4,9 @@
 
 feat: use the new Workers Static Assets feature from Cloudflare
 
-This changes the adapter to stop using the old Workers Sites (kv-asset-handler) approach.
-Instead, making use of the new Workers Static Assets feature, which is embedded into Cloudflare natively.
+This changes the adapter to stop using the old Workers Sites (kv-asset-handler) approach in favor of the new Workers Static Assets feature, which is embedded into Cloudflare natively.
 
-Also this change removes the extra esbuild step that was being run inside the adapter, relying upon Wrangler to do the bundling.
-The extra esbuild step required a hardcoded list of Node.js compatible modules.
-This is no longer needed since Wrangler now manages all of that.
+Also, this change removes the extra esbuild step that was being run inside the adapter, instead relying upon Wrangler to do the bundling.
 
 ## Breaking changes and migration
 
@@ -35,7 +32,7 @@ This is no longer needed since Wrangler now manages all of that.
   ```toml
   name = "<your-site-name>"
   account_id = "<your-account-id>"
-  compatibility_date = "2021-11-12"`
+  compatibility_date = "2021-11-12"
   main = ".svelte-kit/cloudflare/server/index.js"
 
   # Workers Assets configuration
@@ -44,7 +41,7 @@ This is no longer needed since Wrangler now manages all of that.
 
 - Workers Assets defaults to serving assets directly for a matching request, rather than routing it through the Worker code.
   
-  The previous adapter would add custom headers to assets responses (such as `cache-control`, `content-type`, and `x-robots-tag`. Such direct asset responses no longer contain these headers - but the will include eTag headers that have proven (in Pages) to be an effective caching strategy for assets.
+  The previous adapter would add custom headers to assets responses (such as `cache-control`, `content-type`, and `x-robots-tag`. Such direct asset responses no longer contain these headers — but they will include eTag headers that have proven (in Pages) to be an effective caching strategy for assets.
   
   If you wish to always run the Worker before every request then add `serve_directly = false` to the assets configuration section. For example:
 
