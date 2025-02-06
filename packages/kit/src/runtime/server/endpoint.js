@@ -14,9 +14,12 @@ export async function render_endpoint(event, mod, state) {
 
 	// if we've ended up here, the request probably doesn't have the Upgrade: websocket header
 	if (method === 'GET' && !mod.GET && mod.socket?.upgrade) {
-		return new Response('Expected Upgrade: websocket', {
+		return new Response('This service requires use of the websocket protocol.', {
 			status: 426,
-			headers: { upgrade: 'websocket' }
+			headers: {
+				upgrade: 'websocket',
+				connect: 'Upgrade'
+			}
 		});
 	}
 

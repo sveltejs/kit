@@ -201,11 +201,6 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			if (request.headers.get('upgrade') === 'websocket') {
-				vite.middlewares.emit('upgrade', req, req.socket, Buffer.from(''));
-				return;
-			}
-
 			setResponse(
 				res,
 				await server.respond(request, {

@@ -561,11 +561,6 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				if (request.headers.get('upgrade') === 'websocket') {
-					vite.httpServer?.emit('upgrade', req, req.socket, Buffer.from(''));
-					return;
-				}
-
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
