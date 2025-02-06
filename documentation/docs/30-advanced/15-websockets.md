@@ -4,11 +4,11 @@ title: WebSockets
 
 ## The `socket` object
 
-[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between the client and server.
+[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between a client and a server.
 
 A `+server.js` file can export a `socket` object to handle WebSocket connections.
 
-In the `socket` object, you must define [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle.
+In the `socket` object, you can define [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -37,12 +37,12 @@ export const socket = {
 
 ### Upgrade
 
-The `upgrade` hook is called when a WebSocket connection is established, and can be used to accept or reject the connection attempt.
+The `upgrade` hook is called before a WebSocket connection is established. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
 
-Additionally, you can use the [`accept`](@sveltejs-kit#accept) or [`error`](@sveltejs-kit#error) functions imported from `@sveltejs/kit` to easily accept or reject connections. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
+You can use the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit` to easily reject connections. 
 
 ```js
-import { accept, error } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 
 /** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
@@ -51,12 +51,7 @@ export const socket = {
 			// Reject the WebSocket connection by throwing an error
 			error(403, 'Forbidden');
 		}
-
-		// Accept the WebSocket connection by returning a response
-		return accept();
 	}
-
-	// ...
 };
 ```
 

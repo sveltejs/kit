@@ -1,18 +1,14 @@
-import { accept } from '@sveltejs/kit';
-
 /** @type {import('@sveltejs/kit').Peer[]} */
 let sockets = [];
 
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(req) {
-		console.log(`[ws] rejecting ${req.url}...`);
-		return accept();
+		console.log(`[ws] upgrading ${req.url}...`);
 	},
 
 	open(peer) {
 		console.log(`[ws] open: ${peer}`);
-		// console.log(peer);
 	},
 
 	message(peer, message) {

@@ -110,18 +110,6 @@ export function redirect(status, location) {
 	);
 }
 
-const accept_response = new Response(null, {
-	status: 200
-});
-
-/**
- * Accepts a WebSocket upgrade request. When called during request handling, SvelteKit will accept the WebSocket upgrade request.
- * @return {Response} This response instructs SvelteKit to accept the WebSocket upgrade request.
- */
-export function accept() {
-	return accept_response;
-}
-
 /**
  * Checks whether this is a redirect thrown by {@link redirect}.
  * @param {unknown} e The object to check.

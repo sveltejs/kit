@@ -15,17 +15,18 @@ const noHooks = {};
  */
 export function resolve(options, manifest, state) {
 	return async (info) => {
-		/** @type {RequestInit} */
+		/** @type {Request} */
 		let request;
 
 		// Check if info is a Peer object
 		if ('request' in info) {
+			// @ts-ignore the type UpgradeRequest is equivalent to Request
 			request = info.request;
 		} else {
+			// @ts-ignore although the type is RequestInit, it is almost always a Request object
 			request = info;
 		}
 
-		// @ts-expect-error URL is actually valid on this type, I think due to the NodeReqProxy used.
 		const url = new URL(request.url);
 
 		// reroute could alter the given URL, so we pass a copy
@@ -141,14 +142,9 @@ export function resolve(options, manifest, state) {
 
 						const response = await options.hooks.handle({
 							event,
-							// @ts-ignore the crossws types here may be wrong, or at least not accurate for this use case, as its only ever returning responses for us.
-							resolve: async (event) => {
-								if (node.socket && node.socket.upgrade) {
-									//@ts-expect-error The upgrade hook SHOULD only ever return a response or throw an HttpError
-									return await node.socket.upgrade(event.request);
-								} else {
-									return new Response('Not Implemented', { status: 501 });
-								}
+							resolve: async () => {
+								const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+								return new Response(undefined, init);
 							}
 						});
 

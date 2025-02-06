@@ -4,7 +4,6 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-	import type { Hooks } from 'crossws';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1904,7 +1903,7 @@ declare module '@sveltejs/kit' {
 	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 	type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
-		socket?: Partial<Hooks>;
+		socket?: Socket;
 		prerender?: PrerenderOption;
 		trailingSlash?: TrailingSlash;
 		config?: any;
@@ -1986,11 +1985,6 @@ declare module '@sveltejs/kit' {
 	 * @throws {Error} If the provided status is invalid.
 	 * */
 	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
-	/**
-	 * Accepts a WebSocket upgrade request. When called during request handling, SvelteKit will accept the WebSocket upgrade request.
-	 * @return {Response} This response instructs SvelteKit to accept the WebSocket upgrade request.
-	 */
-	export function accept(): Response;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
