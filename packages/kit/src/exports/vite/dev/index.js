@@ -460,11 +460,16 @@ export async function dev(vite, vite_config, svelte_config) {
 		/** @type {import('crossws/adapters/node').NodeAdapter | undefined} */
 		let ws;
 
-		vite.httpServer?.on('upgrade', (req, socket, head) => {
-			if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
-				ws?.handleUpgrade(req, socket, head);
-			}
-		});
+		vite.httpServer?.on(
+			'upgrade',
+			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
+				(req, socket, head) => {
+					if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
+						ws?.handleUpgrade(req, socket, head);
+					}
+				}
+			)
+		);
 
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
@@ -530,13 +535,20 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				ws = crossws({
-					resolve: server.resolve()
-				});
-
 				const request = await getRequest({
 					base,
 					request: req
+				});
+
+				const get_client_address = () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				};
+
+				// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
+				ws = crossws({
+					resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address }),
 				});
 
 				if (manifest_error) {
@@ -562,11 +574,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
+					getClientAddress: get_client_address,
 					read: (file) => {
 						if (file in manifest._.server_assets) {
 							return fs.readFileSync(from_fs(file));

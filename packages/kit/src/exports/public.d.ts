@@ -1299,9 +1299,9 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
-	resolve(): (
-		info: RequestInit | import('crossws').Peer
-	) => Promise<Partial<import('crossws').Hooks>>;
+	resolveWebSocketHooks(
+		options: RequestOptions
+	): (info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>;
 }
 
 export interface ServerInitOptions {

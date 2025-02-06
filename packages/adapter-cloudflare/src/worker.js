@@ -1,6 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
+// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable?
 import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
@@ -10,20 +11,36 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
+let ws = crossws();
+
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
 	// @ts-ignore wtf is Cloudflare doing to these types
 	async fetch(req, env, context) {
+		const options = {
+			platform: { env, context, caches, cf: req.cf },
+			getClientAddress() {
+				return req.headers.get('cf-connecting-ip');
+			}
+		};
+
 		// @ts-ignore
 		await server.init({ env });
 
-		const ws = crossws({
-			resolve: server.resolve()
-		});
-
 		if (req.headers.get('upgrade') === 'websocket') {
-			// @ts-ignore wtf is Cloudflare doing to these types
-			return ws.handleUpgrade(req, env, context);
+			// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
+			ws = crossws({
+				resolve: server.resolveWebSocketHooks(
+					// @ts-ignore
+					options
+				)
+			});
+			return ws.handleUpgrade(
+				// @ts-ignore wtf is Cloudflare doing to these types
+				req,
+				env,
+				context
+			);
 		}
 
 		// skip cache if "cache-control: no-cache" in request
@@ -70,13 +87,11 @@ const worker = {
 			});
 		} else {
 			// dynamically-generated pages
-			res = await server.respond(req, {
+			res = await server.respond(
+				req,
 				// @ts-ignore
-				platform: { env, context, caches, cf: req.cf },
-				getClientAddress() {
-					return req.headers.get('cf-connecting-ip');
-				}
-			});
+				options
+			);
 		}
 
 		// write to `Cache` only if response is not an error,

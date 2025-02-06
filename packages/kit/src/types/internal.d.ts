@@ -172,6 +172,9 @@ export class InternalServer extends Server {
 			emulator?: Emulator;
 		}
 	): Promise<Response>;
+	resolveWebSocketHooks(
+		options: RequestOptions
+	): (info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>;
 }
 
 export interface ManifestData {

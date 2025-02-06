@@ -52,11 +52,9 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	const ws = crossws({
-		resolve: server.resolve()
-	});
-
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	let ws = crossws();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -188,7 +186,18 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
-		vite.middlewares.on('upgrade', ws.handleUpgrade);
+		vite.middlewares.on(
+			'upgrade',
+			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
+				(req, socket, head) => {
+					// TODO: resolve hooks lazily instead of re-creating the websocket server on every request / preserve peers on reinstantiating
+					ws = crossws({
+						resolve: server.resolveWebSocketHooks({ getClientAddress: get_client_address(req) })
+					});
+					ws.handleUpgrade(req, socket, head);
+				}
+			)
+		);
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
@@ -202,11 +211,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			setResponse(
 				res,
 				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
+					getClientAddress: get_client_address(req),
 					read: (file) => {
 						if (file in manifest._.server_assets) {
 							return fs.readFileSync(join(dir, file));
@@ -259,3 +264,14 @@ function scoped(scope, handler) {
 function is_file(path) {
 	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+const get_client_address = (req) => {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
+};

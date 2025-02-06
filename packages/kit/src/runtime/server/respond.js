@@ -59,6 +59,48 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
+	return /** @type {Promise<Response>} */ (handle_request(request, options, manifest, state));
+}
+
+/**
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>}
+ */
+export function resolve_websocket_hooks(options, manifest, state) {
+	return async (info) => {
+		/** @type {Request} */
+		let request;
+
+		// Check if info is a Peer object
+		if ('request' in info) {
+			// @ts-ignore the type UpgradeRequest is equivalent to Request
+			request = info.request;
+		} else {
+			// @ts-ignore although the type is RequestInit, it is almost always a Request object
+			request = info;
+		}
+
+		const hooks = await handle_request(request, options, manifest, state, true);
+
+		if (hooks instanceof Response) {
+			return {};
+		}
+
+		return hooks;
+	};
+}
+
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean=} upgrade
+ * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
+ */
+async function handle_request(request, options, manifest, state, upgrade = false) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -345,6 +387,22 @@ export async function respond(request, options, manifest, state) {
 		});
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
+
+		if (upgrade && route?.endpoint) {
+			const node = await route.endpoint();
+			return {
+				...node.socket,
+				upgrade: (req) => {
+					return options.hooks.handle({
+						event,
+						resolve: async () => {
+							const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+							return new Response(undefined, init);
+						}
+					});
+				}
+			};
+		}
 
 		const response = await options.hooks.handle({
 			event,
