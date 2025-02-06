@@ -26,6 +26,11 @@ declare module '@sveltejs/kit' {
 			 * @param config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
+			/**
+			 * Test support for middleware
+			 * @since 2.18.0
+			 */
+			middleware?: () => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -417,6 +422,12 @@ declare module '@sveltejs/kit' {
 				 * @since 2.3.0
 				 */
 				universal?: string;
+				/**
+				 * The location of your middleware [hooks](https://svelte.dev/docs/kit/hooks).
+				 * @default "src/hooks.middleware"
+				 * @since 2.18.0
+				 */
+				middleware?: string;
 			};
 			/**
 			 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -2011,7 +2022,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 

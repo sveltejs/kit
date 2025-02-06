@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
+import { check_middleware_feature } from '../../utils/features.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -95,6 +96,10 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
 			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
 			validated.kit.files.hooks.universal = path.resolve(cwd, validated.kit.files.hooks.universal);
+			validated.kit.files.hooks.middleware = path.resolve(
+				cwd,
+				validated.kit.files.hooks.middleware
+			);
 		} else {
 			// @ts-expect-error
 			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
@@ -129,6 +134,8 @@ export function validate_config(config) {
 			);
 		}
 	}
+
+	check_middleware_feature(validated.kit.adapter);
 
 	return validated;
 }

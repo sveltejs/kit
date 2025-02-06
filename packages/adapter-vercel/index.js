@@ -431,6 +431,9 @@ const plugin = function (defaults = {}) {
 				}
 
 				return true;
+			},
+			middleware: () => {
+				return true;
 			}
 		}
 	};

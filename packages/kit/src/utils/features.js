@@ -22,3 +22,16 @@ export function check_feature(route_id, config, feature, adapter) {
 		}
 	}
 }
+
+/**
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ */
+export function check_middleware_feature(adapter) {
+	if (!adapter) return;
+
+	if (!adapter.supports?.middleware?.()) {
+		throw new Error(
+			`Cannot use middleware when using ${adapter.name}. Please ensure that your adapter is up to date and supports this feature.`
+		);
+	}
+}

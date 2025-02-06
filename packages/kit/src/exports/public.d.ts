@@ -44,6 +44,11 @@ export interface Adapter {
 		 * @param config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+		/**
+		 * Test support for middleware
+		 * @since 2.18.0
+		 */
+		middleware?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -435,6 +440,12 @@ export interface KitConfig {
 			 * @since 2.3.0
 			 */
 			universal?: string;
+			/**
+			 * The location of your middleware [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @default "src/hooks.middleware"
+			 * @since 2.18.0
+			 */
+			middleware?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`

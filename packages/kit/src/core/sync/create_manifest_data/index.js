@@ -64,11 +64,13 @@ function create_hooks(config, cwd) {
 	const client = resolve_entry(config.kit.files.hooks.client);
 	const server = resolve_entry(config.kit.files.hooks.server);
 	const universal = resolve_entry(config.kit.files.hooks.universal);
+	const middleware = resolve_entry(config.kit.files.hooks.middleware);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
 		server: server && posixify(path.relative(cwd, server)),
-		universal: universal && posixify(path.relative(cwd, universal))
+		universal: universal && posixify(path.relative(cwd, universal)),
+		middleware: middleware && posixify(path.relative(cwd, middleware))
 	};
 }
 

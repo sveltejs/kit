@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { URL } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
@@ -519,7 +519,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = await getRequest({
+				let request = await getRequest({
 					base,
 					request: req
 				});
@@ -546,6 +546,33 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				let middleware;
+				let middleware_result;
+				if (resolve_entry(hooks.middleware)) {
+					try {
+						({ middleware } = await vite.ssrLoadModule(hooks.middleware));
+					} catch (e) {
+						console.error(e);
+					}
+				}
+
+				const { call_middleware } = await vite.ssrLoadModule(
+					posixify(fileURLToPath(new URL('./call_middleware.js', import.meta.url))),
+					{
+						fixStacktrace: true
+					}
+				);
+
+				if (middleware) {
+					middleware_result = await call_middleware(request, middleware);
+					if (middleware_result instanceof Response) {
+						setResponse(res, middleware_result);
+						return;
+					} else {
+						request = middleware_result.request;
+					}
+				}
+
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
@@ -564,6 +591,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					},
 					emulator
 				});
+
+				middleware_result?.add_response_headers?.(rendered);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
