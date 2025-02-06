@@ -110,7 +110,7 @@ export function redirect(status, location) {
 	);
 }
 
-const acceptResponse = new Response(null, {
+const accept_response = new Response(null, {
 	status: 200
 });
 
@@ -119,7 +119,7 @@ const acceptResponse = new Response(null, {
  * @return {Response} This response instructs SvelteKit to accept the WebSocket upgrade request.
  */
 export function accept() {
-	return acceptResponse;
+	return accept_response;
 }
 
 /**

@@ -1282,7 +1282,9 @@ declare module '@sveltejs/kit' {
 		constructor(manifest: SSRManifest);
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
-		resolve(): import('crossws').ResolveHooks;
+		resolve(): (
+			info: RequestInit | import('crossws').Peer
+		) => Promise<Partial<import('crossws').Hooks>>;
 	}
 
 	export interface ServerInitOptions {
@@ -1475,7 +1477,7 @@ declare module '@sveltejs/kit' {
 	 * Shape of the `export const socket = {..}` object in `+server.js`.
 	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
 	 */
-	export type Socket = import('crossws').Hooks;
+	export type Socket = Partial<import('crossws').Hooks>;
 
 	/**
 	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
@@ -1746,7 +1748,7 @@ declare module '@sveltejs/kit' {
 			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
-			nodes?: (string | undefined)[];
+			nodes?: Array<string | undefined>;
 			/**
 			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).

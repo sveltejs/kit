@@ -117,7 +117,6 @@ export class Server {
 	/**
 	 * Returns a function that resolves the websocket hooks for a given request
 	 * @param {import('types').RequestOptions} options
-	 * @returns {(info: Request) => import('types').MaybePromise<Partial<import('crossws').Hooks>>}
 	 */
 	resolve(options) {
 		return resolve(this.#options, this.#manifest, {

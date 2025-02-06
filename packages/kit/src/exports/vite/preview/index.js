@@ -188,9 +188,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
-		vite.middlewares.on('upgrade', (req, socket, head) => {
-			ws.handleUpgrade(req, socket, head);
-		});
+		vite.middlewares.on('upgrade', ws.handleUpgrade);
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
