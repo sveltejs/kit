@@ -2,7 +2,7 @@
 
 SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering.
 
-**Requires [Wrangler v3 or later](https://developers.cloudflare.com/workers/wrangler/get-started/).**.
+**Requires [Wrangler v3.87.0 or later](https://developers.cloudflare.com/workers/wrangler/get-started/).**.
 
 ## Docs
 
