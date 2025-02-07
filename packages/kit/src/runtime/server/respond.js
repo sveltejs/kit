@@ -5,7 +5,12 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
+import {
+	handle_fatal_error,
+	method_not_allowed,
+	normalize_url,
+	redirect_response
+} from './utils.js';
 import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
@@ -556,41 +561,4 @@ export async function respond(request, options, manifest, state) {
 			};
 		}
 	}
-}
-
-// TODO find better place for this method
-/**
- * Strips route resolution/data request from the URL pathname (incoming URL is manipulated) and return info about the URL
- * @param {URL} url
- */
-export function normalize_url(url) {
-	const is_route_resolution_request = has_resolution_prefix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-	/** @type {boolean[] | undefined} */
-	let invalidated_data_nodes;
-
-	if (is_route_resolution_request) {
-		url.pathname = strip_resolution_prefix(url.pathname);
-	} else if (is_data_request) {
-		url.pathname =
-			strip_data_suffix(url.pathname) +
-				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
-		url.searchParams.delete(TRAILING_SLASH_PARAM);
-		invalidated_data_nodes = url.searchParams
-			.get(INVALIDATED_PARAM)
-			?.split('')
-			.map((node) => node === '1');
-		url.searchParams.delete(INVALIDATED_PARAM);
-	}
-
-	return {
-		/**
-		 * If the request is for a route resolution, first modify the URL, then continue as normal
-		 * for path resolution, then return the route object as a JS file.
-		 */
-		is_route_resolution_request,
-		is_data_request,
-		invalidated_data_nodes,
-		url
-	};
 }

@@ -1514,7 +1514,23 @@ export interface Middleware {
 		setResponseHeaders: (headers: Record<string, string>) => void;
 		cookies: Cookies;
 		reroute: (pathname: string) => unknown;
-	}): void;
+	}): Response | unknown;
+}
+
+export interface CallMiddleware {
+	(
+		request: Request,
+		middleware: Middleware
+	): Promise<
+		| Response
+		| {
+				request: Request;
+				request_headers: Headers;
+				did_reroute: boolean;
+				response_headers: Headers;
+				add_response_headers: (response: Response) => void;
+		  }
+	>;
 }
 
 export * from './index.js';

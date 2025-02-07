@@ -114,17 +114,16 @@ export async function build_middleware(
 		}
 	});
 
-	// Preview only: build call_middleware from dev
 	await vite.build({
 		build: {
 			ssr: true,
 			modulePreload: false,
 			rollupOptions: {
 				input: {
-					middleware: posixify(fileURLToPath(new URL('../dev/call_middleware.js', import.meta.url)))
+					middleware: `${runtime_directory}/server/call-middleware.js`
 				},
 				output: {
-					entryFileNames: 'middleware-preview.js',
+					entryFileNames: 'call-middleware.js',
 					inlineDynamicImports: true
 				}
 			},

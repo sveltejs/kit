@@ -1487,6 +1487,33 @@ declare module '@sveltejs/kit' {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
+
+	export interface Middleware {
+		(options: {
+			request: Request;
+			url: URL;
+			setRequestHeaders: (headers: Record<string, string>) => void;
+			setResponseHeaders: (headers: Record<string, string>) => void;
+			cookies: Cookies;
+			reroute: (pathname: string) => unknown;
+		}): Response | unknown;
+	}
+
+	export interface CallMiddleware {
+		(
+			request: Request,
+			middleware: Middleware
+		): Promise<
+			| Response
+			| {
+					request: Request;
+					request_headers: Headers;
+					did_reroute: boolean;
+					response_headers: Headers;
+					add_response_headers: (response: Response) => void;
+			  }
+		>;
+	}
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.

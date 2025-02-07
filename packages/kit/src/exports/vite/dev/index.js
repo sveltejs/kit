@@ -557,10 +557,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const { call_middleware } = await vite.ssrLoadModule(
-					posixify(fileURLToPath(new URL('./call_middleware.js', import.meta.url))),
-					{
-						fixStacktrace: true
-					}
+					`${runtime_base}/server/call-middleware.js`,
+					{ fixStacktrace: true }
 				);
 
 				if (middleware) {

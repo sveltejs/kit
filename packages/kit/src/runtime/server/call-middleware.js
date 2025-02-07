@@ -1,10 +1,11 @@
-import { add_cookies_to_headers, get_cookies } from '../../../runtime/server/cookie.js';
-import { add_resolution_prefix } from '../../../runtime/pathname.js';
-import { normalize_url } from '../../../runtime/server/respond.js';
+import { add_cookies_to_headers, get_cookies } from './cookie.js';
+import { add_resolution_prefix } from '../pathname.js';
+import { normalize_url } from './utils.js';
 
 /**
  * @param {Request} request
- * @param {(options: any) => any} middleware
+ * @param {import('@sveltejs/kit').Middleware} middleware
+ * @returns {ReturnType<import('@sveltejs/kit').CallMiddleware>}
  */
 export async function call_middleware(request, middleware) {
 	const { cookies, new_cookies } = get_cookies(request, new URL(request.url), 'never');
@@ -59,37 +60,36 @@ export async function call_middleware(request, middleware) {
 		reroute
 	});
 
+	add_cookies_to_headers(response_headers, Object.values(new_cookies));
+
+	const add_response_headers = /** @param {Response} response */ (response) => {
+		for (const [key, value] of response_headers) {
+			response.headers.set(key, value);
+		}
+	};
+
 	if (result instanceof Response) {
-		return add_response_headers(result, response_headers, new_cookies);
+		return result;
 	}
 
 	if (typeof result === 'string' || request_headers_called) {
 		const url = new URL(
-			result ? (is_route_resolution_request ? add_resolution_prefix(result) : result) : request.url,
+			typeof result === 'string'
+				? is_route_resolution_request
+					? add_resolution_prefix(result)
+					: result
+				: request.url,
 			request.url
 		);
+
 		request = new Request(url, { headers: request_headers });
 	}
 
 	return {
 		request,
-		/** @param {Response} response */
-		add_response_headers: (response) =>
-			add_response_headers(response, response_headers, new_cookies)
+		request_headers,
+		did_reroute: typeof result === 'string',
+		response_headers,
+		add_response_headers
 	};
-}
-
-/**
- * @param {Response} response
- * @param {Headers} headers
- * @param {Record<string, import('../../../runtime/server/page/types.js').Cookie>} new_cookies
- */
-function add_response_headers(response, headers, new_cookies) {
-	for (const [key, value] of headers) {
-		response.headers.set(key, value);
-	}
-
-	add_cookies_to_headers(response.headers, Object.values(new_cookies));
-
-	return response;
 }
