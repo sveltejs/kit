@@ -1,9 +1,6 @@
 import { add_cookies_to_headers, get_cookies } from '../../../runtime/server/cookie.js';
-import {
-	add_resolution_prefix,
-	has_resolution_prefix,
-	strip_resolution_prefix
-} from '../../../runtime/pathname.js';
+import { add_resolution_prefix } from '../../../runtime/pathname.js';
+import { normalize_url } from '../../../runtime/server/respond.js';
 
 /**
  * @param {Request} request
@@ -51,15 +48,11 @@ export async function call_middleware(request, middleware) {
 		return pathname; // TODO think about making this a class object
 	};
 
-	const url = new URL(request.url);
-	const is_route_resolution_request = has_resolution_prefix(url.pathname);
+	const { url, is_route_resolution_request } = normalize_url(new URL(request.url));
 
 	const result = await middleware({
-		request: is_route_resolution_request
-			? new Request(new URL(strip_resolution_prefix(url.pathname), url), {
-					headers: request_headers
-				})
-			: request,
+		request,
+		url,
 		setRequestHeaders,
 		setResponseHeaders,
 		cookies,

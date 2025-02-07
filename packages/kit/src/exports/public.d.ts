@@ -1506,4 +1506,15 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
+export interface Middleware {
+	(options: {
+		request: Request;
+		url: URL;
+		setRequestHeaders: (headers: Record<string, string>) => void;
+		setResponseHeaders: (headers: Record<string, string>) => void;
+		cookies: Cookies;
+		reroute: (pathname: string) => unknown;
+	}): void;
+}
+
 export * from './index.js';
