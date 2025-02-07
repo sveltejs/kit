@@ -59,9 +59,7 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
-	// this will always return a Response object unless we set the upgrade param to true
-	// and an endpoint with a socket handler exists
-	return /** @type {Promise<Response>} */ (handle_request(request, options, manifest, state));
+	return handle_request(request, options, manifest, state);
 }
 
 /**
@@ -95,6 +93,23 @@ export function resolve_websocket_hooks(options, manifest, state) {
 }
 
 /**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+/**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean} upgrade
+ * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
+ */
+/**
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -102,7 +117,7 @@ export function resolve_websocket_hooks(options, manifest, state) {
  * @param {boolean=} upgrade
  * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
  */
-async function handle_request(request, options, manifest, state, upgrade = false) {
+async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -390,6 +405,27 @@ async function handle_request(request, options, manifest, state, upgrade = false
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
+		/**
+		 * @param {Response} response
+		 * @returns {Response}
+		 */
+		const after_resolve = (response) => {
+			// add headers/cookies here, rather than inside `resolve`, so that we
+			// can do it once for all responses instead of once per `return`
+			for (const key in headers) {
+				const value = headers[key];
+				response.headers.set(key, /** @type {string} */ (value));
+			}
+
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+
+			if (state.prerendering && event.route.id !== null) {
+				response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+			}
+
+			return response;
+		};
+
 		if (upgrade && route?.endpoint) {
 			const node = await route.endpoint();
 			return {
@@ -399,7 +435,7 @@ async function handle_request(request, options, manifest, state, upgrade = false
 						event,
 						resolve: async () => {
 							const init = (await node.socket?.upgrade?.(req)) ?? undefined;
-							return new Response(undefined, init);
+							return after_resolve(new Response(undefined, init));
 						}
 					});
 				}
@@ -408,23 +444,7 @@ async function handle_request(request, options, manifest, state, upgrade = false
 
 		const response = await options.hooks.handle({
 			event,
-			resolve: (event, opts) =>
-				resolve(event, opts).then((response) => {
-					// add headers/cookies here, rather than inside `resolve`, so that we
-					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
-
-					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-
-					if (state.prerendering && event.route.id !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-					}
-
-					return response;
-				})
+			resolve: (event, opts) => resolve(event, opts).then(after_resolve)
 		});
 
 		// respond with 304 if etag matches
