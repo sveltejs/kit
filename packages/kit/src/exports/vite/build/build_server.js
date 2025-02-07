@@ -35,20 +35,14 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		manifest_data.nodes.forEach((node, i) => {
 			if (!node.component || !server_manifest[node.component]) return;
 
-			let stylesheets = new Set();
+			let stylesheets = new Set(server_manifest[node.component].css);
 
-			/**
-			 * @param {string} filename 
-			 */
-			const get_stylesheets = (filename) => {
+			// if the page/layout is imported by another file, the css is associated with a separate chunk instead
+			server_manifest[node.component].imports?.forEach((filename) => {
 				server_manifest[filename].css?.forEach(stylesheet => {
 					stylesheets.add(stylesheet);
-				});
-				// if the page/layout is imported by another file, the css is associated with a separate chunk instead
-				server_manifest[filename].imports?.forEach(get_stylesheets);
-			};
-
-			get_stylesheets(node.component);
+				})
+			});
 
 			if (stylesheets.size) {
 				server_stylesheets.set(i, Array.from(stylesheets));
