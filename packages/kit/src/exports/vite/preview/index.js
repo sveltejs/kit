@@ -43,6 +43,13 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
+	const { middleware } = await import(pathToFileURL(join(dir, 'middleware.js')).href).catch(
+		() => ({})
+	);
+	const { call_middleware } = await import(
+		pathToFileURL(join(dir, 'middleware-preview.js')).href
+	).catch(() => ({}));
+
 	set_assets(assets);
 
 	const server = new Server(manifest);
@@ -109,6 +116,40 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(
 			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
 		);
+
+		// middleware
+		if (middleware) {
+			vite.middlewares.use(async (req, res, next) => {
+				const host = req.headers[':authority'] || req.headers.host;
+
+				const request = await getRequest({
+					base: `${protocol}://${host}`,
+					request: req
+				});
+
+				const result = await call_middleware(request, middleware);
+
+				if (result instanceof Response) {
+					setResponse(res, result);
+				}
+
+				for (const [key, value] of result.request.headers.entries()) {
+					req.headers[key] = value;
+				}
+
+				const url = new URL(result.request.url);
+				req.url = url.pathname + url.search;
+
+				const response = new Response();
+				result.add_response_headers(response);
+
+				for (const [key, value] of result.request.headers.entries()) {
+					res.setHeader(key, value);
+				}
+
+				next();
+			});
+		}
 
 		// prerendered pages (we can't just use sirv because we need to
 		// preserve the correct trailingSlash behaviour)

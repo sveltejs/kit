@@ -36,6 +36,7 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { build_middleware } from './build/build_middleware.js';
 
 const cwd = process.cwd();
 
@@ -206,6 +207,7 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite').UserConfig} */
 	let initial_config;
 
+	const middleware_file = resolve_entry(kit.files.hooks.middleware);
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
@@ -769,9 +771,9 @@ Tips:
 		},
 
 		/**
-		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
+		 * Vite builds a single bundle. We need four bundles: client, server, service worker and middleware.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the server build. We
-		 * then use this hook to kick off builds for the client and service worker.
+		 * then use this hook to kick off builds for the other ones.
 		 */
 		writeBundle: {
 			sequential: true,
@@ -1014,6 +1016,12 @@ Tips:
 						prerendered,
 						client_manifest
 					);
+				}
+
+				if (middleware_file) {
+					log.info('Building server middleware');
+
+					await build_middleware(out, kit, vite_config, runtime_directory, middleware_file);
 				}
 
 				// we need to defer this to closeBundle, so that adapters copy files
