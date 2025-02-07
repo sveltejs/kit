@@ -1,6 +1,3 @@
-/** @type {import('@sveltejs/kit').Peer[]} */
-let sockets = [];
-
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(req) {
@@ -12,24 +9,29 @@ export const socket = {
 	},
 
 	message(peer, message) {
-		console.log('[ws] message from client:', message.text());
-		if (message.text().includes('ping')) {
+		const data = message.text();
+	
+		console.log('[ws] message from client:', data);
+	
+		if (data === 'ping') {
 			peer.send('pong - from /ws');
+			return;
 		}
-		if (message.text().includes('add')) {
-			sockets.push(peer);
+
+		if (data === 'add') {
 			peer.send('added');
+			return;
 		}
-		if (message.text().includes('broadcast')) {
-			sockets.forEach((socket) => {
-				socket.send(message.text());
+
+		if (data === 'broadcast') {
+			peer.peers.forEach((socket) => {
+				socket.send(data);
 			});
 		}
 	},
 
 	close(peer, event) {
 		console.log('[ws] close', peer, event);
-		sockets = sockets.filter((socket) => socket !== peer);
 	},
 
 	error(peer, error) {
