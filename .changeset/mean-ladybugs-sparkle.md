@@ -2,4 +2,4 @@
 "@sveltejs/package": minor
 ---
 
-Added `--preserve-output` flag to prevent deletion of the output directory before packaging
+Add `--preserve-output` flag to prevent deletion of the output directory before packaging
