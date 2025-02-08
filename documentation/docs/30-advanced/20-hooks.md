@@ -39,6 +39,8 @@ export async function handle({ event, resolve }) {
 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
+During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-environment#building) beforehand.
+
 ### locals
 
 To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
@@ -65,6 +67,13 @@ export async function handle({ event, resolve }) {
 	event.locals.user = await getUserInformation(event.cookies.get('sessionid'));
 
 	const response = await resolve(event);
+
+	// Note that modifying response headers isn't always safe.
+	// Response objects can have immutable headers
+	// (e.g. Response.redirect() returned from an endpoint).
+	// Modifying immutable headers throws a TypeError.
+	// In that case, clone the response or avoid creating a
+	// response object with immutable headers.
 	response.headers.set('x-custom-header', 'potato');
 
 	return response;

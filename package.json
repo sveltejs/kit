@@ -8,6 +8,8 @@
 		"test:kit": "pnpm run --dir packages/kit test",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
+		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
+		"test:server-side-route-resolution:build": "pnpm run --dir packages/kit test:server-side-route-resolution:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"test:others": "pnpm test -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
@@ -20,7 +22,7 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.8",
+		"@changesets/cli": "^2.27.11",
 		"@sveltejs/eslint-config": "^8.1.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"eslint": "^9.6.0",
@@ -29,7 +31,7 @@
 		"prettier-plugin-svelte": "^3.1.2",
 		"typescript-eslint": "^8.0.0"
 	},
-	"packageManager": "pnpm@9.15.0",
+	"packageManager": "pnpm@9.15.4",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}

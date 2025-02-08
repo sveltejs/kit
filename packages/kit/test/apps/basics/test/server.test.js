@@ -121,6 +121,27 @@ test.describe('Endpoints', () => {
 		});
 	});
 
+	test('Partially Prerendered +server.js called from a non-prerendered +server.js works', async ({
+		baseURL
+	}) => {
+		for (const [description, url] of [
+			['direct', `${baseURL}/prerendering/prerendered-endpoint/api-with-param/prerendered`],
+			[
+				'proxied',
+				`${baseURL}/prerendering/prerendered-endpoint/proxy?api-with-param-option=prerendered`
+			]
+		]) {
+			await test.step(description, async () => {
+				const res = await fetch(url);
+
+				expect(res.status).toBe(200);
+				expect(await res.json()).toStrictEqual({
+					message: 'Im prerendered and called from a non-prerendered +page.server.js'
+				});
+			});
+		}
+	});
+
 	test('invalid request method returns allow header', async ({ request }) => {
 		const response = await request.post('/endpoint-output/body');
 
@@ -642,7 +663,9 @@ test.describe('Miscellaneous', () => {
 test.describe('reroute', () => {
 	test('Apply reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/basic/a');
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
 	});
 
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {

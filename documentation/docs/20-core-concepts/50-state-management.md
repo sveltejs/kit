@@ -89,7 +89,7 @@ You might wonder how we're able to use `page.data` and other [app state]($app-st
 <script>
 	import { setContext } from 'svelte';
 
-	/** @type {{ data: import('./$types').LayoutData }} */
+	/** @type {import('./$types').LayoutProps} */
 	let { data } = $props();
 
 	// Pass a function referencing our state
@@ -110,7 +110,7 @@ You might wonder how we're able to use `page.data` and other [app state]($app-st
 <p>Welcome {user().name}</p>
 ```
 
-> [!NOTE] We're passing a function into `setContext` to keep reactivity across boundaries. Read more about it [here](https://svelte.dev/docs/svelte/$state#Passing-state-into-functions)
+> [!NOTE] We're passing a function into `setContext` to keep reactivity across boundaries. Read more about it [here](/docs/svelte/$state#Passing-state-into-functions)
 
 > [!LEGACY]
 > You also use stores from `svelte/store` for this, but when using Svelte 5 it is recommended to make use of universal reactivity instead.
@@ -126,7 +126,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	// THIS CODE IS BUGGY!
@@ -149,7 +149,7 @@ Instead, we need to make the value [_reactive_](/tutorial/svelte/state):
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 +++	let wordCount = $derived(data.content.split(' ').length);

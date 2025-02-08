@@ -65,6 +65,9 @@ function clone(element) {
  * - redirects to the nearest error page in case of an unexpected error
  *
  * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+ * It accepts an options object
+ * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
+ * - `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
@@ -106,7 +109,7 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
-			applyAction(result);
+			await applyAction(result);
 		}
 	};
 
@@ -202,7 +205,7 @@ export function enhance(form_element, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
-		callback({
+		await callback({
 			action,
 			formData: form_data,
 			formElement: form_element,

@@ -43,7 +43,7 @@ async function test_make_package(path, options) {
 
 	assert.equal(actual_files, expected_files);
 
-	const extensions = ['.json', '.svelte', '.ts', 'js'];
+	const extensions = ['.json', '.svelte', '.ts', 'js', '.map'];
 	for (const file of actual_files) {
 		const pathname = join(output, file);
 		if (fs.statSync(pathname).isDirectory()) continue;
@@ -69,6 +69,10 @@ async function test_make_package(path, options) {
  * @param {string} content
  */
 async function format(file, content) {
+	if (file.endsWith('.map')) {
+		return content;
+	}
+
 	if (file.endsWith('package.json')) {
 		// For some reason these are ordered differently in different test environments
 		const json = JSON.parse(content);
@@ -153,6 +157,10 @@ test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
 });
 
+test('create package with declaration map', async () => {
+	await test_make_package('typescript-declaration-map');
+});
+
 test('create package with tsconfig specified', async () => {
 	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
 });
@@ -230,7 +238,7 @@ if (!process.env.CI) {
 			await settled();
 			compare('post-error.svelte');
 		} finally {
-			watcher.close();
+			await watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');

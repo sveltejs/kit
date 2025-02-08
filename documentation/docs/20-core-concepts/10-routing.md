@@ -37,12 +37,14 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 <a href="/">Home</a>
 ```
 
+> [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+
 Pages can receive data from `load` functions via the `data` prop.
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 
@@ -51,9 +53,9 @@ Pages can receive data from `load` functions via the `data` prop.
 ```
 
 > [!LEGACY]
-> In Svelte 4, you'd use `export let data` instead
-
-> [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
+> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` property manually with `PageData` instead, see [$types](#\$types).
+>
+> In Svelte 4, you'd use `export let data` instead.
 
 ### +page.js
 
@@ -212,7 +214,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 ```svelte
 <!--- file: src/routes/settings/+layout.svelte --->
 <script>
-	/** @type {{ data: import('./$types').LayoutData, children: import('svelte').Snippet }} */
+	/** @type {import('./$types').LayoutProps} */
 	let { data, children } = $props();
 </script>
 
@@ -226,6 +228,9 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 {@render children()}
 ```
+
+> [!LEGACY]
+> `LayoutProps` was added in 2.16.0. In earlier versions, you had to [type the properties manually instead](#\$types).
 
 You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
 
@@ -255,7 +260,7 @@ Data returned from a layout's `load` function is also available to all its child
 ```svelte
 <!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
@@ -388,15 +393,32 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `let { data } = $props()` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `let { data } = $props()` with `PageProps` (or `LayoutProps`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 ```
+
+> [!NOTE]
+> The `PageProps` and `LayoutProps` types, added in 2.16.0, are a shortcut for typing the `data` prop as `PageData` or `LayoutData`, as well as other props, such as `form` for pages, or `children` for layouts. In earlier versions, you had to type these properties manually. For example, for a page:
+>
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+> let { data, form } = $props();
+> ```
+>
+> Or, for a layout:
+>
+> ```js
+> /// file: +layout.svelte
+> /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+> let { data, children } = $props();
+> ```
 
 In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `LayoutLoad` or `LayoutServerLoad` (for `+page.js`, `+page.server.js`, `+layout.js` and `+layout.server.js` respectively) ensures that `params` and the return value are correctly typed.
 

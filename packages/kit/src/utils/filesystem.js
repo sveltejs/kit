@@ -169,23 +169,26 @@ export function from_fs(str) {
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
+		if (stats.isFile()) {
+			return entry;
+		}
+
 		const index = path.join(entry, 'index');
-		if (stats.isDirectory() && fs.existsSync(index)) {
+		if (fs.existsSync(index + '.js') || fs.existsSync(index + '.ts')) {
 			return resolve_entry(index);
 		}
+	}
 
-		return entry;
-	} else {
-		const dir = path.dirname(entry);
+	const dir = path.dirname(entry);
 
-		if (fs.existsSync(dir)) {
-			const base = path.basename(entry);
-			const files = fs.readdirSync(dir);
+	if (fs.existsSync(dir)) {
+		const base = path.basename(entry);
+		const files = fs.readdirSync(dir);
+		const found = files.find((file) => {
+			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
+		});
 
-			const found = files.find((file) => file.replace(/\.(js|ts)$/, '') === base);
-
-			if (found) return path.join(dir, found);
-		}
+		if (found) return path.join(dir, found);
 	}
 
 	return null;

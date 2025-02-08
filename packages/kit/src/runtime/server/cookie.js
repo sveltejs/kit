@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
-import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { add_data_suffix } from '../pathname.js';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -55,7 +56,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
 			const c = new_cookies[name];
@@ -91,7 +92,7 @@ export function get_cookies(request, url, trailing_slash) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });

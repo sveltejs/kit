@@ -100,15 +100,35 @@ test('replaces strings', () => {
 	);
 });
 
-test('ignores hooks.server folder when resolving hooks', () => {
-	write('hooks.server/index.js', '');
+test('resolves index files', () => {
+	write(join('service-worker', 'index.js'), '');
+
+	expect(resolve_entry(source_dir + '/service-worker')).toBe(
+		join(source_dir, 'service-worker', 'index.js')
+	);
+});
+
+test('resolves entries that have an extension', () => {
+	write('hooks.js', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.js'))).toBe(join(source_dir, 'hooks.js'));
+});
+
+test('resolves universal hooks file when hooks folder exists', () => {
+	write(join('hooks', 'not-index.js'), '');
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).toBe(join(source_dir, 'hooks.js'));
+});
+
+test('ignores hooks.server folder when resolving universal hooks file', () => {
+	write(join('hooks.server', 'index.js'), '');
 
 	expect(resolve_entry(source_dir + '/hooks')).null;
 });
 
-test('ignores hooks folder that has no index file when resolving hooks', () => {
-	write('hooks/not-index.js', '');
-	write('hooks.js', '');
+test('ignores hooks folder when resolving universal hooks file', () => {
+	write(join('hooks', 'hooks.server.js'), '');
 
-	expect(resolve_entry(source_dir + '/hooks')).toBe(source_dir + '/hooks');
+	expect(resolve_entry(source_dir + '/hooks')).null;
 });

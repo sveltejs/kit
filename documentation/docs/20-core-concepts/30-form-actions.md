@@ -140,7 +140,7 @@ export const actions = {
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data, form } = $props();
 </script>
 
@@ -152,7 +152,14 @@ export const actions = {
 ```
 
 > [!LEGACY]
-> In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties
+> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` and `form` properties individually:
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+> let { data, form } = $props();
+> ```
+>
+> In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties.
 
 ### Validation errors
 
@@ -339,14 +346,14 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 <script>
 	+++import { enhance } from '$app/forms';+++
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 </script>
 
 <form method="POST" +++use:enhance+++>
 ```
 
-> [!NOTE] `use:enhance` can only be used with forms that have `method="POST"`. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` will result in an error.
+> [!NOTE] `use:enhance` can only be used with forms that have `method="POST"` and point to actions defined in a `+page.server.js` file. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` or posting to a `+server.js` endpoint will result in an error.
 
 > [!NOTE] Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
 
@@ -390,7 +397,7 @@ If you return a callback, you may need to reproduce part of the default `use:enh
 <script>
 	import { enhance, +++applyAction+++ } from '$app/forms';
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 </script>
 
@@ -427,7 +434,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 
 	/** @param {SubmitEvent & { currentTarget: EventTarget & HTMLFormElement}} event */

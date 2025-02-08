@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 4.4.1
+### Patch Changes
+
+
+- fix: avoid unnecessary Netlify edge function invocations for static files, which resolves a conflict between Netlify Edge Functions and Netlify Identity ([#12052](https://github.com/sveltejs/kit/pull/12052))
+
 ## 4.4.0
 ### Minor Changes
 

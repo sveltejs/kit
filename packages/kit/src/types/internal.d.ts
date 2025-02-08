@@ -68,12 +68,32 @@ export interface BuildData {
 	out_dir: string;
 	service_worker: string | null;
 	client: {
+		/** Path to the client entry point */
 		start: string;
-		app: string;
+		/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
+		app?: string;
+		/** JS files that the client entry point relies on */
 		imports: string[];
+		/**
+		 * JS files that represent the entry points of the layouts/pages.
+		 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
+		 * Only set in case of `router.resolution === 'server'`.
+		 */
+		nodes?: (string | undefined)[];
+		/**
+		 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
+		 * Only set in case of `router.resolution === 'server'`.
+		 */
+		routes?: SSRClientRoute[];
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		/** Only set in case of `bundleStrategy === 'inline'` */
+		inline?: {
+			script: string;
+			style: string | undefined;
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -98,6 +118,17 @@ export type CSRRoute = {
 	errors: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
 	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
+};
+
+/**
+ * Definition of a client side route as transported via `_app/route/...` when using server-side route resolution.
+ */
+export type CSRRouteServer = {
+	id: string;
+	errors: Array<number | undefined>;
+	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, node_id: number];
+	nodes: Record<string, CSRPageNodeLoader>;
 };
 
 export interface Deferred {
@@ -156,11 +187,11 @@ export interface ManifestData {
 
 export interface PageNode {
 	depth: number;
-	/** The +page.svelte */
+	/** The +page/layout.svelte */
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
-	/** The +page.js/.ts */
+	/** The +page/layout.js/.ts */
 	universal?: string;
-	/** The +page.server.js/ts */
+	/** The +page/layout.server.js/ts */
 	server?: string;
 	parent_id?: string;
 	parent?: PageNode;
@@ -300,7 +331,10 @@ export interface ServerMetadataRoute {
 }
 
 export interface ServerMetadata {
-	nodes: Array<{ has_server_load: boolean }>;
+	nodes: Array<{
+		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value */
+		has_server_load: boolean;
+	}>;
 	routes: Map<string, ServerMetadataRoute>;
 }
 
@@ -324,13 +358,13 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `components` array in client/manifest.js */
+	/** index into the `nodes` array in the generated `client/app.js` */
 	index: number;
-	/** external JS files */
+	/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 	imports: string[];
-	/** external CSS files */
+	/** external CSS files that are loaded on the client */
 	stylesheets: string[];
-	/** external font files */
+	/** external font files that are loaded on the client */
 	fonts: string[];
 	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;
@@ -363,13 +397,13 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	app_dir: string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
+	hash_routing: boolean;
 	hooks: ServerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
@@ -410,6 +444,15 @@ export interface SSRRoute {
 	page: PageNodeIndexes | null;
 	endpoint: (() => Promise<SSREndpoint>) | null;
 	endpoint_id?: string;
+}
+
+export interface SSRClientRoute {
+	id: string;
+	pattern: RegExp;
+	params: RouteParam[];
+	errors: Array<number | undefined>;
+	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, node_id: number];
 }
 
 export interface SSRState {

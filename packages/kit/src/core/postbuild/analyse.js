@@ -13,7 +13,7 @@ import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { resolve_route } from '../../utils/routing.js';
+import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -22,6 +22,7 @@ export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
+ *   hash: boolean;
  *   manifest_path: string;
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
@@ -29,7 +30,14 @@ export default forked(import.meta.url, analyse);
  *   env: Record<string, string>
  * }} opts
  */
-async function analyse({ manifest_path, manifest_data, server_manifest, tracked_features, env }) {
+async function analyse({
+	hash,
+	manifest_path,
+	manifest_data,
+	server_manifest,
+	tracked_features,
+	env
+}) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -67,8 +75,20 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 
 	// analyse nodes
 	for (const node of nodes) {
+		if (hash && node.universal) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
+
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+			has_server_load: has_server_load(node)
 		};
 	}
 

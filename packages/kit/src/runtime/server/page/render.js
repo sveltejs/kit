@@ -13,6 +13,8 @@ import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
+import { create_server_routing_response, generate_route_object } from './server_routing.js';
+import { add_resolution_prefix } from '../../pathname.js';
 
 // TODO rename this function/module
 
@@ -95,16 +97,21 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative && !state.prerendering?.fallback) {
-		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+	if (paths.relative) {
+		if (!state.prerendering?.fallback) {
+			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
-		base = segments.map(() => '..').join('/') || '.';
+			base = segments.map(() => '..').join('/') || '.';
 
-		// resolve e.g. '../..' against current location, then remove trailing slash
-		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+			// resolve e.g. '../..' against current location, then remove trailing slash
+			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
-		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-			assets = base;
+			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
+				assets = base;
+			}
+		} else if (options.hash_routing) {
+			// we have to assume that we're in the right place
+			base_expression = "new URL('.', location).pathname.slice(0, -1)";
 		}
 	}
 
@@ -197,7 +204,7 @@ export async function render_response({
 			for (const url of node.stylesheets) stylesheets.add(url);
 			for (const url of node.fonts) fonts.add(url);
 
-			if (node.inline_styles) {
+			if (node.inline_styles && !client.inline) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
 		}
@@ -223,15 +230,18 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	if (inline_styles.size > 0) {
-		const content = Array.from(inline_styles.values()).join('\n');
+	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
+	const style = client.inline
+		? client.inline?.style
+		: Array.from(inline_styles.values()).join('\n');
 
+	if (style) {
 		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		csp.add_style(content);
+		csp.add_style(style);
 
-		head += `\n\t<style${attributes.join('')}>${content}</style>`;
+		head += `\n\t<style${attributes.join('')}>${style}</style>`;
 	}
 
 	for (const dep of stylesheets) {
@@ -289,22 +299,36 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+
 		if (client.uses_env_dynamic_public && state.prerendering) {
-			modulepreloads.add(`${options.app_dir}/env.js`);
+			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
-		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
-			(path) => resolve_opts.preload({ type: 'js', path })
-		);
+		if (!client.inline) {
+			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+				(path) => resolve_opts.preload({ type: 'js', path })
+			);
 
-		for (const path of included_modulepreloads) {
-			// see the kit.output.preloadStrategy option for details on why we have multiple options here
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (options.preload_strategy !== 'modulepreload') {
-				head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-			} else if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+			for (const path of included_modulepreloads) {
+				// see the kit.output.preloadStrategy option for details on why we have multiple options here
+				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				if (options.preload_strategy !== 'modulepreload') {
+					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+				} else if (state.prerendering) {
+					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				}
 			}
+		}
+
+		// prerender a `/_app/route/path/to/page.js` module
+		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+			const pathname = add_resolution_prefix(event.url.pathname);
+
+			state.prerendering.dependencies.set(
+				pathname,
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+			);
 		}
 
 		const blocks = [];
@@ -354,7 +378,7 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['app', 'element'];
+		const args = ['element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
@@ -384,7 +408,15 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (options.embedded) {
+			if (manifest._.client.routes) {
+				if (route) {
+					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+						'\n',
+						'\n\t\t\t\t\t\t\t'
+					); // make output after it's put together with the rest more readable
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
+				}
+			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
@@ -392,24 +424,30 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		if (load_env_eagerly) {
-			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
-						${global}.env = env;
+		// `client.app` is a proxy for `bundleStrategy === 'split'`
+		const boot = client.inline
+			? `${client.inline.script}
 
-						Promise.all([
-							import(${s(prefixed(client.start))}),
-							import(${s(prefixed(client.app))})
-						]).then(([kit, app]) => {
-							kit.start(${args.join(', ')});
-						});
-					});`);
-		} else {
-			blocks.push(`Promise.all([
+					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+			: client.app
+				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						kit.start(${args.join(', ')});
+						kit.start(app, ${args.join(', ')});
+					});`
+				: `import(${s(prefixed(client.start))}).then((app) => {
+						app.start(${args.join(', ')})
+					});`;
+
+		if (load_env_eagerly) {
+			blocks.push(`import(${s(`${base}/${paths.app_dir}/env.js`)}).then(({ env }) => {
+						${global}.env = env;
+
+						${boot.replace(/\n/g, '\n\t')}
 					});`);
+		} else {
+			blocks.push(boot);
 		}
 
 		if (options.service_worker) {

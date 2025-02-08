@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.3.7",
+	"version": "2.3.10",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -20,11 +20,11 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"chokidar": "^4.0.0",
+		"chokidar": "^4.0.3",
 		"kleur": "^4.1.5",
 		"sade": "^1.8.1",
 		"semver": "^7.5.4",
-		"svelte2tsx": "~0.7.16"
+		"svelte2tsx": "~0.7.33"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",

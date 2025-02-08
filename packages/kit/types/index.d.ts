@@ -16,7 +16,7 @@ declare module '@sveltejs/kit' {
 		 * This function is called after SvelteKit has built your app.
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
-		adapt(builder: Builder): MaybePromise<void>;
+		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
 		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 		 */
@@ -31,7 +31,7 @@ declare module '@sveltejs/kit' {
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering
 		 */
-		emulate?(): MaybePromise<Emulator>;
+		emulate?: () => MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -76,9 +76,9 @@ declare module '@sveltejs/kit' {
 		/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 		log: Logger;
 		/** Remove `dir` and all its contents. */
-		rimraf(dir: string): void;
+		rimraf: (dir: string) => void;
 		/** Create `dir` and any required parent directories. */
-		mkdirp(dir: string): void;
+		mkdirp: (dir: string) => void;
 
 		/** The fully resolved `svelte.config.js`. */
 		config: ValidatedConfig;
@@ -93,59 +93,59 @@ declare module '@sveltejs/kit' {
 		 * @param fn A function that groups a set of routes into an entry point
 		 * @deprecated Use `builder.routes` instead
 		 */
-		createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+		createEntries: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 		/**
 		 * Find all the assets imported by server files belonging to `routes`
 		 */
-		findServerAssets(routes: RouteDefinition[]): string[];
+		findServerAssets: (routes: RouteDefinition[]) => string[];
 
 		/**
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
 		 */
-		generateFallback(dest: string): Promise<void>;
+		generateFallback: (dest: string) => Promise<void>;
 
 		/**
 		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
 		 */
-		generateEnvModule(): void;
+		generateEnvModule: () => void;
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 		 */
-		generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
+		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
 		 * @param name path to the file, relative to the build directory
 		 */
-		getBuildDirectory(name: string): string;
+		getBuildDirectory: (name: string) => string;
 		/** Get the fully resolved path to the directory containing client-side assets, including the contents of your `static` directory. */
-		getClientDirectory(): string;
+		getClientDirectory: () => string;
 		/** Get the fully resolved path to the directory containing server-side code. */
-		getServerDirectory(): string;
+		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
-		getAppPath(): string;
+		getAppPath: () => string;
 
 		/**
 		 * Write client assets to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writeClient(dest: string): string[];
+		writeClient: (dest: string) => string[];
 		/**
 		 * Write prerendered files to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writePrerendered(dest: string): string[];
+		writePrerendered: (dest: string) => string[];
 		/**
 		 * Write server-side code to `dest`.
 		 * @param dest the destination folder
 		 * @returns an array of files written to `dest`
 		 */
-		writeServer(dest: string): string[];
+		writeServer: (dest: string) => string[];
 		/**
 		 * Copy a file or directory.
 		 * @param from the source file or directory
@@ -154,20 +154,20 @@ declare module '@sveltejs/kit' {
 		 * @param opts.replace a map of strings to replace
 		 * @returns an array of files that were copied
 		 */
-		copy(
+		copy: (
 			from: string,
 			to: string,
 			opts?: {
 				filter?(basename: string): boolean;
 				replace?: Record<string, string>;
 			}
-		): string[];
+		) => string[];
 
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
 		 */
-		compress(directory: string): Promise<void>;
+		compress: (directory: string) => Promise<void>;
 	}
 
 	export interface Config {
@@ -197,13 +197,13 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -215,11 +215,11 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set(
+		set: (
 			name: string,
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
-		): void;
+		) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -228,7 +228,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
+		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -241,11 +241,11 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		serialize(
+		serialize: (
 			name: string,
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
-		): string;
+		) => string;
 	}
 
 	/**
@@ -480,6 +480,46 @@ declare module '@sveltejs/kit' {
 			 * @since 1.8.4
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+			/**
+			 * The bundle strategy option affects how your app's JavaScript and CSS files are loaded.
+			 * - If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
+			 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
+			 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
+			 *
+			 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+			 *
+			 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
+			 *
+			 * ```js
+			 * /// file: vite.config.js
+			 * import { sveltekit } from '@sveltejs/kit/vite';
+			 * import { defineConfig } from 'vite';
+			 *
+			 * export default defineConfig({
+			 *   plugins: [sveltekit()],
+			 *   build: {
+			 *     // inline all imported assets
+			 *     assetsInlineLimit: Infinity
+			 *   }
+			 * });
+			 * ```
+			 *
+			 * ```svelte
+			 * /// file: src/routes/+layout.svelte
+			 * <script>
+			 *   // import the asset through Vite
+			 *   import favicon from './favicon.png';
+			 * </script>
+			 *
+			 * <svelte:head>
+			 *   <!-- this asset will be inlined as a base64 URL -->
+			 *   <link rel="icon" href={favicon} />
+			 * </svelte:head>
+			 * ```
+			 * @default 'split'
+			 * @since 2.13.0
+			 */
+			bundleStrategy?: 'split' | 'single' | 'inline';
 		};
 		paths?: {
 			/**
@@ -590,6 +630,40 @@ declare module '@sveltejs/kit' {
 			 */
 			origin?: string;
 		};
+		router?: {
+			/**
+			 * What type of client-side router to use.
+			 * - `'pathname'` is the default and means the current URL pathname determines the route
+			 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
+			 *   It comes with some caveats: you can't use server-side rendering (or indeed any server logic), and you have to make sure that the links in your app all start with #/, or they won't work. Beyond that, everything works exactly like a normal SvelteKit app.
+			 *
+			 * @default "pathname"
+			 * @since 2.14.0
+			 */
+			type?: 'pathname' | 'hash';
+			/**
+			 * How to determine which route to load when navigating to a new page.
+			 *
+			 * By default, SvelteKit will serve a route manifest to the browser.
+			 * When navigating, this manifest is used (along with the `reroute` hook, if it exists) to determine which components to load and which `load` functions to run.
+			 * Because everything happens on the client, this decision can be made immediately. The drawback is that the manifest needs to be
+			 * loaded and parsed before the first navigation can happen, which may have an impact if your app contains many routes.
+			 *
+			 * Alternatively, SvelteKit can determine the route on the server. This means that for every navigation to a path that has not yet been visited, the server will be asked to determine the route.
+			 * This has several advantages:
+			 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
+			 * - The list of routes is hidden from public view
+			 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
+
+			 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
+			 *
+			 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
+			 *
+			 * @default "client"
+			 * @since 2.17.0
+			 */
+			resolution?: 'client' | 'server';
+		};
 		serviceWorker?: {
 			/**
 			 * Whether to automatically register the service worker, if it exists.
@@ -668,7 +742,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+		resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
 	}) => MaybePromise<Response>;
 
 	/**
@@ -823,14 +897,14 @@ declare module '@sveltejs/kit' {
 		 *
 		 * `setHeaders` has no effect when a `load` function runs in the browser.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * `await parent()` returns data from parent `+layout.js` `load` functions.
 		 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -868,7 +942,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: Array<`${string}:${string}`>): void;
+		depends: (...deps: Array<`${string}:${string}`>) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -882,7 +956,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	export interface NavigationEvent<
@@ -977,7 +1051,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Call this to prevent the navigation from starting.
 		 */
-		cancel(): void;
+		cancel: () => void;
 	}
 
 	/**
@@ -1018,31 +1092,31 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The shape of the `$page` store
+	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
 		Params extends Record<string, string> = Record<string, string>,
 		RouteId extends string | null = string | null
 	> {
 		/**
-		 * The URL of the current page
+		 * The URL of the current page.
 		 */
 		url: URL;
 		/**
-		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
 		params: Params;
 		/**
-		 * Info about the current route
+		 * Info about the current route.
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
 			 */
 			id: RouteId;
 		};
 		/**
-		 * Http status code of the current page
+		 * HTTP status code of the current page.
 		 */
 		status: number;
 		/**
@@ -1091,7 +1165,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The client's IP address, set by the adapter.
 		 */
-		getClientAddress(): string;
+		getClientAddress: () => string;
 		/**
 		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
 		 */
@@ -1139,7 +1213,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
-		setHeaders(headers: Record<string, string>): void;
+		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
 		 */
@@ -1172,20 +1246,20 @@ declare module '@sveltejs/kit' {
 		 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 		 * @param input the html chunk and the info if this is the last chunk
 		 */
-		transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+		transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 		/**
 		 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 		 * By default, none will be included.
 		 * @param name header name
 		 * @param value header value
 		 */
-		filterSerializedResponseHeaders?(name: string, value: string): boolean;
+		filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 		/**
 		 * Determines what should be added to the `<head>` tag to preload it.
 		 * By default, `js` and `css` files will be preloaded.
 		 * @param input the type of the file and its path
 		 */
-		preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 	}
 
 	export interface RouteDefinition<Config = any> {
@@ -1227,7 +1301,8 @@ declare module '@sveltejs/kit' {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
-			matchers(): Promise<Record<string, ParamMatcher>>;
+			prerendered_routes: Set<string>;
+			matchers: () => Promise<Record<string, ParamMatcher>>;
 			/** A `[file]: size` map of all assets imported by server code */
 			server_assets: Record<string, number>;
 		};
@@ -1254,7 +1329,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 		 */
-		parent(): Promise<ParentData>;
+		parent: () => Promise<ParentData>;
 		/**
 		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 		 *
@@ -1292,7 +1367,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: string[]): void;
+		depends: (...deps: string[]) => void;
 		/**
 		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
 		 *
@@ -1306,7 +1381,7 @@ declare module '@sveltejs/kit' {
 		 * }
 		 * ```
 		 */
-		untrack<T>(fn: () => T): T;
+		untrack: <T>(fn: () => T) => T;
 	}
 
 	/**
@@ -1377,7 +1452,7 @@ declare module '@sveltejs/kit' {
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
-		cancel(): void;
+		cancel: () => void;
 	}) => MaybePromise<
 		| void
 		| ((opts: {
@@ -1390,8 +1465,8 @@ declare module '@sveltejs/kit' {
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 				 */
-				update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
-		  }) => void)
+				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
+		  }) => MaybePromise<void>)
 	>;
 
 	/**
@@ -1640,12 +1715,32 @@ declare module '@sveltejs/kit' {
 		out_dir: string;
 		service_worker: string | null;
 		client: {
+			/** Path to the client entry point */
 			start: string;
-			app: string;
+			/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
+			app?: string;
+			/** JS files that the client entry point relies on */
 			imports: string[];
+			/**
+			 * JS files that represent the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			nodes?: (string | undefined)[];
+			/**
+			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			routes?: SSRClientRoute[];
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
+			/** Only set in case of `bundleStrategy === 'inline'` */
+			inline?: {
+				script: string;
+				style: string | undefined;
+			};
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}
@@ -1664,11 +1759,11 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
-		/** The +page.svelte */
+		/** The +page/layout.svelte */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
-		/** The +page.js/.ts */
+		/** The +page/layout.js/.ts */
 		universal?: string;
-		/** The +page.server.js/ts */
+		/** The +page/layout.server.js/ts */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
@@ -1740,13 +1835,13 @@ declare module '@sveltejs/kit' {
 
 	interface SSRNode {
 		component: SSRComponentLoader;
-		/** index into the `components` array in client/manifest.js */
+		/** index into the `nodes` array in the generated `client/app.js` */
 		index: number;
-		/** external JS files */
+		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 		imports: string[];
-		/** external CSS files */
+		/** external CSS files that are loaded on the client */
 		stylesheets: string[];
-		/** external font files */
+		/** external font files that are loaded on the client */
 		fonts: string[];
 		/** inlined styles */
 		inline_styles?(): MaybePromise<Record<string, string>>;
@@ -1803,6 +1898,15 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
+	interface SSRClientRoute {
+		id: string;
+		pattern: RegExp;
+		params: RouteParam[];
+		errors: Array<number | undefined>;
+		layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+		leaf: [has_server_load: boolean, node_id: number];
+	}
+
 	type ValidatedConfig = Config & {
 		kit: ValidatedKitConfig;
 		extensions: string[];
@@ -1845,6 +1949,14 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+	 *
+	 * Most common status codes:
+	 *  * `303 See Other`: redirect as a GET request (often used after a form POST request)
+	 *  * `307 Temporary Redirect`: redirect will keep the request method
+	 *  * `308 Permanent Redirect`: redirect will keep the request method, SEO will be transferred to the new page
+	 *
+	 * [See all redirect status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages)
+	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
 	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
@@ -2080,6 +2192,9 @@ declare module '$app/forms' {
 	 * - redirects to the nearest error page in case of an unexpected error
 	 *
 	 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+	 * It accepts an options object
+	 * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
+	 * - `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
@@ -2097,7 +2212,7 @@ declare module '$app/forms' {
 
 declare module '$app/navigation' {
 	/**
-	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
@@ -2143,6 +2258,7 @@ declare module '$app/navigation' {
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
 		invalidateAll?: boolean | undefined;
+		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
 	} | undefined): Promise<void>;
 	/**
@@ -2267,7 +2383,7 @@ declare module '$app/server' {
 
 declare module '$app/state' {
 	/**
-	 * A reactive object with information about the current page, serving several use cases:
+	 * A read-only reactive object with information about the current page, serving several use cases:
 	 * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
 	 * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
 	 * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
@@ -2288,12 +2404,23 @@ declare module '$app/state' {
 	 * {/if}
 	 * ```
 	 *
+	 * Changes to `page` are available exclusively with runes. (The legacy reactivity syntax will not reflect any changes)
+	 *
+	 * ```svelte
+	 * <!--- file: +page.svelte --->
+	 * <script>
+	 * 	import { page } from '$app/state';
+	 * 	const id = $derived(page.params.id); // This will correctly update id for usage on this page
+	 * 	$: badId = page.params.id; // Do not use; will never update after initial load
+	 * </script>
+	 * ```
+	 *
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
 	 *
 	 * */
 	export const page: import("@sveltejs/kit").Page;
 	/**
-	 * An object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
 	export const navigating: import("@sveltejs/kit").Navigation | {
@@ -2305,7 +2432,7 @@ declare module '$app/state' {
 		complete: null;
 	};
 	/**
-	 * A reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+	 * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 * */
 	export const updated: {
 		get current(): boolean;
