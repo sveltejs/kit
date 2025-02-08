@@ -6,6 +6,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
+import { resolve } from 'import-meta-resolve';
 
 const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
@@ -113,29 +114,13 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
+			 * @param {import('esbuild').BuildOptions & Required<Pick<import('esbuild').BuildOptions, 'entryPoints'>>} esbuild_options
 			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 * @param {import('./index.js').Config} adapter_config
 			 */
-			async function generate_edge_function(name, config, routes) {
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
+			async function bundle_edge_function(esbuild_options, name, adapter_config) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -144,7 +129,7 @@ const plugin = function (defaults = {}) {
 						external: [
 							...compatible_node_modules,
 							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
+							...((adapter_config.runtime === 'edge' && adapter_config.external) || [])
 						],
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
@@ -155,7 +140,8 @@ const plugin = function (defaults = {}) {
 							'.ttf': 'copy',
 							'.eot': 'copy',
 							'.otf': 'copy'
-						}
+						},
+						...(esbuild_options || {})
 					});
 
 					if (result.warnings.length > 0) {
@@ -199,8 +185,8 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify(
 						{
-							runtime: config.runtime,
-							regions: config.regions,
+							runtime: 'edge',
+							regions: adapter_config.regions,
 							entrypoint: 'index.js',
 							framework: {
 								slug: 'sveltekit',
@@ -212,6 +198,74 @@ const plugin = function (defaults = {}) {
 					)
 				);
 			}
+
+			/**
+			 * @param {string} name
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 */
+			async function generate_edge_function(name, config, routes) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				const dest = `${tmp}/edge.js`;
+
+				builder.copy(`${files}/edge.js`, dest, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js'
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
+
+				await bundle_edge_function({ entryPoints: [dest] }, name, config);
+			}
+
+			/**
+			 * @param {import('./index.js').Config} config
+			 */
+			async function generate_edge_middleware(config) {
+				if (!fs.existsSync(`${builder.getServerDirectory()}/middleware.js`)) return;
+
+				const dest = `${tmp}/middleware.js`;
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				builder.copy(`${files}/middleware.js`, dest, {
+					replace: {
+						MIDDLEWARE: `${relativePath}/middleware.js`,
+						CALL_MIDDLEWARE: `${relativePath}/call-middleware.js`,
+						APP_DIR: `'${builder.config.kit.appDir}'`
+					}
+				});
+
+				// @vercel/edge is a dependency of this package, but the middleware is bundled within the user's project,
+				// where transitive dependencies could not be available (e.g. in case of pnpm). We therefore copy it over.
+				const vercel_edge_pkg = resolve('@vercel/edge/package.json', import.meta.url);
+				builder.copy(
+					path.dirname(fileURLToPath(vercel_edge_pkg)),
+					`${tmp}/node_modules/@vercel/edge`
+				);
+
+				await bundle_edge_function(
+					{
+						entryPoints: [dest]
+					},
+					'user-middleware',
+					config
+				);
+
+				static_config.routes.push({
+					src: '/.*',
+					middlewarePath: `user-middleware`,
+					continue: true
+				});
+			}
+
+			generate_edge_middleware(defaults);
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
