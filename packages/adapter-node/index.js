@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -37,12 +37,15 @@ export default function (opts = {}) {
 
 			builder.writeServer(tmp);
 
+			const has_middleware = existsSync(`${builder.getServerDirectory()}/middleware.js`);
+
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
+					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`,
+					`export const has_middleware = ${has_middleware};`
 				].join('\n\n')
 			);
 
@@ -79,6 +82,14 @@ export default function (opts = {}) {
 				chunkFileNames: 'chunks/[name]-[hash].js'
 			});
 
+			if (has_middleware) {
+				builder.copy(`${builder.getServerDirectory()}/middleware.js`, `${out}/middleware.js`);
+				builder.copy(
+					`${builder.getServerDirectory()}/call-middleware.js`,
+					`${out}/call-middleware.js`
+				);
+			}
+
 			builder.copy(files, out, {
 				replace: {
 					ENV: './env.js',
@@ -86,13 +97,16 @@ export default function (opts = {}) {
 					MANIFEST: './server/manifest.js',
 					SERVER: './server/index.js',
 					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix)
+					ENV_PREFIX: JSON.stringify(envPrefix),
+					MIDDLEWARE: has_middleware ? './middleware.js' : './noop-middleware.js',
+					CALL_MIDDLEWARE: has_middleware ? './call-middleware.js' : './noop-middleware.js'
 				}
 			});
 		},
 
 		supports: {
-			read: () => true
+			read: () => true,
+			middleware: () => true
 		}
 	};
 }

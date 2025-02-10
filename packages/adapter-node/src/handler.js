@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered, base } from 'MANIFEST';
+import { manifest, prerendered, base, has_middleware } from 'MANIFEST';
 import { env } from 'ENV';
+import { middleware as user_middleware } from 'MIDDLEWARE';
+import { call_middleware } from 'CALL_MIDDLEWARE';
 
 /* global ENV_PREFIX */
 
@@ -73,6 +75,44 @@ function serve(path, client = false) {
 		})
 	);
 }
+
+/** @type {import('polka').Middleware} */
+const middleware = async (req, res, next) => {
+	/** @type {Request} */
+	let request;
+
+	try {
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
+	} catch {
+		res.statusCode = 400;
+		res.end('Bad Request');
+		return;
+	}
+
+	const result = await call_middleware(request, user_middleware);
+
+	if (result instanceof Response) {
+		setResponse(res, result);
+	} else {
+		if (result.did_reroute) {
+			req.url = new URL(result.request.url).pathname;
+		}
+
+		for (const [key, value] of result.request_headers) {
+			req.headers[key] = value;
+		}
+
+		for (const [key, value] of result.response_headers) {
+			res.setHeader(key, value);
+		}
+
+		next();
+	}
+};
 
 // required because the static file server ignores trailing slashes
 /** @returns {import('polka').Middleware} */
@@ -208,6 +248,7 @@ export const handler = sequence(
 	[
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
+		has_middleware && middleware,
 		serve_prerendered(),
 		ssr
 	].filter(Boolean)

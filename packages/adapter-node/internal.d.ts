@@ -12,8 +12,19 @@ declare module 'MANIFEST' {
 	export const base: string;
 	export const manifest: SSRManifest;
 	export const prerendered: Set<string>;
+	export const has_middleware: boolean;
 }
 
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
+}
+
+declare module 'MIDDLEWARE' {
+	import { Middleware } from '@sveltejs/kit';
+	export const middleware: Middleware;
+}
+
+declare module 'CALL_MIDDLEWARE' {
+	import { CallMiddleware } from '@sveltejs/kit';
+	export const call_middleware: CallMiddleware;
 }
