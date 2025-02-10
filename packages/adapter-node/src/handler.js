@@ -99,7 +99,7 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
@@ -171,7 +171,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(res, await server.respond(request, get_options(req)));
+	await setResponse(res, await server.respond(request, get_options(req)));
 };
 
 /** @param {import('polka').Middleware[]} handlers */

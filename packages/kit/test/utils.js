@@ -8,7 +8,7 @@ import { test as base, devices } from '@playwright/test';
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
-		use({
+		void use({
 			/**
 			 * @param {string} url
 			 * @param {{ replaceState?: boolean }} opts
