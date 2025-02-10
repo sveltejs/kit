@@ -2,7 +2,7 @@
 title: Single-page apps
 ---
 
-You can turn a SvelteKit app into a fully client-rendered single-page app (SPA) by specifying a _fallback page_ that will be served for any URLs that can't be served via another means such as by returning a prerendered page.
+You can turn a SvelteKit app into a fully client-rendered single-page app (SPA) by specifying a _fallback page_. This page will be served for any URLs that can't be served by other means such as returning a prerendered page.
 
 > SPA mode has a large negative performance impact by forcing two network round trips before rendering can begin. This may be acceptable if you are serving an application from the local network (e.g. a mobile app that wraps a locally-served SPA), but probably is not for most websites on the internet especially when considering the latency of mobile devices. It also harms SEO by often causing sites to be downranked for performance (SPAs are much more likely to fail core web vitals), excluding search engines that don't render JS, and causing your site to receive less frequent updates from those that do. And finally, it makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 >
