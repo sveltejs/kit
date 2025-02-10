@@ -10,7 +10,7 @@ You can turn a SvelteKit app into a fully client-rendered single-page app (SPA) 
 
 ## Usage
 
-First, disable SSR for the pages you don't want to prerender. These pages will be seved via a fallback page. E.g. to serve all pages via the fallback by default, you can update the root layout as shown below. You should [opt back into prerendering individual pages and directories](#prerendering-individual-pages) where possible.
+First, disable SSR for the pages you don't want to prerender. These pages will be served via the fallback page. E.g. to serve all pages via the fallback by default, you can update the root layout as shown below. You should [opt back into prerendering individual pages and directories](#prerendering-individual-pages) where possible.
 ```js
 /// file: src/routes/+layout.js
 export const ssr = false;
