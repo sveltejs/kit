@@ -123,6 +123,9 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
     devDependencies:
+      '@netlify/edge-functions':
+        specifier: ^2.11.1
+        version: 2.11.1
       '@netlify/functions':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1767,6 +1770,9 @@ packages:
     resolution: {integrity: sha512-nhSMNprz3WmeRvd8iUs5JqkKr0Ncx46JtPxM3AhXes84XpSJfmIwKeWXRpsr53S7kqPkQfPhzrMFUxSNb23qSA==}
     engines: {node: '>=18'}
     hasBin: true
+
+  '@netlify/edge-functions@2.11.1':
+    resolution: {integrity: sha512-pyQOTZ8a+ge5lZlE+H/UAHyuqQqtL5gE0pXrHT9mOykr3YQqnkB2hZMtx12odatZ87gHg4EA+UPyMZUbLfnXvw==}
 
   '@netlify/functions@3.0.0':
     resolution: {integrity: sha512-XXf9mNw4+fkxUzukDpJtzc32bl1+YlXZwEhc5ZgMcTbJPLpgRLDs5WWSPJ4eY/Mv1ZFvtxmMwmfgoQYVt68Qog==}
@@ -4231,6 +4237,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@netlify/edge-functions@2.11.1': {}
 
   '@netlify/functions@3.0.0':
     dependencies:
