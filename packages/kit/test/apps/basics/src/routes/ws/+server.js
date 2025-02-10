@@ -10,9 +10,9 @@ export const socket = {
 
 	message(peer, message) {
 		const data = message.text();
-	
+
 		console.log('[ws] message from client:', data);
-	
+
 		if (data === 'ping') {
 			peer.send('pong - from /ws');
 			return;
