@@ -92,6 +92,8 @@ export function resolve_websocket_hooks(options, manifest, state) {
 	};
 }
 
+// These type overloads are necessary because the `handle_request` function
+// can return a `Response` or a `Partial<import('crossws').Hooks>`.
 /**
  * @overload
  * @param {Request} request
