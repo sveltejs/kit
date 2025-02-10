@@ -1475,18 +1475,21 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Shape of the `export const socket = {..}` object in `+server.js`.
 	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+	 * @since 2.18.0
 	 */
 	export type Socket = Partial<import('crossws').Hooks>;
 
 	/**
 	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
 	 * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+	 * @since 2.18.0
 	 */
 	export type Peer = import('crossws').Peer;
 
 	/**
 	 * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
 	 * See [Message](https://crossws.unjs.io/guide/message) for more information.
+	 * @since 2.18.0
 	 */
 	export type Message = import('crossws').Message;
 
@@ -1965,7 +1968,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -1995,13 +1998,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit): Response;
+	export function json(data: any, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit): Response;
+	export function text(body: string, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2283,7 +2286,7 @@ declare module '$app/navigation' {
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
-	}): Promise<void>;
+	} | undefined): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
