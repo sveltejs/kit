@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
@@ -99,6 +99,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			} else {
 				generate_lambda_functions({ builder, split, publish });
 			}
+
+			await generate_middleware(builder);
 		},
 
 		supports: {
@@ -111,10 +113,12 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				}
 
 				return true;
-			}
+			},
+			middleware: () => true
 		}
 	};
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
@@ -127,6 +131,7 @@ async function generate_edge_functions({ builder }) {
 	builder.mkdirp('.netlify/edge-functions');
 
 	builder.log.minor('Generating Edge Function...');
+
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
@@ -136,51 +141,51 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
+	await bundle_edge_function({ builder, name: 'render', excludedPaths: builder.prerendered.paths });
+}
+
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ */
+async function generate_middleware(builder) {
+	if (!existsSync(`${builder.getServerDirectory()}/middleware.js`)) return;
+
+	builder.log.minor('Generating SvelteKit middleware as Edge Function...');
+
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.copy(`${files}/middleware.js`, `${tmp}/entry.js`, {
+		replace: {
+			MIDDLEWARE: `${relativePath}/middleware.js`,
+			CALL_MIDDLEWARE: `${relativePath}/call-middleware.js`
+		}
 	});
 
+	await bundle_edge_function({ builder, name: 'middleware' });
+}
+
+/**
+ *
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.name
+ * @param {string[]} [params.excludedPaths]
+ */
+async function bundle_edge_function({ builder, name, excludedPaths = [] }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+	const manifest = builder.generateManifest({ relativePath });
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
-
-	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
-
-	const path = '/*';
-	// We only need to specify paths without the trailing slash because
-	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
-		// Contains static files
-		`/${builder.getAppPath()}/*`,
-		...builder.prerendered.paths,
-		...Array.from(assets).flatMap((asset) => {
-			if (asset.endsWith('/index.html')) {
-				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
-			}
-			return `${builder.config.kit.paths.base}/${asset}`;
-		}),
-		// Should not be served by SvelteKit at all
-		'/.netlify/*'
-	];
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				path,
-				excludedPath
-			}
-		],
-		version: 1
-	};
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+		outfile: `.netlify/edge-functions/${name}.js`,
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -200,8 +205,48 @@ async function generate_edge_functions({ builder }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
+	/** @type {{ assets: Set<string> }} */
+	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
+
+	const path = '/*';
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
+	const excludedPath = [
+		// Contains static files
+		`/${builder.getAppPath()}/*`,
+		...excludedPaths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		}),
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
+	];
+
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			...(existsSync('.netlify/edge-functions/manifest.json')
+				? JSON.parse(readFileSync('.netlify/edge-functions/manifest.json', 'utf-8')).functions
+				: []),
+			{
+				function: name,
+				path,
+				excludedPath
+			}
+		],
+		version: 1
+	};
+
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
