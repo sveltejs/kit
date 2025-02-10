@@ -4,6 +4,7 @@ import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
 import { check_middleware_feature } from '../../utils/features.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -120,6 +121,7 @@ export function validate_config(config) {
 		);
 	}
 
+	/** @type {import('types').ValidatedConfig} */
 	const validated = options(config, 'config');
 
 	if (validated.kit.router.resolution === 'server') {
@@ -135,7 +137,9 @@ export function validate_config(config) {
 		}
 	}
 
-	check_middleware_feature(validated.kit.adapter);
+	if (resolve_entry(validated.kit.files.hooks.middleware)) {
+		check_middleware_feature(validated.kit.adapter);
+	}
 
 	return validated;
 }
