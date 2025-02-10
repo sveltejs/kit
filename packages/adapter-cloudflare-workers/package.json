@@ -40,7 +40,7 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20250129.0",
 		"@iarna/toml": "^2.2.5",
-		"crossws": "^0.3.3",
+		"crossws": "^0.3.4",
 		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {

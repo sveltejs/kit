@@ -61,8 +61,8 @@ importers:
         specifier: ^4.20241106.0
         version: 4.20241205.0
       crossws:
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
@@ -95,8 +95,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       crossws:
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
@@ -191,8 +191,8 @@ importers:
         specifier: ^20.17.16
         version: 20.17.17
       crossws:
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       polka:
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -358,8 +358,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       crossws:
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       devalue:
         specifier: ^5.1.0
         version: 5.1.0
@@ -2300,8 +2300,8 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
-  crossws@0.3.3:
-    resolution: {integrity: sha512-/71DJT3xJlqSnBr83uGJesmVHSzZEvgxHt/fIKxBAAngqMHmnBWQNxCphVxxJ2XL3xleu5+hJD6IQ3TglBedcw==}
+  crossws@0.3.4:
+    resolution: {integrity: sha512-uj0O1ETYX1Bh6uSgktfPvwDiPYGQ3aI4qVsaC/LWpkIzGj1nUYm5FK3K+t11oOlpN01lGbprFCH4wBlKdJjVgw==}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -4766,7 +4766,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossws@0.3.3:
+  crossws@0.3.4:
     dependencies:
       uncrypto: 0.1.3
 
