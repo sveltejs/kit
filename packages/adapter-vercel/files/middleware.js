@@ -2,13 +2,6 @@ import { next, rewrite } from '@vercel/edge';
 import { middleware as user_middleware } from 'MIDDLEWARE';
 import { call_middleware } from 'CALL_MIDDLEWARE';
 
-// TODO allow customization?
-// TODO base path
-export const config = {
-	// @ts-expect-error will be replaced during build
-	matcher: `^(?!/${APP_DIR}/immutable).*`
-};
-
 /**
  * @param {Request} request
  */

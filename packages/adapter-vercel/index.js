@@ -237,8 +237,7 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/middleware.js`, dest, {
 					replace: {
 						MIDDLEWARE: `${relativePath}/middleware.js`,
-						CALL_MIDDLEWARE: `${relativePath}/call-middleware.js`,
-						APP_DIR: `'${builder.config.kit.appDir}'`
+						CALL_MIDDLEWARE: `${relativePath}/call-middleware.js`
 					}
 				});
 
@@ -259,7 +258,7 @@ const plugin = function (defaults = {}) {
 				);
 
 				static_config.routes.push({
-					src: '/.*',
+					src: '/.*', // TODO allow customization?
 					middlewarePath: `user-middleware`,
 					continue: true
 				});
