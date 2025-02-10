@@ -1,5 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import { middleware as user_middleware } from 'MIDDLEWARE';
+import { call_middleware } from 'CALL_MIDDLEWARE';
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
@@ -14,6 +16,17 @@ const worker = {
 	async fetch(req, env, context) {
 		// @ts-ignore
 		await server.init({ env });
+
+		// We can't use the stuff outlined in
+		// https://developers.cloudflare.com/pages/functions/middleware/ and
+		// https://developers.cloudflare.com/pages/functions/api-reference/#eventcontext
+		// because we're using the _worker.js advanced mode
+		// https://developers.cloudflare.com/pages/functions/advanced-mode/
+		// so we inline the middleware here
+		const mw_response = await call_middleware(req, user_middleware);
+		if (mw_response instanceof Response) return mw_response;
+		req = mw_response.request;
+
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
@@ -66,6 +79,8 @@ const worker = {
 				}
 			});
 		}
+
+		mw_response.add_response_headers(res);
 
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers

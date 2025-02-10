@@ -36,18 +36,24 @@ export default function (options = {}) {
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
 
+			const has_middleware = existsSync(`${builder.getServerDirectory()}/middleware.js`);
 			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n` +
+					`export const app_dir = ${JSON.stringify(builder.config.kit.appDir)};\n`
 			);
 
 			writeFileSync(
 				`${dest}/_routes.json`,
-				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
+				JSON.stringify(
+					get_routes_json(builder, written_files, !has_middleware, options.routes ?? {}),
+					null,
+					'\t'
+				)
 			);
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
@@ -60,13 +66,27 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
+			if (!has_middleware) {
+				builder.copy(
+					`${files}/noop-middleware.js`,
+					`${builder.getServerDirectory()}/middleware.js`
+				);
+				builder.copy(
+					`${files}/noop-middleware.js`,
+					`${builder.getServerDirectory()}/call-middleware.js`
+				);
+			}
+
 			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`,
+					MIDDLEWARE: `${relativePath}/middleware.js`,
+					CALL_MIDDLEWARE: `${relativePath}/call-middleware.js`
 				}
 			});
 		},
+
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
@@ -100,6 +120,10 @@ export default function (options = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+
+		supports: {
+			middleware: () => true
 		}
 	};
 }
@@ -107,10 +131,16 @@ export default function (options = {}) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
+ * @param {boolean} exclude_prerendered
  * @param {import('./index.js').AdapterOptions['routes']} routes
  * @returns {import('./index.js').RoutesJSONSpec}
  */
-function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
+function get_routes_json(
+	builder,
+	assets,
+	exclude_prerendered,
+	{ include = ['/*'], exclude = exclude_prerendered ? ['<all>'] : ['<build>', '<files>'] }
+) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
 		throw new Error('routes.include and routes.exclude must be arrays');
 	}
