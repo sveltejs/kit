@@ -1475,18 +1475,21 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Shape of the `export const socket = {..}` object in `+server.js`.
 	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+	 * @since 2.18.0
 	 */
 	export type Socket = Partial<import('crossws').Hooks>;
 
 	/**
 	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
 	 * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+	 * @since 2.18.0
 	 */
 	export type Peer = import('crossws').Peer;
 
 	/**
 	 * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
 	 * See [Message](https://crossws.unjs.io/guide/message) for more information.
+	 * @since 2.18.0
 	 */
 	export type Message = import('crossws').Message;
 
