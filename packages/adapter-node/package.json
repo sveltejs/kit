@@ -49,7 +49,7 @@
 		"crossws": "^0.3.4",
 		"polka": "^1.0.0-next.28",
 		"sirv": "^3.0.0",
-		"typescript": "^5.5.4",
+		"typescript": "^5.5.3",
 		"vitest": "^3.0.1"
 	},
 	"dependencies": {

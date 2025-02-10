@@ -49,7 +49,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^20.17.16",
 		"@types/ws": "^8.5.10",
-		"typescript": "^5.5.4"
+		"typescript": "^5.5.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
