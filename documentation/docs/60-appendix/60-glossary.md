@@ -12,7 +12,7 @@ In SvelteKit, client-side rendering will be used by default, but you can turn of
 
 ## Hybrid app
 
-SvelteKit uses a hybrid rendering mode by default where it loads the initial HTML from the server (SSR) and the updates the page contents on subsequent navigations via client-side rendering (CSR).
+SvelteKit uses a hybrid rendering mode by default where it loads the initial HTML from the server (SSR), and then updates the page contents on subsequent navigations via client-side rendering (CSR).
 
 ## Hydration
 
