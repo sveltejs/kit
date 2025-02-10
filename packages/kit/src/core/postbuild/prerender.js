@@ -330,7 +330,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				enqueue(decoded, decode_uri(pathname), pathname);
+				void enqueue(decoded, decode_uri(pathname), pathname);
 			}
 		}
 	}
@@ -366,7 +366,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			if (location) {
 				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(decoded, decode_uri(resolved), resolved);
+					void enqueue(decoded, decode_uri(resolved), resolved);
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
@@ -485,17 +485,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					enqueue(null, config.paths.base + path);
+					void enqueue(null, config.paths.base + path);
 				}
 			}
 		} else {
-			enqueue(null, config.paths.base + entry);
+			void enqueue(null, config.paths.base + entry);
 		}
 	}
 
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
-			enqueue(null, config.paths.base + entry, undefined, id);
+			void enqueue(null, config.paths.base + entry, undefined, id);
 		}
 	}
 

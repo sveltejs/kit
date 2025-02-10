@@ -99,7 +99,7 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
@@ -171,7 +171,53 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(res, await server.respond(request, get_options(req)));
+	await setResponse(
+		res,
+		await server.respond(request, {
+			platform: { req },
+			getClientAddress: () => {
+				if (address_header) {
+					if (!(address_header in req.headers)) {
+						throw new Error(
+							`Address header was specified with ${
+								ENV_PREFIX + 'ADDRESS_HEADER'
+							}=${address_header} but is absent from request`
+						);
+					}
+
+					const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+					if (address_header === 'x-forwarded-for') {
+						const addresses = value.split(',');
+
+						if (xff_depth < 1) {
+							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+						}
+
+						if (xff_depth > addresses.length) {
+							throw new Error(
+								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+									addresses.length
+								} addresses`
+							);
+						}
+						return addresses[addresses.length - xff_depth].trim();
+					}
+
+					return value;
+				}
+
+				return (
+					req.connection?.remoteAddress ||
+					// @ts-expect-error
+					req.connection?.socket?.remoteAddress ||
+					req.socket?.remoteAddress ||
+					// @ts-expect-error
+					req.info?.remoteAddress
+				);
+			}
+		})
+	);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

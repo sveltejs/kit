@@ -11,5 +11,5 @@ import * as app from '__sveltekit/manifest';
  * @param {import('./types.js').HydrateOptions} options
  */
 export function start(element, options) {
-	kit.start(app, element, options);
+	void kit.start(app, element, options);
 }

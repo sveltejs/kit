@@ -25,7 +25,7 @@ if (DEV && BROWSER) {
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
 	};
 
-	check_stack_trace();
+	void check_stack_trace();
 
 	/**
 	 * @param {RequestInfo | URL} input
