@@ -93,28 +93,11 @@ export function resolve_websocket_hooks(options, manifest, state) {
 }
 
 /**
- * @overload
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
- */
-/**
- * @overload
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @param {boolean} upgrade
- * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
- */
-/**
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @param {boolean=} upgrade
+ * @param {boolean} [upgrade]
  * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
  */
 async function handle_request(request, options, manifest, state, upgrade) {
