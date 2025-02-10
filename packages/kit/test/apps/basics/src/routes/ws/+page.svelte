@@ -1,33 +1,33 @@
 <script>
-	import { onMount } from 'svelte';
-
+	/** @type {WebSocket | undefined} */
 	let socket;
-	let messages = [];
 
-	onMount(() => {
+	/** @type {string[]} */
+	let messages = [];
+</script>
+
+<button
+	on:click={() => {
 		socket = new WebSocket('/ws');
 
-		socket.onerror = (event) => {
-			console.log(event);
-		};
-
 		socket.onopen = () => {
-			console.log('websocket connected');
-			socket.send('ping');
-		};
-
-		socket.onclose = () => {
-			console.log('disconnected');
+			messages = ['connected'];
 		};
 
 		socket.onmessage = (event) => {
 			messages = [...messages, event.data];
 		};
-	});
-</script>
 
-<h1>Messages:</h1>
+		socket.onerror = (event) => {
+			console.error(event);
+			messages = [...messages, 'error'];
+		};
 
+		socket.onclose = () => {
+			messages = [...messages, 'disconnected'];
+		};
+	}}>open</button
+>
 <button
 	on:click={() => {
 		socket.send('ping');
@@ -35,6 +35,8 @@
 >
 <button on:click={() => socket.send('add')}>add</button>
 <button on:click={() => socket.send('broadcast')}>broadcast</button>
+<button on:click={() => socket.send('error')}>error</button>
+<button on:click={() => socket.close()}>close</button>
 
 <ul>
 	{#each messages as message}

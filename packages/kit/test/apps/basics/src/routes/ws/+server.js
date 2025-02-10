@@ -1,20 +1,20 @@
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(req) {
-		console.log(`[ws] upgrading ${req.url}...`);
+		console.log(`[ws] upgrade ${req.headers.get('origin')}`);
 	},
 
 	open(peer) {
-		console.log(`[ws] open: ${peer}`);
+		console.log(`[ws] open: ${peer.id}`);
 	},
 
 	message(peer, message) {
 		const data = message.text();
 
-		console.log('[ws] message from client:', data);
+		console.log('[ws] message:', data);
 
 		if (data === 'ping') {
-			peer.send('pong - from /ws');
+			peer.send('pong');
 			return;
 		}
 
@@ -27,14 +27,19 @@ export const socket = {
 			peer.peers.forEach((socket) => {
 				socket.send(data);
 			});
+			return;
+		}
+
+		if (data === 'error') {
+			throw new Error('client error');
 		}
 	},
 
 	close(peer, event) {
-		console.log('[ws] close', peer, event);
+		console.log('[ws] close', event);
 	},
 
 	error(peer, error) {
-		console.log('[ws] error', peer, error);
+		console.log('[ws] error', error);
 	}
 };
