@@ -8,7 +8,7 @@ title: WebSockets
 
 A `+server.js` file can export a `socket` object to handle WebSocket connections.
 
-In the `socket` object, you can define [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle.
+In the `socket` object, you can define [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle. All hooks are optional.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
@@ -39,7 +39,7 @@ export const socket = {
 
 The `upgrade` hook is called before a WebSocket connection is established. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
 
-You can use the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit` to easily reject connections. 
+You can use the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit` to easily reject connections. Requests will be auto-accepted if the `upgrade` hook is not defined or does not `error`.
 
 ```js
 import { error } from "@sveltejs/kit";
