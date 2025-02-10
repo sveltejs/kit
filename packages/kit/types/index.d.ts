@@ -1489,16 +1489,42 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface Middleware {
-		(options: {
-			request: Request;
-			url: URL;
-			setRequestHeaders: (headers: Record<string, string>) => void;
-			setResponseHeaders: (headers: Record<string, string>) => void;
-			cookies: Cookies;
-			reroute: (pathname: string) => unknown;
-		}): Response | unknown;
+		(options: MiddlewareEvent): Response | unknown;
 	}
 
+	export interface MiddlewareEvent {
+		/**
+		 * The original request object, as passed by the adapter
+		 */
+		request: Request;
+		/**
+		 * The normalized URL of the request. E.g. data requests or route resolution requests will have their internal information stripped.
+		 * Most of the time you want to use this instead of `request.url` to match against a specific pathname.
+		 */
+		url: URL;
+		/**
+		 * Add headers to the request before it is sent to the server.
+		 */
+		setRequestHeaders: (headers: Record<string, string>) => void;
+		/**
+		 * Add headers to the response before it is sent to the client.
+		 */
+		setResponseHeaders: (headers: Record<string, string>) => void;
+		/**
+		 * Use this to get cookies from the request and set cookies for the response.
+		 */
+		cookies: Cookies;
+		/**
+		 * Return from middleware with this call to route the request to a different path.
+		 */
+		reroute: (pathname: string) => unknown;
+	}
+
+	/**
+	 * A convenience function that takes a Request and a Middleware,
+	 * and takes care of calling the middleware with the appropriate parameters.
+	 * Useful for when you write an adapter and want to call middleware.
+	 */
 	export interface CallMiddleware {
 		(
 			request: Request,
