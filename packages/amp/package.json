@@ -34,7 +34,7 @@
 		"format": "pnpm lint --write"
 	},
 	"devDependencies": {
-		"typescript": "^5.7.3"
+		"typescript": "^5.5.4"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0 || ^2.0.0"
