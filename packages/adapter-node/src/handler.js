@@ -175,10 +175,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, get_options(req))
-	);
+	await setResponse(res, await server.respond(request, get_options(req)));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
