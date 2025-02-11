@@ -533,11 +533,15 @@ Tips:
 				case sveltekit_server: {
 					return dedent`
 						export let read_implementation = null;
-
+						export let websocket_implementation = null;
 						export let manifest = null;
 
 						export function set_read_implementation(fn) {
 							read_implementation = fn;
+						}
+
+						export function set_websocket_implementation(fn) {
+							websocket_implementation = fn;
 						}
 
 						export function set_manifest(_) {

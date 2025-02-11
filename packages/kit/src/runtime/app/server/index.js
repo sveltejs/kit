@@ -1,4 +1,4 @@
-import { read_implementation, manifest } from '__sveltekit/server';
+import { websocket_implementation, read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 import { b64_decode } from '../../utils.js';
@@ -70,4 +70,25 @@ export function read(asset) {
 	}
 
 	throw new Error(`Asset does not exist: ${file}`);
+}
+
+/**
+ * Check if WebSocket connections are supported in the current environment
+ * @example
+ * ```js
+ * import { websocket } from '$app/server';
+ *
+ * const isSupported = websocket();
+ * ```
+ * @returns {boolean}
+ * @since 2.18.0
+ */
+export function websocket() {
+	if (!websocket_implementation) {
+		throw new Error(
+			'No `websocket` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
+		);
+	}
+
+	return websocket_implementation();
 }
