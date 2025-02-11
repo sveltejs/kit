@@ -318,18 +318,18 @@ export const transport = {
 
 ## Middleware hooks
 
-The following can be added to `src/hooks.middleware.js`.
+The following can be added to `src/hooks/middleware.js`.
 
 ### middleware
 
-This function runs prior to all requests made to the server, including those to prerendered pages but excluding those to immutable assets. This is useful when
+This function runs prior to all requests made to the server, including those to prerendered pages but excluding those to immutable assets (though depending on the adapter this may be configurable). This is useful when
 
 - you want to do A/B testing on prerendered pages
 - you want to set a cookie on first time visits, not matter if the users hits a prerendered or SSR'd page
 - you want to reroute to a different page depending on a cookie value, and need to set that cookie before doing so
 
 ```js
-/// file: src/hooks.middleware.js
+/// file: src/hooks/middleware.js
 /** @param {import('@sveltejs/kit').MiddlewareEvent} options */
 export async function middleware({ url, setRequestHeaders, setResponseHeaders, cookies, reroute }) {
 	if (url.pathname === '/custom') {
@@ -361,6 +361,8 @@ export async function middleware({ url, setRequestHeaders, setResponseHeaders, c
 If you have no prerendered pages, i.e. every request hits the SvelteKit runtime, and have no advanced rerouting requirements, then it does not make much sense to use middleware, as all requests will eventually go through `handle`.
 
 When using middleware to reroute based on cookies or headers, you probably want to set [`router.resolution` to `"server"`](configuration#router) so that client-side navigations also request the server first to know which files and data to load for a given link.
+
+> [!NOTE] When using server-side route resolution, each path will only be resolved once per user session (e.g. when you visit `/foo` multiple times from different pages, only the first client-side navigation to `/foo` will invoke the resolution endpoint). For that reason, your middleware responses should be stable over the course of a session.
 
 Because the middleware functionality is very adapter-dependent, it is deliberately small in scope to be applicable to as many platforms at possible. How exactly middleware is deployed depends on the adapter you use. For `adapter-node` it's a `sirv` middleware, for Vercel/Netlify it is deployed to the edge, for Cloudflare it becomes part of the worker. Some adapters, for example `adapter-static`, don't support it at all. 
 

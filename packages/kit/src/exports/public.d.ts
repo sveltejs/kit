@@ -280,6 +280,15 @@ export interface Emulator {
 	 * and returns an `App.Platform` object
 	 */
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+	/**
+	 * A function that is called with the current path, the middleware module and the SvelteKit config,
+	 * and returns a boolean stating whether or not middleware should run on the given path.
+	 */
+	shouldRunMiddleware?: (
+		path: string,
+		middlewareModule: any,
+		kitConfig: KitConfig
+	) => MaybePromise<boolean>;
 }
 
 export interface KitConfig {

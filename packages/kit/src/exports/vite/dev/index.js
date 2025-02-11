@@ -548,21 +548,26 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				let middleware;
 				let middleware_result;
+
 				if (resolve_entry(hooks.middleware)) {
 					try {
-						({ middleware } = await vite.ssrLoadModule(hooks.middleware));
+						middleware = await vite.ssrLoadModule(hooks.middleware);
 					} catch (e) {
 						console.error(e);
 					}
 				}
 
-				const { call_middleware } = await vite.ssrLoadModule(
-					`${runtime_base}/server/call-middleware.js`,
-					{ fixStacktrace: true }
-				);
+				if (
+					req.url &&
+					middleware &&
+					(emulator?.shouldRunMiddleware?.(req.url, middleware, svelte_config.kit) ?? true)
+				) {
+					const { call_middleware } = await vite.ssrLoadModule(
+						`${runtime_base}/server/call-middleware.js`,
+						{ fixStacktrace: true }
+					);
+					middleware_result = await call_middleware(request, middleware.middleware);
 
-				if (middleware) {
-					middleware_result = await call_middleware(request, middleware);
 					if (middleware_result instanceof Response) {
 						void setResponse(res, middleware_result);
 						return;

@@ -495,6 +495,15 @@ const plugin = function (defaults = {}) {
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
 		},
 
+		emulate() {
+			return {
+				shouldRunMiddleware: (path, middlewareModule) => {
+					const rexex = new RegExp(get_regex_from_matchers(middlewareModule.config?.matcher));
+					return rexex.test(path);
+				}
+			};
+		},
+
 		supports: {
 			// reading from the filesystem only works in serverless functions
 			read: ({ config, route }) => {

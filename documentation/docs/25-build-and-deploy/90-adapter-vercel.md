@@ -147,6 +147,8 @@ You can use SvelteKit's [middleware feature](hooks#middleware) with Vercel. It w
 
 By default, middleware will run on all paths except immutable files (normally under `_app/immutable`). You can configure for which paths the middleware should run by adding `export const config = { matcher: ... }` to your middleware file. Doing so will increase the speed of other requests since middleware will not be invoked for them. Refer to the [Vercel documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config) for more information on the syntax. When configuring your own matcher, make sure to not accidentally include requests to immutable files, unless you really want to.
 
+> [!NOTE] During dev, requests to immutable files and static assets are never intercepted
+
 ```js
 /// file: hooks/middleware.js
 export const config = {
