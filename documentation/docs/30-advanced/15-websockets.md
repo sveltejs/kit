@@ -53,7 +53,7 @@ export const socket = {
 };
 ```
 
-### Open
+### open
 
 The `open` hook is called when a WebSocket connection is opened. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, as a parameter.
 
