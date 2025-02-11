@@ -141,6 +141,31 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 > Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
 
+## Middleware
+
+You can use SvelteKit's [middleware feature](hooks#middleware) with Vercel. It will be deployed as [edge middleware](https://vercel.com/docs/functions/edge-middleware). This allows you to for example do A/B testing on prerendered or ISR'd pages, and reroute to a variant based on a cookie.
+
+By default, middleware will run on all paths except immutable files (normally under `_app/immutable`). You can configure for which paths the middleware should run by adding `export const config = { matcher: ... }` to your middleware file. Doing so will increase the speed of other requests since middleware will not be invoked for them. Refer to the [Vercel documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config) for more information on the syntax. When configuring your own matcher, make sure to not accidentally include requests to immutable files, unless you really want to.
+
+```js
+/// file: hooks/middleware.js
+export const config = {
+	// only run this on the about page and its subpages
+	matcher: '/about(.*)'
+};
+
+export function middleware({ url, cookies, reroute }) {
+	if (url.pathname === '/about') {
+		// Decide which variant of the about page
+		// (which can be prerendered or ISR'd)
+		// to load based on a cookie
+		const aboutPageVariant = cookies.get('aboutPageVariant') || (Math.random() > 0.5 ? 'a' : 'b');
+		// reroute will use Vercel middleware's rewrite function under the hood
+		return reroute(aboutPageVariant ? '/about-a' : '/about-b');
+	}
+}
+```
+
 ## Environment variables
 
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:

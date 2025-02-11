@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
+import { get_pathname, get_regex_from_matchers, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 import { resolve } from 'import-meta-resolve';
 
@@ -229,7 +229,9 @@ const plugin = function (defaults = {}) {
 			 * @param {import('./index.js').Config} config
 			 */
 			async function generate_edge_middleware(config) {
-				if (!fs.existsSync(`${builder.getServerDirectory()}/middleware.js`)) return;
+				const middleware_path = `${builder.getServerDirectory()}/middleware.js`;
+
+				if (!fs.existsSync(middleware_path)) return;
 
 				const dest = `${tmp}/middleware.js`;
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
@@ -257,11 +259,32 @@ const plugin = function (defaults = {}) {
 					config
 				);
 
-				static_config.routes.push({
-					src: '/.*', // TODO allow customization?
-					middlewarePath: 'user-middleware',
-					continue: true
-				});
+				let matcher = `/((?!${builder.getAppPath()}/immutable|favicon.ico|favicon.png).*)`;
+
+				try {
+					const file_path = pathToFileURL(middleware_path).href;
+					const { config } = await import(file_path);
+					if (config?.matcher) matcher = config.matcher;
+				} catch (e) {
+					// Don't bother showing the error if we know there's no config object
+					const text = fs.readFileSync(middleware_path, 'utf-8');
+					if (text.includes('config') || text.includes('export *')) {
+						builder.log.error(
+							`Failed to import middleware hook. Make sure it is loadable during build, which is necessary to analyze the config object.`
+						);
+						throw e;
+					}
+				}
+
+				static_config.routes.splice(
+					static_config.routes.findIndex((r) => r.handle === 'filesystem'),
+					0,
+					{
+						src: get_regex_from_matchers(matcher),
+						middlewarePath: 'user-middleware',
+						continue: true
+					}
+				);
 			}
 
 			await generate_edge_middleware(defaults);
