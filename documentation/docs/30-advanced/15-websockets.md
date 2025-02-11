@@ -66,7 +66,7 @@ export const socket = {
 };
 ```
 
-### Message
+### message
 
 The `message` hook is called when a message is received from the client. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the [message](https://crossws.unjs.io/guide/message) object, containing data from the client, as parameters.
 
