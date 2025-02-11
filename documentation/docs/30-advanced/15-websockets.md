@@ -92,7 +92,7 @@ export const socket = {
 };
 ```
 
-### Error
+### error
 
 The `error` hook is called when a WebSocket connection error occurs. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the error as parameters.
 
