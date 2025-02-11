@@ -6,9 +6,7 @@ title: WebSockets
 
 [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between a client and a server.
 
-A `+server.js` file can export a `socket` object to handle WebSocket connections.
-
-In the `socket` object, you can define [hooks](https://crossws.unjs.io/guide/hooks) to handle the different stages of the WebSocket lifecycle. All hooks are optional.
+A `+server.js` file can export a `socket` object to handle WebSocket connections. It uses [crossws](https://crossws.unjs.io/) to provide a consistent interface across different platforms. You can define [hooks](https://crossws.unjs.io/guide/hooks), all optional, to handle the different stages of the WebSocket lifecycle.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
