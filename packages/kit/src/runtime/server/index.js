@@ -4,7 +4,11 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import { set_read_implementation, set_manifest, set_websocket_implementation,  } from '__sveltekit/server';
+import {
+	set_read_implementation,
+	set_manifest,
+	set_websocket_implementation
+} from '__sveltekit/server';
 import { websocket } from '../app/server/index.js';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
