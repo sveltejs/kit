@@ -130,7 +130,8 @@ export async function preview(vite, vite_config, svelte_config) {
 				const result = await call_middleware(request, middleware);
 
 				if (result instanceof Response) {
-					setResponse(res, result);
+					await setResponse(res, result);
+					return;
 				}
 
 				for (const [key, value] of result.request.headers.entries()) {

@@ -96,7 +96,7 @@ const middleware = async (req, res, next) => {
 	const result = await call_middleware(request, user_middleware);
 
 	if (result instanceof Response) {
-		setResponse(res, result);
+		await setResponse(res, result);
 	} else {
 		if (result.did_reroute) {
 			req.url = new URL(result.request.url).pathname;
@@ -110,7 +110,7 @@ const middleware = async (req, res, next) => {
 			res.setHeader(key, value);
 		}
 
-		next();
+		void next();
 	}
 };
 

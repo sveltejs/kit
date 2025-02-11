@@ -27,18 +27,11 @@ import {
 import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
-import {
-	has_data_suffix,
-	has_resolution_prefix,
-	strip_data_suffix,
-	strip_resolution_prefix
-} from '../pathname.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */

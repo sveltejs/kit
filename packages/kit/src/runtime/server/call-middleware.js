@@ -11,7 +11,7 @@ export async function call_middleware(request, middleware) {
 	const { cookies, new_cookies } = get_cookies(request, new URL(request.url), 'never');
 
 	let request_headers_called = false;
-	let request_headers = new Headers(request.headers);
+	const request_headers = new Headers(request.headers);
 	/** @param {Record<string, string>} headers */
 	const setRequestHeaders = (headers) => {
 		for (const key in headers) {
@@ -27,7 +27,7 @@ export async function call_middleware(request, middleware) {
 		}
 	};
 
-	let response_headers = new Headers();
+	const response_headers = new Headers();
 	/** @param {Record<string, string>} headers */
 	const setResponseHeaders = (headers) => {
 		for (const key in headers) {

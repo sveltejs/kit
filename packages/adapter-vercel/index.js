@@ -259,12 +259,12 @@ const plugin = function (defaults = {}) {
 
 				static_config.routes.push({
 					src: '/.*', // TODO allow customization?
-					middlewarePath: `user-middleware`,
+					middlewarePath: 'user-middleware',
 					continue: true
 				});
 			}
 
-			generate_edge_middleware(defaults);
+			await generate_edge_middleware(defaults);
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();

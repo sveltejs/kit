@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath, URL } from 'node:url';
+import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
@@ -564,7 +564,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				if (middleware) {
 					middleware_result = await call_middleware(request, middleware);
 					if (middleware_result instanceof Response) {
-						setResponse(res, middleware_result);
+						void setResponse(res, middleware_result);
 						return;
 					} else {
 						request = middleware_result.request;
