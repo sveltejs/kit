@@ -7,9 +7,9 @@ import { prerendering } from '__sveltekit/environment';
 import {
 	set_read_implementation,
 	set_manifest,
-	set_websocket_implementation
+	set_websocket_implementation,
+	websocket_implementation
 } from '__sveltekit/server';
-import { websocket } from '../app/server/index.js';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -127,7 +127,7 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	resolveWebSocketHooks(options) {
-		if (!websocket()) {
+		if (!websocket_implementation) {
 			throw new Error('WebSockets are not supported in this environment');
 		}
 
