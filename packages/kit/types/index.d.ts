@@ -1291,6 +1291,8 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 		read?: (file: string) => ReadableStream;
+		/** A function that informs SvelteKit if WebSocket connections are supported in a given environment. */
+		websocket?: () => boolean;
 	}
 
 	export interface SSRManifest {
@@ -2403,6 +2405,17 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+	/**
+	 * Check if WebSocket connections are supported in the current environment
+	 * @example
+	 * ```js
+	 * import { websocket } from '$app/server';
+	 *
+	 * const isSupported = websocket();
+	 * ```
+	 * @since 2.18.0
+	 */
+	export function websocket(): boolean;
 
 	export {};
 }
