@@ -130,4 +130,4 @@ See [the WebSocket documentation on MDN](https://developer.mozilla.org/en-US/doc
 
 ## Compatibility
 
-SvelteKit uses [`unjs/crossws`](https://crossws.unjs.io) to handle cross-platform WebSocket connections. Please refer to their [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the `peer` object in different runtime environments.
+SvelteKit uses [`crossws`](https://crossws.unjs.io) to handle cross-platform WebSocket connections. Please refer to their [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the `peer` object in different runtime environments.
