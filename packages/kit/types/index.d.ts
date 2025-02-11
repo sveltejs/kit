@@ -2405,17 +2405,6 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
-	/**
-	 * Check if WebSocket connections are supported in the current environment
-	 * @example
-	 * ```js
-	 * import { websocket } from '$app/server';
-	 *
-	 * const isSupported = websocket();
-	 * ```
-	 * @since 2.18.0
-	 */
-	export function websocket(): boolean;
 
 	export {};
 }
