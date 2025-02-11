@@ -79,7 +79,7 @@ export const socket = {
 };
 ```
 
-### Close
+### close
 
 The `close` hook is called when a WebSocket connection is closed. It receives the [peer](https://crossws.unjs.io/guide/peer) object, to allow interacting with connected clients, and the close event object, containing the [WebSocket connection close code](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code#value) and reason, as parameters.
 
