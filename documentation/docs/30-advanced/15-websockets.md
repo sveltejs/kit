@@ -33,7 +33,7 @@ export const socket = {
 };
 ```
 
-### Upgrade
+### upgrade
 
 The `upgrade` hook is called before a WebSocket connection is established. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
 
