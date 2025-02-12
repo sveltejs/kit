@@ -533,6 +533,7 @@ Tips:
 				case sveltekit_server: {
 					return dedent`
 						export let read_implementation = null;
+
 						export let manifest = null;
 
 						export function set_read_implementation(fn) {
