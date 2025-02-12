@@ -237,6 +237,10 @@ WantedBy=sockets.target
 
 3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`. The app will then automatically start once the first request is made to `localhost:3000`.
 
+## Middleware
+
+The adapter supports the [middleware hook](hooks#Middleware) and runs on all requests except those to immutable files (normally within `_app/immutable`).
+
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.

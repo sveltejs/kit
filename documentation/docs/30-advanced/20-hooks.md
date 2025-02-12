@@ -364,6 +364,8 @@ When using middleware to reroute based on cookies or headers, you probably want 
 
 > [!NOTE] When using server-side route resolution, each path will only be resolved once per user session (e.g. when you visit `/foo` multiple times from different pages, only the first client-side navigation to `/foo` will invoke the resolution endpoint). For that reason, your middleware responses should be stable over the course of a session.
 
+> [!NOTE] During dev, requests to immutable files and static assets are never intercepted
+
 Because the middleware functionality is very adapter-dependent, it is deliberately small in scope to be applicable to as many platforms at possible. How exactly middleware is deployed depends on the adapter you use. For `adapter-node` it's a `sirv` middleware, for Vercel/Netlify it is deployed to the edge, for Cloudflare it becomes part of the worker. Some adapters, for example `adapter-static`, don't support it at all. 
 
 ## Further reading

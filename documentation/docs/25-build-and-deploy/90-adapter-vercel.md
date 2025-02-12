@@ -143,7 +143,7 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 ## Middleware
 
-You can use SvelteKit's [middleware feature](hooks#middleware) with Vercel. It will be deployed as [edge middleware](https://vercel.com/docs/functions/edge-middleware). This allows you to for example do A/B testing on prerendered or ISR'd pages, and reroute to a variant based on a cookie.
+You can use SvelteKit's [middleware feature](hooks#Middleware) with Vercel. It will be deployed as [edge middleware](https://vercel.com/docs/functions/edge-middleware). This allows you to for example do A/B testing on prerendered or ISR'd pages, and reroute to a variant based on a cookie.
 
 By default, middleware will run on all paths except immutable files (normally under `_app/immutable`). You can configure for which paths the middleware should run by adding `export const config = { matcher: ... }` to your middleware file. Doing so will increase the speed of other requests since middleware will not be invoked for them. Refer to the [Vercel documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config) for more information on the syntax. When configuring your own matcher, make sure to not accidentally include requests to immutable files, unless you really want to.
 
