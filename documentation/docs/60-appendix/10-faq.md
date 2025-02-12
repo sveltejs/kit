@@ -81,13 +81,13 @@ onNavigate((navigation) => {
 
 For more, see ["Unlocking view transitions"](/blog/view-transitions) on the Svelte blog.
 
-## How do I setup a database?
+## How do I set up a database?
 
 Put the code to query your database in a [server route](./routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.server.js` and import your database helpers into any endpoint that needs them.
 
-You can use [the Svelte CLI](/docs/cli/overview) to automatically setup database integrations.
+You can use [the Svelte CLI](/docs/cli/overview) to automatically set up database integrations.
 
-## How do I use a client-side library accessesing document or window?
+## How do I use a client-side library accessing `document` or `window`?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
