@@ -107,7 +107,7 @@ export function resolve_websocket_hooks(options, manifest, state) {
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean} upgrade
- * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
+ * @returns {Promise<Response | import('crossws').Hooks>}
  */
 /**
  * @param {Request} request
@@ -115,7 +115,7 @@ export function resolve_websocket_hooks(options, manifest, state) {
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean=} upgrade
- * @returns {Promise<Response | Partial<import('crossws').Hooks>>}
+ * @returns {Promise<Response | import('crossws').Hooks>}
  */
 async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
@@ -429,15 +429,46 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		if (upgrade && route?.endpoint) {
 			const node = await route.endpoint();
 			return {
-				...node.socket,
-				upgrade: (req) => {
-					return options.hooks.handle({
-						event,
-						resolve: async () => {
-							const init = (await node.socket?.upgrade?.(req)) ?? undefined;
-							return after_resolve(new Response(undefined, init));
-						}
-					});
+				upgrade: async (req) => {
+					try {
+						return await options.hooks.handle({
+							event,
+							resolve: async () => {
+								const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+								return after_resolve(new Response(undefined, init));
+							}
+						});
+					} catch (e) {
+						return await handle_fatal_error(event, options, e);
+					}
+				},
+				open: async (peer) => {
+					try {
+						await node.socket?.open?.(peer);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				message: async (peer, message) => {
+					try {
+						await node.socket?.message?.(peer, message);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				close: async (peer, close_event) => {
+					try {
+						await node.socket?.close?.(peer, close_event);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				error: async (peer, error) => {
+					try {
+						await node.socket?.error?.(peer, error);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
 				}
 			};
 		}
