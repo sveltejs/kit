@@ -447,10 +447,40 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	/** @type {import('crossws').ResolveHooks | undefined} */
-	let resolve_websocket_hooks = undefined;
+	async function init_server() {
+		// we have to import `Server` before calling `set_assets`
+		const { Server } = /** @type {import('types').ServerModule} */ (
+			await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+		);
+
+		const { set_fix_stack_trace } = await vite.ssrLoadModule(`${runtime_base}/shared-server.js`);
+		set_fix_stack_trace(fix_stack_trace);
+
+		const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+		set_assets(assets);
+
+		const server = new Server(manifest);
+
+		await server.init({
+			env,
+			read: (file) => createReadableStream(from_fs(file))
+		});
+
+		return server;
+	}
+
 	const ws = crossws({
-		resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+		resolve: async (req) => {
+			// we re-initialise the server here so that WebSocket communications
+			// use the latest server code after a file has been edited
+			const server = await init_server();
+			const resolve = server.resolveWebSocketHooks({
+				getClientAddress: get_client_address(
+					/** @type {import('node:http').IncomingMessage} */ (req)
+				)
+			});
+			return resolve(req);
+		}
 	});
 
 	return () => {
@@ -517,40 +547,11 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
-				);
-
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${runtime_base}/shared-server.js`
-				);
-				set_fix_stack_trace(fix_stack_trace);
-
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
-				set_assets(assets);
-
-				const server = new Server(manifest);
-
-				// we have to initialize the server before we can call the resolve function to populate the webhook resolver in the websocket handler
-				await server.init({
-					env,
-					read: (file) => createReadableStream(from_fs(file))
-				});
+				const server = await init_server();
 
 				const request = await getRequest({
 					base,
 					request: req
-				});
-
-				const get_client_address = () => {
-					const { remoteAddress } = req.socket;
-					if (remoteAddress) return remoteAddress;
-					throw new Error('Could not determine clientAddress');
-				};
-
-				resolve_websocket_hooks = server.resolveWebSocketHooks({
-					getClientAddress: get_client_address
 				});
 
 				if (manifest_error) {
@@ -576,7 +577,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const rendered = await server.respond(request, {
-					getClientAddress: get_client_address,
+					getClientAddress: get_client_address(req),
 					read: (file) => {
 						if (file in manifest._.server_assets) {
 							return fs.readFileSync(from_fs(file));
@@ -682,4 +683,15 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+function get_client_address(req) {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
 }
