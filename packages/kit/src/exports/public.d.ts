@@ -44,6 +44,11 @@ export interface Adapter {
 		 * @param config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+		/**
+		 * Test support for middleware
+		 * @since 2.18.0
+		 */
+		middleware?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -275,6 +280,15 @@ export interface Emulator {
 	 * and returns an `App.Platform` object
 	 */
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+	/**
+	 * A function that is called with the current path, the middleware module and the SvelteKit config,
+	 * and returns a boolean stating whether or not middleware should run on the given path.
+	 */
+	shouldRunMiddleware?: (
+		path: string,
+		middlewareModule: any,
+		kitConfig: KitConfig
+	) => MaybePromise<boolean>;
 }
 
 export interface KitConfig {
@@ -435,6 +449,12 @@ export interface KitConfig {
 			 * @since 2.3.0
 			 */
 			universal?: string;
+			/**
+			 * The location of your middleware [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @default "src/hooks.middleware"
+			 * @since 2.18.0
+			 */
+			middleware?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -1493,6 +1513,59 @@ export type SubmitFunction<
 export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
+}
+
+export interface Middleware {
+	(options: MiddlewareEvent): Response | unknown;
+}
+
+export interface MiddlewareEvent {
+	/**
+	 * The original request object, as passed by the adapter
+	 */
+	request: Request;
+	/**
+	 * The normalized URL of the request. E.g. data requests or route resolution requests will have their internal information stripped.
+	 * Most of the time you want to use this instead of `request.url` to match against a specific pathname.
+	 */
+	url: URL;
+	/**
+	 * Add headers to the request before it is sent to the server.
+	 */
+	setRequestHeaders: (headers: Record<string, string>) => void;
+	/**
+	 * Add headers to the response before it is sent to the client.
+	 */
+	setResponseHeaders: (headers: Record<string, string>) => void;
+	/**
+	 * Use this to get cookies from the request and set cookies for the response.
+	 */
+	cookies: Cookies;
+	/**
+	 * Return from middleware with this call to route the request to a different path.
+	 */
+	reroute: (pathname: string) => unknown;
+}
+
+/**
+ * A convenience function that takes a Request and a Middleware,
+ * and takes care of calling the middleware with the appropriate parameters.
+ * Useful for when you write an adapter and want to call middleware.
+ */
+export interface CallMiddleware {
+	(
+		request: Request,
+		middleware: Middleware
+	): Promise<
+		| Response
+		| {
+				request: Request;
+				request_headers: Headers;
+				did_reroute: boolean;
+				response_headers: Headers;
+				add_response_headers: (response: Response) => void;
+		  }
+	>;
 }
 
 export * from './index.js';

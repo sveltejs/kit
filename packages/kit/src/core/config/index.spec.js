@@ -81,7 +81,8 @@ const get_defaults = (prefix = '') => ({
 			hooks: {
 				client: join(prefix, 'src/hooks.client'),
 				server: join(prefix, 'src/hooks.server'),
-				universal: join(prefix, 'src/hooks')
+				universal: join(prefix, 'src/hooks'),
+				middleware: join(prefix, 'src/hooks.middleware')
 			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),

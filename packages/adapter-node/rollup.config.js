@@ -40,7 +40,7 @@ export default [
 			inlineDynamicImports: true
 		},
 		plugins: [nodeResolve(), commonjs(), json(), prefixBuiltinModules()],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', 'MIDDLEWARE', 'CALL_MIDDLEWARE']
 	},
 	{
 		input: 'src/shims.js',

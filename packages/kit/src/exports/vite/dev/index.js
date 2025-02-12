@@ -519,7 +519,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = await getRequest({
+				let request = await getRequest({
 					base,
 					request: req
 				});
@@ -546,6 +546,36 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				let middleware;
+				let middleware_result;
+
+				if (resolve_entry(hooks.middleware)) {
+					try {
+						middleware = await vite.ssrLoadModule(hooks.middleware);
+					} catch (e) {
+						console.error(e);
+					}
+				}
+
+				if (
+					req.url &&
+					middleware &&
+					(emulator?.shouldRunMiddleware?.(req.url, middleware, svelte_config.kit) ?? true)
+				) {
+					const { call_middleware } = await vite.ssrLoadModule(
+						`${runtime_base}/server/call-middleware.js`,
+						{ fixStacktrace: true }
+					);
+					middleware_result = await call_middleware(request, middleware.middleware);
+
+					if (middleware_result instanceof Response) {
+						void setResponse(res, middleware_result);
+						return;
+					} else {
+						request = middleware_result.request;
+					}
+				}
+
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
@@ -564,6 +594,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					},
 					emulator
 				});
+
+				middleware_result?.add_response_headers?.(rendered);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

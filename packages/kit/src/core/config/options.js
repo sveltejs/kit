@@ -125,7 +125,8 @@ const options = object(
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
 					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
+					universal: string(join('src', 'hooks')),
+					middleware: string(join('src', 'hooks.middleware'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),

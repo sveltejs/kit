@@ -5,7 +5,12 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
+import {
+	handle_fatal_error,
+	method_not_allowed,
+	normalize_url,
+	redirect_response
+} from './utils.js';
 import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
@@ -22,18 +27,11 @@ import {
 import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
-import {
-	has_data_suffix,
-	has_resolution_prefix,
-	strip_data_suffix,
-	strip_resolution_prefix
-} from '../pathname.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -87,29 +85,8 @@ export async function respond(request, options, manifest, state) {
 		return text('Not found', { status: 404 });
 	}
 
-	/** @type {boolean[] | undefined} */
-	let invalidated_data_nodes;
-
-	/**
-	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for path resolution, then return the route object as a JS file.
-	 */
-	const is_route_resolution_request = has_resolution_prefix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-
-	if (is_route_resolution_request) {
-		url.pathname = strip_resolution_prefix(url.pathname);
-	} else if (is_data_request) {
-		url.pathname =
-			strip_data_suffix(url.pathname) +
-				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
-		url.searchParams.delete(TRAILING_SLASH_PARAM);
-		invalidated_data_nodes = url.searchParams
-			.get(INVALIDATED_PARAM)
-			?.split('')
-			.map((node) => node === '1');
-		url.searchParams.delete(INVALIDATED_PARAM);
-	}
+	const { is_route_resolution_request, is_data_request, invalidated_data_nodes } =
+		normalize_url(url);
 
 	let resolved_path;
 

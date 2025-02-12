@@ -6,6 +6,13 @@ import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import {
+	has_resolution_prefix,
+	has_data_suffix,
+	strip_resolution_prefix,
+	strip_data_suffix
+} from '../pathname.js';
+import { TRAILING_SLASH_PARAM, INVALIDATED_PARAM } from '../shared.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -162,4 +169,40 @@ export function stringify_uses(node) {
 	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * Strips route resolution/data request from the URL pathname (incoming URL is manipulated) and return info about the URL
+ * @param {URL} url
+ */
+export function normalize_url(url) {
+	const is_route_resolution_request = has_resolution_prefix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	/** @type {boolean[] | undefined} */
+	let invalidated_data_nodes;
+
+	if (is_route_resolution_request) {
+		url.pathname = strip_resolution_prefix(url.pathname);
+	} else if (is_data_request) {
+		url.pathname =
+			strip_data_suffix(url.pathname) +
+				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		url.searchParams.delete(TRAILING_SLASH_PARAM);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
+		url.searchParams.delete(INVALIDATED_PARAM);
+	}
+
+	return {
+		/**
+		 * If the request is for a route resolution, first modify the URL, then continue as normal
+		 * for path resolution, then return the route object as a JS file.
+		 */
+		is_route_resolution_request,
+		is_data_request,
+		invalidated_data_nodes,
+		url
+	};
 }

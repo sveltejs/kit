@@ -31,6 +31,12 @@ export default async (req, res) => {
 			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
 			pathname = pathname.replace(/\/+/g, '/');
 			req.url = `${pathname}${path.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : ''}?${params}`;
+		} else {
+			pathname = /** @type {string | null} */ (req.headers['x-sveltekit-vercel-rewrite']);
+			if (pathname) {
+				req.url = pathname;
+				delete req.headers['x-sveltekit-vercel-rewrite'];
+			}
 		}
 	}
 

@@ -108,6 +108,10 @@ Cloudflare Workers specific values in the `platform` property are emulated durin
 
 For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
 
+## Middleware
+
+The adapter supports the [middleware hook](hooks#Middleware) and by default runs on all requests except those to immutable files (normally within `_app/immutable`). You can adjust this through the [routes option](#Options-routes), which influences on which paths the underlying worker (which also includes the call to the middleware) runs.
+
 ## Notes
 
 Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](routing#server) in your SvelteKit app.

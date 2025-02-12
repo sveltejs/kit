@@ -182,6 +182,14 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+
+		supports: {
+			middleware: () => {
+				throw new Error(
+					'@sveltejs/adapter-cloudflare-workers does not support SvelteKit middleware. Use @sveltejs/adapter-cloudflare instead.'
+				);
+			}
 		}
 	};
 }
