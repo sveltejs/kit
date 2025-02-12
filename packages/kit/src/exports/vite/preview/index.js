@@ -47,7 +47,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		() => ({})
 	);
 	const { call_middleware } = await import(
-		pathToFileURL(join(dir, 'middleware-preview.js')).href
+		pathToFileURL(join(dir, 'call-middleware.js')).href
 	).catch(() => ({}));
 
 	set_assets(assets);
@@ -141,11 +141,16 @@ export async function preview(vite, vite_config, svelte_config) {
 				const url = new URL(result.request.url);
 				req.url = url.pathname + url.search;
 
-				const response = new Response();
-				result.add_response_headers(response);
+				for (const [key, value] of result.response_headers.entries()) {
+					res.setHeader(key, value);
+				}
+				// @ts-expect-error set headers directly but also put them on the response object
+				// so that we can set them once more after the SvelteKit runtime, in case
+				// the response overrides some of them.
+				res.__set_response_headers = result.set_response_headers;
 
 				for (const [key, value] of result.request.headers.entries()) {
-					res.setHeader(key, value);
+					req.headers[key] = value;
 				}
 
 				next();
@@ -234,24 +239,26 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			await setResponse(
-				res,
-				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
+			const response = await server.respond(request, {
+				getClientAddress: () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				},
+				read: (file) => {
+					if (file in manifest._.server_assets) {
+						return fs.readFileSync(join(dir, file));
+					}
 
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
-				})
-			);
+					return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+				},
+				emulator
+			});
+
+			// @ts-expect-error
+			res.__set_response_headers?.(res);
+
+			await setResponse(res, response);
 		});
 	};
 }

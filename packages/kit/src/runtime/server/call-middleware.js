@@ -64,7 +64,11 @@ export async function call_middleware(request, middleware) {
 
 	const add_response_headers = /** @param {Response} response */ (response) => {
 		for (const [key, value] of response_headers) {
-			response.headers.set(key, value);
+			if (key.toLowerCase() === 'set-cookie') {
+				response.headers.append('set-cookie', value);
+			} else {
+				response.headers.set(key, value);
+			}
 		}
 	};
 
