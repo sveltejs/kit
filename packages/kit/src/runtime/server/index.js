@@ -4,12 +4,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import {
-	set_read_implementation,
-	set_manifest,
-	set_websocket_implementation,
-	websocket_implementation
-} from '__sveltekit/server';
+import { set_read_implementation, set_manifest } from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -43,10 +38,9 @@ export class Server {
 	 * @param {{
 	 *   env: Record<string, string>;
 	 *   read?: (file: string) => ReadableStream;
-	 *   websocket?: () => boolean;
 	 * }} opts
 	 */
-	async init({ env, read, websocket }) {
+	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -70,10 +64,6 @@ export class Server {
 
 		if (read) {
 			set_read_implementation(read);
-		}
-
-		if (websocket) {
-			set_websocket_implementation(websocket);
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,
@@ -127,10 +117,6 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	getWebSocketHooksResolver(options) {
-		if (!websocket_implementation) {
-			throw new Error('WebSockets are not supported in this environment');
-		}
-
 		return get_websocket_hooks_resolver(this.#options, this.#manifest, {
 			...options,
 			error: false,

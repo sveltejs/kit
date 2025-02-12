@@ -18,18 +18,22 @@ declare module '@sveltejs/kit' {
 		 */
 		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
-		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 		 */
 		supports?: {
 			/**
-			 * Test support for `read` from `$app/server`
+			 * Test support for `read` from `$app/server`.
 			 * @param config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
+			/**
+			 * Test support for the `socket` export from a `+server.js` file.
+			 */
+			webSockets?: () => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
-		 * during dev, build and prerendering
+		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 	}
@@ -1291,8 +1295,6 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 		read?: (file: string) => ReadableStream;
-		/** A function that informs SvelteKit if WebSocket connections are supported in a given environment. */
-		websocket?: () => boolean;
 	}
 
 	export interface SSRManifest {

@@ -43,7 +43,6 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_websocket_implementation(implementation: () => boolean): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -161,20 +160,19 @@ export interface Env {
 	public: Record<string, string>;
 }
 
+type InternalRequestOptions = RequestOptions & {
+	prerendering?: PrerenderOptions;
+	read: (file: string) => Buffer;
+	/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
+};
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
-	respond(
-		request: Request,
-		options: RequestOptions & {
-			prerendering?: PrerenderOptions;
-			read: (file: string) => Buffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-			emulator?: Emulator;
-		}
-	): Promise<Response>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 	getWebSocketHooksResolver(
-		options: RequestOptions
+		options: InternalRequestOptions
 	): (info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>;
 }
 

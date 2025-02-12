@@ -469,15 +469,36 @@ export async function dev(vite, vite_config, svelte_config) {
 		return server;
 	}
 
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(from_fs(file));
+		}
+
+		return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+	}
+
+	/**
+	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {any} config
+	 * @param {import('types').PrerenderOption} prerender
+	 */
+	function before_handle(event, config, prerender) {
+		async_local_storage.enterWith({ event, config, prerender });
+	}
+
 	const ws = crossws({
 		resolve: async (req) => {
-			// we re-initialise the server here so that WebSocket communications
-			// use the latest server code after a file has been edited
 			const server = await init_server();
 			const resolve = server.getWebSocketHooksResolver({
 				getClientAddress: get_client_address(
 					/** @type {import('node:http').IncomingMessage} */ (req)
-				)
+				),
+				read,
+				before_handle,
+				emulator
 			});
 			return resolve(req);
 		}
@@ -496,12 +517,22 @@ export async function dev(vite, vite_config, svelte_config) {
 		vite.httpServer?.on(
 			'upgrade',
 			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
-				(req, socket, head) => {
+				async (req, socket, head) => {
 					if (
 						req.headers['sec-websocket-protocol'] !== 'vite-hmr' &&
 						req.headers.upgrade === 'websocket'
 					) {
-						ws.handleUpgrade(req, socket, head);
+						try {
+							// TODO: check if anymore of the middleware logic below needs to be duplicated here
+
+							// TODO: fix the incorrect type in crossws. handleUpgrade actually returns a promise
+							// eslint-disable-next-line @typescript-eslint/await-thenable
+							await ws.handleUpgrade(req, socket, head);
+						} catch (e) {
+							const error = coalesce_to_error(e);
+							socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+							socket.end(fix_stack_trace(error));
+						}
 					}
 				}
 			)
@@ -581,16 +612,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const rendered = await server.respond(request, {
 					getClientAddress: get_client_address(req),
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
-
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
+					read,
+					before_handle,
 					emulator
 				});
 

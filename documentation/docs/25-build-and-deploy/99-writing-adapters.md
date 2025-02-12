@@ -34,6 +34,11 @@ export default function (options) {
 				// Return `true` if the route with the given `config` can use `read`
 				// from `$app/server` in production, return `false` if it can't.
 				// Or throw a descriptive error describing how to configure the deployment
+			},
+			webSockets: () => {
+				// Return `true` if the production environment supports WebSockets,
+				// return `false` if it can't.
+				// Or throw a descriptive error describing how to configure the deployment
 			}
 		}
 	};
@@ -59,4 +64,4 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
-To add WebSockets to a SvelteKit adapter, you will need to handle upgrading the connection within the adapter. The crossws [adapter integration guides](https://crossws.unjs.io/adapters) may be a helpful reference.
+If your environment supports WebSockets, you will need to handle upgrading a HTTP request to a WebSocket connection. You can do this by listening for requests from the platform that have an `Upgrade: websocket` header, calling the `server.getWebSocketHooksResolver({ getClientAddress })` function to get the WebSocket hooks resolver and passing it to the crossws adapter `resolve` option. The [crossws Adapters section](https://crossws.unjs.io/adapters) provides examples of creating this integration within various environments.

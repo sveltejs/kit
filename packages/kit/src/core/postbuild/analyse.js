@@ -103,6 +103,15 @@ async function analyse({
 
 		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
 
+		// we need to perform this check ourselves instead of relying on `check_feature`
+		// because it can only detect features that have been imported in a chunk.
+		// In contrast, exporting a socket doesn't require importing any code
+		if (endpoint?.socket && !config.adapter?.supports?.webSockets?.()) {
+			throw new Error(
+				`Cannot export \`socket\` in ${route.id} when using ${config.adapter?.name}. Please ensure that your adapter is up to date and supports this feature.`
+			);
+		}
+
 		if (page?.prerender && endpoint?.prerender) {
 			throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
 		}
@@ -181,6 +190,7 @@ function analyse_endpoint(route, mod) {
 		config: mod.config,
 		entries: mod.entries,
 		methods,
+		socket: !!mod.socket,
 		prerender: mod.prerender ?? false
 	};
 }

@@ -24,8 +24,6 @@ declare module '__sveltekit/server' {
 
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
-	export function websocket_implementation(): boolean;
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
-	export function set_websocket_implementation(fn: () => boolean): void;
 }

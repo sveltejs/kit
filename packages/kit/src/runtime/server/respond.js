@@ -82,13 +82,17 @@ export function get_websocket_hooks_resolver(options, manifest, state) {
 			request = info;
 		}
 
-		const hooks = await handle_request(request, options, manifest, state, true);
+		const result = await handle_request(request, options, manifest, state, true);
 
-		if (hooks instanceof Response) {
-			return {};
+		if (result instanceof Response) {
+			// if the result is a response instead of the WebSocket hooks, it means
+			// an error has occured, so we return the bad response to the client
+			return {
+				upgrade: () => result
+			};
 		}
 
-		return hooks;
+		return result;
 	};
 }
 
@@ -430,6 +434,11 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		if (upgrade && route?.endpoint) {
 			const node = await route.endpoint();
+
+			if (DEV && node.socket) {
+				__SVELTEKIT_TRACK__('websockets');
+			}
+
 			return {
 				upgrade: async (req) => {
 					try {
