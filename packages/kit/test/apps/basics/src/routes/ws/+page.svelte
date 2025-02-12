@@ -11,7 +11,7 @@
 		socket = new WebSocket('/ws');
 
 		socket.onopen = () => {
-			messages = ['connected'];
+			messages = [...messages, 'connected'];
 		};
 
 		socket.onmessage = (event) => {
