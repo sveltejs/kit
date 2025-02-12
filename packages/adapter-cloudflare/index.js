@@ -139,7 +139,7 @@ function get_routes_json(
 	builder,
 	assets,
 	exclude_prerendered,
-	{ include = ['/*'], exclude = exclude_prerendered ? ['<all>'] : ['<build>', '<files>'] }
+	{ include = ['/*'], exclude = exclude_prerendered ? ['<all>'] : ['<build>'] }
 ) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
 		throw new Error('routes.include and routes.exclude must be arrays');

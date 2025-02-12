@@ -141,7 +141,24 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'render', excludedPaths: builder.prerendered.paths });
+	/** @type {{ assets: Set<string> }} */
+	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
+
+	const excludedPaths = [
+		...builder.prerendered.paths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		})
+	];
+
+	await bundle_edge_function({ builder, name: 'render', excludedPaths });
 }
 
 /**
@@ -205,9 +222,6 @@ async function bundle_edge_function({ builder, name, excludedPaths = [] }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
-	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
-
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
@@ -215,16 +229,7 @@ async function bundle_edge_function({ builder, name, excludedPaths = [] }) {
 		// Contains static files
 		`/${builder.getAppPath()}/*`,
 		...excludedPaths,
-		...Array.from(assets).flatMap((asset) => {
-			if (asset.endsWith('/index.html')) {
-				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
-			}
-			return `${builder.config.kit.paths.base}/${asset}`;
-		}),
+
 		// Should not be served by SvelteKit at all
 		'/.netlify/*'
 	];
