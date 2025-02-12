@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
@@ -10,6 +11,10 @@ import { method_not_allowed } from './utils.js';
  * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, mod, state) {
+	if (DEV && mod.socket) {
+		__SVELTEKIT_TRACK__('websockets');
+	}
+
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	// if we've ended up here, the request probably doesn't have the
