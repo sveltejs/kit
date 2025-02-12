@@ -59,7 +59,7 @@ Libraries work best in the browser with Vite when they distribute an ESM version
 
 If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
 
-## How do I use the view transitions API with SvelteKit?
+## How do I use the view transitions API?
 
 While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`]($app-navigation#onNavigate) to trigger a view transition on every client-side navigation.
 
@@ -81,15 +81,13 @@ onNavigate((navigation) => {
 
 For more, see ["Unlocking view transitions"](/blog/view-transitions) on the Svelte blog.
 
-## How do I use X with SvelteKit?
-
-Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
-
-### How do I setup a database?
+## How do I set up a database?
 
 Put the code to query your database in a [server route](./routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.server.js` and import your database helpers into any endpoint that needs them.
 
-### How do I use a client-side only library that depends on `document` or `window`?
+You can use [the Svelte CLI](/docs/cli/overview) to automatically set up database integrations.
+
+## How do I use a client-side library accessing `document` or `window`?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
@@ -157,7 +155,7 @@ Finally, you may also consider using an `{#await}` block:
 {/await}
 ```
 
-### How do I use a different backend API server?
+## How do I use a different backend API server?
 
 You can use [`event.fetch`](./load#Making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#Server-hooks-handleFetch) helpful.
 
@@ -175,7 +173,7 @@ export function GET({ params, url }) {
 
 (Note that you may also need to proxy `POST`/`PATCH` etc requests, and forward `request.headers`, depending on your needs.)
 
-### How do I use middleware?
+## How do I use middleware?
 
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
@@ -208,6 +206,8 @@ export default config;
 ```
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
+
+## How do I use Yarn?
 
 ### Does it work with Yarn 2?
 
