@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.17.2
+### Patch Changes
+
+
+- fix: add promise return type to the `enhance` action callback ([#13420](https://github.com/sveltejs/kit/pull/13420))
+
 ## 2.17.1
 ### Patch Changes
 
