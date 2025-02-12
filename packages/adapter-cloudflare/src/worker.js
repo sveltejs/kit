@@ -12,7 +12,7 @@ const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
 /** @type {import('crossws').ResolveHooks | undefined} */
-let resolve_websocket_hooks = undefined;
+let resolve_websocket_hooks;
 const ws = crossws({
 	resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
 });
@@ -32,7 +32,7 @@ const worker = {
 		await server.init({ env });
 
 		if (req.headers.get('upgrade') === 'websocket') {
-			resolve_websocket_hooks = server.resolveWebSocketHooks(
+			resolve_websocket_hooks = server.getWebSocketHooksResolver(
 				// @ts-ignore
 				options
 			);

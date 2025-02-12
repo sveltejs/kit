@@ -474,7 +474,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			// we re-initialise the server here so that WebSocket communications
 			// use the latest server code after a file has been edited
 			const server = await init_server();
-			const resolve = server.resolveWebSocketHooks({
+			const resolve = server.getWebSocketHooksResolver({
 				getClientAddress: get_client_address(
 					/** @type {import('node:http').IncomingMessage} */ (req)
 				)
@@ -497,7 +497,10 @@ export async function dev(vite, vite_config, svelte_config) {
 			'upgrade',
 			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
 				(req, socket, head) => {
-					if (req.headers['sec-websocket-protocol'] !== 'vite-hmr') {
+					if (
+						req.headers['sec-websocket-protocol'] !== 'vite-hmr' &&
+						req.headers.upgrade === 'websocket'
+					) {
 						ws.handleUpgrade(req, socket, head);
 					}
 				}

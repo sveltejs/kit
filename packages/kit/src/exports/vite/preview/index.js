@@ -54,10 +54,16 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	/** @type {import('crossws').ResolveHooks | undefined} */
-	let resolve_websocket_hooks = undefined;
 	const ws = crossws({
-		resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
+		resolve: (req) => {
+			const resolve = server.getWebSocketHooksResolver({
+				getClientAddress: get_client_address(
+					// the provided type for req is too generic. It is really just a standard node req
+					/** @type {import("node:http").IncomingMessage} */ (req)
+				)
+			});
+			return resolve(req);
+		}
 	});
 
 	return () => {
@@ -194,10 +200,9 @@ export async function preview(vite, vite_config, svelte_config) {
 			'upgrade',
 			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
 				(req, socket, head) => {
-					resolve_websocket_hooks = server.resolveWebSocketHooks({
-						getClientAddress: get_client_address(req)
-					});
-					ws.handleUpgrade(req, socket, head);
+					if (req.headers.upgrade === 'websocket') {
+						ws.handleUpgrade(req, socket, head);
+					}
 				}
 			)
 		);

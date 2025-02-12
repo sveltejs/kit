@@ -68,7 +68,7 @@ export async function respond(request, options, manifest, state) {
  * @param {import('types').SSRState} state
  * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>}
  */
-export function resolve_websocket_hooks(options, manifest, state) {
+export function get_websocket_hooks_resolver(options, manifest, state) {
 	return async (info) => {
 		/** @type {Request} */
 		let request;
@@ -92,8 +92,8 @@ export function resolve_websocket_hooks(options, manifest, state) {
 	};
 }
 
-// These type overloads are necessary because the `handle_request` function
-// can return a `Response` or a `Partial<import('crossws').Hooks>`.
+// we need the type overload so that TypeScript knows the return value
+// can only be a Response if the upgrade param was omitted
 /**
  * @overload
  * @param {Request} request
