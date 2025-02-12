@@ -546,12 +546,15 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				/** @type {{ middleware: import('@sveltejs/kit').Middleware } | undefined} */
 				let middleware;
 				let middleware_result;
 
 				if (resolve_entry(hooks.middleware)) {
 					try {
-						middleware = await vite.ssrLoadModule(hooks.middleware);
+						middleware = /** @type {{ middleware: import('@sveltejs/kit').Middleware }} */ (
+							await vite.ssrLoadModule(hooks.middleware)
+						);
 					} catch (e) {
 						console.error(e);
 					}
@@ -562,10 +565,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					middleware &&
 					(emulator?.shouldRunMiddleware?.(req.url, middleware, svelte_config.kit) ?? true)
 				) {
-					const { call_middleware } = await vite.ssrLoadModule(
-						`${runtime_base}/server/call-middleware.js`,
-						{ fixStacktrace: true }
-					);
+					const { call_middleware } =
+						/** @type {{ call_middleware: import('@sveltejs/kit').CallMiddleware }} */ (
+							await vite.ssrLoadModule(`${runtime_base}/server/call-middleware.js`, {
+								fixStacktrace: true
+							})
+						);
 					middleware_result = await call_middleware(request, middleware.middleware);
 
 					if (middleware_result instanceof Response) {

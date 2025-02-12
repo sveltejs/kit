@@ -80,7 +80,7 @@ function serve(path, client = false) {
 
 /** @type {import('polka').Middleware} */
 const middleware = async (req, res, next) => {
-	let { pathname } = polka_url_parser(req);
+	const { pathname } = polka_url_parser(req);
 
 	if (pathname.startsWith(`/${manifest.appPath}/immutable/`)) {
 		return next();

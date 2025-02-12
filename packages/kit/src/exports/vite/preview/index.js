@@ -43,9 +43,11 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
+	/** @type {{ middleware: import('@sveltejs/kit').Middleware }} */
 	const { middleware } = await import(pathToFileURL(join(dir, 'middleware.js')).href).catch(
 		() => ({})
 	);
+	/** @type {{ call_middleware: import('@sveltejs/kit').CallMiddleware }} */
 	const { call_middleware } = await import(
 		pathToFileURL(join(dir, 'call-middleware.js')).href
 	).catch(() => ({}));
@@ -134,12 +136,14 @@ export async function preview(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				for (const [key, value] of result.request.headers.entries()) {
+				for (const [key, value] of result.request_headers.entries()) {
 					req.headers[key] = value;
 				}
 
-				const url = new URL(result.request.url);
-				req.url = url.pathname + url.search;
+				if (result.did_reroute) {
+					const url = new URL(result.request.url);
+					req.url = url.pathname + url.search;
+				}
 
 				for (const [key, value] of result.response_headers.entries()) {
 					res.setHeader(key, value);
@@ -148,10 +152,6 @@ export async function preview(vite, vite_config, svelte_config) {
 				// so that we can set them once more after the SvelteKit runtime, in case
 				// the response overrides some of them.
 				res.__set_response_headers = result.set_response_headers;
-
-				for (const [key, value] of result.request.headers.entries()) {
-					req.headers[key] = value;
-				}
 
 				next();
 			});
@@ -256,7 +256,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			});
 
 			// @ts-expect-error
-			res.__set_response_headers?.(res);
+			res.__set_response_headers?.(response);
 
 			await setResponse(res, response);
 		});

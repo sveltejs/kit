@@ -270,7 +270,7 @@ const plugin = function (defaults = {}) {
 					const text = fs.readFileSync(middleware_path, 'utf-8');
 					if (text.includes('config') || text.includes('export *')) {
 						builder.log.error(
-							`Failed to import middleware hook. Make sure it is loadable during build, which is necessary to analyze the config object.`
+							'Failed to import middleware hook. Make sure it is loadable during build, which is necessary to analyze the config object.'
 						);
 						throw e;
 					}
