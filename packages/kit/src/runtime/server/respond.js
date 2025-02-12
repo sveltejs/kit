@@ -434,54 +434,55 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		if (upgrade && route?.endpoint) {
 			const node = await route.endpoint();
-
-			if (DEV && node.socket) {
-				__SVELTEKIT_TRACK__('websockets');
-			}
-
-			return {
-				upgrade: async (req) => {
-					try {
-						return await options.hooks.handle({
-							event,
-							resolve: async () => {
-								const init = (await node.socket?.upgrade?.(req)) ?? undefined;
-								return after_resolve(new Response(undefined, init));
-							}
-						});
-					} catch (e) {
-						return await handle_fatal_error(event, options, e);
-					}
-				},
-				open: async (peer) => {
-					try {
-						await node.socket?.open?.(peer);
-					} catch (e) {
-						await handle_fatal_error(event, options, e);
-					}
-				},
-				message: async (peer, message) => {
-					try {
-						await node.socket?.message?.(peer, message);
-					} catch (e) {
-						await handle_fatal_error(event, options, e);
-					}
-				},
-				close: async (peer, close_event) => {
-					try {
-						await node.socket?.close?.(peer, close_event);
-					} catch (e) {
-						await handle_fatal_error(event, options, e);
-					}
-				},
-				error: async (peer, error) => {
-					try {
-						await node.socket?.error?.(peer, error);
-					} catch (e) {
-						await handle_fatal_error(event, options, e);
-					}
+			if (node.socket) {
+				if (DEV) {
+					__SVELTEKIT_TRACK__('websockets');
 				}
-			};
+
+				return {
+					upgrade: async (req) => {
+						try {
+							return await options.hooks.handle({
+								event,
+								resolve: async () => {
+									const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+									return after_resolve(new Response(undefined, init));
+								}
+							});
+						} catch (e) {
+							return await handle_fatal_error(event, options, e);
+						}
+					},
+					open: async (peer) => {
+						try {
+							await node.socket?.open?.(peer);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					message: async (peer, message) => {
+						try {
+							await node.socket?.message?.(peer, message);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					close: async (peer, close_event) => {
+						try {
+							await node.socket?.close?.(peer, close_event);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					error: async (peer, error) => {
+						try {
+							await node.socket?.error?.(peer, error);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					}
+				};
+			}
 		}
 
 		const response = await options.hooks.handle({
