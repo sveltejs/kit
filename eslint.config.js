@@ -31,7 +31,7 @@ export default [
 		},
 		ignores: [
 			'packages/adapter-node/rollup.config.js',
-			'packages/adapter-node/tests/smoke.spec.js',
+			'packages/adapter-node/tests/**/*',
 			'packages/adapter-static/test/apps/**/*',
 			'packages/create-svelte/shared/**/*',
 			'packages/create-svelte/templates/**/*',
