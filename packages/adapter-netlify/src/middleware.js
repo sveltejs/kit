@@ -1,6 +1,8 @@
 import { middleware as user_middleware } from 'MIDDLEWARE';
 import { call_middleware } from 'CALL_MIDDLEWARE';
 
+// https://docs.netlify.com/edge-functions/overview/
+
 /**
  * @param {Request} request
  * @param {import('@netlify/edge-functions').Context} context

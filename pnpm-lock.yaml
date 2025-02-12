@@ -280,6 +280,9 @@ importers:
       import-meta-resolve:
         specifier: ^4.1.0
         version: 4.1.0
+      path-to-regexp:
+        specifier: ^6.3.0
+        version: 6.3.0
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
