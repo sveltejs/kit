@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import crossws from 'crossws/adapters/node';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
@@ -52,6 +53,31 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(join(dir, file));
+		}
+
+		return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+	}
+
+	const ws = crossws({
+		resolve: (req) => {
+			const resolve = server.getWebSocketHooksResolver({
+				getClientAddress: get_client_address(
+					// the provided type for req is too generic. It is really just a standard node req
+					/** @type {import("node:http").IncomingMessage} */ (req)
+				),
+				read,
+				emulator
+			});
+			return resolve(req);
+		}
+	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -183,6 +209,17 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
+		vite.middlewares.on(
+			'upgrade',
+			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
+				(req, socket, head) => {
+					if (req.headers.upgrade === 'websocket') {
+						ws.handleUpgrade(req, socket, head);
+					}
+				}
+			)
+		);
+
 		// SSR
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
@@ -195,18 +232,8 @@ export async function preview(vite, vite_config, svelte_config) {
 			await setResponse(
 				res,
 				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
+					getClientAddress: get_client_address(req),
+					read,
 					emulator
 				})
 			);
@@ -252,3 +279,14 @@ function scoped(scope, handler) {
 function is_file(path) {
 	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+const get_client_address = (req) => {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
+};

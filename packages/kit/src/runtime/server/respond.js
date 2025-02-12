@@ -59,6 +59,71 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
+	return handle_request(request, options, manifest, state);
+}
+
+/**
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>}
+ */
+export function get_websocket_hooks_resolver(options, manifest, state) {
+	return async (info) => {
+		/** @type {Request} */
+		let request;
+
+		// Check if info is a Peer object
+		if ('request' in info) {
+			// @ts-ignore the type UpgradeRequest is equivalent to Request
+			request = info.request;
+		} else {
+			// @ts-ignore although the type is RequestInit, it is almost always a Request object
+			request = info;
+		}
+
+		const result = await handle_request(request, options, manifest, state, true);
+
+		if (result instanceof Response) {
+			// if the result is a response instead of the WebSocket hooks, it means
+			// an error has occured, so we return the bad response to the client
+			return {
+				upgrade: () => result
+			};
+		}
+
+		return result;
+	};
+}
+
+// we need the type overload so that TypeScript knows the return value
+// can only be a Response if the upgrade param was omitted
+/**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+/**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean} upgrade
+ * @returns {Promise<Response | import('crossws').Hooks>}
+ */
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean=} upgrade
+ * @returns {Promise<Response | import('crossws').Hooks>}
+ */
+async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -346,25 +411,83 @@ export async function respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
+		/**
+		 * @param {Response} response
+		 * @returns {Response}
+		 */
+		const after_resolve = (response) => {
+			// add headers/cookies here, rather than inside `resolve`, so that we
+			// can do it once for all responses instead of once per `return`
+			for (const key in headers) {
+				const value = headers[key];
+				response.headers.set(key, /** @type {string} */ (value));
+			}
+
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+
+			if (state.prerendering && event.route.id !== null) {
+				response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+			}
+
+			return response;
+		};
+
+		if (upgrade && route?.endpoint) {
+			const node = await route.endpoint();
+			if (node.socket) {
+				if (DEV) {
+					__SVELTEKIT_TRACK__('websockets');
+				}
+
+				return {
+					upgrade: async (req) => {
+						try {
+							return await options.hooks.handle({
+								event,
+								resolve: async () => {
+									const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+									return after_resolve(new Response(undefined, init));
+								}
+							});
+						} catch (e) {
+							return await handle_fatal_error(event, options, e);
+						}
+					},
+					open: async (peer) => {
+						try {
+							await node.socket?.open?.(peer);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					message: async (peer, message) => {
+						try {
+							await node.socket?.message?.(peer, message);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					close: async (peer, close_event) => {
+						try {
+							await node.socket?.close?.(peer, close_event);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					error: async (peer, error) => {
+						try {
+							await node.socket?.error?.(peer, error);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					}
+				};
+			}
+		}
+
 		const response = await options.hooks.handle({
 			event,
-			resolve: (event, opts) =>
-				resolve(event, opts).then((response) => {
-					// add headers/cookies here, rather than inside `resolve`, so that we
-					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
-
-					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-
-					if (state.prerendering && event.route.id !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-					}
-
-					return response;
-				})
+			resolve: (event, opts) => resolve(event, opts).then(after_resolve)
 		});
 
 		// respond with 304 if etag matches

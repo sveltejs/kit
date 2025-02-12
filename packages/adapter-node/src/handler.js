@@ -2,6 +2,7 @@ import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import crossws from 'crossws/adapters/node';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
@@ -103,6 +104,55 @@ function serve_prerendered() {
 	};
 }
 
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+function get_options(req) {
+	return {
+		platform: { req },
+		/**
+		 * @returns {string}
+		 */
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${ENV_PREFIX + 'ADDRESS_HEADER'}=${address_header} but is absent from request`
+					);
+				}
+
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${addresses.length} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
+			}
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	};
+}
+
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
@@ -120,53 +170,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
-				}
-
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
-			}
-		})
-	);
+	await setResponse(res, await server.respond(request, get_options(req)));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -212,3 +216,24 @@ export const handler = sequence(
 		ssr
 	].filter(Boolean)
 );
+
+const ws = crossws({
+	resolve: (req) => {
+		const resolve = server.getWebSocketHooksResolver?.(
+			// the provided type for req is too generic. It is really just a standard node req
+			get_options(/** @type {import("node:http").IncomingMessage} */ (req))
+		);
+		return resolve?.(req) ?? {};
+	}
+});
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:stream').Duplex} socket
+ * @param {Buffer} head
+ */
+export function upgradeHandler(req, socket, head) {
+	if (req.headers.upgrade === 'websocket') {
+		ws.handleUpgrade(req, socket, head);
+	}
+}
