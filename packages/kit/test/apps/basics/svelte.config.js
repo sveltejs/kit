@@ -19,6 +19,10 @@ const config = {
 			}
 		},
 
+		experimental: {
+			middleware: true
+		},
+
 		prerender: {
 			entries: [
 				'*',
