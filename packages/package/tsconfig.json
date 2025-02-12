@@ -8,7 +8,6 @@
 		"module": "node16",
 		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
-		"verbatimModuleSyntax": true,
 		"paths": {
 			// internal use only
 			"types": ["./types/index"]
