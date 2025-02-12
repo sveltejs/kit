@@ -17,8 +17,8 @@ export async function render_endpoint(event, mod, state) {
 
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-	// if we've ended up here, the request probably doesn't have the
-	// `Upgrade` and `Connect` headers
+	// if we've ended up here, it means the request does not have both the
+	// `Upgrade: websocket` and the `Connect: upgrade` headers
 	if (method === 'GET' && !mod.GET && mod.socket) {
 		return new Response('This service requires use of the websocket protocol.', {
 			status: 426,
