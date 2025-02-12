@@ -54,13 +54,26 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(join(dir, file));
+		}
+
+		return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+	}
+
 	const ws = crossws({
 		resolve: (req) => {
 			const resolve = server.getWebSocketHooksResolver({
 				getClientAddress: get_client_address(
 					// the provided type for req is too generic. It is really just a standard node req
 					/** @type {import("node:http").IncomingMessage} */ (req)
-				)
+				),
+				read,
+				emulator
 			});
 			return resolve(req);
 		}
@@ -220,13 +233,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				res,
 				await server.respond(request, {
 					getClientAddress: get_client_address(req),
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
+					read,
 					emulator
 				})
 			);
