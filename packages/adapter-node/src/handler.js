@@ -70,6 +70,8 @@ function serve(path, client = false) {
 					// only apply to build directory, not e.g. version.json
 					if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					} else {
+						set_middleware_headers(res);
 					}
 				})
 		})
@@ -78,6 +80,12 @@ function serve(path, client = false) {
 
 /** @type {import('polka').Middleware} */
 const middleware = async (req, res, next) => {
+	let { pathname } = polka_url_parser(req);
+
+	if (pathname.startsWith(`/${manifest.appPath}/immutable/`)) {
+		return next();
+	}
+
 	/** @type {Request} */
 	let request;
 
@@ -106,13 +114,21 @@ const middleware = async (req, res, next) => {
 			req.headers[key] = value;
 		}
 
-		for (const [key, value] of result.response_headers) {
-			res.setHeader(key, value);
-		}
+		// @ts-expect-error
+		res.__response_headers = result.response_headers;
 
 		void next();
 	}
 };
+
+/**
+ * @param {import('polka').Response} res
+ */
+function set_middleware_headers(res) {
+	for (const [name, value] of /** @type {any} */ (res).__response_headers) {
+		res.setHeader(name, value);
+	}
+}
 
 // required because the static file server ignores trailing slashes
 /** @returns {import('polka').Middleware} */
@@ -136,6 +152,7 @@ function serve_prerendered() {
 		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (prerendered.has(location)) {
 			if (query) location += search;
+			set_middleware_headers(res);
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
@@ -160,53 +177,60 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
+	const response = await server.respond(request, {
+		platform: { req },
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${
+							ENV_PREFIX + 'ADDRESS_HEADER'
+						}=${address_header} but is absent from request`
+					);
 				}
 
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								addresses.length
+							} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
 			}
-		})
-	);
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+
+	for (const [name, value] of /** @type {any} */ (res).__response_headers) {
+		if (name === 'set-cookie') {
+			response.headers.append(name, value);
+		} else {
+			response.headers.set(name, value);
+		}
+	}
+
+	await setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -246,9 +270,8 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
 		has_middleware && middleware,
+		serve(path.join(dir, 'client'), true),
 		serve_prerendered(),
 		ssr
 	].filter(Boolean)
