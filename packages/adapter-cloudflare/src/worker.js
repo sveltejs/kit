@@ -32,7 +32,7 @@ const worker = {
 		await server.init({ env });
 
 		if (req.headers.get('upgrade') === 'websocket') {
-			resolve_websocket_hooks = server.getWebSocketHooksResolver(
+			resolve_websocket_hooks = server.getWebSocketHooksResolver?.(
 				// @ts-ignore
 				options
 			);

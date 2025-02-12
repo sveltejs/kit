@@ -219,11 +219,11 @@ export const handler = sequence(
 
 const ws = crossws({
 	resolve: (req) => {
-		const resolve = server.getWebSocketHooksResolver(
+		const resolve = server.getWebSocketHooksResolver?.(
 			// the provided type for req is too generic. It is really just a standard node req
 			get_options(/** @type {import("node:http").IncomingMessage} */ (req))
 		);
-		return resolve(req);
+		return resolve?.(req) ?? {};
 	}
 });
 
