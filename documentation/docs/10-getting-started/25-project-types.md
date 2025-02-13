@@ -18,7 +18,7 @@ You can use SvelteKit as a static site generator (SSG) that fully prerenders you
 
 You may also use [the prerender option](page-options#prerender) to prerender only some pages and then choose a different adapter with which to dynamically server-render other pages.
 
-## Single page apps (SPA)
+## Single-page app (SPA)
 
 You can [build single page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language).
 
