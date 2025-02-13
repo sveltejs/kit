@@ -121,7 +121,7 @@ export type CSRRoute = {
 };
 
 /**
- * Definition of a client side route as transported via `_app/route/...` when using server-side route resolution.
+ * Definition of a client side route as transported via `<pathname>/__route.js` when using server-side route resolution.
  */
 export type CSRRouteServer = {
 	id: string;

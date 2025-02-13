@@ -321,7 +321,7 @@ export async function render_response({
 			}
 		}
 
-		// prerender a `/_app/route/path/to/page.js` module
+		// prerender a `/path/to/page/__route.js` module
 		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
 			const pathname = add_resolution_suffix(event.url.pathname);
 
