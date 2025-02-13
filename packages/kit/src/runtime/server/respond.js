@@ -444,17 +444,29 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 				return {
 					upgrade: async (req) => {
+						/** @type {Response} */
+						let response;
+
 						try {
-							return await options.hooks.handle({
+							response = await options.hooks.handle({
 								event,
 								resolve: async () => {
 									const init = (await node.socket?.upgrade?.(req)) ?? undefined;
-									return after_resolve(new Response(undefined, init));
+									const upgrade_response = new Response(undefined, init);
+									upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+									return after_resolve(upgrade_response);
 								}
 							});
 						} catch (e) {
 							return await handle_fatal_error(event, options, e);
 						}
+
+						// if handle returned a different response then we abort upgrading the connection
+						if (!response.headers.has('x-sveltekit-upgrade')) {
+							throw response;
+						}
+
+						return response;
 					},
 					open: async (peer) => {
 						try {
