@@ -8,7 +8,7 @@ If you don't have a particular way you'd like to build your application in mind,
 
 The project structure and routing will be the same regardless of the project type that you choose. If you are building an application with no backend or where the backend is running in a difference service, you can simply skip over and ignore the parts of the docs talking about `server` files.
 
-## Default hybrid rendered app
+## Default: hybrid-rendered app
 
 By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages.
 
