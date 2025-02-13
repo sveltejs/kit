@@ -406,6 +406,17 @@ declare module '@sveltejs/kit' {
 			privatePrefix?: string;
 		};
 		/**
+		 * Experimental features. Not subject to semver; may be updated or removed in any release.
+		 */
+		experimental?: {
+			/**
+			 * Experimental middleware support. Allows creation of `hooks.middleware.js` files that export functions to run on the server prior to all requests to the app.
+			 * @default false
+			 * @since 2.18.0
+			 */
+			middleware?: boolean;
+		};
+		/**
 		 * Where to find various files within your project.
 		 */
 		files?: {

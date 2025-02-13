@@ -138,6 +138,9 @@ export function validate_config(config) {
 	}
 
 	if (resolve_entry(validated.kit.files.hooks.middleware)) {
+		if (!validated.kit.experimental.middleware) {
+			throw new Error('To use middleware, set `experimental.middleware` to `true`');
+		}
 		check_middleware_feature(validated.kit.adapter);
 	}
 
