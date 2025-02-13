@@ -21,7 +21,7 @@ export function strip_data_suffix(pathname) {
 	return pathname.slice(0, -DATA_SUFFIX.length);
 }
 
-const ROUTE_SUFFIX = `/__route.js`;
+const ROUTE_SUFFIX = '/__route.js';
 
 /**
  * @param {string} pathname
