@@ -22,9 +22,9 @@ You may also use [the prerender option](page-options#prerender) to prerender onl
 
 You can [build single page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language).
 
-## Traditional multi-page app (MPA)
+## Multi-page app (MPA)
 
-Applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps. In SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
+Traditional applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps. In SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
 
 ## Backend in another language
 
