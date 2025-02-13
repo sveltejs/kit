@@ -14,7 +14,7 @@ import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_resolution_prefix } from '../../pathname.js';
+import { add_resolution_suffix } from '../../pathname.js';
 
 // TODO rename this function/module
 
@@ -323,7 +323,7 @@ export async function render_response({
 
 		// prerender a `/_app/route/path/to/page.js` module
 		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
-			const pathname = add_resolution_prefix(event.url.pathname);
+			const pathname = add_resolution_suffix(event.url.pathname);
 
 			state.prerendering.dependencies.set(
 				pathname,

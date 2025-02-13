@@ -39,7 +39,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
-import { add_data_suffix, add_resolution_prefix } from '../pathname.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -1265,7 +1265,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			add_resolution_prefix(url.pathname)
+			add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
