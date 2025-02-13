@@ -151,6 +151,16 @@ export const handle = sequence(
 			event.locals.url = new URL(event.request.url);
 		}
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		const response = await resolve(event);
+		const headers = event.request.headers;
+
+		if (headers.get('upgrade') === 'websocket' && event.url.pathname === '/ws/handle') {
+			return new Response('handle was called');
+		}
+
+		return response;
 	}
 );
 

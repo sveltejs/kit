@@ -1,45 +1,33 @@
+import { error } from '@sveltejs/kit';
+
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(req) {
-		console.log(`[ws] upgrade ${req.headers.get('origin')}`);
+		const url = new URL(req.url);
+		if (url.searchParams.has('me')) {
+			return;
+		}
+		error(403, 'Forbidden');
 	},
-
 	open(peer) {
-		console.log(`[ws] open: ${peer.id}`);
+		peer.send('open hook works');
+		peer.subscribe('chat');
 	},
-
 	message(peer, message) {
 		const data = message.text();
-
-		console.log('[ws] message:', data);
 
 		if (data === 'ping') {
 			peer.send('pong');
 			return;
 		}
 
-		if (data === 'add') {
-			peer.send('added');
-			return;
-		}
-
-		if (data === 'broadcast') {
-			peer.peers.forEach((socket) => {
-				socket.send(data);
-			});
-			return;
-		}
-
-		if (data === 'error') {
-			throw new Error('client error');
-		}
+		peer.publish('chat', data);
 	},
-
 	close(peer, event) {
-		console.log('[ws] close', event);
+		peer.publish('chat', `close: ${event.code} ${event.reason}`);
+		peer.unsubscribe('chat');
 	},
-
 	error(peer, error) {
-		console.log('[ws] error', error);
+		console.error(error);
 	}
 };

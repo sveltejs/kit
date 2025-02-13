@@ -287,6 +287,27 @@ test.describe('Endpoints', () => {
 	});
 });
 
+test.describe('WebSockets', () => {
+	test('handle works', async ({ request }) => {
+		const response = await request.get('/ws/handle', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('handle was called');
+	});
+
+	// TODO: test non-upgrade request returns 426 if no page / GET handler
+
+	// TODO: test upgrade request to non-existent route returns 404
+});
+
 test.describe('Errors', () => {
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');

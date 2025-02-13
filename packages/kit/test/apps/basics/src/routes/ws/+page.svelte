@@ -1,6 +1,6 @@
 <script>
 	/** @type {WebSocket | undefined} */
-	let socket;
+	let primary_socket;
 
 	/** @type {string[]} */
 	let messages = [];
@@ -8,35 +8,42 @@
 
 <button
 	on:click={() => {
-		socket = new WebSocket('/ws');
+		primary_socket = new WebSocket('/ws?me');
 
-		socket.onopen = () => {
+		primary_socket.onopen = () => {
 			messages = [...messages, 'connected'];
 		};
 
-		socket.onmessage = (event) => {
+		primary_socket.onmessage = (event) => {
 			messages = [...messages, event.data];
-		};
-
-		socket.onerror = (event) => {
-			console.error(event);
-			messages = [...messages, 'error'];
-		};
-
-		socket.onclose = () => {
-			messages = [...messages, 'disconnected'];
 		};
 	}}>open</button
 >
 <button
 	on:click={() => {
-		socket.send('ping');
-	}}>ping</button
+		const socket = new WebSocket('/ws');
+		socket.onerror = () => {
+			messages = [...messages, 'rejected'];
+		};
+	}}>rejection</button
 >
-<button on:click={() => socket.send('add')}>add</button>
-<button on:click={() => socket.send('broadcast')}>broadcast</button>
-<button on:click={() => socket.send('error')}>error</button>
-<button on:click={() => socket.close()}>close</button>
+<button on:click={() => primary_socket.send('ping')}>ping</button>
+<button
+	on:click={() => {
+		const socket = new WebSocket('/ws?me');
+		socket.onopen = () => {
+			socket.send('hello');
+		};
+	}}>chat</button
+>
+<button
+	on:click={() => {
+		const socket = new WebSocket('/ws?me');
+		socket.onopen = () => {
+			socket.close(1000, 'test');
+		};
+	}}>join and leave</button
+>
 
 <ul>
 	{#each messages as message}

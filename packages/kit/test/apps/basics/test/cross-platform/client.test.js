@@ -1012,3 +1012,55 @@ test.describe('Load', () => {
 		});
 	}
 });
+
+test.describe('WebSockets', () => {
+	test('upgrade hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+	});
+
+	test('error helper rejects upgrade', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'rejection' }).click();
+		expect(page.getByText('rejected')).toBeVisible();
+	});
+
+	test('open hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('open hook works')).toBeVisible();
+	});
+
+	test('message hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'ping' }).click();
+		expect(page.getByText('pong')).toBeVisible();
+	});
+
+	test('pub/sub', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'chat' }).click();
+		expect(page.getByText('hello')).toBeVisible();
+	});
+
+	test('close hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'join and leave' }).click();
+		expect(page.getByText('close: 1000 test')).toBeVisible();
+	});
+
+	// TODO: test error hook runs
+});
