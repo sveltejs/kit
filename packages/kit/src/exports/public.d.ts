@@ -1305,7 +1305,9 @@ export class Server {
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 	getWebSocketHooksResolver(
 		options: RequestOptions
-	): (info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks>>;
+	): (
+		info: RequestInit | import('crossws').Peer
+	) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
 }
 
 export interface ServerInitOptions {

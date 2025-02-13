@@ -11,11 +11,16 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
-/** @type {import('crossws').ResolveHooks | undefined} */
+/** @type {import('crossws').ResolveHooks} */
 let resolve_websocket_hooks;
-const ws = crossws({
-	resolve: (req) => resolve_websocket_hooks?.(req) ?? {}
-});
+/** @type {import('crossws/adapters/cloudflare').CloudflareAdapter} */
+let ws;
+
+if (server.getWebSocketHooksResolver) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
@@ -31,8 +36,8 @@ const worker = {
 		// @ts-ignore
 		await server.init({ env });
 
-		if (req.headers.get('upgrade') === 'websocket') {
-			resolve_websocket_hooks = server.getWebSocketHooksResolver?.(
+		if (req.headers.get('upgrade') === 'websocket' && ws) {
+			resolve_websocket_hooks = server.getWebSocketHooksResolver(
 				// @ts-ignore
 				options
 			);

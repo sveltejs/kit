@@ -217,23 +217,55 @@ export const handler = sequence(
 	].filter(Boolean)
 );
 
-const ws = crossws({
-	resolve: (req) => {
-		const resolve = server.getWebSocketHooksResolver?.(
-			// the provided type for req is too generic. It is really just a standard node req
-			get_options(/** @type {import("node:http").IncomingMessage} */ (req))
-		);
-		return resolve?.(req) ?? {};
-	}
-});
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/node').NodeAdapter} */
+let ws;
+
+if (server.getWebSocketHooksResolver) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
 
 /**
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:stream').Duplex} socket
  * @param {Buffer} head
  */
-export function upgradeHandler(req, socket, head) {
-	if (req.headers.upgrade === 'websocket') {
+export async function upgradeHandler(req, socket, head) {
+	if (req.headers.upgrade === 'websocket' && ws) {
+		/** @type {Request} */
+		let request;
+
+		// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+		// see https://github.com/unjs/crossws/issues/137
+		try {
+			request = await getRequest({
+				base: origin || get_origin(req.headers),
+				request: req,
+				bodySizeLimit: body_size_limit
+			});
+		} catch {
+			socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+			socket.end();
+			return;
+		}
+
+		Object.defineProperty(request, 'context', {
+			enumerable: true,
+			value: {}
+		});
+
+		const resolve = server.getWebSocketHooksResolver(get_options(req));
+
+		const hooks = await resolve(request);
+		const upgrade = hooks.upgrade;
+		hooks.upgrade = () =>
+			upgrade(/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request));
+
+		resolve_websocket_hooks = () => hooks;
+
 		ws.handleUpgrade(req, socket, head);
 	}
 }

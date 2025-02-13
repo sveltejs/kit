@@ -447,6 +447,15 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_base(req) {
+		return `${vite.config.server.https ? 'https' : 'http'}://${
+			req.headers[':authority'] || req.headers.host
+		}`;
+	}
+
 	async function init_server() {
 		// we have to import `Server` before calling `set_assets`
 		const { Server } = /** @type {import('types').ServerModule} */ (
@@ -489,19 +498,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		async_local_storage.enterWith({ event, config, prerender });
 	}
 
+	/** @type {import('crossws').ResolveHooks} */
+	let resolve_websocket_hooks;
 	const ws = crossws({
-		resolve: async (req) => {
-			const server = await init_server();
-			const resolve = server.getWebSocketHooksResolver({
-				getClientAddress: get_client_address(
-					/** @type {import('node:http').IncomingMessage} */ (req)
-				),
-				read,
-				before_handle,
-				emulator
-			});
-			return resolve(req);
-		}
+		resolve: (req) => resolve_websocket_hooks(req)
 	});
 
 	return () => {
@@ -516,26 +516,57 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		vite.httpServer?.on(
 			'upgrade',
-			/** @type {(req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void} */ (
-				async (req, socket, head) => {
-					if (
-						req.headers['sec-websocket-protocol'] !== 'vite-hmr' &&
-						req.headers.upgrade === 'websocket'
-					) {
-						try {
-							// TODO: check if anymore of the middleware logic below needs to be duplicated here
+			/**
+			 * @param {import('node:http').IncomingMessage} req
+			 * @param {import('node:stream').Duplex} socket
+			 * @param {Buffer} head
+			 */
+			async (req, socket, head) => {
+				if (
+					req.headers['sec-websocket-protocol'] !== 'vite-hmr' &&
+					req.headers.upgrade === 'websocket'
+				) {
+					try {
+						// TODO: check if anymore of the middleware logic below needs to be duplicated here
 
-							// TODO: fix the incorrect type in crossws. handleUpgrade actually returns a promise
-							// eslint-disable-next-line @typescript-eslint/await-thenable
-							await ws.handleUpgrade(req, socket, head);
-						} catch (e) {
-							const error = coalesce_to_error(e);
-							socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
-							socket.end(fix_stack_trace(error));
-						}
+						// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+						// see https://github.com/unjs/crossws/issues/137
+						const request = await getRequest({
+							base: get_base(req),
+							request: req
+						});
+						Object.defineProperty(request, 'context', {
+							enumerable: true,
+							value: {}
+						});
+
+						const server = await init_server();
+						const resolve = server.getWebSocketHooksResolver({
+							getClientAddress: get_client_address(req),
+							read,
+							before_handle,
+							emulator
+						});
+
+						const hooks = await resolve(request);
+						const upgrade = hooks.upgrade;
+						hooks.upgrade = () =>
+							upgrade(
+								/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request)
+							);
+
+						resolve_websocket_hooks = () => hooks;
+
+						// TODO: remove this eslint disable after crossws releases the type fix
+						// eslint-disable-next-line @typescript-eslint/await-thenable -- handleUpgrade actually returns Promise<void>
+						await ws.handleUpgrade(req, socket, head);
+					} catch (e) {
+						const error = coalesce_to_error(e);
+						socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+						socket.end(fix_stack_trace(error));
 					}
 				}
-			)
+			}
 		);
 
 		vite.middlewares.use(async (req, res) => {
@@ -543,9 +574,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
-				const base = `${vite.config.server.https ? 'https' : 'http'}://${
-					req.headers[':authority'] || req.headers.host
-				}`;
+				const base = get_base(req);
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
 				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
