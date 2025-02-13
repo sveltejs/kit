@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assert, expect, test } from 'vitest';
-import { validate_config, load_config } from './index.js';
 import process from 'node:process';
+import { assert, expect, test, vi } from 'vitest';
+import { validate_config, load_config } from './index.js';
+import * as filesystem_utils from '../../utils/filesystem.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -75,6 +76,9 @@ const get_defaults = (prefix = '') => ({
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
+		},
+		experimental: {
+			middleware: false
 		},
 		files: {
 			assets: join(prefix, 'static'),
@@ -298,6 +302,28 @@ test('fails if prerender.entries are invalid', () => {
 			}
 		});
 	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+});
+
+test('can use middleware when setting the experimental flag', () => {
+	const spy = vi.spyOn(filesystem_utils, 'resolve_entry').mockReturnValue('/some/path');
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					middleware: true
+				}
+			}
+		});
+	});
+	spy.mockRestore();
+});
+
+test('fail if middleware is used without setting the experimental flag', () => {
+	const spy = vi.spyOn(filesystem_utils, 'resolve_entry').mockReturnValue('/some/path');
+	assert.throws(() => {
+		validate_config({});
+	}, /^To use middleware, set `experimental.middleware` to `true`$/);
+	spy.mockRestore();
 });
 
 /**
