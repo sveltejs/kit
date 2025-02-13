@@ -20,7 +20,7 @@ You may also use [the prerender option](page-options#prerender) to prerender onl
 
 ## Single page apps (SPA)
 
-You can [build single page apps (SPA)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-lanugage).
+You can [build single page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language).
 
 ## Traditional multi-page app (MPA)
 
