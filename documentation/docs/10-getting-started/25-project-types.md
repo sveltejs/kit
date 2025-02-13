@@ -10,7 +10,7 @@ The project structure and routing will be the same regardless of the project typ
 
 ## Default hybrid rendered app
 
-By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components which is typically faster and eliminates a flash when navigating between pages.
+By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages.
 
 ## Static site generator (SSG)
 
