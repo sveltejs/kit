@@ -420,7 +420,15 @@ export async function dev(vite, vite_config, svelte_config) {
 		return ws_send.apply(vite.ws, args);
 	};
 
-	vite.middlewares.use((req, res, next) => {
+	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const emulator = await svelte_config.kit.adapter?.emulate?.({
+		importFile: (file) => vite.ssrLoadModule(file)
+	});
+
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_asset_uri(req) {
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${
 			req.headers[':authority'] || req.headers.host
 		}`;
@@ -433,18 +441,41 @@ export async function dev(vite, vite_config, svelte_config) {
 
 			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
 				if (has_correct_case(file, svelte_config.kit.files.assets)) {
-					req.url = encodeURI(pathname); // don't need query/hash
-					asset_server(req, res);
-					return;
+					return encodeURI(pathname); // don't need query/hash
 				}
 			}
+		}
+	}
+
+	// adapter-provided middleware
+	vite.middlewares.use(async (req, res, next) => {
+		if (!emulator?.beforeRequest) return next();
+		if (req.url?.startsWith('/@fs/') || req.url?.includes('virtual:')) return next();
+
+		const base = `${vite.config.server.https ? 'https' : 'http'}://${
+			req.headers[':authority'] || req.headers.host
+		}`;
+		const decoded = decodeURI(new URL(base + req.url).pathname);
+		const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+		const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+		const is_static_asset = !!get_asset_uri(req);
+
+		if (is_file && !is_static_asset) {
+			return next();
+		}
+
+		return emulator.beforeRequest(req, res, next);
+	});
+
+	vite.middlewares.use((req, res, next) => {
+		const asset_uri = get_asset_uri(req);
+		if (asset_uri) {
+			req.url = asset_uri;
+			return asset_server(req, res);
 		}
 
 		next();
 	});
-
-	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(

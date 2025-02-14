@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { IncomingMessage, ServerResponse } from 'node:http';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -31,7 +32,7 @@ declare module '@sveltejs/kit' {
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering
 		 */
-		emulate?: () => MaybePromise<Emulator>;
+		emulate?: (helpers: { importFile: (fileUrl: string) => Promise<any> }) => MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -257,6 +258,18 @@ declare module '@sveltejs/kit' {
 		 * and returns an `App.Platform` object
 		 */
 		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+		/**
+		 * Runs before every request that would hit the SvelteKit runtime and before requests to static assets in dev mode.
+		 * Can be used to replicate middleware behavior in dev mode.
+		 * Implementation notes:
+		 * - `req.url` does not include the base path, but `req.originalUrl` does, and you will have to adjust both in case you want to proxy/rewrite requests.
+		 * - you either have to call `next()` to pass on the request/response, or `res.end()` to finish the request
+		 */
+		beforeRequest?: (
+			req: IncomingMessage & { originalUrl?: string },
+			res: ServerResponse,
+			next: () => void
+		) => MaybePromise<void>;
 	}
 
 	export interface KitConfig {
