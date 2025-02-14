@@ -14,7 +14,8 @@ const config = {
 				};
 			},
 			supports: {
-				read: () => true
+				read: () => true,
+				webSockets: () => true
 			}
 		},
 

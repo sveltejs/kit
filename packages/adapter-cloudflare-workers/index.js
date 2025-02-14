@@ -182,6 +182,9 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			webSockets: () => true
 		}
 	};
 }

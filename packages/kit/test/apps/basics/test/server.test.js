@@ -287,6 +287,67 @@ test.describe('Endpoints', () => {
 	});
 });
 
+test.describe('WebSockets', () => {
+	test('handle works', async ({ request }) => {
+		const response = await request.get('/ws/handle', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('handle was called');
+	});
+
+	test('upgrade request to non-existent route returns not found', async ({ request }) => {
+		const response = await request.get('/ws/non-existent-route', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(404);
+	});
+
+	test('upgrade request to endpoint without socket returns method not allowed', async ({
+		request
+	}) => {
+		const response = await request.get('/ws/no-socket', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toBe('GET method not allowed');
+	});
+
+	test('non-upgrade request returns upgrade required when no GET handler exists', async ({
+		request
+	}) => {
+		const response = await request.get('/ws', {
+			headers: {
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(426);
+		expect(await response.text()).toBe('This service requires use of the websocket protocol.');
+	});
+});
+
 test.describe('Errors', () => {
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');

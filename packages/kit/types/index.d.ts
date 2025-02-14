@@ -18,18 +18,22 @@ declare module '@sveltejs/kit' {
 		 */
 		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
-		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 		 */
 		supports?: {
 			/**
-			 * Test support for `read` from `$app/server`
+			 * Test support for `read` from `$app/server`.
 			 * @param config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
+			/**
+			 * Test support for the `socket` export from a `+server.js` file.
+			 */
+			webSockets?: () => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
-		 * during dev, build and prerendering
+		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 	}
@@ -1281,6 +1285,11 @@ declare module '@sveltejs/kit' {
 		constructor(manifest: SSRManifest);
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
+		getWebSocketHooksResolver(
+			options: RequestOptions
+		): (
+			info: RequestInit | import('crossws').Peer
+		) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
 	}
 
 	export interface ServerInitOptions {
@@ -1385,7 +1394,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+	 * Shape of a form action method that is part of `export const actions = {...}` in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
@@ -1395,7 +1404,7 @@ declare module '@sveltejs/kit' {
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
-	 * Shape of the `export const actions = {..}` object in `+page.server.js`.
+	 * Shape of the `export const actions = {...}` object in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
@@ -1434,7 +1443,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function
+	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function.
 	 */
 	export interface Redirect {
 		/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
@@ -1468,6 +1477,27 @@ declare module '@sveltejs/kit' {
 				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
 		  }) => MaybePromise<void>)
 	>;
+
+	/**
+	 * Shape of the `export const socket = {...}` object in `+server.js`.
+	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+	 * @since 2.18.0
+	 */
+	export type Socket = Partial<import('crossws').Hooks>;
+
+	/**
+	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
+	 * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+	 * @since 2.18.0
+	 */
+	export type Peer = import('crossws').Peer;
+
+	/**
+	 * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
+	 * See [Message](https://crossws.unjs.io/guide/message) for more information.
+	 * @since 2.18.0
+	 */
+	export type Message = import('crossws').Message;
 
 	/**
 	 * The type of `export const snapshot` exported from a page or layout component.
@@ -1726,7 +1756,7 @@ declare module '@sveltejs/kit' {
 			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
-			nodes?: (string | undefined)[];
+			nodes?: Array<string | undefined>;
 			/**
 			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
@@ -1882,6 +1912,7 @@ declare module '@sveltejs/kit' {
 	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 	type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+		socket?: Socket;
 		prerender?: PrerenderOption;
 		trailingSlash?: TrailingSlash;
 		config?: any;
@@ -2006,6 +2037,7 @@ declare module '@sveltejs/kit' {
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
 		status: number;
 		body: App.Error;
+		response: Response;
 		toString(): string;
 	}
 	class Redirect_1 {
