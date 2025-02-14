@@ -100,7 +100,10 @@ export async function resolve_route(resolved_path, url, manifest) {
  */
 export function create_server_routing_response(route, params, url, manifest) {
 	const headers = new Headers({
-		'content-type': 'application/javascript; charset=utf-8'
+		'content-type': 'application/javascript; charset=utf-8',
+		// Because we load this on the client via import('...') it's only requested once per session.
+		// We make sure that it is not cached beyond that.
+		'cache-control': 'no-store'
 	});
 
 	if (route) {

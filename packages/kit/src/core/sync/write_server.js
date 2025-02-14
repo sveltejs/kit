@@ -68,18 +68,27 @@ export async function get_hooks() {
 	let handleFetch;
 	let handleError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	let server_reroute;
+	${server_hooks ? `({ handle, handleFetch, handleError, init, reroute: server_reroute } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
 	${universal_hooks ? `({ reroute, transport } = await import(${s(universal_hooks)}));` : ''}
+
+	if (server_reroute && reroute) {
+		throw new Error('Cannot define "reroute" in both server hooks and universal hooks. Remove the function from one of the files.'); 
+	}
+
+	if (server_reroute && ${config.kit.router.resolution === 'client'}) {
+		throw new Error('Cannot define "reroute" in server hooks when router.resolution is set to "client". Remove the function from the file, or set router.resolution to "server".');
+	}
 
 	return {
 		handle,
 		handleFetch,
 		handleError,
 		init,
-		reroute,
+		reroute: server_reroute ?? reroute,
 		transport
 	};
 }
