@@ -15,7 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{ middlewares: import('connect').Server }} vite
+ * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -209,7 +209,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
-		vite.middlewares.on(
+		vite.httpServer.on(
 			'upgrade',
 			/**
 			 * @param {import('node:http').IncomingMessage} req
