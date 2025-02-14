@@ -30,9 +30,9 @@ import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
 	has_data_suffix,
-	has_resolution_prefix,
+	has_resolution_suffix,
 	strip_data_suffix,
-	strip_resolution_prefix
+	strip_resolution_suffix
 } from '../pathname.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -162,11 +162,11 @@ async function handle_request(request, options, manifest, state, upgrade) {
 	 * If the request is for a route resolution, first modify the URL, then continue as normal
 	 * for path resolution, then return the route object as a JS file.
 	 */
-	const is_route_resolution_request = has_resolution_prefix(url.pathname);
+	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
 
 	if (is_route_resolution_request) {
-		url.pathname = strip_resolution_prefix(url.pathname);
+		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +

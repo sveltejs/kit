@@ -1,5 +1,3 @@
-import { base, app_dir } from '__sveltekit/paths';
-
 const DATA_SUFFIX = '/__data.json';
 const HTML_DATA_SUFFIX = '.html__data.json';
 
@@ -23,14 +21,14 @@ export function strip_data_suffix(pathname) {
 	return pathname.slice(0, -DATA_SUFFIX.length);
 }
 
-const ROUTE_PREFIX = `${base}/${app_dir}/route`;
+const ROUTE_SUFFIX = '/__route.js';
 
 /**
  * @param {string} pathname
  * @returns {boolean}
  */
-export function has_resolution_prefix(pathname) {
-	return pathname === `${ROUTE_PREFIX}.js` || pathname.startsWith(`${ROUTE_PREFIX}/`);
+export function has_resolution_suffix(pathname) {
+	return pathname.endsWith(ROUTE_SUFFIX);
 }
 
 /**
@@ -38,17 +36,14 @@ export function has_resolution_prefix(pathname) {
  * @param {string} pathname
  * @returns {string}
  */
-export function add_resolution_prefix(pathname) {
-	let normalized = pathname.slice(base.length);
-	if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
-
-	return `${ROUTE_PREFIX}${normalized}.js`;
+export function add_resolution_suffix(pathname) {
+	return pathname.replace(/\/$/, '') + ROUTE_SUFFIX;
 }
 
 /**
  * @param {string} pathname
  * @returns {string}
  */
-export function strip_resolution_prefix(pathname) {
-	return base + (pathname.slice(ROUTE_PREFIX.length, -3) || '/');
+export function strip_resolution_suffix(pathname) {
+	return pathname.slice(0, -ROUTE_SUFFIX.length);
 }
