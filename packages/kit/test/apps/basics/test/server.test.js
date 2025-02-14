@@ -320,7 +320,7 @@ test.describe('WebSockets', () => {
 	test('upgrade request to endpoint without socket returns method not allowed', async ({
 		request
 	}) => {
-		const response = await request.get('/endpoint-output/without-socket', {
+		const response = await request.get('/ws/no-socket', {
 			headers: {
 				upgrade: 'websocket',
 				connection: 'Upgrade',
