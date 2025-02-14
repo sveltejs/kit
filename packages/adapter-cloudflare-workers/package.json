@@ -46,6 +46,7 @@
 		"@cloudflare/kv-asset-handler": "^0.3.0",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
+		"jsonc-parser": "^3.3.1",
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {

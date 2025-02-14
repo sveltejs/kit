@@ -5,6 +5,7 @@ import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
+import * as jsoncParser from 'jsonc-parser';
 
 /**
  * @typedef {{
@@ -192,16 +193,30 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
  * @returns {WranglerConfig}
  */
 function validate_config(builder, config_file) {
-	if (!existsSync(config_file) && config_file === 'wrangler.toml' && existsSync('wrangler.json')) {
-		builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
-		config_file = 'wrangler.json';
+	if (!existsSync(config_file) && config_file === 'wrangler.toml') {
+		if (existsSync('wrangler.json')) {
+			builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
+			config_file = 'wrangler.json';
+		} else if (existsSync('wrangler.jsonc')) {
+			builder.log.minor('Default wrangler.toml does not exist. Using wrangler.jsonc.');
+			config_file = 'wrangler.jsonc';
+		}
 	}
 	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			if (config_file.endsWith('.json')) {
+			const errors = /** @type {import('jsonc-parser').ParseError[]} */ ([]);
+
+			if (config_file.endsWith('.jsonc')) {
+				wrangler_config =
+					/** @type {WranglerConfig} */
+					jsoncParser.parse(readFileSync(config_file, 'utf-8'), errors, {
+						allowTrailingComma: true
+					});
+				if (errors.length) throw jsoncParser.printParseErrorCode(errors[0].error);
+			} else if (config_file.endsWith('.json')) {
 				wrangler_config = /** @type {WranglerConfig} */ (
 					JSON.parse(readFileSync(config_file, 'utf-8'))
 				);
