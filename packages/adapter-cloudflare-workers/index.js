@@ -1,11 +1,10 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
+import { existsSync, writeFileSync } from 'node:fs';
+import path, { posix, dirname } from 'node:path';
 import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
-import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy } from 'wrangler';
-import * as jsoncParser from 'jsonc-parser';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import process from 'node:process';
 
 /**
  * @typedef {{
@@ -188,84 +187,45 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 }
 
 /**
+ * @returns { string | undefined }
+ */
+function findWranglerConfig() {
+	for (const extension of ['json', 'jsonc', 'toml']) {
+		const configPath = path.join(process.cwd(), `wrangler.${extension}`);
+
+		if (existsSync(configPath)) {
+			return configPath;
+		}
+	}
+}
+
+/**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} config_file
- * @returns {WranglerConfig}
+ * @returns {import('wrangler').Unstable_Config}
  */
 function validate_config(builder, config_file) {
-	if (!existsSync(config_file) && config_file === 'wrangler.toml') {
-		if (existsSync('wrangler.json')) {
-			builder.log.minor('Default wrangler.toml does not exist. Using wrangler.json.');
-			config_file = 'wrangler.json';
-		} else if (existsSync('wrangler.jsonc')) {
-			builder.log.minor('Default wrangler.toml does not exist. Using wrangler.jsonc.');
-			config_file = 'wrangler.jsonc';
-		}
-	}
-	if (existsSync(config_file)) {
-		/** @type {WranglerConfig} */
-		let wrangler_config;
-
-		try {
-			const errors = /** @type {import('jsonc-parser').ParseError[]} */ ([]);
-
-			if (config_file.endsWith('.jsonc')) {
-				wrangler_config =
-					/** @type {WranglerConfig} */
-					jsoncParser.parse(readFileSync(config_file, 'utf-8'), errors, {
-						allowTrailingComma: true
-					});
-				if (errors.length) throw jsoncParser.printParseErrorCode(errors[0].error);
-			} else if (config_file.endsWith('.json')) {
-				wrangler_config = /** @type {WranglerConfig} */ (
-					JSON.parse(readFileSync(config_file, 'utf-8'))
-				);
-			} else {
-				wrangler_config = /** @type {WranglerConfig} */ (
-					toml.parse(readFileSync(config_file, 'utf-8'))
-				);
-			}
-		} catch (err) {
-			err.message = `Error parsing ${config_file}: ${err.message}`;
-			throw err;
-		}
-
-		if (!wrangler_config.site?.bucket) {
-			throw new Error(
-				`You must specify site.bucket in ${config_file}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
-			);
-		}
-
-		if (!wrangler_config.main) {
-			throw new Error(
-				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
-			);
-		}
-
-		return wrangler_config;
+	if (!existsSync(config_file)) {
+		config_file = findWranglerConfig();
 	}
 
-	builder.log.error(
-		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
-	);
+	if (!existsSync(config_file)) {
+		throw new Error('Config not found. Have you created a wrangler.json(c) or wrangler.toml file?');
+	}
 
-	builder.log(
-		`
-		Sample wrangler.toml:
+	const wrangler_config = unstable_readConfig({ config: config_file });
 
-		name = "<your-site-name>"
-		account_id = "<your-account-id>"
+	if (!wrangler_config.site?.bucket) {
+		throw new Error(
+			`You must specify site.bucket in ${config_file}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+		);
+	}
 
-		main = "./.cloudflare/worker.js"
-		site.bucket = "./.cloudflare/public"
+	if (!wrangler_config.main) {
+		throw new Error(
+			`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
+		);
+	}
 
-		build.command = "npm run build"
-
-		compatibility_date = "2021-11-12"
-		workers_dev = true`
-			.replace(/^\t+/gm, '')
-			.trim()
-	);
-
-	throw new Error(`Missing a ${config_file} file`);
+	return wrangler_config;
 }
