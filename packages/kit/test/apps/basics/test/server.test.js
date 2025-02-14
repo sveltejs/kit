@@ -303,9 +303,49 @@ test.describe('WebSockets', () => {
 		expect(await response.text()).toBe('handle was called');
 	});
 
-	// TODO: test non-upgrade request returns 426 if no page / GET handler
+	test('upgrade request to non-existent route returns not found', async ({ request }) => {
+		const response = await request.get('/ws/non-existent-route', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(404);
+	});
 
-	// TODO: test upgrade request to non-existent route returns 404
+	test('upgrade request to endpoint without socket returns method not allowed', async ({
+		request
+	}) => {
+		const response = await request.get('/endpoint-output/without-socket', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toBe('GET method not allowed');
+	});
+
+	test('non-upgrade request returns upgrade required when no GET handler exists', async ({
+		request
+	}) => {
+		const response = await request.get('/ws', {
+			headers: {
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(426);
+		expect(await response.text()).toBe('This service requires use of the websocket protocol.');
+	});
 });
 
 test.describe('Errors', () => {
