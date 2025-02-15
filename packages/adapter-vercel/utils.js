@@ -79,7 +79,7 @@ export const REWRITE_HEADER = 'x-sveltekit-vercel-rewrite';
 export function get_regex_from_matchers(matchers) {
 	const regex = getRegExpFromMatchers(matchers);
 	// Make sure that we also match on our special internal routes
-	const special_routes = ['__data.json', '__route.js'];
+	const special_routes = ['__data\\.json', '__route\\.js'];
 	const modified_regex = regex
 		.replace(/\$\|\^/g, `(?:|${special_routes.join('|')})$|`)
 		.replace(/\$$/g, `(?:|${special_routes.join('|')})$`);
