@@ -27,8 +27,8 @@
 				"**/build/**",
 				"**/test-results/**",
 				"documentation/**/*.md",
-				"packages/package/test/fixtures/**/expected/**/*",
-				"packages/package/test/watch/expected/**/*",
+				"packages/package/test/fixtures/**/expected*/**/*",
+				"packages/package/test/watch/expected*/**/*",
 				"packages/package/test/watch/package/**/*",
 				"packages/kit/src/core/postbuild/fixtures/**/*"
 			],
