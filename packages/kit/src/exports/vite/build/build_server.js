@@ -25,45 +25,59 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {Set<string>} */
 		const client_stylesheets = new Set();
 		for (const key in client_manifest) {
-			const file = client_manifest[key];
-			if (file.css?.[0]) {
-				client_stylesheets.add(file.css[0]);
-			}
+			client_manifest[key].css?.forEach((filename) => {
+				client_stylesheets.add(filename);
+			});
 		}
 
-		/** @type {Map<number, string>} */
+		/** @type {Map<number, string[]>} */
 		const server_stylesheets = new Map();
-
-		const component_stylesheet_map = new Map(Object.values(server_manifest).map((file) => [file.src, file.css?.[0]]));
-
 		manifest_data.nodes.forEach((node, i) => {
-			const server_stylesheet = component_stylesheet_map.get(node.component);
-			if (node.component && server_stylesheet) {
-				server_stylesheets.set(i, server_stylesheet);
+			if (!node.component || !server_manifest[node.component]) return;
+
+			let stylesheets = new Set(server_manifest[node.component].css);
+
+			// if the page/layout is imported by another file, the css is associated with a separate chunk instead
+			server_manifest[node.component].imports?.forEach((filename) => {
+				server_manifest[filename].css?.forEach(stylesheet => {
+					stylesheets.add(stylesheet);
+				})
+			});
+
+			if (stylesheets.size) {
+				server_stylesheets.set(i, Array.from(stylesheets));
 			}
 		});
 
-		// ignore dynamically imported stylesheets since we can't inline those
-		css.filter(asset => client_stylesheets.has(asset.fileName))
-			.forEach((asset) => {
-				if (asset.source.length < kit.inlineStyleThreshold) {
-					// We know that the names for entry points are numbers.
-					const [index] = basename(asset.fileName).split('.');
-					// There can also be other CSS files from shared components
-					// for example, which we need to ignore here.
-					if (isNaN(+index)) return;
+		for (const asset of css) {
+			// ignore dynamically imported stylesheets since we don't need to inline those
+			if (!client_stylesheets.has(asset.fileName) || asset.source.length >= kit.inlineStyleThreshold) {
+				continue;
+			}
 
-					const server_stylesheet = server_stylesheets.get(+index);
-					const file = `${out}/server/stylesheets/${index}.js`;
+			// We know that the names for entry points are numbers.
+			const [index] = basename(asset.fileName).split('.');
+			// There can also be other CSS files from shared components
+			// for example, which we need to ignore here.
+			if (isNaN(+index)) continue;
 
-					// we need to inline the server stylesheet instead of the client one
-					// so that asset paths are correct on document load
-					const source = fs.readFileSync(`${out}/server/${server_stylesheet}`, 'utf-8');
+			const file = `${out}/server/stylesheets/${index}.js`;
 
-					fs.writeFileSync(file, `// ${server_stylesheet}\nexport default ${s(source)};`);
-					stylesheet_lookup.set(asset.fileName, index);
-				}
+			// we need to inline the server stylesheet instead of the client one
+			// so that asset paths are correct on document load
+			const filenames = server_stylesheets.get(+index);
+
+			if (!filenames) {
+				throw new Error('This should never happen, but if it does, it means we failed to find the server stylesheet for a node.');
+			}
+
+			const sources = filenames.map((filename) => {
+				return fs.readFileSync(`${out}/server/${filename}`, 'utf-8');
 			});
+			fs.writeFileSync(file, `// ${filenames.join(', ')}\nexport default ${s(sources.join('\n'))};`);
+
+			stylesheet_lookup.set(asset.fileName, index);
+		}
 	}
 
 	manifest_data.nodes.forEach((node, i) => {
