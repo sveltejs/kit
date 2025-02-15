@@ -1,17 +1,6 @@
 import { rewrite, next } from '@vercel/edge';
 import { REWRITE_HEADER } from './utils.js';
 
-/**
- * @type {typeof import('./middleware.js').createMatcher}
- */
-export function createMatcher({ appDir = '_app', base = '' } = {}) {
-	if (base) {
-		return `/((?!${base.slice(1)}/${appDir}/immutable).*)`;
-	} else {
-		return `/((?!${appDir}/immutable).*)`;
-	}
-}
-
 export { next };
 
 /**

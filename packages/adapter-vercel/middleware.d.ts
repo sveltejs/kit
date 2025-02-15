@@ -1,21 +1,4 @@
 /**
- * Use this string to scope the middleware to only run on paths other than immutable assets.
- *
- * ```ts
- * import { createMatcher } from '@sveltejs/adapter-vercel';
- *
- * export const config = { matcher: createMatcher() };
- * ```
- * @param {{ appDir?: string, base?: string }} options
- */
-export function createMatcher(options?: {
-	/** Corresponds to `kit.appDir` in your `svelte.config.js`; only necessary if you deviated from the default. */
-	appDir?: string;
-	/** Corresponds to `kit.paths.base`; only necessary if you deviated from the default. */
-	base?: string;
-}): string;
-
-/**
  * Normalizes the incoming URL to remove any differences between direct page hits and
  * data or route resolution requests. Returns the `url` and a `rewrite` function
  * that is aware of said differences, and which should be used in place of the `rewrite`

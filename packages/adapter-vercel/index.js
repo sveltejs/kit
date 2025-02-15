@@ -114,30 +114,13 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
+			 * @param {import('esbuild').BuildOptions & Required<Pick<import('esbuild').BuildOptions, 'entryPoints'>>} esbuild_options
 			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 * @param {import('./index.js').Config} adapter_config
 			 */
-			async function generate_edge_function(name, config, routes) {
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js',
-						REWRITE_HEADER: REWRITE_HEADER
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
+			async function bundle_edge_function(esbuild_options, name, adapter_config) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -146,7 +129,7 @@ const plugin = function (defaults = {}) {
 						external: [
 							...compatible_node_modules,
 							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
+							...((adapter_config.runtime === 'edge' && adapter_config.external) || [])
 						],
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
@@ -157,7 +140,8 @@ const plugin = function (defaults = {}) {
 							'.ttf': 'copy',
 							'.eot': 'copy',
 							'.otf': 'copy'
-						}
+						},
+						...(esbuild_options || {})
 					});
 
 					if (result.warnings.length > 0) {
@@ -201,8 +185,8 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify(
 						{
-							runtime: config.runtime,
-							regions: config.regions,
+							runtime: 'edge',
+							regions: adapter_config.regions,
 							entrypoint: 'index.js',
 							framework: {
 								slug: 'sveltekit',
@@ -214,6 +198,83 @@ const plugin = function (defaults = {}) {
 					)
 				);
 			}
+
+			/**
+			 * @param {string} name
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 */
+			async function generate_edge_function(name, config, routes) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				const dest = `${tmp}/edge.js`;
+
+				builder.copy(`${files}/edge.js`, dest, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js',
+						REWRITE_HEADER: REWRITE_HEADER
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
+
+				await bundle_edge_function({ entryPoints: [dest] }, name, config);
+			}
+
+			/**
+			 * @param {import('./index.js').Config} config
+			 */
+			async function generate_edge_middleware(config) {
+				let middleware_path = './vercel-middleware.js';
+
+				if (!fs.existsSync(middleware_path)) {
+					middleware_path = './vercel-middleware.ts';
+				}
+
+				if (!fs.existsSync(middleware_path)) return;
+
+				await bundle_edge_function(
+					{
+						entryPoints: [middleware_path]
+					},
+					'user-middleware',
+					config
+				);
+
+				let matcher = `/((?!${builder.getAppPath()}/immutable|favicon.ico|favicon.png).*)`;
+
+				try {
+					const file_path = pathToFileURL(`${dirs.functions}/user-middleware.func/index.js`).href;
+					const { config } = await import(file_path);
+					if (config?.matcher) matcher = config.matcher;
+				} catch (e) {
+					// Don't bother showing the error if we know there's no config object
+					const text = fs.readFileSync(middleware_path, 'utf-8');
+					if (text.includes('config') || text.includes('export *')) {
+						builder.log.error(
+							'Failed to import middleware. Make sure it is loadable during build, which is necessary to analyze the config object.'
+						);
+						throw e;
+					}
+				}
+
+				static_config.routes.splice(
+					static_config.routes.findIndex((r) => r.handle === 'filesystem'),
+					0,
+					{
+						src: get_regex_from_matchers(matcher),
+						middlewarePath: 'user-middleware',
+						continue: true
+					}
+				);
+			}
+
+			await generate_edge_middleware(defaults);
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
