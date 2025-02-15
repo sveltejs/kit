@@ -23,10 +23,6 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
-		"./middleware": {
-			"types": "./middleware.d.ts",
-			"import": "./middleware.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",

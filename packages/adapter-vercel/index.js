@@ -234,13 +234,26 @@ const plugin = function (defaults = {}) {
 
 				if (!fs.existsSync(middleware_path)) {
 					middleware_path = './vercel-middleware.ts';
+					if (!fs.existsSync(middleware_path)) return;
 				}
 
-				if (!fs.existsSync(middleware_path)) return;
+				const dest = `${tmp}/middleware.js`;
+				const relativePath = path.posix.relative(tmp, '.');
+
+				builder.copy(`${files}/middleware.js`, dest, {
+					replace: {
+						MIDDLEWARE: `${relativePath}/vercel-middleware.js`
+					}
+				});
 
 				await bundle_edge_function(
 					{
-						entryPoints: [middleware_path]
+						entryPoints: [dest],
+						logOverride: {
+							// Silence this warning which can occur when the user has no config export
+							// in their middleware (because we reference it in our generated middleware wrapper)
+							'import-is-undefined': 'verbose'
+						}
 					},
 					'user-middleware',
 					config
