@@ -496,8 +496,11 @@ const plugin = function (defaults = {}) {
 		},
 
 		emulate: async (opts) => {
-			const middleware_path = process.cwd() + '/middleware.js';
-			if (!fs.existsSync(middleware_path)) return {};
+			let middleware_path = process.cwd() + '/vercel-middleware.js';
+			if (!fs.existsSync(middleware_path)) {
+				middleware_path = process.cwd() + '/vercel-middleware.ts';
+				if (!fs.existsSync(middleware_path)) return {};
+			}
 
 			return {
 				beforeRequest: async (req, res, next) => {
