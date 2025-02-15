@@ -1,3 +1,5 @@
+import { pathToRegexp } from 'path-to-regexp';
+
 /** @param {import("@sveltejs/kit").RouteDefinition<any>} route */
 export function get_pathname(route) {
 	let i = 1;
@@ -66,4 +68,60 @@ export function pattern_to_src(pattern) {
 	src = src.replace(/\(\?:\/\((.+?)\)\)/g, '(/$1)');
 
 	return src;
+}
+
+export const REWRITE_HEADER = 'x-sveltekit-vercel-rewrite';
+
+/**
+ * @param {unknown} matchers
+ * @returns {string}
+ */
+export function get_regex_from_matchers(matchers) {
+	const regex = getRegExpFromMatchers(matchers);
+	// Make sure that we also match on our special internal routes
+	const special_routes = ['__data.json', '__route.js'];
+	const modified_regex = regex
+		.replace(/\$\|\^/g, `(?:|${special_routes.join('|')})$|`)
+		.replace(/\$$/g, `(?:|${special_routes.join('|')})$`);
+	return modified_regex;
+}
+
+// Copied from https://github.com/vercel/vercel/blob/main/packages/node/src/utils.ts#L97 which hopefully is available via @vercel/routing-utils at some point
+/**
+ * @param {unknown} matcherOrMatchers
+ * @returns {string}
+ */
+function getRegExpFromMatchers(matcherOrMatchers) {
+	if (!matcherOrMatchers) {
+		return '^/.*$';
+	}
+	const matchers = Array.isArray(matcherOrMatchers) ? matcherOrMatchers : [matcherOrMatchers];
+	const regExps = matchers.flatMap(getRegExpFromMatcher).join('|');
+	return regExps;
+}
+
+/**
+ * @param {unknown} matcher
+ * @param {number} _index
+ * @param {unknown[]} allMatchers
+ * @returns {string[]}
+ */
+function getRegExpFromMatcher(matcher, _index, allMatchers) {
+	if (typeof matcher !== 'string') {
+		throw new Error(
+			"Middleware's `config.matcher` must be a path matcher (string) or an array of path matchers (string[])"
+		);
+	}
+
+	if (!matcher.startsWith('/')) {
+		throw new Error(
+			`Middleware's \`config.matcher\` values must start with "/". Received: ${matcher}`
+		);
+	}
+
+	const regExps = [pathToRegexp(matcher).source];
+	if (matcher === '/' && !allMatchers.includes('/index')) {
+		regExps.push(pathToRegexp('/index').source);
+	}
+	return regExps;
 }

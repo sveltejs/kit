@@ -23,6 +23,10 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./middleware": {
+			"types": "./middleware.d.ts",
+			"import": "./middleware.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -41,7 +45,9 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.29.0",
-		"esbuild": "^0.24.0"
+		"@vercel/edge": "^1.2.1",
+		"esbuild": "^0.24.0",
+		"path-to-regexp": "^6.3.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

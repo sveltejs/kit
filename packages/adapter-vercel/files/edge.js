@@ -15,6 +15,14 @@ const initialized = server.init({
 export default async (request, context) => {
 	await initialized;
 
+	const pathname = request.headers.get('REWRITE_HEADER');
+	if (pathname) {
+		let url = new URL(request.url);
+		url.pathname = pathname;
+		request = new Request(url, request);
+		request.headers.delete('x-sveltekit-vercel-rewrite');
+	}
+
 	return server.respond(request, {
 		getClientAddress() {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));

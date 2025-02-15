@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
+import { get_pathname, get_regex_from_matchers, pattern_to_src, REWRITE_HEADER } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
@@ -95,7 +95,8 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
+						MANIFEST: './manifest.js',
+						REWRITE_HEADER: REWRITE_HEADER
 					}
 				});
 
@@ -124,7 +125,8 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
+						MANIFEST: './manifest.js',
+						REWRITE_HEADER: REWRITE_HEADER
 					}
 				});
 
@@ -417,6 +419,69 @@ const plugin = function (defaults = {}) {
 			builder.log.minor('Writing routes...');
 
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
+		},
+
+		emulate: async (opts) => {
+			const middleware_path = process.cwd() + '/middleware.js';
+			if (!fs.existsSync(middleware_path)) return {};
+
+			return {
+				beforeRequest: async (req, res, next) => {
+					// We have to import this here or else we wouldn't notice when the middleware file changes
+					const middleware = await opts.importFile(pathToFileURL(middleware_path).href);
+					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));
+					const original_url = req.originalUrl || '/';
+
+					if (matcher.test(original_url)) {
+						// TODO copied from exports/node/index.js, expose it?
+						let headers = /** @type {Record<string, string>} */ (req.headers);
+						if (req.httpVersionMajor >= 2) {
+							// the Request constructor rejects headers with ':' in the name
+							headers = Object.assign({}, headers);
+							// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
+							if (headers[':authority']) {
+								headers.host = headers[':authority'];
+							}
+							delete headers[':authority'];
+							delete headers[':method'];
+							delete headers[':path'];
+							delete headers[':scheme'];
+						}
+
+						// We omit the body here because it would consume the stream
+						const request = new Request(new URL(original_url, 'https://localhost'), {
+							headers: new Headers(Object.entries(headers)),
+							method: req.method,
+							body:
+								req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
+									? undefined
+									: 'Cannot read body in dev mode'
+						});
+
+						const response = await middleware.default(request, { waitUntil: () => {} });
+						if (!response) return next();
+
+						// Do the reverse of https://github.com/vercel/vercel/blob/main/packages/functions/src/middleware.ts#L38
+						// to apply the headers to the original request/response
+						for (const [key, value] of response.headers) {
+							if (key === REWRITE_HEADER) {
+								// Vite removes the base path from req.url
+								req.url = value.slice(original_url.length - (req.url || '/').length);
+								req.originalUrl = value;
+							} else if (key.startsWith('x-middleware-request-')) {
+								const header = key.slice('x-middleware-request-'.length);
+								req.headers[header] = value;
+							} else if (key !== 'x-middleware-override-headers') {
+								// This isn't 100% correct because a header could be overwritten by later middleware
+								// but it's the closest we can get given how Vite/Express/Polka middleware works.
+								res.setHeader(key, value);
+							}
+						}
+					}
+
+					return next();
+				}
+			};
 		},
 
 		supports: {
