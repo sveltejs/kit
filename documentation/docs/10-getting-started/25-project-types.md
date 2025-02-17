@@ -52,7 +52,7 @@ These mobile development platforms work by starting a local web server and then 
 
 ## Desktop app
 
-You can turn a [SvelteKit SPA](https://kit.svelte.dev/docs/single-page-apps) into a desktop app [with Tauri](https://v2.tauri.app/start/frontend/sveltekit/).
+You can turn a [SvelteKit SPA](https://kit.svelte.dev/docs/single-page-apps) into a desktop app with [Tauri](https://v2.tauri.app/start/frontend/sveltekit/), [Wails](https://wails.io/docs/guides/sveltekit), or [Electron](https://www.electronjs.org/).
 
 ## Browser extension
 
