@@ -2037,8 +2037,8 @@ declare module '@sveltejs/kit' {
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
 		status: number;
 		body: App.Error;
-		response: Response;
 		toString(): string;
+		get response(): Response;
 	}
 	class Redirect_1 {
 		
