@@ -288,8 +288,8 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('WebSockets', () => {
-	test('handle works', async ({ request }) => {
-		const response = await request.get('/ws/handle', {
+	test('handle can return a custom response during upgrade', async ({ request }) => {
+		const response = await request.get('/ws/handle?custom', {
 			headers: {
 				upgrade: 'websocket',
 				connection: 'Upgrade',
@@ -300,7 +300,39 @@ test.describe('WebSockets', () => {
 			}
 		});
 		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('handle was called');
+		expect(await response.text()).toBe('custom response');
+	});
+
+	test('handle sets cookies during upgrade', async ({ request }) => {
+		const response = await request.get('/ws/handle?set-cookie', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(200);
+		expect(response.headers()['set-cookie']).toBe(
+			'ws%3Dtest%3B%20Path%3D%2Fws%3B%20HttpOnly%3B%20SameSite%3DLax\nname%3DSvelteKit%3B%20path%3D%2F%3B%20HttpOnly'
+		);
+	});
+
+	test('handle sets headers during upgrade', async ({ request }) => {
+		const response = await request.get('/ws/handle?set-headers', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+		expect(response.status()).toBe(200);
+		expect(response.headers()['x-sveltekit-ws']).toBe('test');
 	});
 
 	test('upgrade request to non-existent route returns not found', async ({ request }) => {
@@ -345,6 +377,26 @@ test.describe('WebSockets', () => {
 		});
 		expect(response.status()).toBe(426);
 		expect(await response.text()).toBe('This service requires use of the websocket protocol.');
+	});
+
+	test('returns redirect if thrown', async ({ request, read_errors }) => {
+		const response = await request.get('/ws/redirect', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			},
+			maxRedirects: 0
+		});
+
+		const error = read_errors('/ws/redirect');
+		expect(error).toBeUndefined();
+
+		expect(response.status()).toBe(303);
+		expect(response.headers().location).toBe('%2Fws%3Fme');
 	});
 });
 

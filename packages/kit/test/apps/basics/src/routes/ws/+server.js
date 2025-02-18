@@ -27,7 +27,4 @@ export const socket = {
 		peer.publish('chat', `close: ${event.code} ${event.reason}`);
 		peer.unsubscribe('chat');
 	},
-	error(peer, error) {
-		console.error(error);
-	}
 };

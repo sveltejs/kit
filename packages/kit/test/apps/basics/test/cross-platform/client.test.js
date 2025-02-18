@@ -1062,5 +1062,31 @@ test.describe('WebSockets', () => {
 		expect(page.getByText('close: 1000 test')).toBeVisible();
 	});
 
-	// TODO: test error hook runs
+	// TODO: test error hook runs after finding out how to trigger it
+
+	test('throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error');
+
+		await page.locator('button', { hasText: 'upgrade' }).click();
+		expect(page.getByText('error')).toBeVisible();
+		let error = read_errors('/ws/handle-error');
+		expect(error.message).toBe('upgrade hook');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('opened')).toBeVisible();
+		error = read_errors('/ws/handle-error');
+		expect(error.message).toBe('open hook');
+
+		await page.locator('button', { hasText: 'message' }).click();
+		expect(page.getByText('message received')).toBeVisible();
+		error = read_errors('/ws/handle-error');
+		expect(error.message).toBe('message hook');
+
+		await page.locator('button', { hasText: 'close' }).click();
+		expect(page.getByText('closed')).toBeVisible();
+		error = read_errors('/ws/handle-error');
+		expect(error.message).toBe('close hook');
+
+		// TODO: test error thrown from error hook runs handleError
+	});
 });
