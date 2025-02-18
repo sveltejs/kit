@@ -9,6 +9,7 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
+import node_middleware from 'MIDDLEWARE';
 
 /* global ENV_PREFIX */
 
@@ -50,6 +51,17 @@ await server.init({
 	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
+
+/** @type {import('polka').Middleware} */
+const middleware = async (req, res, next) => {
+	const { pathname } = polka_url_parser(req);
+
+	if (pathname.startsWith(`/${manifest.appPath}/immutable/`)) {
+		return next();
+	}
+
+	return node_middleware(req, res, next);
+};
 
 /**
  * @param {string} path
@@ -206,6 +218,7 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
+		middleware,
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
 		serve_prerendered(),

@@ -137,6 +137,18 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#Socket-activation) for more details.
 
+## Middleware
+
+You can integrate Express or Polka middleware into your SvelteKit application built with the Node adapter by placing a `node-middleware.js` file at the root of your project. It must export a default function which receives the same arguments as [Polka middleware](https://github.com/lukeed/polka?tab=readme-ov-file#middleware). The middleware runs on all requests except those to files inside `_app/immutable`. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter prerendered or not and no matter client- or server-side.
+
+```js
+/// file: node-middleware.js
+export default function middleware(req, res, next) {
+  console.log(`Received ${req.method} on ${req.url}`);
+  next(); // move on
+}
+```
+
 ## Options
 
 The adapter can be configured with various options:

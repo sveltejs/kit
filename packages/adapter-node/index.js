@@ -1,9 +1,20 @@
-import { readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { VERSION } from '@sveltejs/kit';
+
+const [major, minor] = VERSION.split('.').map(Number);
+const can_use_middleware = major > 2 || (major === 2 && minor > 17);
+
+/** @type {string | null} */
+let middleware_path = can_use_middleware ? 'node-middleware.js' : null;
+if (middleware_path && !existsSync(middleware_path)) {
+	middleware_path = 'node-middleware.ts';
+	if (!existsSync(middleware_path)) middleware_path = null;
+}
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -46,6 +57,10 @@ export default function (opts = {}) {
 				].join('\n\n')
 			);
 
+			if (!middleware_path) {
+				writeFileSync(`${tmp}/node-middleware.js`, 'export default (req, res, next) => next();');
+			}
+
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
 			// we bundle the Vite output so that deployments only need
@@ -54,7 +69,8 @@ export default function (opts = {}) {
 			const bundle = await rollup({
 				input: {
 					index: `${tmp}/index.js`,
-					manifest: `${tmp}/manifest.js`
+					manifest: `${tmp}/manifest.js`,
+					'node-middleware': `${tmp}/node-middleware.js`
 				},
 				external: [
 					// dependencies could have deep exports, so we need a regex
@@ -86,9 +102,34 @@ export default function (opts = {}) {
 					MANIFEST: './server/manifest.js',
 					SERVER: './server/index.js',
 					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix)
+					ENV_PREFIX: JSON.stringify(envPrefix),
+					MIDDLEWARE: './server/node-middleware.js'
 				}
 			});
+		},
+
+		emulate: ({ importFile }) => {
+			if (!existsSync(middleware_path)) return {};
+
+			return {
+				beforeRequest: async (req, res, next) => {
+					// We have to import this here or else we wouldn't notice when the middleware file changes
+					const middleware = await importFile(pathToFileURL(middleware_path).href);
+					return middleware.default(req, res, next);
+				}
+			};
+		},
+
+		additionalEntryPoints: () => {
+			if (!middleware_path) return [];
+
+			return [
+				{
+					name: 'node-middleware',
+					file: middleware_path,
+					allowedFeatures: ['$app/server:read']
+				}
+			];
 		},
 
 		supports: {

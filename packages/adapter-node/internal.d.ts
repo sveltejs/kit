@@ -17,3 +17,8 @@ declare module 'MANIFEST' {
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
+
+declare module 'MIDDLEWARE' {
+	const middleware: import('polka').Middleware;
+	export default middleware;
+}
