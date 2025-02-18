@@ -37,6 +37,16 @@ const get_default_runtime = () => {
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
 
+const [major, minor] = VERSION.split('.').map(Number);
+const can_use_middleware = major > 2 || (major === 2 && minor > 17);
+
+/** @type {string | null} */
+let middleware_path = can_use_middleware ? 'vercel-middleware.js' : null;
+if (middleware_path && !fs.existsSync(middleware_path)) {
+	middleware_path = 'vercel-middleware.ts';
+	if (!fs.existsSync(middleware_path)) middleware_path = null;
+}
+
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
@@ -230,19 +240,17 @@ const plugin = function (defaults = {}) {
 			 * @param {import('./index.js').Config} config
 			 */
 			async function generate_edge_middleware(config) {
-				let middleware_path = './vercel-middleware.js';
-
-				if (!fs.existsSync(middleware_path)) {
-					middleware_path = './vercel-middleware.ts';
-					if (!fs.existsSync(middleware_path)) return;
-				}
+				if (!middleware_path) return;
 
 				const dest = `${tmp}/middleware.js`;
-				const relativePath = path.posix.relative(tmp, '.');
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/middleware.js`, dest, {
 					replace: {
-						MIDDLEWARE: `${relativePath}/vercel-middleware.js`
+						SERVER_INIT: `${relativePath}/init.js`,
+						MIDDLEWARE: `${relativePath}/vercel-middleware.js`,
+						PUBLIC_PREFIX: builder.config.kit.env.publicPrefix,
+						PRIVATE_PREFIX: builder.config.kit.env.privatePrefix
 					}
 				});
 
@@ -496,11 +504,7 @@ const plugin = function (defaults = {}) {
 		},
 
 		emulate: async (opts) => {
-			let middleware_path = process.cwd() + '/vercel-middleware.js';
-			if (!fs.existsSync(middleware_path)) {
-				middleware_path = process.cwd() + '/vercel-middleware.ts';
-				if (!fs.existsSync(middleware_path)) return {};
-			}
+			if (!middleware_path) return {};
 
 			return {
 				beforeRequest: async (req, res, next) => {
@@ -574,6 +578,18 @@ const plugin = function (defaults = {}) {
 
 				return true;
 			}
+		},
+
+		additionalEntryPoints: () => {
+			if (!middleware_path) return [];
+
+			return [
+				{
+					name: 'vercel-middleware',
+					file: middleware_path,
+					allowedFeatures: []
+				}
+			];
 		}
 	};
 };

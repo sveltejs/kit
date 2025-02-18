@@ -1,4 +1,13 @@
+import { initServer } from 'SERVER_INIT';
 import * as user_middleware from 'MIDDLEWARE';
+
+initServer({
+	env: {
+		env: /** @type {Record<string, string>} */ (process.env),
+		public_prefix: 'PUBLIC_PREFIX',
+		private_prefix: 'PRIVATE_PREFIX'
+	}
+});
 
 export const config = user_middleware.config;
 

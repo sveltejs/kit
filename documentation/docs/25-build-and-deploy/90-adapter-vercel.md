@@ -141,6 +141,53 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 > Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
 
+## Edge Middleware
+
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing a `vercel-middleware.js` file at the root of your project. You can use it to intercept requests even for prerendered or ISR'd pages. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered or ISR'd pages by rerouting a user to either variant A or B depending on a cookie.
+
+```js
+/// file: vercel-middleware.js
+import { rewrite, next } from '@vercel/edge';
+
+export default async function middleware(request: Request) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = split_cookies(request.headers.get('cookie') ?? '')?.flag;
+
+	// Fall back to random value if this is a new visitor
+	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+
+	return rewrite(
+		// Get destination URL based on the feature flag
+		flag === 'a' ? '/home-a' : '/home-b',
+		{
+			headers: {
+				// Set a cookie to remember the feature flags for this visitor
+				'Set-Cookie': `flag=${flag}; Path=/`
+			}
+		}
+	);
+}
+
+function split_cookies(cookies: string) {
+	return cookies.split(';').reduce(
+		(acc, cookie) => {
+			const [name, value] = cookie.trim().split('=');
+			acc[name] = value;
+			return acc;
+		},
+		{} as Record<string, string>
+	);
+}
+```
+
+By default, middleware runs on all requests except for files within `_app/immutable`. You can customize this by exporting a `config` object with a `matcher` property as described in Vercel's [API documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config).
+
+If you want to run code prior to a request but neither have prerendered nor ISR'd pages and have no rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
+
 ## Environment variables
 
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
