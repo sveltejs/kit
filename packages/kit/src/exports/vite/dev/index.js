@@ -527,25 +527,44 @@ export async function dev(vite, vite_config, svelte_config) {
 					req.headers.upgrade === 'websocket'
 				) {
 					try {
-						// TODO: check if anymore of the middleware logic below needs to be duplicated here
+						const base = get_base(req);
+						const decoded = decodeURI(new URL(base + req.url).pathname);
 
-						// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
-						// see https://github.com/unjs/crossws/issues/137
-						const request = await getRequest({
-							base: get_base(req),
-							request: req
-						});
-						Object.defineProperty(request, 'context', {
-							enumerable: true,
-							value: {}
-						});
+						if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+							socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+							socket.end(
+								`The server is configured with a public base URL of ${escape_html(
+									svelte_config.kit.paths.base
+								)} - did you mean to visit ${escape_html(svelte_config.kit.paths.base + req.url)} instead?`
+							);
+							return;
+						}
 
 						const server = await init_server();
+
+						if (manifest_error) {
+							console.error(colors.bold().red(manifest_error.message));
+							socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+							socket.end(manifest_error.message ?? 'Invalid routes');
+							return;
+						}
+
 						const resolve = server.getWebSocketHooksResolver({
 							getClientAddress: get_client_address(req),
 							read,
 							before_handle,
 							emulator
+						});
+
+						// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+						// see https://github.com/unjs/crossws/issues/137
+						const request = await getRequest({
+							base,
+							request: req
+						});
+						Object.defineProperty(request, 'context', {
+							enumerable: true,
+							value: {}
 						});
 
 						const hooks = await resolve(request);
