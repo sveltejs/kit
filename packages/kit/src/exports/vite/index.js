@@ -212,9 +212,12 @@ async function kit({ svelte_config }) {
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
 	 * in which chunks, so that we can later determine which routes use which features
-	 * @type {Record<string, string[]>}
+	 * @type {Record<string, import('types').TrackedFeature[]>}
 	 */
 	const tracked_features = {};
+
+	/** Adapter-provided additional entry points */
+	const additional_entry_points = kit.adapter?.additionalEntryPoints?.() ?? [];
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -599,7 +602,12 @@ Tips:
 
 				if (ssr) {
 					input.index = `${runtime_directory}/server/index.js`;
+					input.init = `${runtime_directory}/server/init.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
+
+					for (const additional of additional_entry_points) {
+						input[additional.name] = additional.file;
+					}
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -825,6 +833,7 @@ Tips:
 					manifest_data,
 					server_manifest,
 					tracked_features,
+					additional_entry_points,
 					env: { ...env.private, ...env.public }
 				});
 

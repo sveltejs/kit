@@ -39,7 +39,12 @@ export async function dev(vite, vite_config, svelte_config) {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+		check_feature(
+			context.event.route.id,
+			context.config,
+			/** @type {import('types').TrackedFeature} */ (label),
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -450,7 +455,13 @@ export async function dev(vite, vite_config, svelte_config) {
 	// adapter-provided middleware
 	vite.middlewares.use(async (req, res, next) => {
 		if (!emulator?.beforeRequest) return next();
-		if (req.url?.startsWith('/@fs/') || req.url?.includes('virtual:')) return next();
+		if (
+			req.url?.startsWith('/@fs/') ||
+			req.url?.startsWith('/@vite/') ||
+			req.url?.includes('virtual:')
+		) {
+			return next();
+		}
 
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${
 			req.headers[':authority'] || req.headers.host

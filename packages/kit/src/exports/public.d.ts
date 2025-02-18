@@ -5,6 +5,7 @@ import '../types/ambient.js';
 import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
+	AdditionalEntryPoint,
 	CspDirectives,
 	HttpMethod,
 	Logger,
@@ -51,6 +52,11 @@ export interface Adapter {
 	 * during dev, build and prerendering
 	 */
 	emulate?: (helpers: { importFile: (fileUrl: string) => Promise<any> }) => MaybePromise<Emulator>;
+	/**
+	 * A function that returns additional entry points for Vite to consider during compilation.
+	 * This is useful for adapters that want to generate separate bundles for e.g. middleware.
+	 */
+	additionalEntryPoints?: () => AdditionalEntryPoint[];
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -1308,11 +1314,24 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
+/**
+ * Represents the SvelteKit server runtime. Adapters should use this via `${output}/server/index.js` to create a server to send requests to.
+ */
 export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
+
+/**
+ * Similar to Server#init. Can be used via `${output}/server/init.js` for other entry points that don't start the server but still need to setup the environment.
+ */
+export function initServer(options: {
+	/** Required for `$env/*` to work */
+	env: { env: Record<string, string>; public_prefix: string; private_prefix: string };
+	/** Required for the `read` export from `$app/server` to work */
+	read?: { read: (file: string) => ReadableStream; manifest: SSRManifest };
+}): void;
 
 export interface ServerInitOptions {
 	/** A map of environment variables */
