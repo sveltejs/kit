@@ -304,6 +304,23 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		preload: default_preload
 	};
 
+	/**
+	 * @param {unknown} e
+	 * @returns {Promise<Response>}
+	 */
+	async function redirect_or_fatal_error(e) {
+		if (e instanceof Redirect) {
+			const response = is_data_request
+				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			return response;
+		}
+		return await handle_fatal_error(event, options, e);
+	}
+
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route) {
@@ -419,6 +436,14 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		 * @returns {Response}
 		 */
 		const after_resolve = (response) => {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
+
 			// add headers/cookies here, rather than inside `resolve`, so that we
 			// can do it once for all responses instead of once per `return`
 			for (const key in headers) {
@@ -451,17 +476,31 @@ async function handle_request(request, options, manifest, state, upgrade) {
 							response = await options.hooks.handle({
 								event,
 								resolve: async () => {
-									const init = (await node.socket?.upgrade?.(req)) ?? undefined;
-									const upgrade_response = new Response(undefined, init);
-									upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+									/** @type {Response} */
+									let upgrade_response;
+
+									try {
+										const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+										upgrade_response = new Response(undefined, init);
+										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+									} catch (e) {
+										// crossws allows throwing a Response to abort the upgrade
+										if (e instanceof Response) {
+											upgrade_response = e;
+										} else {
+											throw e;
+										}
+									}
+
 									return after_resolve(upgrade_response);
 								}
 							});
 						} catch (e) {
-							return await handle_fatal_error(event, options, e);
+							return await redirect_or_fatal_error(e);
 						}
 
-						// if handle returned a different response then we abort upgrading the connection
+						// if the handle hook returned a different response then we
+						// abort upgrading the connection
 						if (!response.headers.has('x-sveltekit-upgrade')) {
 							throw response;
 						}
@@ -550,16 +589,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		return response;
 	} catch (e) {
-		if (e instanceof Redirect) {
-			const response = is_data_request
-				? redirect_json_response(e)
-				: route?.page && is_action_json_request(event)
-					? action_json_redirect(e)
-					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-			return response;
-		}
-		return await handle_fatal_error(event, options, e);
+		return await redirect_or_fatal_error(e);
 	}
 
 	/**
@@ -705,14 +735,6 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return await handle_fatal_error(event, options, e);
-		} finally {
-			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
-
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-			};
 		}
 	}
 }

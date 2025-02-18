@@ -2045,6 +2045,7 @@ declare module '@sveltejs/kit' {
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
+		get response(): Response;
 	}
 
 	export {};

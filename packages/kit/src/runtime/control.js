@@ -36,6 +36,15 @@ export class Redirect {
 		this.status = status;
 		this.location = location;
 	}
+
+	// Used by crossws to reject a WebSocket connection.
+	// See https://github.com/unjs/crossws/blob/bc55c9765f436316213e9a3b907522cc86013a8c/src/hooks.ts#L69
+	get response() {
+		return new Response(undefined, {
+			status: this.status,
+			headers: { location: this.location }
+		});
+	}
 }
 
 /**
