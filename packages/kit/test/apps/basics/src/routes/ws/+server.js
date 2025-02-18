@@ -26,5 +26,5 @@ export const socket = {
 	close(peer, event) {
 		peer.publish('chat', `close: ${event.code} ${event.reason}`);
 		peer.unsubscribe('chat');
-	},
+	}
 };

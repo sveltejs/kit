@@ -28,7 +28,7 @@
 		};
 		socket.onmessage = (event) => {
 			message = event.data;
-		}
+		};
 	}}>message</button
 >
 
@@ -40,7 +40,7 @@
 		};
 		socket.onclose = () => {
 			message = 'closed';
-		}
+		};
 	}}>close</button
 >
 
