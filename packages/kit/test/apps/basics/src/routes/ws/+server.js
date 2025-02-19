@@ -21,10 +21,17 @@ export const socket = {
 			return;
 		}
 
+		if (data === 'close') {
+			peer.close(1000, 'test');
+			return;
+		}
+
 		peer.publish('chat', data);
 	},
 	close(peer, event) {
-		peer.publish('chat', `close: ${event.code} ${event.reason}`);
+		if (event.reason === 'test') {
+			peer.publish('chat', `close: ${event.code} ${event.reason}`);
+		}
 		peer.unsubscribe('chat');
 	}
 };

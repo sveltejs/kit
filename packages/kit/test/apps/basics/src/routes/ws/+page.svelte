@@ -2,6 +2,9 @@
 	/** @type {WebSocket | undefined} */
 	let primary_socket;
 
+	/** @type {WebSocket | undefined} */
+	let secondary_socket;
+
 	/** @type {string[]} */
 	let messages = [];
 </script>
@@ -30,19 +33,30 @@
 <button on:click={() => primary_socket.send('ping')}>ping</button>
 <button
 	on:click={() => {
-		const socket = new WebSocket('/ws?me');
-		socket.onopen = () => {
-			socket.send('hello');
-		};
+		primary_socket.send('hello');
 	}}>chat</button
 >
 <button
 	on:click={() => {
-		const socket = new WebSocket('/ws?me');
-		socket.onopen = () => {
-			socket.close(1000, 'test');
+		secondary_socket = new WebSocket('/ws?me');
+
+		secondary_socket.onopen = () => {
+			messages = [...messages, 'joined the chat'];
 		};
-	}}>join and leave</button
+
+		secondary_socket.onmessage = (event) => {
+			messages = [...messages, event.data];
+		};
+
+		secondary_socket.onclose = () => {
+			messages = [...messages, 'left the chat'];
+		};
+	}}>join</button
+>
+<button
+	on:click={() => {
+		secondary_socket.send('close');
+	}}>leave</button
 >
 
 <ul>
