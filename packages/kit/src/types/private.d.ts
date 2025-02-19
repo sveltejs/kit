@@ -158,9 +158,12 @@ export type MaybePromise<T> = T | Promise<T>;
 export type TrackedFeature = '$app/server:read';
 
 export interface AdditionalEntryPoint {
+	/** Unique name of the entry point. Will be written to disk during build at `output/server/<name>.js` */
 	name: string;
+	/** Path relative to the project root of the corresponding file (e.g. `foo.js` means it's at `<project-root>/foo.js`) */
 	file: string;
-	allowedFeatures: TrackedFeature[];
+	/** Define which features should not be allowed within the entry point (or the files it imports) */
+	disallowedFeatures?: TrackedFeature[];
 }
 
 export interface Prerendered {

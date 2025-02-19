@@ -511,7 +511,7 @@ const plugin = function (defaults = {}) {
 			return {
 				beforeRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
-					const middleware = await opts.importFile(pathToFileURL(middleware_path).href);
+					const middleware = await opts.importEntryPoint('vercel-middleware');
 					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));
 					const original_url = /** @type {string} */ (req.url);
 
@@ -574,7 +574,7 @@ const plugin = function (defaults = {}) {
 				{
 					name: 'vercel-middleware',
 					file: middleware_path,
-					allowedFeatures: []
+					disallowedFeatures: ['$app/server:read']
 				}
 			];
 		}

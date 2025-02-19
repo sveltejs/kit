@@ -134,7 +134,7 @@ async function analyse({
 
 			for (const additional of additional_entry_points) {
 				for (const feature of list_features(additional.file, server_manifest, tracked_features)) {
-					if (!additional.allowedFeatures.includes(feature)) {
+					if (additional.disallowedFeatures?.includes(feature)) {
 						throw new Error(
 							`Usage of ${feature} (imported directly or indirectly) is not allowed in ${additional.file}`
 						);

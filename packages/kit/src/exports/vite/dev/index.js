@@ -426,8 +426,18 @@ export async function dev(vite, vite_config, svelte_config) {
 	};
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const additional_entry_points = svelte_config.kit.adapter?.additionalEntryPoints?.() ?? [];
 	const emulator = await svelte_config.kit.adapter?.emulate?.({
-		importFile: (file) => vite.ssrLoadModule(file)
+		importEntryPoint: (entry) => {
+			const file = additional_entry_points.find((e) => e.name === entry)?.file;
+			if (!file) {
+				throw new Error(
+					`Entry point '${entry}' not found: ` +
+						'Adapters can only import entry points defined previously through additionalEntryPoints'
+				);
+			}
+			return vite.ssrLoadModule(file);
+		}
 	});
 
 	/**

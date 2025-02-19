@@ -32,7 +32,10 @@ declare module '@sveltejs/kit' {
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering
 		 */
-		emulate?: (helpers: { importFile: (fileUrl: string) => Promise<any> }) => MaybePromise<Emulator>;
+		emulate?: (helpers: {
+			/** Allows to import an entry point defined within `additionalEntryPoints` by referencing its name */
+			importEntryPoint: (name: string) => Promise<any>;
+		}) => MaybePromise<Emulator>;
 		/**
 		 * A function that returns additional entry points for Vite to consider during compilation.
 		 * This is useful for adapters that want to generate separate bundles for e.g. middleware.
@@ -1661,9 +1664,12 @@ declare module '@sveltejs/kit' {
 	type TrackedFeature = '$app/server:read';
 
 	interface AdditionalEntryPoint {
+		/** Unique name of the entry point. Will be written to disk during build at `output/server/<name>.js` */
 		name: string;
+		/** Path relative to the project root of the corresponding file (e.g. `foo.js` means it's at `<project-root>/foo.js`) */
 		file: string;
-		allowedFeatures: TrackedFeature[];
+		/** Define which features should not be allowed within the entry point (or the files it imports) */
+		disallowedFeatures?: TrackedFeature[];
 	}
 
 	interface Prerendered {
@@ -2039,6 +2045,8 @@ declare module '@sveltejs/kit' {
 	 * Strips possible SvelteKit-internal suffixes from the URL pathname.
 	 * Returns the normalized URL as well as a method for adding the potential suffix back based on a new pathname.
 	 * ```js
+	 * import { normalizeUrl } from '@sveltejs/kit';
+	 *
 	 * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
 	 * console.log(url.pathname); // /blog/post
 	 * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json

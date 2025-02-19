@@ -52,7 +52,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.({
-		importFile: (file) => import(file)
+		importEntryPoint: (entry) => import(pathToFileURL(join(dir, `${entry}.js`)).href)
 	});
 
 	return () => {

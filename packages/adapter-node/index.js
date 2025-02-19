@@ -108,13 +108,13 @@ export default function (opts = {}) {
 			});
 		},
 
-		emulate: ({ importFile }) => {
+		emulate: (opts) => {
 			if (!existsSync(middleware_path)) return {};
 
 			return {
 				beforeRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
-					const middleware = await importFile(pathToFileURL(middleware_path).href);
+					const middleware = await opts.importEntryPoint('node-middleware');
 					return middleware.default(req, res, next);
 				}
 			};
@@ -126,8 +126,7 @@ export default function (opts = {}) {
 			return [
 				{
 					name: 'node-middleware',
-					file: middleware_path,
-					allowedFeatures: ['$app/server:read']
+					file: middleware_path
 				}
 			];
 		},

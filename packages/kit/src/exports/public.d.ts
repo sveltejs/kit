@@ -51,7 +51,10 @@ export interface Adapter {
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering
 	 */
-	emulate?: (helpers: { importFile: (fileUrl: string) => Promise<any> }) => MaybePromise<Emulator>;
+	emulate?: (helpers: {
+		/** Allows to import an entry point defined within `additionalEntryPoints` by referencing its name */
+		importEntryPoint: (name: string) => Promise<any>;
+	}) => MaybePromise<Emulator>;
 	/**
 	 * A function that returns additional entry points for Vite to consider during compilation.
 	 * This is useful for adapters that want to generate separate bundles for e.g. middleware.
