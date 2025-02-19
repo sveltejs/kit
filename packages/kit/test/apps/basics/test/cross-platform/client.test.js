@@ -1077,6 +1077,7 @@ test.describe.serial('WebSockets', () => {
 		await page.goto('/ws/handle-error/upgrade');
 		await page.locator('button', { hasText: 'upgrade' }).click();
 		expect(page.getByText('error')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
 		const error = read_errors('/ws/handle-error/upgrade');
 		expect(error.message).toBe('upgrade hook');
 	});
@@ -1085,6 +1086,7 @@ test.describe.serial('WebSockets', () => {
 		await page.goto('/ws/handle-error/open');
 		await page.locator('button', { hasText: 'open' }).click();
 		expect(page.getByText('opened')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
 		const error = read_errors('/ws/handle-error/open');
 		expect(error.message).toBe('open hook');
 	});
@@ -1093,6 +1095,7 @@ test.describe.serial('WebSockets', () => {
 		await page.goto('/ws/handle-error/message');
 		await page.locator('button', { hasText: 'message' }).click();
 		expect(page.getByText('message received')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
 		const error = read_errors('/ws/handle-error/message');
 		expect(error.message).toBe('message hook');
 	});
@@ -1103,6 +1106,7 @@ test.describe.serial('WebSockets', () => {
 		expect(page.getByText('connected')).toBeVisible();
 		await page.locator('button', { hasText: 'close' }).click();
 		expect(page.getByText('closed')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
 		const error = read_errors('/ws/handle-error/close');
 		expect(error.message).toBe('close hook');
 	});
