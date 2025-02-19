@@ -143,10 +143,10 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 ## Edge Middleware
 
-You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing a `vercel-middleware.js` file at the root of your project. You can use it to intercept requests even for prerendered or ISR'd pages. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered or ISR'd pages by rerouting a user to either variant A or B depending on a cookie.
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing a `edge-middleware.js` file at the root of your project. You can use it to intercept requests even for prerendered or ISR'd pages. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered or ISR'd pages by rerouting a user to either variant A or B depending on a cookie.
 
 ```js
-/// file: vercel-middleware.js
+/// file: edge-middleware.js
 import { rewrite, next } from '@vercel/edge';
 
 export default async function middleware(request: Request) {
@@ -186,7 +186,7 @@ function split_cookies(cookies: string) {
 
 By default, middleware runs on all requests except for files within `_app/immutable`. You can customize this by exporting a `config` object with a `matcher` property as described in Vercel's [API documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config).
 
-If you want to run code prior to a request but neither have prerendered nor ISR'd pages and have no rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
+> [!NOTE] If you want to run code prior to a request but neither have prerendered nor ISR'd pages and have no rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
 
 ## Environment variables
 

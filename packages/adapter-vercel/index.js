@@ -43,9 +43,9 @@ const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
-let middleware_path = can_use_middleware ? 'vercel-middleware.js' : null;
+let middleware_path = can_use_middleware ? 'edge-middleware.js' : null;
 if (middleware_path && !fs.existsSync(middleware_path)) {
-	middleware_path = 'vercel-middleware.ts';
+	middleware_path = 'edge-middleware.ts';
 	if (!fs.existsSync(middleware_path)) middleware_path = null;
 }
 
@@ -250,7 +250,7 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/middleware.js`, dest, {
 					replace: {
 						SERVER_INIT: `${relativePath}/init.js`,
-						MIDDLEWARE: `${relativePath}/vercel-middleware.js`,
+						MIDDLEWARE: `${relativePath}/edge-middleware.js`,
 						PUBLIC_PREFIX: builder.config.kit.env.publicPrefix,
 						PRIVATE_PREFIX: builder.config.kit.env.privatePrefix
 					}
@@ -511,7 +511,7 @@ const plugin = function (defaults = {}) {
 			return {
 				beforeRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
-					const middleware = await opts.importEntryPoint('vercel-middleware');
+					const middleware = await opts.importEntryPoint('edge-middleware');
 					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));
 					const original_url = /** @type {string} */ (req.url);
 
@@ -572,7 +572,7 @@ const plugin = function (defaults = {}) {
 
 			return [
 				{
-					name: 'vercel-middleware',
+					name: 'edge-middleware',
 					file: middleware_path,
 					disallowedFeatures: ['$app/server:read']
 				}
