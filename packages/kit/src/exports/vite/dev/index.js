@@ -475,7 +475,19 @@ export async function dev(vite, vite_config, svelte_config) {
 			return next();
 		}
 
-		return emulator.beforeRequest(req, res, next);
+		// Vite's base middleware strips out the base path. Restore it for the duration of beforeRequest
+		const prev_url = req.url;
+		req.url = req.originalUrl;
+		const _next = () => {
+			if (prev_url !== req.url) {
+				req.originalUrl = req.url;
+				req.url = /** @type {string} */ (req.url).slice(svelte_config.kit.paths.base.length);
+			} else {
+				req.url = prev_url;
+			}
+			return next();
+		};
+		return emulator.beforeRequest(req, res, _next);
 	});
 
 	vite.middlewares.use((req, res, next) => {

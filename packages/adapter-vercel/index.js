@@ -513,7 +513,7 @@ const plugin = function (defaults = {}) {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importFile(pathToFileURL(middleware_path).href);
 					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));
-					const original_url = req.originalUrl || '/';
+					const original_url = /** @type {string} */ (req.url);
 
 					if (matcher.test(original_url)) {
 						const { url, denormalize } = kit.normalizeUrl(original_url);
@@ -534,11 +534,8 @@ const plugin = function (defaults = {}) {
 						// to apply the headers to the original request/response
 						for (const [key, value] of response.headers) {
 							if (key === 'x-middleware-rewrite') {
-								// Vite removes the base path from req.url
-								const d1 = denormalize(value.slice(original_url.length - (req.url || '/').length));
-								req.url = d1.pathname + d1.search;
-								const d2 = denormalize(value);
-								req.originalUrl = d2.pathname + d2.search;
+								const url = denormalize(value);
+								req.url = url.pathname + url.search;
 							} else if (key.startsWith('x-middleware-request-')) {
 								const header = key.slice('x-middleware-request-'.length);
 								req.headers[header] = value;
