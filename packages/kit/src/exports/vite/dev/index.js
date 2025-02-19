@@ -473,31 +473,37 @@ export async function dev(vite, vite_config, svelte_config) {
 			return next();
 		}
 
-		const base = `${vite.config.server.https ? 'https' : 'http'}://${
-			req.headers[':authority'] || req.headers.host
-		}`;
-		const decoded = decodeURI(new URL(base + req.url).pathname);
-		const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
-		const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
-		const is_static_asset = !!get_asset_uri(req);
+		try {
+			const base = `${vite.config.server.https ? 'https' : 'http'}://${
+				req.headers[':authority'] || req.headers.host
+			}`;
+			const decoded = decodeURI(new URL(base + req.url).pathname); // this can fail when req.url is malformed, hence the early try-catch
+			const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+			const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+			const is_static_asset = !!get_asset_uri(req);
 
-		if (is_file && !is_static_asset) {
-			return next();
-		}
-
-		// Vite's base middleware strips out the base path. Restore it for the duration of beforeRequest
-		const prev_url = req.url;
-		req.url = req.originalUrl;
-		const _next = () => {
-			if (prev_url !== req.url) {
-				req.originalUrl = req.url;
-				req.url = /** @type {string} */ (req.url).slice(svelte_config.kit.paths.base.length);
-			} else {
-				req.url = prev_url;
+			if (is_file && !is_static_asset) {
+				return next();
 			}
-			return next();
-		};
-		return emulator.beforeRequest(req, res, _next);
+
+			// Vite's base middleware strips out the base path. Restore it for the duration of beforeRequest
+			const prev_url = req.url;
+			req.url = req.originalUrl;
+			const _next = () => {
+				if (prev_url !== req.url) {
+					req.originalUrl = req.url;
+					req.url = /** @type {string} */ (req.url).slice(svelte_config.kit.paths.base.length);
+				} else {
+					req.url = prev_url;
+				}
+				return next();
+			};
+			return emulator.beforeRequest(req, res, _next);
+		} catch (e) {
+			const error = coalesce_to_error(e);
+			res.statusCode = 500;
+			res.end(fix_stack_trace(error));
+		}
 	});
 
 	vite.middlewares.use((req, res, next) => {
@@ -529,7 +535,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				const decoded = decodeURI(new URL(base + req.url).pathname); // this can fail when req.url is malformed, hence the early try-catch
 				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
