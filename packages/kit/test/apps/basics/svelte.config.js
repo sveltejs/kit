@@ -6,8 +6,12 @@ const config = {
 		adapter: {
 			name: 'test-adapter',
 			adapt() {},
-			emulate() {
+			emulate(opts) {
 				return {
+					async beforeRequest(req, res, next) {
+						const middleware = await opts.importEntryPoint('test-adapter-middleware');
+						await middleware.default(req, res, next);
+					},
 					platform({ config, prerender }) {
 						return { config, prerender };
 					}
@@ -15,7 +19,14 @@ const config = {
 			},
 			supports: {
 				read: () => true
-			}
+			},
+			additionalEntryPoints: () => [
+				{
+					name: 'test-adapter-middleware',
+					file: 'test-adapter-middleware.js',
+					allowedFeatures: []
+				}
+			]
 		},
 
 		prerender: {
