@@ -1,5 +1,3 @@
-import { json } from '../exports/index.js';
-
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -19,12 +17,6 @@ export class HttpError {
 	toString() {
 		return JSON.stringify(this.body);
 	}
-
-	// Used by crossws to reject a WebSocket connection.
-	// See https://github.com/unjs/crossws/blob/bc55c9765f436316213e9a3b907522cc86013a8c/src/hooks.ts#L69
-	get response() {
-		return json(this.body, { status: this.status });
-	}
 }
 
 export class Redirect {
@@ -35,15 +27,6 @@ export class Redirect {
 	constructor(status, location) {
 		this.status = status;
 		this.location = location;
-	}
-
-	// Used by crossws to reject a WebSocket connection.
-	// See https://github.com/unjs/crossws/blob/bc55c9765f436316213e9a3b907522cc86013a8c/src/hooks.ts#L69
-	get response() {
-		return new Response(undefined, {
-			status: this.status,
-			headers: { location: this.location }
-		});
 	}
 }
 

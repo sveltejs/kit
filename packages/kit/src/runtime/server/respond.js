@@ -484,8 +484,16 @@ async function handle_request(request, options, manifest, state, upgrade) {
 										upgrade_response = new Response(undefined, init);
 										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 									} catch (e) {
+										if (e instanceof HttpError) {
+											upgrade_response = json(e.body, { status: e.status });
+										} else if (e instanceof Redirect) {
+											upgrade_response = new Response(undefined, {
+												status: e.status,
+												headers: { location: e.location }
+											});
+										}
 										// crossws allows throwing a Response to abort the upgrade
-										if (e instanceof Response) {
+										else if (e instanceof Response) {
 											upgrade_response = e;
 										} else {
 											throw e;
@@ -499,8 +507,8 @@ async function handle_request(request, options, manifest, state, upgrade) {
 							return await redirect_or_fatal_error(e);
 						}
 
-						// if the handle hook returned a different response then we
-						// abort upgrading the connection
+						// if the handle hook returned a custom response or the user threw a response
+						// then we abort upgrading the connection
 						if (!response.headers.has('x-sveltekit-upgrade')) {
 							throw response;
 						}

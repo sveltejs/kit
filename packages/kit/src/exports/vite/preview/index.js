@@ -218,6 +218,12 @@ export async function preview(vite, vite_config, svelte_config) {
 			 */
 			async (req, socket, head) => {
 				if (req.headers.upgrade === 'websocket') {
+					const resolve = server.getWebSocketHooksResolver({
+						getClientAddress: get_client_address(req),
+						read,
+						emulator
+					});
+
 					// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
 					// see https://github.com/unjs/crossws/issues/137
 					const request = await getRequest({
@@ -227,12 +233,6 @@ export async function preview(vite, vite_config, svelte_config) {
 					Object.defineProperty(request, 'context', {
 						enumerable: true,
 						value: {}
-					});
-
-					const resolve = server.getWebSocketHooksResolver({
-						getClientAddress: get_client_address(req),
-						read,
-						emulator
 					});
 
 					const hooks = await resolve(request);
