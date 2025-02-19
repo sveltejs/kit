@@ -1,5 +1,13 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	has_data_suffix,
+	has_resolution_suffix,
+	strip_data_suffix,
+	strip_resolution_suffix
+} from '../runtime/pathname.js';
 
 export { VERSION } from '../version.js';
 
@@ -206,4 +214,43 @@ export function fail(status, data) {
  */
 export function isActionFailure(e) {
 	return e instanceof ActionFailure;
+}
+
+/**
+ * Strips possible SvelteKit-internal suffixes from the URL pathname.
+ * Returns the normalized URL as well as a method for adding the potential suffix back based on a new pathname.
+ * ```js
+ * import { normalizeUrl } from '@sveltejs/kit';
+ *
+ * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
+ * console.log(url.pathname); // /blog/post
+ * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
+ * ```
+ * @param {URL | string} url
+ * @returns {{ url: URL, denormalize: (pathname?: string) => URL }}
+ */
+export function normalizeUrl(url) {
+	url = new URL(url, 'http://internal');
+
+	const is_route_resolution = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+
+	if (is_route_resolution) {
+		url.pathname = strip_resolution_suffix(url.pathname);
+	} else if (is_data_request) {
+		url.pathname = strip_data_suffix(url.pathname);
+	}
+
+	return {
+		url,
+		denormalize: (pathname = /** @type {URL} */ (url).pathname) => {
+			url = new URL(pathname, url);
+			if (is_route_resolution) {
+				url.pathname = add_resolution_suffix(url.pathname);
+			} else if (is_data_request) {
+				url.pathname = add_data_suffix(url.pathname);
+			}
+			return url;
+		}
+	};
 }

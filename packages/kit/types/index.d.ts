@@ -2035,6 +2035,19 @@ declare module '@sveltejs/kit' {
 	 * @param e The object to check.
 	 * */
 	export function isActionFailure(e: unknown): e is ActionFailure;
+	/**
+	 * Strips possible SvelteKit-internal suffixes from the URL pathname.
+	 * Returns the normalized URL as well as a method for adding the potential suffix back based on a new pathname.
+	 * ```js
+	 * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
+	 * console.log(url.pathname); // /blog/post
+	 * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
+	 * ```
+	 * */
+	export function normalizeUrl(url: URL | string): {
+		url: URL;
+		denormalize: (pathname?: string) => URL;
+	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
@@ -2134,6 +2147,11 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
+	/**
+	 * Turns the Node request headers into a `Headers` instance
+	 * */
+	export function getRequestHeaders(request: import("http").IncomingMessage): Headers;
+
 	export function getRequest({ request, base, bodySizeLimit }: {
 		request: import("http").IncomingMessage;
 		base: string;
