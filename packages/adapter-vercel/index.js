@@ -106,7 +106,7 @@ const plugin = function (defaults = {}) {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js',
-						REWRITE_HEADER: REWRITE_HEADER
+						REWRITE_HEADER
 					}
 				});
 
@@ -224,7 +224,7 @@ const plugin = function (defaults = {}) {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js',
-						REWRITE_HEADER: REWRITE_HEADER
+						REWRITE_HEADER
 					}
 				});
 
@@ -503,7 +503,7 @@ const plugin = function (defaults = {}) {
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
 		},
 
-		emulate: async (opts) => {
+		emulate: (opts) => {
 			if (!middleware_path) return {};
 
 			return {
