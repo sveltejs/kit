@@ -5,7 +5,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname, get_regex_from_matchers, pattern_to_src, REWRITE_HEADER } from './utils.js';
-import { VERSION } from '@sveltejs/kit';
+// TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
+import * as node_kit from '@sveltejs/kit/node';
 
 const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
@@ -37,7 +39,7 @@ const get_default_runtime = () => {
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
 
-const [major, minor] = VERSION.split('.').map(Number);
+const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
@@ -200,7 +202,7 @@ const plugin = function (defaults = {}) {
 							entrypoint: 'index.js',
 							framework: {
 								slug: 'sveltekit',
-								version: VERSION
+								version: kit.VERSION
 							}
 						},
 						null,
@@ -514,26 +516,12 @@ const plugin = function (defaults = {}) {
 					const original_url = req.originalUrl || '/';
 
 					if (matcher.test(original_url)) {
-						// TODO copied from exports/node/index.js, expose it?
-						let headers = /** @type {Record<string, string>} */ (req.headers);
-						if (req.httpVersionMajor >= 2) {
-							// the Request constructor rejects headers with ':' in the name
-							headers = Object.assign({}, headers);
-							// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
-							if (headers[':authority']) {
-								headers.host = headers[':authority'];
-							}
-							delete headers[':authority'];
-							delete headers[':method'];
-							delete headers[':path'];
-							delete headers[':scheme'];
-						}
-
-						// We omit the body here because it would consume the stream
-						const request = new Request(new URL(original_url, 'https://localhost'), {
-							headers: new Headers(Object.entries(headers)),
+						const { url, denormalize } = kit.normalizeUrl(original_url);
+						const request = new Request(url, {
+							headers: node_kit.getRequestHeaders(req),
 							method: req.method,
 							body:
+								// We omit the body here because it would consume the stream
 								req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
 									? undefined
 									: 'Cannot read body in dev mode'
@@ -545,10 +533,12 @@ const plugin = function (defaults = {}) {
 						// Do the reverse of https://github.com/vercel/vercel/blob/main/packages/functions/src/middleware.ts#L38
 						// to apply the headers to the original request/response
 						for (const [key, value] of response.headers) {
-							if (key === REWRITE_HEADER) {
+							if (key === 'x-middleware-rewrite') {
 								// Vite removes the base path from req.url
-								req.url = value.slice(original_url.length - (req.url || '/').length);
-								req.originalUrl = value;
+								const d1 = denormalize(value.slice(original_url.length - (req.url || '/').length));
+								req.url = d1.pathname + d1.search;
+								const d2 = denormalize(value);
+								req.originalUrl = d2.pathname + d2.search;
 							} else if (key.startsWith('x-middleware-request-')) {
 								const header = key.slice('x-middleware-request-'.length);
 								req.headers[header] = value;
@@ -846,7 +836,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 				experimentalResponseStreaming: !config.isr,
 				framework: {
 					slug: 'sveltekit',
-					version: VERSION
+					version: kit.VERSION
 				}
 			},
 			null,
