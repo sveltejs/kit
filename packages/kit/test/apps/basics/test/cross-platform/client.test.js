@@ -1031,6 +1031,7 @@ test.describe.serial('WebSockets', () => {
 	test('open hook', async ({ page }) => {
 		await page.goto('/ws');
 		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
 		expect(page.getByText('open hook works')).toBeVisible();
 	});
 
