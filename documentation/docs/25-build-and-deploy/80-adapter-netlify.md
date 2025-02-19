@@ -66,6 +66,37 @@ export default {
 };
 ```
 
+## Edge Middleware
+
+You can deploy one Netlify Edge Function [as middleware](https://docs.netlify.com/edge-functions/api/#modify-a-response) by placing an `edge-middleware.js` file at the root of your project. You can use it to intercept requests even for prerendered pages. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered pages by rerouting a user to either variant A or B depending on a cookie.
+
+```js
+/// file: edge-middleware.js
+export default async function middleware(request: Request, { next, cookies }) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = cookies.get('flag');
+
+	// Fall back to random value if this is a new visitor
+	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+
+	// Set a cookie to remember the feature flags for this visitor
+	cookies.set('flag', flag);
+
+	// Get destination URL based on the feature flag
+	return new URL(flag === 'a' ? '/home-a' : '/home-b');
+}
+```
+
+Middleware runs on all requests except for files within `_app/immutable`.
+
+> [!NOTE] Locally during dev and preview this only approximates the capabilities of edge functions. Notably, you cannot read the request or response body, and many properties on the context object are `null`ed.
+
+> [!NOTE] If you want to run code prior to a request but neither have prerendered pages nor rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
