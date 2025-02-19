@@ -21,11 +21,18 @@ export default function (options) {
 		async adapt(builder) {
 			// adapter implementation
 		},
-		async emulate() {
+		async emulate({ importEntryPoint }) {
 			return {
 				async platform({ config, prerender }) {
 					// the returned object becomes `event.platform` during dev, build and
 					// preview. Its shape is that of `App.Platform`
+				},
+				async beforeRequest(req, res, next) {
+					// Allows you to run code before a request to a prerendered page, a static asset,
+					// or a regular request to the SvelteKit runtime, both in dev and preview mode.
+					// Allows you to for example replicate middleware during dev and preview.
+					const module = await importEntryPoint('additional-entry-point');
+					module.default(req, res, next);
 				}
 			}
 		},
@@ -35,7 +42,16 @@ export default function (options) {
 				// from `$app/server` in production, return `false` if it can't.
 				// Or throw a descriptive error describing how to configure the deployment
 			}
-		}
+		},
+		additionalEntryPoints: () => [
+			// Allows you to configure additional entry points for compilation.
+			// You can use these via `importEntryPoint` within `emulate` or reference them
+			// from `${builder.getServerDirectory()}/<name>.js` for further compilation/bundling.
+			{
+				name: 'additional-entry-point',
+				file: 'my-project-root-relative-file.js',
+			}
+		]
 	};
 
 	return adapter;
