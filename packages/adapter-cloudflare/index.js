@@ -2,6 +2,19 @@ import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
+import { VERSION } from '@sveltejs/kit';
+// TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as node_kit from '@sveltejs/kit/node';
+
+const [major, minor] = VERSION.split('.').map(Number);
+const can_use_middleware = major > 2 || (major === 2 && minor > 17);
+
+/** @type {string | null} */
+let middleware_path = can_use_middleware ? 'cloudflare-middleware.js' : null;
+if (middleware_path && !existsSync(middleware_path)) {
+	middleware_path = 'cloudflare-middleware.ts';
+	if (!existsSync(middleware_path)) middleware_path = null;
+}
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
@@ -46,6 +59,11 @@ export default function (options = {}) {
 			);
 
 			writeFileSync(
+				`${tmp}/noop-middleware.js`,
+				'export function onRequest({ next }) { return next() }'
+			);
+
+			writeFileSync(
 				`${dest}/_routes.json`,
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
@@ -63,11 +81,15 @@ export default function (options = {}) {
 			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`,
+					MIDDLEWARE: middleware_path
+						? `${relativePath}/cloudflare-middleware.js`
+						: `${path.posix.relative(dest, tmp)}/noop-middleware.js`
 				}
 			});
 		},
-		emulate() {
+
+		emulate(opts) {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
 			const get_emulated = async () => {
@@ -98,8 +120,75 @@ export default function (options = {}) {
 				platform: async ({ prerender }) => {
 					emulated ??= await get_emulated();
 					return prerender ? emulated.prerender_platform : emulated.platform;
+				},
+				beforeRequest: async (req, res, next) => {
+					emulated ??= await get_emulated();
+					const middleware = await opts.importEntryPoint('cloudflare-middleware');
+
+					const request = new Request(new URL(req.url, 'http://localhost'), {
+						headers: node_kit.getRequestHeaders(req),
+						method: req.method,
+						body:
+							// We omit the body here because it would consume the stream
+							req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
+								? undefined
+								: 'Cannot read body in dev mode'
+					});
+					// @ts-expect-error slight type mismatch which seems harmless
+					request.cf = emulated.platform.cf;
+
+					// Cloudflare allows you to modify the response object after calling next().
+					// This isn't replicable using Vite or Polka middleware, so we approximate it.
+					const fake_response = new Response();
+
+					const response = await middleware.onRequest(
+						/** @type {Partial<import('@cloudflare/workers-types').EventContext<any, any, any>>} */ ({
+							request: /** @type {any} */ (request), // requires a fetcher property which we don't have
+							env: /** @type {any} */ (emulated.platform).env, // does exist, see above
+							...emulated.platform.context,
+							next: async (input, init) => {
+								// More any casts because of annoying CF types
+								const adjusted =
+									input instanceof Request
+										? input
+										: input && new Request(/** @type {any} */ (input), /** @type {any} */ (init));
+
+								if (adjusted) {
+									const url = new URL(adjusted.url);
+									req.url = url.pathname + url.search;
+									for (const [key, value] of adjusted.headers) {
+										req.headers[key] = value;
+									}
+								}
+
+								return /** @type {any} */ (fake_response);
+							}
+						})
+					);
+
+					if (response instanceof Response && response !== fake_response) {
+						// We assume that middleware bails out when returning a custom response
+						node_kit.setResponse(res, response);
+					} else {
+						for (const header of fake_response.headers) {
+							res.setHeader(header[0], header[1]);
+						}
+
+						next();
+					}
 				}
 			};
+		},
+
+		additionalEntryPoints: () => {
+			if (!middleware_path) return [];
+			return [
+				{
+					name: 'cloudflare-middleware',
+					file: middleware_path,
+					disallowedFeatures: ['$app/server:read']
+				}
+			];
 		}
 	};
 }

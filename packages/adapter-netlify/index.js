@@ -5,8 +5,8 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
+import { VERSION } from '@sveltejs/kit';
 // TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
-import * as kit from '@sveltejs/kit';
 import * as node_kit from '@sveltejs/kit/node';
 
 /**
@@ -45,7 +45,7 @@ const edge_set_in_env_var =
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
-const [major, minor] = kit.VERSION.split('.').map(Number);
+const [major, minor] = VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */

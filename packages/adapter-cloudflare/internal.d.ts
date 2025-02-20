@@ -10,3 +10,7 @@ declare module 'MANIFEST' {
 	export const app_path: string;
 	export const base_path: string;
 }
+
+declare module 'MIDDLEWARE' {
+	export function onRequest(context: any): Promise<Response> | Response;
+}
