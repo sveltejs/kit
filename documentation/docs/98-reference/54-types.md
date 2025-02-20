@@ -7,7 +7,7 @@ title: Types
 The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
+/// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @errors: 2355 2322 1360
 /** @type {import('@sveltejs/kit').RequestHandler<{
     foo: string;
@@ -34,8 +34,8 @@ type RouteParams = {
 	baz: string;
 };
 
-export type PageServerLoad = Kit.ServerLoad<RouteParams>;
-export type PageLoad = Kit.Load<RouteParams>;
+export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;
+export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
