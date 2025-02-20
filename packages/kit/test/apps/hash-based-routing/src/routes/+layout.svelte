@@ -9,11 +9,14 @@
 
 <a href="/">/</a>
 <a href="/#/a">/#/a</a>
+<a href="/#/b">/#/b</a>
 <a href="/#/a#b">/#/a#b</a>
 <a href="/#/b/123">/#/b/123</a>
 <a href="/#/b/456">/#/b/456</a>
 <a href="/#/reroute-a">/#/reroute-a</a>
 <a href="/#/reroute-b">/#/reroute-b</a>
+<a href="/#/params/route-1">/#/route-1</a>
+<a href="/#/params/route-2">/#/route-2</a>
 <button data-goto onclick={() => goto('/#/b')}>goto /#/b</button>
 <button data-push onclick={() => pushState('/#/b', {})}>pushState /#/b</button>
 <button data-replace onclick={() => replaceState('/#/a#b', {})}>replaceState /#/a#b</button>
