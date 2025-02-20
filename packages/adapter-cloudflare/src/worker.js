@@ -36,7 +36,7 @@ const worker = {
 				req = new Request(input, init);
 			}
 
-			return inner_fetch(request, env, context);
+			return inner_fetch(req, env, context);
 		};
 
 		response = await onRequest({ ...context, request, env, next });

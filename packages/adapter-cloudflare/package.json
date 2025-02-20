@@ -33,7 +33,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
+		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:MIDDLEWARE --format=esm",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
