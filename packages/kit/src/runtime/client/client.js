@@ -39,7 +39,7 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
-import { add_data_suffix, add_resolution_prefix } from '../pathname.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -273,8 +273,8 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	default_layout_loader();
-	default_error_loader();
+	void default_layout_loader();
+	void default_error_loader();
 
 	current_history_index = history.state?.[HISTORY_INDEX];
 	current_navigation_index = history.state?.[NAVIGATION_INDEX];
@@ -306,7 +306,7 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(app.hash ? decode_hash(new URL(location.href)) : location.href, {
+		await goto(app.hash ? decode_hash(new URL(location.href)) : location.href, {
 			replaceState: true
 		});
 	}
@@ -1265,7 +1265,7 @@ async function get_navigation_intent(url, invalidating) {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			add_resolution_prefix(url.pathname)
+			add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
@@ -1448,7 +1448,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1644,14 +1644,14 @@ function setup_preload() {
 
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			preload(target, 2);
+			void preload(target, 2);
 		}, 20);
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		void preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1661,7 +1661,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
+					void _preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1692,7 +1692,7 @@ function setup_preload() {
 				const intent = await get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
-						_preload_data(intent).then((result) => {
+						void _preload_data(intent).then((result) => {
 							if (result.type === 'loaded' && result.state.error) {
 								console.warn(
 									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
@@ -1703,11 +1703,11 @@ function setup_preload() {
 							}
 						});
 					} else {
-						_preload_data(intent);
+						void _preload_data(intent);
 					}
 				}
 			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url));
+				void _preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1727,7 +1727,7 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url));
+				void _preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -2127,10 +2127,10 @@ export async function applyAction(result) {
 			root.$set(navigation_result.props);
 			update(navigation_result.props.page);
 
-			tick().then(reset_focus);
+			void tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
-		_goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
 		page.form = result.data;
 		page.status = result.status;
@@ -2311,7 +2311,7 @@ function _start_router() {
 			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
 		});
 
-		navigate({
+		await navigate({
 			type: 'link',
 			url,
 			keepfocus: options.keepfocus,
@@ -2362,7 +2362,7 @@ function _start_router() {
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
 
-		navigate({
+		void navigate({
 			type: 'form',
 			url,
 			keepfocus: options.keepfocus,
@@ -2455,7 +2455,7 @@ function _start_router() {
 			// (surprisingly!) mutates `current.url`, allowing us to
 			// detect it and trigger a navigation
 			if (current.url.hash === location.hash) {
-				navigate({ type: 'goto', url: decode_hash(current.url) });
+				void navigate({ type: 'goto', url: decode_hash(current.url) });
 			}
 		}
 	});

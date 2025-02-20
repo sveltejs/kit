@@ -236,7 +236,7 @@ if (!process.env.CI) {
 			await settled();
 			compare('post-error.svelte');
 		} finally {
-			watcher.close();
+			await watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');

@@ -1489,7 +1489,7 @@ export type SubmitFunction<
 			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
 			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-	  }) => void)
+	  }) => MaybePromise<void>)
 >;
 
 /**
