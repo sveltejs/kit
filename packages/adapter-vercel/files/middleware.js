@@ -1,3 +1,5 @@
+/* eslint-disable n/prefer-global/process --
+ Vercel Edge Runtime does not support node:process */
 import { normalizeUrl } from '@sveltejs/kit';
 import { initServer } from 'SERVER_INIT';
 import * as user_middleware from 'MIDDLEWARE';
