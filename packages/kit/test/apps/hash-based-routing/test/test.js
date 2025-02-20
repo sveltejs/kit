@@ -104,7 +104,10 @@ test.describe('hash based navigation', () => {
 		await page.goto('/');
 
 		await page.locator('a[href="/#/a"]').click();
+		await page.waitForURL('/#/a');
+
 		await page.locator('a[href="/#/b"]').click();
+		await page.waitForURL('/#/b');
 
 		await page.goBack();
 		expect(page.locator('p')).toHaveText('a');
