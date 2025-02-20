@@ -36,7 +36,7 @@ export default async (req, res) => {
 
 	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
-	await setResponse(
+	void setResponse(
 		res,
 		await server.respond(request, {
 			getClientAddress() {
