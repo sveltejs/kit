@@ -288,6 +288,45 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('WebSockets', () => {
+	test('error helper rejects upgrade', async ({ request, read_errors }) => {
+		const response = await request.get('/ws/error', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			}
+		});
+
+		const error = read_errors('/ws/error');
+		expect(error).toBeUndefined();
+
+		expect(response.status()).toBe(403);
+		expect(await response.text()).toBe('Forbidden');
+	});
+
+	test('redirect helper redirects', async ({ request, read_errors }) => {
+		const response = await request.get('/ws/redirect', {
+			headers: {
+				upgrade: 'websocket',
+				connection: 'Upgrade',
+				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
+				'Sec-WebSocket-Version': '13',
+				// we need this so that one of our hook handlers doesn't reject us
+				'User-Agent': 'node'
+			},
+			maxRedirects: 0
+		});
+
+		const error = read_errors('/ws/redirect');
+		expect(error).toBeUndefined();
+
+		expect(response.status()).toBe(303);
+		expect(response.headers().location).toBe('%2Fws%3Fme');
+	});
+
 	test('handle can return a custom response during upgrade', async ({ request }) => {
 		const response = await request.get('/ws/handle?custom', {
 			headers: {
@@ -377,26 +416,6 @@ test.describe('WebSockets', () => {
 		});
 		expect(response.status()).toBe(426);
 		expect(await response.text()).toBe('This service requires use of the websocket protocol.');
-	});
-
-	test('returns redirect if thrown', async ({ request, read_errors }) => {
-		const response = await request.get('/ws/redirect', {
-			headers: {
-				upgrade: 'websocket',
-				connection: 'Upgrade',
-				'Sec-WebSocket-Key': 'W3vhWQbVNmNADVH4GinPfg==',
-				'Sec-WebSocket-Version': '13',
-				// we need this so that one of our hook handlers doesn't reject us
-				'User-Agent': 'node'
-			},
-			maxRedirects: 0
-		});
-
-		const error = read_errors('/ws/redirect');
-		expect(error).toBeUndefined();
-
-		expect(response.status()).toBe(303);
-		expect(response.headers().location).toBe('%2Fws%3Fme');
 	});
 });
 

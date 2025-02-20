@@ -11,24 +11,16 @@
 
 <button
 	on:click={() => {
-		primary_socket = new WebSocket('/ws?me');
+		primary_socket = new WebSocket('/ws');
 
 		primary_socket.onopen = () => {
-			messages = [...messages, 'connected'];
+			messages = [...messages, 'connected', `protocol: ${primary_socket.protocol}`];
 		};
 
 		primary_socket.onmessage = (event) => {
 			messages = [...messages, event.data];
 		};
 	}}>open</button
->
-<button
-	on:click={() => {
-		const socket = new WebSocket('/ws');
-		socket.onerror = () => {
-			messages = [...messages, 'rejected'];
-		};
-	}}>rejection</button
 >
 <button on:click={() => primary_socket.send('ping')}>ping</button>
 <button
@@ -38,7 +30,7 @@
 >
 <button
 	on:click={() => {
-		secondary_socket = new WebSocket('/ws?me');
+		secondary_socket = new WebSocket('/ws');
 
 		secondary_socket.onopen = () => {
 			messages = [...messages, 'joined the chat'];

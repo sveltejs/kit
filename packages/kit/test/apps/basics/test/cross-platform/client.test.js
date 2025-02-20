@@ -1020,12 +1020,7 @@ test.describe.serial('WebSockets', () => {
 		await page.goto('/ws');
 		await page.locator('button', { hasText: 'open' }).click();
 		expect(page.getByText('connected')).toBeVisible();
-	});
-
-	test('error helper rejects upgrade', async ({ page }) => {
-		await page.goto('/ws');
-		await page.locator('button', { hasText: 'rejection' }).click();
-		expect(page.getByText('rejected')).toBeVisible();
+		expect(page.getByText('protocol: test')).toBeVisible();
 	});
 
 	test('open hook', async ({ page }) => {

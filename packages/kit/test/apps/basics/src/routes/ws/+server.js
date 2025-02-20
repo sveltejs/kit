@@ -1,13 +1,11 @@
-import { error } from '@sveltejs/kit';
-
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
-	upgrade(req) {
-		const url = new URL(req.url);
-		if (url.searchParams.has('me')) {
-			return;
+	upgrade() {
+		return {
+			headers: {
+				'Sec-WebSocket-Protocol': 'test'
+			}
 		}
-		error(403, 'Forbidden');
 	},
 	open(peer) {
 		peer.send('open hook works');
