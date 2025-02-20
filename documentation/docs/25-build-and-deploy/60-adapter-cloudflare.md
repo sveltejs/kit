@@ -125,8 +125,10 @@ declare module '@cloudflare/workers-types';
 // ---cut---
 import { normalizeUrl } from '@sveltejs/kit';
 
-/** @type {import('@cloudflare/workers-types'.EventContext)} */
-export function onRequest(context) {
+/**
+ * @param {import('@cloudflare/workers-types'.EventContext)} context
+ */
+export function onRequest({ request, next }) {
 	const { url, denormalize } = normalizeUrl(request.url);
 
 	if (url.pathname !== '/') return next();

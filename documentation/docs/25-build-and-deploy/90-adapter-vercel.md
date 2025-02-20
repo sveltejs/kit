@@ -147,9 +147,17 @@ You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/e
 
 ```js
 /// file: edge-middleware.js
+// @filename: ambient.d.ts
+declare module '@vercel/edge';
+
+// @filename: index.js
+// ---cut---
 import { rewrite, next } from '@vercel/edge';
 
-export default async function middleware(request: Request) {
+/**
+ * @param {Request} request
+ */
+export default async function middleware(request) {
 	const url = new URL(request.url);
 
 	if (url.pathname !== '/') return next();

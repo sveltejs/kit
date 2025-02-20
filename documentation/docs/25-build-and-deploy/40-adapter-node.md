@@ -143,9 +143,48 @@ You can integrate Express or Polka middleware into your SvelteKit application bu
 
 ```js
 /// file: node-middleware.js
+// @filename: ambient.d.ts
+declare module '@vercel/edge';
+
+// @filename: index.js
+// ---cut---
+import { normalizeUrl } from '@sveltejs/kit';
+
+/**
+ * @param {import('polka').Request} req
+ * @param {import('polka').Response} res
+ * @param {import('polka').NextHandler} next
+ */
 export default function middleware(req, res, next) {
-  console.log(`Received ${req.method} on ${req.url}`);
-  next(); // move on
+	const { url, denormalize } = normalizeUrl(req.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = split_cookies(req.headers.cookie ?? '')?.flag;
+
+	// Fall back to random value if this is a new visitor
+	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+
+	// Get destination URL based on the feature flag
+	const rewritten = denormalize(flag === 'a' ? '/home-a' : '/home-b');
+	req.url = rewritten.pathname + rewritten.search;
+
+	// Set a cookie to remember the feature flags for this visitor
+	res.appendHeader('Set-Cookie', `flag=${flag}; Path=/`);
+
+	return next();
+}
+
+function split_cookies(cookies: string) {
+	return cookies.split(';').reduce(
+		(acc, cookie) => {
+			const [name, value] = cookie.trim().split('=');
+			acc[name] = value;
+			return acc;
+		},
+		{} as Record<string, string>
+	);
 }
 ```
 

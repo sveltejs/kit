@@ -72,8 +72,19 @@ You can deploy one Netlify Edge Function [as middleware](https://docs.netlify.co
 
 ```js
 /// file: edge-middleware.js
-export default async function middleware(request: Request, { next, cookies }) {
-	const url = new URL(request.url);
+// @filename: ambient.d.ts
+declare module '@netlify/edge-functions';
+
+// @filename: index.js
+// ---cut---
+import { normalizeUrl } from '@sveltejs/kit';
+
+/**
+ * @param {Request} request
+ * @param {import('@netlify/edge-functions').Context} context
+ */
+export default async function middleware(request, { next, cookies }) {
+	const { url, denormalize } = normalizeUrl(request.url);
 
 	if (url.pathname !== '/') return next();
 
@@ -87,7 +98,7 @@ export default async function middleware(request: Request, { next, cookies }) {
 	cookies.set('flag', flag);
 
 	// Get destination URL based on the feature flag
-	return new URL(flag === 'a' ? '/home-a' : '/home-b');
+	return denormalize(flag === 'a' ? '/home-a' : '/home-b');
 }
 ```
 

@@ -143,10 +143,11 @@ export default function (options = {}) {
 
 					const response = await middleware.onRequest(
 						/** @type {Partial<import('@cloudflare/workers-types').EventContext<any, any, any>>} */ ({
+							// eslint-disable-next-line object-shorthand
 							request: /** @type {any} */ (request), // requires a fetcher property which we don't have
 							env: /** @type {any} */ (emulated.platform).env, // does exist, see above
 							...emulated.platform.context,
-							next: async (input, init) => {
+							next: (input, init) => {
 								// More any casts because of annoying CF types
 								const adjusted =
 									input instanceof Request
@@ -161,20 +162,20 @@ export default function (options = {}) {
 									}
 								}
 
-								return /** @type {any} */ (fake_response);
+								return Promise.resolve(/** @type {any} */ (fake_response));
 							}
 						})
 					);
 
 					if (response instanceof Response && response !== fake_response) {
 						// We assume that middleware bails out when returning a custom response
-						node_kit.setResponse(res, response);
+						return node_kit.setResponse(res, response);
 					} else {
 						for (const header of fake_response.headers) {
 							res.setHeader(header[0], header[1]);
 						}
 
-						next();
+						return next();
 					}
 				}
 			};
