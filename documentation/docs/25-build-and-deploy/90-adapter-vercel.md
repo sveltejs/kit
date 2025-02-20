@@ -180,7 +180,8 @@ export default async function middleware(request) {
 	);
 }
 
-function split_cookies(cookies: string) {
+/** @param {string} cookies */
+function split_cookies(cookies) {
 	return cookies.split(';').reduce(
 		(acc, cookie) => {
 			const [name, value] = cookie.trim().split('=');

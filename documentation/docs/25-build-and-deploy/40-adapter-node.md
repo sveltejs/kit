@@ -144,7 +144,7 @@ You can integrate Express or Polka middleware into your SvelteKit application bu
 ```js
 /// file: node-middleware.js
 // @filename: ambient.d.ts
-declare module '@vercel/edge';
+declare module 'polka';
 
 // @filename: index.js
 // ---cut---
@@ -176,7 +176,8 @@ export default function middleware(req, res, next) {
 	return next();
 }
 
-function split_cookies(cookies: string) {
+/** @param {string} cookies */
+function split_cookies(cookies) {
 	return cookies.split(';').reduce(
 		(acc, cookie) => {
 			const [name, value] = cookie.trim().split('=');
