@@ -30,10 +30,9 @@ export default {
 				exclude: ['<all>']
 			},
 			platformProxy: {
-				configPath: 'wrangler.toml',
+				configPath: undefined,
 				environment: undefined,
-				experimentalJsonConfig: false,
-				persist: false
+				persist: undefined
 			}
 		})
 	}
@@ -104,9 +103,9 @@ export {};
 
 ### Testing Locally
 
-Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
 
 ## Notes
 
