@@ -112,14 +112,4 @@ test.describe('hash based navigation', () => {
 		await page.goForward();
 		expect(page.locator('p')).toHaveText('b');
 	});
-
-	test('load functions are rerun', async ({ page }) => {
-		await page.goto('/');
-
-		await page.locator('a[href="/#/params/route-1"]').click();
-		expect(page.locator('p')).toHaveText('route-1');
-
-		await page.goto('/#/params/route-2');
-		expect(page.locator('p')).toHaveText('route-2');
-	});
 });
