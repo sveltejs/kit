@@ -1,20 +1,9 @@
-import { existsSync, writeFileSync } from 'node:fs';
-import path, { posix, dirname } from 'node:path';
 import { execSync } from 'node:child_process';
-import esbuild from 'esbuild';
+import { writeFileSync } from 'node:fs';
+import { posix, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import esbuild from 'esbuild';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
-import process from 'node:process';
-
-/**
- * @typedef {{
- *   main: string;
- *   site: {
- *     bucket: string;
- *   }
- *   compatibility_flags?: string[];
- * }} WranglerConfig
- */
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -32,7 +21,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
+export default function ({ config, platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -187,43 +176,46 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 }
 
 /**
- * @returns { string | undefined }
- */
-function findWranglerConfig() {
-	for (const extension of ['json', 'jsonc', 'toml']) {
-		const configPath = path.join(process.cwd(), `wrangler.${extension}`);
-
-		if (existsSync(configPath)) {
-			return configPath;
-		}
-	}
-}
-
-/**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} config_file
  * @returns {import('wrangler').Unstable_Config}
  */
-function validate_config(builder, config_file) {
-	if (!existsSync(config_file)) {
-		config_file = findWranglerConfig();
-	}
-
-	if (!existsSync(config_file)) {
-		throw new Error('Config not found. Have you created a wrangler.json(c) or wrangler.toml file?');
-	}
-
+function validate_config(builder, config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
+
+	if (!wrangler_config.configPath) {
+		builder.log.error(
+			'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
+		);
+		builder.log(
+			`
+Sample wrangler.jsonc:
+{
+	"name": "<your-service-name>",
+	"account_id": "<your-account-id>",
+	"main": "./.cloudflare/worker.js",
+	"site": {
+		"bucket": "./.cloudflare/public"
+	},
+	"build": {
+		"command": "npm run build"
+	},
+	"compatibility_date": "2021-11-12"
+}
+	`.trim()
+		);
+		throw new Error('Missing a Wrangler configuration file');
+	}
 
 	if (!wrangler_config.site?.bucket) {
 		throw new Error(
-			`You must specify site.bucket in ${config_file}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+			`You must specify the \`site.bucket\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
 		);
 	}
 
 	if (!wrangler_config.main) {
 		throw new Error(
-			`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
+			`You must specify the \`main\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
 		);
 	}
 
