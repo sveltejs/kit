@@ -1020,7 +1020,7 @@ test.describe.serial('WebSockets', () => {
 		await page.goto('/ws');
 		await page.locator('button', { hasText: 'open' }).click();
 		expect(page.getByText('connected')).toBeVisible();
-		expect(page.getByText('protocol: test')).toBeVisible();
+		expect(page.getByText('protocol: bar')).toBeVisible();
 	});
 
 	test('open hook', async ({ page }) => {

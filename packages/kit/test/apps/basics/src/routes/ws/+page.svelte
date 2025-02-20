@@ -11,7 +11,7 @@
 
 <button
 	on:click={() => {
-		primary_socket = new WebSocket('/ws');
+		primary_socket = new WebSocket('/ws', ['foo', 'bar']);
 
 		primary_socket.onopen = () => {
 			messages = [...messages, 'connected', `protocol: ${primary_socket.protocol}`];

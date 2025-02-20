@@ -1,10 +1,14 @@
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
-	upgrade() {
-		return {
-			headers: {
-				'Sec-WebSocket-Protocol': 'test'
-			}
+	upgrade(request) {
+		const protocols = request.headers.get('Sec-WebSocket-Protocol')?.split(',');
+
+		if (protocols?.includes('bar')) {
+			return {
+				headers: {
+					'Sec-WebSocket-Protocol': 'bar'
+				}
+			};
 		}
 	},
 	open(peer) {
