@@ -1,7 +1,10 @@
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
 	upgrade(request) {
-		const protocols = request.headers.get('Sec-WebSocket-Protocol')?.split(',');
+		const protocols = request.headers
+			.get('Sec-WebSocket-Protocol')
+			?.split(',')
+			.map((s) => s.trim());
 
 		if (protocols?.includes('bar')) {
 			return {
