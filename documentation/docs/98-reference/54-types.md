@@ -7,7 +7,7 @@ title: Types
 The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
+/// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @errors: 2355 2322 1360
 /** @type {import('@sveltejs/kit').RequestHandler<{
     foo: string;
@@ -34,14 +34,14 @@ type RouteParams = {
 	baz: string;
 };
 
-export type PageServerLoad = Kit.ServerLoad<RouteParams>;
+export type RequestHandler = Kit.RequestHandler<RouteParams>;
 export type PageLoad = Kit.Load<RouteParams>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
+/// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @filename: $types.d.ts
 import type * as Kit from '@sveltejs/kit';
 
@@ -51,12 +51,12 @@ type RouteParams = {
 	baz: string;
 }
 
-export type PageServerLoad = Kit.ServerLoad<RouteParams>;
+export type RequestHandler = Kit.RequestHandler<RouteParams>;
 
 // @filename: index.js
-// @errors: 2355
+// @errors: 2355 2322
 // ---cut---
-/** @type {import('./$types').PageServerLoad} */
+/** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
 	// ...
 }
@@ -84,7 +84,9 @@ export async function load({ params, fetch }) {
 }
 ```
 
-The return types of the load functions are then available through the `$types` module as `PageData` and `LayoutData` respectively, while the union of the return values of all `Actions` is available as `ActionData`. Starting with version 2.16.0, two additional helper types are provided. `PageProps` defines `data: PageData`, as well as `form: ActionData`, when there are actions defined. `LayoutProps` defines `data: LayoutData`, as well as `children: Snippet`:
+The return types of the load functions are then available through the `$types` module as `PageData` and `LayoutData` respectively, while the union of the return values of all `Actions` is available as `ActionData`.
+
+Starting with version 2.16.0, two additional helper types are provided: `PageProps` defines `data: PageData`, as well as `form: ActionData`, when there are actions defined, while `LayoutProps` defines `data: LayoutData`, as well as `children: Snippet`.
 
 ```svelte
 <!--- file: src/routes/+page.svelte --->
