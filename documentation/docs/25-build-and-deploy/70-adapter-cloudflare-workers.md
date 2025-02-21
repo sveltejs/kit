@@ -4,7 +4,7 @@ title: Cloudflare Workers
 
 To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
-> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
+> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use [`adapter-cloudflare`](adapter-cloudflare) instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -32,11 +32,11 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### platformProxy
 
-Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
+Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
 
 ## Basic Configuration
 
-This adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/platform/sites/configuration) in the project root. It should look something like this:
+This adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/configuration/sites/configuration/) in the project root. It should look something like this:
 
 ```jsonc
 /// file: wrangler.jsonc
@@ -62,7 +62,7 @@ https://dash.cloudflare.com/<your-account-id>/home
 
 > [!NOTE] You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) and the `.wrangler` directory to your `.gitignore`.
 
-You will need to install [Wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
+You will need to install [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-and-update/) and log in, if you haven't already:
 
 ```sh
 npm i -D wrangler
@@ -77,7 +77,7 @@ wrangler deploy
 
 ## Runtime APIs
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/platform/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#the-cf-property-requestinitcfproperties), meaning that you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/context/), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties), meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -86,9 +86,9 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> [!NOTE] SvelteKit's built-in `$env` module should be preferred for environment variables.
+> [!NOTE] SvelteKit's built-in [`$env` module]($env-static-private) should be preferred for environment variables.
 
-To make these types available to your app, install `@cloudflare/workers-types` and reference them in your `src/app.d.ts`:
+To make these types available to your app, install [`@cloudflare/workers-types`](https://www.npmjs.com/package/@cloudflare/workers-types) and reference them in your `src/app.d.ts`:
 
 ```ts
 /// file: src/app.d.ts
