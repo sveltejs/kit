@@ -90,7 +90,7 @@ export default {
 
 Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
-> Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
+> [!NOTE] Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
 
 To add ISR to a route, include the `isr` property in your `config` object:
 
@@ -107,7 +107,7 @@ export const config = {
 };
 ```
 
-> Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
+> [!NOTE] Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
 
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 
@@ -139,7 +139,7 @@ vercel env pull .env.development.local
 
 A list of valid query parameters that contribute to the cache key. Other parameters (such as utm tracking codes) will be ignored, ensuring that they do not result in content being re-generated unnecessarily. By default, query parameters are ignored.
 
-> Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
+> [!NOTE] Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
 
 ## Edge Middleware
 
