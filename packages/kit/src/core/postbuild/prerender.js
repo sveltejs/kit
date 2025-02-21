@@ -119,7 +119,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const emulator = await config.adapter?.emulate?.({
 		importEntryPoint: (entry) =>
-			import(pathToFileURL(`${config.outDir}/output/server/${entry}.js`).href)
+			import(pathToFileURL(`${config.outDir}/output/server/adapter/${entry}.js`).href)
 	});
 
 	/** @type {import('types').Logger} */

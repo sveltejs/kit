@@ -58,7 +58,10 @@ export default function (opts = {}) {
 			);
 
 			if (!middleware_path) {
-				writeFileSync(`${tmp}/node-middleware.js`, 'export default (req, res, next) => next();');
+				writeFileSync(
+					`${tmp}/adapter/node-middleware.js`,
+					'export default (req, res, next) => next();'
+				);
 			}
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
