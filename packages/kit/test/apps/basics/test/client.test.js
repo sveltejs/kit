@@ -827,32 +827,51 @@ test.describe('Invalidation', () => {
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-preload-code', async ({ page }) => {
 		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => {
-			requests.push(r.url());
+		const responses = [];
+
+		const nodes_location = process.env.DEV
+			? '.svelte-kit/generated/client/nodes/'
+			: '/_app/immutable/nodes/';
+
+		page.on('response', async (response) => {
+			const url = response.url();
+			if (url.includes(nodes_location)) {
+				responses.push(url);
+			}
 		});
 
 		// eager
 		await page.goto('/data-sveltekit/preload-code');
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		// expect 4 nodes on initial load: root layout, root error, current page, and eager preload
+		expect(responses.length).toEqual(4);
 
 		// viewport
-		requests.length = 0;
+		responses.length = 0;
 		page.locator('#viewport').scrollIntoViewIfNeeded();
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		await page.locator('#viewport').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 
 		// hover
-		requests.length = 0;
-		await page.locator('#hover').dispatchEvent('mousemove');
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		responses.length = 0;
+		await page.locator('#hover').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 
 		// tap
-		requests.length = 0;
-		await page.locator('#tap').dispatchEvent('touchstart');
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		responses.length = 0;
+		await page.locator('#tap').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 	});
 
 	test('data-sveltekit-preload-data', async ({ page }) => {
@@ -875,7 +894,7 @@ test.describe('data-sveltekit attributes', () => {
 		});
 
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#one').dispatchEvent('mousemove');
+		await page.locator('#one').hover();
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -884,7 +903,7 @@ test.describe('data-sveltekit attributes', () => {
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#two').dispatchEvent('mousemove');
+		await page.locator('#two').hover();
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -893,12 +912,21 @@ test.describe('data-sveltekit attributes', () => {
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#three').dispatchEvent('mousemove');
+		await page.locator('#three').hover();
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(0);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#tap').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({

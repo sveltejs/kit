@@ -1,3 +1,5 @@
+<a id="eager" href="/data-sveltekit/preload-code/target/eager" data-sveltekit-preload-code="eager">eager</a>
+
 <div style="height: 200vh"></div>
 
 <a
