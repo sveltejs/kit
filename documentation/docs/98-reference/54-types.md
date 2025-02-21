@@ -54,7 +54,7 @@ type RouteParams = {
 export type RequestHandler = Kit.RequestHandler<RouteParams>;
 
 // @filename: index.js
-// @errors: 2355
+// @errors: 2355 2322
 // ---cut---
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
