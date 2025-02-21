@@ -34,14 +34,14 @@ type RouteParams = {
 	baz: string;
 };
 
-export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;
-export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;
+export type RequestHandler = Kit.RequestHandler<RouteParams>;
+export type RequestEvent = Kit.RequestEvent<RouteParams>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
+/// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @filename: $types.d.ts
 import type * as Kit from '@sveltejs/kit';
 
@@ -51,12 +51,12 @@ type RouteParams = {
 	baz: string;
 }
 
-export type PageServerLoad = Kit.ServerLoad<RouteParams>;
+export type RequestHandler = Kit.RequestHandler<RouteParams>;
 
 // @filename: index.js
 // @errors: 2355
 // ---cut---
-/** @type {import('./$types').PageServerLoad} */
+/** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
 	// ...
 }
