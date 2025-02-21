@@ -6,3 +6,5 @@
 		>three</a
 	>
 </div>
+
+<a id="tap" href="/data-sveltekit/preload-data/target" data-sveltekit-preload-data="tap">tap</a>
