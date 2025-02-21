@@ -70,7 +70,7 @@ export default function (opts = {}) {
 				input: {
 					index: `${tmp}/index.js`,
 					manifest: `${tmp}/manifest.js`,
-					'node-middleware': `${tmp}/node-middleware.js`
+					'node-middleware': `${tmp}/adapter/node-middleware.js`
 				},
 				external: [
 					// dependencies could have deep exports, so we need a regex
@@ -120,16 +120,7 @@ export default function (opts = {}) {
 			};
 		},
 
-		additionalEntryPoints: () => {
-			if (!middleware_path) return [];
-
-			return [
-				{
-					name: 'node-middleware',
-					file: middleware_path
-				}
-			];
-		},
+		additionalEntryPoints: { 'node-middleware': middleware_path },
 
 		supports: {
 			read: () => true

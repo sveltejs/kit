@@ -217,7 +217,7 @@ async function kit({ svelte_config }) {
 	const tracked_features = {};
 
 	/** Adapter-provided additional entry points */
-	const additional_entry_points = kit.adapter?.additionalEntryPoints?.() ?? [];
+	const additional_entry_points = kit.adapter?.additionalEntryPoints ?? {};
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -605,8 +605,10 @@ Tips:
 					input.init = `${runtime_directory}/server/init.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
 
-					for (const additional of additional_entry_points) {
-						input[additional.name] = additional.file;
+					for (const [entry, file] of Object.entries(additional_entry_points)) {
+						if (file) {
+							input[`adapter/${entry}`] = file;
+						}
 					}
 
 					// add entry points for every endpoint...

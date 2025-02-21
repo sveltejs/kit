@@ -25,8 +25,10 @@ declare module '@sveltejs/kit' {
 			/**
 			 * Test support for `read` from `$app/server`
 			 * @param config The merged route config
+			 * @param route The route and its ID
+			 * @param entry Name of the entry point, in case this was called from an additional entry point (route and config are irrelevant in this case)
 			 */
-			read?: (details: { config: any; route: { id: string } }) => boolean;
+			read?: (details: { config: any; route: { id: string }; entry?: string }) => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -37,10 +39,12 @@ declare module '@sveltejs/kit' {
 			importEntryPoint: (name: string) => Promise<any>;
 		}) => MaybePromise<Emulator>;
 		/**
-		 * A function that returns additional entry points for Vite to consider during compilation.
+		 * An object with additional entry points for Vite to consider during compilation.
+		 * The key is the name of the entry point that will be later available at `${builder.getServerDirectory()}/adapter/<name>.js`,
+		 * the value is the relative path to the entry point file.
 		 * This is useful for adapters that want to generate separate bundles for e.g. middleware.
 		 */
-		additionalEntryPoints?: () => AdditionalEntryPoint[];
+		additionalEntryPoints?: Record<string, string | undefined | null>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -1658,17 +1662,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	type MaybePromise<T> = T | Promise<T>;
-
-	type TrackedFeature = '$app/server:read';
-
-	interface AdditionalEntryPoint {
-		/** Unique name of the entry point. Will be written to disk during build at `output/server/<name>.js` */
-		name: string;
-		/** Path relative to the project root of the corresponding file (e.g. `foo.js` means it's at `<project-root>/foo.js`) */
-		file: string;
-		/** Define which features should not be allowed within the entry point (or the files it imports) */
-		disallowedFeatures?: TrackedFeature[];
-	}
 
 	interface Prerendered {
 		/**

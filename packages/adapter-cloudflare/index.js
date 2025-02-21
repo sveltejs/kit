@@ -83,7 +83,7 @@ export default function (options = {}) {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`,
 					MIDDLEWARE: middleware_path
-						? `${relativePath}/cloudflare-middleware.js`
+						? `${relativePath}/adapter/cloudflare-middleware.js`
 						: `${path.posix.relative(dest, tmp)}/noop-middleware.js`
 				}
 			});
@@ -181,16 +181,7 @@ export default function (options = {}) {
 			};
 		},
 
-		additionalEntryPoints: () => {
-			if (!middleware_path) return [];
-			return [
-				{
-					name: 'cloudflare-middleware',
-					file: middleware_path,
-					disallowedFeatures: ['$app/server:read']
-				}
-			];
-		}
+		additionalEntryPoints: { 'cloudflare-middleware': middleware_path }
 	};
 }
 

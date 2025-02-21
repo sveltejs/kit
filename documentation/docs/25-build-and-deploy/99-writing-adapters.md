@@ -43,15 +43,12 @@ export default function (options) {
 				// Or throw a descriptive error describing how to configure the deployment
 			}
 		},
-		additionalEntryPoints: () => [
-			// Allows you to configure additional entry points for compilation.
-			// You can use these via `importEntryPoint` within `emulate` or reference them
-			// from `${builder.getServerDirectory()}/<name>.js` for further compilation/bundling.
-			{
-				name: 'additional-entry-point',
-				file: 'my-project-root-relative-file.js',
-			}
-		]
+		// Allows you to configure additional entry points for compilation.
+		// You can use these via `importEntryPoint` within `emulate` and reference them
+		// from `${builder.getServerDirectory()}/adapter/<name>.js` for further compilation/bundling.
+		additionalEntryPoints: {
+			'additional-entry-point': 'my-project-root-relative-file.js'
+		}
 	};
 
 	return adapter;

@@ -27,7 +27,7 @@ export default forked(import.meta.url, analyse);
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, import('types').TrackedFeature[]>;
- *   additional_entry_points: import('types').AdditionalEntryPoint[]
+ *   additional_entry_points: Record<string, string | undefined | null>
  *   env: Record<string, string>
  * }} opts
  */
@@ -94,6 +94,14 @@ async function analyse({
 		};
 	}
 
+	for (const [entry, file] of Object.entries(additional_entry_points)) {
+		if (file) {
+			for (const feature of list_features(file, server_manifest, tracked_features)) {
+				check_feature('', {}, entry, feature, config.adapter);
+			}
+		}
+	}
+
 	// analyse routes
 	for (const route of manifest._.routes) {
 		const page =
@@ -129,17 +137,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
-			}
-
-			for (const additional of additional_entry_points) {
-				for (const feature of list_features(additional.file, server_manifest, tracked_features)) {
-					if (additional.disallowedFeatures?.includes(feature)) {
-						throw new Error(
-							`Usage of ${feature} (imported directly or indirectly) is not allowed in ${additional.file}`
-						);
-					}
-				}
+				check_feature(route.id, route_config, undefined, feature, config.adapter);
 			}
 		}
 

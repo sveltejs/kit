@@ -250,7 +250,7 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/middleware.js`, dest, {
 					replace: {
 						SERVER_INIT: `${relativePath}/init.js`,
-						MIDDLEWARE: `${relativePath}/edge-middleware.js`,
+						MIDDLEWARE: `${relativePath}/adapter/edge-middleware.js`,
 						PUBLIC_PREFIX: builder.config.kit.env.publicPrefix,
 						PRIVATE_PREFIX: builder.config.kit.env.privatePrefix
 					}
@@ -554,7 +554,11 @@ const plugin = function (defaults = {}) {
 
 		supports: {
 			// reading from the filesystem only works in serverless functions
-			read: ({ config, route }) => {
+			read: ({ config, route, entry }) => {
+				if (entry === 'edge-middleware') {
+					throw new Error(`${name}: Cannot use \`read\` from \`$app/server\` in Edge Middleware`);
+				}
+
 				const runtime = config.runtime ?? defaults.runtime;
 
 				if (runtime === 'edge') {
@@ -567,17 +571,7 @@ const plugin = function (defaults = {}) {
 			}
 		},
 
-		additionalEntryPoints: () => {
-			if (!middleware_path) return [];
-
-			return [
-				{
-					name: 'edge-middleware',
-					file: middleware_path,
-					disallowedFeatures: ['$app/server:read']
-				}
-			];
-		}
+		additionalEntryPoints: { 'edge-middleware': middleware_path }
 	};
 };
 

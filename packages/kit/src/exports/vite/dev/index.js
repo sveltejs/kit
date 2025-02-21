@@ -37,11 +37,34 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
 		const context = async_local_storage.getStore();
-		if (!context || context.prerender === true) return;
+
+		if (!context) {
+			const files = new Error().stack
+				?.split('\n')
+				.map((line) => line.match(/\((.*?):\d+:\d+\)/)?.[1])
+				.map((file) => file?.replace(cwd.replaceAll('\\', '/') + '/', ''));
+
+			for (const [entry, file] of Object.entries(additional_entry_points)) {
+				if (files?.includes(file ?? undefined)) {
+					check_feature(
+						'',
+						{},
+						entry,
+						/** @type {import('types').TrackedFeature} */ (label),
+						svelte_config.kit.adapter
+					);
+				}
+			}
+
+			return;
+		} else if (context.prerender === true) {
+			return;
+		}
 
 		check_feature(
 			context.event.route.id,
 			context.config,
+			undefined,
 			/** @type {import('types').TrackedFeature} */ (label),
 			svelte_config.kit.adapter
 		);
@@ -426,10 +449,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	};
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const additional_entry_points = svelte_config.kit.adapter?.additionalEntryPoints?.() ?? [];
+	const additional_entry_points = svelte_config.kit.adapter?.additionalEntryPoints ?? {};
 	const emulator = await svelte_config.kit.adapter?.emulate?.({
 		importEntryPoint: (entry) => {
-			const file = additional_entry_points.find((e) => e.name === entry)?.file;
+			const file = additional_entry_points[entry];
 			if (!file) {
 				throw new Error(
 					`Entry point '${entry}' not found: ` +

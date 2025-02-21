@@ -210,17 +210,12 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			};
 		},
 
-		additionalEntryPoints: () => {
-			if (!middleware_path) return [];
-			return [
-				{ name: 'edge-middleware', file: middleware_path, disallowedFeatures: ['$app/server:read'] }
-			];
-		},
+		additionalEntryPoints: { 'edge-middleware': middleware_path },
 
 		supports: {
 			// reading from the filesystem only works in serverless functions
-			read: ({ route }) => {
-				if (edge) {
+			read: ({ route, entry }) => {
+				if (edge || entry === 'edge-middleware') {
 					throw new Error(
 						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
 					);
@@ -297,7 +292,7 @@ async function generate_edge_middleware({ builder }) {
 	builder.copy(`${files}/middleware.js`, `${tmp}/entry.js`, {
 		replace: {
 			SERVER_INIT: `${relativePath}/init.js`,
-			MIDDLEWARE: `${relativePath}/edge-middleware.js`
+			MIDDLEWARE: `${relativePath}/adapter/edge-middleware.js`
 		}
 	});
 
