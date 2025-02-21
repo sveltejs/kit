@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 5.6.3
+### Patch Changes
+
+
+- chore(deps): upgrade @vercel/nft to fix glob deprecation warnings ([`b1e9781a6dff41841d8e1509311d948421956746`](https://github.com/sveltejs/kit/commit/b1e9781a6dff41841d8e1509311d948421956746))
+
 ## 5.6.2
 ### Patch Changes
 
