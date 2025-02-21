@@ -34,5 +34,11 @@
 	"packageManager": "pnpm@10.4.1",
 	"engines": {
 		"pnpm": ">=9.0.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"svelte-preprocess",
+			"workerd"
+		]
 	}
 }

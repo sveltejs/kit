@@ -88,14 +88,11 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20231121.0
         version: 4.20241205.0
-      '@iarna/toml':
-        specifier: ^2.2.5
-        version: 2.2.5
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
       wrangler:
-        specifier: ^3.28.4
+        specifier: ^3.91.0
         version: 3.109.2(@cloudflare/workers-types@4.20241205.0)
     devDependencies:
       '@cloudflare/kv-asset-handler':
