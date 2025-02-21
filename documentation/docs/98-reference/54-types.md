@@ -35,7 +35,7 @@ type RouteParams = {
 };
 
 export type RequestHandler = Kit.RequestHandler<RouteParams>;
-export type RequestEvent = Kit.RequestEvent<RouteParams>;
+export type PageLoad = Kit.Load<RouteParams>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
@@ -84,7 +84,9 @@ export async function load({ params, fetch }) {
 }
 ```
 
-The return types of the load functions are then available through the `$types` module as `PageData` and `LayoutData` respectively, while the union of the return values of all `Actions` is available as `ActionData`. Starting with version 2.16.0, two additional helper types are provided. `PageProps` defines `data: PageData`, as well as `form: ActionData`, when there are actions defined. `LayoutProps` defines `data: LayoutData`, as well as `children: Snippet`:
+The return types of the load functions are then available through the `$types` module as `PageData` and `LayoutData` respectively, while the union of the return values of all `Actions` is available as `ActionData`.
+
+Starting with version 2.16.0, two additional helper types are provided: `PageProps` defines `data: PageData`, as well as `form: ActionData`, when there are actions defined, while `LayoutProps` defines `data: LayoutData`, as well as `children: Snippet`.
 
 ```svelte
 <!--- file: src/routes/+page.svelte --->
