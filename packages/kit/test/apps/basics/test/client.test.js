@@ -842,6 +842,8 @@ test.describe('data-sveltekit attributes', () => {
 
 		// eager
 		await page.goto('/data-sveltekit/preload-code');
+		await page.locator('#eager').hover();
+		await page.locator('#eager').dispatchEvent('touchstart');
 		// expect 4 nodes on initial load: root layout, root error, current page, and eager preload
 		expect(responses.length).toEqual(4);
 
@@ -849,6 +851,7 @@ test.describe('data-sveltekit attributes', () => {
 		responses.length = 0;
 		page.locator('#viewport').scrollIntoViewIfNeeded();
 		await page.locator('#viewport').hover();
+		await page.locator('#viewport').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -858,6 +861,7 @@ test.describe('data-sveltekit attributes', () => {
 		// hover
 		responses.length = 0;
 		await page.locator('#hover').hover();
+		await page.locator('#hover').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -867,6 +871,7 @@ test.describe('data-sveltekit attributes', () => {
 		// tap
 		responses.length = 0;
 		await page.locator('#tap').hover();
+		await page.locator('#tap').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -922,6 +927,7 @@ test.describe('data-sveltekit attributes', () => {
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#tap').hover();
+		await page.locator('#tap').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
