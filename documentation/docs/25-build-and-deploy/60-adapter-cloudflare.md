@@ -140,7 +140,7 @@ export function onRequest({ request, next }) {
 	flag ||= Math.random() > 0.5 ? 'a' : 'b';
 
 	// Get destination URL based on the feature flag
-	request = new Request(flag === 'a' ? '/home-a' : '/home-b', request);
+	request = new Request(new URL(flag === 'a' ? '/home-a' : '/home-b', url), request);
 
 	const response = await next(request);
 
