@@ -57,6 +57,6 @@ export default [
 			format: 'esm'
 		},
 		plugins: [nodeResolve(), commonjs(), prefixBuiltinModules()],
-		external: ['MIDDLEWARE']
+		external: ['MIDDLEWARE', '@sveltejs/kit']
 	}
 ];
