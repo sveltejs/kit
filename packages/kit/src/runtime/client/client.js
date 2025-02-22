@@ -1677,8 +1677,6 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 		if (!a || a === current_a) return;
 
-		current_a = a;
-
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
 
@@ -1689,6 +1687,7 @@ function setup_preload() {
 
 		if (!options.reload && !same_url) {
 			if (priority <= options.preload_data) {
+				current_a = a;
 				const intent = await get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
@@ -1707,6 +1706,7 @@ function setup_preload() {
 					}
 				}
 			} else if (priority <= options.preload_code) {
+				current_a = a;
 				void _preload_code(/** @type {URL} */ (url));
 			}
 		}
