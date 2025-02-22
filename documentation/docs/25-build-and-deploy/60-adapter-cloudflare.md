@@ -129,7 +129,7 @@ import { normalizeUrl } from '@sveltejs/kit';
  * @param {import('@cloudflare/workers-types'.EventContext)} context
  */
 export function onRequest({ request, next }) {
-	const { url, denormalize } = normalizeUrl(request.url);
+	const url = new URL(request.url);
 
 	if (url.pathname !== '/') return next();
 
@@ -140,7 +140,7 @@ export function onRequest({ request, next }) {
 	flag ||= Math.random() > 0.5 ? 'a' : 'b';
 
 	// Get destination URL based on the feature flag
-	request = new Request(denormalize(flag === 'a' ? '/home-a' : '/home-b'), request);
+	request = new Request(flag === 'a' ? '/home-a' : '/home-b', request);
 
 	const response = await next(request);
 

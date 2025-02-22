@@ -4,9 +4,10 @@ import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-import { VERSION } from '@sveltejs/kit';
+// TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
 
-const [major, minor] = VERSION.split('.').map(Number);
+const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
@@ -57,9 +58,15 @@ export default function (opts = {}) {
 				].join('\n\n')
 			);
 
-			if (!middleware_path) {
+			if (middleware_path) {
+				builder.copy(`${files}/middleware.js`, `${tmp}/adapter/node-middleware-wrapper.js`, {
+					replace: {
+						MIDDLEWARE: './node-middleware.js'
+					}
+				});
+			} else {
 				writeFileSync(
-					`${tmp}/adapter/node-middleware.js`,
+					`${tmp}/adapter/node-middleware-wrapper.js`,
 					'export default (req, res, next) => next();'
 				);
 			}
@@ -73,7 +80,7 @@ export default function (opts = {}) {
 				input: {
 					index: `${tmp}/index.js`,
 					manifest: `${tmp}/manifest.js`,
-					'node-middleware': `${tmp}/adapter/node-middleware.js`
+					'node-middleware': `${tmp}/adapter/node-middleware-wrapper.js`
 				},
 				external: [
 					// dependencies could have deep exports, so we need a regex
@@ -99,6 +106,7 @@ export default function (opts = {}) {
 			});
 
 			builder.copy(files, out, {
+				filter: (file) => file !== 'middleware.js',
 				replace: {
 					ENV: './env.js',
 					HANDLER: './handler.js',
@@ -112,13 +120,22 @@ export default function (opts = {}) {
 		},
 
 		emulate: (opts) => {
-			if (!existsSync(middleware_path)) return {};
+			if (!middleware_path) return {};
 
 			return {
 				beforeRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importEntryPoint('node-middleware');
-					return middleware.default(req, res, next);
+
+					const { url, denormalize } = kit.normalizeUrl(req.url);
+					req.url = url.pathname + url.search;
+					const _next = () => {
+						const { pathname, search } = denormalize(req.url);
+						req.url = pathname + search;
+						return next();
+					};
+
+					return middleware.default(req, res, _next);
 				}
 			};
 		},

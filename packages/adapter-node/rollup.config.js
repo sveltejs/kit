@@ -40,7 +40,7 @@ export default [
 			inlineDynamicImports: true
 		},
 		plugins: [nodeResolve(), commonjs(), json(), prefixBuiltinModules()],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', 'MIDDLEWARE']
 	},
 	{
 		input: 'src/shims.js',
@@ -49,5 +49,14 @@ export default [
 			format: 'esm'
 		},
 		plugins: [nodeResolve(), commonjs(), prefixBuiltinModules()]
+	},
+	{
+		input: 'src/middleware.js',
+		output: {
+			file: 'files/middleware.js',
+			format: 'esm'
+		},
+		plugins: [nodeResolve(), commonjs(), prefixBuiltinModules()],
+		external: ['MIDDLEWARE']
 	}
 ];

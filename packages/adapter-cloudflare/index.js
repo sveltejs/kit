@@ -2,11 +2,11 @@ import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
-import { VERSION } from '@sveltejs/kit';
 // TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
 import * as node_kit from '@sveltejs/kit/node';
 
-const [major, minor] = VERSION.split('.').map(Number);
+const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
@@ -58,10 +58,18 @@ export default function (options = {}) {
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
-			writeFileSync(
-				`${tmp}/noop-middleware.js`,
-				'export function onRequest({ next }) { return next() }'
-			);
+			if (middleware_path) {
+				builder.copy(`${files}/middleware.js`, `${tmp}/middleware.js`, {
+					replace: {
+						MIDDLEWARE: `${path.posix.relative(tmp, builder.getServerDirectory())}/adapter/cloudflare-middleware.js`
+					}
+				});
+			} else {
+				writeFileSync(
+					`${tmp}/middleware.js`,
+					'export function onRequest({ next }) { return next() }'
+				);
+			}
 
 			writeFileSync(
 				`${dest}/_routes.json`,
@@ -82,9 +90,7 @@ export default function (options = {}) {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`,
-					MIDDLEWARE: middleware_path
-						? `${relativePath}/adapter/cloudflare-middleware.js`
-						: `${path.posix.relative(dest, tmp)}/noop-middleware.js`
+					MIDDLEWARE: `${path.posix.relative(dest, tmp)}/middleware.js`
 				}
 			});
 		},
@@ -125,7 +131,9 @@ export default function (options = {}) {
 					emulated ??= await get_emulated();
 					const middleware = await opts.importEntryPoint('cloudflare-middleware');
 
-					const request = new Request(new URL(req.url, 'http://localhost'), {
+					const { url, denormalize } = kit.normalizeUrl(req.url);
+
+					const request = new Request(url, {
 						headers: node_kit.getRequestHeaders(req),
 						method: req.method,
 						body:
@@ -149,15 +157,15 @@ export default function (options = {}) {
 							...emulated.platform.context,
 							next: (input, init) => {
 								// More any casts because of annoying CF types
-								const adjusted =
+								const request =
 									input instanceof Request
 										? input
 										: input && new Request(/** @type {any} */ (input), /** @type {any} */ (init));
 
-								if (adjusted) {
-									const url = new URL(adjusted.url);
+								if (request) {
+									const url = denormalize(request.url);
 									req.url = url.pathname + url.search;
-									for (const [key, value] of adjusted.headers) {
+									for (const [key, value] of request.headers) {
 										req.headers[key] = value;
 									}
 								}

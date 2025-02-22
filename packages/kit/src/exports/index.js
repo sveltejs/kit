@@ -218,7 +218,8 @@ export function isActionFailure(e) {
 
 /**
  * Strips possible SvelteKit-internal suffixes from the URL pathname.
- * Returns the normalized URL as well as a method for adding the potential suffix back based on a new pathname.
+ * Returns the normalized URL as well as a method for adding the potential suffix back
+ * based on a new pathname (possibly including search) or URL.
  * ```js
  * import { normalizeUrl } from '@sveltejs/kit';
  *
@@ -227,7 +228,7 @@ export function isActionFailure(e) {
  * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
  * ```
  * @param {URL | string} url
- * @returns {{ url: URL, denormalize: (pathname?: string) => URL }}
+ * @returns {{ url: URL, neededNormalization: boolean, denormalize: (url?: string | URL) => URL }}
  */
 export function normalizeUrl(url) {
 	url = new URL(url, 'http://internal');
@@ -243,14 +244,15 @@ export function normalizeUrl(url) {
 
 	return {
 		url,
-		denormalize: (pathname = /** @type {URL} */ (url).pathname) => {
-			url = new URL(pathname, url);
+		neededNormalization: is_data_request || is_route_resolution,
+		denormalize: (new_url = url) => {
+			new_url = new URL(new_url, url);
 			if (is_route_resolution) {
-				url.pathname = add_resolution_suffix(url.pathname);
+				new_url.pathname = add_resolution_suffix(new_url.pathname);
 			} else if (is_data_request) {
-				url.pathname = add_data_suffix(url.pathname);
+				new_url.pathname = add_data_suffix(new_url.pathname);
 			}
-			return url;
+			return new_url;
 		}
 	};
 }

@@ -5,8 +5,8 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
-import { VERSION } from '@sveltejs/kit';
 // TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
 import * as node_kit from '@sveltejs/kit/node';
 
 /**
@@ -45,7 +45,7 @@ const edge_set_in_env_var =
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
-const [major, minor] = VERSION.split('.').map(Number);
+const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
@@ -126,7 +126,9 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importEntryPoint('edge-middleware');
 
-					const request = new Request(new URL(req.url, 'http://localhost'), {
+					const { url, denormalize } = kit.normalizeUrl(req.url);
+
+					const request = new Request(url, {
 						headers: node_kit.getRequestHeaders(req),
 						method: req.method,
 						body:
@@ -181,8 +183,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 						/** @param {any} request */
 						next: (request) => {
 							if (request instanceof Request) {
-								const url = new URL(request.url);
-								req.url = url.pathname + url.search;
+								const new_url = denormalize(request.url);
+								req.url = new_url.pathname + url.search;
 								for (const header of request.headers) {
 									req.headers[header[0]] = header[1];
 								}
@@ -198,7 +200,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 					if (response instanceof URL) {
 						// https://docs.netlify.com/edge-functions/api/#return-a-rewrite
-						req.url = response.pathname + response.search;
+						const new_url = denormalize(response);
+						req.url = new_url.pathname + new_url.search;
 						return next();
 					} else if (response instanceof Response && response !== fake_response) {
 						// We assume that middleware bails out when returning a custom response

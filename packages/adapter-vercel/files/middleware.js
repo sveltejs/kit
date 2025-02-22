@@ -19,25 +19,22 @@ export const config = user_middleware.config;
  * @param {any} context
  */
 export default async function middleware(request, context) {
-	const { url, denormalize } = normalizeUrl(request.url);
+	const { url, neededNormalization, denormalize } = normalizeUrl(request.url);
 
-	if (url.pathname !== new URL(request.url).pathname) {
+	if (neededNormalization) {
 		request = new Request(url, request);
 	}
 
 	const response = await user_middleware.default(request, context);
 
 	if (response instanceof Response && response.headers.has('x-middleware-rewrite')) {
-		let rewritten = new URL(
-			/** @type {string} */ (response.headers.get('x-middleware-rewrite')),
-			url
+		const rewritten = denormalize(
+			/** @type {string} */ (response.headers.get('x-middleware-rewrite'))
 		);
-
-		if (rewritten.hostname === url.hostname) {
-			rewritten = denormalize(rewritten.pathname);
-			response.headers.set('REWRITE_HEADER', rewritten.pathname + rewritten.search);
-			response.headers.set('x-middleware-rewrite', rewritten.pathname + rewritten.search);
-		}
+		const str =
+			rewritten.hostname !== url.hostname ? rewritten.href : rewritten.pathname + rewritten.search;
+		response.headers.set('REWRITE_HEADER', str);
+		response.headers.set('x-middleware-rewrite', str);
 	}
 
 	return response;
