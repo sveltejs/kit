@@ -43,9 +43,9 @@ const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
-let middleware_path = can_use_middleware ? 'edge-middleware.js' : null;
+let middleware_path = can_use_middleware ? 'src/edge-middleware.js' : null;
 if (middleware_path && !fs.existsSync(middleware_path)) {
-	middleware_path = 'edge-middleware.ts';
+	middleware_path = 'src/edge-middleware.ts';
 	if (!fs.existsSync(middleware_path)) middleware_path = null;
 }
 

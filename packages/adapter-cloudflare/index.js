@@ -10,9 +10,9 @@ const [major, minor] = kit.VERSION.split('.').map(Number);
 const can_use_middleware = major > 2 || (major === 2 && minor > 17);
 
 /** @type {string | null} */
-let middleware_path = can_use_middleware ? 'cloudflare-middleware.js' : null;
+let middleware_path = can_use_middleware ? 'src/cloudflare-middleware.js' : null;
 if (middleware_path && !existsSync(middleware_path)) {
-	middleware_path = 'cloudflare-middleware.ts';
+	middleware_path = 'src/cloudflare-middleware.ts';
 	if (!existsSync(middleware_path)) middleware_path = null;
 }
 
