@@ -143,7 +143,7 @@ async function generate_edge_functions({ builder }) {
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
+	const { assets } = JSON.parse(manifest);
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
