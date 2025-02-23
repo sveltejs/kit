@@ -99,4 +99,20 @@ test.describe('hash based navigation', () => {
 		const url = new URL(page.url());
 		expect(url.hash).toBe('#/anchor#test');
 	});
+
+	test('navigation history works', async ({ page }) => {
+		await page.goto('/');
+
+		await page.locator('a[href="/#/a"]').click();
+		await page.waitForURL('/#/a');
+
+		await page.locator('a[href="/#/b"]').click();
+		await page.waitForURL('/#/b');
+
+		await page.goBack();
+		expect(page.locator('p')).toHaveText('a');
+
+		await page.goForward();
+		expect(page.locator('p')).toHaveText('b');
+	});
 });
