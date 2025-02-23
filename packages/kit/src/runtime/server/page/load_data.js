@@ -242,7 +242,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				dependency = { response, body: null };
 				state.prerendering.dependencies.set(url.pathname, dependency);
 			}
-		} else {
+		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 			const mode = input instanceof Request ? input.mode : (init?.mode ?? 'cors');
 			if (mode === 'no-cors') {
