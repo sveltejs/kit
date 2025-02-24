@@ -2,4 +2,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-fix: avoid file import that is incompatible with Windows
+fix: correctly import manifest on Windows machines
