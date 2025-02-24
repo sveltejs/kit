@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 5.0.3
+### Patch Changes
+
+
+- fix: exclude the dynamic route `/_app/env.js` from the adapter config `routes.exclude` special value `<build>` ([#13411](https://github.com/sveltejs/kit/pull/13411))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
 ## 5.0.2
 ### Patch Changes
 
