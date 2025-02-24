@@ -143,7 +143,8 @@ async function generate_edge_functions({ builder }) {
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
-	const { assets } = JSON.parse(manifest);
+  // we have to prepend the file:// protocol because Windows doesn't support absolute path imports
+	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
