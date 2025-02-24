@@ -20,13 +20,9 @@ const config = {
 			supports: {
 				read: () => true
 			},
-			additionalEntryPoints: () => [
-				{
-					name: 'test-adapter-middleware',
-					file: 'test-adapter-middleware.js',
-					allowedFeatures: []
-				}
-			]
+			additionalEntryPoints: {
+				'test-adapter-middleware': 'test-adapter-middleware.js'
+			}
 		},
 
 		prerender: {
