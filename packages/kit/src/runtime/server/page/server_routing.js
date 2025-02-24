@@ -133,11 +133,7 @@ function create_css_import(route, url, manifest) {
 		if (typeof node !== 'number') continue;
 		const node_css = manifest._.client.css?.[node];
 		for (const css_path of node_css ?? []) {
-			if (assets !== '') {
-				css += `'${assets}/${css_path}',`;
-			} else {
-				css += `'${base}/${css_path}',`;
-			}
+			css += `'${assets || base}/${css_path}',`;
 		}
 	}
 

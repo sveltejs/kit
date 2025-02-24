@@ -345,10 +345,10 @@ const seen = {};
 export function load_css(deps) {
 	if (__SVELTEKIT_CLIENT_ROUTING__) return;
 
-	const cspNonceMeta = /** @type {HTMLMetaElement} */ (
+	const csp_nonce_meta = /** @type {HTMLMetaElement} */ (
 		document.querySelector('meta[property=csp-nonce]')
 	);
-	const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute('nonce');
+	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
 
 	for (const dep of deps) {
 		if (dep in seen) continue;
@@ -362,8 +362,8 @@ export function load_css(deps) {
 		link.rel = 'stylesheet';
 		link.crossOrigin = '';
 		link.href = dep;
-		if (cspNonce) {
-			link.setAttribute('nonce', cspNonce);
+		if (csp_nonce) {
+			link.setAttribute('nonce', csp_nonce);
 		}
 		document.head.appendChild(link);
 	}
