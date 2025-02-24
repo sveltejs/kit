@@ -269,7 +269,7 @@ const plugin = function (defaults = {}) {
 					config
 				);
 
-				let matcher = `/((?!${builder.getAppPath()}/immutable|favicon.ico|favicon.png).*)`;
+				let matcher = `/((?!${builder.getAppPath()}/|favicon.ico|favicon.png).*)`;
 
 				try {
 					const file_path = pathToFileURL(`${dirs.functions}/user-middleware.func/index.js`).href;

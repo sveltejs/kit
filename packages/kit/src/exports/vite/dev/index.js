@@ -488,6 +488,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	// adapter-provided middleware
 	vite.middlewares.use(async (req, res, next) => {
 		if (!emulator?.beforeRequest) return next();
+
+		// Middleware can run on all files, but for some it does not run on _app/* by default.
+		// This isn't replicable in dev mode because everything is unbundled, and it would give
+		// wrong pathnames to compare against, too, so we just filter them out at dev time.
 		if (
 			req.url?.startsWith('/@fs/') ||
 			req.url?.startsWith('/@vite/') ||

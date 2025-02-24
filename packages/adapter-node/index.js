@@ -65,6 +65,7 @@ export default function (opts = {}) {
 					}
 				});
 			} else {
+				builder.mkdirp(`${tmp}/adapter`);
 				writeFileSync(
 					`${tmp}/adapter/node-middleware-wrapper.js`,
 					'export default (req, res, next) => next();'

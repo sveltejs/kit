@@ -72,10 +72,6 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res, next) => {
 			if (!emulator?.beforeRequest) return next();
 
-			const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
-
-			if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) return next();
-
 			return emulator.beforeRequest(req, res, next);
 		});
 

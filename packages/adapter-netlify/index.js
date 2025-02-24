@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
@@ -262,6 +262,7 @@ async function generate_edge_functions({ builder }) {
 		name: 'render',
 		path: '/*',
 		excludedPath: [
+			`/${builder.getAppPath()}/*`, // Contains static files
 			...builder.prerendered.paths,
 			...Array.from(assets).flatMap((asset) => {
 				if (asset.endsWith('/index.html')) {
@@ -292,6 +293,25 @@ async function generate_edge_middleware({ builder }) {
 
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
+	let pattern = `/((?!${builder.getAppPath()}/|favicon.ico|favicon.png).*)`;
+
+	try {
+		const file_path = pathToFileURL(
+			`${builder.getServerDirectory()}/adapter/edge-middleware.js`
+		).href;
+		const { config } = await import(file_path);
+		if (config?.pattern) pattern = config.pattern;
+	} catch (e) {
+		// Don't bother showing the error if we know there's no config object
+		const text = readFileSync(middleware_path, 'utf-8');
+		if (text.includes('config') || text.includes('export *')) {
+			builder.log.error(
+				'Failed to import middleware. Make sure it is loadable during build, which is necessary to analyze the config object.'
+			);
+			throw e;
+		}
+	}
+
 	builder.copy(`${files}/middleware.js`, `${tmp}/entry.js`, {
 		replace: {
 			SERVER_INIT: `${relativePath}/init.js`,
@@ -299,22 +319,18 @@ async function generate_edge_middleware({ builder }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'edge-middleware', path: '/*', excludedPath: [] });
+	await bundle_edge_function({ builder, name: 'edge-middleware', pattern });
 }
 
 /**
- * @param {object} params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param {string} params.name
- * @param {string} params.path
- * @param {string[]} params.excludedPath
+ * @param {{ builder: import('@sveltejs/kit').Builder; name: string; } & ({ path: string; excludedPath: string[] } | { pattern: string })} params
  */
-async function bundle_edge_function({ builder, name, path, excludedPath }) {
-	const tmp = builder.getBuildDirectory('netlify-tmp');
+async function bundle_edge_function(params) {
+	const tmp = params.builder.getBuildDirectory('netlify-tmp');
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
-		outfile: `.netlify/edge-functions/${name}.js`,
+		outfile: `.netlify/edge-functions/${params.name}.js`,
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -340,19 +356,22 @@ async function bundle_edge_function({ builder, name, path, excludedPath }) {
 			...(existsSync('.netlify/edge-functions/manifest.json')
 				? JSON.parse(readFileSync('.netlify/edge-functions/manifest.json', 'utf-8')).functions
 				: []),
-			{
-				function: name,
-				path,
-				// We only need to specify paths without the trailing slash because
-				// Netlify will handle the optional trailing slash for us
-				excludedPath: [
-					// Contains static files
-					`/${builder.getAppPath()}/*`,
-					...excludedPath,
-					// Should not be served by SvelteKit at all
-					'/.netlify/*'
-				]
-			}
+			'pattern' in params
+				? {
+						function: params.name,
+						pattern: params.pattern
+					}
+				: {
+						function: params.name,
+						path: params.path,
+						// We only need to specify paths without the trailing slash because
+						// Netlify will handle the optional trailing slash for us
+						excludedPath: [
+							...params.excludedPath,
+							// Should not be served by SvelteKit at all
+							'/.netlify/*'
+						]
+					}
 		],
 		version: 1
 	};

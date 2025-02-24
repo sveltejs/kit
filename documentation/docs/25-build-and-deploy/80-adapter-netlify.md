@@ -102,7 +102,7 @@ export default async function middleware(request, { next, cookies }) {
 }
 ```
 
-Middleware runs on all requests except for files within `_app/immutable`.
+By default middleware runs on all requests except for files within `_app/`. You can customize this by exporting a `export const config = { pattern: '<regex string>' }` object from the file similar to [how you can do it for native edge functions](https://docs.netlify.com/edge-functions/declarations/#declare-edge-functions-inline).
 
 > [!NOTE] Locally during dev and preview this only approximates the capabilities of edge functions. Notably, you cannot read the request or response body, and many properties on the context object are `null`ed.
 
