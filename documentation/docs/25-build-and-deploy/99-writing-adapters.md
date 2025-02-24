@@ -27,7 +27,7 @@ export default function (options) {
 					// the returned object becomes `event.platform` during dev, build and
 					// preview. Its shape is that of `App.Platform`
 				},
-				async beforeRequest(req, res, next) {
+				async interceptRequest(req, res, next) {
 					// Allows you to run code before a request to a prerendered page, a static asset,
 					// or a regular request to the SvelteKit runtime, both in dev and preview mode.
 					// Allows you to for example replicate middleware during dev and preview.

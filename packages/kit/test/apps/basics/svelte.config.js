@@ -8,7 +8,7 @@ const config = {
 			adapt() {},
 			emulate(opts) {
 				return {
-					async beforeRequest(req, res, next) {
+					async interceptRequest(req, res, next) {
 						const middleware = await opts.importEntryPoint('test-adapter-middleware');
 						await middleware.default(req, res, next);
 					},

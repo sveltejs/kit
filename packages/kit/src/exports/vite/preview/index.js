@@ -70,9 +70,9 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// adapter-provided middleware
 		vite.middlewares.use(async (req, res, next) => {
-			if (!emulator?.beforeRequest) return next();
+			if (!emulator?.interceptRequest) return next();
 
-			return emulator.beforeRequest(req, res, next);
+			return emulator.interceptRequest(req, res, next);
 		});
 
 		// generated client assets and the contents of `static`

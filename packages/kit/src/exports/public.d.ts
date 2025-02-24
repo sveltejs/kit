@@ -290,10 +290,12 @@ export interface Emulator {
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	/**
 	 * Runs before every request that would hit the SvelteKit runtime and before requests to static assets in dev mode.
-	 * Can be used to replicate middleware behavior in dev mode.
+	 * In preview mode, in runs prior to all requests.
+	 * Can be used to replicate middleware behavior outside of production environments.
+	 *
 	 * Implementation note: You either have to call `next()` to pass on the request/response, or `res.end()` to finish the request
 	 */
-	beforeRequest?: (
+	interceptRequest?: (
 		req: IncomingMessage & { originalUrl?: string },
 		res: ServerResponse,
 		next: () => void

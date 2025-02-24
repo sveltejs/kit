@@ -509,7 +509,7 @@ const plugin = function (defaults = {}) {
 			if (!middleware_path) return {};
 
 			return {
-				beforeRequest: async (req, res, next) => {
+				interceptRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importEntryPoint('edge-middleware');
 					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));

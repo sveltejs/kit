@@ -122,7 +122,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			if (!middleware_path) return {};
 
 			return {
-				beforeRequest: async (req, res, next) => {
+				interceptRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importEntryPoint('edge-middleware');
 

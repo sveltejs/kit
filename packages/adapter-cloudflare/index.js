@@ -127,7 +127,7 @@ export default function (options = {}) {
 					emulated ??= await get_emulated();
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				},
-				beforeRequest: async (req, res, next) => {
+				interceptRequest: async (req, res, next) => {
 					emulated ??= await get_emulated();
 					const middleware = await opts.importEntryPoint('cloudflare-middleware');
 

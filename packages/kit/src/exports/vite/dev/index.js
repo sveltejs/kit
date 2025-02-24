@@ -487,7 +487,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	// adapter-provided middleware
 	vite.middlewares.use(async (req, res, next) => {
-		if (!emulator?.beforeRequest) return next();
+		if (!emulator?.interceptRequest) return next();
 
 		// Middleware can run on all files, but for some it does not run on _app/* by default.
 		// This isn't replicable in dev mode because everything is unbundled, and it would give
@@ -513,7 +513,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				return next();
 			}
 
-			// Vite's base middleware strips out the base path. Restore it for the duration of beforeRequest
+			// Vite's base middleware strips out the base path. Restore it for the duration of interceptRequest
 			const prev_url = req.url;
 			req.url = req.originalUrl;
 			const _next = () => {
@@ -525,7 +525,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 				return next();
 			};
-			return emulator.beforeRequest(req, res, _next);
+			return emulator.interceptRequest(req, res, _next);
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			res.statusCode = 500;

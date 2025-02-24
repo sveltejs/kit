@@ -124,7 +124,7 @@ export default function (opts = {}) {
 			if (!middleware_path) return {};
 
 			return {
-				beforeRequest: async (req, res, next) => {
+				interceptRequest: async (req, res, next) => {
 					// We have to import this here or else we wouldn't notice when the middleware file changes
 					const middleware = await opts.importEntryPoint('node-middleware');
 
