@@ -1728,6 +1728,12 @@ declare module '@sveltejs/kit' {
 			 */
 			nodes?: (string | undefined)[];
 			/**
+			 * CSS files referenced in the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			css?: (string[] | undefined)[];
+			/**
 			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
 			 * Only set in case of `router.resolution === 'server'`.

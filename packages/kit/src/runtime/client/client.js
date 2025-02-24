@@ -19,7 +19,8 @@ import {
 	origin,
 	scroll_state,
 	notifiable_store,
-	create_updated_store
+	create_updated_store,
+	load_css
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -40,6 +41,8 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+
+export { load_css };
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
