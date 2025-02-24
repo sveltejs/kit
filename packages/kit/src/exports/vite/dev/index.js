@@ -145,6 +145,7 @@ export async function dev(vite, vite_config, svelte_config) {
 										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
 									}
 								}),
+					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
 					routes:
 						svelte_config.kit.router.resolution === 'client'
 							? undefined
