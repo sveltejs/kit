@@ -5,9 +5,9 @@ import { onRequest as user_middleware } from 'MIDDLEWARE';
  * @param {{ request: Request, next: (init?: any, options?: any) => any}} context
  */
 export async function onRequest(context) {
-	const { url, neededNormalization, denormalize } = normalizeUrl(context.request.url);
+	const { url, wasNormalized, denormalize } = normalizeUrl(context.request.url);
 
-	if (neededNormalization) {
+	if (wasNormalized) {
 		const request = new Request(url.href, context.request);
 
 		/**

@@ -5,9 +5,9 @@ import user_middleware from 'MIDDLEWARE';
  * @type {import('polka').Middleware}
  */
 export default function middleware(req, res, next) {
-	const { url, neededNormalization, denormalize } = normalizeUrl(req.url);
+	const { url, wasNormalized, denormalize } = normalizeUrl(req.url);
 
-	if (neededNormalization) {
+	if (wasNormalized) {
 		req.url = url.pathname + url.search;
 		const _next = () => {
 			const { pathname, search } = denormalize(req.url);

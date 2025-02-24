@@ -20,7 +20,7 @@ export default async (request, context) => {
 		let url = new URL(request.url);
 		url.pathname = pathname;
 		request = new Request(url, request);
-		request.headers.delete('x-sveltekit-vercel-rewrite');
+		request.headers.delete('REWRITE_HEADER');
 	}
 
 	return server.respond(request, {

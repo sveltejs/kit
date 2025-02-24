@@ -2033,7 +2033,7 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function isActionFailure(e: unknown): e is ActionFailure;
 	/**
-	 * Strips possible SvelteKit-internal suffixes from the URL pathname.
+	 * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
 	 * Returns the normalized URL as well as a method for adding the potential suffix back
 	 * based on a new pathname (possibly including search) or URL.
 	 * ```js
@@ -2046,7 +2046,7 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function normalizeUrl(url: URL | string): {
 		url: URL;
-		neededNormalization: boolean;
+		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;

@@ -556,7 +556,7 @@ const plugin = function (defaults = {}) {
 			// reading from the filesystem only works in serverless functions
 			read: ({ config, route, entry }) => {
 				if (entry === 'edge-middleware') {
-					throw new Error(`${name}: Cannot use \`read\` from \`$app/server\` in Edge Middleware`);
+					throw new Error(`${name}: Cannot use \`read\` from \`$app/server\` in edge middleware`);
 				}
 
 				const runtime = config.runtime ?? defaults.runtime;

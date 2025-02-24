@@ -217,7 +217,7 @@ export function isActionFailure(e) {
 }
 
 /**
- * Strips possible SvelteKit-internal suffixes from the URL pathname.
+ * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
  * Returns the normalized URL as well as a method for adding the potential suffix back
  * based on a new pathname (possibly including search) or URL.
  * ```js
@@ -228,29 +228,34 @@ export function isActionFailure(e) {
  * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
  * ```
  * @param {URL | string} url
- * @returns {{ url: URL, neededNormalization: boolean, denormalize: (url?: string | URL) => URL }}
+ * @returns {{ url: URL, wasNormalized: boolean, denormalize: (url?: string | URL) => URL }}
  */
 export function normalizeUrl(url) {
 	url = new URL(url, 'http://internal');
 
 	const is_route_resolution = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
+	const has_trailing_slash = url.pathname !== '/' && url.pathname.endsWith('/');
 
 	if (is_route_resolution) {
 		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname = strip_data_suffix(url.pathname);
+	} else if (has_trailing_slash) {
+		url.pathname = url.pathname.slice(0, -1);
 	}
 
 	return {
 		url,
-		neededNormalization: is_data_request || is_route_resolution,
+		wasNormalized: is_data_request || is_route_resolution || has_trailing_slash,
 		denormalize: (new_url = url) => {
 			new_url = new URL(new_url, url);
 			if (is_route_resolution) {
 				new_url.pathname = add_resolution_suffix(new_url.pathname);
 			} else if (is_data_request) {
 				new_url.pathname = add_data_suffix(new_url.pathname);
+			} else if (has_trailing_slash && !new_url.pathname.endsWith('/')) {
+				new_url.pathname += '/';
 			}
 			return new_url;
 		}

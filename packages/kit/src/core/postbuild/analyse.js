@@ -226,10 +226,9 @@ function analyse_page(layouts, leaf) {
  * @param {string} entry
  * @param {import('vite').Manifest} server_manifest
  * @param {Record<string, import('types').TrackedFeature[]>} tracked_features
+ * @param {Set<import('types').TrackedFeature>} [features]
  */
-function list_features(entry, server_manifest, tracked_features) {
-	const features = new Set();
-
+function list_features(entry, server_manifest, tracked_features, features = new Set()) {
 	/** @param {string} id */
 	function visit(id) {
 		const chunk = server_manifest[id];
@@ -250,7 +249,7 @@ function list_features(entry, server_manifest, tracked_features) {
 
 	visit(entry);
 
-	return Array.from(features);
+	return features;
 }
 
 /**
@@ -260,7 +259,7 @@ function list_features(entry, server_manifest, tracked_features) {
  * @param {Record<string, import('types').TrackedFeature[]>} tracked_features
  */
 function list_route_features(route, manifest_data, server_manifest, tracked_features) {
-	const features = [];
+	const features = new Set();
 	const route_data = /** @type {import('types').RouteData} */ (
 		manifest_data.routes.find((r) => r.id === route.id)
 	);
@@ -268,20 +267,20 @@ function list_route_features(route, manifest_data, server_manifest, tracked_feat
 	let page_node = route_data?.leaf;
 	while (page_node) {
 		if (page_node.server) {
-			features.push(...list_features(page_node.server, server_manifest, tracked_features));
+			list_features(page_node.server, server_manifest, tracked_features, features);
 		}
 		page_node = page_node.parent ?? null;
 	}
 
 	if (route_data.endpoint) {
-		features.push(...list_features(route_data.endpoint.file, server_manifest, tracked_features));
+		list_features(route_data.endpoint.file, server_manifest, tracked_features, features);
 	}
 
 	if (manifest_data.hooks.server) {
 		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
 		// we don't currently account for that case
-		features.push(...list_features(manifest_data.hooks.server, server_manifest, tracked_features));
+		list_features(manifest_data.hooks.server, server_manifest, tracked_features, features);
 	}
 
-	return Array.from(features);
+	return features;
 }

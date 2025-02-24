@@ -16,9 +16,9 @@ initServer({
  * @param {any} context
  */
 export default async function middleware(request, context) {
-	const { url, neededNormalization, denormalize } = normalizeUrl(request.url);
+	const { url, wasNormalized, denormalize } = normalizeUrl(request.url);
 
-	if (neededNormalization) {
+	if (wasNormalized) {
 		request = new Request(url.href, request);
 
 		/**
