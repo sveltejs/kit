@@ -37,8 +37,8 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 			const { stylesheets } = find_deps(server_manifest, node.component, false);
 
-			if (stylesheets.size) {
-				server_stylesheets.set(i, Array.from(stylesheets));
+			if (stylesheets.length) {
+				server_stylesheets.set(i, stylesheets);
 			}
 		});
 
