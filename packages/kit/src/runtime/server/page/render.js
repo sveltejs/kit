@@ -13,6 +13,8 @@ import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
+import { create_server_routing_response, generate_route_object } from './server_routing.js';
+import { add_resolution_suffix } from '../../pathname.js';
 
 // TODO rename this function/module
 
@@ -297,8 +299,10 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+
 		if (client.uses_env_dynamic_public && state.prerendering) {
-			modulepreloads.add(`${options.app_dir}/env.js`);
+			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
 		if (!client.inline) {
@@ -315,6 +319,16 @@ export async function render_response({
 					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 				}
 			}
+		}
+
+		// prerender a `/path/to/page/__route.js` module
+		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+			const pathname = add_resolution_suffix(event.url.pathname);
+
+			state.prerendering.dependencies.set(
+				pathname,
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+			);
 		}
 
 		const blocks = [];
@@ -394,7 +408,15 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (options.embedded) {
+			if (manifest._.client.routes) {
+				if (route) {
+					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+						'\n',
+						'\n\t\t\t\t\t\t\t'
+					); // make output after it's put together with the rest more readable
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
+				}
+			} else if (options.embedded) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
@@ -419,7 +441,7 @@ export async function render_response({
 					});`;
 
 		if (load_env_eagerly) {
-			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
+			blocks.push(`import(${s(`${base}/${paths.app_dir}/env.js`)}).then(({ env }) => {
 						${global}.env = env;
 
 						${boot.replace(/\n/g, '\n\t')}

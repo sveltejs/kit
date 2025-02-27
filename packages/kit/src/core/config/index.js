@@ -115,5 +115,20 @@ export function validate_config(config) {
 		);
 	}
 
-	return options(config, 'config');
+	const validated = options(config, 'config');
+
+	if (validated.kit.router.resolution === 'server') {
+		if (validated.kit.router.type === 'hash') {
+			throw new Error(
+				"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
+			);
+		}
+		if (validated.kit.output.bundleStrategy !== 'split') {
+			throw new Error(
+				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+			);
+		}
+	}
+
+	return validated;
 }

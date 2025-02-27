@@ -136,7 +136,35 @@ export async function dev(vite, vite_config, svelte_config) {
 					imports: [],
 					stylesheets: [],
 					fonts: [],
-					uses_env_dynamic_public: true
+					uses_env_dynamic_public: true,
+					nodes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: manifest_data.nodes.map((node, i) => {
+									if (node.component || node.universal) {
+										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
+									}
+								}),
+					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
+					routes:
+						svelte_config.kit.router.resolution === 'client'
+							? undefined
+							: compact(
+									manifest_data.routes.map((route) => {
+										if (!route.page) return;
+
+										return {
+											id: route.id,
+											pattern: route.pattern,
+											params: route.params,
+											layouts: route.page.layouts.map((l) =>
+												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+											),
+											errors: route.page.errors,
+											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+										};
+									})
+								)
 				},
 				server_assets: new Proxy(
 					{},
@@ -222,6 +250,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						return result;
 					};
 				}),
+				prerendered_routes: new Set(),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
@@ -347,11 +376,11 @@ export async function dev(vite, vite_config, svelte_config) {
 	// changing the svelte config requires restarting the dev server
 	// the config is only read on start and passed on to vite-plugin-svelte
 	// which needs up-to-date values to operate correctly
-	vite.watcher.on('change', (file) => {
+	vite.watcher.on('change', async (file) => {
 		if (path.basename(file) === 'svelte.config.js') {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;
-			vite.restart();
+			await vite.restart();
 		}
 	});
 
@@ -380,14 +409,14 @@ export async function dev(vite, vite_config, svelte_config) {
 			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
-	align_exports();
+	await align_exports();
 	const ws_send = vite.ws.send;
 	/** @param {any} args */
 	vite.ws.send = function (...args) {
 		// We need to reapply the patch after Vite did dependency optimizations
 		// because that clears the module resolutions
 		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
-			align_exports();
+			void align_exports();
 		}
 		return ws_send.apply(vite.ws, args);
 	};
@@ -540,10 +569,10 @@ export async function dev(vite, vite_config, svelte_config) {
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						setResponse(res, rendered);
+						void setResponse(res, rendered);
 					});
 				} else {
-					setResponse(res, rendered);
+					void setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
