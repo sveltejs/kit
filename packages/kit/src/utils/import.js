@@ -1,4 +1,4 @@
-import { resolveModuleURL } from 'exsolve'
+import { resolveModuleURL } from 'exsolve';
 
 /**
  * Resolve a dependency relative to the current working directory,
