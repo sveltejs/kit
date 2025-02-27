@@ -32,9 +32,9 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### handlers
 
-Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) to be exported from the file the adapter generates. This allows you to, for example, include handlers for scheduled or queue triggers alongside the fetch handler your SvelteKit app.
+Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) export alongside the SvelteKit-generated `fetch()` handler. Enables integration of, for example, `scheduled()` or `queue()` handlers with your SvelteKit app.
 
-By default, `handlers` is undefined, which means that no additional handlers will be exported alongside the `fetch` handler this adapter creates for you. If you want to include any additional handlers, you must specify the path to a file with the additional handlers. 
+Default: `undefined`- no additional handlers are exported. 
 
 The handlers file should export a default object with any additional handlers. Example below:
 
