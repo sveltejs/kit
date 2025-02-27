@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
-import { resolve } from 'import-meta-resolve';
+import { resolveModuleURL } from 'exsolve';
 import { adapters } from './adapters.js';
 import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -40,10 +39,7 @@ function detect_package_manager() {
 
 /** @param {string} name */
 function import_from_cwd(name) {
-	const cwd = pathToFileURL(process.cwd()).href;
-	const url = resolve(name, cwd + '/x.js');
-
-	return import(url);
+	return import(resolveModuleURL(name));
 }
 
 /** @typedef {import('@sveltejs/kit').Adapter} Adapter */

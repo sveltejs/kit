@@ -1,6 +1,4 @@
-import * as imr from 'import-meta-resolve';
-import process from 'node:process';
-import { pathToFileURL } from 'node:url';
+import { resolveModuleURL } from 'exsolve'
 
 /**
  * Resolve a dependency relative to the current working directory,
@@ -9,8 +7,7 @@ import { pathToFileURL } from 'node:url';
  */
 export async function resolve_peer_dependency(dependency) {
 	try {
-		// @ts-expect-error the types are wrong
-		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
+		const resolved = resolveModuleURL(dependency);
 		return await import(resolved);
 	} catch {
 		try {

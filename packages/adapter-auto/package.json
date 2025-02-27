@@ -47,7 +47,7 @@
 		"vitest": "^3.0.1"
 	},
 	"dependencies": {
-		"import-meta-resolve": "^4.1.0"
+		"exsolve": "^1.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"
