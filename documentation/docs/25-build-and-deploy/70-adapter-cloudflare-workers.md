@@ -32,24 +32,13 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### handlers
 
-Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) and (optionally) [Durable Objects](https://developers.cloudflare.com/durable-objects/) to be exported from the file the adapter generates. This allows you to, for example, include handlers for scheduled or queue triggers alongside the fetch handler your SvelteKit app.
+Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) to be exported from the file the adapter generates. This allows you to, for example, include handlers for scheduled or queue triggers alongside the fetch handler your SvelteKit app.
 
-The handlers file should export a default object with any additional handlers, and any Durable Objects as named exports. Example below:
+The handlers file should export a default object with any additional handlers. Example below:
 
 ```js
 // @errors: 2307 2377 7006
 /// file: src/handlers.js
-// export your durable objects here
-import { DurableObject } from "cloudflare:workers";
-
-export class MyDurableObject extends DurableObject {
-  constructor(state, env) {}
-
-  async sayHello() {
-    return "Hello, World!";
-  }
-}
-
 export default {
   async scheduled(event, env, ctx) {
     console.log("Scheduled trigger!");
@@ -58,7 +47,7 @@ export default {
 }
 ```
 
-> [!NOTE] The adapter expects the `handlers` file to have a default export. If you only want to export a Durable Object, add `export default {};` to the file.
+> [!NOTE] The adapter expects the `handlers` file to have a default export.
 
 > [!NOTE] The adapter will overwrite any [fetch handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/) exported from the `handlers` file in the generated worker. Most uses for a fetch handler are covered by endpoints or server hooks, so you should use those instead.
 

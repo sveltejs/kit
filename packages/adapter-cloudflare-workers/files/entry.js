@@ -5,8 +5,6 @@ import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
 import { WorkerEntrypoint } from 'cloudflare:workers';
 
-export * from 'HANDLERS';
-
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);

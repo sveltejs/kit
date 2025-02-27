@@ -74,9 +74,7 @@ export default function ({ config, platformProxy = {}, handlers } = {}) {
 				const handlers_file = resolve(cwd(), handlers);
 				writeFileSync(
 					`${tmp}/_handlers.js`,
-					`import handlers from "${handlers_file}";\n\n` +
-						`export * from "${handlers_file}";\n\n` +
-						'export default handlers;'
+					`import handlers from "${handlers_file}";\n\n` + 'export default handlers;'
 				);
 			} else {
 				// The handlers file must export a plain object as its default export.
