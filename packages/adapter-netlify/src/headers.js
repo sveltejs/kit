@@ -1,4 +1,4 @@
-import * as set_cookie_parser from 'set-cookie-parser';
+import { splitSetCookieString } from 'cookie-es';
 
 /**
  * Splits headers into two categories: single value and multi value
@@ -18,7 +18,7 @@ export function split_headers(headers) {
 	headers.forEach((value, key) => {
 		if (key === 'set-cookie') {
 			if (!m[key]) m[key] = [];
-			m[key].push(...set_cookie_parser.splitCookiesString(value));
+			m[key].push(...splitSetCookieString(value));
 		} else {
 			h[key] = value;
 		}

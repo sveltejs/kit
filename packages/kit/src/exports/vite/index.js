@@ -334,13 +334,6 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
-
-				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
-				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
-					'cookie',
-					'set-cookie-parser'
-				];
 			}
 
 			warn_overridden_config(config, new_config);
@@ -434,7 +427,7 @@ Tips:
 					if (import_map.has(illegal_module)) {
 						const importer = path.relative(
 							cwd,
-							/** @type {string} */ (import_map.get(illegal_module))
+							/** @type {string} */(import_map.get(illegal_module))
 						);
 						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
@@ -1085,7 +1078,7 @@ function warn_overridden_config(config, resolved_config) {
 	if (overridden.length > 0) {
 		console.error(
 			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-				overridden.map((key) => `\n  - ${key}`).join('')
+			overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }
@@ -1129,9 +1122,9 @@ const create_service_worker_module = (config) => dedent`
 	export const build = [];
 	export const files = [
 		${create_assets(config)
-			.filter((asset) => config.kit.serviceWorker.files(asset.file))
-			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-			.join(',\n')}
+		.filter((asset) => config.kit.serviceWorker.files(asset.file))
+		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+		.join(',\n')}
 	];
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};

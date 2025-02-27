@@ -1,4 +1,4 @@
-import { CookieSerializeOptions } from 'cookie';
+import { CookieSerializeOptions } from 'cookie-es';
 import { SSRNode, CspDirectives, ServerDataNode } from 'types';
 
 export interface Fetched {

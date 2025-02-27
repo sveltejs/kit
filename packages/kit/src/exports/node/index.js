@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import * as set_cookie_parser from 'set-cookie-parser';
+import { splitSetCookieString } from 'cookie-es'
 import { SvelteKitError } from '../../runtime/control.js';
 
 /**
@@ -145,10 +145,10 @@ export async function setResponse(res, response) {
 			res.setHeader(
 				key,
 				key === 'set-cookie'
-					? set_cookie_parser.splitCookiesString(
+					? splitSetCookieString(
 							// This is absurd but necessary, TODO: investigate why
-							/** @type {string}*/ (response.headers.get(key))
-						)
+							/** @type {string}*/(response.headers.get(key))
+					)
 					: value
 			);
 		} catch (error) {
@@ -168,7 +168,7 @@ export async function setResponse(res, response) {
 	if (response.body.locked) {
 		res.end(
 			'Fatal error: Response body is locked. ' +
-				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
+			"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
 		);
 		return;
 	}
@@ -186,7 +186,7 @@ export async function setResponse(res, response) {
 
 		// If the reader has already been interrupted with an error earlier,
 		// then it will appear here, it is useless, but it needs to be catch.
-		reader.cancel(error).catch(() => {});
+		reader.cancel(error).catch(() => { });
 		if (error) res.destroy(error);
 	};
 
@@ -196,7 +196,7 @@ export async function setResponse(res, response) {
 	void next();
 	async function next() {
 		try {
-			for (;;) {
+			for (; ;) {
 				const { done, value } = await reader.read();
 
 				if (done) break;

@@ -113,12 +113,12 @@ importers:
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
+      cookie-es:
+        specifier: ^2.0.0
+        version: 2.0.0
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
     devDependencies:
       '@netlify/functions':
         specifier: ^3.0.0
@@ -339,12 +339,9 @@ importers:
 
   packages/kit:
     dependencies:
-      '@types/cookie':
-        specifier: ^0.6.0
-        version: 0.6.0
-      cookie:
-        specifier: ^0.6.0
-        version: 0.6.0
+      cookie-es:
+        specifier: ^2.0.0
+        version: 2.0.0
       devalue:
         specifier: ^5.1.0
         version: 5.1.0
@@ -366,9 +363,6 @@ importers:
       sade:
         specifier: ^1.8.1
         version: 1.8.1
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
@@ -385,9 +379,6 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
-      '@types/set-cookie-parser':
-        specifier: ^2.4.7
-        version: 2.4.7
       dts-buddy:
         specifier: ^0.5.5
         version: 0.5.5(typescript@5.6.3)
@@ -1965,9 +1956,6 @@ packages:
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
-  '@types/cookie@0.6.0':
-    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
-
   '@types/eslint@8.56.12':
     resolution: {integrity: sha512-03ruubjWyOHlmljCVoxSuNDdmfZDzsrrz0P2LeJsOXr+ZwFQ+0yQIwNCwt/GYhV7Z31fgtXJTAEs+FYlEL851g==}
 
@@ -2258,12 +2246,11 @@ packages:
     resolution: {integrity: sha512-pMD+MVR538ipqkG5JXeOEbKWS5um1H4LUUccUQG68qpeqBYbzYy79Gh55jkd2TtPdRfUaLWdv6LPP//5Zt0aPQ==}
     engines: {node: '>=4'}
 
+  cookie-es@2.0.0:
+    resolution: {integrity: sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==}
+
   cookie@0.5.0:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
-    engines: {node: '>= 0.6'}
-
-  cookie@0.6.0:
-    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
 
   cross-env@7.0.3:
@@ -3187,9 +3174,6 @@ packages:
     resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
     engines: {node: '>=10'}
     hasBin: true
-
-  set-cookie-parser@2.6.0:
-    resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
 
   sharp@0.33.5:
     resolution: {integrity: sha512-haPVm1EkS9pgvHrQ/F3Xy+hgcuMV0Wm9vfIBSiwZ05k+xgb0PkBQpGsAA/oWdDobNaZTH5ppvHtzCFbnSEwHVw==}
@@ -4350,8 +4334,6 @@ snapshots:
     dependencies:
       '@types/node': 18.19.50
 
-  '@types/cookie@0.6.0': {}
-
   '@types/eslint@8.56.12':
     dependencies:
       '@types/estree': 1.0.6
@@ -4658,9 +4640,9 @@ snapshots:
 
   console-clear@1.1.1: {}
 
-  cookie@0.5.0: {}
+  cookie-es@2.0.0: {}
 
-  cookie@0.6.0: {}
+  cookie@0.5.0: {}
 
   cross-env@7.0.3:
     dependencies:
@@ -5570,8 +5552,6 @@ snapshots:
   semiver@1.1.0: {}
 
   semver@7.7.1: {}
-
-  set-cookie-parser@2.6.0: {}
 
   sharp@0.33.5:
     dependencies:

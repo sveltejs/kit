@@ -18,8 +18,7 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@types/cookie": "^0.6.0",
-		"cookie": "^0.6.0",
+		"cookie-es": "^2.0.0",
 		"devalue": "^5.1.0",
 		"esm-env": "^1.2.2",
 		"import-meta-resolve": "^4.1.0",
@@ -27,7 +26,6 @@
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
-		"set-cookie-parser": "^2.6.0",
 		"sirv": "^3.0.0"
 	},
 	"devDependencies": {
@@ -35,7 +33,6 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/connect": "^3.4.38",
 		"@types/node": "^18.19.48",
-		"@types/set-cookie-parser": "^2.4.7",
 		"dts-buddy": "^0.5.5",
 		"rollup": "^4.14.2",
 		"svelte": "^5.2.9",
