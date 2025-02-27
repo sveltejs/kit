@@ -427,7 +427,7 @@ Tips:
 					if (import_map.has(illegal_module)) {
 						const importer = path.relative(
 							cwd,
-							/** @type {string} */(import_map.get(illegal_module))
+							/** @type {string} */ (import_map.get(illegal_module))
 						);
 						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
@@ -1078,7 +1078,7 @@ function warn_overridden_config(config, resolved_config) {
 	if (overridden.length > 0) {
 		console.error(
 			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-			overridden.map((key) => `\n  - ${key}`).join('')
+				overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }
@@ -1122,9 +1122,9 @@ const create_service_worker_module = (config) => dedent`
 	export const build = [];
 	export const files = [
 		${create_assets(config)
-		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-		.join(',\n')}
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
 	];
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};

@@ -143,7 +143,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				if (!request.headers.has('accept-language')) {
 					request.headers.set(
 						'accept-language',
-						/** @type {string} */(event.request.headers.get('accept-language'))
+						/** @type {string} */ (event.request.headers.get('accept-language'))
 					);
 				}
 
@@ -178,7 +178,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = server_fetch(input, init);
-		response.catch(() => { });
+		response.catch(() => {});
 		return response;
 	};
 }
