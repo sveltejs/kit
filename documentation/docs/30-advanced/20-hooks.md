@@ -299,6 +299,8 @@ The `lang` parameter will be correctly derived from the returned pathname.
 
 Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
 
+Since version 2.18, the `reroute` hook is allowed to be asynchronous, to for example fetch data from your backend to decide where to reroute. Use this carefully and make sure it's fast, as this will delay navigations otherwise.
+
 ### transport
 
 This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns `false` for anything that isn't an instance of the type) and a corresponding `decode` function:
