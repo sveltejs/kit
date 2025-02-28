@@ -32,7 +32,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 	 * Else, root layout/error is always included as they are needed for 404 and root errors.
 	 * @type {Set<any>}
 	 */
-	const used_nodes = new Set(routes.length > 0 ? [0, 1] : []);
+	const used_nodes = new Set([0, 1]);
 
 	const server_assets = find_server_assets(build_data, routes);
 
