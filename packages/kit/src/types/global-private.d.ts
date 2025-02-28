@@ -6,6 +6,8 @@ declare global {
 	const __SVELTEKIT_EMBEDDED__: boolean;
 	/** True if `config.kit.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
+	/** True if `config.kit.router.hydrationErrorHandling === 'keep html'` */
+	const __SVELTEKIT_NO_ROOT_ERROR_ON_HYDRATION__: boolean;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

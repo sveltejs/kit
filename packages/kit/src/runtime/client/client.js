@@ -212,6 +212,7 @@ let current = {
 /** this being true means we SSR'd */
 let hydrated = false;
 let started = false;
+let errored_on_hydration = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -1242,7 +1243,7 @@ function get_rerouted_url(url) {
  * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
 async function get_navigation_intent(url, invalidating) {
-	if (!url) return;
+	if (!url || errored_on_hydration) return;
 	if (is_external_url(url, base, app.hash)) return;
 
 	if (__SVELTEKIT_CLIENT_ROUTING__) {
@@ -1678,7 +1679,7 @@ function setup_preload() {
 	 */
 	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a || a === current_a) return;
+		if (!a || a === current_a || errored_on_hydration) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
@@ -2213,7 +2214,7 @@ function _start_router() {
 		if (event.defaultPrevented) return;
 
 		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
-		if (!a) return;
+		if (!a || errored_on_hydration) return;
 
 		const { url, external, target, download } = get_link_info(a, base, app.hash);
 		if (!url) return;
@@ -2584,15 +2585,20 @@ async function _hydrate(
 			return;
 		}
 
-		result = await load_root_error_page({
-			status: get_status(error),
-			error: await handle_error(error, { url, params, route }),
-			url,
-			route
-		});
+		if (__SVELTEKIT_NO_ROOT_ERROR_ON_HYDRATION__) {
+			errored_on_hydration = true;
+			return;
+		} else {
+			result = await load_root_error_page({
+				status: get_status(error),
+				error: await handle_error(error, { url, params, route }),
+				url,
+				route
+			});
 
-		target.textContent = '';
-		hydrate = false;
+			target.textContent = '';
+			hydrate = false;
+		}
 	}
 
 	if (result.props.page) {
