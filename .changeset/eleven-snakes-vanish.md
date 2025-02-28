@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': minor
 ---
 
-feat: add possibility for adding polka/express middleware
+feat: add support for polka/express middleware

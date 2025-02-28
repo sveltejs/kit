@@ -143,7 +143,7 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 ## Edge Middleware
 
-You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file at the root of your project. You can use it to intercept requests even for prerendered or ISR'd pages. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered or ISR'd pages by rerouting a user to either variant A or B depending on a cookie.
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file at the root of your project. You can use it to intercept all requests including those for ISRed or prerendered pages and static content. Combined with [server-side route resolution](configuration#router), you can ensure it runs prior to all navigations, whether client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
 
 ```js
 /// file: edge-middleware.js
@@ -193,9 +193,9 @@ function split_cookies(cookies) {
 }
 ```
 
-By default, middleware runs on all requests except for files within `_app/immutable`. You can customize this by exporting a `config` object with a `matcher` property as described in Vercel's [API documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config).
+> [!NOTE] If you can do what you need to by using the [handle hook](hooks#Server-hooks-handle), do so. Avoid using edge middleware for requests that will end up hitting the SvelteKit server runtime (instead of e.g. an ISRed page or static content) — it would be unnecessary (even if very small) overhead. Notable use cases for edge middleware include A/B testing using rewrites on prerendered pages, or running lightweight logic (such as adding headers) while serving ISRed content.
 
-> [!NOTE] If you want to run code prior to a request but neither have prerendered nor ISR'd pages and have no rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
+By default, middleware runs on all requests except for SvelteKit-internal artifacts (such as the compiled JS files; normally within `_app/`). You can customize this by exporting a `config` object with a `matcher` property as described in Vercel's [API documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config). Due to the aforementioned performance impact, you should configure this to only run on requests that actually need edge middleware.
 
 ## Environment variables
 

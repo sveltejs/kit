@@ -2,4 +2,4 @@
 '@sveltejs/adapter-vercel': minor
 ---
 
-feat: add possibility of defining edge middleware
+feat: add support for edge middleware
