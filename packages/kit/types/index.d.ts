@@ -663,6 +663,16 @@ declare module '@sveltejs/kit' {
 			 * @since 2.17.0
 			 */
 			resolution?: 'client' | 'server';
+			/**
+			 * Sometimes the server renders the HTML successfully, but during hydration on the client something goes wrong. One example is a flaky network where
+			 * the request for one of the JavaScript files that is needed for a page to work fails. This option allows you to configure what should happen in such a case:
+			 * - `'error'` (default) - the client will fall back to the root error page. The user will immediately see something's off and depending on the error page can act accordingly. Use this if your app is too sensitive to not-immediately-visible broken states.
+			 * - `'keep html'` - the client will show the HTML that was rendered on the server and not attempt to hydrate the page. The user will see the successful server-rendered page, but no interactivity will be available and navigations are full page reloads. Use this if your app can largely function without JavaScript.
+			 *
+			 * @default "error"
+			 * @since 2.18.0
+			 */
+			hydrationErrorHandling?: 'error' | 'keep html';
 		};
 		serviceWorker?: {
 			/**

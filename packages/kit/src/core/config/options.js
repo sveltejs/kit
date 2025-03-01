@@ -262,7 +262,8 @@ const options = object(
 
 			router: object({
 				type: list(['pathname', 'hash']),
-				resolution: list(['client', 'server'])
+				resolution: list(['client', 'server']),
+				hydrationErrorHandling: list(['error', 'keep html'])
 			}),
 
 			serviceWorker: object({
