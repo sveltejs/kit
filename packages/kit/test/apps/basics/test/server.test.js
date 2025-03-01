@@ -668,6 +668,13 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/a');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
+		);
+	});
+
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
 		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);

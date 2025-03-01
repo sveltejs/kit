@@ -1198,13 +1198,13 @@ async function load_root_error_page({ status, error, url, route }) {
 /**
  * Resolve the relative rerouted URL for a client-side navigation
  * @param {URL} url
- * @returns {URL | undefined}
+ * @returns {Promise<URL | undefined>}
  */
-function get_rerouted_url(url) {
-	// reroute could alter the given URL, so we pass a copy
+async function get_rerouted_url(url) {
 	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
+		// reroute could alter the given URL, so we pass a copy
+		rerouted = (await app.hooks.reroute({ url: new URL(url) })) ?? url;
 
 		if (typeof rerouted === 'string') {
 			const tmp = new URL(url); // do not mutate the incoming URL
@@ -1246,7 +1246,7 @@ async function get_navigation_intent(url, invalidating) {
 	if (is_external_url(url, base, app.hash)) return;
 
 	if (__SVELTEKIT_CLIENT_ROUTING__) {
-		const rerouted = get_rerouted_url(url);
+		const rerouted = await get_rerouted_url(url);
 		if (!rerouted) return;
 
 		const path = get_url_path(rerouted);
@@ -1997,7 +1997,7 @@ export async function preloadCode(pathname) {
 		}
 
 		if (__SVELTEKIT_CLIENT_ROUTING__) {
-			const rerouted = get_rerouted_url(url);
+			const rerouted = await get_rerouted_url(url);
 			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
 				throw new Error(`'${pathname}' did not match any routes`);
 			}

@@ -115,7 +115,7 @@ export async function respond(request, options, manifest, state) {
 
 	try {
 		// reroute could alter the given URL, so we pass a copy
-		resolved_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
