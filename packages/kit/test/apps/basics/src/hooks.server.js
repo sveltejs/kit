@@ -151,6 +151,18 @@ export const handle = sequence(
 			event.locals.url = new URL(event.request.url);
 		}
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/middleware/headers') {
+			if (event.request.headers.get('x-custom-request-header') !== 'value') {
+				throw new Error('Request header not set');
+			}
+		}
+		const response = await resolve(event);
+		if (response.headers.has('x-custom-response-header')) {
+			throw new Error('Expected no response header from middleware at this point');
+		}
+		return response;
 	}
 );
 

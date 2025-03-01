@@ -155,6 +155,8 @@ export interface Logger {
 
 export type MaybePromise<T> = T | Promise<T>;
 
+export type TrackedFeature = '$app/server:read';
+
 export interface Prerendered {
 	/**
 	 * A map of `path` to `{ file }` objects, where a path like `/foo` corresponds to `foo.html` and a path like `/bar/` corresponds to `bar/index.html`.

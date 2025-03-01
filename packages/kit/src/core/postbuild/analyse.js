@@ -26,7 +26,8 @@ export default forked(import.meta.url, analyse);
  *   manifest_path: string;
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
- *   tracked_features: Record<string, string[]>;
+ *   tracked_features: Record<string, import('types').TrackedFeature[]>;
+ *   additional_entry_points: Record<string, string | undefined | null>
  *   env: Record<string, string>
  * }} opts
  */
@@ -35,6 +36,7 @@ async function analyse({
 	manifest_path,
 	manifest_data,
 	server_manifest,
+	additional_entry_points,
 	tracked_features,
 	env
 }) {
@@ -92,6 +94,14 @@ async function analyse({
 		};
 	}
 
+	for (const [entry, file] of Object.entries(additional_entry_points)) {
+		if (file) {
+			for (const feature of list_features(file, server_manifest, tracked_features)) {
+				check_feature('', {}, entry, feature, config.adapter);
+			}
+		}
+	}
+
 	// analyse routes
 	for (const route of manifest._.routes) {
 		const page =
@@ -121,13 +131,13 @@ async function analyse({
 		const prerender = page?.prerender ?? endpoint?.prerender;
 
 		if (prerender !== true) {
-			for (const feature of list_features(
+			for (const feature of list_route_features(
 				route,
 				manifest_data,
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, undefined, feature, config.adapter);
 			}
 		}
 
@@ -213,18 +223,12 @@ function analyse_page(layouts, leaf) {
 }
 
 /**
- * @param {import('types').SSRRoute} route
- * @param {import('types').ManifestData} manifest_data
+ * @param {string} entry
  * @param {import('vite').Manifest} server_manifest
- * @param {Record<string, string[]>} tracked_features
+ * @param {Record<string, import('types').TrackedFeature[]>} tracked_features
+ * @param {Set<import('types').TrackedFeature>} [features]
  */
-function list_features(route, manifest_data, server_manifest, tracked_features) {
-	const features = new Set();
-
-	const route_data = /** @type {import('types').RouteData} */ (
-		manifest_data.routes.find((r) => r.id === route.id)
-	);
-
+function list_features(entry, server_manifest, tracked_features, features = new Set()) {
 	/** @param {string} id */
 	function visit(id) {
 		const chunk = server_manifest[id];
@@ -243,21 +247,40 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		}
 	}
 
+	visit(entry);
+
+	return features;
+}
+
+/**
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {Record<string, import('types').TrackedFeature[]>} tracked_features
+ */
+function list_route_features(route, manifest_data, server_manifest, tracked_features) {
+	const features = new Set();
+	const route_data = /** @type {import('types').RouteData} */ (
+		manifest_data.routes.find((r) => r.id === route.id)
+	);
+
 	let page_node = route_data?.leaf;
 	while (page_node) {
-		if (page_node.server) visit(page_node.server);
+		if (page_node.server) {
+			list_features(page_node.server, server_manifest, tracked_features, features);
+		}
 		page_node = page_node.parent ?? null;
 	}
 
 	if (route_data.endpoint) {
-		visit(route_data.endpoint.file);
+		list_features(route_data.endpoint.file, server_manifest, tracked_features, features);
 	}
 
 	if (manifest_data.hooks.server) {
 		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
 		// we don't currently account for that case
-		visit(manifest_data.hooks.server);
+		list_features(manifest_data.hooks.server, server_manifest, tracked_features, features);
 	}
 
-	return Array.from(features);
+	return features;
 }

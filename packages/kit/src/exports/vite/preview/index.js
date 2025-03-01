@@ -51,7 +51,9 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await svelte_config.kit.adapter?.emulate?.({
+		importEntryPoint: (entry) => import(pathToFileURL(join(dir, `adapter/${entry}.js`)).href)
+	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -65,6 +67,13 @@ export async function preview(vite, vite_config, svelte_config) {
 				vite.middlewares.stack.splice(i, 1);
 			}
 		}
+
+		// adapter-provided middleware
+		vite.middlewares.use(async (req, res, next) => {
+			if (!emulator?.interceptRequest) return next();
+
+			return emulator.interceptRequest(req, res, next);
+		});
 
 		// generated client assets and the contents of `static`
 		vite.middlewares.use(

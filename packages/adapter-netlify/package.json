@@ -33,7 +33,7 @@
 	],
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\" && node -e \"fs.cpSync('src/middleware.js', 'files/middleware.js')\"",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
