@@ -1,4 +1,4 @@
-import { parse, serialize } from 'cookie';
+import { parse, serialize } from 'cookie-es';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 
@@ -40,7 +40,7 @@ export function get_cookies(request, url, trailing_slash) {
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
-	/** @type {import('cookie').CookieSerializeOptions} */
+	/** @type {import('cookie-es').CookieSerializeOptions} */
 	const defaults = {
 		httpOnly: true,
 		sameSite: 'lax',
@@ -56,7 +56,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie-es').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
 			const c = new_cookies[name];
@@ -92,7 +92,7 @@ export function get_cookies(request, url, trailing_slash) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie-es').CookieParseOptions} [opts]
 		 */
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });
