@@ -404,6 +404,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
+	app_template_contains_svelte_htmlAttributes: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	embedded: boolean;
@@ -416,6 +417,7 @@ export interface SSROptions {
 	service_worker: boolean;
 	templates: {
 		app(values: {
+			htmlAttributes: string;
 			head: string;
 			body: string;
 			assets: string;
