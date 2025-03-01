@@ -35,9 +35,9 @@ importers:
 
   packages/adapter-auto:
     dependencies:
-      import-meta-resolve:
-        specifier: ^4.1.0
-        version: 4.1.0
+      exsolve:
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -351,9 +351,9 @@ importers:
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
-      import-meta-resolve:
-        specifier: ^4.1.0
-        version: 4.1.0
+      exsolve:
+        specifier: ^1.0.1
+        version: 1.0.1
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
@@ -2497,6 +2497,9 @@ packages:
     resolution: {integrity: sha512-bFi65yM+xZgk+u/KRIpekdSYkTB5W1pEf0Lt8Q8Msh7b+eQ7LXVtIB1Bkm4fvclDEL1b2CZkMhv2mOeF8tMdkA==}
     engines: {node: '>=12.0.0'}
 
+  exsolve@1.0.1:
+    resolution: {integrity: sha512-Smf0iQtkQVJLaph8r/qS8C8SWfQkaq9Q/dFcD44MLbJj6DNhlWefVuaS21SjfqOsBbjVlKtbCj6L9ekXK6EZUg==}
+
   extendable-error@0.1.7:
     resolution: {integrity: sha512-UOiS2in6/Q0FK0R0q6UY9vYpQ21mr/Qn1KOnte7vsACuNJf514WvCCUHSRCPcgjPT2bAhNIJdlE6bVap1GKmeg==}
 
@@ -2652,9 +2655,6 @@ packages:
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
-
-  import-meta-resolve@4.1.0:
-    resolution: {integrity: sha512-I6fiaX09Xivtk+THaMfAwnA3MVA5Big1WHF1Dfx9hFuvNIWpXnorlkzhcQf6ehrqQiiZECRt1poOAkPmer3ruw==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -4945,6 +4945,8 @@ snapshots:
 
   expect-type@1.1.0: {}
 
+  exsolve@1.0.1: {}
+
   extendable-error@0.1.7: {}
 
   external-editor@3.1.0:
@@ -5103,8 +5105,6 @@ snapshots:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-
-  import-meta-resolve@4.1.0: {}
 
   imurmurhash@0.1.4: {}
 
