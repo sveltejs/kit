@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import crossws from 'crossws/adapters/node';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
@@ -14,7 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{ middlewares: import('connect').Server }} vite
+ * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -52,6 +53,31 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_base(req) {
+		const host = req.headers[':authority'] || req.headers.host;
+		return `${protocol}://${host}`;
+	}
+
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(join(dir, file));
+		}
+
+		return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+	}
+
+	/** @type {import('crossws').ResolveHooks} */
+	let resolve_websocket_hooks;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -183,30 +209,58 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
+		vite.httpServer.on(
+			'upgrade',
+			/**
+			 * @param {import('node:http').IncomingMessage} req
+			 * @param {import('node:stream').Duplex} socket
+			 * @param {Buffer} head
+			 */
+			async (req, socket, head) => {
+				if (req.headers.upgrade === 'websocket') {
+					const resolve = server.getWebSocketHooksResolver({
+						getClientAddress: get_client_address(req),
+						read,
+						emulator
+					});
+
+					// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+					// see https://github.com/unjs/crossws/issues/137
+					const request = await getRequest({
+						base: get_base(req),
+						request: req
+					});
+					Object.defineProperty(request, 'context', {
+						enumerable: true,
+						value: {}
+					});
+
+					const hooks = await resolve(request);
+					const upgrade = hooks.upgrade;
+					hooks.upgrade = () =>
+						upgrade(
+							/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request)
+						);
+
+					resolve_websocket_hooks = () => hooks;
+
+					ws.handleUpgrade(req, socket, head);
+				}
+			}
+		);
+
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers[':authority'] || req.headers.host;
-
 			const request = await getRequest({
-				base: `${protocol}://${host}`,
+				base: get_base(req),
 				request: req
 			});
 
 			await setResponse(
 				res,
 				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
+					getClientAddress: get_client_address(req),
+					read,
 					emulator
 				})
 			);
@@ -252,3 +306,14 @@ function scoped(scope, handler) {
 function is_file(path) {
 	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+const get_client_address = (req) => {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
+};

@@ -171,6 +171,9 @@ export default function ({ config, platformProxy = {} } = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			webSockets: () => true
 		}
 	};
 }

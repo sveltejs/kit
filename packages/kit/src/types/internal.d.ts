@@ -20,7 +20,8 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transporter,
+	Socket
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -79,7 +80,7 @@ export interface BuildData {
 		 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
 		 * Only set in case of `router.resolution === 'server'`.
 		 */
-		nodes?: (string | undefined)[];
+		nodes?: Array<string | undefined>;
 		/**
 		 * CSS files referenced in the entry points of the layouts/pages.
 		 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
@@ -165,18 +166,22 @@ export interface Env {
 	public: Record<string, string>;
 }
 
+type InternalRequestOptions = RequestOptions & {
+	prerendering?: PrerenderOptions;
+	read: (file: string) => Buffer;
+	/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
+};
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
-	respond(
-		request: Request,
-		options: RequestOptions & {
-			prerendering?: PrerenderOptions;
-			read: (file: string) => Buffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-			emulator?: Emulator;
-		}
-	): Promise<Response>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
+	getWebSocketHooksResolver(
+		options: InternalRequestOptions
+	): (
+		info: RequestInit | import('crossws').Peer
+	) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
 }
 
 export interface ManifestData {
@@ -436,6 +441,7 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	socket?: Socket;
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;

@@ -1012,3 +1012,100 @@ test.describe('Load', () => {
 		});
 	}
 });
+
+// Running the tests serially prevents the WebSocket server from being overloaded,
+// improving communication speed and reducing test flakiness
+test.describe.serial('WebSockets', () => {
+	test('upgrade hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+		expect(page.getByText('protocol: bar')).toBeVisible();
+	});
+
+	test('open hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+		expect(page.getByText('open hook works')).toBeVisible();
+	});
+
+	test('message hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'ping' }).click();
+		expect(page.getByText('pong')).toBeVisible();
+	});
+
+	test('pub/sub', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'join' }).click();
+		expect(page.getByText('joined the chat')).toBeVisible();
+
+		await page.locator('button', { hasText: 'chat' }).click();
+		expect(page.getByText('hello')).toBeVisible();
+	});
+
+	test('close hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'join' }).click();
+		expect(page.getByText('joined the chat')).toBeVisible();
+
+		await page.locator('button', { hasText: 'leave' }).click();
+		expect(page.getByText('left the chat')).toBeVisible();
+		expect(page.getByText('close: 1000 test')).toBeVisible();
+	});
+
+	// TODO: test error hook runs after finding out how to trigger it
+
+	test('upgrade hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/upgrade');
+		await page.locator('button', { hasText: 'upgrade' }).click();
+		expect(page.getByText('error')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/upgrade');
+		expect(error.message).toBe('upgrade hook');
+	});
+
+	test('open hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/open');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('opened')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/open');
+		expect(error.message).toBe('open hook');
+	});
+
+	test('message hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/message');
+		await page.locator('button', { hasText: 'message' }).click();
+		expect(page.getByText('message received')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/message');
+		expect(error.message).toBe('message hook');
+	});
+
+	test('close hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/close');
+		await page.locator('button', { hasText: 'open' }).click();
+		expect(page.getByText('connected')).toBeVisible();
+		await page.locator('button', { hasText: 'close' }).click();
+		expect(page.getByText('closed')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/close');
+		expect(error.message).toBe('close hook');
+	});
+
+	// TODO: test error hook throwing an error runs handleError
+});
