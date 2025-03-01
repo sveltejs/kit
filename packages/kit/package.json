@@ -18,7 +18,6 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@types/cookie": "^0.6.0",
 		"cookie": "^0.7.0",
 		"devalue": "^5.1.0",
 		"esm-env": "^1.2.2",
