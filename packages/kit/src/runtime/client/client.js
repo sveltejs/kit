@@ -1636,25 +1636,29 @@ if (import.meta.hot) {
 	});
 }
 
+/** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
+
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
 	/** @type {Element} */
 	let current_a;
+	/** @type {PreloadDataPriority} */
+	let current_priority;
 
 	container.addEventListener('mousemove', (event) => {
 		const target = /** @type {Element} */ (event.target);
 
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			void preload(target, 2);
+			void preload(target, PRELOAD_PRIORITIES.hover);
 		}, 20);
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		void preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1674,11 +1678,14 @@ function setup_preload() {
 
 	/**
 	 * @param {Element} element
-	 * @param {number} priority
+	 * @param {PreloadDataPriority} priority
 	 */
 	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a || a === current_a) return;
+
+		// we don't want to preload data again if the user has already hovered/tapped
+		const interacted = a === current_a && priority >= current_priority;
+		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
@@ -1687,31 +1694,34 @@ function setup_preload() {
 
 		// we don't want to preload data for a page we're already on
 		const same_url = url && get_page_key(current.url) === get_page_key(url);
+		if (options.reload || same_url) return;
 
-		if (!options.reload && !same_url) {
-			if (priority <= options.preload_data) {
-				current_a = a;
-				const intent = await get_navigation_intent(url, false);
-				if (intent) {
-					if (DEV) {
-						void _preload_data(intent).then((result) => {
-							if (result.type === 'loaded' && result.state.error) {
-								console.warn(
-									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://svelte.dev/docs/kit/link-options for more info'
-								);
-							}
-						});
-					} else {
-						void _preload_data(intent);
+		if (priority <= options.preload_data) {
+			current_a = a;
+			// we don't want to preload data again on tap if we've already preloaded it on hover
+			current_priority = PRELOAD_PRIORITIES.tap;
+
+			const intent = await get_navigation_intent(url, false);
+			if (!intent) return;
+
+			if (DEV) {
+				void _preload_data(intent).then((result) => {
+					if (result.type === 'loaded' && result.state.error) {
+						console.warn(
+							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+								'See https://svelte.dev/docs/kit/link-options for more info'
+						);
 					}
-				}
-			} else if (priority <= options.preload_code) {
-				current_a = a;
-				void _preload_code(/** @type {URL} */ (url));
+				});
+			} else {
+				void _preload_data(intent);
 			}
+		} else if (priority <= options.preload_code) {
+			current_a = a;
+			current_priority = priority;
+			void _preload_code(/** @type {URL} */ (url));
 		}
 	}
 
