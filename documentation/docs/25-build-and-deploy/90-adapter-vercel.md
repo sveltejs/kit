@@ -143,7 +143,7 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 ## Edge Middleware
 
-You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file at the root of your project. You can use it to intercept all requests including those for ISRed or prerendered pages and static content. Combined with [server-side route resolution](configuration#router), you can ensure it runs prior to all navigations, whether client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file in your `src` folder. You can use it to intercept all requests including those for ISRed or prerendered pages and static content. Combined with [server-side route resolution](configuration#router), you can ensure it runs prior to all navigations, whether client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
 
 ```js
 /// file: edge-middleware.js

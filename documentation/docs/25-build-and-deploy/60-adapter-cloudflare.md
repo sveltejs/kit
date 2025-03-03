@@ -113,7 +113,7 @@ You can deploy one middleware function that closely follows the [Pages Middlewar
 
 > [!NOTE] It isn't really Pages Middleware because the adapter compiles to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode) (also see the [Notes](#Notes) section), which ignores middleware, but it closely mirrors its capabilities.
 
-To get started, place a `cloudflare-middleware.js` file at the root of your project and export a `onRequest` function from it:
+To get started, place a `cloudflare-middleware.js` file in your `src` folder and export a `onRequest` function from it:
 
 ```js
 /// file: cloudflare-middleware.js
