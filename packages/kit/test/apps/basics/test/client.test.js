@@ -904,6 +904,7 @@ test.describe('data-sveltekit attributes', () => {
 
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').hover();
+		await page.locator('#one').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -913,6 +914,7 @@ test.describe('data-sveltekit attributes', () => {
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').hover();
+		await page.locator('#two').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -922,6 +924,7 @@ test.describe('data-sveltekit attributes', () => {
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').hover();
+		await page.locator('#three').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
