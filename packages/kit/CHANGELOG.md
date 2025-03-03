@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.17.3
+### Patch Changes
+
+
+- fix: avoid simulated CORS errors with non-HTTP URLs ([#13493](https://github.com/sveltejs/kit/pull/13493))
+
+
+- fix: correctly preload links on `mousedown`/`touchstart` ([#13486](https://github.com/sveltejs/kit/pull/13486))
+
+
+- fix: load CSS when using server-side route resolution ([#13498](https://github.com/sveltejs/kit/pull/13498))
+
+
+- fix: correctly find shared entry-point CSS files during inlining ([#13431](https://github.com/sveltejs/kit/pull/13431))
+
 ## 2.17.2
 ### Patch Changes
 
