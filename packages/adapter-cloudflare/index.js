@@ -135,13 +135,24 @@ export default function (options = {}) {
 
 					const request = new Request(url, {
 						headers: node_kit.getRequestHeaders(req),
-						method: req.method,
-						body:
-							// We omit the body here because it would consume the stream
-							req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
-								? undefined
-								: 'Cannot read body in dev mode'
+						method: req.method
 					});
+
+					// We omit the body here because it would consume the stream
+					if (req.method !== 'GET' && req.method !== 'HEAD') {
+						Object.defineProperty(request, 'body', {
+							get() {
+								console.warn('Cannot read request body in dev/preview.');
+								return new ReadableStream({
+									start(controller) {
+										controller.enqueue('Cannot read request body in dev/preview.');
+										controller.close();
+									}
+								});
+							}
+						});
+					}
+
 					// @ts-expect-error slight type mismatch which seems harmless
 					request.cf = emulated.platform.cf;
 

@@ -130,13 +130,23 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 					const request = new Request(url, {
 						headers: node_kit.getRequestHeaders(req),
-						method: req.method,
-						body:
-							// We omit the body here because it would consume the stream
-							req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
-								? undefined
-								: 'Cannot read body in dev mode'
+						method: req.method
 					});
+
+					// We omit the body here because it would consume the stream
+					if (req.method !== 'GET' && req.method !== 'HEAD') {
+						Object.defineProperty(request, 'body', {
+							get() {
+								console.warn('Cannot read request body in dev/preview.');
+								return new ReadableStream({
+									start(controller) {
+										controller.enqueue('Cannot read request body in dev/preview.');
+										controller.close();
+									}
+								});
+							}
+						});
+					}
 
 					// Netlify allows you to modify the response object after calling next().
 					// This isn't replicable using Vite or Polka middleware, so we approximate it.
