@@ -2,6 +2,7 @@
  * Parses the given value into number of bytes.
  *
  * @param {string} value - Size in bytes. Can also be specified with a unit suffix kilobytes (K), megabytes (M), or gigabytes (G).
+ * @returns {number}
  */
 export function parse_as_bytes(value) {
 	const multiplier =

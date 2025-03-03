@@ -9,7 +9,7 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
-import { parse_as_bytes } from './libs/utils.js';
+import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
 

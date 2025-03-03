@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { parse_as_bytes } from '../src/libs/utils.js';
+import { parse_as_bytes } from '../utils.js';
 
 describe('parse_as_bytes', () => {
 	test('parses correctly', () => {
@@ -13,8 +13,7 @@ describe('parse_as_bytes', () => {
 		};
 
 		Object.keys(testData).forEach((input) => {
-			// @ts-ignore: Ignoring 'Element implicitly has an any type' error
-			const expected = testData[input];
+			const expected = testData[/** @type {keyof typeof testData} */ (input)];
 			const actual = parse_as_bytes(input);
 			expect(actual, `Testing input '${input}'`).toBe(expected);
 		});
