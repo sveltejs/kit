@@ -139,7 +139,7 @@ When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of sec
 
 ## Middleware
 
-You can integrate Express or Polka middleware into your SvelteKit application built with the Node adapter by placing a `node-middleware.js` file in your `src` folder. It must export a default function which receives the same arguments as [Express middleware](https://expressjs.com/en/guide/using-middleware.html) (if you don't use a custom server, then you may also make use of additional [Polka-specific API](https://github.com/lukeed/polka?tab=readme-ov-file#middleware), since that's what the Node adapter uses by default). The middleware runs on all requests. Combined with using [server-side route resolution](configuration#router) you can make sure it runs prior to all navigations, no matter prerendered or not and no matter client- or server-side.
+You can integrate Express or Polka middleware into your SvelteKit application built with the Node adapter by placing a `node-middleware.js` file in your `src` folder. It must export a default function which receives the same arguments as [Express middleware](https://expressjs.com/en/guide/using-middleware.html) (if you don't use a custom server, then you may also make use of additional [Polka-specific API](https://github.com/lukeed/polka?tab=readme-ov-file#middleware), since that's what the Node adapter uses by default). Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware runs on all requests, including for static assets and prerendered pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side.
 
 ```js
 /// file: node-middleware.js
@@ -148,6 +148,7 @@ declare module 'polka';
 
 // @filename: index.js
 // ---cut---
+import { parse } from 'cookie';
 
 /**
  * @param {import('polka').Request} req
@@ -158,30 +159,20 @@ export default function middleware(req, res, next) {
 	if (req.url !== '/') return next();
 
 	// Retrieve feature flag from cookies
-	let flag = split_cookies(req.headers.cookie ?? '')?.flag;
+	let flag = parse(req.headers.cookie ?? '').flag;
 
-	// Fall back to random value if this is a new visitor
-	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+	if (!flag) {
+		// Fall back to random value if this is a new visitor
+		flag = Math.random() > 0.5 ? 'a' : 'b';
+
+		// Set a cookie to remember the feature flags for this visitor
+		res.appendHeader('Set-Cookie', `flag=${flag}; Path=/`);
+	}
 
 	// Get destination URL based on the feature flag
 	req.url = flag === 'a' ? '/home-a' : '/home-b';
 
-	// Set a cookie to remember the feature flags for this visitor
-	res.appendHeader('Set-Cookie', `flag=${flag}; Path=/`);
-
 	return next();
-}
-
-/** @param {string} cookies */
-function split_cookies(cookies) {
-	return cookies.split(';').reduce(
-		(acc, cookie) => {
-			const [name, value] = cookie.trim().split('=');
-			acc[name] = value;
-			return acc;
-		},
-		{} as Record<string, string>
-	);
 }
 ```
 

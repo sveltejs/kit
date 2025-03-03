@@ -68,7 +68,7 @@ export default {
 
 ## Edge Middleware
 
-You can deploy one Netlify Edge Function [as middleware](https://docs.netlify.com/edge-functions/api/#modify-a-response) by placing an `edge-middleware.js` file in your `src` folder. You can use it to intercept requests even for prerendered pages and other static content. Combined with [server-side route resolution](configuration#router), you can ensure it runs prior to all navigations, whether client- or server-side. This allows you to for example run A/B-tests on prerendered pages by rerouting a user to either variant A or B depending on a cookie.
+You can deploy one Netlify Edge Function [as middleware](https://docs.netlify.com/edge-functions/api/#modify-a-response) by placing an `edge-middleware.js` file in your `src` folder. Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware can run on all requests, including for static assets and prerendered pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered pages by rerouting a user to either variant A or B depending on a cookie.
 
 ```js
 /// file: edge-middleware.js
@@ -91,11 +91,13 @@ export default async function middleware(request, { next, cookies }) {
 	// Retrieve feature flag from cookies
 	let flag = cookies.get('flag');
 
-	// Fall back to random value if this is a new visitor
-	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+	if (!flag) {
+		// Fall back to random value if this is a new visitor
+		flag = Math.random() > 0.5 ? 'a' : 'b';
 
-	// Set a cookie to remember the feature flags for this visitor
-	cookies.set('flag', flag);
+		// Set a cookie to remember the feature flags for this visitor
+		cookies.set('flag', flag);
+	}
 
 	// Get destination URL based on the feature flag
 	return new URL(flag === 'a' ? '/home-a' : '/home-b', url);

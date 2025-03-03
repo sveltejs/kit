@@ -57,3 +57,16 @@ export interface RoutesJSONSpec {
 	include: string[];
 	exclude: string[];
 }
+
+/**
+ * The type of the parameter that is passed to the middleware.
+ * Closely modelled after Cloudflare's EventContext type.
+ */
+export interface EventContext<Bindings = Record<string, any>> {
+	request: Request;
+	bindings?: Bindings;
+	waitUntil(f: any): void;
+	passThroughOnException(): void;
+	env: Record<string, string> & { ASSETS: { fetch: typeof fetch } };
+	next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
+}

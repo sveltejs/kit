@@ -143,7 +143,7 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 
 ## Edge Middleware
 
-You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file in your `src` folder. You can use it to intercept all requests including those for ISRed or prerendered pages and static content. Combined with [server-side route resolution](configuration#router), you can ensure it runs prior to all navigations, whether client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file in your `src` folder. Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware can run on all requests, including for static assets and prerendered or ISRed pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
 
 ```js
 /// file: edge-middleware.js
@@ -153,6 +153,7 @@ declare module '@vercel/edge';
 // @filename: index.js
 // ---cut---
 import { rewrite, next } from '@vercel/edge';
+import { parse } from 'cookie';
 
 /**
  * @param {Request} request
@@ -163,7 +164,7 @@ export default async function middleware(request) {
 	if (url.pathname !== '/') return next();
 
 	// Retrieve feature flag from cookies
-	let flag = split_cookies(request.headers.get('cookie') ?? '')?.flag;
+	let flag = parse(request.headers.get('cookie') ?? '').flag;
 
 	// Fall back to random value if this is a new visitor
 	flag ||= Math.random() > 0.5 ? 'a' : 'b';
@@ -177,18 +178,6 @@ export default async function middleware(request) {
 				'Set-Cookie': `flag=${flag}; Path=/`
 			}
 		}
-	);
-}
-
-/** @param {string} cookies */
-function split_cookies(cookies) {
-	return cookies.split(';').reduce(
-		(acc, cookie) => {
-			const [name, value] = cookie.trim().split('=');
-			acc[name] = value;
-			return acc;
-		},
-		{} as Record<string, string>
 	);
 }
 ```
