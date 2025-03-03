@@ -672,8 +672,10 @@ export interface KitConfig {
 		 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
 		 * - The list of routes is hidden from public view
 		 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
-
+		 *
 		 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
+		 *
+		 * > [!NOTE] When using `reroute` inside `hooks.server.js`, you _must_ use server-side route resolution.
 		 *
 		 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
 		 *
@@ -815,6 +817,20 @@ export type ClientInit = () => MaybePromise<void>;
  * @since 2.3.0
  */
 export type Reroute = (event: { url: URL }) => void | string;
+
+/**
+ * The [`reroute`](https://svelte.dev/docs/kit/hooks#Server-hooks-reroute) hook on the server allows you to modify the URL before it is used to determine which route to render.
+ * In contrast to the universal [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook, it
+ * - is allowed to be async (though you should take extra caution to not do long running operations here, as it will delay navigation)
+ * - also receives headers and cookies (though you cannot modify them)
+ *
+ * @since 2.18.0
+ */
+export type ServerReroute = (event: {
+	url: URL;
+	headers: Omit<Headers, 'set' | 'delete' | 'append'>;
+	cookies: { get: Cookies['get'] };
+}) => MaybePromise<void | string>;
 
 /**
  * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
