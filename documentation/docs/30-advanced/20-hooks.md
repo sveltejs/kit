@@ -299,7 +299,7 @@ The `lang` parameter will be correctly derived from the returned pathname.
 
 Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
 
-Since version 2.18, the `reroute` hook is allowed to be asynchronous, to for example fetch data from your backend to decide where to reroute. Use this carefully and make sure it's fast, as this will delay navigations otherwise.
+Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise.
 
 ### transport
 
