@@ -14,7 +14,7 @@ By default, when a user visits a site, SvelteKit will render the first page with
 
 You can use SvelteKit as a [static site generator (SSG)](glossary#SSG) that fully [prerenders](glossary#Prerendering) your site with static rendering using [`adapter-static`](adapter-static). You may also use [the prerender option](page-options#prerender) to prerender only some pages and then choose a different adapter with which to dynamically server-render other pages.
 
-Tools built solely to do static site generation may scale the prerendering process more efficiently when rendering a very large number of pages. However, in contrast to purpose-built SSGs, SvelteKit allows for nicely mixing and matching different rendering types on different pages.
+Tools built solely to do static site generation may scale the prerendering process more efficiently during build when rendering a very large number of pages. When working with very large statically generated sites, you can avoid long build times with [Incremental Static Regeneration (ISR) if using `adapter-vercel`](adapter-vercel#Incremental-Static-Regeneration). And in contrast to purpose-built SSGs, SvelteKit allows for nicely mixing and matching different rendering types on different pages.
 
 ## Single-page app
 
