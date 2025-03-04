@@ -477,6 +477,11 @@ test.describe('Load', () => {
 		expect(await response.text()).toContain('status: 404');
 	});
 
+	test('fetch reads universal load assets on the server', async ({ page }) => {
+		await page.goto('/load/fetch-asset');
+		await expect(page.locator('p')).toHaveText('1');
+	});
+
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
 		await page.goto('/load/fetch-origin-internal');
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
