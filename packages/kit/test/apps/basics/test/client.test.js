@@ -1402,6 +1402,14 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/a']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
+		);
+	});
+
 	test('Apply reroute after client-only redirects', async ({ page }) => {
 		await page.goto('/reroute/client-only-redirect');
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');
