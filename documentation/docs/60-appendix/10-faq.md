@@ -8,7 +8,7 @@ Please see [the Svelte FAQ](../svelte/faq) and [`vite-plugin-svelte` FAQ](https:
 
 ## What can I make with SvelteKit?
 
-See [the documentation regarding project types] for more details.
+See [the documentation regarding project types](project-types) for more details.
 
 ## How do I include details from package.json in my application?
 
