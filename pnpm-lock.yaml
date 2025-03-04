@@ -646,9 +646,6 @@ importers:
 
   packages/kit/test/apps/prerendered-app-error-pages:
     devDependencies:
-      '@sveltejs/adapter-auto':
-        specifier: workspace:^
-        version: link:../../../../adapter-auto
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
