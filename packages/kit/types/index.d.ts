@@ -1726,13 +1726,13 @@ declare module '@sveltejs/kit' {
 			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
-			nodes?: (string | undefined)[];
+			nodes?: Array<string | undefined>;
 			/**
 			 * CSS files referenced in the entry points of the layouts/pages.
 			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
-			css?: (string[] | undefined)[];
+			css?: Array<string[] | undefined>;
 			/**
 			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
@@ -1873,8 +1873,8 @@ declare module '@sveltejs/kit' {
 			entries?: PrerenderEntryGenerator;
 		};
 
-		universal_id: string;
-		server_id: string;
+		universal_id?: string;
+		server_id?: string;
 	}
 
 	type SSRNodeLoader = () => Promise<SSRNode>;
