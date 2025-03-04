@@ -4,25 +4,25 @@ title: Project types
 
 SvelteKit offers configurable rendering, which allows you to build and deploy your project in several different ways. You can build all of the below types of applications and more with SvelteKit. Rendering settings are not mutually exclusive and you may choose the optimal manner with which to render different parts of your application.
 
-If you don't have a particular way you'd like to build your application in mind, don't worry! The way your application is built, deployed, and rendered is controlled by which adapter you've chosen and a small amount of configuration and these can always be changed later. The project structure and routing will be the same regardless of the project type that you choose.
+If you don't have a particular way you'd like to build your application in mind, don't worry! The way your application is built, deployed, and rendered is controlled by which adapter you've chosen and a small amount of configuration and these can always be changed later. The [project structure](project-structure) and [routing](glossary#Routing) will be the same regardless of the project type that you choose.
 
 ## Default rendering
 
-By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages. Apps built with this hybrid rendering approach have also been called [transitional apps](https://www.youtube.com/watch?v=860d8usGC0o).
+By default, when a user visits a site, SvelteKit will render the first page with [server-side rendering (SSR)](glossary#SSR) and subsequent pages with [client-side rendering (CSR)](glossary#CSR). Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages. Apps built with this hybrid rendering approach have also been called [transitional apps](https://www.youtube.com/watch?v=860d8usGC0o).
 
 ## Static site generation
 
-You can use SvelteKit as a static site generator (SSG) that fully [prerenders](glossary#Prerendering) your site with static rendering using [`adapter-static`](adapter-static). You may also use [the prerender option](page-options#prerender) to prerender only some pages and then choose a different adapter with which to dynamically server-render other pages.
+You can use SvelteKit as a [static site generator (SSG)](glossary#SSG) that fully [prerenders](glossary#Prerendering) your site with static rendering using [`adapter-static`](adapter-static). You may also use [the prerender option](page-options#prerender) to prerender only some pages and then choose a different adapter with which to dynamically server-render other pages.
 
 Tools built solely to do static site generation may scale the prerendering process more efficiently when rendering a very large number of pages. However, in contrast to purpose-built SSGs, SvelteKit allows for nicely mixing and matching different rendering types on different pages.
 
 ## Single-page app
 
-You can [build single-page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language). If you are building an application with no backend or a [separate backend](#Separate-backend), you can simply skip over and ignore the parts of the docs talking about `server` files.
+[Single-page apps (SPAs)](glossary#SPA) exclusively use [client-side rendering (CSR)](glossary#CSR). You can [build single-page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language). If you are building an application with no backend or a [separate backend](#Separate-backend), you can simply skip over and ignore the parts of the docs talking about `server` files.
 
 ## Multi-page app
 
-Traditional applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps (MPA). In SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
+SvelteKit isn't typically used to build a [traditional multi-page apps](glossary#MPA). However, in SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
 
 ## Separate backend
 
