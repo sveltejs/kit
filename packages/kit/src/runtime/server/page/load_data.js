@@ -78,7 +78,7 @@ export async function load_server_data({ event, state, node, parent }) {
 				const { href } = new URL(dep, event.url);
 
 				if (DEV) {
-					validate_depends(node.server_id, dep);
+					validate_depends(node.server_id || 'missing route ID', dep);
 
 					if (done && !uses.dependencies.has(href)) {
 						console.warn(
