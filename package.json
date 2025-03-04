@@ -38,7 +38,8 @@
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"svelte-preprocess",
-			"workerd"
+			"workerd",
+			"esbuild"
 		]
 	}
 }
