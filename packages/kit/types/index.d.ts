@@ -1159,7 +1159,7 @@ declare module '@sveltejs/kit' {
 		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
 		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies)
+		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 		 */
 		fetch: typeof fetch;
 		/**
@@ -1171,7 +1171,7 @@ declare module '@sveltejs/kit' {
 		 */
 		locals: App.Locals;
 		/**
-		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
 		params: Params;
 		/**
@@ -1179,15 +1179,15 @@ declare module '@sveltejs/kit' {
 		 */
 		platform: Readonly<App.Platform> | undefined;
 		/**
-		 * The original request object
+		 * The original request object.
 		 */
 		request: Request;
 		/**
-		 * Info about the current route
+		 * Info about the current route.
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
 			 */
 			id: RouteId;
 		};
@@ -1284,15 +1284,16 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface ServerInitOptions {
-		/** A map of environment variables */
+		/** A map of environment variables. */
 		env: Record<string, string>;
-		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
 		appDir: string;
 		appPath: string;
+		/** Static files from `kit.config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
 
@@ -1303,7 +1304,7 @@ declare module '@sveltejs/kit' {
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
-			/** A `[file]: size` map of all assets imported by server code */
+			/** A `[file]: size` map of all assets imported by server code. */
 			server_assets: Record<string, number>;
 		};
 	}
@@ -1434,7 +1435,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function
+	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function.
 	 */
 	export interface Redirect {
 		/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
@@ -1752,6 +1753,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface ManifestData {
+		/** Static files from `kit.config.files.assets` */
 		assets: Asset[];
 		hooks: {
 			client: string | null;
