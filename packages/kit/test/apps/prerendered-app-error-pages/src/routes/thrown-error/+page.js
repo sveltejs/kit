@@ -1,5 +1,5 @@
-import { error } from "@sveltejs/kit";
+import { error } from '@sveltejs/kit';
 
 export function load() {
-  error(404, 'Not found');
+	error(404, 'Not found');
 }

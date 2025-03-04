@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-		server: {
+	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
