@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.18.0
+### Minor Changes
+
+
+- feat: allow async `reroute` ([#13520](https://github.com/sveltejs/kit/pull/13520))
+
+
+- feat: provide `normalizeUrl` helper ([#13539](https://github.com/sveltejs/kit/pull/13539))
+
+
+### Patch Changes
+
+
+- fix: correct navigation history with hash router and ensure load functions are rerun on user changes to URL hash ([#13492](https://github.com/sveltejs/kit/pull/13492))
+
+
+- fix: include universal load assets as server assets ([#13531](https://github.com/sveltejs/kit/pull/13531))
+
+
+- fix: Include root layout and error nodes even when apps have only prerendered pages ([#13522](https://github.com/sveltejs/kit/pull/13522))
+
+
+- fix: correctly preload data on `mousedown`/`touchstart` if code was preloaded on hover ([#13530](https://github.com/sveltejs/kit/pull/13530))
+
 ## 2.17.3
 ### Patch Changes
 
