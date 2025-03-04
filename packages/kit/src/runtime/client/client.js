@@ -2435,6 +2435,12 @@ function _start_router() {
 			if (!hash_navigating) {
 				const url = new URL(location.href);
 				update_url(url);
+
+				// if the user edits the hash via the browser URL bar, trigger a full-page
+				// reload to align with pathname router behavior
+				if (app.hash) {
+					location.reload();
+				}
 			}
 		}
 	});
@@ -2453,13 +2459,6 @@ function _start_router() {
 				'',
 				location.href
 			);
-		} else if (app.hash) {
-			// If the user edits the hash via the browser URL bar, it
-			// (surprisingly!) mutates `current.url`, allowing us to
-			// detect it and trigger a navigation
-			if (current.url.hash === location.hash) {
-				void navigate({ type: 'goto', url: decode_hash(current.url) });
-			}
 		}
 	});
 
