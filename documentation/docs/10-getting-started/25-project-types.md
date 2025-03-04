@@ -8,9 +8,9 @@ If you don't have a particular way you'd like to build your application in mind,
 
 The project structure and routing will be the same regardless of the project type that you choose. If you are building an application with no backend or where the backend is running in a difference service, you can simply skip over and ignore the parts of the docs talking about `server` files.
 
-## Default hybrid rendered app
+## Default: hybrid-rendered app
 
-By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components which is typically faster and eliminates a flash when navigating between pages.
+By default, when a user visits a site, SvelteKit will render the first page with server-side rendering and subsequent pages with client-side rendering. Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages.
 
 ## Static site generator (SSG)
 
@@ -18,17 +18,17 @@ You can use SvelteKit as a static site generator (SSG) that fully prerenders you
 
 You may also use [the prerender option](page-options#prerender) to prerender only some pages and then choose a different adapter with which to dynamically server-render other pages.
 
-## Single page apps (SPA)
+## Single-page app (SPA)
 
-You can [build single page apps (SPA)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-lanugage).
+You can [build single-page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language).
 
-## Traditional multi-page app (MPA)
+## Multi-page app (MPA)
 
-Applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps. In SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
+Traditional applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps. In SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
 
 ## Backend in another language
 
-If your backend is written in another language such as Go, Java, PHP, Rust, or .Net then there are a couple of ways that you can deploy your application. The most recommended way would be to deploy your SvelteKit frontend separately from your backend utilizing `adapter-node` or a serverless adapter. Some users prefer not to have a separate process to manage and decide to deploy their application as a [single page app (SPA)](single-page-apps) served by their backend server.
+If your backend is written in another language such as Go, Java, PHP, Ruby, Rust, or .Net then there are a couple of ways that you can deploy your application. The most recommended way would be to deploy your SvelteKit frontend separately from your backend utilizing `adapter-node` or a serverless adapter. Some users prefer not to have a separate process to manage and decide to deploy their application as a [single-page app (SPA)](single-page-apps) served by their backend server, but note that single-page apps have worse SEO and performance characteristics.
 
 Also see [the FAQ about how to make calls to a separate backend](faq#How-do-I-use-X-with-SvelteKit-How-do-I-use-a-different-backend-API-server).
 
@@ -52,7 +52,7 @@ These mobile development platforms work by starting a local web server and then 
 
 ## Desktop app
 
-You can turn a [SvelteKit SPA](https://kit.svelte.dev/docs/single-page-apps) into a desktop app [with Tauri](https://v2.tauri.app/start/frontend/sveltekit/).
+You can turn a [SvelteKit SPA](https://kit.svelte.dev/docs/single-page-apps) into a desktop app with [Tauri](https://v2.tauri.app/start/frontend/sveltekit/), [Wails](https://wails.io/docs/guides/sveltekit), or [Electron](https://www.electronjs.org/).
 
 ## Browser extension
 
