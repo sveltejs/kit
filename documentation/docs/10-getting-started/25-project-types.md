@@ -22,7 +22,7 @@ Tools built solely to do static site generation may scale the prerendering proce
 
 ## Multi-page app
 
-SvelteKit isn't typically used to build a [traditional multi-page apps](glossary#MPA). However, in SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
+SvelteKit isn't typically used to build [traditional multi-page apps](glossary#MPA). However, in SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
 
 ## Separate backend
 
