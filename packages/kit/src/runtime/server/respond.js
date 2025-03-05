@@ -129,6 +129,17 @@ async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
+	/**
+	 * @param {HttpError} error
+	 * @returns {Response}
+	 */
+	function text_or_json(error) {
+		if (request.headers.get('accept') === 'application/json') {
+			return json(error.body, { status: error.status });
+		}
+		return text(error.body.message, { status: error.status });
+	}
+
 	if (options.csrf_check_origin) {
 		const forbidden =
 			is_form_content_type(request) &&
@@ -139,14 +150,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = new HttpError(
-				403,
-				`Cross-site ${request.method} form submissions are forbidden`
+			return text_or_json(
+				new HttpError(403, `Cross-site ${request.method} form submissions are forbidden`)
 			);
-			if (request.headers.get('accept') === 'application/json') {
-				return json(csrf_error.body, { status: csrf_error.status });
-			}
-			return text(csrf_error.body.message, { status: csrf_error.status });
 		}
 	}
 
@@ -484,15 +490,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 									} catch (e) {
 										if (e instanceof HttpError) {
-											upgrade_response = json(e.body, { status: e.status });
-										} else if (e instanceof Redirect) {
-											upgrade_response = new Response(undefined, {
-												status: e.status,
-												headers: { location: e.location }
-											});
-										}
-										// crossws allows throwing a Response to abort the upgrade
-										else if (e instanceof Response) {
+											upgrade_response = text_or_json(e);
+										} else if (e instanceof Response) {
+											// crossws allows throwing a Response to abort the upgrade
 											upgrade_response = e;
 										} else {
 											throw e;
