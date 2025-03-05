@@ -47,9 +47,22 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const asset_dir = `${dir}/client${base}`;
 
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/node').NodeAdapter} */
+let ws;
+
+if (server.getWebSocketHooksResolver) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
+
 await server.init({
 	env: process.env,
-	read: (file) => createReadableStream(`${asset_dir}/${file}`)
+	read: (file) => createReadableStream(`${asset_dir}/${file}`),
+	peers: ws?.peers,
+	publish: ws?.publish
 });
 
 /**
@@ -108,7 +121,7 @@ function serve_prerendered() {
  * @param {import('node:http').IncomingMessage} req
  */
 function get_options(req) {
-	return {
+	return /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
 		platform: { req },
 		/**
 		 * @returns {string}
@@ -150,7 +163,7 @@ function get_options(req) {
 				req.info?.remoteAddress
 			);
 		}
-	};
+	});
 }
 
 /** @type {import('polka').Middleware} */
@@ -216,17 +229,6 @@ export const handler = sequence(
 		ssr
 	].filter(Boolean)
 );
-
-/** @type {import('crossws').ResolveHooks} */
-let resolve_websocket_hooks;
-/** @type {import('crossws/adapters/node').NodeAdapter} */
-let ws;
-
-if (server.getWebSocketHooksResolver) {
-	ws = crossws({
-		resolve: (req) => resolve_websocket_hooks(req)
-	});
-}
 
 /**
  * @param {import('node:http').IncomingMessage} req

@@ -93,7 +93,11 @@ export default function (opts = {}) {
 
 		supports: {
 			read: () => true,
-			webSockets: () => true
+			webSockets: {
+				socket: () => true,
+				getPeers: () => true,
+				publish: () => true
+			}
 		}
 	};
 }

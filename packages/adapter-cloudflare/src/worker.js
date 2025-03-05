@@ -1,7 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
-// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable?
 import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
@@ -26,15 +25,26 @@ if (server.getWebSocketHooksResolver) {
 const worker = {
 	// @ts-ignore wtf is Cloudflare doing to these types
 	async fetch(req, env, context) {
-		const options = {
-			platform: { env, context, caches, cf: req.cf },
+		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
+			platform: {
+				env,
+				context,
+				// @ts-ignore
+				caches,
+				// @ts-ignore
+				cf: req.cf
+			},
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}
-		};
+		});
 
-		// @ts-ignore
-		await server.init({ env });
+		await server.init({
+			// @ts-ignore
+			env,
+			peers: ws?.peers,
+			publish: ws?.publish
+		});
 
 		if (req.headers.get('upgrade') === 'websocket' && ws) {
 			resolve_websocket_hooks = server.getWebSocketHooksResolver(

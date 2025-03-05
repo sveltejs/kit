@@ -41,13 +41,23 @@ export interface Adapter {
 	supports?: {
 		/**
 		 * Test support for `read` from `$app/server`.
-		 * @param config The merged route config
+		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
-		/**
-		 * Test support for the `socket` export from a `+server.js` file.
-		 */
-		webSockets?: () => boolean;
+		webSockets?: {
+			/**
+			 * Test support for the `socket` export from a `+server.js` file.
+			 */
+			socket: () => boolean;
+			/**
+			 * Test support for `getPeers` from `$app/server`.
+			 */
+			getPeers: (details: { route: { id: string } }) => boolean;
+			/**
+			 * Test support for `publish` from `$app/server`.
+			 */
+			publish: (details: { route: { id: string } }) => boolean;
+		};
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -1311,10 +1321,14 @@ export class Server {
 }
 
 export interface ServerInitOptions {
-	/** A map of environment variables */
+	/** A map of environment variables. */
 	env: Record<string, string>;
-	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => ReadableStream;
+	/** A `Set` of WebSocket `Peer` instances. Required for the `getPeers` export from `$app/server` to work. */
+	peers?: import('crossws').AdapterInstance['peers'];
+	/** A function that publishes a message to WebSocket subscribers of a topic. Required for the `publish` export from `$app/server` to work. */
+	publish?: import('crossws').AdapterInstance['publish'];
 }
 
 export interface SSRManifest {
@@ -1499,21 +1513,36 @@ export type SubmitFunction<
 /**
  * Shape of the `export const socket = {...}` object in `+server.js`.
  * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
- * @since 2.18.0
+ * @since 2.19.0
  */
-export type Socket = Partial<import('crossws').Hooks>;
+export interface Socket {
+	/**
+	 * Upgrading.
+	 * @param request
+	 * @throws {Response}
+	 */
+	upgrade?: (request: RequestEvent) => MaybePromise<Response | ResponseInit | void>;
+	/** A message is received. */
+	message?: import('crossws').Hooks['message'];
+	/** A socket is opened. */
+	open?: import('crossws').Hooks['open'];
+	/** A socket is closed */
+	close?: import('crossws').Hooks['close'];
+	/** An error occurs. */
+	error?: import('crossws').Hooks['error'];
+}
 
 /**
  * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
  * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
- * @since 2.18.0
+ * @since 2.19.0
  */
 export type Peer = import('crossws').Peer;
 
 /**
  * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
  * See [Message](https://crossws.unjs.io/guide/message) for more information.
- * @since 2.18.0
+ * @since 2.19.0
  */
 export type Message = import('crossws').Message;
 

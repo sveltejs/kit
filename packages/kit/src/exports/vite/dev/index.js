@@ -472,7 +472,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		await server.init({
 			env,
-			read: (file) => createReadableStream(from_fs(file))
+			read: (file) => createReadableStream(from_fs(file)),
+			peers: ws.peers,
+			publish: ws.publish
 		});
 
 		return server;

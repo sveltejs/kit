@@ -43,6 +43,8 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
+	set_peers(peers: import('crossws').AdapterInstance['peers']): void;
+	set_publish_implementation(implementation: import('crossws').AdapterInstance['publish']): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -218,6 +220,7 @@ export interface PrerenderOptions {
 export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
 	// Will recursively continue until it reaches a primitive or Function
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
 		: T[K]; // Use the exact type for everything else

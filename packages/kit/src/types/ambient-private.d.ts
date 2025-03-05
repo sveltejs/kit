@@ -24,6 +24,12 @@ declare module '__sveltekit/server' {
 
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
+	export let peers: import('crossws').AdapterInstance['peers'];
+	export const publish_implementation: import('crossws').AdapterInstance['publish'];
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+	export function set_peers(peers: import('crossws').AdapterInstance['peers']): void;
+	export function set_publish_implementation(
+		fn: import('crossws').AdapterInstance['publish']
+	): void;
 }

@@ -468,7 +468,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				}
 
 				return {
-					upgrade: async (req) => {
+					upgrade: async () => {
 						/** @type {Response} */
 						let response;
 
@@ -480,7 +480,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 									let upgrade_response;
 
 									try {
-										const init = (await node.socket?.upgrade?.(req)) ?? undefined;
+										const init = (await node.socket?.upgrade?.(event)) ?? undefined;
 										upgrade_response = new Response(undefined, init);
 										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 									} catch (e) {

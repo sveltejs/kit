@@ -2,16 +2,16 @@
 title: WebSockets
 ---
 
+[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between a client and a server. SvelteKit uses [crossws](https://crossws.unjs.io/) to provide a consistent interface across different platforms.
+
 ## The `socket` object
 
-[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between a client and a server.
-
-A `+server.js` file can export a `socket` object to handle WebSocket connections. It uses [crossws](https://crossws.unjs.io/) to provide a consistent interface across different platforms. You can define [hooks](https://crossws.unjs.io/guide/hooks), all optional, to handle the different stages of the WebSocket lifecycle.
+A `+server.js` file can export a `socket` object with [hooks](https://crossws.unjs.io/guide/hooks), all optional, to handle the different stages of the WebSocket lifecycle.
 
 ```js
 /** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
-	upgrade(req) {
+	upgrade(event) {
         // ...
 	},
 
@@ -35,7 +35,7 @@ export const socket = {
 
 ### upgrade
 
-The `upgrade` hook is called before a WebSocket connection is established. It receives the [request](https://developer.mozilla.org/docs/Web/API/Request) object as a parameter.
+The `upgrade` hook is called before a WebSocket connection is established. It takes a [RequestEvent](@sveltejs-kit#RequestEvent) argument.
 
 You can use the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit` to easily reject connections. Requests will be auto-accepted if the `upgrade` hook is not defined or does not `error`.
 
@@ -44,7 +44,7 @@ import { error } from "@sveltejs/kit";
 
 /** @type {import('@sveltejs/kit').Socket} **/
 export const socket = {
-	upgrade(request) {
+	upgrade({ request }) {
 		if (request.headers.get('origin') !== 'allowed_origin') {
 			// Reject the WebSocket connection by throwing an error
 			error(403, 'Forbidden');
@@ -105,6 +105,10 @@ export const socket = {
 };
 ```
 
+## `getPeers` and `publish`
+
+The [`getPeers`]($app-server#getPeers) and [`publish`]($app-server#publish) functions from `$app/server` can be used to interact with your WebSocket connections from anywhere on the server.
+
 ## Connecting from the client
 
 To connect to a WebSocket endpoint, you can use the [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket) constructor in the browser.
@@ -130,4 +134,4 @@ See [the WebSocket documentation on MDN](https://developer.mozilla.org/en-US/doc
 
 ## Compatibility
 
-SvelteKit uses [`crossws`](https://crossws.unjs.io) to handle cross-platform WebSocket connections. Please refer to their [compatibility table](https://crossws.unjs.io/guide/peer#compatibility) for the `peer` object in different runtime environments.
+Please refer to the crossws [`peer` object compatibility table](https://crossws.unjs.io/guide/peer#compatibility) and [`message` object compatibility table](https://crossws.unjs.io/guide/message#adapter-support) to know what is supported in different runtime environments.

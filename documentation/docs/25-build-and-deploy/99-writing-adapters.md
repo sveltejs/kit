@@ -35,10 +35,22 @@ export default function (options) {
 				// from `$app/server` in production, return `false` if it can't.
 				// Or throw a descriptive error describing how to configure the deployment
 			},
-			webSockets: () => {
-				// Return `true` if the production environment supports WebSockets,
-				// return `false` if it can't.
-				// Or throw a descriptive error describing how to configure the deployment
+			webSockets: {
+				socket: () => {
+					// Return `true` if the production environment supports WebSockets,
+					// return `false` if it can't.
+					// Or throw a descriptive error describing how to configure the deployment
+				},
+				getPeers: ({ route }) => {
+					// Return `true` if the production environment supports WebSockets,
+					// return `false` if it can't.
+					// Or throw a descriptive error describing how to configure the deployment
+				}
+				publish: ({ route }) => {
+					// Return `true` if the production environment supports coordination among
+					// multiple WebSockets, return `false` if it can't.
+					// Or throw a descriptive error describing how to configure the deployment
+				}
 			}
 		}
 	};

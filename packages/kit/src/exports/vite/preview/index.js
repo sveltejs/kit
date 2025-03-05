@@ -46,10 +46,18 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	set_assets(assets);
 
+	/** @type {import('crossws').ResolveHooks} */
+	let resolve_websocket_hooks;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+
 	const server = new Server(manifest);
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		read: (file) => createReadableStream(`${dir}/${file}`)
+		read: (file) => createReadableStream(`${dir}/${file}`),
+		peers: ws.peers,
+		publish: ws.publish
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
@@ -72,12 +80,6 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		return fs.readFileSync(join(svelte_config.kit.files.assets, file));
 	}
-
-	/** @type {import('crossws').ResolveHooks} */
-	let resolve_websocket_hooks;
-	const ws = crossws({
-		resolve: (req) => resolve_websocket_hooks(req)
-	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.

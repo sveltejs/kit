@@ -64,6 +64,8 @@ async function analyse({
 	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
+	internal.set_peers(new Set());
+	internal.set_publish_implementation(() => {});
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -168,9 +170,9 @@ async function analyse({
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
-	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.socket)) {
 		throw new Error(
-			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+			`Cannot prerender a +server file with POST, PATCH, PUT, DELETE, or socket (${route.id})`
 		);
 	}
 

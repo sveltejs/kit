@@ -2,7 +2,6 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
-// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable
 import crossws from 'crossws/adapters/cloudflare';
 
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
@@ -32,21 +31,25 @@ export default {
 	 * @param {any} context
 	 */
 	async fetch(req, env, context) {
-		const options = {
+		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
 			platform: {
 				env,
 				context,
-				// lib.dom is interfering with workers-types
+				// @ts-ignore lib.dom is interfering with workers-types
 				caches,
-				// req is actually a Cloudflare request not a standard request
+				// @ts-ignore req is actually a Cloudflare request not a standard request
 				cf: req.cf
 			},
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}
-		};
+		});
 
-		await server.init({ env });
+		await server.init({
+			env,
+			peers: ws?.peers,
+			publish: ws?.publish
+		});
 
 		if (req.headers.get('upgrade') === 'websocket' && ws) {
 			resolve_websocket_hooks = server.getWebSocketHooksResolver(

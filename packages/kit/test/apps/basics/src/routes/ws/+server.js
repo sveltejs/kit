@@ -1,6 +1,6 @@
 /** @type {import('@sveltejs/kit').Socket} */
 export const socket = {
-	upgrade(request) {
+	upgrade({ request }) {
 		const protocols = request.headers
 			.get('Sec-WebSocket-Protocol')
 			?.split(',')
