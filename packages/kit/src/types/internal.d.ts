@@ -71,11 +71,11 @@ export interface BuildData {
 	out_dir: string;
 	service_worker: string | null;
 	client: {
-		/** Path to the client entry point */
+		/** Path to the client entry point. */
 		start: string;
-		/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
+		/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'`. */
 		app?: string;
-		/** JS files that the client entry point relies on */
+		/** JS files that the client entry point relies on. */
 		imports: string[];
 		/**
 		 * JS files that represent the entry points of the layouts/pages.
@@ -83,6 +83,12 @@ export interface BuildData {
 		 * Only set in case of `router.resolution === 'server'`.
 		 */
 		nodes?: Array<string | undefined>;
+		/**
+		 * CSS files referenced in the entry points of the layouts/pages.
+		 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
+		 * Only set in case of `router.resolution === 'server'`.
+		 */
+		css?: Array<string[] | undefined>;
 		/**
 		 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
@@ -92,7 +98,7 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
-		/** Only set in case of `bundleStrategy === 'inline'` */
+		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {
 			script: string;
 			style: string | undefined;
@@ -181,6 +187,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
+	/** Static files from `kit.config.files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;
@@ -194,15 +201,15 @@ export interface ManifestData {
 
 export interface PageNode {
 	depth: number;
-	/** The +page/layout.svelte */
+	/** The `+page/layout.svelte`. */
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
-	/** The +page/layout.js/.ts */
+	/** The `+page/layout.js/.ts`. */
 	universal?: string;
-	/** The +page/layout.server.js/ts */
+	/** The `+page/layout.server.js/ts`. */
 	server?: string;
 	parent_id?: string;
 	parent?: PageNode;
-	/** Filled with the pages that reference this layout (if this is a layout) */
+	/** Filled with the pages that reference this layout (if this is a layout). */
 	child_pages?: PageNode[];
 }
 
@@ -307,20 +314,20 @@ export interface ServerDataChunkNode {
 
 /**
  * Signals that the server `load` function was not run, and the
- * client should use what it has in memory
+ * client should use what it has in memory.
  */
 export interface ServerDataSkippedNode {
 	type: 'skip';
 }
 
 /**
- * Signals that the server `load` function failed
+ * Signals that the server `load` function failed.
  */
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
 	/**
-	 * Only set for HttpErrors
+	 * Only set for HttpErrors.
 	 */
 	status?: number;
 }
@@ -340,7 +347,7 @@ export interface ServerMetadataRoute {
 
 export interface ServerMetadata {
 	nodes: Array<{
-		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value */
+		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value. */
 		has_server_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
@@ -366,7 +373,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `nodes` array in the generated `client/app.js` */
+	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;
 	/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 	imports: string[];
@@ -374,7 +381,7 @@ export interface SSRNode {
 	stylesheets: string[];
 	/** external font files that are loaded on the client */
 	fonts: string[];
-	/** inlined styles */
+	/** inlined styles. */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 
 	universal: {
@@ -398,8 +405,8 @@ export interface SSRNode {
 		entries?: PrerenderEntryGenerator;
 	};
 
-	universal_id: string;
-	server_id: string;
+	universal_id?: string;
+	server_id?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -468,18 +475,18 @@ export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
 	/**
-	 * True if we're currently attempting to render an error page
+	 * True if we're currently attempting to render an error page.
 	 */
 	error: boolean;
 	/**
-	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests
+	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	depth: number;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 	/**
 	 * When fetching data from a +server.js endpoint in `load`, the page's
-	 * prerender option is inherited by the endpoint, unless overridden
+	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;

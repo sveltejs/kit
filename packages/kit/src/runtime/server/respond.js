@@ -24,7 +24,6 @@ import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { load_page_nodes } from './page/load_page_nodes.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -183,7 +182,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 	try {
 		// reroute could alter the given URL, so we pass a copy
-		resolved_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
@@ -322,18 +321,19 @@ async function handle_request(request, options, manifest, state, upgrade) {
 	}
 
 	try {
+		/** @type {Array<import('types').SSRNode | undefined> | undefined} */
+		const page_nodes = route?.page ? await load_page_nodes(route.page, manifest) : undefined;
+
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {
 				trailing_slash = 'always';
-			} else if (route.page) {
-				const nodes = await load_page_nodes(route.page, manifest);
-
+			} else if (page_nodes) {
 				if (DEV) {
-					const layouts = nodes.slice(0, -1);
-					const page = nodes.at(-1);
+					const layouts = page_nodes.slice(0, -1);
+					const page = page_nodes.at(-1);
 
 					for (const layout of layouts) {
 						if (layout) {
@@ -354,7 +354,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					}
 				}
 
-				trailing_slash = get_option(nodes, 'trailingSlash');
+				trailing_slash = get_option(page_nodes, 'trailingSlash');
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash;
@@ -391,10 +391,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					const node = await route.endpoint();
 					config = node.config ?? config;
 					prerender = node.prerender ?? prerender;
-				} else if (route.page) {
-					const nodes = await load_page_nodes(route.page, manifest);
-					config = get_page_config(nodes) ?? config;
-					prerender = get_option(nodes, 'prerender') ?? false;
+				} else if (page_nodes) {
+					config = get_page_config(page_nodes) ?? config;
+					prerender = get_option(page_nodes, 'prerender') ?? false;
 				}
 
 				if (state.before_handle) {
@@ -549,7 +548,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		const response = await options.hooks.handle({
 			event,
-			resolve: (event, opts) => resolve(event, opts).then(after_resolve)
+			resolve: (event, opts) => resolve(event, page_nodes, opts).then(after_resolve)
 		});
 
 		// respond with 304 if etag matches
@@ -602,9 +601,10 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 	/**
 	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {Array<import('types').SSRNode | undefined> | undefined} page_nodes
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
-	async function resolve(event, opts) {
+	async function resolve(event, page_nodes, opts) {
 		try {
 			if (opts) {
 				resolve_opts = {
@@ -648,8 +648,18 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					if (page_methods.has(method)) {
-						response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					if (!page_nodes) {
+						throw new Error('page_nodes not found. This should never happen');
+					} else if (page_methods.has(method)) {
+						response = await render_page(
+							event,
+							route.page,
+							options,
+							manifest,
+							state,
+							page_nodes,
+							resolve_opts
+						);
 					} else {
 						const allowed_methods = new Set(allowed_page_methods);
 						const node = await manifest._.nodes[route.page.leaf]();
@@ -675,9 +685,8 @@ async function handle_request(request, options, manifest, state, upgrade) {
 						}
 					}
 				} else {
-					// a route will always have a page or an endpoint, but TypeScript
-					// doesn't know that
-					throw new Error('This should never happen');
+					// a route will always have a page or an endpoint, but TypeScript doesn't know that
+					throw new Error('Route is neither page nor endpoint. This should never happen');
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
@@ -745,4 +754,16 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			return await handle_fatal_error(event, options, e);
 		}
 	}
+}
+
+/**
+ * @param {import('types').PageNodeIndexes} page
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ */
+export function load_page_nodes(page, manifest) {
+	return Promise.all([
+		// we use == here rather than === because [undefined] serializes as "[null]"
+		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
+		manifest._.nodes[page.leaf]()
+	]);
 }

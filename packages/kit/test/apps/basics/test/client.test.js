@@ -887,37 +887,44 @@ test.describe('data-sveltekit attributes', () => {
 				req
 					.response()
 					.then(
-						(res) => res.text(),
+						(res) => res?.text(),
 						() => ''
 					)
-					.then((response) => {
-						if (response.includes('this string should only appear in this preloaded file')) {
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
 							requests.push(req.url());
 						}
 					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
 			}
 		});
 
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').hover();
+		await page.locator('#one').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').hover();
+		await page.locator('#two').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').hover();
+		await page.locator('#three').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
@@ -932,7 +939,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
@@ -999,6 +1006,47 @@ test.describe('data-sveltekit attributes', () => {
 		]);
 
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+	});
+
+	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
+		page
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res?.text(),
+						() => ''
+					)
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
+							requests.push(req.url());
+						}
+					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#hover-then-tap').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
+
+		await page.locator('#hover-then-tap').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -1399,6 +1447,14 @@ test.describe('reroute', () => {
 		await page.click("a[href='/reroute/basic/a']");
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
+	});
+
+	test('Apply async reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/a']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
 		);
 	});
 

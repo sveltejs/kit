@@ -35,7 +35,7 @@
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
-		"test": "echo \"tests temporarily disabled\" # vitest run",
+		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",

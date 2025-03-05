@@ -27,12 +27,10 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 	const reindexed = new Map();
 	/**
 	 * All nodes actually used in the routes definition (prerendered routes are omitted).
-	 * If `routes` is empty, it means that this manifest is only used for server-side resolution
-	 * and the root layout/error is therefore not needed.
-	 * Else, root layout/error is always included as they are needed for 404 and root errors.
+	 * Root layout/error is always included as they are needed for 404 and root errors.
 	 * @type {Set<any>}
 	 */
-	const used_nodes = new Set(routes.length > 0 ? [0, 1] : []);
+	const used_nodes = new Set([0, 1]);
 
 	const server_assets = find_server_assets(build_data, routes);
 
