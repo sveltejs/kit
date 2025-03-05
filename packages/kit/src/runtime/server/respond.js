@@ -268,7 +268,7 @@ export async function respond(request, options, manifest, state) {
 					}
 				}
 
-				trailing_slash = page_nodes.trailingSlash();
+				trailing_slash = page_nodes.trailing_slash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash ?? 'never';

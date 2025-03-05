@@ -44,7 +44,7 @@ export class PageNodes {
 		return this.#get_option('prerender') ?? false
 	}
 
-	trailingSlash() {
+	trailing_slash() {
 		return this.#get_option('trailingSlash') ?? 'never'
 	}
 
