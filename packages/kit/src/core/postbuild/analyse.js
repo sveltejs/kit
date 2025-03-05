@@ -208,7 +208,7 @@ function analyse_page(layouts, leaf) {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: nodes.get_option('prerender') ?? false
+		prerender: nodes.prerender()
 	};
 }
 

@@ -171,8 +171,8 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
-	/** @type {import('types').TrailingSlash | void} */
-	let trailing_slash = undefined;
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
 
 	/** @type {Record<string, string>} */
 	const headers = {};
@@ -268,10 +268,10 @@ export async function respond(request, options, manifest, state) {
 					}
 				}
 
-				trailing_slash = page_nodes.get_option('trailingSlash');
+				trailing_slash = page_nodes.trailingSlash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
-				trailing_slash = node.trailingSlash;
+				trailing_slash = node.trailingSlash ?? 'never';
 
 				if (DEV) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
@@ -279,7 +279,7 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (!is_data_request) {
-				const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+				const normalized = normalize_path(url.pathname, trailing_slash);
 
 				if (normalized !== url.pathname && !state.prerendering?.fallback) {
 					return new Response(undefined, {
@@ -307,7 +307,7 @@ export async function respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
 					config = page_nodes.get_config() ?? config;
-					prerender = page_nodes.get_option('prerender') ?? false;
+					prerender = page_nodes.prerender();
 				}
 
 				if (state.before_handle) {
@@ -328,7 +328,7 @@ export async function respond(request, options, manifest, state) {
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
 			url,
-			trailing_slash ?? 'never'
+			trailing_slash
 		);
 
 		cookies_to_add = new_cookies;
@@ -466,7 +466,7 @@ export async function respond(request, options, manifest, state) {
 						manifest,
 						state,
 						invalidated_data_nodes,
-						trailing_slash ?? 'never'
+						trailing_slash
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);

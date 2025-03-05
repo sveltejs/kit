@@ -24,12 +24,28 @@ export class PageNodes {
 	 *
 	 * @returns {Value | undefined}
 	 */
-	get_option(option) {
+	#get_option(option) {
 		return this.data.reduce((value, node) => {
 			return /** @type {Value} TypeScript's too dumb to understand this */ (
 				node?.universal?.[option] ?? node?.server?.[option] ?? value
 			);
 		}, /** @type {Value | undefined} */ (undefined));
+	}
+
+	csr() {
+		return this.#get_option('csr') ?? true
+	}
+
+	ssr() {
+		return this.#get_option('ssr') ?? true
+	}
+
+	prerender() {
+		return this.#get_option('prerender') ?? false
+	}
+
+	trailingSlash() {
+		return this.#get_option('trailingSlash') ?? 'never'
 	}
 
 	get_config() {

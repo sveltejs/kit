@@ -70,7 +70,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifest generated later
-		const should_prerender = nodes.get_option('prerender') ?? false;
+		const should_prerender = nodes.prerender();
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod?.actions) {
@@ -96,7 +96,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (nodes.get_option('ssr') === false && !(state.prerendering && should_prerender_data)) {
+		if (nodes.ssr() === false && !(state.prerendering && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -117,7 +117,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				fetched,
 				page_config: {
 					ssr: false,
-					csr: nodes.get_option('csr') ?? true
+					csr: nodes.csr()
 				},
 				status,
 				error: null,
@@ -171,7 +171,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			});
 		});
 
-		const csr = nodes.get_option('csr') ?? true;
+		const csr = nodes.csr();
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.data.map((node, i) => {
@@ -294,7 +294,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			});
 		}
 
-		const ssr = nodes.get_option('ssr') ?? true;
+		const ssr = nodes.ssr();
 
 		return await render_response({
 			event,
@@ -303,7 +303,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			state,
 			resolve_opts,
 			page_config: {
-				csr: nodes.get_option('csr') ?? true,
+				csr: nodes.csr(),
 				ssr
 			},
 			status,
