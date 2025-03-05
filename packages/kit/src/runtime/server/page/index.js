@@ -13,7 +13,6 @@ import {
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
 
@@ -28,7 +27,7 @@ const MAX_DEPTH = 10;
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
@@ -46,7 +45,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 	}
 
 	try {
-		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
+		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.page());
 
 		let status = 200;
 
@@ -68,16 +67,10 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			}
 		}
 
-		const should_prerender_data = nodes.some(
-			// prerender in case of trailingSlash because the client retrieves that value from the server
-			(node) => node?.server?.load || node?.server?.trailingSlash !== undefined
-		);
-		const data_pathname = add_data_suffix(event.url.pathname);
-
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifest generated later
-		const should_prerender = get_option(nodes, 'prerender') ?? false;
+		const should_prerender = nodes.get_option('prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod?.actions) {
@@ -94,13 +87,16 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		// inherit the prerender option of the page
 		state.prerender_default = should_prerender;
 
+		const should_prerender_data = nodes.should_prerender_data();
+		const data_pathname = add_data_suffix(event.url.pathname);
+
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
+		if (nodes.get_option('ssr') === false && !(state.prerendering && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -121,7 +117,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				fetched,
 				page_config: {
 					ssr: false,
-					csr: get_option(nodes, 'csr') ?? true
+					csr: nodes.get_option('csr') ?? true
 				},
 				status,
 				error: null,
@@ -140,7 +136,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let load_error = null;
 
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
-		const server_promises = nodes.map((node, i) => {
+		const server_promises = nodes.data.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
 				throw load_error;
@@ -175,10 +171,10 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			});
 		});
 
-		const csr = get_option(nodes, 'csr') ?? true;
+		const csr = nodes.get_option('csr') ?? true;
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
-		const load_promises = nodes.map((node, i) => {
+		const load_promises = nodes.data.map((node, i) => {
 			if (load_error) throw load_error;
 			return Promise.resolve().then(async () => {
 				try {
@@ -209,8 +205,8 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		for (const p of server_promises) p.catch(() => {});
 		for (const p of load_promises) p.catch(() => {});
 
-		for (let i = 0; i < nodes.length; i += 1) {
-			const node = nodes[i];
+		for (let i = 0; i < nodes.data.length; i += 1) {
+			const node = nodes.data[i];
 
 			if (node) {
 				try {
@@ -298,7 +294,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			});
 		}
 
-		const ssr = get_option(nodes, 'ssr') ?? true;
+		const ssr = nodes.get_option('ssr') ?? true;
 
 		return await render_response({
 			event,
@@ -307,7 +303,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			state,
 			resolve_opts,
 			page_config: {
-				csr: get_option(nodes, 'csr') ?? true,
+				csr: nodes.get_option('csr') ?? true,
 				ssr
 			},
 			status,
