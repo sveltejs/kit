@@ -229,6 +229,7 @@ export function isActionFailure(e) {
  * ```
  * @param {URL | string} url
  * @returns {{ url: URL, wasNormalized: boolean, denormalize: (url?: string | URL) => URL }}
+ * @since 2.18.0
  */
 export function normalizeUrl(url) {
 	url = new URL(url, 'http://internal');
