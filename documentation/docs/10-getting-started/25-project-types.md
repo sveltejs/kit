@@ -26,7 +26,7 @@ SvelteKit isn't typically used to build [traditional multi-page apps](glossary#M
 
 ## Separate backend
 
-If your backend is written in another language such as Go, Java, PHP, Ruby, Rust, or .Net then there are a couple of ways that you can deploy your application. The most recommended way would be to deploy your SvelteKit frontend separately from your backend utilizing `adapter-node` or a serverless adapter. Some users prefer not to have a separate process to manage and decide to deploy their application as a [single-page app (SPA)](single-page-apps) served by their backend server, but note that single-page apps have worse SEO and performance characteristics.
+If your backend is written in another language such as Go, Java, PHP, Ruby, Rust, or C#, there are a couple of ways that you can deploy your application. The most recommended way would be to deploy your SvelteKit frontend separately from your backend utilizing `adapter-node` or a serverless adapter. Some users prefer not to have a separate process to manage and decide to deploy their application as a [single-page app (SPA)](single-page-apps) served by their backend server, but note that single-page apps have worse SEO and performance characteristics.
 
 If you are using an external backend, you can simply skip over and ignore the parts of the docs talking about `server` files. You may also want to reference [the FAQ about how to make calls to a separate backend](faq#How-do-I-use-a-different-backend-API-server).
 
