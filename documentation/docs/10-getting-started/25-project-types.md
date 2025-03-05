@@ -32,7 +32,7 @@ If you are using an external backend, you can simply skip over and ignore the pa
 
 ## Serverless app
 
-SvelteKit apps are simple to run on serverless platforms. [The default zero config adapter](adapter-auto) will automatically run your app on a number of supported platforms. You can use [`adapter-vercel`](adapter-vercel), [`adapter-netlify`](adapter-netlify), or [`adapter-cloudflare`](adapter-cloudflare) to provide platform-specific configuration. And [community adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) allow you to deploy your application to almost any serverless environment. Some of these adapters such as [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify) have an `edge` option, to support [edge rendering](/glossary#Edge) for improved latency.
+SvelteKit apps are simple to run on serverless platforms. [The default zero config adapter](adapter-auto) will automatically run your app on a number of supported platforms or you can use [`adapter-vercel`](adapter-vercel), [`adapter-netlify`](adapter-netlify), or [`adapter-cloudflare`](adapter-cloudflare) to provide platform-specific configuration. And [community adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) allow you to deploy your application to almost any serverless environment. Some of these adapters such as [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify) offer an `edge` option, to support [edge rendering](glossary#Edge) for improved latency.
 
 ## Your own server
 
