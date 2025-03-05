@@ -40,7 +40,7 @@ In SvelteKit, you can control prerendering with [the `prerender` page option](pa
 
 ## Progressive web app
 
-A progressive web app (PWA) is an app that's built using web APIs and technologies, but that functions like a mobile or desktop app. Sites served as [PWAs can be installed](https://web.dev/learn/pwa/installation), allowing you to add a shortcut to the application on you launcher, home screen, or start menu. Many PWAs will utilize [service workers](service-workers) to build offline capabilities.
+A progressive web app (PWA) is an app that's built using web APIs and technologies, but functions like a mobile or desktop app. Sites served as [PWAs can be installed](https://web.dev/learn/pwa/installation), allowing you to add a shortcut to the application on your launcher, home screen, or start menu. Many PWAs will utilize [service workers](service-workers) to build offline capabilities.
 
 ## Routing
 
