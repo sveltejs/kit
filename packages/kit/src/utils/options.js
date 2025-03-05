@@ -1,6 +1,6 @@
 /**
  * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
- * @template {(import('types').SSRNode['universal'] | import('types').SSRNode['server'])[Option]} Value
+ * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {Option} option
