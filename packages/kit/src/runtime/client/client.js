@@ -197,7 +197,7 @@ let load_cache = null;
  * The server reroute calls don't need to be cached because they are called using `import(...)`
  * which is cached per the JS spec.
  */
-let reroute_cache = new Map();
+const reroute_cache = new Map();
 
 /**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
