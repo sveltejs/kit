@@ -2016,7 +2016,8 @@ declare module '@sveltejs/kit' {
 	 * console.log(url.pathname); // /blog/post
 	 * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
 	 * ```
-	 * */
+	 * @since 2.18.0
+	 */
 	export function normalizeUrl(url: URL | string): {
 		url: URL;
 		wasNormalized: boolean;
