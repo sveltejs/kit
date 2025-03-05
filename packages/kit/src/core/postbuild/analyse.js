@@ -107,7 +107,7 @@ async function analyse({
 
 		// we need to perform this check ourselves because `list_features` only includes
 		// chunks that have imported a feature, but using WebSockets doesn't involve any imports
-		if (endpoint?.socket && !config.adapter?.supports?.webSockets?.()) {
+		if (endpoint?.socket && !config.adapter?.supports?.webSockets?.socket()) {
 			throw new Error(
 				`Cannot export \`socket\` in ${route.id} when using ${config.adapter?.name}. Please ensure that your adapter is up to date and supports this feature.`
 			);
