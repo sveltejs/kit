@@ -19,6 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -42,14 +43,26 @@ export interface Adapter {
 		/**
 		 * Test support for `read` from `$app/server`
 		 * @param config The merged route config
+		 * @param route The route and its ID
+		 * @param entry Name of the entry point, in case this was called from an additional entry point (route and config are irrelevant in this case)
 		 */
-		read?: (details: { config: any; route: { id: string } }) => boolean;
+		read?: (details: { config: any; route: { id: string }; entry?: string }) => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering
 	 */
-	emulate?: () => MaybePromise<Emulator>;
+	emulate?: (helpers: {
+		/** Allows to import an entry point defined within `additionalEntryPoints` by referencing its name */
+		importEntryPoint: (name: string) => Promise<any>;
+	}) => MaybePromise<Emulator>;
+	/**
+	 * An object with additional entry points for Vite to consider during compilation.
+	 * The key is the name of the entry point that will be later available at `${builder.getServerDirectory()}/adapter/<name>.js`,
+	 * the value is the relative path to the entry point file.
+	 * This is useful for adapters that want to generate separate bundles for e.g. middleware.
+	 */
+	additionalEntryPoints?: Record<string, string | undefined | null>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -275,6 +288,18 @@ export interface Emulator {
 	 * and returns an `App.Platform` object
 	 */
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+	/**
+	 * Runs before every request that would hit the SvelteKit runtime and before requests to static assets in dev mode.
+	 * In preview mode, in runs prior to all requests.
+	 * Can be used to replicate middleware behavior outside of production environments.
+	 *
+	 * Implementation note: You either have to call `next()` to pass on the request/response, or `res.end()` to finish the request
+	 */
+	interceptRequest?: (
+		req: IncomingMessage & { originalUrl?: string },
+		res: ServerResponse,
+		next: () => void
+	) => MaybePromise<void>;
 }
 
 export interface KitConfig {
@@ -1295,11 +1320,24 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
+/**
+ * Represents the SvelteKit server runtime. Adapters should use this via `${builder.getServerDirectory()}/index.js` to create a server to send requests to.
+ */
 export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
+
+/**
+ * Similar to Server#init. Can be used via `${builder.getServerDirectory()}/init.js` for other entry points that don't start the server but still need to setup the environment.
+ */
+export function initServer(options: {
+	/** Required for `$env/*` to work */
+	env: { env: Record<string, string>; public_prefix: string; private_prefix: string };
+	/** Required for the `read` export from `$app/server` to work */
+	read?: { read: (file: string) => ReadableStream; manifest: SSRManifest };
+}): void;
 
 export interface ServerInitOptions {
 	/** A map of environment variables. */

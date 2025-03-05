@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
-import { VERSION } from '@sveltejs/kit';
+import { get_pathname, get_regex_from_matchers, pattern_to_src, REWRITE_HEADER } from './utils.js';
+// TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
+import * as node_kit from '@sveltejs/kit/node';
 
 const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
@@ -36,6 +38,16 @@ const get_default_runtime = () => {
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
+
+const [major, minor] = kit.VERSION.split('.').map(Number);
+const can_use_middleware = major > 2 || (major === 2 && minor > 17);
+
+/** @type {string | null} */
+let middleware_path = can_use_middleware ? 'src/edge-middleware.js' : null;
+if (middleware_path && !fs.existsSync(middleware_path)) {
+	middleware_path = 'src/edge-middleware.ts';
+	if (!fs.existsSync(middleware_path)) middleware_path = null;
+}
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -95,7 +107,8 @@ const plugin = function (defaults = {}) {
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
+						MANIFEST: './manifest.js',
+						REWRITE_HEADER
 					}
 				});
 
@@ -113,29 +126,13 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
+			 * @param {import('esbuild').BuildOptions & Required<Pick<import('esbuild').BuildOptions, 'entryPoints'>>} esbuild_options
 			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 * @param {import('./index.js').Config} adapter_config
 			 */
-			async function generate_edge_function(name, config, routes) {
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
+			async function bundle_edge_function(esbuild_options, name, adapter_config) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -144,7 +141,7 @@ const plugin = function (defaults = {}) {
 						external: [
 							...compatible_node_modules,
 							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
+							...((adapter_config.runtime === 'edge' && adapter_config.external) || [])
 						],
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
@@ -155,7 +152,8 @@ const plugin = function (defaults = {}) {
 							'.ttf': 'copy',
 							'.eot': 'copy',
 							'.otf': 'copy'
-						}
+						},
+						...(esbuild_options || {})
 					});
 
 					if (result.warnings.length > 0) {
@@ -199,12 +197,12 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify(
 						{
-							runtime: config.runtime,
-							regions: config.regions,
+							runtime: 'edge',
+							regions: adapter_config.regions,
 							entrypoint: 'index.js',
 							framework: {
 								slug: 'sveltekit',
-								version: VERSION
+								version: kit.VERSION
 							}
 						},
 						null,
@@ -212,6 +210,94 @@ const plugin = function (defaults = {}) {
 					)
 				);
 			}
+
+			/**
+			 * @param {string} name
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 */
+			async function generate_edge_function(name, config, routes) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				const dest = `${tmp}/edge.js`;
+
+				builder.copy(`${files}/edge.js`, dest, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js',
+						REWRITE_HEADER
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
+
+				await bundle_edge_function({ entryPoints: [dest] }, name, config);
+			}
+
+			/**
+			 * @param {import('./index.js').Config} config
+			 */
+			async function generate_edge_middleware(config) {
+				if (!middleware_path) return;
+
+				const dest = `${tmp}/middleware.js`;
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				builder.copy(`${files}/middleware.js`, dest, {
+					replace: {
+						SERVER_INIT: `${relativePath}/init.js`,
+						MIDDLEWARE: `${relativePath}/adapter/edge-middleware.js`,
+						PUBLIC_PREFIX: builder.config.kit.env.publicPrefix,
+						PRIVATE_PREFIX: builder.config.kit.env.privatePrefix
+					}
+				});
+
+				await bundle_edge_function(
+					{
+						entryPoints: [dest],
+						logOverride: {
+							// Silence this warning which can occur when the user has no config export
+							// in their middleware (because we reference it in our generated middleware wrapper)
+							'import-is-undefined': 'verbose'
+						}
+					},
+					'user-middleware',
+					config
+				);
+
+				let matcher = `/((?!${builder.getAppPath()}/|favicon.ico|favicon.png).*)`;
+
+				try {
+					const file_path = pathToFileURL(`${dirs.functions}/user-middleware.func/index.js`).href;
+					const { config } = await import(file_path);
+					if (config?.matcher) matcher = config.matcher;
+				} catch (e) {
+					// Don't bother showing the error if we know there's no config object
+					const text = fs.readFileSync(middleware_path, 'utf-8');
+					if (text.includes('config') || text.includes('export *')) {
+						builder.log.error(
+							'Failed to import middleware. Make sure it is loadable during build, which is necessary to analyze the config object.'
+						);
+						throw e;
+					}
+				}
+
+				static_config.routes.splice(
+					static_config.routes.findIndex((r) => r.handle === 'filesystem'),
+					0,
+					{
+						src: get_regex_from_matchers(matcher),
+						middlewarePath: 'user-middleware',
+						continue: true
+					}
+				);
+			}
+
+			await generate_edge_middleware(defaults);
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
@@ -419,9 +505,60 @@ const plugin = function (defaults = {}) {
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
 		},
 
+		emulate: (opts) => {
+			if (!middleware_path) return {};
+
+			return {
+				interceptRequest: async (req, res, next) => {
+					// We have to import this here or else we wouldn't notice when the middleware file changes
+					const middleware = await opts.importEntryPoint('edge-middleware');
+					const matcher = new RegExp(get_regex_from_matchers(middleware.config?.matcher));
+					const original_url = /** @type {string} */ (req.url);
+
+					if (matcher.test(original_url)) {
+						const { url, denormalize } = kit.normalizeUrl(original_url);
+						const request = new Request(url, {
+							headers: node_kit.getRequestHeaders(req),
+							method: req.method,
+							body:
+								// We omit the body here because it would consume the stream
+								req.method === 'GET' || req.method === 'HEAD' || !req.headers['content-type']
+									? undefined
+									: 'Cannot read body in dev mode'
+						});
+
+						const response = await middleware.default(request, { waitUntil: () => {} });
+						if (!response) return next();
+
+						// Do the reverse of https://github.com/vercel/vercel/blob/main/packages/functions/src/middleware.ts#L38
+						// to apply the headers to the original request/response
+						for (const [key, value] of response.headers) {
+							if (key === 'x-middleware-rewrite') {
+								const url = denormalize(value);
+								req.url = url.pathname + url.search;
+							} else if (key.startsWith('x-middleware-request-')) {
+								const header = key.slice('x-middleware-request-'.length);
+								req.headers[header] = value;
+							} else if (key !== 'x-middleware-override-headers') {
+								// This isn't 100% correct because a header could be overwritten by later middleware
+								// but it's the closest we can get given how Vite/Express/Polka middleware works.
+								res.setHeader(key, value);
+							}
+						}
+					}
+
+					return next();
+				}
+			};
+		},
+
 		supports: {
 			// reading from the filesystem only works in serverless functions
-			read: ({ config, route }) => {
+			read: ({ config, route, entry }) => {
+				if (entry === 'edge-middleware') {
+					throw new Error(`${name}: Cannot use \`read\` from \`$app/server\` in edge middleware`);
+				}
+
 				const runtime = config.runtime ?? defaults.runtime;
 
 				if (runtime === 'edge') {
@@ -432,7 +569,9 @@ const plugin = function (defaults = {}) {
 
 				return true;
 			}
-		}
+		},
+
+		additionalEntryPoints: { 'edge-middleware': middleware_path }
 	};
 };
 
@@ -688,7 +827,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 				experimentalResponseStreaming: !config.isr,
 				framework: {
 					slug: 'sveltekit',
-					version: VERSION
+					version: kit.VERSION
 				}
 			},
 			null,

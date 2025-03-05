@@ -107,6 +107,53 @@ Cloudflare Workers specific values in the `platform` property are emulated durin
 
 For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
 
+## Pages Middleware
+
+You can deploy one middleware function that closely follows the [Pages Middleware API](https://developers.cloudflare.com/pages/functions/middleware/). Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware runs on all requests, including for static assets and prerendered pages (depending on your configuration). If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered pages by rerouting a user to either variant A or B depending on a cookie.
+
+> [!NOTE] It isn't really Pages Middleware because the adapter compiles to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode) (also see the [Notes](#Notes) section), which ignores middleware, but it closely mirrors its capabilities.
+
+To get started, place a `cloudflare-middleware.js` file in your `src` folder and export an `onRequest` function from it:
+
+```js
+/// file: src/cloudflare-middleware.js
+import { normalizeUrl } from '@sveltejs/kit';
+import { parse } from 'cookie';
+
+/**
+ * @param {import('@sveltejs/adapter-cloudflare').EventContext)} context
+ */
+export function onRequest({ request, next }) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve cookies which contain the feature flags.
+	let flag = parse(request.headers.get('cookie') ?? '').flags;
+
+	// Fall back to random value if this is a new visitor
+	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+
+	// Get destination URL based on the feature flag
+	request = new Request(new URL(flag === 'a' ? '/home-a' : '/home-b', url), request);
+
+	const response = await next(request);
+
+	// Set a cookie to remember the feature flags for this visitor
+	response.headers.set('Set-Cookie', `flags=${flag}; Path=/`);
+
+	return response;
+}
+```
+
+The `context` parameter closely follows the [EventContext](https://developers.cloudflare.com/pages/functions/api-reference/#eventcontext) object but is missing some Pages-specific parameters such as `data`, `params` and `functionPath`.
+
+> [!NOTE] If you want to run code prior to a request but neither have prerendered pages nor rerouting logic, then it makes more sense to use the [handle hook](hooks#Server-hooks-handle) instead.
+
+The middleware runs on all requests that your worker is invoked for, which is dependent on the [`include/exclude` options](#Options-routes).
+
+> [!NOTE] Locally during dev and preview this only approximates the capabilities of middleware. Notably, you cannot read the request or response body, and the `include/exclude` options are not honored.
+
 ## Notes
 
 Functions contained in the [`/functions` directory](https://developers.cloudflare.com/pages/functions/routing/) at the project's root will _not_ be included in the deployment. Instead, functions should be implemented as [server endpoints](routing#server) in your SvelteKit app, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/functions/advanced-mode/).

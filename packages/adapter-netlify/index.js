@@ -1,10 +1,13 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
+// TODO 3.0: switch to named imports, right now we're doing `import * as ..` to avoid having to bump the peer dependency on Kit
+import * as kit from '@sveltejs/kit';
+import * as node_kit from '@sveltejs/kit/node';
 
 /**
  * @typedef {{
@@ -41,6 +44,16 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
 const FUNCTION_PREFIX = 'sveltekit-';
+
+const [major, minor] = kit.VERSION.split('.').map(Number);
+const can_use_middleware = major > 2 || (major === 2 && minor > 17);
+
+/** @type {string | null} */
+let middleware_path = can_use_middleware ? 'src/edge-middleware.js' : null;
+if (middleware_path && !existsSync(middleware_path)) {
+	middleware_path = 'src/edge-middleware.ts';
+	if (!existsSync(middleware_path)) middleware_path = null;
+}
 
 /** @type {import('./index.js').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
@@ -90,6 +103,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
+			if (middleware_path) {
+				await generate_edge_middleware({ builder });
+			}
+
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
@@ -101,10 +118,117 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			}
 		},
 
+		emulate: (opts) => {
+			if (!middleware_path) return {};
+
+			return {
+				interceptRequest: async (req, res, next) => {
+					// We have to import this here or else we wouldn't notice when the middleware file changes
+					const middleware = await opts.importEntryPoint('edge-middleware');
+
+					const { url, denormalize } = kit.normalizeUrl(req.url);
+
+					const request = new Request(url, {
+						headers: node_kit.getRequestHeaders(req),
+						method: req.method
+					});
+
+					// We omit the body here because it would consume the stream
+					if (req.method !== 'GET' && req.method !== 'HEAD') {
+						Object.defineProperty(request, 'body', {
+							get() {
+								console.warn('Cannot read request body in dev/preview.');
+								return new ReadableStream({
+									start(controller) {
+										controller.enqueue('Cannot read request body in dev/preview.');
+										controller.close();
+									}
+								});
+							}
+						});
+					}
+
+					// Netlify allows you to modify the response object after calling next().
+					// This isn't replicable using Vite or Polka middleware, so we approximate it.
+					const fake_response = new Response();
+
+					const response = await middleware.default(request, {
+						// approximation of the Netlify context object
+						// https://docs.netlify.com/edge-functions/api/
+						account: { id: null },
+						cookies: {
+							/** @param {string} name */
+							get: (name) =>
+								req.headers.cookie
+									?.split(';')
+									.find((c) => c.trim().startsWith(`${name}=`))
+									?.split('=')[1],
+							/** @param {string} name @param {string} value */
+							set: (name, value) => res.appendHeader('Set-Cookie', `${name}=${value}`),
+							/** @param {string} name */
+							delete: (name) => res.appendHeader('Set-Cookie', `${name}=; Max-Age=0`)
+						},
+						deploy: {
+							context: null,
+							id: null,
+							published: null
+						},
+						geo: {
+							city: null,
+							country: { code: null, name: null },
+							latitude: null,
+							longitude: null,
+							subdivision: { code: null, name: null },
+							timezone: null,
+							postalCode: null
+						},
+						ip: null,
+						params: {},
+						requestId: null,
+						site: {
+							id: null,
+							name: null,
+							url: null
+						},
+						/** @param {any} request */
+						next: (request) => {
+							if (request instanceof Request) {
+								const new_url = denormalize(request.url);
+								req.url = new_url.pathname + url.search;
+								for (const header of request.headers) {
+									req.headers[header[0]] = header[1];
+								}
+							}
+
+							return fake_response;
+						}
+					});
+
+					for (const header of fake_response.headers) {
+						res.setHeader(header[0], header[1]);
+					}
+
+					if (response instanceof URL) {
+						// https://docs.netlify.com/edge-functions/api/#return-a-rewrite
+						const new_url = denormalize(response);
+						req.url = new_url.pathname + new_url.search;
+						return next();
+					} else if (response instanceof Response && response !== fake_response) {
+						// We assume that middleware bails out when returning a custom response
+						return node_kit.setResponse(res, response);
+					} else {
+						return next();
+					}
+				}
+			};
+		},
+
+		additionalEntryPoints: { 'edge-middleware': middleware_path },
+
 		supports: {
 			// reading from the filesystem only works in serverless functions
-			read: ({ route }) => {
-				if (edge) {
+			read: ({ route, entry }) => {
+				if (edge || entry === 'edge-middleware') {
 					throw new Error(
 						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
 					);
@@ -127,6 +251,7 @@ async function generate_edge_functions({ builder }) {
 	builder.mkdirp('.netlify/edge-functions');
 
 	builder.log.minor('Generating Edge Function...');
+
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
@@ -136,52 +261,87 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
+	const manifest = builder.generateManifest({ relativePath });
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
 	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
 	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
 
-	const path = '/*';
-	// We only need to specify paths without the trailing slash because
-	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
-		// Contains static files
-		`/${builder.getAppPath()}/*`,
-		...builder.prerendered.paths,
-		...Array.from(assets).flatMap((asset) => {
-			if (asset.endsWith('/index.html')) {
-				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
-			}
-			return `${builder.config.kit.paths.base}/${asset}`;
-		}),
-		// Should not be served by SvelteKit at all
-		'/.netlify/*'
-	];
+	await bundle_edge_function({
+		builder,
+		name: 'render',
+		path: '/*',
+		excludedPath: [
+			`/${builder.getAppPath()}/*`, // Contains static files
+			...builder.prerendered.paths,
+			...Array.from(assets).flatMap((asset) => {
+				if (asset.endsWith('/index.html')) {
+					const dir = asset.replace(/\/index\.html$/, '');
+					return [
+						`${builder.config.kit.paths.base}/${asset}`,
+						`${builder.config.kit.paths.base}/${dir}`
+					];
+				}
+				return `${builder.config.kit.paths.base}/${asset}`;
+			})
+		]
+	});
+}
 
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				path,
-				excludedPath
-			}
-		],
-		version: 1
-	};
+/**
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ */
+async function generate_edge_middleware({ builder }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.log.minor('Generating Edge Middleware...');
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+
+	let pattern = `/((?!${builder.getAppPath()}/|favicon.ico|favicon.png).*)`;
+
+	try {
+		const file_path = pathToFileURL(
+			`${builder.getServerDirectory()}/adapter/edge-middleware.js`
+		).href;
+		const { config } = await import(file_path);
+		if (config?.pattern) pattern = config.pattern;
+	} catch (e) {
+		// Don't bother showing the error if we know there's no config object
+		const text = readFileSync(middleware_path, 'utf-8');
+		if (text.includes('config') || text.includes('export *')) {
+			builder.log.error(
+				'Failed to import middleware. Make sure it is loadable during build, which is necessary to analyze the config object.'
+			);
+			throw e;
+		}
+	}
+
+	builder.copy(`${files}/middleware.js`, `${tmp}/entry.js`, {
+		replace: {
+			SERVER_INIT: `${relativePath}/init.js`,
+			MIDDLEWARE: `${relativePath}/adapter/edge-middleware.js`
+		}
+	});
+
+	await bundle_edge_function({ builder, name: 'edge-middleware', pattern });
+}
+
+/**
+ * @param {{ builder: import('@sveltejs/kit').Builder; name: string; } & ({ path: string; excludedPath: string[] } | { pattern: string })} params
+ */
+async function bundle_edge_function(params) {
+	const tmp = params.builder.getBuildDirectory('netlify-tmp');
 
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+		outfile: `.netlify/edge-functions/${params.name}.js`,
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -201,8 +361,35 @@ async function generate_edge_functions({ builder }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			...(existsSync('.netlify/edge-functions/manifest.json')
+				? JSON.parse(readFileSync('.netlify/edge-functions/manifest.json', 'utf-8')).functions
+				: []),
+			'pattern' in params
+				? {
+						function: params.name,
+						pattern: params.pattern
+					}
+				: {
+						function: params.name,
+						path: params.path,
+						// We only need to specify paths without the trailing slash because
+						// Netlify will handle the optional trailing slash for us
+						excludedPath: [
+							...params.excludedPath,
+							// Should not be served by SvelteKit at all
+							'/.netlify/*'
+						]
+					}
+		],
+		version: 1
+	};
+
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder

@@ -117,7 +117,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
+	const emulator = await config.adapter?.emulate?.({
+		importEntryPoint: (entry) =>
+			import(pathToFileURL(`${config.outDir}/output/server/adapter/${entry}.js`).href)
+	});
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });

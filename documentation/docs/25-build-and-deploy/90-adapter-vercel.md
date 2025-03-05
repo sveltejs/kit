@@ -90,7 +90,7 @@ export default {
 
 Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
-> Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
+> [!NOTE] Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
 
 To add ISR to a route, include the `isr` property in your `config` object:
 
@@ -107,7 +107,7 @@ export const config = {
 };
 ```
 
-> Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
+> [!NOTE] Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
 
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 
@@ -139,7 +139,52 @@ vercel env pull .env.development.local
 
 A list of valid query parameters that contribute to the cache key. Other parameters (such as utm tracking codes) will be ignored, ensuring that they do not result in content being re-generated unnecessarily. By default, query parameters are ignored.
 
-> Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
+> [!NOTE] Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
+
+## Edge Middleware
+
+You can make use of [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware) by placing an `edge-middleware.js` file in your `src` folder. Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware can run on all requests, including for static assets and prerendered or ISRed pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side. This allows you to, for example, run A/B tests on prerendered or ISRed pages by rerouting a user to either variant A or B depending on a cookie.
+
+```js
+/// file: edge-middleware.js
+// @filename: ambient.d.ts
+declare module '@vercel/edge';
+
+// @filename: index.js
+// ---cut---
+import { rewrite, next } from '@vercel/edge';
+import { parse } from 'cookie';
+
+/**
+ * @param {Request} request
+ */
+export default async function middleware(request) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = parse(request.headers.get('cookie') ?? '').flag;
+
+	// Fall back to random value if this is a new visitor
+	flag ||= Math.random() > 0.5 ? 'a' : 'b';
+
+	return rewrite(
+		// Get destination URL based on the feature flag
+		flag === 'a' ? '/home-a' : '/home-b',
+		{
+			headers: {
+				// Set a cookie to remember the feature flags for this visitor
+				'Set-Cookie': `flag=${flag}; Path=/`
+			}
+		}
+	);
+}
+```
+
+> [!NOTE] If you can do what you need to by using the [handle hook](hooks#Server-hooks-handle), do so. Avoid using edge middleware for requests that will end up hitting the SvelteKit server runtime (instead of e.g. an ISRed page or static content) — it would be unnecessary (even if very small) overhead. Notable use cases for edge middleware include A/B testing using rewrites on prerendered pages, or running lightweight logic (such as adding headers) while serving ISRed content.
+
+By default, middleware runs on all requests except for SvelteKit-internal artifacts (such as the compiled JS files; normally within `_app/`). You can customize this by exporting a `config` object with a `matcher` property as described in Vercel's [API documentation](https://vercel.com/docs/functions/edge-middleware/middleware-api#match-paths-based-on-custom-matcher-config). Due to the aforementioned performance impact, you should configure this to only run on requests that actually need edge middleware.
 
 ## Environment variables
 

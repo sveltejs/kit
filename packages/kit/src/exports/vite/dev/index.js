@@ -37,9 +37,37 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
 		const context = async_local_storage.getStore();
-		if (!context || context.prerender === true) return;
 
-		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+		if (!context) {
+			const files = new Error().stack
+				?.split('\n')
+				.map((line) => line.match(/\((.*?):\d+:\d+\)/)?.[1])
+				.map((file) => file?.replace(cwd.replaceAll('\\', '/') + '/', ''));
+
+			for (const [entry, file] of Object.entries(additional_entry_points)) {
+				if (files?.includes(file ?? undefined)) {
+					check_feature(
+						'',
+						{},
+						entry,
+						/** @type {import('types').TrackedFeature} */ (label),
+						svelte_config.kit.adapter
+					);
+				}
+			}
+
+			return;
+		} else if (context.prerender === true) {
+			return;
+		}
+
+		check_feature(
+			context.event.route.id,
+			context.config,
+			undefined,
+			/** @type {import('types').TrackedFeature} */ (label),
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -418,7 +446,25 @@ export async function dev(vite, vite_config, svelte_config) {
 		return ws_send.apply(vite.ws, args);
 	};
 
-	vite.middlewares.use((req, res, next) => {
+	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const additional_entry_points = svelte_config.kit.adapter?.additionalEntryPoints ?? {};
+	const emulator = await svelte_config.kit.adapter?.emulate?.({
+		importEntryPoint: (entry) => {
+			const file = additional_entry_points[entry];
+			if (!file) {
+				throw new Error(
+					`Entry point '${entry}' not found: ` +
+						'Adapters can only import entry points defined previously through additionalEntryPoints'
+				);
+			}
+			return vite.ssrLoadModule(file);
+		}
+	});
+
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_asset_uri(req) {
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${
 			req.headers[':authority'] || req.headers.host
 		}`;
@@ -431,18 +477,69 @@ export async function dev(vite, vite_config, svelte_config) {
 
 			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
 				if (has_correct_case(file, svelte_config.kit.files.assets)) {
-					req.url = encodeURI(pathname); // don't need query/hash
-					asset_server(req, res);
-					return;
+					return encodeURI(pathname); // don't need query/hash
 				}
 			}
+		}
+	}
+
+	// adapter-provided middleware
+	vite.middlewares.use(async (req, res, next) => {
+		if (!emulator?.interceptRequest) return next();
+
+		// Middleware can run on all files, but for some it does not run on _app/* by default.
+		// This isn't replicable in dev mode because everything is unbundled, and it would give
+		// wrong pathnames to compare against, too, so we just filter them out at dev time.
+		if (
+			req.url?.startsWith('/@fs/') ||
+			req.url?.startsWith('/@vite/') ||
+			req.url?.includes('virtual:')
+		) {
+			return next();
+		}
+
+		try {
+			const base = `${vite.config.server.https ? 'https' : 'http'}://${
+				req.headers[':authority'] || req.headers.host
+			}`;
+			const decoded = decodeURI(new URL(base + req.url).pathname); // this can fail when req.url is malformed, hence the early try-catch
+			const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+			const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+			const is_static_asset = !!get_asset_uri(req);
+
+			if (is_file && !is_static_asset) {
+				return next();
+			}
+
+			// Vite's base middleware strips out the base path. Restore it for the duration of interceptRequest
+			const prev_url = req.url;
+			req.url = req.originalUrl;
+			const _next = () => {
+				if (prev_url !== req.url) {
+					req.originalUrl = req.url;
+					req.url = /** @type {string} */ (req.url).slice(svelte_config.kit.paths.base.length);
+				} else {
+					req.url = prev_url;
+				}
+				return next();
+			};
+			return emulator.interceptRequest(req, res, _next);
+		} catch (e) {
+			const error = coalesce_to_error(e);
+			res.statusCode = 500;
+			res.end(fix_stack_trace(error));
+		}
+	});
+
+	vite.middlewares.use((req, res, next) => {
+		const asset_uri = get_asset_uri(req);
+		if (asset_uri) {
+			req.url = asset_uri;
+			return asset_server(req, res);
 		}
 
 		next();
 	});
-
-	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -463,7 +560,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				const decoded = decodeURI(new URL(base + req.url).pathname); // this can fail when req.url is malformed, hence the early try-catch
 				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =

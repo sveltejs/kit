@@ -863,8 +863,10 @@ test.describe('Routing', () => {
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
 
-		// Filter out server-side route resolution request
-		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
+		// Filter out server-side route resolution request-related stuff
+		expect(
+			requests.filter((r) => !r.includes('__route.js') && !r.includes('_app/immutable/assets'))
+		).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');

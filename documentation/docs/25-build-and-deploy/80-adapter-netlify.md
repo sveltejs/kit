@@ -66,6 +66,50 @@ export default {
 };
 ```
 
+## Edge Middleware
+
+You can deploy one Netlify Edge Function [as middleware](https://docs.netlify.com/edge-functions/api/#modify-a-response) by placing an `edge-middleware.js` file in your `src` folder. Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware can run on all requests, including for static assets and prerendered pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side. This allows you to for example run A/B-tests on prerendered pages by rerouting a user to either variant A or B depending on a cookie.
+
+```js
+/// file: edge-middleware.js
+// @filename: ambient.d.ts
+declare module '@netlify/edge-functions';
+
+// @filename: index.js
+// ---cut---
+import { normalizeUrl } from '@sveltejs/kit';
+
+/**
+ * @param {Request} request
+ * @param {import('@netlify/edge-functions').Context} context
+ */
+export default async function middleware(request, { next, cookies }) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = cookies.get('flag');
+
+	if (!flag) {
+		// Fall back to random value if this is a new visitor
+		flag = Math.random() > 0.5 ? 'a' : 'b';
+
+		// Set a cookie to remember the feature flags for this visitor
+		cookies.set('flag', flag);
+	}
+
+	// Get destination URL based on the feature flag
+	return new URL(flag === 'a' ? '/home-a' : '/home-b', url);
+}
+```
+
+[!NOTE] If you can do what you need to by using the [handle hook](hooks#Server-hooks-handle), do so. Avoid using edge middleware for requests that will end up hitting the SvelteKit server runtime (instead of e.g. static content) — it would be unnecessary (even if very small) overhead. Notable use cases include A/B testing using rerouting on prerendered pages, or adding headers to requests for static assets.
+
+By default middleware runs on all requests except for SvelteKit-internal artifacts (such as the compiled JS files; normally within `_app/`). You can customize this by exporting a `export const config = { pattern: '<regex string>' }` object from the file similar to [how you can do it for native edge functions](https://docs.netlify.com/edge-functions/declarations/#declare-edge-functions-inline). Due to the aforementioned performance impact, you should configure this to only run on requests that actually need edge middleware.
+
+> [!NOTE] Locally during dev and preview this only approximates the capabilities of edge functions. Notably, you cannot read the request or response body, and many properties on the context object are `null`ed.
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.

@@ -9,6 +9,7 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
+import middleware from 'MIDDLEWARE';
 import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
@@ -194,6 +195,7 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
+		middleware,
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
 		serve_prerendered(),

@@ -137,6 +137,45 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#Socket-activation) for more details.
 
+## Middleware
+
+You can integrate Express or Polka middleware into your SvelteKit application built with the Node adapter by placing a `node-middleware.js` file in your `src` folder. It must export a default function which receives the same arguments as [Express middleware](https://expressjs.com/en/guide/using-middleware.html) (if you don't use a custom server, then you may also make use of additional [Polka-specific API](https://github.com/lukeed/polka?tab=readme-ov-file#middleware), since that's what the Node adapter uses by default). Unlike the [handle](/docs/kit/hooks#Server-hooks-handle) hook, middleware runs on all requests, including for static assets and prerendered pages. If using [server-side route resolution](configuration#router) this means it runs prior to all navigations, no matter client- or server-side.
+
+```js
+/// file: node-middleware.js
+// @filename: ambient.d.ts
+declare module 'polka';
+
+// @filename: index.js
+// ---cut---
+import { parse } from 'cookie';
+
+/**
+ * @param {import('polka').Request} req
+ * @param {import('polka').Response} res
+ * @param {import('polka').NextHandler} next
+ */
+export default function middleware(req, res, next) {
+	if (req.url !== '/') return next();
+
+	// Retrieve feature flag from cookies
+	let flag = parse(req.headers.cookie ?? '').flag;
+
+	if (!flag) {
+		// Fall back to random value if this is a new visitor
+		flag = Math.random() > 0.5 ? 'a' : 'b';
+
+		// Set a cookie to remember the feature flags for this visitor
+		res.appendHeader('Set-Cookie', `flag=${flag}; Path=/`);
+	}
+
+	// Get destination URL based on the feature flag
+	req.url = flag === 'a' ? '/home-a' : '/home-b';
+
+	return next();
+}
+```
+
 ## Options
 
 The adapter can be configured with various options:

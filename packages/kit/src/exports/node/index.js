@@ -96,17 +96,13 @@ function get_raw_body(req, body_size_limit) {
 }
 
 /**
- * @param {{
- *   request: import('http').IncomingMessage;
- *   base: string;
- *   bodySizeLimit?: number;
- * }} options
- * @returns {Promise<Request>}
+ * Turns the Node request headers into a `Headers` instance
+ * @param {import('http').IncomingMessage} request
+ * @returns {Headers}
  */
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function getRequest({ request, base, bodySizeLimit }) {
+export function getRequestHeaders(request) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
+
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
 		headers = Object.assign({}, headers);
@@ -120,11 +116,25 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
+	return new Headers(Object.entries(headers));
+}
+
+/**
+ * @param {{
+ *   request: import('http').IncomingMessage;
+ *   base: string;
+ *   bodySizeLimit?: number;
+ * }} options
+ * @returns {Promise<Request>}
+ */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
+export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers: Object.entries(headers),
+		headers: getRequestHeaders(request),
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined

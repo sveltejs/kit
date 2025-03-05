@@ -1532,3 +1532,37 @@ test.describe('Serialization', () => {
 		expect(await page.textContent('h1')).toBe('It works!');
 	});
 });
+
+test.describe('Middleware', () => {
+	test('Responds with custom Response', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return; // TODO figure out what should happen in this case
+
+		await page.goto('/middleware');
+		await page.click('a[href="/middleware/custom-response"]');
+		expect(await page.textContent('h1')).toBe('Custom Response');
+	});
+
+	test('Reroutes to a different page', async ({ page }) => {
+		await page.goto('/middleware');
+		await page.click('a[href="/middleware/reroute/a"]');
+		expect(await page.textContent('p')).toBe('Rerouted');
+		expect(new URL(page.url()).pathname).toBe('/middleware/reroute/a');
+	});
+
+	test('Sets request/response headers', async ({ page, javaScriptEnabled }) => {
+		if (
+			javaScriptEnabled &&
+			/** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) !== 'server'
+		) {
+			// For client side navigation, we need server side route resolution to have a request to add the headers to
+			return;
+		}
+
+		await page.goto('/middleware');
+		page.click('a[href="/middleware/headers"]');
+		const response = await page.waitForResponse((response) =>
+			new URL(response.url()).pathname.includes('/middleware/headers')
+		);
+		expect(await response.headerValue('x-custom-response-header')).toBe('value');
+	});
+});
