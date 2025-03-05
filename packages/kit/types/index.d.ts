@@ -1842,6 +1842,27 @@ declare module '@sveltejs/kit' {
 
 	type SSRComponentLoader = () => Promise<SSRComponent>;
 
+	interface UniversalNode {
+		load?: Load;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
+	interface ServerNode {
+		load?: ServerLoad;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		actions?: Actions;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
 	interface SSRNode {
 		component: SSRComponentLoader;
 		/** index into the `nodes` array in the generated `client/app.js`. */
@@ -1855,29 +1876,10 @@ declare module '@sveltejs/kit' {
 		/** inlined styles. */
 		inline_styles?(): MaybePromise<Record<string, string>>;
 
-		universal: {
-			load?: Load;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
-
-		server: {
-			load?: ServerLoad;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			actions?: Actions;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
-
 		universal_id?: string;
 		server_id?: string;
+		universal?: UniversalNode;
+		server?: ServerNode;
 	}
 
 	type SSRNodeLoader = () => Promise<SSRNode>;

@@ -364,6 +364,27 @@ export interface SSRComponent {
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
+export interface UniversalNode {
+	load?: Load;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+}
+
+export interface ServerNode {
+	load?: ServerLoad;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	actions?: Actions;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+}
+
 export interface SSRNode {
 	component: SSRComponentLoader;
 	/** index into the `nodes` array in the generated `client/app.js`. */
@@ -377,29 +398,10 @@ export interface SSRNode {
 	/** inlined styles. */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 
-	universal: {
-		load?: Load;
-		prerender?: PrerenderOption;
-		ssr?: boolean;
-		csr?: boolean;
-		trailingSlash?: TrailingSlash;
-		config?: any;
-		entries?: PrerenderEntryGenerator;
-	};
-
-	server: {
-		load?: ServerLoad;
-		prerender?: PrerenderOption;
-		ssr?: boolean;
-		csr?: boolean;
-		trailingSlash?: TrailingSlash;
-		actions?: Actions;
-		config?: any;
-		entries?: PrerenderEntryGenerator;
-	};
-
 	universal_id?: string;
 	server_id?: string;
+	universal?: UniversalNode;
+	server?: ServerNode;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
