@@ -11,6 +11,19 @@
 
 <button
 	on:click={() => {
+		primary_socket = new WebSocket('/ws');
+
+		primary_socket.onopen = () => {
+			messages = [...messages, 'connected'];
+		};
+
+		primary_socket.onmessage = (event) => {
+			messages = [...messages, event.data];
+		};
+	}}>open</button
+>
+<button
+	on:click={() => {
 		primary_socket = new WebSocket('/ws', ['foo', 'bar']);
 
 		primary_socket.onopen = () => {
@@ -20,7 +33,7 @@
 		primary_socket.onmessage = (event) => {
 			messages = [...messages, event.data];
 		};
-	}}>open</button
+	}}>with sub-protocols</button
 >
 <button on:click={() => primary_socket.send('ping')}>ping</button>
 <button
