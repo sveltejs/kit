@@ -214,7 +214,7 @@ function check_named_default_separate(actions) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
+ * @param {NonNullable<import('types').ServerNode['actions']>} actions
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
 async function call_action(event, actions) {

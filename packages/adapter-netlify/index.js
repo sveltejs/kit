@@ -207,7 +207,8 @@ async function bundle_edge_function({ builder, name }) {
 	});
 
 	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(`${tmp}/manifest.js`)).manifest;
+	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
+	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because

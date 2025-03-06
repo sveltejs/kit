@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "5.6.2",
+	"version": "5.6.3",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"keywords": [
 		"adapter",
@@ -45,7 +45,7 @@
 	},
 	"dependencies": {
 		"@vercel/edge": "^1.2.1",
-		"@vercel/nft": "^0.29.0",
+		"@vercel/nft": "^0.29.2",
 		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {

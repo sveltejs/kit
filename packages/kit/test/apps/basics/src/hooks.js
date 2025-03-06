@@ -27,6 +27,14 @@ export const reroute = ({ url }) => {
 		throw new Error('Server Error - Should trigger 500 response');
 	}
 
+	if (url.pathname === '/reroute/async/a') {
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				resolve('/reroute/async/b');
+			}, 100);
+		});
+	}
+
 	if (url.pathname in mapping) {
 		return mapping[url.pathname];
 	}

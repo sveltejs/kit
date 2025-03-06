@@ -477,6 +477,11 @@ test.describe('Load', () => {
 		expect(await response.text()).toContain('status: 404');
 	});
 
+	test('fetch reads universal load assets on the server', async ({ page }) => {
+		await page.goto('/load/fetch-asset');
+		await expect(page.locator('p')).toHaveText('1');
+	});
+
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
 		await page.goto('/load/fetch-origin-internal');
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
@@ -665,6 +670,13 @@ test.describe('reroute', () => {
 		await page.goto('/reroute/basic/a');
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
+	});
+
+	test('Apply async reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/a');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
 		);
 	});
 

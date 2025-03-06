@@ -15,7 +15,6 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
-import { load_page_nodes } from './load_page_nodes.js';
 import { DEV } from 'esm-env';
 
 /**
@@ -29,10 +28,11 @@ const MAX_DEPTH = 10;
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
+ * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, page, options, manifest, state, resolve_opts) {
+export async function render_page(event, page, options, manifest, state, nodes, resolve_opts) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -46,8 +46,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 	}
 
 	try {
-		const nodes = await load_page_nodes(page, manifest);
-
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
 		let status = 200;
