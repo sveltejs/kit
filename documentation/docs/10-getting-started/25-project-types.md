@@ -42,6 +42,10 @@ You can deploy to your own server or VPS using [`adapter-node`](adapter-node).
 
 You can use [`adapter-node`](adapter-node) to run a SvelteKit app within a container such as Docker or LXC.
 
+## Library
+
+You can create a library to be used by other Svelte apps with the [`@sveltejs/package`](packaging) add-on to SvelteKit by choosing the library option when running [`sv create`](/docs/cli/sv-create).
+
 ## Offline app
 
 SvelteKit has full suppport for [service workers](service-workers) allowing you to build many types of applications such as offline apps and [progressive web apps](glossary#PWA).
