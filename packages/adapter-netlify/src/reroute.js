@@ -3,16 +3,16 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 
 /**
  * @param {Request} request
- * @returns {URL | undefined}
+ * @returns {Promise<URL | undefined>}
  */
-export default function middleware(request) {
+export default async function middleware(request) {
 	const url = new URL(request.url);
-	const rerouted_path = applyReroute(url, reroute);
+	const resolved_path = await applyReroute(url, reroute);
 
-	// a rewrite on Netlify will cause this function to run again with the new URL
-	// instead of moving onto the route function, so we only return a URL if
-	// the reroute path is different from the original to avoid an endless loop
-	if (rerouted_path && url.pathname !== rerouted_path.pathname) {
-		return rerouted_path;
+	// a Netlify rewrite will invoke this function again but with the new URL,
+	// so we only return a URL if the rerouted path is different from the original
+	// to avoid an endless loop
+	if (resolved_path && url.pathname !== resolved_path.pathname) {
+		return resolved_path;
 	}
 }

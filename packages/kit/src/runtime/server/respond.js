@@ -22,7 +22,12 @@ import {
 import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, ORIGINAL_PATH_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import {
+	INVALIDATED_PARAM,
+	TRAILING_SLASH_PARAM,
+	ORIGINAL_PATH_PARAM,
+	RESOLVED_PATH_PARAM
+} from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
@@ -61,11 +66,13 @@ export async function respond(request, options, manifest, state) {
 	// URL but stripped from the potential `/__data.json` suffix and its search param
 	const url = new URL(request.url);
 
-	// if the url has been rewritten by a middleware, we need to restore the original path
-	const original_path = url.searchParams.get(ORIGINAL_PATH_PARAM);
-	if (original_path) {
-		url.pathname = original_path;
+	let resolved_path;
+
+	if (manifest._.reroute_middleware) {
+		url.pathname = url.searchParams.get(ORIGINAL_PATH_PARAM) || url.pathname;
+		resolved_path = url.searchParams.get(RESOLVED_PATH_PARAM);
 		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+		url.searchParams.delete(RESOLVED_PATH_PARAM);
 	}
 
 	if (options.csrf_check_origin) {
@@ -117,15 +124,16 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	let resolved_path;
-
-	try {
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
+	// skip reroute if it already ran earlier in an edge middleware
+	if (!resolved_path) {
+		try {
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		}
 	}
 
 	try {

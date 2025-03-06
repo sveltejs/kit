@@ -4,12 +4,12 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 
 /**
  * @param {Request} request
- * @returns {Response}
+ * @returns {Promise<Response>}
  */
-export default function middleware(request) {
-	const rerouted_path = applyReroute(new URL(request.url), reroute);
-	if (rerouted_path) {
-		return rewrite(rerouted_path);
+export default async function middleware(request) {
+	const resolved_path = await applyReroute(new URL(request.url), reroute);
+	if (resolved_path) {
+		return rewrite(resolved_path);
 	}
 	return next(request);
 }

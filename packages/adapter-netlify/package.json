@@ -59,6 +59,6 @@
 		"vitest": "^3.0.1"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.4.0"
+		"@sveltejs/kit": "^2.19.0"
 	}
 }

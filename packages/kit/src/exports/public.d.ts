@@ -130,9 +130,15 @@ export interface Builder {
 
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 * @param opts.relativePath a relative path to the base directory of the app
+	 * @param opts.routes optional. In which format (esm or cjs) the manifest should be generated
+	 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest: (opts: {
+		relativePath: string;
+		routes?: RouteDefinition[];
+		rerouteMiddleware?: boolean;
+	}) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -147,7 +153,7 @@ export interface Builder {
 	getAppPath: () => string;
 	/**
 	 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
-	 * @since 2.17.0
+	 * @since 2.19.0
 	 */
 	getReroutePath: () => Promise<string | void>;
 
@@ -1329,6 +1335,8 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;
+		/** True if the `reroute` hook will run in a middleware before the main handler */
+		reroute_middleware: boolean;
 	};
 }
 

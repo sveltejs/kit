@@ -90,21 +90,24 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
+			let reroute_middleware = false;
+
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
 
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, reroute_middleware });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
-
 				/** @type {string | void} */
 				let reroute_path;
 
 				if (split && (reroute_path = await builder.getReroutePath?.())) {
 					await generate_reroute_middleware({ builder, reroute_path });
+					reroute_middleware = true;
 				}
+
+				generate_lambda_functions({ builder, split, publish, reroute_middleware });
 			}
 		},
 
@@ -126,8 +129,9 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {boolean} params.reroute_middleware
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, reroute_middleware }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
@@ -145,7 +149,7 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'render' });
+	await bundle_edge_function({ builder, name: 'render', reroute_middleware });
 }
 
 /**
@@ -154,13 +158,13 @@ async function generate_edge_functions({ builder }) {
  * @param {string} params.reroute_path
  */
 async function generate_reroute_middleware({ builder, reroute_path }) {
+	builder.log.minor('Generating edge middleware to run reroute before split functions...');
+
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
 
 	builder.mkdirp('.netlify/edge-functions');
-
-	builder.log.minor('Generating Reroute Edge Function...');
 
 	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
 		replace: {
@@ -168,7 +172,7 @@ async function generate_reroute_middleware({ builder, reroute_path }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'reroute' });
+	await bundle_edge_function({ builder, name: 'reroute', reroute_middleware: false });
 }
 
 /**
@@ -176,12 +180,16 @@ async function generate_reroute_middleware({ builder, reroute_path }) {
  * @param {object} params
  * @param {import('@sveltejs/kit').Builder} params.builder
  * @param {string} params.name
+ * @param {boolean} params.reroute_middleware
  */
-async function bundle_edge_function({ builder, name }) {
+async function bundle_edge_function({ builder, name, reroute_middleware }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
-	const manifest = builder.generateManifest({ relativePath });
+	const manifest = builder.generateManifest({
+		relativePath,
+		rerouteMiddleware: reroute_middleware
+	});
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	await esbuild.build({
@@ -247,12 +255,13 @@ async function bundle_edge_function({ builder, name }) {
 }
 
 /**
- * @param { object } params
+ * @param {object} params
  * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
+ * @param {string} params.publish
+ * @param {boolean} params.split
+ * @param {boolean} params.reroute_middleware
  */
-function generate_lambda_functions({ builder, publish, split }) {
+function generate_lambda_functions({ builder, publish, split, reroute_middleware }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
@@ -313,7 +322,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			const manifest = builder.generateManifest({
 				relativePath: '../server',
-				routes
+				routes,
+				rerouteMiddleware: reroute_middleware
 			});
 
 			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
@@ -327,7 +337,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 		}
 	} else {
 		const manifest = builder.generateManifest({
-			relativePath: '../server'
+			relativePath: '../server',
+			rerouteMiddleware: reroute_middleware
 		});
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;

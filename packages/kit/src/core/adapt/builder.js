@@ -183,14 +183,15 @@ export function create_builder({
 			write(dest, `export const env=${JSON.stringify(env.public)}`);
 		},
 
-		generateManifest({ relativePath, routes: subset }) {
+		generateManifest({ relativePath, routes: subset, rerouteMiddleware }) {
 			return generate_manifest({
 				build_data,
 				prerendered: prerendered.paths,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true)
+					: route_data.filter((route) => prerender_map.get(route.id) !== true),
+				reroute_middleware: rerouteMiddleware
 			});
 		},
 
