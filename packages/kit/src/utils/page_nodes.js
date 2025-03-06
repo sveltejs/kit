@@ -19,9 +19,7 @@ export class PageNodes {
 	/**
 	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
 	 * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
-	 *
 	 * @param {Option} option
-	 *
 	 * @returns {Value | undefined}
 	 */
 	#get_option(option) {
