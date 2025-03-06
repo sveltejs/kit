@@ -28,10 +28,14 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
 	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
-	let no_svelte_3 = true
+	let no_svelte_3 = true;
 	try {
-	  no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
-	} catch(e) { }
+		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	} catch (e) {
+		if (e instanceof Error) {
+			console.info(`Can't check svelte version ${svelte_dep}`, e.message);
+		}
+	}
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: no_svelte_3
