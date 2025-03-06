@@ -18,6 +18,7 @@ export async function applyReroute(url, reroute) {
 	normalized_url.searchParams.set(RESOLVED_PATH_PARAM, resolved_path ?? url.pathname);
 
 	if (resolved_path) {
+		normalized_url.pathname = resolved_path;
 		return denormalize(normalized_url);
 	}
 }
