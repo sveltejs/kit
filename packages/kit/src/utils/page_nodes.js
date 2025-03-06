@@ -1,3 +1,10 @@
+import {
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
+	validate_page_server_exports
+} from './exports.js';
+
 export class PageNodes {
 	data;
 
@@ -14,6 +21,21 @@ export class PageNodes {
 
 	page() {
 		return this.data.at(-1);
+	}
+
+	validate() {
+		for (const layout of this.layouts()) {
+			if (layout) {
+				validate_layout_server_exports(layout.server, /** @type {string} */ (layout.server_id));
+				validate_layout_exports(layout.universal, /** @type {string} */ (layout.universal_id));
+			}
+		}
+
+		const page = this.page();
+		if (page) {
+			validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
+			validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
+		}
 	}
 
 	/**

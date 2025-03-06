@@ -13,13 +13,7 @@ import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
@@ -248,31 +242,12 @@ export async function respond(request, options, manifest, state) {
 				trailing_slash = 'always';
 			} else if (page_nodes) {
 				if (DEV) {
-					for (const layout of page_nodes.layouts()) {
-						if (layout) {
-							validate_layout_server_exports(
-								layout.server,
-								/** @type {string} */ (layout.server_id)
-							);
-							validate_layout_exports(
-								layout.universal,
-								/** @type {string} */ (layout.universal_id)
-							);
-						}
-					}
-
-					const page = page_nodes.page();
-					if (page) {
-						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
-					}
+					page_nodes.validate();
 				}
-
 				trailing_slash = page_nodes.trailing_slash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash ?? 'never';
-
 				if (DEV) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
 				}

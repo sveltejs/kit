@@ -1,12 +1,6 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
@@ -189,21 +183,13 @@ function analyse_endpoint(route, mod) {
  * @param {import('types').SSRNode} leaf
  */
 function analyse_page(layouts, leaf) {
-	for (const layout of layouts) {
-		if (layout) {
-			validate_layout_server_exports(layout.server, layout.server_id);
-			validate_layout_exports(layout.universal, layout.universal_id);
-		}
-	}
-
 	/** @type {Array<'GET' | 'POST'>} */
 	const methods = ['GET'];
 	if (leaf.server?.actions) methods.push('POST');
 
-	validate_page_server_exports(leaf.server, leaf.server_id);
-	validate_page_exports(leaf.universal, leaf.universal_id);
-
 	const nodes = new PageNodes([...layouts, leaf]);
+	nodes.validate();
+
 	return {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
