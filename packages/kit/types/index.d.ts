@@ -1864,7 +1864,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface SSRNode {
-		component: SSRComponentLoader;
 		/** index into the `nodes` array in the generated `client/app.js`. */
 		index: number;
 		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
@@ -1873,12 +1872,17 @@ declare module '@sveltejs/kit' {
 		stylesheets: string[];
 		/** external font files that are loaded on the client */
 		fonts: string[];
-		/** inlined styles. */
-		inline_styles?(): MaybePromise<Record<string, string>>;
 
 		universal_id?: string;
 		server_id?: string;
+
+		/** inlined styles. */
+		inline_styles?(): MaybePromise<Record<string, string>>;
+		/** Svelte component */
+		component?: SSRComponentLoader;
+		/** +page.js or +layout.js */
 		universal?: UniversalNode;
+		/** +page.server.js, +layout.server.js, or +server.js */
 		server?: ServerNode;
 	}
 

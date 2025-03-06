@@ -11,20 +11,13 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
+import { PageNodes } from '../../utils/page_nodes.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
-import { get_option } from '../../utils/options.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
@@ -252,8 +245,10 @@ export async function respond(request, options, manifest, state) {
 	let trailing_slash = 'never';
 
 	try {
-		/** @type {Array<import('types').SSRNode | undefined> | undefined} */
-		const page_nodes = route?.page ? await load_page_nodes(route.page, manifest) : undefined;
+		/** @type {PageNodes|undefined} */
+		const page_nodes = route?.page
+			? new PageNodes(await load_page_nodes(route.page, manifest))
+			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route) {
@@ -263,33 +258,12 @@ export async function respond(request, options, manifest, state) {
 				trailing_slash = 'always';
 			} else if (page_nodes) {
 				if (DEV) {
-					const layouts = page_nodes.slice(0, -1);
-					const page = page_nodes.at(-1);
-
-					for (const layout of layouts) {
-						if (layout) {
-							validate_layout_server_exports(
-								layout.server,
-								/** @type {string} */ (layout.server_id)
-							);
-							validate_layout_exports(
-								layout.universal,
-								/** @type {string} */ (layout.universal_id)
-							);
-						}
-					}
-
-					if (page) {
-						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
-					}
+					page_nodes.validate();
 				}
-
-				trailing_slash = get_option(page_nodes, 'trailingSlash') ?? 'never';
+				trailing_slash = page_nodes.trailing_slash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash ?? 'never';
-
 				if (DEV) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
 				}
@@ -323,8 +297,8 @@ export async function respond(request, options, manifest, state) {
 					config = node.config ?? config;
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
-					config = get_page_config(page_nodes) ?? config;
-					prerender = get_option(page_nodes, 'prerender') ?? false;
+					config = page_nodes.get_config() ?? config;
+					prerender = page_nodes.prerender();
 				}
 
 				if (state.before_handle) {
@@ -421,7 +395,7 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 * @param {import('@sveltejs/kit').RequestEvent} event
-	 * @param {Array<import('types').SSRNode | undefined> | undefined} page_nodes
+	 * @param {PageNodes | undefined} page_nodes
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
