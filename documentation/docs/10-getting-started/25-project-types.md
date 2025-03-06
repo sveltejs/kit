@@ -44,7 +44,7 @@ You can use [`adapter-node`](adapter-node) to run a SvelteKit app within a conta
 
 ## Offline app
 
-SvelteKit has full suppport for [service workers](service-workers) allowing you to build many types of applications such as offline apps and [progressive web apps](glossary#Progressive-web-apps).
+SvelteKit has full suppport for [service workers](service-workers) allowing you to build many types of applications such as offline apps and [progressive web apps](glossary#PWA).
 
 ## Mobile app
 
