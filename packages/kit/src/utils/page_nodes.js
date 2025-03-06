@@ -33,19 +33,19 @@ export class PageNodes {
 	}
 
 	csr() {
-		return this.#get_option('csr') ?? true
+		return this.#get_option('csr') ?? true;
 	}
 
 	ssr() {
-		return this.#get_option('ssr') ?? true
+		return this.#get_option('ssr') ?? true;
 	}
 
 	prerender() {
-		return this.#get_option('prerender') ?? false
+		return this.#get_option('prerender') ?? false;
 	}
 
 	trailing_slash() {
-		return this.#get_option('trailingSlash') ?? 'never'
+		return this.#get_option('trailingSlash') ?? 'never';
 	}
 
 	get_config() {
