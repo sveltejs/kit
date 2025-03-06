@@ -12,7 +12,7 @@ In SvelteKit, client-side rendering will be used by default, but you can turn of
 
 ## Edge
 
-Rendering on the edge refers to rendering an application in a CDN near the user. Edge rendering allows the request and response for a page to travel a shorter distance thus improving latency.
+Rendering on the edge refers to rendering an application in a content delivery network (CDN) near the user. Edge rendering allows the request and response for a page to travel a shorter distance thus improving latency.
 
 ## Hydration
 
