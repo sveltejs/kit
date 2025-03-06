@@ -18,7 +18,7 @@ Tools built solely to do static site generation may scale the prerendering proce
 
 ## Single-page app
 
-[Single-page apps (SPAs)](glossary#SPA) exclusively use [client-side rendering (CSR)](glossary#CSR). You can [build single-page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language](#backend-in-another-language). If you are building an application with no backend or a [separate backend](#Separate-backend), you can simply skip over and ignore the parts of the docs talking about `server` files.
+[Single-page apps (SPAs)](glossary#SPA) exclusively use [client-side rendering (CSR)](glossary#CSR). You can [build single-page apps (SPAs)](single-page-apps) with SvelteKit. As with all types of SvelteKit applications, you can write your backend in SvelteKit or [another language or framework](#separate-backend). If you are building an application with no backend or a [separate backend](#Separate-backend), you can simply skip over and ignore the parts of the docs talking about `server` files.
 
 ## Multi-page app
 
