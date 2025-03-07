@@ -301,6 +301,8 @@ Using `reroute` will _not_ change the contents of the browser's address bar, or 
 
 Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise.
 
+> [!NOTE] `reroute` is considered a pure, idempotent function. As such, it must always return the same output for the same input and not have side effects. Under these assumptions, SvelteKit caches the result of `reroute` on the client so it is only called once per unique URL.
+
 ### transport
 
 This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns `false` for anything that isn't an instance of the type) and a corresponding `decode` function:
