@@ -189,6 +189,17 @@ const components = [];
 let load_cache = null;
 
 /**
+ * @type {Map<string, Promise<URL>>}
+ * Cache for client-side rerouting, since it could contain async calls which we want to
+ * avoid running multiple times which would slow down navigations (e.g. else preloading
+ * wouldn't help because on navigation it would be called again). Since `reroute` should be
+ * a pure function (i.e. always return the same) value it's safe to cache across navigations.
+ * The server reroute calls don't need to be cached because they are called using `import(...)`
+ * which is cached per the JS spec.
+ */
+const reroute_cache = new Map();
+
+/**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
  * do not re-assign as some closures keep references to these Sets
  */
@@ -1210,29 +1221,44 @@ async function load_root_error_page({ status, error, url, route }) {
  * @returns {Promise<URL | undefined>}
  */
 async function get_rerouted_url(url) {
+	const href = url.href;
+
+	if (reroute_cache.has(href)) {
+		return reroute_cache.get(href);
+	}
+
 	let rerouted;
+
 	try {
-		// reroute could alter the given URL, so we pass a copy
-		rerouted =
-			(await app.hooks.reroute({
-				url: new URL(url),
-				fetch: async (input, init) => {
-					return resolve_fetch_url(input, init, url).promise;
+		const promise = (async () => {
+			// reroute could alter the given URL, so we pass a copy
+			let rerouted =
+				(await app.hooks.reroute({
+					url: new URL(url),
+					fetch: async (input, init) => {
+						return resolve_fetch_url(input, init, url).promise;
+					}
+				})) ?? url;
+
+			if (typeof rerouted === 'string') {
+				const tmp = new URL(url); // do not mutate the incoming URL
+
+				if (app.hash) {
+					tmp.hash = rerouted;
+				} else {
+					tmp.pathname = rerouted;
 				}
-			})) ?? url;
 
-		if (typeof rerouted === 'string') {
-			const tmp = new URL(url); // do not mutate the incoming URL
-
-			if (app.hash) {
-				tmp.hash = rerouted;
-			} else {
-				tmp.pathname = rerouted;
+				rerouted = tmp;
 			}
 
-			rerouted = tmp;
-		}
+			return rerouted;
+		})();
+
+		reroute_cache.set(href, promise);
+		rerouted = await promise;
 	} catch (e) {
+		reroute_cache.delete(href);
 		if (DEV) {
 			// in development, print the error...
 			console.error(e);
