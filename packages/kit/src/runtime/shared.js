@@ -16,5 +16,3 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 export const ORIGINAL_PATH_PARAM = 'x-sveltekit-original-path';
-
-export const RESOLVED_PATH_PARAM = 'x-sveltekit-resolved-path';

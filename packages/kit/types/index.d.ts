@@ -2071,7 +2071,7 @@ declare module '@sveltejs/kit/adapter' {
 	 * to reroute the request to the correct function.
 	 * @since 2.19.0
 	 */
-	export function applyReroute(url: URL, reroute: import("@sveltejs/kit").Reroute): Promise<URL | void>;
+	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL>;
 
 	export {};
 }
