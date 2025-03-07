@@ -103,11 +103,82 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
+	/** @type {Record<string, string>} */
+	const headers = {};
+
+	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
+		request,
+		url
+	);
+
+	/** @type {import('@sveltejs/kit').RequestEvent} */
+	const event = {
+		cookies,
+		// @ts-expect-error `fetch` needs to be created after the `event` itself
+		fetch: null,
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
+				throw new Error(
+					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
+				);
+			}),
+		locals: {},
+		params: {},
+		platform: state.platform,
+		request,
+		route: { id: null },
+		setHeaders: (new_headers) => {
+			if (__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+				const value = new_headers[key];
+
+				if (lower === 'set-cookie') {
+					throw new Error(
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+					);
+				} else if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				} else {
+					headers[lower] = value;
+
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
+					}
+				}
+			}
+		},
+		url,
+		isDataRequest: is_data_request,
+		isSubRequest: state.depth > 0
+	};
+
+	event.fetch = create_fetch({
+		event,
+		options,
+		manifest,
+		state,
+		get_cookie_header,
+		set_internal
+	});
+
+	if (state.emulator?.platform) {
+		event.platform = await state.emulator.platform({
+			config: {},
+			prerender: !!state.prerendering?.fallback
+		});
+	}
+
 	let resolved_path;
 
 	try {
 		// reroute could alter the given URL, so we pass a copy
-		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
+		resolved_path =
+			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
@@ -122,9 +193,6 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
-
-	/** @type {Record<string, string>} */
-	let params = {};
 
 	if (base && !state.prerendering?.fallback) {
 		if (!resolved_path.startsWith(base)) {
@@ -159,67 +227,12 @@ export async function respond(request, options, manifest, state) {
 			const matched = exec(match, candidate.params, matchers);
 			if (matched) {
 				route = candidate;
-				params = decode_params(matched);
+				event.route = { id: route.id };
+				event.params = decode_params(matched);
 				break;
 			}
 		}
 	}
-
-	/** @type {import('types').TrailingSlash} */
-	let trailing_slash = 'never';
-
-	/** @type {Record<string, string>} */
-	const headers = {};
-
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
-	let cookies_to_add = {};
-
-	/** @type {import('@sveltejs/kit').RequestEvent} */
-	const event = {
-		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
-		cookies: null,
-		// @ts-expect-error
-		fetch: null,
-		getClientAddress:
-			state.getClientAddress ||
-			(() => {
-				throw new Error(
-					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-				);
-			}),
-		locals: {},
-		params,
-		platform: state.platform,
-		request,
-		route: { id: route?.id ?? null },
-		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
-					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-					);
-				} else if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
-				} else {
-					headers[lower] = value;
-
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
-					}
-				}
-			}
-		},
-		url,
-		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
-	};
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
@@ -227,6 +240,9 @@ export async function respond(request, options, manifest, state) {
 		filterSerializedResponseHeaders: default_filter,
 		preload: default_preload
 	};
+
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
 
 	try {
 		/** @type {PageNodes|undefined} */
@@ -293,29 +309,9 @@ export async function respond(request, options, manifest, state) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
-		} else if (state.emulator?.platform) {
-			event.platform = await state.emulator.platform({
-				config: {},
-				prerender: !!state.prerendering?.fallback
-			});
 		}
 
-		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
-			request,
-			url,
-			trailing_slash
-		);
-
-		cookies_to_add = new_cookies;
-		event.cookies = cookies;
-		event.fetch = create_fetch({
-			event,
-			options,
-			manifest,
-			state,
-			get_cookie_header,
-			set_internal
-		});
+		set_trailing_slash(trailing_slash);
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
@@ -330,7 +326,7 @@ export async function respond(request, options, manifest, state) {
 						response.headers.set(key, /** @type {string} */ (value));
 					}
 
-					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 					if (state.prerendering && event.route.id !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -391,7 +387,7 @@ export async function respond(request, options, manifest, state) {
 				: route?.page && is_action_json_request(event)
 					? action_json_redirect(e)
 					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			add_cookies_to_headers(response.headers, Object.values(new_cookies));
 			return response;
 		}
 		return await handle_fatal_error(event, options, e);

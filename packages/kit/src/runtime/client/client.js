@@ -690,12 +690,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				app.hash
 			),
 			async fetch(resource, init) {
-				/** @type {URL | string} */
-				let requested;
-
 				if (resource instanceof Request) {
-					requested = resource.url;
-
 					// we're not allowed to modify the received `Request` object, so in order
 					// to fixup relative urls we create a new equivalent `init` object instead
 					init = {
@@ -720,25 +715,15 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						signal: resource.signal,
 						...init
 					};
-				} else {
-					requested = resource;
 				}
 
-				// we must fixup relative urls so they are resolved from the target page
-				const resolved = new URL(requested, url);
+				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+
 				if (is_tracking) {
 					depends(resolved.href);
 				}
 
-				// match ssr serialized data url, which is important to find cached responses
-				if (resolved.origin === url.origin) {
-					requested = resolved.href.slice(url.origin.length);
-				}
-
-				// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
-				return started
-					? subsequent_fetch(requested, resolved.href, init)
-					: initial_fetch(requested, init);
+				return promise;
 			},
 			setHeaders: () => {}, // noop
 			depends,
@@ -791,6 +776,30 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		data: data ?? server_data_node?.data ?? null,
 		slash: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
+}
+
+/**
+ * @param {Request | string | URL} input
+ * @param {RequestInit | undefined} init
+ * @param {URL} url
+ */
+function resolve_fetch_url(input, init, url) {
+	let requested = input instanceof Request ? input.url : input;
+
+	// we must fixup relative urls so they are resolved from the target page
+	const resolved = new URL(requested, url);
+
+	// match ssr serialized data url, which is important to find cached responses
+	if (resolved.origin === url.origin) {
+		requested = resolved.href.slice(url.origin.length);
+	}
+
+	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+	const promise = started
+		? subsequent_fetch(requested, resolved.href, init)
+		: initial_fetch(requested, init);
+
+	return { resolved, promise };
 }
 
 /**
@@ -1223,7 +1232,13 @@ async function get_rerouted_url(url) {
 	try {
 		const promise = (async () => {
 			// reroute could alter the given URL, so we pass a copy
-			let rerouted = (await app.hooks.reroute({ url: new URL(url) })) ?? url;
+			let rerouted =
+				(await app.hooks.reroute({
+					url: new URL(url),
+					fetch: async (input, init) => {
+						return resolve_fetch_url(input, init, url).promise;
+					}
+				})) ?? url;
 
 			if (typeof rerouted === 'string') {
 				const tmp = new URL(url); // do not mutate the incoming URL
