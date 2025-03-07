@@ -51,8 +51,87 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
+	return handle_request(request, options, manifest, state);
+}
+
+/**
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>}
+ */
+export function get_websocket_hooks_resolver(options, manifest, state) {
+	return async (info) => {
+		/** @type {Request} */
+		let request;
+
+		// Check if info is a Peer object
+		if ('request' in info) {
+			// @ts-ignore UpgradeRequest and Request are essentially the same
+			request = info.request;
+		} else {
+			// @ts-ignore although the type is RequestInit, it is almost always a Request object
+			request = info;
+		}
+
+		const result = await handle_request(request, options, manifest, state, true);
+
+		if (result instanceof Response) {
+			// if the result is a Response instead of WebSocket hooks, it means
+			// we should ignore the upgrade request and send back a regular response
+			return {
+				upgrade: () => {
+					// we have to throw the Response to avoid accepting the upgrade
+					throw result;
+				}
+			};
+		}
+
+		return result;
+	};
+}
+
+// we need the type overload so that TypeScript knows the return value
+// can only be a Response if the upgrade param was omitted
+/**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+/**
+ * @overload
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean} upgrade
+ * @returns {Promise<Response | import('crossws').Hooks>}
+ */
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @param {boolean=} upgrade
+ * @returns {Promise<Response | import('crossws').Hooks>}
+ */
+async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
+
+	/**
+	 * @param {HttpError} error
+	 * @returns {Response}
+	 */
+	function text_or_json(error) {
+		if (request.headers.get('accept') === 'application/json') {
+			return json(error.body, { status: error.status });
+		}
+		return text(error.body.message, { status: error.status });
+	}
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -64,14 +143,9 @@ export async function respond(request, options, manifest, state) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = new HttpError(
-				403,
-				`Cross-site ${request.method} form submissions are forbidden`
+			return text_or_json(
+				new HttpError(403, `Cross-site ${request.method} form submissions are forbidden`)
 			);
-			if (request.headers.get('accept') === 'application/json') {
-				return json(csrf_error.body, { status: csrf_error.status });
-			}
-			return text(csrf_error.body.message, { status: csrf_error.status });
 		}
 	}
 
@@ -228,6 +302,23 @@ export async function respond(request, options, manifest, state) {
 		preload: default_preload
 	};
 
+	/**
+	 * @param {unknown} e
+	 * @returns {Promise<Response>}
+	 */
+	async function redirect_or_fatal_error(e) {
+		if (e instanceof Redirect) {
+			const response = is_data_request
+				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			return response;
+		}
+		return await handle_fatal_error(event, options, e);
+	}
+
 	try {
 		/** @type {PageNodes|undefined} */
 		const page_nodes = route?.page
@@ -319,25 +410,119 @@ export async function respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
+		/**
+		 * @param {Response} response
+		 * @returns {Response}
+		 */
+		const after_resolve = (response) => {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
+
+			// add headers/cookies here, rather than inside `resolve`, so that we
+			// can do it once for all responses instead of once per `return`
+			for (const key in headers) {
+				const value = headers[key];
+				response.headers.set(key, /** @type {string} */ (value));
+			}
+
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+
+			if (state.prerendering && event.route.id !== null) {
+				response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+			}
+
+			return response;
+		};
+
+		if (upgrade && route?.endpoint) {
+			const node = await route.endpoint();
+			if (node.socket) {
+				if (DEV) {
+					__SVELTEKIT_TRACK__('websockets');
+				}
+
+				return {
+					upgrade: async () => {
+						/** @type {Response} */
+						let response;
+
+						try {
+							response = await options.hooks.handle({
+								event,
+								resolve: async () => {
+									/** @type {Response} */
+									let upgrade_response;
+
+									try {
+										const init = (await node.socket?.upgrade?.(event)) ?? undefined;
+										upgrade_response = new Response(undefined, init);
+										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+									} catch (e) {
+										if (e instanceof HttpError) {
+											upgrade_response = text_or_json(e);
+										} else if (e instanceof Response) {
+											// crossws allows throwing a Response to abort the upgrade
+											upgrade_response = e;
+										} else {
+											throw e;
+										}
+									}
+
+									return after_resolve(upgrade_response);
+								}
+							});
+						} catch (e) {
+							return await redirect_or_fatal_error(e);
+						}
+
+						// if the handle hook returned a custom response or the user threw a response
+						// then we abort upgrading the connection
+						if (!response.headers.has('x-sveltekit-upgrade')) {
+							throw response;
+						}
+
+						return response;
+					},
+					open: async (peer) => {
+						try {
+							await node.socket?.open?.(peer);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					message: async (peer, message) => {
+						try {
+							await node.socket?.message?.(peer, message);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					close: async (peer, close_event) => {
+						try {
+							await node.socket?.close?.(peer, close_event);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					},
+					error: async (peer, error) => {
+						try {
+							await node.socket?.error?.(peer, error);
+						} catch (e) {
+							await handle_fatal_error(event, options, e);
+						}
+					}
+				};
+			}
+		}
+
 		const response = await options.hooks.handle({
 			event,
-			resolve: (event, opts) =>
-				resolve(event, page_nodes, opts).then((response) => {
-					// add headers/cookies here, rather than inside `resolve`, so that we
-					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
-
-					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-
-					if (state.prerendering && event.route.id !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-					}
-
-					return response;
-				})
+			resolve: (event, opts) => resolve(event, page_nodes, opts).then(after_resolve)
 		});
 
 		// respond with 304 if etag matches
@@ -385,16 +570,7 @@ export async function respond(request, options, manifest, state) {
 
 		return response;
 	} catch (e) {
-		if (e instanceof Redirect) {
-			const response = is_data_request
-				? redirect_json_response(e)
-				: route?.page && is_action_json_request(event)
-					? action_json_redirect(e)
-					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-			return response;
-		}
-		return await handle_fatal_error(event, options, e);
+		return await redirect_or_fatal_error(e);
 	}
 
 	/**
@@ -550,14 +726,6 @@ export async function respond(request, options, manifest, state) {
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return await handle_fatal_error(event, options, e);
-		} finally {
-			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
-
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-			};
 		}
 	}
 }

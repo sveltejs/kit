@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import crossws from 'crossws/adapters/node';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
@@ -444,6 +445,65 @@ export async function dev(vite, vite_config, svelte_config) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_base(req) {
+		return `${vite.config.server.https ? 'https' : 'http'}://${
+			req.headers[':authority'] || req.headers.host
+		}`;
+	}
+
+	async function init_server() {
+		// we have to import `Server` before calling `set_assets`
+		const { Server } = /** @type {import('types').ServerModule} */ (
+			await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+		);
+
+		const { set_fix_stack_trace } = await vite.ssrLoadModule(`${runtime_base}/shared-server.js`);
+		set_fix_stack_trace(fix_stack_trace);
+
+		const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+		set_assets(assets);
+
+		const server = new Server(manifest);
+
+		await server.init({
+			env,
+			read: (file) => createReadableStream(from_fs(file)),
+			peers: ws.peers,
+			publish: ws.publish
+		});
+
+		return server;
+	}
+
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(from_fs(file));
+		}
+
+		return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+	}
+
+	/**
+	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {any} config
+	 * @param {import('types').PrerenderOption} prerender
+	 */
+	function before_handle(event, config, prerender) {
+		async_local_storage.enterWith({ event, config, prerender });
+	}
+
+	/** @type {import('crossws').ResolveHooks} */
+	let resolve_websocket_hooks;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -454,14 +514,86 @@ export async function dev(vite, vite_config, svelte_config) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
+		vite.httpServer?.on(
+			'upgrade',
+			/**
+			 * @param {import('node:http').IncomingMessage} req
+			 * @param {import('node:stream').Duplex} socket
+			 * @param {Buffer} head
+			 */
+			async (req, socket, head) => {
+				if (
+					req.headers['sec-websocket-protocol'] !== 'vite-hmr' &&
+					req.headers.upgrade === 'websocket'
+				) {
+					try {
+						const base = get_base(req);
+						const decoded = decodeURI(new URL(base + req.url).pathname);
+
+						if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+							socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+							socket.end(
+								`The server is configured with a public base URL of ${escape_html(
+									svelte_config.kit.paths.base
+								)} - did you mean to visit ${escape_html(svelte_config.kit.paths.base + req.url)} instead?`
+							);
+							return;
+						}
+
+						const server = await init_server();
+
+						if (manifest_error) {
+							console.error(colors.bold().red(manifest_error.message));
+							socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+							socket.end(manifest_error.message ?? 'Invalid routes');
+							return;
+						}
+
+						const resolve = server.getWebSocketHooksResolver({
+							getClientAddress: get_client_address(req),
+							read,
+							before_handle,
+							emulator
+						});
+
+						// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+						// see https://github.com/unjs/crossws/issues/137
+						const request = await getRequest({
+							base,
+							request: req
+						});
+						Object.defineProperty(request, 'context', {
+							enumerable: true,
+							value: {}
+						});
+
+						const hooks = await resolve(request);
+						const upgrade = hooks.upgrade;
+						hooks.upgrade = () =>
+							upgrade(
+								/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request)
+							);
+
+						resolve_websocket_hooks = () => hooks;
+
+						// TODO: remove this eslint disable after crossws releases the type fix
+						// eslint-disable-next-line @typescript-eslint/await-thenable -- handleUpgrade actually returns Promise<void>
+						await ws.handleUpgrade(req, socket, head);
+					} catch (e) {
+						const error = coalesce_to_error(e);
+						socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+						socket.end(fix_stack_trace(error));
+					}
+				}
+			}
+		);
+
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
-				const base = `${vite.config.server.https ? 'https' : 'http'}://${
-					req.headers[':authority'] || req.headers.host
-				}`;
+				const base = get_base(req);
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
 				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
@@ -497,25 +629,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
-				);
-
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${runtime_base}/shared-server.js`
-				);
-				set_fix_stack_trace(fix_stack_trace);
-
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
-				set_assets(assets);
-
-				const server = new Server(manifest);
-
-				await server.init({
-					env,
-					read: (file) => createReadableStream(from_fs(file))
-				});
+				const server = await init_server();
 
 				const request = await getRequest({
 					base,
@@ -545,21 +659,9 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
-
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
+					getClientAddress: get_client_address(req),
+					read,
+					before_handle,
 					emulator
 				});
 
@@ -655,4 +757,15 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+function get_client_address(req) {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
 }

@@ -1,10 +1,15 @@
-import { respond } from './respond.js';
+import { respond, get_websocket_hooks_resolver } from './respond.js';
 import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import {
+	set_read_implementation,
+	set_manifest,
+	set_peers,
+	set_publish_implementation
+} from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -35,12 +40,9 @@ export class Server {
 	}
 
 	/**
-	 * @param {{
-	 *   env: Record<string, string>;
-	 *   read?: (file: string) => ReadableStream;
-	 * }} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
 	 */
-	async init({ env, read }) {
+	async init({ env, read, peers, publish }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -64,6 +66,14 @@ export class Server {
 
 		if (read) {
 			set_read_implementation(read);
+		}
+
+		if (peers) {
+			set_peers(peers);
+		}
+
+		if (publish) {
+			set_publish_implementation(publish);
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,
@@ -107,6 +117,17 @@ export class Server {
 	 */
 	async respond(request, options) {
 		return respond(request, this.#options, this.#manifest, {
+			...options,
+			error: false,
+			depth: 0
+		});
+	}
+
+	/**
+	 * @param {import('types').RequestOptions} options
+	 */
+	getWebSocketHooksResolver(options) {
+		return get_websocket_hooks_resolver(this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0

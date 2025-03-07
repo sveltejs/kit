@@ -1,10 +1,10 @@
-import { read_implementation, manifest } from '__sveltekit/server';
+import { read_implementation, peers, publish_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 import { b64_decode } from '../../utils.js';
 
 /**
- * Read the contents of an imported asset from the filesystem
+ * Read the contents of an imported asset from the filesystem.
  * @example
  * ```js
  * import { read } from '$app/server';
@@ -70,4 +70,58 @@ export function read(asset) {
 	}
 
 	throw new Error(`Asset does not exist: ${file}`);
+}
+
+/**
+ * Returns a set of connected WebSocket peers.
+ * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+ * @example
+ * ```js
+ * import { getPeers } from '$app/server';
+ *
+ * const peers = getPeers();
+ * peers.forEach((peer) => {
+ *   // ...
+ * });
+ * ```
+ * @returns {import('crossws').AdapterInstance['peers']}
+ * @since 2.19.0
+ */
+export function getPeers() {
+	__SVELTEKIT_TRACK__('$app/server:getPeers');
+
+	if (!peers) {
+		throw new Error(
+			'No `peers` reference was provided. Please ensure that your adapter is up to date and supports this feature'
+		);
+	}
+
+	return peers;
+}
+
+/**
+ * Send a message to WebSocket peer subscribers of a given topic.
+ * See [Pub / Sub](https://crossws.unjs.io/guide/pubsub) for more information.
+ * @example
+ * ```js
+ * import { publish } from '$app/server';
+ *
+ * publish('chat', { message: 'Hello, world!' });
+ * ```
+ * @param {string} topic
+ * @param {unknown} data
+ * @param {{ compress?: boolean }=} options
+ * @returns {void}
+ * @since 2.19.0
+ */
+export function publish(topic, data, options) {
+	__SVELTEKIT_TRACK__('$app/server:publish');
+
+	if (!publish_implementation) {
+		throw new Error(
+			'No `publish` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
+		);
+	}
+
+	publish_implementation(topic, data, options);
 }

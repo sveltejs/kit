@@ -20,7 +20,8 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transporter,
+	Socket
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -42,6 +43,8 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
+	set_peers(peers: import('crossws').AdapterInstance['peers']): void;
+	set_publish_implementation(implementation: import('crossws').AdapterInstance['publish']): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -165,18 +168,22 @@ export interface Env {
 	public: Record<string, string>;
 }
 
+type InternalRequestOptions = RequestOptions & {
+	prerendering?: PrerenderOptions;
+	read: (file: string) => Buffer;
+	/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
+};
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
-	respond(
-		request: Request,
-		options: RequestOptions & {
-			prerendering?: PrerenderOptions;
-			read: (file: string) => Buffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-			emulator?: Emulator;
-		}
-	): Promise<Response>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
+	getWebSocketHooksResolver(
+		options: InternalRequestOptions
+	): (
+		info: RequestInit | import('crossws').Peer
+	) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
 }
 
 export interface ManifestData {
@@ -444,6 +451,7 @@ export interface PageNodeIndexes {
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	socket?: Socket;
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;

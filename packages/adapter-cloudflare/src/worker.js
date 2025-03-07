@@ -1,6 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
+import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
 
@@ -9,11 +10,55 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/cloudflare').CloudflareAdapter} */
+let ws;
+
+if (server.getWebSocketHooksResolver) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
+
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
+	// @ts-ignore wtf is Cloudflare doing to these types
 	async fetch(req, env, context) {
-		// @ts-ignore
-		await server.init({ env });
+		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
+			platform: {
+				env,
+				context,
+				// @ts-ignore
+				caches,
+				// @ts-ignore
+				cf: req.cf
+			},
+			getClientAddress() {
+				return req.headers.get('cf-connecting-ip');
+			}
+		});
+
+		await server.init({
+			// @ts-ignore
+			env,
+			peers: ws?.peers,
+			publish: ws?.publish
+		});
+
+		if (req.headers.get('upgrade') === 'websocket' && ws) {
+			resolve_websocket_hooks = server.getWebSocketHooksResolver(
+				// @ts-ignore
+				options
+			);
+			return ws.handleUpgrade(
+				// @ts-ignore wtf is Cloudflare doing to these types
+				req,
+				env,
+				context
+			);
+		}
+
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
@@ -58,13 +103,11 @@ const worker = {
 			});
 		} else {
 			// dynamically-generated pages
-			res = await server.respond(req, {
+			res = await server.respond(
+				req,
 				// @ts-ignore
-				platform: { env, context, caches, cf: req.cf },
-				getClientAddress() {
-					return req.headers.get('cf-connecting-ip');
-				}
-			});
+				options
+			);
 		}
 
 		// write to `Cache` only if response is not an error,

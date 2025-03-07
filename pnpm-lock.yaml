@@ -60,6 +60,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241106.0
         version: 4.20241205.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
@@ -86,8 +89,14 @@ importers:
   packages/adapter-cloudflare-workers:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20231121.0
-        version: 4.20241205.0
+        specifier: ^4.20250129.0
+        version: 4.20250204.0
+      '@iarna/toml':
+        specifier: ^2.2.5
+        version: 2.2.5
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
@@ -181,6 +190,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       polka:
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -345,6 +357,9 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       devalue:
         specifier: ^5.1.0
         version: 5.1.0
@@ -1287,6 +1302,9 @@ packages:
 
   '@cloudflare/workers-types@4.20241205.0':
     resolution: {integrity: sha512-pj1VKRHT/ScQbHOIMFODZaNAlJHQHdBSZXNIdr9ebJzwBff9Qz8VdqhbhggV7f+aUEh8WSbrsPIo4a+WtgjUvw==}
+
+  '@cloudflare/workers-types@4.20250204.0':
+    resolution: {integrity: sha512-mWoQbYaP+nYztx9I7q9sgaiNlT54Cypszz0RfzMxYnT5W3NXDuwGcjGB+5B5H5VB8tEC2dYnBRpa70lX94ueaQ==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -2288,6 +2306,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  crossws@0.3.4:
+    resolution: {integrity: sha512-uj0O1ETYX1Bh6uSgktfPvwDiPYGQ3aI4qVsaC/LWpkIzGj1nUYm5FK3K+t11oOlpN01lGbprFCH4wBlKdJjVgw==}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -3479,6 +3500,9 @@ packages:
   ufo@1.5.4:
     resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
 
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
+
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
@@ -3850,6 +3874,8 @@ snapshots:
     optional: true
 
   '@cloudflare/workers-types@4.20241205.0': {}
+
+  '@cloudflare/workers-types@4.20250204.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -4694,6 +4720,10 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  crossws@0.3.4:
+    dependencies:
+      uncrypto: 0.1.3
 
   cssesc@3.0.0: {}
 
@@ -5862,6 +5892,8 @@ snapshots:
 
   ufo@1.5.4: {}
 
+  uncrypto@0.1.3: {}
+
   undici-types@5.26.5: {}
 
   undici@5.28.5:
@@ -6019,6 +6051,34 @@ snapshots:
       sharp: 0.33.5
     transitivePeerDependencies:
       - bufferutil
+      - utf-8-validate
+
+  wrangler@3.94.0(@cloudflare/workers-types@4.20250204.0):
+    dependencies:
+      '@cloudflare/kv-asset-handler': 0.3.4
+      '@cloudflare/workers-shared': 0.11.0
+      '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
+      '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
+      blake3-wasm: 2.1.5
+      chokidar: 4.0.3
+      date-fns: 4.1.0
+      esbuild: 0.17.19
+      itty-time: 1.0.6
+      miniflare: 3.20241205.0
+      nanoid: 3.3.8
+      path-to-regexp: 6.3.0
+      resolve: 1.22.8
+      selfsigned: 2.4.1
+      source-map: 0.6.1
+      unenv: unenv-nightly@2.0.0-20241204-140205-a5d5190
+      workerd: 1.20241205.0
+      xxhash-wasm: 1.0.2
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20250204.0
+      fsevents: 2.3.3
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
       - utf-8-validate
 
   wrap-ansi@7.0.0:

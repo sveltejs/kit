@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { handler } from 'HANDLER';
+import { handler, upgradeHandler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
 
@@ -42,6 +42,9 @@ if (socket_activation) {
 		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
+
+// Register the upgrade handler after the listen call, so the internal server is available
+server.server.on('upgrade', upgradeHandler);
 
 /** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
 function graceful_shutdown(reason) {
