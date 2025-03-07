@@ -286,7 +286,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					}
 
 					return matchers;
-				}
+				},
+				reroute_middleware: false
 			}
 		};
 	}

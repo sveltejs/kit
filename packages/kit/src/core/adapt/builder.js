@@ -183,14 +183,15 @@ export function create_builder({
 			write(dest, `export const env=${JSON.stringify(env.public)}`);
 		},
 
-		generateManifest({ relativePath, routes: subset }) {
+		generateManifest({ relativePath, routes: subset, rerouteMiddleware }) {
 			return generate_manifest({
 				build_data,
 				prerendered: prerendered.paths,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true)
+					: route_data.filter((route) => prerender_map.get(route.id) !== true),
+				reroute_middleware: rerouteMiddleware
 			});
 		},
 
@@ -208,6 +209,18 @@ export function create_builder({
 
 		getAppPath() {
 			return build_data.app_path;
+		},
+
+		async getReroutePath() {
+			const hooks = build_data.manifest_data.hooks.universal;
+			if (!hooks) return;
+
+			const hooks_path = `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks].file}`;
+			const has_reroute_hook =
+				existsSync(hooks_path) && (await import(hooks_path).then((m) => 'reroute' in m));
+			if (has_reroute_hook) {
+				return hooks_path;
+			}
 		},
 
 		writeClient(dest) {

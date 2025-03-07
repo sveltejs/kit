@@ -16,7 +16,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -51,8 +51,16 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
-	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
+	// URL but stripped from the potential `/__data.json` suffix and its search param
 	const url = new URL(request.url);
+
+	let resolved_path;
+
+	if (manifest._.reroute_middleware) {
+		resolved_path = url.pathname;
+		url.pathname = url.searchParams.get(ORIGINAL_PATH_PARAM) || url.pathname;
+		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+	}
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -103,15 +111,16 @@ export async function respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
-	let resolved_path;
-
-	try {
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
+	// skip reroute if it already ran earlier in an edge middleware
+	if (!resolved_path) {
+		try {
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		}
 	}
 
 	try {

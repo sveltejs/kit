@@ -90,14 +90,24 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
+			let reroute_middleware = false;
+
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
 
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, reroute_middleware });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
+				/** @type {string | void} */
+				let reroute_path;
+
+				if (split && (reroute_path = await builder.getReroutePath?.())) {
+					await generate_reroute_middleware({ builder, reroute_path });
+					reroute_middleware = true;
+				}
+
+				generate_lambda_functions({ builder, split, publish, reroute_middleware });
 			}
 		},
 
@@ -115,11 +125,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		}
 	};
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {boolean} params.reroute_middleware
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, reroute_middleware }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
@@ -127,6 +139,7 @@ async function generate_edge_functions({ builder }) {
 	builder.mkdirp('.netlify/edge-functions');
 
 	builder.log.minor('Generating Edge Function...');
+
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
@@ -136,11 +149,70 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
+	await bundle_edge_function({ builder, name: 'render', reroute_middleware });
+}
+
+/**
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.reroute_path
+ */
+async function generate_reroute_middleware({ builder, reroute_path }) {
+	builder.log.minor('Generating edge middleware to run reroute before split functions...');
+
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
+		replace: {
+			__HOOKS__: reroute_path
+		}
 	});
 
+	await bundle_edge_function({ builder, name: 'reroute', reroute_middleware: false });
+}
+
+/**
+ *
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.name
+ * @param {boolean} params.reroute_middleware
+ */
+async function bundle_edge_function({ builder, name, reroute_middleware }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+	const manifest = builder.generateManifest({
+		relativePath,
+		rerouteMiddleware: reroute_middleware
+	});
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
+
+	await esbuild.build({
+		entryPoints: [`${tmp}/entry.js`],
+		outfile: `.netlify/edge-functions/${name}.js`,
+		bundle: true,
+		format: 'esm',
+		platform: 'browser',
+		sourcemap: 'linked',
+		target: 'es2020',
+		loader: {
+			'.wasm': 'copy',
+			'.woff': 'copy',
+			'.woff2': 'copy',
+			'.ttf': 'copy',
+			'.eot': 'copy',
+			'.otf': 'copy'
+		},
+		// Node built-ins are allowed, but must be prefixed with `node:`
+		// https://docs.netlify.com/edge-functions/api/#runtime-environment
+		external: builtinModules.map((id) => `node:${id}`),
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
+	});
 
 	/** @type {{ assets: Set<string> }} */
 	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
@@ -171,7 +243,7 @@ async function generate_edge_functions({ builder }) {
 	const edge_manifest = {
 		functions: [
 			{
-				function: 'render',
+				function: name,
 				path,
 				excludedPath
 			}
@@ -179,37 +251,17 @@ async function generate_edge_functions({ builder }) {
 		version: 1
 	};
 
-	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
-		bundle: true,
-		format: 'esm',
-		platform: 'browser',
-		sourcemap: 'linked',
-		target: 'es2020',
-		loader: {
-			'.wasm': 'copy',
-			'.woff': 'copy',
-			'.woff2': 'copy',
-			'.ttf': 'copy',
-			'.eot': 'copy',
-			'.otf': 'copy'
-		},
-		// Node built-ins are allowed, but must be prefixed with `node:`
-		// https://docs.netlify.com/edge-functions/api/#runtime-environment
-		external: builtinModules.map((id) => `node:${id}`),
-		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
-	});
-
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
+
 /**
- * @param { object } params
+ * @param {object} params
  * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
+ * @param {string} params.publish
+ * @param {boolean} params.split
+ * @param {boolean} params.reroute_middleware
  */
-function generate_lambda_functions({ builder, publish, split }) {
+function generate_lambda_functions({ builder, publish, split, reroute_middleware }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
@@ -270,7 +322,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			const manifest = builder.generateManifest({
 				relativePath: '../server',
-				routes
+				routes,
+				rerouteMiddleware: reroute_middleware
 			});
 
 			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
@@ -284,7 +337,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 		}
 	} else {
 		const manifest = builder.generateManifest({
-			relativePath: '../server'
+			relativePath: '../server',
+			rerouteMiddleware: reroute_middleware
 		});
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;

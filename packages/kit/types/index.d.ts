@@ -112,9 +112,15 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+		 * @param opts.relativePath a relative path to the base directory of the app
+		 * @param opts.routes optional. In which format (esm or cjs) the manifest should be generated
+		 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest: (opts: {
+			relativePath: string;
+			routes?: RouteDefinition[];
+			rerouteMiddleware?: boolean;
+		}) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -127,6 +133,11 @@ declare module '@sveltejs/kit' {
 		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
+		/**
+		 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
+		 * @since 2.19.0
+		 */
+		getReroutePath: () => Promise<string | void>;
 
 		/**
 		 * Write client assets to `dest`.
@@ -1306,6 +1317,8 @@ declare module '@sveltejs/kit' {
 			matchers: () => Promise<Record<string, ParamMatcher>>;
 			/** A `[file]: size` map of all assets imported by server code. */
 			server_assets: Record<string, number>;
+			/** True if the `reroute` hook will run in a middleware before the main handler */
+			reroute_middleware: boolean;
 		};
 	}
 
@@ -2047,6 +2060,18 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * If your deployment platform supports splitting your app into multiple functions,
+	 * you should run this in a middleware that runs before the main handler
+	 * to reroute the request to the correct function.
+	 * @since 2.19.0
+	 */
+	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL>;
 
 	export {};
 }
