@@ -14,3 +14,12 @@ declare module '__STATIC_CONTENT_MANIFEST' {
 	const json: string;
 	export default json;
 }
+
+declare module 'HANDLERS' {
+	import { ExportedHandler } from '@cloudflare/workers-types';
+	import { WorkerEntrypoint } from 'cloudflare:workers';
+
+	const handlers: Omit<ExportedHandler, 'fetch'> | WorkerEntrypoint;
+
+	export default handlers;
+}
