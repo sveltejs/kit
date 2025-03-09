@@ -145,6 +145,7 @@ export async function dev(vite, vite_config, svelte_config) {
 										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
 									}
 								}),
+					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
 					routes:
 						svelte_config.kit.router.resolution === 'client'
 							? undefined
@@ -176,16 +177,17 @@ export async function dev(vite, vite_config, svelte_config) {
 					return async () => {
 						/** @type {import('types').SSRNode} */
 						const result = {};
-
-						/** @type {import('vite').ModuleNode[]} */
-						const module_nodes = [];
-
 						result.index = index;
+						result.universal_id = node.universal;
+						result.server_id = node.server;
 
-						// these are unused in dev, it's easier to include them
+						// these are unused in dev, but it's easier to include them
 						result.imports = [];
 						result.stylesheets = [];
 						result.fonts = [];
+
+						/** @type {import('vite').ModuleNode[]} */
+						const module_nodes = [];
 
 						if (node.component) {
 							result.component = async () => {
@@ -201,17 +203,13 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						if (node.universal) {
 							const { module, module_node } = await resolve(node.universal);
-
 							module_nodes.push(module_node);
-
 							result.universal = module;
-							result.universal_id = node.universal;
 						}
 
 						if (node.server) {
 							const { module } = await resolve(node.server);
 							result.server = module;
-							result.server_id = node.server;
 						}
 
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
@@ -375,11 +373,11 @@ export async function dev(vite, vite_config, svelte_config) {
 	// changing the svelte config requires restarting the dev server
 	// the config is only read on start and passed on to vite-plugin-svelte
 	// which needs up-to-date values to operate correctly
-	vite.watcher.on('change', (file) => {
+	vite.watcher.on('change', async (file) => {
 		if (path.basename(file) === 'svelte.config.js') {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;
-			vite.restart();
+			await vite.restart();
 		}
 	});
 
@@ -408,14 +406,14 @@ export async function dev(vite, vite_config, svelte_config) {
 			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
-	align_exports();
+	await align_exports();
 	const ws_send = vite.ws.send;
 	/** @param {any} args */
 	vite.ws.send = function (...args) {
 		// We need to reapply the patch after Vite did dependency optimizations
 		// because that clears the module resolutions
 		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
-			align_exports();
+			void align_exports();
 		}
 		return ws_send.apply(vite.ws, args);
 	};
@@ -568,10 +566,10 @@ export async function dev(vite, vite_config, svelte_config) {
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						setResponse(res, rendered);
+						void setResponse(res, rendered);
 					});
 				} else {
-					setResponse(res, rendered);
+					void setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

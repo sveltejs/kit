@@ -192,7 +192,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			setResponse(
+			await setResponse(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {

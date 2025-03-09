@@ -405,7 +405,7 @@ const plugin = function (defaults = {}) {
 				);
 
 				static_config.routes.push({
-					src: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route(\\.js|/.*)`,
+					src: `${builder.config.kit.paths.base}/(|.+/)__route\\.js`,
 					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route`
 				});
 			}

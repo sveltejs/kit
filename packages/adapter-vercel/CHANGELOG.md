@@ -1,5 +1,20 @@
 # @sveltejs/adapter-vercel
 
+## 5.6.3
+### Patch Changes
+
+
+- chore(deps): upgrade @vercel/nft to fix glob deprecation warnings ([`b1e9781a6dff41841d8e1509311d948421956746`](https://github.com/sveltejs/kit/commit/b1e9781a6dff41841d8e1509311d948421956746))
+
+## 5.6.2
+### Patch Changes
+
+
+- fix: change server-side route resolution endpoint ([#13461](https://github.com/sveltejs/kit/pull/13461))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
 ## 5.6.1
 ### Patch Changes
 

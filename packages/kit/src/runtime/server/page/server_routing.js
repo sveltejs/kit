@@ -105,10 +105,39 @@ export function create_server_routing_response(route, params, url, manifest) {
 
 	if (route) {
 		const csr_route = generate_route_object(route, url, manifest);
-		const body = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
+		const body = `${create_css_import(route, url, manifest)}\nexport const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
 
 		return { response: text(body, { headers }), body };
 	} else {
 		return { response: text('', { headers }), body: '' };
 	}
+}
+
+/**
+ * This function generates the client-side import for the CSS files that are
+ * associated with the current route. Vite takes care of that when using
+ * client-side route resolution, but for server-side resolution it does
+ * not know about the CSS files automatically.
+ *
+ * @param {import('types').SSRClientRoute} route
+ * @param {URL} url
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @returns {string}
+ */
+function create_css_import(route, url, manifest) {
+	const { errors, layouts, leaf } = route;
+
+	let css = '';
+
+	for (const node of [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]) {
+		if (typeof node !== 'number') continue;
+		const node_css = manifest._.client.css?.[node];
+		for (const css_path of node_css ?? []) {
+			css += `'${assets || base}/${css_path}',`;
+		}
+	}
+
+	if (!css) return '';
+
+	return `${create_client_import(/** @type {string} */ (manifest._.client.start), url)}.then(x => x.load_css([${css}]));`;
 }

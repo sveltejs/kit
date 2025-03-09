@@ -1,5 +1,13 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	has_data_suffix,
+	has_resolution_suffix,
+	strip_data_suffix,
+	strip_resolution_suffix
+} from '../runtime/pathname.js';
 
 export { VERSION } from '../version.js';
 
@@ -206,4 +214,51 @@ export function fail(status, data) {
  */
 export function isActionFailure(e) {
 	return e instanceof ActionFailure;
+}
+
+/**
+ * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
+ * Returns the normalized URL as well as a method for adding the potential suffix back
+ * based on a new pathname (possibly including search) or URL.
+ * ```js
+ * import { normalizeUrl } from '@sveltejs/kit';
+ *
+ * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
+ * console.log(url.pathname); // /blog/post
+ * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
+ * ```
+ * @param {URL | string} url
+ * @returns {{ url: URL, wasNormalized: boolean, denormalize: (url?: string | URL) => URL }}
+ * @since 2.18.0
+ */
+export function normalizeUrl(url) {
+	url = new URL(url, 'http://internal');
+
+	const is_route_resolution = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const has_trailing_slash = url.pathname !== '/' && url.pathname.endsWith('/');
+
+	if (is_route_resolution) {
+		url.pathname = strip_resolution_suffix(url.pathname);
+	} else if (is_data_request) {
+		url.pathname = strip_data_suffix(url.pathname);
+	} else if (has_trailing_slash) {
+		url.pathname = url.pathname.slice(0, -1);
+	}
+
+	return {
+		url,
+		wasNormalized: is_data_request || is_route_resolution || has_trailing_slash,
+		denormalize: (new_url = url) => {
+			new_url = new URL(new_url, url);
+			if (is_route_resolution) {
+				new_url.pathname = add_resolution_suffix(new_url.pathname);
+			} else if (is_data_request) {
+				new_url.pathname = add_data_suffix(new_url.pathname);
+			} else if (has_trailing_slash && !new_url.pathname.endsWith('/')) {
+				new_url.pathname += '/';
+			}
+			return new_url;
+		}
+	};
 }

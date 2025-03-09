@@ -78,7 +78,7 @@ export async function load_server_data({ event, state, node, parent }) {
 				const { href } = new URL(dep, event.url);
 
 				if (DEV) {
-					validate_depends(node.server_id, dep);
+					validate_depends(node.server_id || 'missing route ID', dep);
 
 					if (done && !uses.dependencies.has(href)) {
 						console.warn(
@@ -242,7 +242,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				dependency = { response, body: null };
 				state.prerendering.dependencies.set(url.pathname, dependency);
 			}
-		} else {
+		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 			const mode = input instanceof Request ? input.mode : (init?.mode ?? 'cors');
 			if (mode === 'no-cors') {
