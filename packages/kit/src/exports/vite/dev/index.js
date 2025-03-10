@@ -573,7 +573,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						const hooks = await resolve(request);
 						resolve_websocket_hooks = () => hooks;
 
-						// this function call is awaitable but the crossws type fix hasn't been released yet
+						// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
 						await ws.handleUpgrade(req, socket, head);
 						// TODO: remove this line once https://github.com/unjs/crossws/pull/140 is merged
 						socket.destroy();
