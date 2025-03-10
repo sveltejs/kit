@@ -14,19 +14,15 @@ export const socket = {
 	upgrade(event) {
         // ...
 	},
-
 	open(peer) {
         // ...
 	},
-
 	message(peer, message) {
         // ...
 	},
-
 	close(peer, event) {
 		// ...
 	},
-
 	error(peer, error) {
 		// ...
 	}

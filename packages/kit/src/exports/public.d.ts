@@ -1516,21 +1516,22 @@ export type SubmitFunction<
  * @since 2.19.0
  */
 export interface Socket {
+	// TODO: write our own descriptions for these properties?
 	/**
 	 * Upgrading.
-	 * @param request
+	 * @param event
 	 * @throws {Response}
 	 */
 	upgrade?: (
-		request: RequestEvent & { context: import('crossws').Peer['context'] }
+		event: RequestEvent & { context: import('crossws').Peer['context'] }
 	) => MaybePromise<Response | ResponseInit | void>;
 	/** A message is received. */
 	message?: import('crossws').Hooks['message'];
 	/** A socket is opened. */
 	open?: import('crossws').Hooks['open'];
-	/** A socket is closed */
+	/** A socket is closed. */
 	close?: import('crossws').Hooks['close'];
-	/** An error occurs. */
+	/** A WebSocket error occurs. */
 	error?: import('crossws').Hooks['error'];
 }
 
