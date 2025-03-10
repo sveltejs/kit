@@ -1502,7 +1502,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Upgrading.
 		 * */
-		upgrade?: (request: RequestEvent) => MaybePromise<Response | ResponseInit | void>;
+		upgrade?: (
+			request: RequestEvent & { context: import('crossws').Peer['context'] }
+		) => MaybePromise<Response | ResponseInit | void>;
 		/** A message is received. */
 		message?: import('crossws').Hooks['message'];
 		/** A socket is opened. */
