@@ -55,40 +55,27 @@ export async function respond(request, options, manifest, state) {
 }
 
 /**
+ * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {(info: RequestInit | import('crossws').Peer) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>}
+ * @returns {Promise<Partial<import('crossws').Hooks>>}
  */
-export function get_websocket_hooks_resolver(options, manifest, state) {
-	return async (info) => {
-		/** @type {Request} */
-		let request;
+export async function resolve_websocket_hooks(request, options, manifest, state) {
+	const result = await handle_request(request, options, manifest, state, true);
 
-		// Check if info is a Peer object
-		if ('request' in info) {
-			// @ts-ignore UpgradeRequest and Request are essentially the same
-			request = info.request;
-		} else {
-			// @ts-ignore although the type is RequestInit, it is almost always a Request object
-			request = info;
-		}
+	if (result instanceof Response) {
+		// if the result is a Response instead of WebSocket hooks, it means
+		// we should ignore the upgrade request and send back the response
+		return {
+			upgrade: () => {
+				// we have to throw the Response to reject the upgrade
+				throw result;
+			}
+		};
+	}
 
-		const result = await handle_request(request, options, manifest, state, true);
-
-		if (result instanceof Response) {
-			// if the result is a Response instead of WebSocket hooks, it means
-			// we should ignore the upgrade request and send back a regular response
-			return {
-				upgrade: () => {
-					// we have to throw the Response to avoid accepting the upgrade
-					throw result;
-				}
-			};
-		}
-
-		return result;
-	};
+	return result;
 }
 
 // we need the type overload so that TypeScript knows the return value

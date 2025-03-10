@@ -177,11 +177,10 @@ type InternalRequestOptions = RequestOptions & {
 
 export class InternalServer extends Server {
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
-	getWebSocketHooksResolver(
+	resolveWebSocketHooks(
+		request: Request,
 		options: InternalRequestOptions
-	): (
-		info: RequestInit | import('crossws').Peer
-	) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
+	): Promise<Partial<import('crossws').Hooks>>;
 }
 
 export interface ManifestData {

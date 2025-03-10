@@ -18,7 +18,7 @@ let resolve_websocket_hooks;
 /** @type {import('crossws/adapters/cloudflare').CloudflareAdapter} */
 let ws;
 
-if (server.getWebSocketHooksResolver) {
+if (server.resolveWebSocketHooks) {
 	ws = crossws({
 		resolve: (req) => resolve_websocket_hooks(req)
 	});
@@ -52,10 +52,12 @@ export default {
 		});
 
 		if (req.headers.get('upgrade') === 'websocket' && ws) {
-			resolve_websocket_hooks = server.getWebSocketHooksResolver(
+			const hooks = await server.resolveWebSocketHooks(
+				req,
 				// @ts-ignore
 				options
 			);
+			resolve_websocket_hooks = () => hooks;
 			return ws.handleUpgrade(
 				// @ts-ignore wtf is Cloudflare doing to these types
 				req,

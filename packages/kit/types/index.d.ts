@@ -1295,11 +1295,10 @@ declare module '@sveltejs/kit' {
 		constructor(manifest: SSRManifest);
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
-		getWebSocketHooksResolver(
+		resolveWebSocketHooks(
+			request: Request,
 			options: RequestOptions
-		): (
-			info: RequestInit | import('crossws').Peer
-		) => Promise<Partial<import('crossws').Hooks> & { upgrade: import('crossws').Hooks['upgrade'] }>;
+		): Promise<Partial<import('crossws').Hooks>>;
 	}
 
 	export interface ServerInitOptions {

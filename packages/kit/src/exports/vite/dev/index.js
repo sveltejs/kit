@@ -556,13 +556,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							return;
 						}
 
-						const resolve = server.getWebSocketHooksResolver({
-							getClientAddress: get_client_address(req),
-							read,
-							before_handle,
-							emulator
-						});
-
 						// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
 						// see https://github.com/unjs/crossws/issues/137
 						const request = await getRequest({
@@ -570,7 +563,12 @@ export async function dev(vite, vite_config, svelte_config) {
 							request: req
 						});
 
-						const hooks = await resolve(request);
+						const hooks = await server.resolveWebSocketHooks(request, {
+							getClientAddress: get_client_address(req),
+							read,
+							before_handle,
+							emulator
+						});
 						resolve_websocket_hooks = () => hooks;
 
 						// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet

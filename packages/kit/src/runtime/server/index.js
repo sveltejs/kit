@@ -1,4 +1,4 @@
-import { respond, get_websocket_hooks_resolver } from './respond.js';
+import { respond, resolve_websocket_hooks } from './respond.js';
 import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
@@ -124,10 +124,11 @@ export class Server {
 	}
 
 	/**
+	 * @param {Request} request
 	 * @param {import('types').RequestOptions} options
 	 */
-	getWebSocketHooksResolver(options) {
-		return get_websocket_hooks_resolver(this.#options, this.#manifest, {
+	resolveWebSocketHooks(request, options) {
+		return resolve_websocket_hooks(request, this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
