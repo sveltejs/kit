@@ -9,7 +9,6 @@ import {
 	RequestHandler,
 	ResolveOptions,
 	Server,
-	ServerInitOptions,
 	HandleFetch,
 	Actions,
 	HandleClientError,
@@ -177,7 +176,6 @@ type InternalRequestOptions = RequestOptions & {
 };
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 	getWebSocketHooksResolver(
 		options: InternalRequestOptions
