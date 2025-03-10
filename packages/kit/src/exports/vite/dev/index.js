@@ -575,8 +575,12 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
 						await ws.handleUpgrade(req, socket, head);
-						// TODO: remove this line once https://github.com/unjs/crossws/pull/140 is merged
-						socket.destroy();
+						// TODO: remove this block once https://github.com/unjs/crossws/pull/140 is merged
+						if (socket.writableFinished) {
+							socket.destroy();
+						} else {
+							socket.once('finish', socket.destroy);
+						}
 					} catch (e) {
 						const error = coalesce_to_error(e);
 						socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
