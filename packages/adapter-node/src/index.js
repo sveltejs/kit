@@ -2,6 +2,7 @@ import process from 'node:process';
 import { handler, upgradeHandler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
+import { closeAllWebSockets, terminateAllWebSockets } from './handler.js';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -43,7 +44,7 @@ if (socket_activation) {
 	});
 }
 
-// Register the upgrade handler after the listen call, so the internal server is available
+// Register the upgrade handler after the listen call, when the internal server is available
 server.server.on('upgrade', upgradeHandler);
 
 /** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
@@ -70,11 +71,13 @@ function graceful_shutdown(reason) {
 		process.emit('sveltekit:shutdown', reason);
 	});
 
-	shutdown_timeout_id = setTimeout(
+	closeAllWebSockets();
+
+	shutdown_timeout_id = setTimeout(() => {
 		// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-		() => server.server.closeAllConnections(),
-		shutdown_timeout * 1000
-	);
+		server.server.closeAllConnections();
+		terminateAllWebSockets();
+	}, shutdown_timeout * 1000);
 }
 
 server.server.on(

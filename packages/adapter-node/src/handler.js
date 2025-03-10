@@ -40,7 +40,7 @@ let resolve_websocket_hooks;
 /** @type {import('crossws/adapters/node').NodeAdapter} */
 let ws;
 
-if (server.getWebSocketHooksResolver) {
+if (server.resolveWebSocketHooks) {
 	ws = crossws({
 		resolve: (req) => resolve_websocket_hooks(req),
 		serverOptions: {
@@ -249,8 +249,7 @@ export async function upgradeHandler(req, socket, head) {
 			return;
 		}
 
-		const resolve = server.getWebSocketHooksResolver(get_options(req));
-		const hooks = await resolve(request);
+		const hooks = await server.resolveWebSocketHooks(request, get_options(req));
 		resolve_websocket_hooks = () => hooks;
 
 		// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
@@ -261,5 +260,20 @@ export async function upgradeHandler(req, socket, head) {
 		} else {
 			socket.once('finish', socket.destroy);
 		}
+	}
+}
+
+export function closeAllWebSockets() {
+	if (ws) {
+		ws.closeAll();
+	}
+}
+
+export function terminateAllWebSockets() {
+	if (ws) {
+		// TODO: replace this once https://github.com/unjs/crossws/issues/145 is resolved
+		ws.peers.forEach((peer) => {
+			peer.terminate();
+		});
 	}
 }

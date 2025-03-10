@@ -34,7 +34,7 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 ### Compressing responses
 
-You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+You will typically want to compress responses coming from the server. If you're already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
 
 However, if you're building a [custom server](#Custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
 
@@ -263,6 +263,8 @@ const server = app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
 
-// let SvelteKit handle protocol upgrades for WebSocket connections
+// let SvelteKit handle upgrades for WebSocket connections
 server.on('upgrade', upgradeHandler);
 ```
+
+If you're manually handling the `SIGTERM` and `SIGINT` signal events to implement your own graceful shutdown, you must use the `closeAllWebSockets` and the `terminateAllWebSockets` helpers imported from the `handler.js` file to gracefully close or immediately terminate all active WebSocket connections.
