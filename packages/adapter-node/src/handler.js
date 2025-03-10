@@ -42,7 +42,14 @@ let ws;
 
 if (server.getWebSocketHooksResolver) {
 	ws = crossws({
-		resolve: (req) => resolve_websocket_hooks(req)
+		resolve: (req) => resolve_websocket_hooks(req),
+		serverOptions: {
+			// we need to disable the `ws` package's default behaviour of automatically
+			// returning the request's sec-websocket-protocol header in the response
+			// to avoid sending that header multiple times if the user also returns that header.
+			// TODO: we could remove this if https://github.com/unjs/crossws/pull/142 standardises this behaviour
+			handleProtocols: () => false
+		}
 	});
 }
 
@@ -242,20 +249,13 @@ export async function upgradeHandler(req, socket, head) {
 			return;
 		}
 
-		Object.defineProperty(request, 'context', {
-			enumerable: true,
-			value: {}
-		});
-
 		const resolve = server.getWebSocketHooksResolver(get_options(req));
-
 		const hooks = await resolve(request);
-		const upgrade = hooks.upgrade;
-		hooks.upgrade = () =>
-			upgrade(/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request));
-
 		resolve_websocket_hooks = () => hooks;
 
-		ws.handleUpgrade(req, socket, head);
+		// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
+		await ws.handleUpgrade(req, socket, head);
+		// TODO: remove this line once https://github.com/unjs/crossws/pull/140 is merged
+		socket.destroy();
 	}
 }

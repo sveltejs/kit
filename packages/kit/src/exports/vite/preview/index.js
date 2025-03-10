@@ -49,7 +49,14 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {import('crossws').ResolveHooks} */
 	let resolve_websocket_hooks;
 	const ws = crossws({
-		resolve: (req) => resolve_websocket_hooks(req)
+		resolve: (req) => resolve_websocket_hooks(req),
+		serverOptions: {
+			// we need to disable the `ws` package's default behaviour of automatically
+			// returning the request's sec-websocket-protocol header in the response
+			// to avoid sending that header multiple times if the user also returns that header.
+			// TODO: we could remove this if https://github.com/unjs/crossws/pull/142 standardises this behaviour
+			handleProtocols: () => false
+		}
 	});
 
 	const server = new Server(manifest);
@@ -232,21 +239,14 @@ export async function preview(vite, vite_config, svelte_config) {
 						base: get_base(req),
 						request: req
 					});
-					Object.defineProperty(request, 'context', {
-						enumerable: true,
-						value: {}
-					});
 
 					const hooks = await resolve(request);
-					const upgrade = hooks.upgrade;
-					hooks.upgrade = () =>
-						upgrade(
-							/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request)
-						);
-
 					resolve_websocket_hooks = () => hooks;
 
-					ws.handleUpgrade(req, socket, head);
+					// this function call is awaitable but the crossws type fix hasn't been released yet
+					await ws.handleUpgrade(req, socket, head);
+					// TODO: remove this line once https://github.com/unjs/crossws/pull/140 is merged
+					socket.destroy();
 				}
 			}
 		);

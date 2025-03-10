@@ -501,7 +501,14 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {import('crossws').ResolveHooks} */
 	let resolve_websocket_hooks;
 	const ws = crossws({
-		resolve: (req) => resolve_websocket_hooks(req)
+		resolve: (req) => resolve_websocket_hooks(req),
+		serverOptions: {
+			// we need to disable the `ws` package's default behaviour of automatically
+			// returning the request's sec-websocket-protocol header in the response
+			// to avoid sending that header multiple times if the user also returns that header.
+			// TODO: we could remove this if https://github.com/unjs/crossws/pull/142 standardises this behaviour
+			handleProtocols: () => false
+		}
 	});
 
 	return () => {
@@ -562,23 +569,14 @@ export async function dev(vite, vite_config, svelte_config) {
 							base,
 							request: req
 						});
-						Object.defineProperty(request, 'context', {
-							enumerable: true,
-							value: {}
-						});
 
 						const hooks = await resolve(request);
-						const upgrade = hooks.upgrade;
-						hooks.upgrade = () =>
-							upgrade(
-								/** @type {Request & { context: import('crossws').Peer['context'] }} */ (request)
-							);
-
 						resolve_websocket_hooks = () => hooks;
 
-						// TODO: remove this eslint disable after crossws releases the type fix
-						// eslint-disable-next-line @typescript-eslint/await-thenable -- handleUpgrade actually returns Promise<void>
+						// this function call is awaitable but the crossws type fix hasn't been released yet
 						await ws.handleUpgrade(req, socket, head);
+						// TODO: remove this line once https://github.com/unjs/crossws/pull/140 is merged
+						socket.destroy();
 					} catch (e) {
 						const error = coalesce_to_error(e);
 						socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
