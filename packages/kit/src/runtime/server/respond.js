@@ -11,20 +11,13 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
+import { PageNodes } from '../../utils/page_nodes.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
-import { get_option } from '../../utils/options.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { get_page_config } from '../../utils/route_config.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
@@ -184,11 +177,82 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
+	/** @type {Record<string, string>} */
+	const headers = {};
+
+	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
+		request,
+		url
+	);
+
+	/** @type {import('@sveltejs/kit').RequestEvent} */
+	const event = {
+		cookies,
+		// @ts-expect-error `fetch` needs to be created after the `event` itself
+		fetch: null,
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
+				throw new Error(
+					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
+				);
+			}),
+		locals: {},
+		params: {},
+		platform: state.platform,
+		request,
+		route: { id: null },
+		setHeaders: (new_headers) => {
+			if (__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+				const value = new_headers[key];
+
+				if (lower === 'set-cookie') {
+					throw new Error(
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+					);
+				} else if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				} else {
+					headers[lower] = value;
+
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
+					}
+				}
+			}
+		},
+		url,
+		isDataRequest: is_data_request,
+		isSubRequest: state.depth > 0
+	};
+
+	event.fetch = create_fetch({
+		event,
+		options,
+		manifest,
+		state,
+		get_cookie_header,
+		set_internal
+	});
+
+	if (state.emulator?.platform) {
+		event.platform = await state.emulator.platform({
+			config: {},
+			prerender: !!state.prerendering?.fallback
+		});
+	}
+
 	let resolved_path;
 
 	try {
 		// reroute could alter the given URL, so we pass a copy
-		resolved_path = (await options.hooks.reroute({ url: new URL(url) })) ?? url.pathname;
+		resolved_path =
+			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
 	} catch {
 		return text('Internal Server Error', {
 			status: 500
@@ -203,9 +267,6 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
-
-	/** @type {Record<string, string>} */
-	let params = {};
 
 	if (base && !state.prerendering?.fallback) {
 		if (!resolved_path.startsWith(base)) {
@@ -240,67 +301,12 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			const matched = exec(match, candidate.params, matchers);
 			if (matched) {
 				route = candidate;
-				params = decode_params(matched);
+				event.route = { id: route.id };
+				event.params = decode_params(matched);
 				break;
 			}
 		}
 	}
-
-	/** @type {import('types').TrailingSlash | void} */
-	let trailing_slash = undefined;
-
-	/** @type {Record<string, string>} */
-	const headers = {};
-
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
-	let cookies_to_add = {};
-
-	/** @type {import('@sveltejs/kit').RequestEvent} */
-	const event = {
-		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
-		cookies: null,
-		// @ts-expect-error
-		fetch: null,
-		getClientAddress:
-			state.getClientAddress ||
-			(() => {
-				throw new Error(
-					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-				);
-			}),
-		locals: {},
-		params,
-		platform: state.platform,
-		request,
-		route: { id: route?.id ?? null },
-		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
-					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-					);
-				} else if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
-				} else {
-					headers[lower] = value;
-
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
-					}
-				}
-			}
-		},
-		url,
-		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
-	};
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
@@ -320,15 +326,20 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				: route?.page && is_action_json_request(event)
 					? action_json_redirect(e)
 					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			add_cookies_to_headers(response.headers, Object.values(new_cookies));
 			return response;
 		}
 		return await handle_fatal_error(event, options, e);
 	}
 
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
+
 	try {
-		/** @type {Array<import('types').SSRNode | undefined> | undefined} */
-		const page_nodes = route?.page ? await load_page_nodes(route.page, manifest) : undefined;
+		/** @type {PageNodes|undefined} */
+		const page_nodes = route?.page
+			? new PageNodes(await load_page_nodes(route.page, manifest))
+			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route) {
@@ -338,40 +349,19 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				trailing_slash = 'always';
 			} else if (page_nodes) {
 				if (DEV) {
-					const layouts = page_nodes.slice(0, -1);
-					const page = page_nodes.at(-1);
-
-					for (const layout of layouts) {
-						if (layout) {
-							validate_layout_server_exports(
-								layout.server,
-								/** @type {string} */ (layout.server_id)
-							);
-							validate_layout_exports(
-								layout.universal,
-								/** @type {string} */ (layout.universal_id)
-							);
-						}
-					}
-
-					if (page) {
-						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
-					}
+					page_nodes.validate();
 				}
-
-				trailing_slash = get_option(page_nodes, 'trailingSlash');
+				trailing_slash = page_nodes.trailing_slash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
-				trailing_slash = node.trailingSlash;
-
+				trailing_slash = node.trailingSlash ?? 'never';
 				if (DEV) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
 				}
 			}
 
 			if (!is_data_request) {
-				const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+				const normalized = normalize_path(url.pathname, trailing_slash);
 
 				if (normalized !== url.pathname && !state.prerendering?.fallback) {
 					return new Response(undefined, {
@@ -398,8 +388,8 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					config = node.config ?? config;
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
-					config = get_page_config(page_nodes) ?? config;
-					prerender = get_option(page_nodes, 'prerender') ?? false;
+					config = page_nodes.get_config() ?? config;
+					prerender = page_nodes.prerender();
 				}
 
 				if (state.before_handle) {
@@ -410,29 +400,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
-		} else if (state.emulator?.platform) {
-			event.platform = await state.emulator.platform({
-				config: {},
-				prerender: !!state.prerendering?.fallback
-			});
 		}
 
-		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
-			request,
-			url,
-			trailing_slash ?? 'never'
-		);
-
-		cookies_to_add = new_cookies;
-		event.cookies = cookies;
-		event.fetch = create_fetch({
-			event,
-			options,
-			manifest,
-			state,
-			get_cookie_header,
-			set_internal
-		});
+		set_trailing_slash(trailing_slash);
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
@@ -456,7 +426,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				response.headers.set(key, /** @type {string} */ (value));
 			}
 
-			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 			if (state.prerendering && event.route.id !== null) {
 				response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -614,7 +584,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 	/**
 	 * @param {import('@sveltejs/kit').RequestEvent} event
-	 * @param {Array<import('types').SSRNode | undefined> | undefined} page_nodes
+	 * @param {PageNodes | undefined} page_nodes
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
@@ -656,7 +626,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 						manifest,
 						state,
 						invalidated_data_nodes,
-						trailing_slash ?? 'never'
+						trailing_slash
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);

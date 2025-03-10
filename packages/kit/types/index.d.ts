@@ -810,7 +810,7 @@ declare module '@sveltejs/kit' {
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: { url: URL }) => MaybePromise<void | string>;
+	export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 	/**
 	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
@@ -1899,8 +1899,28 @@ declare module '@sveltejs/kit' {
 
 	type SSRComponentLoader = () => Promise<SSRComponent>;
 
+	interface UniversalNode {
+		load?: Load;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
+	interface ServerNode {
+		load?: ServerLoad;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		actions?: Actions;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
 	interface SSRNode {
-		component: SSRComponentLoader;
 		/** index into the `nodes` array in the generated `client/app.js`. */
 		index: number;
 		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
@@ -1909,32 +1929,18 @@ declare module '@sveltejs/kit' {
 		stylesheets: string[];
 		/** external font files that are loaded on the client */
 		fonts: string[];
-		/** inlined styles. */
-		inline_styles?(): MaybePromise<Record<string, string>>;
-
-		universal: {
-			load?: Load;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
-
-		server: {
-			load?: ServerLoad;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			actions?: Actions;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
 
 		universal_id?: string;
 		server_id?: string;
+
+		/** inlined styles. */
+		inline_styles?(): MaybePromise<Record<string, string>>;
+		/** Svelte component */
+		component?: SSRComponentLoader;
+		/** +page.js or +layout.js */
+		universal?: UniversalNode;
+		/** +page.server.js, +layout.server.js, or +server.js */
+		server?: ServerNode;
 	}
 
 	type SSRNodeLoader = () => Promise<SSRNode>;

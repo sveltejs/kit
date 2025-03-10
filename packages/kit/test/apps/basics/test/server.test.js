@@ -806,6 +806,9 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply async reroute when directly accessing a page', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
 		await page.goto('/reroute/async/a');
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/async/a'

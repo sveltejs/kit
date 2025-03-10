@@ -369,8 +369,28 @@ export interface SSRComponent {
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
+export interface UniversalNode {
+	load?: Load;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+}
+
+export interface ServerNode {
+	load?: ServerLoad;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	actions?: Actions;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+}
+
 export interface SSRNode {
-	component: SSRComponentLoader;
 	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;
 	/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
@@ -379,32 +399,18 @@ export interface SSRNode {
 	stylesheets: string[];
 	/** external font files that are loaded on the client */
 	fonts: string[];
-	/** inlined styles. */
-	inline_styles?(): MaybePromise<Record<string, string>>;
-
-	universal: {
-		load?: Load;
-		prerender?: PrerenderOption;
-		ssr?: boolean;
-		csr?: boolean;
-		trailingSlash?: TrailingSlash;
-		config?: any;
-		entries?: PrerenderEntryGenerator;
-	};
-
-	server: {
-		load?: ServerLoad;
-		prerender?: PrerenderOption;
-		ssr?: boolean;
-		csr?: boolean;
-		trailingSlash?: TrailingSlash;
-		actions?: Actions;
-		config?: any;
-		entries?: PrerenderEntryGenerator;
-	};
 
 	universal_id?: string;
 	server_id?: string;
+
+	/** inlined styles. */
+	inline_styles?(): MaybePromise<Record<string, string>>;
+	/** Svelte component */
+	component?: SSRComponentLoader;
+	/** +page.js or +layout.js */
+	universal?: UniversalNode;
+	/** +page.server.js, +layout.server.js, or +server.js */
+	server?: ServerNode;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -488,6 +494,10 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
+	/**
+	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
+	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 	emulator?: Emulator;
 }
