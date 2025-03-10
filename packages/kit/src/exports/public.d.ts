@@ -1522,7 +1522,9 @@ export interface Socket {
 	 * @param request
 	 * @throws {Response}
 	 */
-	upgrade?: (request: RequestEvent) => MaybePromise<Response | ResponseInit | void>;
+	upgrade?: (
+		request: RequestEvent & { context: import('crossws').Peer['context'] }
+	) => MaybePromise<Response | ResponseInit | void>;
 	/** A message is received. */
 	message?: import('crossws').Hooks['message'];
 	/** A socket is opened. */

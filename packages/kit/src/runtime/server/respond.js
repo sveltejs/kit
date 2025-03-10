@@ -473,19 +473,20 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				}
 
 				return {
-					upgrade: async () => {
+					upgrade: async ({ context }) => {
 						/** @type {Response} */
 						let response;
 
 						try {
 							response = await options.hooks.handle({
 								event,
-								resolve: async () => {
+								resolve: async (request) => {
 									/** @type {Response} */
 									let upgrade_response;
 
 									try {
-										const init = (await node.socket?.upgrade?.(event)) ?? undefined;
+										const init =
+											(await node.socket?.upgrade?.({ ...request, context })) ?? undefined;
 										upgrade_response = new Response(undefined, init);
 										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 									} catch (e) {
@@ -506,8 +507,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 							return await redirect_or_fatal_error(e);
 						}
 
-						// if the handle hook returned a custom response or the user threw a response
-						// then we abort upgrading the connection
+						// if the x-sveltekit-upgrade header is missing we know we should
+						// abort the upgrade request because a custom response has been thrown
+						// from the upgrade hook or returned from the handle hook
 						if (!response.headers.has('x-sveltekit-upgrade')) {
 							throw response;
 						}
