@@ -786,7 +786,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 	 */
 	export type HandleFetch = (input: {
 		event: RequestEvent;
@@ -1499,37 +1499,43 @@ declare module '@sveltejs/kit' {
 	 */
 	export interface Socket {
 		/**
-		 * The [upgrade](https://svelte.dev/docs/kit/websockets#upgrade) hook runs every time a request is attempting to upgrade to a WebSocket connection.
+		 * The [upgrade](https://svelte.dev/docs/kit/websockets#Hooks-upgrade) hook runs every time a request is attempting to upgrade to a WebSocket connection.
 		 */
 		upgrade?: (
 			event: RequestEvent & { context: import('crossws').Peer['context'] }
 		) => MaybePromise<Response | ResponseInit | void>;
-		/** The [open](https://svelte.dev/docs/kit/websockets#open) hook runs every time a WebSocket connection is opened. */
+		/** The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs every time a WebSocket connection is opened. */
 		open?: import('crossws').Hooks['open'];
-		/** The [message](https://svelte.dev/docs/kit/websockets#message) hook runs every time a message is received from a WebSocket client. */
+		/** The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook runs every time a message is received from a WebSocket client. */
 		message?: import('crossws').Hooks['message'];
-		/** The [close](https://svelte.dev/docs/kit/websockets#close) hook runs every time a WebSocket connection is closed. */
+		/** The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs every time a WebSocket connection is closed. */
 		close?: import('crossws').Hooks['close'];
-		/** The [error](https://svelte.dev/docs/kit/websockets#error) hook runs every time a WebSocket error occurs. */
+		/** The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs every time a WebSocket error occurs. */
 		error?: import('crossws').Hooks['error'];
 	}
 
 	/**
-	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `Peer` instance that allows getting information from clients and sending messages to them.
-	 * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
+	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects
+	 * to the server, `crossws` creates a [`Peer`](https://crossws.unjs.io/guide/peer)
+	 * object that allows interacting with the connected client.
 	 * @since 2.20.0
 	 */
 	export type Peer = import('crossws').Peer;
 
 	/**
-	 * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you'll receive a `message` object containing data from the client.
-	 * See [Message](https://crossws.unjs.io/guide/message) for more information.
+	 * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
+	 * hook, you'll receive a [`Message`](https://crossws.unjs.io/guide/message)
+	 * object containing data from the client.
 	 * @since 2.20.0
 	 */
 	export type Message = import('crossws').Message;
 
 	/**
-	 * The type of `export const snapshot` exported from a page or layout component.
+	 * Shape of the `export const snapshot = {...}` object in a page or layout component.
+	 * You should import these from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
+	 * rather than using `Snapshot` directly.
+	 * See [snapshots](https://svelte.dev/docs/kit/snapshots) for more information.
+	 * @since 1.5.0
 	 */
 	export interface Snapshot<T = any> {
 		capture: () => T;

@@ -4,7 +4,7 @@ title: WebSockets
 
 [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) provide a way to open a bidirectional communication channel between a client and a server. SvelteKit uses [crossws](https://crossws.unjs.io/) to provide a consistent interface across different platforms.
 
-## The `socket` object
+## Hooks
 
 A `+server.js` file can export a `socket` object with [hooks](https://crossws.unjs.io/guide/hooks), all optional, to handle the different stages of the WebSocket lifecycle.
 
