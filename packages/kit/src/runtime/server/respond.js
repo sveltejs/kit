@@ -442,20 +442,24 @@ async function handle_request(request, options, manifest, state, upgrade) {
 									let upgrade_response;
 
 									try {
-										let init;
+										/** @type {Response | ResponseInit | undefined} */
+										let result;
+
 										if (node.socket?.upgrade) {
 											Object.defineProperty(event, 'context', {
 												enumerable: true,
 												value: context
 											});
-											init =
+											result =
 												(await node.socket.upgrade(
 													/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
 														event
 													)
 												)) ?? undefined;
 										}
-										upgrade_response = new Response(undefined, init);
+
+										upgrade_response =
+											result instanceof Response ? result : new Response(undefined, result);
 										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 									} catch (e) {
 										if (e instanceof HttpError) {
