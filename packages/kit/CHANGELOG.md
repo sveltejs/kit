@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.19.0
+### Minor Changes
+
+
+- feat: provide `fetch` to `reroute` ([#13549](https://github.com/sveltejs/kit/pull/13549))
+
+
+### Patch Changes
+
+
+- chore: cache reroute results ([#13548](https://github.com/sveltejs/kit/pull/13548))
+
 ## 2.18.0
 ### Minor Changes
 

@@ -796,7 +796,7 @@ declare module '@sveltejs/kit' {
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: { url: URL }) => MaybePromise<void | string>;
+	export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 	/**
 	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.

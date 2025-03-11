@@ -1451,6 +1451,9 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply async reroute during client side navigation', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
 		await page.goto('/reroute/async');
 		await page.click("a[href='/reroute/async/a']");
 		expect(await page.textContent('h1')).toContain(

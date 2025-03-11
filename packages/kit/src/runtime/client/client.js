@@ -189,6 +189,17 @@ const components = [];
 let load_cache = null;
 
 /**
+ * @type {Map<string, Promise<URL>>}
+ * Cache for client-side rerouting, since it could contain async calls which we want to
+ * avoid running multiple times which would slow down navigations (e.g. else preloading
+ * wouldn't help because on navigation it would be called again). Since `reroute` should be
+ * a pure function (i.e. always return the same) value it's safe to cache across navigations.
+ * The server reroute calls don't need to be cached because they are called using `import(...)`
+ * which is cached per the JS spec.
+ */
+const reroute_cache = new Map();
+
+/**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
  * do not re-assign as some closures keep references to these Sets
  */
@@ -679,12 +690,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				app.hash
 			),
 			async fetch(resource, init) {
-				/** @type {URL | string} */
-				let requested;
-
 				if (resource instanceof Request) {
-					requested = resource.url;
-
 					// we're not allowed to modify the received `Request` object, so in order
 					// to fixup relative urls we create a new equivalent `init` object instead
 					init = {
@@ -709,25 +715,15 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						signal: resource.signal,
 						...init
 					};
-				} else {
-					requested = resource;
 				}
 
-				// we must fixup relative urls so they are resolved from the target page
-				const resolved = new URL(requested, url);
+				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+
 				if (is_tracking) {
 					depends(resolved.href);
 				}
 
-				// match ssr serialized data url, which is important to find cached responses
-				if (resolved.origin === url.origin) {
-					requested = resolved.href.slice(url.origin.length);
-				}
-
-				// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
-				return started
-					? subsequent_fetch(requested, resolved.href, init)
-					: initial_fetch(requested, init);
+				return promise;
 			},
 			setHeaders: () => {}, // noop
 			depends,
@@ -780,6 +776,30 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		data: data ?? server_data_node?.data ?? null,
 		slash: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
+}
+
+/**
+ * @param {Request | string | URL} input
+ * @param {RequestInit | undefined} init
+ * @param {URL} url
+ */
+function resolve_fetch_url(input, init, url) {
+	let requested = input instanceof Request ? input.url : input;
+
+	// we must fixup relative urls so they are resolved from the target page
+	const resolved = new URL(requested, url);
+
+	// match ssr serialized data url, which is important to find cached responses
+	if (resolved.origin === url.origin) {
+		requested = resolved.href.slice(url.origin.length);
+	}
+
+	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+	const promise = started
+		? subsequent_fetch(requested, resolved.href, init)
+		: initial_fetch(requested, init);
+
+	return { resolved, promise };
 }
 
 /**
@@ -1201,23 +1221,44 @@ async function load_root_error_page({ status, error, url, route }) {
  * @returns {Promise<URL | undefined>}
  */
 async function get_rerouted_url(url) {
+	const href = url.href;
+
+	if (reroute_cache.has(href)) {
+		return reroute_cache.get(href);
+	}
+
 	let rerouted;
+
 	try {
-		// reroute could alter the given URL, so we pass a copy
-		rerouted = (await app.hooks.reroute({ url: new URL(url) })) ?? url;
+		const promise = (async () => {
+			// reroute could alter the given URL, so we pass a copy
+			let rerouted =
+				(await app.hooks.reroute({
+					url: new URL(url),
+					fetch: async (input, init) => {
+						return resolve_fetch_url(input, init, url).promise;
+					}
+				})) ?? url;
 
-		if (typeof rerouted === 'string') {
-			const tmp = new URL(url); // do not mutate the incoming URL
+			if (typeof rerouted === 'string') {
+				const tmp = new URL(url); // do not mutate the incoming URL
 
-			if (app.hash) {
-				tmp.hash = rerouted;
-			} else {
-				tmp.pathname = rerouted;
+				if (app.hash) {
+					tmp.hash = rerouted;
+				} else {
+					tmp.pathname = rerouted;
+				}
+
+				rerouted = tmp;
 			}
 
-			rerouted = tmp;
-		}
+			return rerouted;
+		})();
+
+		reroute_cache.set(href, promise);
+		rerouted = await promise;
 	} catch (e) {
+		reroute_cache.delete(href);
 		if (DEV) {
 			// in development, print the error...
 			console.error(e);
