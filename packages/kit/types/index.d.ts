@@ -1495,7 +1495,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Shape of the `export const socket = {...}` object in `+server.js`.
 	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
-	 * @since 2.19.0
+	 * @since 2.20.0
 	 */
 	export interface Socket {
 		/**
@@ -1517,14 +1517,14 @@ declare module '@sveltejs/kit' {
 	/**
 	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `Peer` instance that allows getting information from clients and sending messages to them.
 	 * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
-	 * @since 2.19.0
+	 * @since 2.20.0
 	 */
 	export type Peer = import('crossws').Peer;
 
 	/**
 	 * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you'll receive a `message` object containing data from the client.
 	 * See [Message](https://crossws.unjs.io/guide/message) for more information.
-	 * @since 2.19.0
+	 * @since 2.20.0
 	 */
 	export type Message = import('crossws').Message;
 
@@ -2481,9 +2481,9 @@ declare module '$app/server' {
 	 *   // ...
 	 * });
 	 * ```
-	 * @since 2.19.0
+	 * @since 2.20.0
 	 */
-	export function getPeers(): import("crossws").AdapterInstance["peers"];
+	export function getPeers(): any["peers"];
 	/**
 	 * Send a message to WebSocket peer subscribers of a given topic.
 	 * See [Pub / Sub](https://crossws.unjs.io/guide/pubsub) for more information.
@@ -2493,7 +2493,7 @@ declare module '$app/server' {
 	 *
 	 * publish('chat', { message: 'Hello, world!' });
 	 * ```
-	 * @since 2.19.0
+	 * @since 2.20.0
 	 */
 	export function publish(topic: string, data: unknown, options?: {
 		compress?: boolean;
