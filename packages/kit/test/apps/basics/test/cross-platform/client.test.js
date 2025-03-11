@@ -532,6 +532,24 @@ test.describe('CSS', () => {
 
 		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
+
+	test('dynamically imported components lazily load CSS', async ({ page, get_computed_style }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			const url = request.url();
+			if (url.includes('Dynamic') && url.endsWith('.css')) {
+				requests.push(url);
+			}
+		});
+
+		await page.goto('/css/dynamic');
+		expect(requests.length).toBe(0);
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('I\'m dynamically imported');
+		expect(await get_computed_style('p', 'color')).toBe('rgb(0, 0, 255)');
+		expect(requests.length).toBe(1);
+	});
 });
 
 test.describe.serial('Errors', () => {

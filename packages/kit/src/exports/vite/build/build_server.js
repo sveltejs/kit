@@ -122,7 +122,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			const entry = find_deps(
 				client_manifest,
 				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
-				true
+				false
 			);
 
 			imported.push(...entry.imports);
