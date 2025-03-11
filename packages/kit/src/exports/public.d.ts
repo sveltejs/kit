@@ -1516,34 +1516,31 @@ export type SubmitFunction<
  * @since 2.19.0
  */
 export interface Socket {
-	// TODO: write our own descriptions for these properties?
 	/**
-	 * Upgrading.
-	 * @param event
-	 * @throws {Response}
+	 * The [upgrade](https://svelte.dev/docs/kit/websockets#upgrade) hook runs every time a request is attempting to upgrade to a WebSocket connection.
 	 */
 	upgrade?: (
 		event: RequestEvent & { context: import('crossws').Peer['context'] }
 	) => MaybePromise<Response | ResponseInit | void>;
-	/** A message is received. */
-	message?: import('crossws').Hooks['message'];
-	/** A socket is opened. */
+	/** The [open](https://svelte.dev/docs/kit/websockets#open) hook runs every time a WebSocket connection is opened. */
 	open?: import('crossws').Hooks['open'];
-	/** A socket is closed. */
+	/** The [message](https://svelte.dev/docs/kit/websockets#message) hook runs every time a message is received from a WebSocket client. */
+	message?: import('crossws').Hooks['message'];
+	/** The [close](https://svelte.dev/docs/kit/websockets#close) hook runs every time a WebSocket connection is closed. */
 	close?: import('crossws').Hooks['close'];
-	/** A WebSocket error occurs. */
+	/** The [error](https://svelte.dev/docs/kit/websockets#error) hook runs every time a WebSocket error occurs. */
 	error?: import('crossws').Hooks['error'];
 }
 
 /**
- * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `peer` instance that allows getting information from clients and sending messages to them.
+ * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects to the server, `crossws` creates a `Peer` instance that allows getting information from clients and sending messages to them.
  * See [Peer](https://crossws.unjs.io/guide/peer) for more information.
  * @since 2.19.0
  */
 export type Peer = import('crossws').Peer;
 
 /**
- * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you receive a `message` object containing data from the client.
+ * During a [WebSocket](https://svelte.dev/docs/kit/websockets) `message` hook, you'll receive a `message` object containing data from the client.
  * See [Message](https://crossws.unjs.io/guide/message) for more information.
  * @since 2.19.0
  */
