@@ -68,7 +68,8 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Output code that:
 	- Imports `Server` from `${builder.getServerDirectory()}/index.js`
 	- Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
-	- Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `server.respond(request, { getClientAddress })` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
+	- Initialises the server by calling the `server.init({ env })` function
+	- Listens for requests from the platform, converts them to a standard [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `server.respond(request, { getClientAddress })` function to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
 	- expose any platform-specific information to SvelteKit via the `platform` option passed to `server.respond`
 	- Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/node/polyfills` helper for platforms that can use `undici`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
@@ -76,4 +77,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
-If your environment supports WebSockets, you will need to handle upgrading a HTTP request to a WebSocket connection. You can do this by listening for requests from the platform that have an `Upgrade: websocket` header, calling the `server.getWebSocketHooksResolver({ getClientAddress })` function to get the WebSocket hooks resolver and passing it to the crossws adapter `resolve` option. The [crossws Adapters section](https://crossws.unjs.io/adapters) provides examples of creating this integration within various environments.
+If your environment supports WebSockets, you will need to integrate [`crossws`](https://crossws.unjs.io/adapters) into your adapter by outputting code that:
+
+- Initialises the server with the `crossws` adapter's `peers` and `publish` utilities by calling the `server.init({ env, peers, publish })` function
+- Listens for requests from the platform that have an `Upgrade: websocket` header, converts them to a standard `Request` if necessary, calls the `server.resolveWebSocketHooks(request, { getClientAddress })` function to resolve the WebSocket hooks, and passes it to the `crossws` adapter's `resolve` option.
