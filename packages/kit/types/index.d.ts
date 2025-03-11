@@ -2483,7 +2483,7 @@ declare module '$app/server' {
 	 * ```
 	 * @since 2.20.0
 	 */
-	export function getPeers(): any["peers"];
+	export function getPeers(): import("crossws").AdapterInstance["peers"];
 	/**
 	 * Send a message to WebSocket peer subscribers of a given topic.
 	 * See [Pub / Sub](https://crossws.unjs.io/guide/pubsub) for more information.
