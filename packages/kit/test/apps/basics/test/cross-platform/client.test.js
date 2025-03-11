@@ -546,7 +546,7 @@ test.describe('CSS', () => {
 		expect(requests.length).toBe(0);
 
 		await page.locator('button').click();
-		await expect(page.locator('p')).toHaveText('I\'m dynamically imported');
+		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
 		expect(await get_computed_style('p', 'color')).toBe('rgb(0, 0, 255)');
 		expect(requests.length).toBe(1);
 	});
