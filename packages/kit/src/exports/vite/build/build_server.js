@@ -140,7 +140,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			const css_used_by_server = new Set();
 			const assets_used_by_server = new Set();
 
-			const relative_entry_path = relative(process.cwd(), entry_path);
+			const relative_entry_path = normalizePath(relative(process.cwd(), entry_path));
 			entry.stylesheet_map.forEach((value, key) => {
 				if (key === relative_entry_path) {
 					// map the client node index to the server component source
