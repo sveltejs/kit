@@ -163,3 +163,15 @@ export function stringify_uses(node) {
 
 	return `"uses":{${uses.join(',')}}`;
 }
+
+/**
+ * Returns `true` if the given path was prerendered
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {string} pathname Should include the base and be decoded
+ */
+export function has_prerendered_path(manifest, pathname) {
+	return (
+		manifest._.prerendered_routes.has(pathname) ||
+		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
+	);
+}
