@@ -3,7 +3,7 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename, relative } from 'node:path';
+import { basename } from 'node:path';
 
 /**
  * @param {string} out
