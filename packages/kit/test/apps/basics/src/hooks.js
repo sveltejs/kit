@@ -31,6 +31,10 @@ export const reroute = ({ url, fetch }) => {
 		return fetch('/reroute/api').then((r) => r.text());
 	}
 
+	if (url.pathname === '/reroute/prerendered/to-destination') {
+		return '/reroute/prerendered/destination';
+	}
+
 	if (url.pathname in mapping) {
 		return mapping[url.pathname];
 	}
