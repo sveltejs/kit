@@ -22,11 +22,15 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
 	const imported_assets = new Set();
 
+	/** @type {Map<string, { css: string[]; assets: string[] }>} */
+	const stylesheet_map = new Map();
+
 	/**
 	 * @param {string} current
 	 * @param {boolean} add_js
+	 * @param {number} dynamic_import_depth
 	 */
-	function traverse(current, add_js) {
+	function traverse(current, add_js, dynamic_import_depth = 0) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
@@ -35,9 +39,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.assets) {
-			for (const asset of chunk.assets) {
-				imported_assets.add(asset);
-			}
+			chunk.assets.forEach(asset => imported_assets.add(asset));
 		}
 
 		if (chunk.css) {
@@ -45,11 +47,22 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((file) => traverse(file, add_js));
+			chunk.imports.forEach((file) => traverse(file, add_js, dynamic_import_depth));
 		}
 
-		if (add_dynamic_css && chunk.dynamicImports) {
-			chunk.dynamicImports.forEach((file) => traverse(file, false));
+		if (!add_dynamic_css) return;
+
+		if (dynamic_import_depth <= 1) {
+			stylesheet_map.set(current, {
+				css: chunk.css ?? [], assets: chunk.assets ?? []
+			});
+		}
+
+		if (chunk.dynamicImports) {
+			dynamic_import_depth++;
+			chunk.dynamicImports.forEach((file) => {
+				traverse(file, false, dynamic_import_depth);
+			});
 		}
 	}
 
@@ -65,7 +78,8 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets),
 		// TODO do we need this separately?
-		fonts: assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset))
+		fonts: filter_fonts(assets),
+		stylesheet_map
 	};
 }
 
@@ -85,7 +99,15 @@ export function resolve_symlinks(manifest, file) {
 	return { chunk, file };
 }
 
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
+/**
+ * @param {string[]} assets 
+ * @returns {string[]}
+ */
+export function filter_fonts(assets) {
+	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
+}
+
+const method_names = new Set((['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']));
 
 // If we'd written this in TypeScript, it could be easy...
 /**
