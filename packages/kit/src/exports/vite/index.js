@@ -36,6 +36,7 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { transform_client } from './remote/index.js';
 
 const cwd = process.cwd();
 
@@ -398,6 +399,9 @@ async function kit({ svelte_config }) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
+			if (id === '__sveltekit/remote') {
+				return `${runtime_directory}/client/client.js`;
+			}
 			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
@@ -575,6 +579,39 @@ Tips:
 					guard.check(id);
 				});
 			}
+		}
+	};
+
+	/**
+	 * @type {any}
+	 */
+	let root;
+
+	const plugin_remote = {
+		name: 'vite-plugin-sveltekit-remote',
+
+		/**
+		 * @param {{ root: any; }} config
+		 */
+		configResolved(config) {
+			root = config.root;
+		},
+
+		/**
+		 * @param {string} code
+		 * @param {string} id
+		 * @param {any} opts
+		 */
+		transform(code, id, opts) {
+			if (!id.endsWith('.remote.js') && !id.endsWith('.remote.ts')) return;
+
+			if (opts.ssr) {
+				return;
+			}
+
+			const filename = id.replace(root, '');
+
+			return transform_client(code, filename);
 		}
 	};
 
@@ -1072,7 +1109,7 @@ Tips:
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	return [plugin_setup, plugin_remote, plugin_virtual_modules, plugin_guard, plugin_compile];
 }
 
 /**

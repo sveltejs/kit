@@ -2949,3 +2949,30 @@ if (DEV) {
 		});
 	}
 }
+
+/**
+ * @param {string} hash
+ * @param {string} func_name
+ * @param {any} args
+ */
+export async function remote_call(hash, func_name, args) {
+	const transport = app.hooks.transport;
+	const encoders = Object.fromEntries(
+		Object.entries(transport).map(([key, value]) => [key, value.encode])
+	);
+	const body = devalue.stringify(args, encoders);
+
+	const response = await fetch('/remote', {
+		method: 'POST',
+		body,
+		headers: {
+			'Content-Type': 'application/json',
+			'sk-rpc': JSON.stringify([hash, func_name])
+		}
+	});
+
+	const json = await response.text();
+	const parsed = JSON.parse(json);
+
+	return devalue.parse(parsed.data, app.decoders);
+}
