@@ -52,7 +52,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 
 		if (!add_dynamic_css) return;
 
-		if (dynamic_import_depth <= 1) {
+		if ((chunk.css || chunk.assets) && dynamic_import_depth <= 1) {
 			stylesheet_map.set(current, {
 				css: chunk.css ?? [], assets: chunk.assets ?? []
 			});
