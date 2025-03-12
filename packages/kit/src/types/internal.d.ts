@@ -59,7 +59,7 @@ export interface AssetDependencies {
 	imports: string[];
 	stylesheets: string[];
 	fonts: string[];
-	stylesheet_map: Map<string, { css: string[]; assets: string[] }>;
+	stylesheet_map: Map<string, { css: Set<string>; assets: Set<string> }>;
 }
 
 export interface BuildData {

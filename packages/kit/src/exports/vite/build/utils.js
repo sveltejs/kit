@@ -22,15 +22,16 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
 	const imported_assets = new Set();
 
-	/** @type {Map<string, { css: string[]; assets: string[] }>} */
+	/** @type {Map<string, { css: Set<string>; assets: Set<string> }>} */
 	const stylesheet_map = new Map();
 
 	/**
 	 * @param {string} current
 	 * @param {boolean} add_js
+	 * @param {string} initial_importer
 	 * @param {number} dynamic_import_depth
 	 */
-	function traverse(current, add_js, dynamic_import_depth = 0) {
+	function traverse(current, add_js, initial_importer, dynamic_import_depth) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
@@ -47,28 +48,38 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((file) => traverse(file, add_js, dynamic_import_depth));
+			chunk.imports.forEach((file) => traverse(file, add_js, initial_importer, dynamic_import_depth));
 		}
 
 		if (!add_dynamic_css) return;
 
 		if ((chunk.css || chunk.assets) && dynamic_import_depth <= 1) {
-			stylesheet_map.set(current, {
-				css: chunk.css ?? [], assets: chunk.assets ?? []
-			});
+			// group files based on the initial importer because if a file is only ever
+			// a transitive dependency, it doesn't have a suitable name we can map back to
+			// the server manifest
+			if (stylesheet_map.has(initial_importer)) {
+				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (stylesheet_map.get(initial_importer));
+				if (chunk.css) chunk.css.forEach((file) => css.add(file));
+				if (chunk.assets) chunk.assets.forEach((file) => assets.add(file));
+			} else {
+				stylesheet_map.set(initial_importer, {
+					css: new Set(chunk.css),
+					assets: new Set(chunk.assets)
+				});
+			}
 		}
 
 		if (chunk.dynamicImports) {
 			dynamic_import_depth++;
 			chunk.dynamicImports.forEach((file) => {
-				traverse(file, false, dynamic_import_depth);
+				traverse(file, false, file, dynamic_import_depth);
 			});
 		}
 	}
 
 	const { chunk, file } = resolve_symlinks(manifest, entry);
 
-	traverse(file, true);
+	traverse(file, true, entry, 0);
 
 	const assets = Array.from(imported_assets);
 
