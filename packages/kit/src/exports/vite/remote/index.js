@@ -2,22 +2,17 @@
 /** @import * as ESTree from 'estree' */
 
 import * as acorn from 'acorn';
-import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { walk } from 'zimmerframe';
 import MagicString from 'magic-string';
 import { hash } from '../../../runtime/hash.js';
-
-const ParserWithTS = acorn.Parser.extend(tsPlugin());
 
 /**
  * @param {string} code
  * @param {string} filename
  */
 export function transform_client(code, filename) {
-	const parser = filename.endsWith('.ts') ? ParserWithTS : acorn.Parser;
-
 	const ast = /** @type {ESTree.Program} */ (
-		parser.parse(code, {
+		acorn.parse(code, {
 			sourceType: 'module',
 			ecmaVersion: 13,
 			locations: true

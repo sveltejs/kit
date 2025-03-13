@@ -339,9 +339,6 @@ importers:
 
   packages/kit:
     dependencies:
-      '@sveltejs/acorn-typescript':
-        specifier: ^1.0.5
-        version: 1.0.5(acorn@8.14.0)
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -1967,11 +1964,6 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: '>=8.40.0'
-
-  '@sveltejs/acorn-typescript@1.0.5':
-    resolution: {integrity: sha512-IwQk4yfwLdibDlrXVE04jTZYlLnwsTT2PIOQQGNLWfjavGifnk1JD1LcZjZaBTRcxZu2FfPfNLOE04DSu9lqtQ==}
-    peerDependencies:
-      acorn: ^8.9.0
 
   '@sveltejs/eslint-config@8.1.0':
     resolution: {integrity: sha512-cfgp4lPREYBjNd4ZzaP/jA85ufm7vfXiaV7h9vILXNogne80IbZRNhRCQ8XoOqTAOY/pChIzWTBuR8aDNMbAEA==}
@@ -4349,10 +4341,6 @@ snapshots:
       eslint: 9.6.0
       eslint-visitor-keys: 4.2.0
       espree: 10.3.0
-
-  '@sveltejs/acorn-typescript@1.0.5(acorn@8.14.0)':
-    dependencies:
-      acorn: 8.14.0
 
   '@sveltejs/eslint-config@8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.16.1(eslint@9.6.0)(typescript@5.6.3))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.2.9))(eslint@9.6.0)(typescript-eslint@8.26.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)':
     dependencies:

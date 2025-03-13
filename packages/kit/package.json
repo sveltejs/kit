@@ -30,7 +30,6 @@
 		"set-cookie-parser": "^2.6.0",
 		"sirv": "^3.0.0",
 		"acorn": "^8.12.1",
-		"@sveltejs/acorn-typescript": "^1.0.5",
 		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
