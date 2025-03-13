@@ -592,9 +592,11 @@ Tips:
 		 * @param {any} opts
 		 */
 		transform(code, id, opts) {
-			if (!id.endsWith('.remote.js') && !id.endsWith('.remote.ts')) return;
-
 			if (opts.ssr) {
+				return;
+			}
+
+			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
