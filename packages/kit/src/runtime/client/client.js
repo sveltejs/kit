@@ -2969,8 +2969,12 @@ export async function remote_call(hash, func_name, args) {
 		}
 	});
 
-	const json = await response.text();
-	const parsed = JSON.parse(json);
+	const result = await response.json();
 
-	return devalue.parse(parsed.data, app.decoders);
+	if (!response.ok) {
+		// TODO should this go through `handleError`?
+		throw new Error(result.message);
+	}
+
+	return devalue.parse(result.data, app.decoders);
 }
