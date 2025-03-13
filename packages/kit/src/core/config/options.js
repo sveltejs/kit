@@ -267,7 +267,9 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
-				options: object({}, true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, () => object({}, true)),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
