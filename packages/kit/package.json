@@ -28,9 +28,7 @@
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.6.0",
-		"sirv": "^3.0.0",
-		"acorn": "^8.12.1",
-		"zimmerframe": "^1.1.2"
+		"sirv": "^3.0.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.44.1",
@@ -44,8 +42,7 @@
 		"svelte-preprocess": "^6.0.0",
 		"typescript": "^5.3.3",
 		"vite": "^6.0.11",
-		"vitest": "^3.0.1",
-		"@types/estree": "^1.0.5"
+		"vitest": "^3.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0",

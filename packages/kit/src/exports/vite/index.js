@@ -36,7 +36,6 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { transform_client } from './remote/index.js';
 
 const cwd = process.cwd();
 
@@ -600,7 +599,40 @@ Tips:
 				return;
 			}
 
-			return transform_client(code, id);
+			/** @type {string[]} */
+			const names = [];
+			const program = this.parse(code);
+
+			for (const node of program.body) {
+				if (node.type === 'ExportNamedDeclaration') {
+					for (const specifier of node.specifiers) {
+						names.push(/** @type {{ name: string }} */ (specifier.exported).name);
+					}
+
+					if (node.declaration) {
+						if (node.declaration.type === 'FunctionDeclaration') {
+							names.push(node.declaration.id.name);
+						} else if (node.declaration.type === 'VariableDeclaration') {
+							for (const declarator of node.declaration.declarations) {
+								if (declarator.id.type !== 'Identifier') {
+									throw new Error('TODO');
+								}
+
+								names.push(declarator.id.name);
+							}
+						}
+					}
+				}
+			}
+
+			const h = hash(id);
+			const exports = names.map(
+				(n) => `export const ${n} = (...args) => remote_call('${h}', '${n}', args);`
+			);
+
+			return {
+				code: `import { remote_call } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+			};
 		}
 	};
 
