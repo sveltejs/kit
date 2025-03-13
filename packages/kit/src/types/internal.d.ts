@@ -422,7 +422,7 @@ export interface SSROptions {
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
-	service_worker_options: Parameters<ServiceWorkerContainer['register']>[1];
+	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
 			head: string;

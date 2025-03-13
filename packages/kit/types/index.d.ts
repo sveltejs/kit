@@ -680,7 +680,7 @@ declare module '@sveltejs/kit' {
 					/**
 					 * Options for serviceWorker.register("...", options);
 					 */
-					options?: Parameters<ServiceWorkerContainer['register']>[1];
+					options?: RegistrationOptions;
 			  }
 			| {
 					/**
