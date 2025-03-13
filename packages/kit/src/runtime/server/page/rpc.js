@@ -6,7 +6,7 @@ import * as devalue from 'devalue';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
 export function is_rpc_json_request(event) {
-	const rpc_data = event.request.headers.get('sk-rpc');
+	const rpc_data = event.request.headers.get('x-sveltekit-remote');
 
 	if (rpc_data == null) return false;
 	const json = JSON.parse(rpc_data);
@@ -50,7 +50,9 @@ async function bad_rpc(event, options) {
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  */
 export async function handle_rpc_json_request(event, options, manifest) {
-	const [hash, func_name] = JSON.parse(/** @type {string} */ (event.request.headers.get('sk-rpc')));
+	const [hash, func_name] = JSON.parse(
+		/** @type {string} */ (event.request.headers.get('x-sveltekit-remote'))
+	);
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) {

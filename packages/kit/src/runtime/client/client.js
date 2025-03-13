@@ -2967,7 +2967,7 @@ export async function remote_call(hash, func_name, args) {
 		body,
 		headers: {
 			'Content-Type': 'application/json',
-			'sk-rpc': JSON.stringify([hash, func_name])
+			'x-sveltekit-remote': JSON.stringify([hash, func_name])
 		}
 	});
 
