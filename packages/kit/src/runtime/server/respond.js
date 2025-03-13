@@ -26,7 +26,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { handle_rpc_json_request, is_rpc_json_request } from './remote/index.js';
+import { handle_remote_call, is_rpc_json_request } from './remote/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -89,6 +89,7 @@ export async function respond(request, options, manifest, state) {
 	 */
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
+	const is_remote_request = url.pathname.startsWith(`/${app_dir}/remote/`);
 
 	if (is_route_resolution_request) {
 		url.pathname = strip_resolution_suffix(url.pathname);
@@ -210,7 +211,7 @@ export async function respond(request, options, manifest, state) {
 		return get_public_env(request);
 	}
 
-	if (resolved_path.startsWith(`/${app_dir}`)) {
+	if (!is_remote_request && resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
@@ -424,8 +425,8 @@ export async function respond(request, options, manifest, state) {
 				});
 			}
 
-			if (is_rpc_json_request(event)) {
-				return handle_rpc_json_request(event, options, manifest);
+			if (is_remote_request) {
+				return handle_remote_call(event, options, manifest);
 			}
 
 			if (route) {

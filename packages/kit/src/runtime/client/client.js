@@ -22,7 +22,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -2960,14 +2960,12 @@ export async function remote_call(hash, func_name, args) {
 	const encoders = Object.fromEntries(
 		Object.entries(transport).map(([key, value]) => [key, value.encode])
 	);
-	const body = devalue.stringify(args, encoders);
 
-	const response = await fetch('/remote', {
+	const response = await fetch(`/${app_dir}/remote/${hash}/${func_name}`, {
 		method: 'POST',
-		body,
+		body: devalue.stringify(args, encoders), // TODO maybe don't use devalue.stringify here
 		headers: {
-			'Content-Type': 'application/json',
-			'x-sveltekit-remote': JSON.stringify([hash, func_name])
+			'Content-Type': 'application/json'
 		}
 	});
 

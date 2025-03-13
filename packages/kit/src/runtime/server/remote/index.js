@@ -1,21 +1,8 @@
-import { negotiate } from '../../../utils/http.js';
 import { json } from '../../../exports/index.js';
 import { SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import * as devalue from 'devalue';
-
-/** @param {import('@sveltejs/kit').RequestEvent} event */
-export function is_rpc_json_request(event) {
-	const rpc_data = event.request.headers.get('x-sveltekit-remote');
-
-	if (rpc_data == null) return false;
-	const json = JSON.parse(rpc_data);
-	if (!Array.isArray(json) || json.length !== 2) return false;
-
-	const accept = negotiate(event.request.headers.get('accept') ?? '*/*', ['application/json']);
-
-	return accept === 'application/json' && event.request.method === 'POST';
-}
+import { app_dir } from '__sveltekit/paths';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -49,10 +36,10 @@ async function bad_rpc(event, options) {
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  */
-export async function handle_rpc_json_request(event, options, manifest) {
-	const [hash, func_name] = JSON.parse(
-		/** @type {string} */ (event.request.headers.get('x-sveltekit-remote'))
-	);
+export async function handle_remote_call(event, options, manifest) {
+	const id = event.url.pathname.replace(`/${app_dir}/remote/`, '');
+
+	const [hash, func_name] = id.split('/');
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) {
