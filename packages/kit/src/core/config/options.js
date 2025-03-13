@@ -267,6 +267,7 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
+				options: object({}, true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
