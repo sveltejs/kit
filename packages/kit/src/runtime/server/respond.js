@@ -26,7 +26,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { handle_remote_call, is_rpc_json_request } from './remote/index.js';
+import { handle_remote_call } from './remote/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
