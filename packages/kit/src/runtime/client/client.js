@@ -2976,5 +2976,5 @@ export async function remote_call(hash, func_name, args) {
 		throw new Error(result.message);
 	}
 
-	return devalue.parse(result.data, app.decoders);
+	return devalue.parse(result, app.decoders);
 }
