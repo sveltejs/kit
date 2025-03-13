@@ -582,20 +582,9 @@ Tips:
 		}
 	};
 
-	/**
-	 * @type {any}
-	 */
-	let root;
-
+	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
-
-		/**
-		 * @param {{ root: any; }} config
-		 */
-		configResolved(config) {
-			root = config.root;
-		},
 
 		/**
 		 * @param {string} code
