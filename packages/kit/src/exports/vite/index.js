@@ -609,9 +609,7 @@ Tips:
 				return;
 			}
 
-			const filename = id.replace(root, '');
-
-			return transform_client(code, filename);
+			return transform_client(code, id);
 		}
 	};
 
@@ -668,6 +666,11 @@ Tips:
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+
+					// ...and every .remote file
+					for (const filename of manifest_data.remotes) {
+						input[`remote/${hash(filename)}`] = filename;
+					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {

@@ -19,6 +19,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { hash } from '../../../runtime/hash.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -248,7 +249,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					};
 				}),
 				prerendered_routes: new Set(),
-				remotes: manifest_data.remotes,
+				remotes: Object.fromEntries(
+					manifest_data.remotes.map((filename) => [
+						hash(filename),
+						() => vite.ssrLoadModule(filename)
+					])
+				),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;

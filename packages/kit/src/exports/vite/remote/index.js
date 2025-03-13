@@ -25,7 +25,7 @@ export function transform_client(code, filename) {
 	);
 
 	const s = new MagicString(code);
-	const _hash = hash(code);
+	const _hash = hash(filename);
 
 	/** @type {Visitors<ESTree.Node, null>} */
 	const visitors = {

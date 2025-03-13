@@ -188,7 +188,7 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: Map<string, string>;
+	remotes: string[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }

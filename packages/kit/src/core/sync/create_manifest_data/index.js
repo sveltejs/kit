@@ -4,11 +4,10 @@ import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
-import { hash } from '../../../runtime/hash.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -28,7 +27,7 @@ export default function create_manifest_data({
 	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
-	const remotes = create_remotes(cwd);
+	const remotes = create_remotes(config, cwd);
 
 	for (const route of routes) {
 		for (const param of route.params) {
@@ -469,54 +468,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 }
 
 /**
+ * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  */
-function create_remotes(cwd) {
-	/**
-	 * @type {Map<string, string>}
-	 */
-	const remotes = new Map();
+function create_remotes(config, cwd) {
+	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
 
-	const valid_extensions = ['.remote.ts', '.remote.js'];
+	const files = walk(`${cwd}/src`); // TODO could files live in other directories, including node_modules?
 
-	/**
-	 * @param {number} depth
-	 * @param {string} id
-	 */
-	const walk = (depth, id) => {
-		const dir = path.join(cwd, id);
-		console.log(dir);
-
-		// We can't use withFileTypes because of a NodeJs bug which returns wrong results
-		// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
-		const files = fs.readdirSync(dir).map((name) => ({
-			is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-			name
-		}));
-
-		// process files first
-		for (const file of files) {
-			if (file.is_dir) continue;
-
-			const ext = valid_extensions.find((ext) => file.name.endsWith(ext));
-			if (!ext) continue;
-			const source = fs.readFileSync(path.join(dir, file.name), 'utf-8');
-
-			remotes.set(hash(source), path.join(cwd, id, file.name));
-		}
-
-		// then handle children
-		for (const file of files) {
-			if (file.is_dir) {
-				if (file.name === 'node_modules') continue;
-				walk(depth + 1, path.posix.join(id, file.name));
-			}
-		}
-	};
-
-	walk(0, '/');
-
-	return remotes;
+	return files
+		.filter((file) => extensions.some((ext) => file.endsWith(ext)))
+		.map((file) => `${cwd}/src/${file}`);
 }
 
 /**

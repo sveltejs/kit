@@ -1,5 +1,5 @@
 import { negotiate } from '../../../utils/http.js';
-import { json } from '../../../exports/index.js';
+import { error, json } from '../../../exports/index.js';
 import { SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import * as devalue from 'devalue';
@@ -53,17 +53,18 @@ export async function handle_rpc_json_request(event, options, manifest) {
 	const [hash, func_name] = JSON.parse(/** @type {string} */ (event.request.headers.get('sk-rpc')));
 	const remotes = manifest._.remotes;
 
-	if (!remotes.has(hash)) {
+	if (!remotes[hash]) {
+		// TODO replace with `error`
 		return await bad_rpc(event, options);
 	}
 
-	const remote = /** @type {string} */ (remotes.get(hash));
 	let func;
 
 	try {
-		const module = await import(remote);
+		const module = await remotes[hash]();
 		func = module[func_name];
 	} catch {
+		// TODO replace with `error`
 		return await bad_rpc(event, options);
 	}
 
