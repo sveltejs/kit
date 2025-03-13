@@ -55,24 +55,35 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	if (options.csrf_check_origin) {
+	const is_route_resolution_request = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const is_remote_request = url.pathname.startsWith(`/${app_dir}/remote/`);
+
+	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
+		const opts = { status: 403 };
+
+		if (is_remote_request) {
+			return json(
+				{
+					message: 'Cross-site remote requests are forbidden'
+				},
+				opts
+			);
+		}
+
 		const forbidden =
 			is_form_content_type(request) &&
 			(request.method === 'POST' ||
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
-				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+				request.method === 'DELETE');
 
 		if (forbidden) {
-			const csrf_error = new HttpError(
-				403,
-				`Cross-site ${request.method} form submissions are forbidden`
-			);
+			const message = `Cross-site ${request.method} form submissions are forbidden`;
 			if (request.headers.get('accept') === 'application/json') {
-				return json(csrf_error.body, { status: csrf_error.status });
+				return json({ message }, opts);
 			}
-			return text(csrf_error.body.message, { status: csrf_error.status });
+			return text(message, opts);
 		}
 	}
 
@@ -83,15 +94,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
-	/**
-	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for path resolution, then return the route object as a JS file.
-	 */
-	const is_route_resolution_request = has_resolution_suffix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-	const is_remote_request = url.pathname.startsWith(`/${app_dir}/remote/`);
-
 	if (is_route_resolution_request) {
+		/**
+		 * If the request is for a route resolution, first modify the URL, then continue as normal
+		 * for path resolution, then return the route object as a JS file.
+		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
