@@ -92,6 +92,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
+		testExtensions: ['.test.js', '.test.ts', '.spec.js', '.spec.ts', '.stories.svelte'],
 		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
