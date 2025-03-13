@@ -15,7 +15,6 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
-import { handle_rpc_json_request, is_rpc_json_request } from './rpc.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -38,10 +37,6 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		return text(`Not found: ${event.url.pathname}`, {
 			status: 404 // TODO in some cases this should be 500. not sure how to differentiate
 		});
-	}
-
-	if (is_rpc_json_request(event)) {
-		return await handle_rpc_json_request(event, options, manifest);
 	}
 
 	if (is_action_json_request(event)) {

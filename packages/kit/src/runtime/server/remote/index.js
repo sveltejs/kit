@@ -1,5 +1,5 @@
 import { negotiate } from '../../../utils/http.js';
-import { error, json } from '../../../exports/index.js';
+import { json } from '../../../exports/index.js';
 import { SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import * as devalue from 'devalue';

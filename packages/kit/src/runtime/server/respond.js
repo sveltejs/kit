@@ -26,6 +26,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { handle_rpc_json_request, is_rpc_json_request } from './remote/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -421,6 +422,10 @@ export async function respond(request, options, manifest, state) {
 					fetched: [],
 					resolve_opts
 				});
+			}
+
+			if (is_rpc_json_request(event)) {
+				return handle_rpc_json_request(event, options, manifest);
 			}
 
 			if (route) {
