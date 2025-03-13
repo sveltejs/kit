@@ -86,18 +86,15 @@ importers:
   packages/adapter-cloudflare-workers:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20231121.0
-        version: 4.20241205.0
+        specifier: ^4.20241218.0
+        version: 4.20250303.0
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
       wrangler:
         specifier: ^3.91.0
-        version: 3.109.2(@cloudflare/workers-types@4.20241205.0)
+        version: 3.109.2(@cloudflare/workers-types@4.20250303.0)
     devDependencies:
-      '@cloudflare/kv-asset-handler':
-        specifier: ^0.3.0
-        version: 0.3.4
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -1287,6 +1284,9 @@ packages:
 
   '@cloudflare/workers-types@4.20241205.0':
     resolution: {integrity: sha512-pj1VKRHT/ScQbHOIMFODZaNAlJHQHdBSZXNIdr9ebJzwBff9Qz8VdqhbhggV7f+aUEh8WSbrsPIo4a+WtgjUvw==}
+
+  '@cloudflare/workers-types@4.20250303.0':
+    resolution: {integrity: sha512-O7F7nRT4bbmwHf3gkRBLfJ7R6vHIJ/oZzWdby6obOiw2yavUfp/AIwS7aO2POu5Cv8+h3TXS3oHs3kKCZLraUA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3851,6 +3851,8 @@ snapshots:
 
   '@cloudflare/workers-types@4.20241205.0': {}
 
+  '@cloudflare/workers-types@4.20250303.0': {}
+
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
@@ -6015,6 +6017,25 @@ snapshots:
       workerd: 1.20250214.0
     optionalDependencies:
       '@cloudflare/workers-types': 4.20241205.0
+      fsevents: 2.3.3
+      sharp: 0.33.5
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  wrangler@3.109.2(@cloudflare/workers-types@4.20250303.0):
+    dependencies:
+      '@cloudflare/kv-asset-handler': 0.3.4
+      '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
+      '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
+      blake3-wasm: 2.1.5
+      esbuild: 0.17.19
+      miniflare: 3.20250214.0
+      path-to-regexp: 6.3.0
+      unenv: 2.0.0-rc.1
+      workerd: 1.20250214.0
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20250303.0
       fsevents: 2.3.3
       sharp: 0.33.5
     transitivePeerDependencies:
