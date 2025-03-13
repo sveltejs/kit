@@ -474,11 +474,14 @@ function create_routes_and_nodes(cwd, config, fallback) {
 function create_remotes(config, cwd) {
 	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
 
-	const files = walk(`${cwd}/src`); // TODO could files live in other directories, including node_modules?
-
-	return files
-		.filter((file) => extensions.some((ext) => file.endsWith(ext)))
-		.map((file) => `${cwd}/src/${file}`);
+	// TODO could files live in other directories, including node_modules?
+	return [config.kit.files.lib, config.kit.files.routes].flatMap((dir) =>
+		fs.existsSync(dir)
+			? walk(dir)
+					.filter((file) => extensions.some((ext) => file.endsWith(ext)))
+					.map((file) => `${dir}/${file}`)
+			: []
+	);
 }
 
 /**
