@@ -6,6 +6,7 @@ declare global {
 			key: string;
 			params: Record<string, string>;
 			url?: URL;
+			message?: string;
 		}
 
 		interface PageState {
