@@ -3,7 +3,7 @@
 /** @type {RequestEvent | null} */
 let request_event = null;
 
-/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent>} */
+/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null>} */
 let als;
 
 try {
@@ -40,7 +40,7 @@ export function getRequestEvent() {
 
 /**
  * @template T
- * @param {RequestEvent} event
+ * @param {RequestEvent | null} event
  * @param {() => T} fn
  */
 export function with_event(event, fn) {

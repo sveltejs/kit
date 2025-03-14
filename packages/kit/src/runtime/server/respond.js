@@ -355,22 +355,26 @@ export async function respond(request, options, manifest, state) {
 			options.hooks.handle({
 				event,
 				resolve: (event, opts) =>
-					resolve(event, page_nodes, opts).then((response) => {
-						// add headers/cookies here, rather than inside `resolve`, so that we
-						// can do it once for all responses instead of once per `return`
-						for (const key in headers) {
-							const value = headers[key];
-							response.headers.set(key, /** @type {string} */ (value));
-						}
+					// counter-intuitively, we need to clear the event, so that it's not
+					// e.g. accessible when loading modules needed to handle the request
+					with_event(null, () =>
+						resolve(event, page_nodes, opts).then((response) => {
+							// add headers/cookies here, rather than inside `resolve`, so that we
+							// can do it once for all responses instead of once per `return`
+							for (const key in headers) {
+								const value = headers[key];
+								response.headers.set(key, /** @type {string} */ (value));
+							}
 
-						add_cookies_to_headers(response.headers, Object.values(new_cookies));
+							add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-						if (state.prerendering && event.route.id !== null) {
-							response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-						}
+							if (state.prerendering && event.route.id !== null) {
+								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+							}
 
-						return response;
-					})
+							return response;
+						})
+					)
 			})
 		);
 

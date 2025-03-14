@@ -154,7 +154,7 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
-		if (event.url.pathname === '/get-request-event/with-message') {
+		if (event.url.pathname.startsWith('/get-request-event/')) {
 			const e = getRequestEvent();
 
 			if (event !== e) {
