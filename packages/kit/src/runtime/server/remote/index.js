@@ -27,9 +27,7 @@ export async function handle_remote_call(event, options, manifest) {
 	const args = devalue.parse(args_json, decoders);
 	const data = await func.apply(null, args);
 
-	return json(stringify_rpc_response(data, transport), {
-		status: data ? 200 : 204
-	});
+	return json(stringify_rpc_response(data, transport));
 }
 
 /**
