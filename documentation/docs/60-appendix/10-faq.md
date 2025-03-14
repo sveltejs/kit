@@ -14,7 +14,8 @@ See [the documentation regarding project types](project-types) for more details.
 
 If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
 
-```js
+```ts
+// @errors: 2732
 /// file: svelte.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
