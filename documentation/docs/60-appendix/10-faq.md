@@ -62,7 +62,7 @@ Put the code to query your database in a [server route](./routing#server) - don'
 
 You can use [the Svelte CLI](/docs/cli/overview) to automatically set up database integrations.
 
-## How do I use a client-side library accessing `document` or `window`?
+## How do I use a client-side library accessing document or window?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
