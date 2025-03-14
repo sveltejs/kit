@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.19.2
+### Patch Changes
+
+
+- fix: lazily load CSS for dynamically imported components ([#13564](https://github.com/sveltejs/kit/pull/13564))
+
 ## 2.19.1
 ### Patch Changes
 
