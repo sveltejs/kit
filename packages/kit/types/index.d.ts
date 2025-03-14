@@ -2412,8 +2412,7 @@ declare module '$app/server' {
 	 */
 	export function read(asset: string): Response;
 	/**
-	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions
-	 * called by them).
+	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
 	 *
 	 * In environments that do not support [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 */
