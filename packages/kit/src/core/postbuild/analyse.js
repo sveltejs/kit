@@ -57,6 +57,8 @@ async function analyse({
 	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
+	internal.set_peers(new Set());
+	internal.set_publish_implementation(() => {});
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -95,6 +97,14 @@ async function analyse({
 			);
 
 		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
+
+		// we need to perform this check ourselves because `list_features` only includes
+		// chunks that have imported a feature, but using WebSockets doesn't involve any imports
+		if (endpoint?.socket && !config.adapter?.supports?.webSockets?.socket()) {
+			throw new Error(
+				`Cannot export \`socket\` in ${route.id} when using ${config.adapter?.name}. Please ensure that your adapter is up to date and supports this feature.`
+			);
+		}
 
 		if (page?.prerender && endpoint?.prerender) {
 			throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
@@ -153,9 +163,9 @@ async function analyse({
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
-	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.socket)) {
 		throw new Error(
-			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+			`Cannot prerender a +server file with POST, PATCH, PUT, DELETE, or socket (${route.id})`
 		);
 	}
 
@@ -174,6 +184,7 @@ function analyse_endpoint(route, mod) {
 		config: mod.config,
 		entries: mod.entries,
 		methods,
+		socket: !!mod.socket,
 		prerender: mod.prerender ?? false
 	};
 }

@@ -2,6 +2,8 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
+import crossws from 'crossws/adapters/cloudflare';
+
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
@@ -11,6 +13,17 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/cloudflare').CloudflareAdapter} */
+let ws;
+
+if (server.resolveWebSocketHooks) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
+
 export default {
 	/**
 	 * @param {Request} req
@@ -18,7 +31,40 @@ export default {
 	 * @param {any} context
 	 */
 	async fetch(req, env, context) {
-		await server.init({ env });
+		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
+			platform: {
+				env,
+				context,
+				// @ts-ignore lib.dom is interfering with workers-types
+				caches,
+				// @ts-ignore req is actually a Cloudflare request not a standard request
+				cf: req.cf
+			},
+			getClientAddress() {
+				return req.headers.get('cf-connecting-ip');
+			}
+		});
+
+		await server.init({
+			env,
+			peers: ws?.peers,
+			publish: ws?.publish
+		});
+
+		if (req.headers.get('upgrade') === 'websocket' && ws) {
+			const hooks = await server.resolveWebSocketHooks(
+				req,
+				// @ts-ignore
+				options
+			);
+			resolve_websocket_hooks = () => hooks;
+			return ws.handleUpgrade(
+				// @ts-ignore wtf is Cloudflare doing to these types
+				req,
+				env,
+				context
+			);
+		}
 
 		const url = new URL(req.url);
 
@@ -90,19 +136,11 @@ export default {
 		}
 
 		// dynamically-generated pages
-		return await server.respond(req, {
-			platform: {
-				env,
-				context,
-				// @ts-expect-error lib.dom is interfering with workers-types
-				caches,
-				// @ts-expect-error req is actually a Cloudflare request not a standard request
-				cf: req.cf
-			},
-			getClientAddress() {
-				return req.headers.get('cf-connecting-ip');
-			}
-		});
+		return await server.respond(
+			req,
+			// @ts-ignore
+			options
+		);
 	}
 };
 

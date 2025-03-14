@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
+const name = '@sveltejs/adapter-cloudflare-workers';
+
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
 	'assert',
@@ -23,7 +25,7 @@ const compatible_node_modules = [
 /** @type {import('./index.js').default} */
 export default function ({ config, platformProxy = {} } = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare-workers',
+		name,
 
 		async adapt(builder) {
 			const { main, site, compatibility_flags } = validate_config(builder, config);
@@ -171,6 +173,18 @@ export default function ({ config, platformProxy = {} } = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			webSockets: {
+				socket: () => true,
+				getPeers: () => true,
+				publish: ({ route }) => {
+					// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable?
+					throw new Error(
+						`${name}: Cannot use \`publish\` from \`$app/server\` in route \`${route.id}\` because Cloudflare Workers cannot coordinate among multiple WebSocket connections without Durable Objects`
+					);
+				}
+			}
 		}
 	};
 }

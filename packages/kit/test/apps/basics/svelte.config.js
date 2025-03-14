@@ -14,7 +14,12 @@ const config = {
 				};
 			},
 			supports: {
-				read: () => true
+				read: () => true,
+				webSockets: {
+					socket: () => true,
+					getPeers: () => true,
+					publish: () => true
+				}
 			}
 		},
 
