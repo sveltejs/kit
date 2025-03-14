@@ -27,6 +27,12 @@ const config = {
 			],
 			handleHttpError: 'warn'
 		},
+		serviceWorker: {
+			register: true,
+			options: {
+				updateViaCache: 'imports'
+			}
+		},
 
 		version: {
 			name: 'TEST_VERSION'
