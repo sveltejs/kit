@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.19.1
+### Patch Changes
+
+
+- fix: allow reroute to point to prerendered route ([#13575](https://github.com/sveltejs/kit/pull/13575))
+
 ## 2.19.0
 ### Minor Changes
 
