@@ -2,6 +2,7 @@ import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
 import { b64_encode } from '../../utils.js';
+import { with_event } from '../../app/server/event.js';
 
 /**
  * Calls the user's server `load` function.
@@ -58,92 +59,98 @@ export async function load_server_data({ event, state, node, parent }) {
 		disable_search(url);
 	}
 
-	const result = await node.server.load?.call(null, {
-		...event,
-		fetch: (info, init) => {
-			const url = new URL(info instanceof Request ? info.url : info, event.url);
+	const load = node.server.load;
 
-			if (DEV && done && !uses.dependencies.has(url.href)) {
-				console.warn(
-					`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-				);
-			}
+	const result =
+		load &&
+		(await with_event(event, () =>
+			load.call(null, {
+				...event,
+				fetch: (info, init) => {
+					const url = new URL(info instanceof Request ? info.url : info, event.url);
 
-			// Note: server fetches are not added to uses.depends due to security concerns
-			return event.fetch(info, init);
-		},
-		/** @param {string[]} deps */
-		depends: (...deps) => {
-			for (const dep of deps) {
-				const { href } = new URL(dep, event.url);
-
-				if (DEV) {
-					validate_depends(node.server_id || 'missing route ID', dep);
-
-					if (done && !uses.dependencies.has(href)) {
+					if (DEV && done && !uses.dependencies.has(url.href)) {
 						console.warn(
-							`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+							`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
 						);
 					}
-				}
 
-				uses.dependencies.add(href);
-			}
-		},
-		params: new Proxy(event.params, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
-					console.warn(
-						`${node.server_id}: Accessing \`params.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
-					);
-				}
+					// Note: server fetches are not added to uses.depends due to security concerns
+					return event.fetch(info, init);
+				},
+				/** @param {string[]} deps */
+				depends: (...deps) => {
+					for (const dep of deps) {
+						const { href } = new URL(dep, event.url);
 
-				if (is_tracking) {
-					uses.params.add(key);
-				}
-				return target[/** @type {string} */ (key)];
-			}
-		}),
-		parent: async () => {
-			if (DEV && done && !uses.parent) {
-				console.warn(
-					`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-				);
-			}
+						if (DEV) {
+							validate_depends(node.server_id || 'missing route ID', dep);
 
-			if (is_tracking) {
-				uses.parent = true;
-			}
-			return parent();
-		},
-		route: new Proxy(event.route, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.route) {
-					console.warn(
-						`${node.server_id}: Accessing \`route.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-					);
-				}
+							if (done && !uses.dependencies.has(href)) {
+								console.warn(
+									`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+								);
+							}
+						}
 
-				if (is_tracking) {
-					uses.route = true;
+						uses.dependencies.add(href);
+					}
+				},
+				params: new Proxy(event.params, {
+					get: (target, key) => {
+						if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
+							console.warn(
+								`${node.server_id}: Accessing \`params.${String(
+									key
+								)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+							);
+						}
+
+						if (is_tracking) {
+							uses.params.add(key);
+						}
+						return target[/** @type {string} */ (key)];
+					}
+				}),
+				parent: async () => {
+					if (DEV && done && !uses.parent) {
+						console.warn(
+							`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
+						);
+					}
+
+					if (is_tracking) {
+						uses.parent = true;
+					}
+					return parent();
+				},
+				route: new Proxy(event.route, {
+					get: (target, key) => {
+						if (DEV && done && typeof key === 'string' && !uses.route) {
+							console.warn(
+								`${node.server_id}: Accessing \`route.${String(
+									key
+								)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+							);
+						}
+
+						if (is_tracking) {
+							uses.route = true;
+						}
+						return target[/** @type {'id'} */ (key)];
+					}
+				}),
+				url,
+				untrack(fn) {
+					is_tracking = false;
+					try {
+						return fn();
+					} finally {
+						is_tracking = true;
+					}
 				}
-				return target[/** @type {'id'} */ (key)];
-			}
-		}),
-		url,
-		untrack(fn) {
-			is_tracking = false;
-			try {
-				return fn();
-			} finally {
-				is_tracking = true;
-			}
-		}
-	});
+			})
+		));
 
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, node.server_id);
