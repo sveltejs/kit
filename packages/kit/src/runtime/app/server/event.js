@@ -24,7 +24,15 @@ export function getRequestEvent() {
 	const event = request_event ?? als?.getStore();
 
 	if (!event) {
-		throw new Error('Can only read the current request event when the event is being processed');
+		let message =
+			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, and server endpoints.';
+
+		if (!als) {
+			message +=
+				' In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.';
+		}
+
+		throw new Error(message);
 	}
 
 	return event;
