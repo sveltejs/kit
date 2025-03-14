@@ -2414,7 +2414,7 @@ declare module '$app/server' {
 	/**
 	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
 	 *
-	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * In environments that do not support [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 */
 	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
