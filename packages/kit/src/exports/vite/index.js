@@ -625,18 +625,16 @@ Tips:
 				}
 			}
 
-			let fn = 'remote_call';
+			let fn = 'remote';
 
-			// belt and braces — guard against an existing `export function remote_call() {...}`
+			// belt and braces — guard against an existing `export function remote() {...}`
 			let n = 1;
-			while (names.includes(fn)) fn = `remote_call$${n++}`;
+			while (names.includes(fn)) fn = `remote$${n++}`;
 
 			const h = hash(id);
-			const exports = names.map(
-				(n) => `export const ${n} = (...args) => ${fn}('${h}', '${n}', args);`
-			);
+			const exports = names.map((n) => `export const ${n} = ${fn}('${h}/${n}');`);
 
-			const specifier = fn === 'remote_call' ? fn : `remote_call as ${fn}`;
+			const specifier = fn === 'remote' ? fn : `remote as ${fn}`;
 
 			return {
 				code: `import { ${specifier} } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`

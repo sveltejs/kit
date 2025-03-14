@@ -2951,30 +2951,30 @@ if (DEV) {
 }
 
 /**
- * @param {string} hash
- * @param {string} func_name
- * @param {any} args
+ * @param {string} id
  */
-export async function remote_call(hash, func_name, args) {
-	const transport = app.hooks.transport;
-	const encoders = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.encode])
-	);
+export function remote(id) {
+	return async (/** @type {any} */ ...args) => {
+		const transport = app.hooks.transport;
+		const encoders = Object.fromEntries(
+			Object.entries(transport).map(([key, value]) => [key, value.encode])
+		);
 
-	const response = await fetch(`/${app_dir}/remote/${hash}/${func_name}`, {
-		method: 'POST',
-		body: devalue.stringify(args, encoders), // TODO maybe don't use devalue.stringify here
-		headers: {
-			'Content-Type': 'application/json'
+		const response = await fetch(`/${app_dir}/remote/${id}`, {
+			method: 'POST',
+			body: devalue.stringify(args, encoders), // TODO maybe don't use devalue.stringify here
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const result = await response.json();
+
+		if (!response.ok) {
+			// TODO should this go through `handleError`?
+			throw new Error(result.message);
 		}
-	});
 
-	const result = await response.json();
-
-	if (!response.ok) {
-		// TODO should this go through `handleError`?
-		throw new Error(result.message);
-	}
-
-	return devalue.parse(result, app.decoders);
+		return devalue.parse(result, app.decoders);
+	};
 }
