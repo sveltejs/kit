@@ -137,14 +137,6 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 				universal = find_deps(server_manifest, node.universal, true);
 			}
 
-			if (entry.stylesheet_map.size > 0) {
-				console.dir({
-					entry: entry.stylesheet_map,
-					component: component?.stylesheet_map,
-					universal: universal?.stylesheet_map,
-				}, { colors: true, depth: null, maxArrayLength: null });
-			}
-
 			/** @type {Set<string>} */
 			const css_used_by_server = new Set();
 			/** @type {Set<string>} */
