@@ -42,7 +42,7 @@
 		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
-		"@cloudflare/kv-asset-handler": "^0.3.0",
+		"@cloudflare/kv-asset-handler": "^0.4.0",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
 		"typescript": "^5.3.3"
