@@ -972,7 +972,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -994,7 +994,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Info about the target route
 		 */
-		route: { id: string | null };
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: string | null;
+		};
 		/**
 		 * The URL that is navigated to
 		 */
@@ -1111,7 +1116,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1187,7 +1192,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};

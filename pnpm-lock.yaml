@@ -67,7 +67,7 @@ importers:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
       wrangler:
-        specifier: '>=3.0.0'
+        specifier: ^3.87.0 || ^4.0.0
         version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
     devDependencies:
       '@sveltejs/kit':
@@ -92,12 +92,12 @@ importers:
         specifier: ^0.24.0
         version: 0.24.2
       wrangler:
-        specifier: '>=3.0.0'
+        specifier: ^3.91.0 || ^4.0.0
         version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
     devDependencies:
       '@cloudflare/kv-asset-handler':
-        specifier: ^0.3.0
-        version: 0.3.4
+        specifier: ^0.4.0
+        version: 0.4.0
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -1250,10 +1250,6 @@ packages:
 
   '@changesets/write@0.3.2':
     resolution: {integrity: sha512-kDxDrPNpUgsjDbWBvUo27PzKX4gqeKOlhibaOXDJA6kuBisGqNHv/HwGJrAu8U/dSf8ZEFIeHIPtvSlZI1kULw==}
-
-  '@cloudflare/kv-asset-handler@0.3.4':
-    resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
-    engines: {node: '>=16.13'}
 
   '@cloudflare/kv-asset-handler@0.4.0':
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
@@ -3692,10 +3688,6 @@ snapshots:
       fs-extra: 7.0.1
       human-id: 1.0.2
       prettier: 2.8.8
-
-  '@cloudflare/kv-asset-handler@0.3.4':
-    dependencies:
-      mime: 3.0.0
 
   '@cloudflare/kv-asset-handler@0.4.0':
     dependencies:

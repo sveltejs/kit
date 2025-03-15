@@ -299,11 +299,11 @@ The `lang` parameter will be correctly derived from the returned pathname.
 
 Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
 
-Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise. In case you fetch data, make sure to use the `fetch` provided to the `reroute` function. It has the [same benefits](load#Making-fetch-requests) as using the special `fetch` of `load` functions, with the caveat that `params` and `id` are unavailable to [`handleFetch`](#Server-hooks-handleFetch) because the route is not known yet.
+Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise. If you need to fetch data, use the `fetch` provided as an argument. It has the [same benefits](load#Making-fetch-requests) as the `fetch` provided to `load` functions, with the caveat that `params` and `id` are unavailable to [`handleFetch`](#Server-hooks-handleFetch) because the route is not yet known.
 
 ```js
 /// file: src/hooks.js
-// @errors: 2345
+// @errors: 2345`
 // @errors: 2304
 
 /** @type {import('@sveltejs/kit').Reroute} */
