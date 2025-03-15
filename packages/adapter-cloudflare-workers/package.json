@@ -38,7 +38,7 @@
 		"check": "tsc --skipLibCheck"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20231121.0",
+		"@cloudflare/workers-types": "^4.20250312.0",
 		"esbuild": "^0.24.0"
 	},
 	"devDependencies": {
@@ -49,6 +49,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^3.91.0"
+		"wrangler": "^3.91.0 || ^4.0.0"
 	}
 }
