@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.9.0
+### Minor Changes
+
+
+- feat: support wrangler 4 ([#13580](https://github.com/sveltejs/kit/pull/13580))
+
+
+### Patch Changes
+
+- Updated dependencies [[`001bc04dece9b0983efc2187225772c19d135345`](https://github.com/sveltejs/kit/commit/001bc04dece9b0983efc2187225772c19d135345)]:
+  - @sveltejs/kit@2.19.2
+
 ## 2.8.0
 ### Minor Changes
 
