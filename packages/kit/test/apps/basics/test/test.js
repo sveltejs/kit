@@ -1532,3 +1532,25 @@ test.describe('Serialization', () => {
 		expect(await page.textContent('h1')).toBe('It works!');
 	});
 });
+
+test.describe('service worker option', () => {
+	test('pass the options to the service worker', async ({ page }) => {
+		await page.goto('/');
+		const content = await page.content();
+		const matching = content.match(/navigator\.serviceWorker\.register\(.+?, (?<options>{.+?})\)/);
+		let options = {};
+		if (matching && matching.groups) {
+			options = JSON.parse(matching.groups.options);
+		}
+		if (process.env.DEV) {
+			expect(options).toMatchObject({
+				type: 'module',
+				updateViaCache: 'imports'
+			});
+		} else {
+			expect(options).toMatchObject({
+				updateViaCache: 'imports'
+			});
+		}
+	});
+});
