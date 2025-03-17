@@ -257,7 +257,10 @@ test.describe('Navigation lifecycle functions', () => {
 		);
 	});
 
-	test('afterNavigate properly removed', async ({ page, clicknav }) => {
+	test('onNavigate returned function is only called once', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
