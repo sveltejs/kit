@@ -33,6 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -350,26 +351,32 @@ export async function respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
-		const response = await options.hooks.handle({
-			event,
-			resolve: (event, opts) =>
-				resolve(event, page_nodes, opts).then((response) => {
-					// add headers/cookies here, rather than inside `resolve`, so that we
-					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
+		const response = await with_event(event, () =>
+			options.hooks.handle({
+				event,
+				resolve: (event, opts) =>
+					// counter-intuitively, we need to clear the event, so that it's not
+					// e.g. accessible when loading modules needed to handle the request
+					with_event(null, () =>
+						resolve(event, page_nodes, opts).then((response) => {
+							// add headers/cookies here, rather than inside `resolve`, so that we
+							// can do it once for all responses instead of once per `return`
+							for (const key in headers) {
+								const value = headers[key];
+								response.headers.set(key, /** @type {string} */ (value));
+							}
 
-					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+							add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-					if (state.prerendering && event.route.id !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-					}
+							if (state.prerendering && event.route.id !== null) {
+								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+							}
 
-					return response;
-				})
-		});
+							return response;
+						})
+					)
+			})
+		);
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
