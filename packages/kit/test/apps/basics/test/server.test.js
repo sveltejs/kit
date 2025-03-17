@@ -815,6 +815,11 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/prerendered/to-destination');
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
+	});
+
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
 		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);

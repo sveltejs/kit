@@ -2,6 +2,7 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
 import { read_implementation } from '__sveltekit/server';
+import { has_prerendered_path } from './utils.js';
 
 /**
  * @param {{
@@ -112,10 +113,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
-				if (
-					manifest._.prerendered_routes.has(decoded) ||
-					(decoded.at(-1) === '/' && manifest._.prerendered_routes.has(decoded.slice(0, -1)))
-				) {
+				if (has_prerendered_path(manifest, paths.base + decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for

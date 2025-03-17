@@ -1004,7 +1004,7 @@ export interface NavigationEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1026,7 +1026,12 @@ export interface NavigationTarget {
 	/**
 	 * Info about the target route
 	 */
-	route: { id: string | null };
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 */
+		id: string | null;
+	};
 	/**
 	 * The URL that is navigated to
 	 */
@@ -1143,7 +1148,7 @@ export interface Page<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1219,7 +1224,7 @@ export interface RequestEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};

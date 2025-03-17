@@ -363,10 +363,10 @@ export async function POST({ request }) {
 Exporting the `fallback` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
 
 ```js
-// @errors: 7031
 /// file: src/routes/api/add/+server.js
 import { json, text } from '@sveltejs/kit';
 
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
 	const { a, b } = await request.json();
 	return json(a + b);
