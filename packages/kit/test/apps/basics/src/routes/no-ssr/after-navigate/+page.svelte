@@ -2,11 +2,11 @@
 	import { afterNavigate } from '$app/navigation';
 
 	let count = 0;
-  let type = '';
+	let type = '';
 
 	afterNavigate((event) => {
 		count += 1;
-    type = event.type;
+		type = event.type;
 	});
 </script>
 
