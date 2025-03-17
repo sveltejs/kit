@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.0
+### Minor Changes
+
+
+- feat: add `getRequestEvent` to `$app/server` ([#13582](https://github.com/sveltejs/kit/pull/13582))
+
 ## 2.19.2
 ### Patch Changes
 
