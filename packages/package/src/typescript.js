@@ -33,7 +33,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
 	} catch (e) {
 		if (!(e instanceof Error)) throw e;
-		console.info(`Can't check svelte version ${svelte_dep}`, e.message);
+		console.warn(`Can't check svelte version ${svelte_dep}`, e.message);
 	}
 	await emitDts({
 		libRoot: input,
