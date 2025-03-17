@@ -5,7 +5,7 @@
 		"noEmit": true,
 		"strict": true,
 		"target": "es2022",
-		"module": "node16",
+		"module": "nodenext",
 		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
