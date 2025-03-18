@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.1
+### Patch Changes
+
+
+- fix: avoid using top-level await ([#13607](https://github.com/sveltejs/kit/pull/13607))
+
 ## 2.20.0
 ### Minor Changes
 
