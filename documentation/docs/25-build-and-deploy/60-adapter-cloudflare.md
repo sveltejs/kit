@@ -68,6 +68,8 @@ When configuring your project settings, you must use the following settings:
 - **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 
+Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage).
+
 ## Runtime APIs
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/context/), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties), meaning that you can access it in hooks and endpoints:
@@ -105,7 +107,7 @@ export {};
 
 Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/pages/functions/bindings/) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/pages/functions/wrangler-configuration/#local-development) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare --compatibility-flag=nodejs_als`.
 
 ## Notes
 
