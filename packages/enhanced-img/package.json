@@ -46,7 +46,7 @@
 		"@types/estree": "^1.0.5",
 		"@types/node": "^18.19.48",
 		"rollup": "^4.27.4",
-		"svelte": "^5.2.9",
+		"svelte": "^5.23.1",
 		"typescript": "^5.6.3",
 		"vite": "^6.0.11",
 		"vitest": "^3.0.1"
