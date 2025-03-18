@@ -52,7 +52,7 @@
 		"vitest": "^3.0.1"
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0",
+		"svelte": "^5.12.0",
 		"vite": ">= 5.0.0"
 	}
 }
