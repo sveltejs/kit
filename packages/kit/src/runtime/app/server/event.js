@@ -6,14 +6,13 @@ let request_event = null;
 /** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null>} */
 let als;
 
-try {
-	const hooks = await import('node:async_hooks');
-	als = new hooks.AsyncLocalStorage();
-} catch {
-	// can't use AsyncLocalStorage, but can still call getRequestEvent synchronously.
-	// this isn't behind `supports` because it's basically just StackBlitz (i.e.
-	// in-browser usage) that doesn't support it AFAICT
-}
+import('node:async_hooks')
+	.then((hooks) => (als = new hooks.AsyncLocalStorage()))
+	.catch(() => {
+		// can't use AsyncLocalStorage, but can still call getRequestEvent synchronously.
+		// this isn't behind `supports` because it's basically just StackBlitz (i.e.
+		// in-browser usage) that doesn't support it AFAICT
+	});
 
 /**
  * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
