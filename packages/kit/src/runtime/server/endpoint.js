@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
+import { with_event } from '../app/server/event.js';
 import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
@@ -57,8 +58,8 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		let response = await handler(
-			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
+		let response = await with_event(event, () =>
+			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 
 		if (!(response instanceof Response)) {

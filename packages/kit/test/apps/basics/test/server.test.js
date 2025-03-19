@@ -834,3 +834,10 @@ test.describe('init', () => {
 		await expect(page.locator('p')).toHaveText('1');
 	});
 });
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in server endpoints', async ({ request }) => {
+		const response = await request.get('/get-request-event/endpoint');
+		expect(await response.text()).toBe('hello from hooks.server.js');
+	});
+});

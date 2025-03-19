@@ -1500,7 +1500,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Shape of the `export const socket = {...}` object in `+server.js`.
 	 * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
-	 * @since 2.20.0
+	 * @since 2.21.0
 	 */
 	export interface Socket {
 		/**
@@ -1523,7 +1523,7 @@ declare module '@sveltejs/kit' {
 	 * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects
 	 * to the server, `crossws` creates a [`Peer`](https://crossws.unjs.io/guide/peer)
 	 * object that allows interacting with the connected client.
-	 * @since 2.20.0
+	 * @since 2.21.0
 	 */
 	export type Peer = import('crossws').Peer;
 
@@ -1531,7 +1531,7 @@ declare module '@sveltejs/kit' {
 	 * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
 	 * hook, you'll receive a [`Message`](https://crossws.unjs.io/guide/message)
 	 * object containing data from the client.
-	 * @since 2.20.0
+	 * @since 2.21.0
 	 */
 	export type Message = import('crossws').Message;
 
@@ -2467,6 +2467,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
+	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem.
 	 * @example
@@ -2492,7 +2493,7 @@ declare module '$app/server' {
 	 *   // ...
 	 * });
 	 * ```
-	 * @since 2.20.0
+	 * @since 2.21.0
 	 */
 	export function getPeers(): import("crossws").AdapterInstance["peers"];
 	/**
@@ -2504,11 +2505,18 @@ declare module '$app/server' {
 	 *
 	 * publish('chat', { message: 'Hello, world!' });
 	 * ```
-	 * @since 2.20.0
+	 * @since 2.21.0
 	 */
 	export function publish(topic: string, data: unknown, options?: {
 		compress?: boolean;
 	} | undefined): void;
+	/**
+	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
+	 *
+	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * @since 2.20.0
+	 */
+	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
 	export {};
 }

@@ -1518,7 +1518,7 @@ export type SubmitFunction<
 /**
  * Shape of the `export const socket = {...}` object in `+server.js`.
  * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
- * @since 2.20.0
+ * @since 2.21.0
  */
 export interface Socket {
 	/**
@@ -1541,7 +1541,7 @@ export interface Socket {
  * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects
  * to the server, `crossws` creates a [`Peer`](https://crossws.unjs.io/guide/peer)
  * object that allows interacting with the connected client.
- * @since 2.20.0
+ * @since 2.21.0
  */
 export type Peer = import('crossws').Peer;
 
@@ -1549,7 +1549,7 @@ export type Peer = import('crossws').Peer;
  * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
  * hook, you'll receive a [`Message`](https://crossws.unjs.io/guide/message)
  * object containing data from the client.
- * @since 2.20.0
+ * @since 2.21.0
  */
 export type Message = import('crossws').Message;
 

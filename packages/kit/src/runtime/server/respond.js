@@ -33,6 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -429,32 +430,49 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
 		/**
-		 * @param {Response} response
-		 * @returns {Response}
+		 * @param {(event: import('@sveltejs/kit').RequestEvent, page_nodes: PageNodes | undefined, opts?: import('@sveltejs/kit').ResolveOptions) => Promise<Response>} resolve
+		 * @returns {Promise<Response>}
 		 */
-		const after_resolve = (response) => {
-			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
+		const handle_hook = async (resolve) => {
+			return await with_event(event, () => {
+				return options.hooks.handle({
+					event,
+					resolve: (event, opts) => {
+						// counter-intuitively, we need to clear the event, so that it's not
+						// e.g. accessible when loading modules needed to handle the request
+						return with_event(null, () => {
+							return resolve(event, page_nodes, opts).then((response) => {
+								event.cookies.set = () => {
+									throw new Error(
+										'Cannot use `cookies.set(...)` after the response has been generated'
+									);
+								};
 
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-			};
+								event.setHeaders = () => {
+									throw new Error(
+										'Cannot use `setHeaders(...)` after the response has been generated'
+									);
+								};
 
-			// add headers/cookies here, rather than inside `resolve`, so that we
-			// can do it once for all responses instead of once per `return`
-			for (const key in headers) {
-				const value = headers[key];
-				response.headers.set(key, /** @type {string} */ (value));
-			}
+								// add headers/cookies here, rather than inside `resolve`, so that we
+								// can do it once for all responses instead of once per `return`
+								for (const key in headers) {
+									const value = headers[key];
+									response.headers.set(key, /** @type {string} */ (value));
+								}
 
-			add_cookies_to_headers(response.headers, Object.values(new_cookies));
+								add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-			if (state.prerendering && event.route.id !== null) {
-				response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-			}
+								if (state.prerendering && event.route.id !== null) {
+									response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+								}
 
-			return response;
+								return response;
+							});
+						});
+					}
+				});
+			});
 		};
 
 		if (upgrade && route?.endpoint) {
@@ -470,45 +488,42 @@ async function handle_request(request, options, manifest, state, upgrade) {
 						let response;
 
 						try {
-							response = await options.hooks.handle({
-								event,
-								resolve: async (event) => {
-									/** @type {Response} */
-									let upgrade_response;
+							response = await handle_hook(async (event) => {
+								/** @type {Response} */
+								let upgrade_response;
 
-									try {
-										/** @type {Response | ResponseInit | undefined} */
-										let result;
+								try {
+									/** @type {Response | ResponseInit | undefined} */
+									let result;
 
-										if (node.socket?.upgrade) {
-											Object.defineProperty(event, 'context', {
-												enumerable: true,
-												value: context
-											});
-											result =
-												(await node.socket.upgrade(
-													/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
-														event
-													)
-												)) ?? undefined;
-										}
-
-										upgrade_response =
-											result instanceof Response ? result : new Response(undefined, result);
-										upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
-									} catch (e) {
-										if (e instanceof HttpError) {
-											upgrade_response = text_or_json(e);
-										} else if (e instanceof Response) {
-											// crossws allows throwing a Response to abort the upgrade
-											upgrade_response = e;
-										} else {
-											throw e;
-										}
+									if (node.socket?.upgrade) {
+										Object.defineProperty(event, 'context', {
+											enumerable: true,
+											value: context
+										});
+										result =
+											(await node.socket.upgrade(
+												/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
+													event
+												)
+											)) ?? undefined;
 									}
 
-									return after_resolve(upgrade_response);
+									upgrade_response =
+										result instanceof Response ? result : new Response(undefined, result);
+									upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+								} catch (e) {
+									if (e instanceof HttpError) {
+										upgrade_response = text_or_json(e);
+									} else if (e instanceof Response) {
+										// crossws allows throwing a Response to abort the upgrade
+										upgrade_response = e;
+									} else {
+										throw e;
+									}
 								}
+
+								return upgrade_response;
 							});
 						} catch (e) {
 							return await redirect_or_fatal_error(e);
@@ -555,10 +570,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			}
 		}
 
-		const response = await options.hooks.handle({
-			event,
-			resolve: (event, opts) => resolve(event, page_nodes, opts).then(after_resolve)
-		});
+		const response = await handle_hook(resolve);
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {

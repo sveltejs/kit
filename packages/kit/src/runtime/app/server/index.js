@@ -85,7 +85,7 @@ export function read(asset) {
  * });
  * ```
  * @returns {import('crossws').AdapterInstance['peers']}
- * @since 2.20.0
+ * @since 2.21.0
  */
 export function getPeers() {
 	__SVELTEKIT_TRACK__('$app/server:getPeers');
@@ -112,7 +112,7 @@ export function getPeers() {
  * @param {unknown} data
  * @param {{ compress?: boolean }=} options
  * @returns {void}
- * @since 2.20.0
+ * @since 2.21.0
  */
 export function publish(topic, data, options) {
 	__SVELTEKIT_TRACK__('$app/server:publish');
@@ -125,3 +125,5 @@ export function publish(topic, data, options) {
 
 	publish_implementation(topic, data, options);
 }
+
+export { getRequestEvent } from './event.js';
