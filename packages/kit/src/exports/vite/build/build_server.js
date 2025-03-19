@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { find_deps, resolve_symlinks } from './utils.js';
+import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
@@ -83,13 +83,13 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		const exports = [`export const index = ${i};`];
 
 		/** @type {string[]} */
-		const imported = [];
+		let imported = [];
 
 		/** @type {string[]} */
-		const stylesheets = [];
+		let stylesheets = [];
 
 		/** @type {string[]} */
-		const fonts = [];
+		let fonts = [];
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -119,15 +119,45 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (client_manifest && (node.universal || node.component) && output_config.bundleStrategy === 'split') {
-			const entry = find_deps(
-				client_manifest,
-				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
-				true
-			);
+			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
+			const entry = find_deps(client_manifest, entry_path, true);
 
-			imported.push(...entry.imports);
-			stylesheets.push(...entry.stylesheets);
-			fonts.push(...entry.fonts);
+			// eagerly load stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
+			// If it is not used during SSR, it can be lazily loaded in the browser.
+	
+			/** @type {import('types').AssetDependencies | undefined} */
+			let component;
+			if (node.component) {
+				component = find_deps(server_manifest, node.component, true);
+			}
+
+			/** @type {import('types').AssetDependencies | undefined} */
+			let universal;
+			if (node.universal) {
+				universal = find_deps(server_manifest, node.universal, true);
+			}
+
+			/** @type {Set<string>} */
+			const css_used_by_server = new Set();
+			/** @type {Set<string>} */
+			const assets_used_by_server = new Set();
+
+			entry.stylesheet_map.forEach((value, key) => {
+				// pages and layouts are named as node indexes in the client manifest
+				// so we need to use the original filename when checking against the server manifest
+				if (key === entry_path) {
+					key = node.component ?? key;
+				}
+
+				if (component?.stylesheet_map.has(key) || universal?.stylesheet_map.has(key)) {
+					value.css.forEach(file => css_used_by_server.add(file));
+					value.assets.forEach(file => assets_used_by_server.add(file));
+				}
+			});
+
+			imported = entry.imports;
+			stylesheets = Array.from(css_used_by_server);
+			fonts = filter_fonts(Array.from(assets_used_by_server));
 		}
 
 		exports.push(

@@ -5,7 +5,12 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
+import {
+	handle_fatal_error,
+	has_prerendered_path,
+	method_not_allowed,
+	redirect_response
+} from './utils.js';
 import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
@@ -21,11 +26,14 @@ import { get_public_env } from './env_module.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
+	add_data_suffix,
+	add_resolution_suffix,
 	has_data_suffix,
 	has_resolution_suffix,
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -191,6 +199,34 @@ export async function respond(request, options, manifest, state) {
 		return text('Malformed URI', { status: 400 });
 	}
 
+	if (
+		resolved_path !== url.pathname &&
+		!state.prerendering?.fallback &&
+		has_prerendered_path(manifest, resolved_path)
+	) {
+		const url = new URL(request.url);
+		url.pathname = is_data_request
+			? add_data_suffix(resolved_path)
+			: is_route_resolution_request
+				? add_resolution_suffix(resolved_path)
+				: resolved_path;
+
+		// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
+		// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
+		const response = await fetch(url, request);
+		const headers = new Headers(response.headers);
+		if (headers.has('content-encoding')) {
+			headers.delete('content-encoding');
+			headers.delete('content-length');
+		}
+
+		return new Response(response.body, {
+			headers,
+			status: response.status,
+			statusText: response.statusText
+		});
+	}
+
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
 
@@ -315,26 +351,32 @@ export async function respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
-		const response = await options.hooks.handle({
-			event,
-			resolve: (event, opts) =>
-				resolve(event, page_nodes, opts).then((response) => {
-					// add headers/cookies here, rather than inside `resolve`, so that we
-					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
+		const response = await with_event(event, () =>
+			options.hooks.handle({
+				event,
+				resolve: (event, opts) =>
+					// counter-intuitively, we need to clear the event, so that it's not
+					// e.g. accessible when loading modules needed to handle the request
+					with_event(null, () =>
+						resolve(event, page_nodes, opts).then((response) => {
+							// add headers/cookies here, rather than inside `resolve`, so that we
+							// can do it once for all responses instead of once per `return`
+							for (const key in headers) {
+								const value = headers[key];
+								response.headers.set(key, /** @type {string} */ (value));
+							}
 
-					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+							add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-					if (state.prerendering && event.route.id !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-					}
+							if (state.prerendering && event.route.id !== null) {
+								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+							}
 
-					return response;
-				})
-		});
+							return response;
+						})
+					)
+			})
+		);
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
