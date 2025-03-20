@@ -17,7 +17,7 @@ export function parse_redirects(file_contents) {
 		const [pathname] = line.split(' ');
 		// pathnames with placeholders are not supported
 		if (!pathname || pathname.includes('/:')) {
-			throw new Error(`_redirect rule cannot be excluded by _routes.json: ${line}`);
+			throw new Error(`The following _redirects rule cannot be excluded by _routes.json: ${line}`);
 		}
 		redirects.push(pathname);
 	}
