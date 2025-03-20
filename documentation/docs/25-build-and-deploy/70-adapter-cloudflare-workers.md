@@ -4,6 +4,12 @@ title: Cloudflare Workers
 
 To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
+## Comparisons
+
+- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
+- `adapter-cloudflare` – supports all SvelteKit features; builds for Cloudflare Pages
+- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages and Cloudflare Workers
+
 ## Usage
 
 Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `svelte.config.js`:

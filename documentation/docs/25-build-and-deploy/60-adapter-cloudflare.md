@@ -8,12 +8,6 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 > [!NOTE] Unless you have a specific reason to use `adapter-cloudflare`, it's recommended that you use [`adapter-cloudflare-workers`](adapter-cloudflare-workers) instead since Cloudflare plans to deprecate Cloudflare Pages in favour of Cloudflare Workers. Refer to the [compatibility matrix](https://developers.cloudflare.com/workers/static-assets/compatibility-matrix/) for more information.
 
-## Comparisons
-
-- `adapter-cloudflare` – supports all SvelteKit features; builds for Cloudflare Pages
-- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
-- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages and Cloudflare Workers
-
 ## Usage
 
 Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `svelte.config.js`:
