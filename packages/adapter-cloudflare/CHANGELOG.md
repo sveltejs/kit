@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare
 
+## 6.0.0
+### Major Changes
+
+
+- fix: copy the `_headers` and `_redirects` files from the project root instead of the `/static` directory ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+
+### Patch Changes
+
+
+- fix: write server files to the cloudflare build directory ([#13610](https://github.com/sveltejs/kit/pull/13610))
+
 ## 5.1.0
 ### Minor Changes
 
