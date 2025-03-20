@@ -15,5 +15,5 @@
 		"lib": ["es2021"],
 		"types": ["@cloudflare/workers-types"]
 	},
-	"include": ["**/*.js", "internal.d.ts"]
+	"include": ["index.js", "internal.d.ts", "src/worker.js"]
 }
