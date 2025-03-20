@@ -69,13 +69,12 @@ If your functions need to access data in a specific region, it's recommended tha
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```js
-// @errors: 2300 2842 7031 1181 1005 1136 1128
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
 export default {
 	kit: {
-		adapter({
+		adapter: adapter({
 			images: {
 				sizes: [640, 828, 1200, 1920, 3840],
 				formats: ['image/avif', 'image/webp'],
@@ -124,16 +123,16 @@ Making a `GET` or `HEAD` request with `x-prerender-revalidate: <token>` will for
 
 Note that the `BYPASS_TOKEN` string must be at least 32 characters long. You could generate one using the JavaScript console like so:
 
-```console
-btoa(Math.random().toString()).substring(0,32);
+```js
+crypto.randomUUID();
 ```
 
 Set this string as an environment variable on Vercel by logging in and going to your project then Settings > Environment Variables. For "Key" put `BYPASS_TOKEN` and for "value" use the string generated above, then hit "Save".
 
 To get this key known about for local development, you can use the [Vercel CLI](https://vercel.com/docs/cli/env) by running the `vercel env pull` command locally like so:
 
-```console
-$ vercel env pull .env.development.local
+```sh
+vercel env pull .env.development.local
 ```
 
 ### allowQuery

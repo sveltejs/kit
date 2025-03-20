@@ -8,7 +8,7 @@ import { test as base, devices } from '@playwright/test';
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
-		use({
+		void use({
 			/**
 			 * @param {string} url
 			 * @param {{ replaceState?: boolean }} opts
@@ -40,10 +40,10 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
-			 * @param {string[]} urls
+			 * @param {string} pathname
 			 * @returns {Promise<void>}
 			 */
-			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
 
 			/**
 			 * @param {string} url

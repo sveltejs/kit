@@ -1,5 +1,47 @@
 # @sveltejs/adapter-vercel
 
+## 5.6.3
+### Patch Changes
+
+
+- chore(deps): upgrade @vercel/nft to fix glob deprecation warnings ([`b1e9781a6dff41841d8e1509311d948421956746`](https://github.com/sveltejs/kit/commit/b1e9781a6dff41841d8e1509311d948421956746))
+
+## 5.6.2
+### Patch Changes
+
+
+- fix: change server-side route resolution endpoint ([#13461](https://github.com/sveltejs/kit/pull/13461))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
+## 5.6.1
+### Patch Changes
+
+
+- fix: correct edge function path for route resolution endpoint ([#13409](https://github.com/sveltejs/kit/pull/13409))
+
+## 5.6.0
+### Minor Changes
+
+
+- feat: generate edge function dedicated to server side route resolution when using that option in SvelteKit ([#13379](https://github.com/sveltejs/kit/pull/13379))
+
+
+### Patch Changes
+
+- Updated dependencies [[`09296d0f19c8d1ff57d699e637bd1beabb69d438`](https://github.com/sveltejs/kit/commit/09296d0f19c8d1ff57d699e637bd1beabb69d438), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79), [`f30352f874790b9de0bd0eba985a21aef23e158e`](https://github.com/sveltejs/kit/commit/f30352f874790b9de0bd0eba985a21aef23e158e), [`180fa3467e195065c0a25206c6328a908e6952d7`](https://github.com/sveltejs/kit/commit/180fa3467e195065c0a25206c6328a908e6952d7), [`5906e9708965b848b468d0014999c36272dc8d50`](https://github.com/sveltejs/kit/commit/5906e9708965b848b468d0014999c36272dc8d50), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79)]:
+  - @sveltejs/kit@2.17.0
+
+## 5.5.3
+### Patch Changes
+
+
+- fix: include ambient type declarations ([#12088](https://github.com/sveltejs/kit/pull/12088))
+
+- Updated dependencies [[`d440c68acac67ed64eea4b9bda267e229303db7b`](https://github.com/sveltejs/kit/commit/d440c68acac67ed64eea4b9bda267e229303db7b), [`6774ebc34330b12ae8c0cae08e98b577d819fffb`](https://github.com/sveltejs/kit/commit/6774ebc34330b12ae8c0cae08e98b577d819fffb), [`777c8ef11f17d2ab48aee0f2347c051663da5826`](https://github.com/sveltejs/kit/commit/777c8ef11f17d2ab48aee0f2347c051663da5826), [`f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2`](https://github.com/sveltejs/kit/commit/f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2), [`34a03ff16af29e917abebb649b31eadfc40a98a0`](https://github.com/sveltejs/kit/commit/34a03ff16af29e917abebb649b31eadfc40a98a0), [`1c77e283896058084c1cb5752d9ec207987a585e`](https://github.com/sveltejs/kit/commit/1c77e283896058084c1cb5752d9ec207987a585e), [`04958cca5905aaeeff367c9e4a5ce6e90fc64779`](https://github.com/sveltejs/kit/commit/04958cca5905aaeeff367c9e4a5ce6e90fc64779), [`9dc5c0e3e01a3c07010e9996688169be68e1dde8`](https://github.com/sveltejs/kit/commit/9dc5c0e3e01a3c07010e9996688169be68e1dde8), [`00e1a7621de554054d068e4525a9e505d1c2e588`](https://github.com/sveltejs/kit/commit/00e1a7621de554054d068e4525a9e505d1c2e588), [`9fcd1e7574197fa6e7ac000a030378d877cb8837`](https://github.com/sveltejs/kit/commit/9fcd1e7574197fa6e7ac000a030378d877cb8837), [`e541a4057a00f5ab6740fb51b7f88f17776da50a`](https://github.com/sveltejs/kit/commit/e541a4057a00f5ab6740fb51b7f88f17776da50a), [`37f72fbb075b481de8263f62c77125333735f382`](https://github.com/sveltejs/kit/commit/37f72fbb075b481de8263f62c77125333735f382), [`b60707ca8e755be95c86490122aa1b792b9bd6be`](https://github.com/sveltejs/kit/commit/b60707ca8e755be95c86490122aa1b792b9bd6be), [`699f4405c752261cf46c1ad32e4dbadceaffc75b`](https://github.com/sveltejs/kit/commit/699f4405c752261cf46c1ad32e4dbadceaffc75b), [`e2a4538c48295cde06f64fb8c7f0b333fbf95496`](https://github.com/sveltejs/kit/commit/e2a4538c48295cde06f64fb8c7f0b333fbf95496), [`a91ba1f326b6e244503de9a010771d942b461dad`](https://github.com/sveltejs/kit/commit/a91ba1f326b6e244503de9a010771d942b461dad)]:
+  - @sveltejs/kit@2.16.0
+
 ## 5.5.2
 ### Patch Changes
 

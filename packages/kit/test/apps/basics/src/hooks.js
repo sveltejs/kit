@@ -4,11 +4,12 @@ import { Foo } from './lib';
 const mapping = {
 	'/reroute/basic/a': '/reroute/basic/b',
 	'/reroute/client-only-redirect/a': '/reroute/client-only-redirect/b',
-	'/reroute/preload-data/a': '/reroute/preload-data/b'
+	'/reroute/preload-data/a': '/reroute/preload-data/b',
+	'/reroute/invalidate/a': '/reroute/invalidate'
 };
 
 /** @type {import("@sveltejs/kit").Reroute} */
-export const reroute = ({ url }) => {
+export const reroute = ({ url, fetch }) => {
 	//Try to rewrite the external url used in /reroute/external to the homepage - This should not work
 	if (browser && url.href.startsWith('https://expired.badssl.com')) {
 		return '/';
@@ -24,6 +25,14 @@ export const reroute = ({ url }) => {
 
 	if (url.pathname === '/reroute/error-handling/server-error') {
 		throw new Error('Server Error - Should trigger 500 response');
+	}
+
+	if (url.pathname === '/reroute/async/a') {
+		return fetch('/reroute/api').then((r) => r.text());
+	}
+
+	if (url.pathname === '/reroute/prerendered/to-destination') {
+		return '/reroute/prerendered/destination';
 	}
 
 	if (url.pathname in mapping) {

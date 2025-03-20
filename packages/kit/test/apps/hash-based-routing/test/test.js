@@ -56,10 +56,10 @@ test.describe('hash based navigation', () => {
 	});
 
 	test('navigation works with URL encoded characters', async ({ page }) => {
-		await page.goto('/#/%23test');
+		await page.goto('/?query=%23abc#/%23test');
 		await expect(page.locator('p')).toHaveText('home');
 		// hashchange event
-		await page.goto('/#/a%23test');
+		await page.goto('/?query=%23abc#/a%23test');
 		await expect(page.locator('p')).toHaveText('a');
 	});
 
@@ -88,5 +88,31 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('p')).toHaveText('rerouted');
 		url = new URL(page.url());
 		expect(url.hash).toBe('#/reroute-b');
+	});
+
+	test('relative anchor works', async ({ page }) => {
+		await page.goto('/#/anchor');
+
+		await page.locator('a[href="#test"]').click();
+		await page.waitForURL('#/anchor#test');
+		await expect(page.locator('#test')).toHaveText('#test');
+		const url = new URL(page.url());
+		expect(url.hash).toBe('#/anchor#test');
+	});
+
+	test('navigation history works', async ({ page }) => {
+		await page.goto('/');
+
+		await page.locator('a[href="/#/a"]').click();
+		await page.waitForURL('/#/a');
+
+		await page.locator('a[href="/#/b"]').click();
+		await page.waitForURL('/#/b');
+
+		await page.goBack();
+		expect(page.locator('p')).toHaveText('a');
+
+		await page.goForward();
+		expect(page.locator('p')).toHaveText('b');
 	});
 });

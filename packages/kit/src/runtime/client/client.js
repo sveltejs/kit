@@ -1,7 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	add_data_suffix,
 	decode_params,
 	decode_pathname,
 	strip_hash,
@@ -9,7 +8,7 @@ import {
 	normalize_path
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse } from './parse.js';
+import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -20,7 +19,8 @@ import {
 	origin,
 	scroll_state,
 	notifiable_store,
-	create_updated_store
+	create_updated_store,
+	load_css
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -40,6 +40,9 @@ import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../sh
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+
+export { load_css };
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -158,7 +161,7 @@ async function update_service_worker() {
 
 function noop() {}
 
-/** @type {import('types').CSRRoute[]} */
+/** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
@@ -184,6 +187,17 @@ const components = [];
 
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
 let load_cache = null;
+
+/**
+ * @type {Map<string, Promise<URL>>}
+ * Cache for client-side rerouting, since it could contain async calls which we want to
+ * avoid running multiple times which would slow down navigations (e.g. else preloading
+ * wouldn't help because on navigation it would be called again). Since `reroute` should be
+ * a pure function (i.e. always return the same) value it's safe to cache across navigations.
+ * The server reroute calls don't need to be cached because they are called using `import(...)`
+ * which is cached per the JS spec.
+ */
+const reroute_cache = new Map();
 
 /**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
@@ -265,7 +279,7 @@ export async function start(_app, _target, hydrate) {
 
 	await _app.hooks.init?.();
 
-	routes = parse(_app);
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -273,8 +287,8 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	default_layout_loader();
-	default_error_loader();
+	void default_layout_loader();
+	void default_error_loader();
 
 	current_history_index = history.state?.[HISTORY_INDEX];
 	current_navigation_index = history.state?.[NAVIGATION_INDEX];
@@ -306,7 +320,9 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(app.hash ? decodeURIComponent(location.href) : location.href, { replaceState: true });
+		await goto(app.hash ? decode_hash(new URL(location.href)) : location.href, {
+			replaceState: true
+		});
 	}
 
 	_start_router();
@@ -320,7 +336,8 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const intent = get_navigation_intent(current.url, true);
+	const nav_token = (token = {});
+	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
 	// Also solves an edge case where a preload is triggered, the navigation for it
@@ -328,7 +345,6 @@ async function _invalidate() {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || nav_token !== token) return;
 
@@ -426,9 +442,12 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {URL} url */
+/**
+ * @param {URL} url
+ * @returns {Promise<void>}
+ */
 async function _preload_code(url) {
-	const route = routes.find((route) => route.exec(get_url_path(url)));
+	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -579,8 +598,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 }
 
 /**
- * Call the load function of the given node, if it exists.
- * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+ * Call the universal load function of the given node, if it exists.
  *
  * @param {{
  *   loader: import('types').CSRPageNodeLoader;
@@ -672,12 +690,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				app.hash
 			),
 			async fetch(resource, init) {
-				/** @type {URL | string} */
-				let requested;
-
 				if (resource instanceof Request) {
-					requested = resource.url;
-
 					// we're not allowed to modify the received `Request` object, so in order
 					// to fixup relative urls we create a new equivalent `init` object instead
 					init = {
@@ -702,25 +715,15 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						signal: resource.signal,
 						...init
 					};
-				} else {
-					requested = resource;
 				}
 
-				// we must fixup relative urls so they are resolved from the target page
-				const resolved = new URL(requested, url);
+				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+
 				if (is_tracking) {
 					depends(resolved.href);
 				}
 
-				// match ssr serialized data url, which is important to find cached responses
-				if (resolved.origin === url.origin) {
-					requested = resolved.href.slice(url.origin.length);
-				}
-
-				// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
-				return started
-					? subsequent_fetch(requested, resolved.href, init)
-					: initial_fetch(requested, init);
+				return promise;
 			},
 			setHeaders: () => {}, // noop
 			depends,
@@ -773,6 +776,30 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		data: data ?? server_data_node?.data ?? null,
 		slash: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
+}
+
+/**
+ * @param {Request | string | URL} input
+ * @param {RequestInit | undefined} init
+ * @param {URL} url
+ */
+function resolve_fetch_url(input, init, url) {
+	let requested = input instanceof Request ? input.url : input;
+
+	// we must fixup relative urls so they are resolved from the target page
+	const resolved = new URL(requested, url);
+
+	// match ssr serialized data url, which is important to find cached responses
+	if (resolved.origin === url.origin) {
+		requested = resolved.href.slice(url.origin.length);
+	}
+
+	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+	const promise = started
+		? subsequent_fetch(requested, resolved.href, init)
+		: initial_fetch(requested, init);
+
+	return { resolved, promise };
 }
 
 /**
@@ -1189,33 +1216,49 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
- * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
- * returns undefined.
- * @param {URL | undefined} url
- * @param {boolean} invalidating
+ * Resolve the relative rerouted URL for a client-side navigation
+ * @param {URL} url
+ * @returns {Promise<URL | undefined>}
  */
-function get_navigation_intent(url, invalidating) {
-	if (!url) return;
-	if (is_external_url(url, base, app.hash)) return;
+async function get_rerouted_url(url) {
+	const href = url.href;
 
-	// reroute could alter the given URL, so we pass a copy
+	if (reroute_cache.has(href)) {
+		return reroute_cache.get(href);
+	}
+
 	let rerouted;
+
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url;
+		const promise = (async () => {
+			// reroute could alter the given URL, so we pass a copy
+			let rerouted =
+				(await app.hooks.reroute({
+					url: new URL(url),
+					fetch: async (input, init) => {
+						return resolve_fetch_url(input, init, url).promise;
+					}
+				})) ?? url;
 
-		if (typeof rerouted === 'string') {
-			const tmp = new URL(url); // do not mutate the incoming URL
+			if (typeof rerouted === 'string') {
+				const tmp = new URL(url); // do not mutate the incoming URL
 
-			if (app.hash) {
-				tmp.hash = rerouted;
-			} else {
-				tmp.pathname = rerouted;
+				if (app.hash) {
+					tmp.hash = rerouted;
+				} else {
+					tmp.pathname = rerouted;
+				}
+
+				rerouted = tmp;
 			}
 
-			rerouted = tmp;
-		}
+			return rerouted;
+		})();
+
+		reroute_cache.set(href, promise);
+		rerouted = await promise;
 	} catch (e) {
+		reroute_cache.delete(href);
 		if (DEV) {
 			// in development, print the error...
 			console.error(e);
@@ -1225,26 +1268,59 @@ function get_navigation_intent(url, invalidating) {
 		}
 
 		// fall back to native navigation
-		return undefined;
+		return;
 	}
 
-	const path = get_url_path(rerouted);
+	return rerouted;
+}
 
-	for (const route of routes) {
-		const params = route.exec(path);
+/**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
+ * @param {URL | undefined} url
+ * @param {boolean} invalidating
+ * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
+ */
+async function get_navigation_intent(url, invalidating) {
+	if (!url) return;
+	if (is_external_url(url, base, app.hash)) return;
 
-		if (params) {
-			const id = get_page_key(url);
-			/** @type {import('./types.js').NavigationIntent} */
-			const intent = {
-				id,
-				invalidating,
-				route,
-				params: decode_params(params),
-				url
-			};
-			return intent;
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		const rerouted = await get_rerouted_url(url);
+		if (!rerouted) return;
+
+		const path = get_url_path(rerouted);
+
+		for (const route of routes) {
+			const params = route.exec(path);
+
+			if (params) {
+				return {
+					id: get_page_key(url),
+					invalidating,
+					route,
+					params: decode_params(params),
+					url
+				};
+			}
 		}
+	} else {
+		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
+		const { route, params } = await import(
+			/* @vite-ignore */
+			add_resolution_suffix(url.pathname)
+		);
+
+		if (!route) return;
+
+		return {
+			id: get_page_key(url),
+			invalidating,
+			route: parse_server_route(route, app.nodes),
+			params,
+			url
+		};
 	}
 }
 
@@ -1327,11 +1403,15 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
-	const intent = get_navigation_intent(url, false);
+	const prev_token = token;
+	token = nav_token;
+
+	const intent = await get_navigation_intent(url, false);
 	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
 		block();
+		if (token === nav_token) token = prev_token;
 		return;
 	}
 
@@ -1347,7 +1427,6 @@ async function navigate({
 		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
-	token = nav_token;
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
@@ -1413,7 +1492,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1598,23 +1677,29 @@ if (import.meta.hot) {
 	});
 }
 
+/** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
+
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {Element} */
+	let current_a;
+	/** @type {PreloadDataPriority} */
+	let current_priority;
 
 	container.addEventListener('mousemove', (event) => {
 		const target = /** @type {Element} */ (event.target);
 
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			preload(target, 2);
+			void preload(target, PRELOAD_PRIORITIES.hover);
 		}, 20);
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1624,7 +1709,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
+					void _preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1634,11 +1719,14 @@ function setup_preload() {
 
 	/**
 	 * @param {Element} element
-	 * @param {number} priority
+	 * @param {PreloadDataPriority} priority
 	 */
-	function preload(element, priority) {
+	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a) return;
+
+		// we don't want to preload data again if the user has already hovered/tapped
+		const interacted = a === current_a && priority >= current_priority;
+		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
@@ -1647,29 +1735,34 @@ function setup_preload() {
 
 		// we don't want to preload data for a page we're already on
 		const same_url = url && get_page_key(current.url) === get_page_key(url);
+		if (options.reload || same_url) return;
 
-		if (!options.reload && !same_url) {
-			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(url, false);
-				if (intent) {
-					if (DEV) {
-						_preload_data(intent).then((result) => {
-							if (result.type === 'loaded' && result.state.error) {
-								console.warn(
-									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://svelte.dev/docs/kit/link-options for more info'
-								);
-							}
-						});
-					} else {
-						_preload_data(intent);
+		if (priority <= options.preload_data) {
+			current_a = a;
+			// we don't want to preload data again on tap if we've already preloaded it on hover
+			current_priority = PRELOAD_PRIORITIES.tap;
+
+			const intent = await get_navigation_intent(url, false);
+			if (!intent) return;
+
+			if (DEV) {
+				void _preload_data(intent).then((result) => {
+					if (result.type === 'loaded' && result.state.error) {
+						console.warn(
+							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+								'See https://svelte.dev/docs/kit/link-options for more info'
+						);
 					}
-				}
-			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url));
+				});
+			} else {
+				void _preload_data(intent);
 			}
+		} else if (priority <= options.preload_code) {
+			current_a = a;
+			current_priority = priority;
+			void _preload_code(/** @type {URL} */ (url));
 		}
 	}
 
@@ -1688,7 +1781,7 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url));
+				void _preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
@@ -1904,7 +1997,7 @@ export async function preloadData(href) {
 	}
 
 	const url = resolve_url(href);
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
@@ -1934,7 +2027,7 @@ export async function preloadData(href) {
  * @param {string} pathname
  * @returns {Promise<void>}
  */
-export function preloadCode(pathname) {
+export async function preloadCode(pathname) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
@@ -1942,14 +2035,23 @@ export function preloadCode(pathname) {
 	const url = new URL(pathname, current.url);
 
 	if (DEV) {
-		if (!pathname.startsWith(base)) {
+		if (!pathname.startsWith('/')) {
 			throw new Error(
-				`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
 			);
 		}
 
-		if (!routes.find((route) => route.exec(get_url_path(url)))) {
-			throw new Error(`'${pathname}' did not match any routes`);
+		if (!pathname.startsWith(base)) {
+			throw new Error(
+				`pathname passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+			);
+		}
+
+		if (__SVELTEKIT_CLIENT_ROUTING__) {
+			const rerouted = await get_rerouted_url(url);
+			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
+				throw new Error(`'${pathname}' did not match any routes`);
+			}
 		}
 	}
 
@@ -2079,10 +2181,10 @@ export async function applyAction(result) {
 			root.$set(navigation_result.props);
 			update(navigation_result.props.page);
 
-			tick().then(reset_focus);
+			void tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
-		_goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
 		page.form = result.data;
 		page.status = result.status;
@@ -2263,7 +2365,7 @@ function _start_router() {
 			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
 		});
 
-		navigate({
+		await navigate({
 			type: 'link',
 			url,
 			keepfocus: options.keepfocus,
@@ -2314,7 +2416,7 @@ function _start_router() {
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
 
-		navigate({
+		void navigate({
 			type: 'form',
 			url,
 			keepfocus: options.keepfocus,
@@ -2384,6 +2486,12 @@ function _start_router() {
 			if (!hash_navigating) {
 				const url = new URL(location.href);
 				update_url(url);
+
+				// if the user edits the hash via the browser URL bar, trigger a full-page
+				// reload to align with pathname router behavior
+				if (app.hash) {
+					location.reload();
+				}
 			}
 		}
 	});
@@ -2402,13 +2510,6 @@ function _start_router() {
 				'',
 				location.href
 			);
-		} else if (app.hash) {
-			// If the user edits the hash via the browser URL bar, it
-			// (surprisingly!) mutates `current.url`, allowing us to
-			// detect it and trigger a navigation
-			if (current.url.hash === location.hash) {
-				navigate({ type: 'goto', url: new URL(decodeURIComponent(current.url.href)) });
-			}
 		}
 	});
 
@@ -2447,16 +2548,31 @@ function _start_router() {
  */
 async function _hydrate(
 	target,
-	{ status = 200, error, node_ids, params, route, data: server_data_nodes, form }
+	{ status = 200, error, node_ids, params, route, server_route, data: server_data_nodes, form }
 ) {
 	hydrated = true;
 
 	const url = new URL(location.href);
 
-	if (!__SVELTEKIT_EMBEDDED__) {
-		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
-		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+	/** @type {import('types').CSRRoute | undefined} */
+	let parsed_route;
+
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		if (!__SVELTEKIT_EMBEDDED__) {
+			// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+			// of determining the params on the client side.
+			({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
+		}
+
+		parsed_route = routes.find(({ id }) => id === route.id);
+	} else {
+		// undefined in case of 404
+		if (server_route) {
+			parsed_route = route = parse_server_route(server_route, app.nodes);
+		} else {
+			route = { id: null };
+			params = {};
+		}
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
@@ -2489,8 +2605,6 @@ async function _hydrate(
 
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
-
-		const parsed_route = routes.find(({ id }) => id === route.id);
 
 		// server-side will have compacted the branch, reinstate empty slots
 		// so that error boundaries can be lined up correctly
@@ -2799,6 +2913,17 @@ function clone_page(page) {
 		status: page.status,
 		url: page.url
 	};
+}
+
+/**
+ * @param {URL} url
+ * @returns {URL}
+ */
+function decode_hash(url) {
+	const new_url = new URL(url);
+	// Safari, for some reason, does change # to %23, when entered through the address bar
+	new_url.hash = decodeURIComponent(url.hash);
+	return new_url;
 }
 
 if (DEV) {

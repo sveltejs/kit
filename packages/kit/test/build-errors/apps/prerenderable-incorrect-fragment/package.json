@@ -6,16 +6,17 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
-		"svelte": "^5.2.9",
+		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
-		"vite": "^6.0.1"
+		"vite": "^6.0.11"
 	},
 	"type": "module"
 }

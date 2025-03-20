@@ -35,7 +35,6 @@ import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
-	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
@@ -118,6 +117,8 @@ export function write_server(config, output) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	// Contains the stringified version of
+	/** @type {import('types').SSROptions} */
 	write_if_changed(
 		`${output}/server/internal.js`,
 		server_template({

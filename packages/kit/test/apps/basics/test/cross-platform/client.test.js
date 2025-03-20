@@ -532,6 +532,24 @@ test.describe('CSS', () => {
 
 		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
+
+	test('dynamically imported components lazily load CSS', async ({ page, get_computed_style }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			const url = request.url();
+			if (url.includes('Dynamic') && url.endsWith('.css')) {
+				requests.push(url);
+			}
+		});
+
+		await page.goto('/css/dynamic');
+		expect(requests.length).toBe(0);
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
+		expect(await get_computed_style('p', 'color')).toBe('rgb(0, 0, 255)');
+		expect(requests.length).toBe(1);
+	});
 });
 
 test.describe.serial('Errors', () => {
@@ -601,7 +619,40 @@ test.describe.serial('Errors', () => {
 });
 
 test.describe('Prefetching', () => {
-	test('prefetches programmatically', async ({ baseURL, page, app }) => {
+	test('prefetches code programmatically', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		await app.preloadCode('/routing/b');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.js')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => /\/_app\/immutable\/nodes\/.*?.js$/.test(req)).length).toBe(
+				1
+			);
+		}
+
+		if (process.env.DEV) {
+			try {
+				await app.preloadCode('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch(
+					'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
+				);
+			}
+		}
+	});
+
+	test('prefetches data programmatically', async ({ baseURL, page, app }) => {
 		await page.goto('/routing/a');
 
 		/** @type {string[]} */
@@ -830,7 +881,8 @@ test.describe('Routing', () => {
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
 
-		expect(requests).toEqual([]);
+		// Filter out server-side route resolution request
+		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');

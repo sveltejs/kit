@@ -1,5 +1,38 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.9.0
+### Minor Changes
+
+
+- feat: support wrangler 4 ([#13580](https://github.com/sveltejs/kit/pull/13580))
+
+
+### Patch Changes
+
+- Updated dependencies [[`001bc04dece9b0983efc2187225772c19d135345`](https://github.com/sveltejs/kit/commit/001bc04dece9b0983efc2187225772c19d135345)]:
+  - @sveltejs/kit@2.19.2
+
+## 2.8.0
+### Minor Changes
+
+
+- feat: support `.jsonc` Wrangler configuration files ([#13467](https://github.com/sveltejs/kit/pull/13467))
+
+
+### Patch Changes
+
+- Updated dependencies [[`28cf64589a331ea4770c0883216c5e16d1de7496`](https://github.com/sveltejs/kit/commit/28cf64589a331ea4770c0883216c5e16d1de7496), [`ef1e8047225e7a79c6d121d8ed1a571e5ea44f08`](https://github.com/sveltejs/kit/commit/ef1e8047225e7a79c6d121d8ed1a571e5ea44f08), [`2e6527b92875976b79cc00e7b75ee0ad8b69a239`](https://github.com/sveltejs/kit/commit/2e6527b92875976b79cc00e7b75ee0ad8b69a239), [`0c0172e1463218fe63a67c587173bb3065a53c49`](https://github.com/sveltejs/kit/commit/0c0172e1463218fe63a67c587173bb3065a53c49)]:
+  - @sveltejs/kit@2.17.3
+
+## 2.7.1
+### Patch Changes
+
+
+- fix: prevent Vitest from hanging, which was not fully addressed in [#12830](https://github.com/sveltejs/kit/pull/12830) ([#13373](https://github.com/sveltejs/kit/pull/13373))
+
+- Updated dependencies [[`09296d0f19c8d1ff57d699e637bd1beabb69d438`](https://github.com/sveltejs/kit/commit/09296d0f19c8d1ff57d699e637bd1beabb69d438), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79), [`f30352f874790b9de0bd0eba985a21aef23e158e`](https://github.com/sveltejs/kit/commit/f30352f874790b9de0bd0eba985a21aef23e158e), [`180fa3467e195065c0a25206c6328a908e6952d7`](https://github.com/sveltejs/kit/commit/180fa3467e195065c0a25206c6328a908e6952d7), [`5906e9708965b848b468d0014999c36272dc8d50`](https://github.com/sveltejs/kit/commit/5906e9708965b848b468d0014999c36272dc8d50), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79)]:
+  - @sveltejs/kit@2.17.0
+
 ## 2.7.0
 ### Minor Changes
 

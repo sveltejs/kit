@@ -10,7 +10,7 @@ export default function (options = {}) {
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
-					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+					"Cloudflare's _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 
@@ -28,13 +28,12 @@ export default function (options = {}) {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
+			const worker_dest = `${dest}/_worker.js`;
 
 			builder.rimraf(dest);
-			builder.rimraf(tmp);
 
 			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
+			builder.mkdirp(worker_dest);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
 			const fallback = path.join(dest, '404.html');
@@ -47,12 +46,11 @@ export default function (options = {}) {
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-
-			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
+			builder.writeServer(`${worker_dest}/server`);
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`${worker_dest}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
@@ -80,17 +78,17 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
-			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+					SERVER: './server/index.js',
+					MANIFEST: './manifest.js'
 				}
 			});
 		},
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
-			const getting_platform = (async () => {
+			const get_emulated = async () => {
 				const proxy = await getPlatformProxy(options.platformProxy);
 				const platform = /** @type {App.Platform} */ ({
 					env: proxy.env,
@@ -98,11 +96,9 @@ export default function (options = {}) {
 					caches: proxy.caches,
 					cf: proxy.cf
 				});
-
 				/** @type {Record<string, any>} */
 				const env = {};
 				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-
 				for (const key in proxy.env) {
 					Object.defineProperty(env, key, {
 						get: () => {
@@ -111,12 +107,15 @@ export default function (options = {}) {
 					});
 				}
 				return { platform, prerender_platform };
-			})();
+			};
+
+			/** @type {{ platform: App.Platform, prerender_platform: App.Platform }} */
+			let emulated;
 
 			return {
 				platform: async ({ prerender }) => {
-					const { platform, prerender_platform } = await getting_platform;
-					return prerender ? prerender_platform : platform;
+					emulated ??= await get_emulated();
+					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
 		}
@@ -146,7 +145,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.getAppPath()}/*`;
+				return [`/${builder.getAppPath()}/immutable/*`, `/${builder.getAppPath()}/version.json`];
 			}
 
 			if (rule === '<files>') {

@@ -13,7 +13,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { assets_base, find_deps } from './build/utils.js';
+import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -35,6 +35,7 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
+import { compact } from '../../utils/array.js';
 
 const cwd = process.cwd();
 
@@ -319,7 +320,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
 
 				if (!secondary_build_started) {
@@ -329,7 +331,8 @@ async function kit({ svelte_config }) {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
 
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
@@ -421,15 +424,22 @@ async function kit({ svelte_config }) {
 
 					const illegal_module = strip_virtual_prefix(relative);
 
+					const error_prefix = `Cannot import ${illegal_module} into client-side code. This could leak sensitive information.`;
+					const error_suffix = `
+Tips:
+ - To resolve this error, ensure that no exports from ${illegal_module} are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`;
+
 					if (import_map.has(illegal_module)) {
 						const importer = path.relative(
 							cwd,
 							/** @type {string} */ (import_map.get(illegal_module))
 						);
-						throw new Error(`Cannot import ${illegal_module} into client-side code: ${importer}`);
+						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
 
-					throw new Error(`Cannot import ${illegal_module} into client-side code`);
+					throw new Error(`${error_prefix}${error_suffix}`);
 				}
 			}
 
@@ -472,12 +482,14 @@ async function kit({ svelte_config }) {
 						return dedent`
 							export const base = ${global}?.base ?? ${s(base)};
 							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
+							export const app_dir = ${s(kit.appDir)};
 						`;
 					}
 
 					return dedent`
 						export let base = ${s(base)};
 						export let assets = ${assets ? s(assets) : 'base'};
+						export const app_dir = ${s(kit.appDir)};
 
 						export const relative = ${svelte_config.kit.paths.relative};
 
@@ -788,6 +800,7 @@ async function kit({ svelte_config }) {
 					manifest_path,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: [],
 						relative_path: '.',
 						routes: manifest_data.routes
 					})};\n`
@@ -853,8 +866,12 @@ async function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				const deps_of = /** @param {string} f */ (f) =>
-					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				/**
+				 * @param {string} entry
+				 * @param {boolean} [add_dynamic_css]
+				 */
+				const deps_of = (entry, add_dynamic_css = false) =>
+					find_deps(client_manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
 					const start = deps_of(`${runtime_directory}/client/entry.js`);
@@ -870,6 +887,43 @@ async function kit({ svelte_config }) {
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
+
+					// In case of server-side route resolution, we create a purpose-built route manifest that is
+					// similar to that on the client, with as much information computed upfront so that we
+					// don't need to include any code of the actual routes in the server bundle.
+					if (svelte_config.kit.router.resolution === 'server') {
+						const nodes = manifest_data.nodes.map((node, i) => {
+							if (node.component || node.universal) {
+								const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+								const deps = deps_of(entry, true);
+								const file = resolve_symlinks(
+									client_manifest,
+									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`
+								).chunk.file;
+
+								return { file, css: deps.stylesheets };
+							}
+						});
+						build_data.client.nodes = nodes.map((node) => node?.file);
+						build_data.client.css = nodes.map((node) => node?.css);
+
+						build_data.client.routes = compact(
+							manifest_data.routes.map((route) => {
+								if (!route.page) return;
+
+								return {
+									id: route.id,
+									pattern: route.pattern,
+									params: route.params,
+									layouts: route.page.layouts.map((l) =>
+										l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
+									),
+									errors: route.page.errors,
+									leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
+								};
+							})
+						);
+					}
 				} else {
 					const start = deps_of(`${runtime_directory}/client/bundle.js`);
 
@@ -910,6 +964,7 @@ async function kit({ svelte_config }) {
 					manifest_path,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: [],
 						relative_path: '.',
 						routes: manifest_data.routes
 					})};\n`
@@ -941,6 +996,7 @@ async function kit({ svelte_config }) {
 					`${out}/server/manifest.js`,
 					`export const manifest = ${generate_manifest({
 						build_data,
+						prerendered: prerendered.paths,
 						relative_path: '.',
 						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
 					})};\n`

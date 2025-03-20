@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
-import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { add_data_suffix } from '../pathname.js';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -28,13 +29,13 @@ function validate_options(options) {
 /**
  * @param {Request} request
  * @param {URL} url
- * @param {import('types').TrailingSlash} trailing_slash
  */
-export function get_cookies(request, url, trailing_slash) {
+export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = parse(header, { decode: (value) => value });
 
-	const normalized_url = normalize_path(url.pathname, trailing_slash);
+	/** @type {string | undefined} */
+	let normalized_url;
 
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
@@ -148,6 +149,9 @@ export function get_cookies(request, url, trailing_slash) {
 			let path = options.path;
 
 			if (!options.domain || options.domain === url.hostname) {
+				if (!normalized_url) {
+					throw new Error('Cannot serialize cookies until after the route is determined');
+				}
 				path = resolve(normalized_url, path);
 			}
 
@@ -189,12 +193,20 @@ export function get_cookies(request, url, trailing_slash) {
 			.join('; ');
 	}
 
+	/** @type {Array<() => void>} */
+	const internal_queue = [];
+
 	/**
 	 * @param {string} name
 	 * @param {string} value
 	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
+		if (!normalized_url) {
+			internal_queue.push(() => set_internal(name, value, options));
+			return;
+		}
+
 		let path = options.path;
 
 		if (!options.domain || options.domain === url.hostname) {
@@ -219,7 +231,15 @@ export function get_cookies(request, url, trailing_slash) {
 		}
 	}
 
-	return { cookies, new_cookies, get_cookie_header, set_internal };
+	/**
+	 * @param {import('types').TrailingSlash} trailing_slash
+	 */
+	function set_trailing_slash(trailing_slash) {
+		normalized_url = normalize_path(url.pathname, trailing_slash);
+		internal_queue.forEach((fn) => fn());
+	}
+
+	return { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash };
 }
 
 /**
