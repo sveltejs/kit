@@ -1,20 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
 import { execSync } from 'node:child_process';
-import esbuild from 'esbuild';
-import toml from '@iarna/toml';
+import { writeFileSync } from 'node:fs';
+import { posix, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy } from 'wrangler';
-
-/**
- * @typedef {{
- *   main: string;
- *   site: {
- *     bucket: string;
- *   }
- *   compatibility_flags?: string[];
- * }} WranglerConfig
- */
+import esbuild from 'esbuild';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -32,7 +21,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
+export default function ({ config, platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -149,30 +138,37 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			builder.writePrerendered(bucket_dir);
 		},
 
-		async emulate() {
-			const proxy = await getPlatformProxy(platformProxy);
-			const platform = /** @type {App.Platform} */ ({
-				env: proxy.env,
-				context: proxy.ctx,
-				caches: proxy.caches,
-				cf: proxy.cf
-			});
-
-			/** @type {Record<string, any>} */
-			const env = {};
-			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-
-			for (const key in proxy.env) {
-				Object.defineProperty(env, key, {
-					get: () => {
-						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-					}
+		emulate() {
+			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
+			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
+			const get_emulated = async () => {
+				const proxy = await getPlatformProxy(platformProxy);
+				const platform = /** @type {App.Platform} */ ({
+					env: proxy.env,
+					context: proxy.ctx,
+					caches: proxy.caches,
+					cf: proxy.cf
 				});
-			}
+				/** @type {Record<string, any>} */
+				const env = {};
+				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+				for (const key in proxy.env) {
+					Object.defineProperty(env, key, {
+						get: () => {
+							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+						}
+					});
+				}
+				return { platform, prerender_platform };
+			};
+
+			/** @type {{ platform: App.Platform, prerender_platform: App.Platform }} */
+			let emulated;
 
 			return {
-				platform: ({ prerender }) => {
-					return prerender ? prerender_platform : platform;
+				platform: async ({ prerender }) => {
+					emulated ??= await get_emulated();
+					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
 		}
@@ -182,58 +178,46 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} config_file
- * @returns {WranglerConfig}
+ * @returns {import('wrangler').Unstable_Config}
  */
-function validate_config(builder, config_file) {
-	if (existsSync(config_file)) {
-		/** @type {WranglerConfig} */
-		let wrangler_config;
+function validate_config(builder, config_file = undefined) {
+	const wrangler_config = unstable_readConfig({ config: config_file });
 
-		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(config_file, 'utf-8'))
-			);
-		} catch (err) {
-			err.message = `Error parsing ${config_file}: ${err.message}`;
-			throw err;
-		}
-
-		if (!wrangler_config.site?.bucket) {
-			throw new Error(
-				`You must specify site.bucket in ${config_file}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
-			);
-		}
-
-		if (!wrangler_config.main) {
-			throw new Error(
-				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
-			);
-		}
-
-		return wrangler_config;
+	if (!wrangler_config.configPath) {
+		builder.log.error(
+			'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
+		);
+		builder.log(
+			`
+Sample wrangler.jsonc:
+{
+	"name": "<your-service-name>",
+	"account_id": "<your-account-id>",
+	"main": "./.cloudflare/worker.js",
+	"site": {
+		"bucket": "./.cloudflare/public"
+	},
+	"build": {
+		"command": "npm run build"
+	},
+	"compatibility_date": "2021-11-12"
+}
+	`.trim()
+		);
+		throw new Error('Missing a Wrangler configuration file');
 	}
 
-	builder.log.error(
-		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
-	);
+	if (!wrangler_config.site?.bucket) {
+		throw new Error(
+			`You must specify the \`site.bucket\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+		);
+	}
 
-	builder.log(
-		`
-		Sample wrangler.toml:
+	if (!wrangler_config.main) {
+		throw new Error(
+			`You must specify the \`main\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+		);
+	}
 
-		name = "<your-site-name>"
-		account_id = "<your-account-id>"
-
-		main = "./.cloudflare/worker.js"
-		site.bucket = "./.cloudflare/public"
-
-		build.command = "npm run build"
-
-		compatibility_date = "2021-11-12"
-		workers_dev = true`
-			.replace(/^\t+/gm, '')
-			.trim()
-	);
-
-	throw new Error(`Missing a ${config_file} file`);
+	return wrangler_config;
 }

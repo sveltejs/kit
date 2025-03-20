@@ -1,24 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as esbuild from 'esbuild';
 import { getPlatformProxy } from 'wrangler';
 import { parse_redirects } from 'utils.js';
-
-// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
-const compatible_node_modules = [
-	'assert',
-	'async_hooks',
-	'buffer',
-	'crypto',
-	'diagnostics_channel',
-	'events',
-	'path',
-	'process',
-	'stream',
-	'string_decoder',
-	'util'
-];
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
@@ -27,19 +11,18 @@ export default function (options = {}) {
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
-					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+					"Cloudflare's _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
+			const worker_dest = `${dest}/_worker.js`;
 
 			builder.rimraf(dest);
-			builder.rimraf(tmp);
 
 			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
+			builder.mkdirp(worker_dest);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
 			const fallback = path.join(dest, '404.html');
@@ -52,12 +35,11 @@ export default function (options = {}) {
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-
-			const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+			builder.writeServer(`${worker_dest}/server`);
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`${worker_dest}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
@@ -75,100 +57,46 @@ export default function (options = {}) {
 				});
 			}
 
-			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+
+			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
+					SERVER: './server/index.js',
 					MANIFEST: './manifest.js'
 				}
 			});
-
-			const external = ['cloudflare:*', ...compatible_node_modules.map((id) => `node:${id}`)];
-
-			try {
-				const result = await esbuild.build({
-					platform: 'browser',
-					// https://github.com/cloudflare/workers-sdk/blob/a12b2786ce745f24475174bcec994ad691e65b0f/packages/wrangler/src/deployment-bundle/bundle.ts#L35-L36
-					conditions: ['workerd', 'worker', 'browser'],
-					sourcemap: 'linked',
-					target: 'es2022',
-					entryPoints: [`${tmp}/_worker.js`],
-					outfile: `${dest}/_worker.js`,
-					allowOverwrite: true,
-					format: 'esm',
-					bundle: true,
-					loader: {
-						'.wasm': 'copy',
-						'.woff': 'copy',
-						'.woff2': 'copy',
-						'.ttf': 'copy',
-						'.eot': 'copy',
-						'.otf': 'copy'
-					},
-					external,
-					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
-					logLevel: 'silent'
-				});
-
-				if (result.warnings.length > 0) {
-					const formatted = await esbuild.formatMessages(result.warnings, {
-						kind: 'warning',
-						color: true
-					});
-
-					console.error(formatted.join('\n'));
-				}
-			} catch (error) {
-				for (const e of error.errors) {
-					for (const node of e.notes) {
-						const match =
-							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
-								node.text
-							);
-
-						if (match) {
-							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
-						}
-					}
-				}
-
-				const formatted = await esbuild.formatMessages(error.errors, {
-					kind: 'error',
-					color: true
-				});
-
-				console.error(formatted.join('\n'));
-
-				throw new Error(
-					`Bundling with esbuild failed with ${error.errors.length} ${
-						error.errors.length === 1 ? 'error' : 'errors'
-					}`
-				);
-			}
 		},
-		async emulate() {
-			const proxy = await getPlatformProxy(options.platformProxy);
-			const platform = /** @type {App.Platform} */ ({
-				env: proxy.env,
-				context: proxy.ctx,
-				caches: proxy.caches,
-				cf: proxy.cf
-			});
-
-			/** @type {Record<string, any>} */
-			const env = {};
-			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-
-			for (const key in proxy.env) {
-				Object.defineProperty(env, key, {
-					get: () => {
-						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-					}
+		emulate() {
+			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
+			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
+			const get_emulated = async () => {
+				const proxy = await getPlatformProxy(options.platformProxy);
+				const platform = /** @type {App.Platform} */ ({
+					env: proxy.env,
+					context: proxy.ctx,
+					caches: proxy.caches,
+					cf: proxy.cf
 				});
-			}
+				/** @type {Record<string, any>} */
+				const env = {};
+				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+				for (const key in proxy.env) {
+					Object.defineProperty(env, key, {
+						get: () => {
+							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+						}
+					});
+				}
+				return { platform, prerender_platform };
+			};
+
+			/** @type {{ platform: App.Platform, prerender_platform: App.Platform }} */
+			let emulated;
 
 			return {
-				platform: ({ prerender }) => {
-					return prerender ? prerender_platform : platform;
+				platform: async ({ prerender }) => {
+					emulated ??= await get_emulated();
+					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
 		}
@@ -202,7 +130,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		)
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.getAppPath()}/*`;
+				return [`/${builder.getAppPath()}/immutable/*`, `/${builder.getAppPath()}/version.json`];
 			}
 
 			if (rule === '<files>') {
@@ -272,4 +200,14 @@ function generate_redirects(redirects) {
 ${rules}
 # === END AUTOGENERATED SVELTE PRERENDERED REDIRECTS ===
 `.trimEnd();
+}
+
+function generate_assetsignore() {
+	// this comes from https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates-experimental/svelte/templates/static/.assetsignore
+	return `
+_worker.js
+_routes.json
+_headers
+_redirects
+`;
 }

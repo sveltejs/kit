@@ -1,5 +1,80 @@
 # @sveltejs/adapter-cloudflare
 
+## 5.1.0
+### Minor Changes
+
+
+- feat: support wrangler 4 ([#13580](https://github.com/sveltejs/kit/pull/13580))
+
+
+### Patch Changes
+
+- Updated dependencies [[`001bc04dece9b0983efc2187225772c19d135345`](https://github.com/sveltejs/kit/commit/001bc04dece9b0983efc2187225772c19d135345)]:
+  - @sveltejs/kit@2.19.2
+
+## 5.0.3
+### Patch Changes
+
+
+- fix: exclude the dynamic route `/_app/env.js` from the adapter config `routes.exclude` special value `<build>` ([#13411](https://github.com/sveltejs/kit/pull/13411))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
+## 5.0.2
+### Patch Changes
+
+
+- fix: prevent Vitest from hanging, which was not fully addressed in [#12830](https://github.com/sveltejs/kit/pull/12830) ([#13373](https://github.com/sveltejs/kit/pull/13373))
+
+- Updated dependencies [[`09296d0f19c8d1ff57d699e637bd1beabb69d438`](https://github.com/sveltejs/kit/commit/09296d0f19c8d1ff57d699e637bd1beabb69d438), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79), [`f30352f874790b9de0bd0eba985a21aef23e158e`](https://github.com/sveltejs/kit/commit/f30352f874790b9de0bd0eba985a21aef23e158e), [`180fa3467e195065c0a25206c6328a908e6952d7`](https://github.com/sveltejs/kit/commit/180fa3467e195065c0a25206c6328a908e6952d7), [`5906e9708965b848b468d0014999c36272dc8d50`](https://github.com/sveltejs/kit/commit/5906e9708965b848b468d0014999c36272dc8d50), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79)]:
+  - @sveltejs/kit@2.17.0
+
+## 5.0.1
+### Patch Changes
+
+
+- fix: prevent vitest from hanging ([#12830](https://github.com/sveltejs/kit/pull/12830))
+
+- Updated dependencies [[`1bedcc1cfc1f2d85946c1423f60faa8a2a56148b`](https://github.com/sveltejs/kit/commit/1bedcc1cfc1f2d85946c1423f60faa8a2a56148b), [`e201fa9380a00e072a80a2dcab56de3d77e5b67c`](https://github.com/sveltejs/kit/commit/e201fa9380a00e072a80a2dcab56de3d77e5b67c), [`f3f08582d41b08c3fd1daf742e5703d9cdca7823`](https://github.com/sveltejs/kit/commit/f3f08582d41b08c3fd1daf742e5703d9cdca7823), [`d4bcfccb4503b12fe76140dbb6cfddc81f9419fc`](https://github.com/sveltejs/kit/commit/d4bcfccb4503b12fe76140dbb6cfddc81f9419fc), [`d09bc033123903f359c1ad6fd3a6d8d7fc19298a`](https://github.com/sveltejs/kit/commit/d09bc033123903f359c1ad6fd3a6d8d7fc19298a)]:
+  - @sveltejs/kit@2.15.3
+
+## 5.0.0
+### Major Changes
+
+
+- feat: remove esbuild step ([#13132](https://github.com/sveltejs/kit/pull/13132))
+
+
+### Patch Changes
+
+- Updated dependencies [[`12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f`](https://github.com/sveltejs/kit/commit/12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f), [`528af75f846f971ef64e4d109ac5e22fca046b90`](https://github.com/sveltejs/kit/commit/528af75f846f971ef64e4d109ac5e22fca046b90)]:
+  - @sveltejs/kit@2.15.1
+
+## 4.9.0
+### Minor Changes
+
+
+- feat: generate `.assetsignore` file for use with Cloudflare Workers Static Assets ([#13109](https://github.com/sveltejs/kit/pull/13109))
+
+
+### Patch Changes
+
+- Updated dependencies [[`20f2720aa3455f38fa2630a33d52f7532da27fce`](https://github.com/sveltejs/kit/commit/20f2720aa3455f38fa2630a33d52f7532da27fce)]:
+  - @sveltejs/kit@2.13.0
+
+## 4.8.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
 ## 4.7.4
 ### Patch Changes
 

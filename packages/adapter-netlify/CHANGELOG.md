@@ -1,5 +1,32 @@
 # @sveltejs/adapter-netlify
 
+## 4.4.2
+### Patch Changes
+
+
+- fix: correctly import manifest on Windows machines ([#13495](https://github.com/sveltejs/kit/pull/13495))
+
+- Updated dependencies [[`28cf64589a331ea4770c0883216c5e16d1de7496`](https://github.com/sveltejs/kit/commit/28cf64589a331ea4770c0883216c5e16d1de7496), [`ef1e8047225e7a79c6d121d8ed1a571e5ea44f08`](https://github.com/sveltejs/kit/commit/ef1e8047225e7a79c6d121d8ed1a571e5ea44f08), [`2e6527b92875976b79cc00e7b75ee0ad8b69a239`](https://github.com/sveltejs/kit/commit/2e6527b92875976b79cc00e7b75ee0ad8b69a239), [`0c0172e1463218fe63a67c587173bb3065a53c49`](https://github.com/sveltejs/kit/commit/0c0172e1463218fe63a67c587173bb3065a53c49)]:
+  - @sveltejs/kit@2.17.3
+
+## 4.4.1
+### Patch Changes
+
+
+- fix: avoid unnecessary Netlify edge function invocations for static files, which resolves a conflict between Netlify Edge Functions and Netlify Identity ([#12052](https://github.com/sveltejs/kit/pull/12052))
+
+## 4.4.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
 ## 4.3.6
 ### Patch Changes
 

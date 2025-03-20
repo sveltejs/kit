@@ -53,7 +53,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 			...headers
 		})
 	});
-	return get_cookies(request, url, 'ignore');
+	const result = get_cookies(request, url);
+	result.set_trailing_slash('ignore');
+	return result;
 };
 
 test('a cookie should not be present after it is deleted', () => {

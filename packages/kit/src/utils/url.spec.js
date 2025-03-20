@@ -125,8 +125,23 @@ describe('make_trackable', (test) => {
 
 		assert.throws(
 			() => url.hash,
-			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
+			/Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead/
 		);
+	});
+
+	test('does not throw an error when its hash property is accessed if it is allowed', () => {
+		let tracked = false;
+		const url = make_trackable(
+			new URL('https://svelte.dev/docs/kit'),
+			() => {
+				tracked = true;
+			},
+			() => {},
+			true
+		);
+
+		url.hash;
+		assert.ok(tracked);
 	});
 
 	test('track each search param separately if accessed directly', () => {

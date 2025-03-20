@@ -1,5 +1,26 @@
 # @sveltejs/package
 
+## 2.3.10
+### Patch Changes
+
+
+- chore: update to chokidar 4.0.3 ([#13381](https://github.com/sveltejs/kit/pull/13381))
+
+## 2.3.9
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency for more up-to-date `d.ts` output ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+
+- fix: adjust declaration map paths ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+## 2.3.8
+### Patch Changes
+
+
+- fix: resolve aliases more robustly ([#13351](https://github.com/sveltejs/kit/pull/13351))
+
 ## 2.3.7
 ### Patch Changes
 
