@@ -1,52 +1,16 @@
 import path from 'node:path';
 import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
-import { image } from './preprocessor.js';
+import { image_plugin } from './vite-plugin.js';
 
 /**
- * @returns {import('vite').Plugin[]}
+ * @returns {Array<import('vite').Plugin | Promise<import('vite').Plugin>>}
  */
 export function enhancedImages() {
 	const imagetools_instance = imagetools_plugin();
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
-}
-
-/**
- * Creates the Svelte image plugin which provides the preprocessor.
- * @param {import('vite').Plugin} imagetools_plugin
- * @returns {import('vite').Plugin}
- */
-function image_plugin(imagetools_plugin) {
-	/**
-	 * @type {{
-	 *   plugin_context: import('vite').Rollup.PluginContext
-	 *   vite_config: import('vite').ResolvedConfig
-	 *   imagetools_plugin: import('vite').Plugin
-	 * }}
-	 */
-	const opts = {
-		// @ts-expect-error populated when build starts so we cheat on type
-		plugin_context: undefined,
-		// @ts-expect-error populated when build starts so we cheat on type
-		vite_config: undefined,
-		imagetools_plugin
-	};
-	const preprocessor = image(opts);
-
-	return {
-		name: 'vite-plugin-enhanced-img',
-		api: {
-			sveltePreprocess: preprocessor
-		},
-		configResolved(config) {
-			opts.vite_config = config;
-		},
-		buildStart() {
-			opts.plugin_context = this;
-		}
-	};
 }
 
 /** @type {Record<string,string>} */
