@@ -127,31 +127,22 @@ export function image(opts) {
 			 */
 			const pending_ast_updates = [];
 
-			walk(
-				/** @type {import('svelte/compiler').AST.Root} */ (ast),
-				{},
-				{
-					_(_, { next }) {
-						next();
-					},
-					/** @param {import('svelte/compiler').AST.RegularElement} node */
-					// @ts-ignore
-					RegularElement(node, { next }) {
-						if ('name' in node && node.name === 'enhanced:img') {
-							// Compare node tag match
-							const src = get_attr_value(node, 'src');
+			walk(/** @type {import('svelte/compiler').AST.TemplateNode} */ (ast), null, {
+				RegularElement(node, { next }) {
+					if ('name' in node && node.name === 'enhanced:img') {
+						// Compare node tag match
+						const src = get_attr_value(node, 'src');
 
-							if (!src || typeof src === 'boolean') return;
+						if (!src || typeof src === 'boolean') return;
 
-							pending_ast_updates.push(update_element(node, src));
+						pending_ast_updates.push(update_element(node, src));
 
-							return;
-						}
-
-						next();
+						return;
 					}
+
+					next();
 				}
-			);
+			});
 
 			await Promise.all(pending_ast_updates);
 
