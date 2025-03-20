@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
@@ -8,6 +8,18 @@ export default function ({ config, platformProxy = {} } = {}) {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		adapt(builder) {
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
 			const { main, assets } = validate_config(builder, config);
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -48,10 +60,20 @@ export default function ({ config, platformProxy = {} } = {}) {
 			builder.writePrerendered(assets_dir);
 			writeFileSync(`${assets.directory}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
-			writeFileSync(`${assets.directory}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
+			const headers_file = `${assets.directory}/_headers`;
+			if (existsSync('_headers')) {
+				copyFileSync('_headers', headers_file);
+			}
+			writeFileSync(headers_file, generate_headers(builder.getAppPath()), {
+				flag: 'a'
+			});
 
+			const redirects_file = `${assets.directory}/_redirects`;
+			if (existsSync('_redirects')) {
+				copyFileSync('_redirects', redirects_file);
+			}
 			if (builder.prerendered.redirects.size > 0) {
-				writeFileSync(`${assets.directory}/_redirects`, generate_redirects(builder.prerendered.redirects), {
+				writeFileSync(redirects_file, generate_redirects(builder.prerendered.redirects), {
 					flag: 'a'
 				});
 			}
