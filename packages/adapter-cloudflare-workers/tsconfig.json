@@ -7,11 +7,13 @@
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
+		"lib": ["es2021"],
+		"types": ["@cloudflare/workers-types"]
 	},
 	"include": ["**/*.js", "internal.d.ts"]
 }

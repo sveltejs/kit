@@ -1,5 +1,4 @@
 import { writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
@@ -11,23 +10,22 @@ export default function ({ config, platformProxy = {} } = {}) {
 		adapt(builder) {
 			const { main, assets } = validate_config(builder, config);
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const out_dir = dirname(main);
-			const relative_path = posix.relative(out_dir, builder.getServerDirectory());
 
 			builder.log.minor('Generating worker...');
 
 			// Clear out old files
 			builder.rimraf(assets.directory);
-			builder.rimraf(out_dir);
+			builder.rimraf(main);
 
 			// Create the entry-point for the Worker
-			builder.copy(`${files}/entry.js`, main, {
+			builder.copy(`${files}/worker.js`, `${main}/index.js`, {
 				replace: {
-					SERVER: `${relative_path}/index.js`,
+					SERVER: `${main}/server/index.js`,
 					MANIFEST: './manifest.js',
 					ASSETS: assets.binding || 'ASSETS'
 				}
 			});
+			builder.writeServer(`${main}/server`);
 
 			// Create the manifest for the Worker
 			let prerendered_entries = Array.from(builder.prerendered.pages.entries());
@@ -38,8 +36,8 @@ export default function ({ config, platformProxy = {} } = {}) {
 				]);
 			}
 			writeFileSync(
-				`${out_dir}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: relative_path })};\n\n` +
+				`${main}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
 					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
@@ -48,6 +46,7 @@ export default function ({ config, platformProxy = {} } = {}) {
 			const assets_dir = `${assets.directory}${builder.config.kit.paths.base}`;
 			builder.writeClient(assets_dir);
 			builder.writePrerendered(assets_dir);
+			writeFileSync(`${assets.directory}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 
 		emulate() {
@@ -96,39 +95,51 @@ function validate_config(builder, config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 	if (!wrangler_config.configPath) {
 		builder.log.error(
-			'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
+			'Consult https://developers.cloudflare.com/workers/static-assets/ on how to setup your configuration'
 		);
-		builder.log(
+		builder.log.error(
 			`
 Sample wrangler.jsonc:
 {
-	"name": "<your-service-name>",
-	"account_id": "<your-account-id>",
-	"main": "./.cloudflare/worker.js",
-	"site": {
-		"bucket": "./.cloudflare/public"
-	},
-	"build": {
-		"command": "npm run build"
-	},
-	"compatibility_date": "2021-11-12"
+  "name": "<your-service-name>",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".svelte-kit/cloudflare"
+  }
 }
 	`.trim()
 		);
 		throw new Error('Missing a Wrangler configuration file');
 	}
 
-	if (!wrangler_config.site?.bucket) {
+	if (!wrangler_config.main) {
 		throw new Error(
-			`You must specify the \`site.bucket\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+			`You must specify the \`main\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/`
 		);
 	}
 
-	if (!wrangler_config.main) {
+	if (!wrangler_config.assets?.directory) {
 		throw new Error(
-			`You must specify the \`main\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/`
+		);
+	}
+
+	if (!wrangler_config.assets?.binding) {
+		throw new Error(
+			`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/`
 		);
 	}
 
 	return wrangler_config;
+}
+
+// this list comes from https://developers.cloudflare.com/workers/static-assets/binding/#ignoring-assets
+function generate_assetsignore() {
+	return `
+_worker.js
+_headers
+_redirects
+`;
 }

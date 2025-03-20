@@ -4,13 +4,15 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://pages.cloudflare.com/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that `event.platform` is emulated during local development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Cloudflare Pages-specific options.
+
+> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare`, it's recommended that you use [`adapter-cloudflare-workers`](adapter-cloudflare-workers) instead since Cloudflare plans to deprecate Cloudflare Pages in favour of Cloudflare Workers. Refer to the [compatibility matrix](https://developers.cloudflare.com/workers/static-assets/compatibility-matrix/) for more information.
 
 ## Comparisons
 
-- `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
+- `adapter-cloudflare` – supports all SvelteKit features; builds for Cloudflare Pages
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
-- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
+- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages and Cloudflare Workers
 
 ## Usage
 
@@ -62,7 +64,7 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/get-started/) for Cloudflare Pages to begin.
 
-When configuring your project settings, you must use the following settings:
+If you're using the [Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/), your build settings should look like this:
 
 - **Framework preset** – SvelteKit
 - **Build command** – `npm run build` or `vite build`
