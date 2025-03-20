@@ -4,7 +4,7 @@ import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
 
 /**
- * @returns {Array<import('vite').Plugin | Promise<import('vite').Plugin>>}
+ * @returns {import('vite').Plugin[]}
  */
 export function enhancedImages() {
 	const imagetools_instance = imagetools_plugin();

@@ -7,7 +7,7 @@ const resolve = /** @param {string} file */ (file) => path.resolve(__dirname, fi
 
 it('Image preprocess snapshot test', async () => {
 	const filename = 'Input.svelte';
-	const vite_plugin = await image_plugin({
+	const vite_plugin = image_plugin({
 		name: 'vite-imagetools-mock',
 		load(id) {
 			if (id.includes('dev')) {

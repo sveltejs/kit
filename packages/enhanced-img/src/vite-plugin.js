@@ -2,8 +2,7 @@
 
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import url from 'node:url';
+import { loadSvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
@@ -15,9 +14,9 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 /**
  * Creates the Svelte image plugin.
  * @param {import('vite').Plugin<void>} imagetools_plugin
- * @returns {Promise<import('vite').Plugin<void>>}
+ * @returns {import('vite').Plugin<void>}
  */
-export async function image_plugin(imagetools_plugin) {
+export function image_plugin(imagetools_plugin) {
 	// TODO: clear this map in dev mode to avoid memory leak
 	/**
 	 * URL to image details
@@ -28,17 +27,20 @@ export async function image_plugin(imagetools_plugin) {
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
-	const svelte_config = await load_config();
-	const extensions = svelte_config.extensions || ['.svelte'];
+	/** @type {Partial<import('@sveltejs/vite-plugin-svelte').SvelteConfig | undefined>} */
+	let svelte_config;
 
 	return {
 		name: 'vite-plugin-enhanced-img-markup',
 		enforce: 'pre',
-		configResolved(config) {
+		async configResolved(config) {
 			vite_config = config;
+			svelte_config = await loadSvelteConfig();
+			if (!svelte_config) throw new Error('Could not load Svelte config file');
 		},
 		async transform(content, filename) {
 			const plugin_context = this;
+			const extensions = svelte_config?.extensions || ['.svelte'];
 			if (extensions.some((ext) => filename.endsWith(ext))) {
 				if (!content.includes('<enhanced:img')) {
 					return;
@@ -377,29 +379,4 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 		<img ${serialize_img_attributes(content, attributes, details)} />
 	</picture>
 {/if}`;
-}
-
-/**
- * Loads and validates svelte.config.js
- * @param {{ cwd?: string }} options
- * @returns {Promise<{extensions?: string[]}>}
- */
-export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
-
-	if (!existsSync(config_file)) {
-		return {};
-	}
-
-	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
-
-	try {
-		return config.default;
-	} catch (e) {
-		const error = /** @type {Error} */ (e);
-
-		// redact the stack trace — it's not helpful to users
-		error.stack = `Could not load svelte.config.js: ${error.message}\n`;
-		throw error;
-	}
 }
