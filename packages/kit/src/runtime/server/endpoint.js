@@ -29,7 +29,7 @@ export async function render_endpoint(event, mod, state) {
 		throw new Error('Cannot prerender endpoints that have mutative methods');
 	}
 
-	if (state.prerendering && !prerender) {
+	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {
 		if (state.depth > 0) {
 			// if request came from a prerendered page, bail
 			throw new Error(`${event.route.id} is not prerenderable`);
