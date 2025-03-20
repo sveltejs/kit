@@ -192,14 +192,12 @@ export async function respond(request, options, manifest, state) {
 		// reroute could alter the given URL, so we pass a copy
 		resolved_path =
 			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
-
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
 	} catch {
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
-
 		return text('Internal Server Error', {
 			status: 500
 		});
+	} finally {
+		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
 	}
 
 	try {
