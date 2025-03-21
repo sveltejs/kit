@@ -30,7 +30,6 @@ export default [
 			'@typescript-eslint/no-floating-promises': 'error'
 		},
 		ignores: [
-			'packages/adapter-cloudflare/test/utils.spec.js',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',

@@ -50,7 +50,7 @@
 		"@types/node": "^18.19.48",
 		"@types/ws": "^8.5.10",
 		"typescript": "^5.3.3",
-		"vitest": "^2.0.1"
+		"vitest": "^3.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
