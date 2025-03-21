@@ -132,7 +132,7 @@ Setting up proper types for service workers requires some manual setup. Inside y
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
+/** @typedef {ServiceWorkerGlobalScope} self */
 ```
 ```generated-ts
 /// <reference types="@sveltejs/kit" />
@@ -140,10 +140,10 @@ const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-const sw = self as unknown as ServiceWorkerGlobalScope;
+declare const self: ServiceWorkerGlobalScope;
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but this is the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions. If you import `$env/static/public` you either have to `// @ts-ignore` the import or add `/// <reference types="../.svelte-kit/ambient.d.ts" />` to the reference types.
+This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions. If you import `$env/static/public` you either have to `// @ts-ignore` the import or add `/// <reference types="../.svelte-kit/ambient.d.ts" />` to the reference types.
 
 ## Other solutions
 
