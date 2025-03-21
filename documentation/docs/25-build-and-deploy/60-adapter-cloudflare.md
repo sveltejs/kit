@@ -97,7 +97,7 @@ declare global {
 export {};
 ```
 
-### Testing Locally
+### Testing locally
 
 Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/pages/functions/bindings/) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/pages/functions/wrangler-configuration/#local-development) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
@@ -121,7 +121,7 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
 
-```json
+```jsonc
 /// file: wrangler.jsonc
 {
 	"compatibility_flags": ["nodejs_compat"]

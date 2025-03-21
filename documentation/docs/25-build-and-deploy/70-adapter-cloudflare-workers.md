@@ -38,11 +38,11 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
 
-## Basic Configuration
+## Basic configuration
 
 This adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/configuration/sites/configuration/) in the project root. It should look something like this:
 
-```json
+```jsonc
 /// file: wrangler.jsonc
 {
 	"name": "<your-service-name>",
@@ -92,7 +92,7 @@ declare global {
 export {};
 ```
 
-### Testing Locally
+### Testing locally
 
 Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
@@ -108,7 +108,7 @@ The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/)
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
 
-```json
+```jsonc
 /// file: wrangler.jsonc
 {
 	"compatibility_flags": ["nodejs_compat"]
@@ -127,6 +127,8 @@ You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#p
 
 Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, remove all `site` configuration settings from your Wrangler configuration file and add the `assets.directory` and `assets.binding` configuration settings:
 
+### wrangler.toml
+
 ```toml
 /// file: wrangler.toml
 ---site.bucket = ".cloudflare/public"---
@@ -134,7 +136,9 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 assets.binding = "ASSETS"+++
 ```
 
-```json
+### wrangler.jsonc
+
+```jsonc
 /// file: wrangler.jsonc
 {
 ---	"site": {

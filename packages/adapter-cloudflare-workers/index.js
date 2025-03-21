@@ -150,6 +150,12 @@ Sample wrangler.jsonc:
 		);
 	}
 
+	if (wrangler_config.site) {
+		throw new Error(
+			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare-workers#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
+		);
+	}
+
 	if (!wrangler_config.assets?.directory) {
 		throw new Error(
 			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/`
