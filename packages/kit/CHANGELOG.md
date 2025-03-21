@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.2
+### Patch Changes
+
+
+- fix: allow non-prerendered API endpoint calls during reroute when prerendering ([#13616](https://github.com/sveltejs/kit/pull/13616))
+
 ## 2.20.1
 ### Patch Changes
 
