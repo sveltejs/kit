@@ -1,15 +1,18 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import * as path from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
-import { parse_redirects } from 'utils.js';
+import { get_routes_json, parse_redirects } from 'utils.js';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
-			if (existsSync('_routes.json')) {
+			if (
+				existsSync('_routes.json') ||
+				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
+			) {
 				throw new Error(
 					"Cloudflare's _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
@@ -33,10 +36,10 @@ export default function (options = {}) {
 
 			builder.rimraf(dest);
 
-			builder.mkdirp(dest);
 			builder.mkdirp(worker_dest);
 
-			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
+			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
+			// This file is served when a request that matches an entry in `routes.exclude` fails to match an asset.
 			const fallback = path.join(dest, '404.html');
 			if (options.fallback === 'spa') {
 				await builder.generateFallback(fallback);
@@ -44,11 +47,19 @@ export default function (options = {}) {
 				writeFileSync(fallback, 'Not Found');
 			}
 
+			// client assets and prerendered pages
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
-			const written_files = builder.writeClient(dest_dir);
+			const client_assets = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-			builder.writeServer(`${worker_dest}/server`);
 
+			// _worker.js
+			builder.writeServer(`${worker_dest}/server`);
+			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
+				replace: {
+					SERVER: './server/index.js',
+					MANIFEST: './manifest.js'
+				}
+			});
 			writeFileSync(
 				`${worker_dest}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
@@ -56,35 +67,40 @@ export default function (options = {}) {
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
-			writeFileSync(
-				`${dest}/_routes.json`,
-				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
-			);
-
+			// _headers
 			if (existsSync('_headers')) {
 				copyFileSync('_headers', `${dest}/_headers`);
 			}
-
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
+			// _redirects
+			const redirects_file = `${dest}/_redirects`;
 			if (existsSync('_redirects')) {
-				copyFileSync('_redirects', `${dest}/_redirects`);
+				copyFileSync('_redirects', redirects_file);
 			}
-
 			if (builder.prerendered.redirects.size > 0) {
-				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
+				writeFileSync(redirects_file, generate_redirects(builder.prerendered.redirects), {
 					flag: 'a'
 				});
 			}
 
-			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+			// _routes.json
+			/** @type {string[]} */
+			let redirects = [];
+			if (existsSync(redirects_file)) {
+				const redirect_rules = readFileSync(redirects_file, 'utf8');
+				redirects = parse_redirects(redirect_rules);
+			}
+			writeFileSync(
+				`${dest}/_routes.json`,
+				JSON.stringify(
+					get_routes_json(builder, client_assets, redirects, options.routes ?? {}),
+					null,
+					'\t'
+				)
+			);
 
-			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
-				replace: {
-					SERVER: './server/index.js',
-					MANIFEST: './manifest.js'
-				}
-			});
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
@@ -124,77 +140,9 @@ export default function (options = {}) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Builder} builder
- * @param {string[]} assets
- * @param {import('./index.js').AdapterOptions['routes']} routes
- * @returns {import('./index.js').RoutesJSONSpec}
+ * @param {string} app_dir
+ * @returns {string}
  */
-function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
-	if (!Array.isArray(include) || !Array.isArray(exclude)) {
-		throw new Error('routes.include and routes.exclude must be arrays');
-	}
-
-	if (include.length === 0) {
-		throw new Error('routes.include must contain at least one route');
-	}
-
-	if (include.length > 100) {
-		throw new Error('routes.include must contain 100 or fewer routes');
-	}
-
-	const redirects_file = `${builder.config.kit.files.assets}/_redirects`;
-
-	exclude = exclude
-		.flatMap((rule) =>
-			rule === '<all>' ? ['<build>', '<files>', '<prerendered>', '<redirects>'] : rule
-		)
-		.flatMap((rule) => {
-			if (rule === '<build>') {
-				return [`/${builder.getAppPath()}/immutable/*`, `/${builder.getAppPath()}/version.json`];
-			}
-
-			if (rule === '<files>') {
-				return assets
-					.filter(
-						(file) =>
-							!(
-								file.startsWith(`${builder.config.kit.appDir}/`) ||
-								file === '_headers' ||
-								file === '_redirects'
-							)
-					)
-					.map((file) => `${builder.config.kit.paths.base}/${file}`);
-			}
-
-			if (rule === '<prerendered>') {
-				return builder.prerendered.paths;
-			}
-
-			if (rule === '<redirects>' && existsSync(redirects_file)) {
-				const file_contents = readFileSync(redirects_file, 'utf8');
-				return parse_redirects(file_contents);
-			}
-
-			return rule;
-		});
-
-	const excess = include.length + exclude.length - 100;
-	if (excess > 0) {
-		const message = `Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`;
-		builder.log.warn(message);
-
-		exclude.length -= excess;
-	}
-
-	return {
-		version: 1,
-		description: 'Generated by @sveltejs/adapter-cloudflare',
-		include,
-		exclude
-	};
-}
-
-/** @param {string} app_dir */
 function generate_headers(app_dir) {
 	return `
 # === START AUTOGENERATED SVELTE IMMUTABLE HEADERS ===
@@ -208,7 +156,10 @@ function generate_headers(app_dir) {
 `.trimEnd();
 }
 
-/** @param {Map<string, { status: number; location: string }>} redirects */
+/**
+ * @param {Map<string, { status: number; location: string }>} redirects
+ * @returns {string}
+ */
 function generate_redirects(redirects) {
 	const rules = Array.from(
 		redirects.entries(),
@@ -222,6 +173,9 @@ ${rules}
 `.trimEnd();
 }
 
+/**
+ * @returns {string}
+ */
 function generate_assetsignore() {
 	// this comes from https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates-experimental/svelte/templates/static/.assetsignore
 	return `
@@ -229,5 +183,5 @@ _worker.js
 _routes.json
 _headers
 _redirects
-`;
+`.trimEnd();
 }
