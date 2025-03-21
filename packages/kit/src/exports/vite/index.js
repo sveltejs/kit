@@ -334,13 +334,6 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
-
-				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
-				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
-					'cookie',
-					'set-cookie-parser'
-				];
 			}
 
 			warn_overridden_config(config, new_config);

@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import * as set_cookie_parser from 'set-cookie-parser';
+import { splitSetCookieString } from 'cookie-es';
 import { SvelteKitError } from '../../runtime/control.js';
 
 /**
@@ -145,7 +145,7 @@ export async function setResponse(res, response) {
 			res.setHeader(
 				key,
 				key === 'set-cookie'
-					? set_cookie_parser.splitCookiesString(
+					? splitSetCookieString(
 							// This is absurd but necessary, TODO: investigate why
 							/** @type {string}*/ (response.headers.get(key))
 						)
