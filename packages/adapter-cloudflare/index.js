@@ -28,12 +28,12 @@ export default function (options = {}) {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const worker_dest = `${dest}/_worker.js`;
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			builder.rimraf(dest);
 
 			builder.mkdirp(dest);
-			builder.mkdirp(worker_dest);
+			builder.mkdirp(tmp);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
 			const fallback = path.join(dest, '404.html');
@@ -46,14 +46,20 @@ export default function (options = {}) {
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-			builder.writeServer(`${worker_dest}/server`);
 
+			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
 			writeFileSync(
-				`${worker_dest}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+				replace: {
+					SERVER: `${relativePath}/index.js`,
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+				}
+			});
 
 			writeFileSync(
 				`${dest}/_routes.json`,
@@ -77,13 +83,6 @@ export default function (options = {}) {
 			}
 
 			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
-
-			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
-				replace: {
-					SERVER: './server/index.js',
-					MANIFEST: './manifest.js'
-				}
-			});
 		},
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
