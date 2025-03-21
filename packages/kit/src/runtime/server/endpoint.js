@@ -41,7 +41,7 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		let response = await with_event(event, () =>
+		const response = await with_event(event, () =>
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 
