@@ -42,7 +42,7 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 This adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/configuration/sites/configuration/) in the project root. It should look something like this:
 
-```jsonc
+```json
 /// file: wrangler.jsonc
 {
 	"name": "<your-service-name>",
@@ -108,7 +108,7 @@ The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/)
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
 
-```jsonc
+```json
 /// file: wrangler.jsonc
 {
 	"compatibility_flags": ["nodejs_compat"]
@@ -125,4 +125,24 @@ You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#p
 
 ## Migrating from Workers Sites to Workers Static Assets
 
-Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, remove all `site` configuration settings from your Wrangler configuration file.
+Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, remove all `site` configuration settings from your Wrangler configuration file and add the `assets.directory` and `assets.binding` configuration settings:
+
+```toml
+/// file: wrangler.toml
+---site.bucket = ".cloudflare/public"---
++++assets.directory = ".cloudflare/public"
+assets.binding = "ASSETS"+++
+```
+
+```json
+/// file: wrangler.jsonc
+{
+---	"site": {
+		"bucket": ".cloudflare/public"
+	},---
++++	"assets": {
+		"directory": ".cloudflare/public",
+		"binding": "ASSETS"
+	}+++
+}
+```

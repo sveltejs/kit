@@ -4,7 +4,7 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://pages.cloudflare.com/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Cloudflare Pages-specific options.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that `event.platform` is emulated during local development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
 
 > [!NOTE] Unless you have a specific reason to use `adapter-cloudflare`, it's recommended that you use [`adapter-cloudflare-workers`](adapter-cloudflare-workers) instead since Cloudflare plans to deprecate Cloudflare Pages in favour of Cloudflare Workers. Refer to the [compatibility matrix](https://developers.cloudflare.com/workers/static-assets/compatibility-matrix/) for more information.
 
@@ -121,7 +121,7 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
 
-```jsonc
+```json
 /// file: wrangler.jsonc
 {
 	"compatibility_flags": ["nodejs_compat"]
