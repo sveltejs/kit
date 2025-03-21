@@ -6,11 +6,7 @@ To deploy to [Cloudflare Pages](https://pages.cloudflare.com/), use [`adapter-cl
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that `event.platform` is emulated during local development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
 
-## Comparisons
-
-- `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
-- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
-- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
+> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare`, it's recommended that you use [`adapter-cloudflare-workers`](adapter-cloudflare-workers) instead since Cloudflare plans to deprecate Cloudflare Pages in favour of Cloudflare Workers. Refer to the [compatibility matrix](https://developers.cloudflare.com/workers/static-assets/compatibility-matrix/) for more information.
 
 ## Usage
 
@@ -62,7 +58,7 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/get-started/) for Cloudflare Pages to begin.
 
-When configuring your project settings, you must use the following settings:
+If you're using the [Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/), your build settings should look like this:
 
 - **Framework preset** – SvelteKit
 - **Build command** – `npm run build` or `vite build`
@@ -101,7 +97,7 @@ declare global {
 export {};
 ```
 
-### Testing Locally
+### Testing locally
 
 Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/pages/functions/bindings/) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/pages/functions/wrangler-configuration/#local-development) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 

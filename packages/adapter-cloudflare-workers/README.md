@@ -1,8 +1,8 @@
 # adapter-cloudflare-workers
 
-SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering.
+[Adapter](https://svelte.dev/docs/kit/building-your-app) for building SvelteKit applications on [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [static assets](https://developers.cloudflare.com/workers/static-assets/).
 
-**Requires [Wrangler v2](https://developers.cloudflare.com/workers/wrangler/get-started/).** Wrangler v1 is no longer supported.
+**Requires [Wrangler v3.91.0 or later](https://developers.cloudflare.com/workers/wrangler/get-started/).**.
 
 ## Docs
 
