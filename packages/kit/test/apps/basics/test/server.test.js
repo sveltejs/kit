@@ -683,6 +683,18 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/c');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/prerendered/to-destination');
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
+	});
+
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
 		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);
@@ -695,5 +707,12 @@ test.describe('init', () => {
 		await expect(page.locator('p')).toHaveText('1');
 		await page.reload();
 		await expect(page.locator('p')).toHaveText('1');
+	});
+});
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in server endpoints', async ({ request }) => {
+		const response = await request.get('/get-request-event/endpoint');
+		expect(await response.text()).toBe('hello from hooks.server.js');
 	});
 });

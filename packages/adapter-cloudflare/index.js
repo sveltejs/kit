@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
@@ -10,19 +10,30 @@ export default function (options = {}) {
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
-					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+					"Cloudflare's _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
 				);
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
+			const worker_dest = `${dest}/_worker.js`;
 
 			builder.rimraf(dest);
-			builder.rimraf(tmp);
 
 			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
+			builder.mkdirp(worker_dest);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
 			const fallback = path.join(dest, '404.html');
@@ -35,12 +46,11 @@ export default function (options = {}) {
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-
-			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
+			builder.writeServer(`${worker_dest}/server`);
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`${worker_dest}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
@@ -50,7 +60,15 @@ export default function (options = {}) {
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
+			if (existsSync('_headers')) {
+				copyFileSync('_headers', `${dest}/_headers`);
+			}
+
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
+
+			if (existsSync('_redirects')) {
+				copyFileSync('_redirects', `${dest}/_redirects`);
+			}
 
 			if (builder.prerendered.redirects.size > 0) {
 				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
@@ -60,10 +78,10 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
-			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+					SERVER: './server/index.js',
+					MANIFEST: './manifest.js'
 				}
 			});
 		},

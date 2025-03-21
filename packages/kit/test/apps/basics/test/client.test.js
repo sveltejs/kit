@@ -1461,6 +1461,20 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async prerendered reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/c']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/prerendered');
+		await page.click("a[href='/reroute/prerendered/to-destination']");
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
+	});
+
 	test('Apply reroute after client-only redirects', async ({ page }) => {
 		await page.goto('/reroute/client-only-redirect');
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');

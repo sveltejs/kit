@@ -972,7 +972,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -994,7 +994,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Info about the target route
 		 */
-		route: { id: string | null };
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: string | null;
+		};
 		/**
 		 * The URL that is navigated to
 		 */
@@ -1111,7 +1116,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1187,7 +1192,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -2397,6 +2402,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
+	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2410,6 +2416,13 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+	/**
+	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
+	 *
+	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * @since 2.20.0
+	 */
+	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
 	export {};
 }

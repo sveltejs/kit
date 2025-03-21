@@ -59,6 +59,7 @@ export interface AssetDependencies {
 	imports: string[];
 	stylesheets: string[];
 	fonts: string[];
+	stylesheet_map: Map<string, { css: Set<string>; assets: Set<string> }>;
 }
 
 export interface BuildData {
@@ -216,6 +217,8 @@ export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
+	/** True for the duration of a call to the `reroute` hook */
+	inside_reroute?: boolean;
 }
 
 export type RecursiveRequired<T> = {
