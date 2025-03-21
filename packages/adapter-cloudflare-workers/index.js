@@ -156,9 +156,9 @@ Sample wrangler.jsonc:
 		);
 	}
 
-	if (!wrangler_config.assets?.binding) {
+	if (wrangler_config.assets?.binding !== 'ASSETS') {
 		throw new Error(
-			`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/`
+			`You must set the \`assets.binding\` key to 'ASSETS' in ${wrangler_config.configPath}.`
 		);
 	}
 
