@@ -1324,6 +1324,7 @@ export interface SSRManifest {
 	_: {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
 		remotes: Record<string, () => Promise<any>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;

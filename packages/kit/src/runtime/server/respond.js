@@ -17,7 +17,7 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
+import { Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
@@ -70,7 +70,11 @@ export async function respond(request, options, manifest, state) {
 	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
 		const opts = { status: 403 };
 
-		if (is_remote_request) {
+		if (
+			is_remote_request &&
+			// TODO get doesn't have an origin header - any way we can still forbid other origins?
+			request.method !== 'GET'
+		) {
 			return json(
 				{
 					message: 'Cross-site remote requests are forbidden'
@@ -190,23 +194,25 @@ export async function respond(request, options, manifest, state) {
 		});
 	}
 
-	let resolved_path;
+	let resolved_path = url.pathname;
 
-	const prerendering_reroute_state = state.prerendering?.inside_reroute;
-	try {
-		// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
-		// which would end up in the wrong logic path if not disabled.
-		if (state.prerendering) state.prerendering.inside_reroute = true;
+	if (!is_remote_request) {
+		const prerendering_reroute_state = state.prerendering?.inside_reroute;
+		try {
+			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
+			// which would end up in the wrong logic path if not disabled.
+			if (state.prerendering) state.prerendering.inside_reroute = true;
 
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path =
-			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
-	} finally {
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path =
+				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		} finally {
+			if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+		}
 	}
 
 	try {

@@ -2953,7 +2953,31 @@ if (DEV) {
 /**
  * @param {string} id
  */
-export function remote(id) {
+export function remoteQuery(id) {
+	return async (/** @type {any} */ ...args) => {
+		const transport = app.hooks.transport;
+		const encoders = Object.fromEntries(
+			Object.entries(transport).map(([key, value]) => [key, value.encode])
+		);
+
+		const response = await fetch(
+			`/${app_dir}/remote/${id}?args=${encodeURIComponent(devalue.stringify(args, encoders))}`
+		);
+		const result = await response.json();
+
+		if (!response.ok) {
+			// TODO should this go through `handleError`?
+			throw new Error(result.message);
+		}
+
+		return devalue.parse(result, app.decoders);
+	};
+}
+
+/**
+ * @param {string} id
+ */
+export function remoteAction(id) {
 	return async (/** @type {any} */ ...args) => {
 		const transport = app.hooks.transport;
 		const encoders = Object.fromEntries(
@@ -2976,5 +3000,15 @@ export function remote(id) {
 		}
 
 		return devalue.parse(result, app.decoders);
+	};
+}
+
+/**
+ * @param {string} id
+ */
+export function remoteFormAction(id) {
+	return {
+		method: 'POST',
+		action: `/${app_dir}/remote/${id}`
 	};
 }

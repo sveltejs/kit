@@ -1306,6 +1306,8 @@ declare module '@sveltejs/kit' {
 		_: {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
+			/** hashed filename -> import to that file */
+			remotes: Record<string, () => Promise<any>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1766,6 +1768,7 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
+		remotes: string[];
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}
@@ -2034,6 +2037,12 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
+
+	export function formAction<T extends (formData: FormData) => any>(fn: T): T;
+
+	export function query<T extends (...args: any[]) => any>(fn: T): T;
+
+	export function action<T extends (...args: any[]) => any>(fn: T): T;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;

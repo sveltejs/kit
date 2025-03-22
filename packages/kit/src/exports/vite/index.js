@@ -36,6 +36,7 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { build_remotes, create_public_remote_file } from './build/build_remotes.js';
 
 const cwd = process.cwd();
 
@@ -581,63 +582,128 @@ Tips:
 		}
 	};
 
+	/** @type {import('vite').ViteDevServer} */
+	let dev_server;
+
+	const remote_virtual_suffix = '.__virtual';
+	/** @type {Record<string, string>} */
+	const remote_cache = {};
+	/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
+	let remote_exports = undefined;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
+
+		configureServer(_dev_server) {
+			dev_server = _dev_server;
+		},
+
+		async resolveId(id, importer) {
+			if (id.endsWith(remote_virtual_suffix)) {
+				return id;
+			}
+
+			if (importer?.endsWith(remote_virtual_suffix)) {
+				return this.resolve(
+					id,
+					posixify(process.cwd()) + importer.slice(0, -remote_virtual_suffix.length)
+				);
+			}
+		},
+
+		async load(id) {
+			if (id.endsWith(remote_virtual_suffix)) {
+				return remote_cache[posixify(process.cwd()) + id.slice(0, -remote_virtual_suffix.length)];
+			}
+		},
 
 		/**
 		 * @param {string} code
 		 * @param {string} id
 		 * @param {any} opts
 		 */
-		transform(code, id, opts) {
-			if (opts.ssr) {
-				return;
-			}
-
+		async transform(code, id, opts) {
 			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
-			/** @type {string[]} */
-			const names = [];
-			const program = this.parse(code);
+			const hashed_id = hash(posixify(id));
 
-			for (const node of program.body) {
-				if (node.type === 'ExportNamedDeclaration') {
-					for (const specifier of node.specifiers) {
-						names.push(/** @type {{ name: string }} */ (specifier.exported).name);
-					}
+			if (opts.ssr) {
+				// build does this in a separate step because dev_server is not available to it
+				if (!dev_server) return;
 
-					if (node.declaration) {
-						if (node.declaration.type === 'FunctionDeclaration') {
-							names.push(node.declaration.id.name);
-						} else if (node.declaration.type === 'VariableDeclaration') {
-							for (const declarator of node.declaration.declarations) {
-								if (declarator.id.type !== 'Identifier') {
-									throw new Error('TODO');
-								}
-
-								names.push(declarator.id.name);
-							}
-						}
-					}
-				}
+				remote_cache[id] = code;
+				const module = await dev_server.ssrLoadModule(id + remote_virtual_suffix);
+				const exports = Object.keys(module);
+				return create_public_remote_file(
+					exports,
+					id + remote_virtual_suffix,
+					hashed_id,
+					svelte_config
+				);
 			}
 
-			let fn = 'remote';
+			/** @type {Map<string, string[]>} */
+			const remotes = new Map();
 
-			// belt and braces — guard against an existing `export function remote() {...}`
-			let n = 1;
-			while (names.includes(fn)) fn = `remote$${n++}`;
+			if (remote_exports) {
+				const exports = remote_exports.get(hashed_id);
+				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			const h = hash(id);
-			const exports = names.map((n) => `export const ${n} = ${fn}('${h}/${n}');`);
+				for (const [name, value] of exports) {
+					if (name === 'other') continue;
+					const type = name_to_client_export(name);
+					remotes.set(type, value);
+				}
+			} else if (dev_server) {
+				const modules = await dev_server.ssrLoadModule(id);
+				for (const [name, value] of Object.entries(modules)) {
+					if (value.__type) {
+						const type = name_to_client_export(value.__type);
+						remotes.set(type, (remotes.get(type) ?? []).concat(name));
+					}
+				}
+			} else {
+				throw new Error(
+					'plugin-remote error: Expected one of dev_server and remote_exports to be available'
+				);
+			}
 
-			const specifier = fn === 'remote' ? fn : `remote as ${fn}`;
+			/** @param {string} name */
+			function name_to_client_export(name) {
+				return 'remote' + name[0].toUpperCase() + name.slice(1);
+			}
+
+			const exports = [];
+			const specifiers = [];
+
+			for (const [type, _exports] of remotes) {
+				// TODO handle default export
+				const result = exports_and_fn(type, _exports);
+				exports.push(...result.exports);
+				specifiers.push(result.specifier);
+			}
+
+			/**
+			 * @param {string} remote_import
+			 * @param {string[]} names
+			 */
+			function exports_and_fn(remote_import, names) {
+				// belt and braces — guard against an existing `export function remote() {...}`
+				let n = 1;
+				let fn = remote_import;
+				while (names.includes(fn)) fn = `${fn}$${n++}`;
+
+				const exports = names.map((n) => `export const ${n} = ${fn}('${hashed_id}/${n}');`);
+				const specifier = fn === remote_import ? fn : `${fn} as ${fn}`;
+
+				return { exports, specifier };
+			}
 
 			return {
-				code: `import { ${specifier} } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: `import { ${specifiers.join(', ')} } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
 		}
 	};
@@ -897,7 +963,11 @@ Tips:
 					env: { ...env.private, ...env.public }
 				});
 
+				remote_exports = metadata.remotes;
+
 				log.info('Building app');
+
+				build_remotes(metadata, svelte_config, out);
 
 				// create client build
 				write_client_manifest(

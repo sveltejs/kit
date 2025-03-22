@@ -348,6 +348,8 @@ export interface ServerMetadata {
 		has_server_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
+	/** For each hashed remote file, its export names grouped by query/action/formAction/other */
+	remotes: Map<string, Map<string, string[]>>;
 }
 
 export interface SSRComponent {

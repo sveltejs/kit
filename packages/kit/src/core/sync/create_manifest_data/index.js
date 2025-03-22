@@ -479,7 +479,7 @@ function create_remotes(config, cwd) {
 		fs.existsSync(dir)
 			? walk(dir)
 					.filter((file) => extensions.some((ext) => file.endsWith(ext)))
-					.map((file) => `${dir}/${file}`)
+					.map((file) => posixify(`${dir}/${file}`))
 			: []
 	);
 }

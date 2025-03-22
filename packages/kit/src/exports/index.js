@@ -262,3 +262,74 @@ export function normalizeUrl(url) {
 		}
 	};
 }
+
+/**
+ * @template {(formData: FormData) => any} T
+ * @param {T} fn
+ * @returns {T}
+ */
+export function formAction(fn) {
+	// Better safe than sorry: Seal these properties to prevent modification
+	Object.defineProperty(fn, 'method', {
+		value: 'POST',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+	Object.defineProperty(fn, '__type', {
+		value: 'formAction',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+	let set = false;
+	Object.defineProperty(fn, '_set_action', {
+		/** @param {string} action */
+		value: (action) => {
+			if (set) return;
+			set = true;
+			Object.defineProperty(fn, 'action', {
+				value: action,
+				writable: false,
+				enumerable: true,
+				configurable: false
+			});
+		},
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+	return fn;
+}
+
+/**
+ * @template {(...args: any[]) => any} T
+ * @param {T} fn
+ * @returns {T}
+ */
+export function query(fn) {
+	// Better safe than sorry: Seal these properties to prevent modification
+	Object.defineProperty(fn, '__type', {
+		value: 'query',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+	return fn;
+}
+
+/**
+ * @template {(...args: any[]) => any} T
+ * @param {T} fn
+ * @returns {T}
+ */
+export function action(fn) {
+	// Better safe than sorry: Seal these properties to prevent modification
+	Object.defineProperty(fn, '__type', {
+		value: 'action',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+	return fn;
+}
