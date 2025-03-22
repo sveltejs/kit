@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
-	import { add, multiply } from '$lib/foo.remote.ts';
+	import { add, multiply, divide } from '$lib/foo.remote.ts';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -20,3 +21,7 @@
 		console.log(result);
 	}}>multiply</button
 >
+
+<form {...divide} use:enhance>
+	<button>divide</button>
+</form>
