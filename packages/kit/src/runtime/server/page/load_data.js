@@ -2,6 +2,7 @@ import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
 import { b64_encode } from '../../utils.js';
+import { with_event } from '../../app/server/event.js';
 
 /**
  * Calls the user's server `load` function.
@@ -16,7 +17,6 @@ import { b64_encode } from '../../utils.js';
 export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
-	let done = false;
 	let is_tracking = true;
 
 	const uses = {
@@ -27,6 +27,13 @@ export async function load_server_data({ event, state, node, parent }) {
 		url: false,
 		search_params: new Set()
 	};
+
+	const load = node.server.load;
+	const slash = node.server.trailingSlash;
+
+	if (!load) {
+		return { type: 'data', data: null, uses, slash };
+	}
 
 	const url = make_trackable(
 		event.url,
@@ -58,92 +65,96 @@ export async function load_server_data({ event, state, node, parent }) {
 		disable_search(url);
 	}
 
-	const result = await node.server.load?.call(null, {
-		...event,
-		fetch: (info, init) => {
-			const url = new URL(info instanceof Request ? info.url : info, event.url);
+	let done = false;
 
-			if (DEV && done && !uses.dependencies.has(url.href)) {
-				console.warn(
-					`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-				);
-			}
+	const result = await with_event(event, () =>
+		load.call(null, {
+			...event,
+			fetch: (info, init) => {
+				const url = new URL(info instanceof Request ? info.url : info, event.url);
 
-			// Note: server fetches are not added to uses.depends due to security concerns
-			return event.fetch(info, init);
-		},
-		/** @param {string[]} deps */
-		depends: (...deps) => {
-			for (const dep of deps) {
-				const { href } = new URL(dep, event.url);
+				if (DEV && done && !uses.dependencies.has(url.href)) {
+					console.warn(
+						`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+					);
+				}
 
-				if (DEV) {
-					validate_depends(node.server_id, dep);
+				// Note: server fetches are not added to uses.depends due to security concerns
+				return event.fetch(info, init);
+			},
+			/** @param {string[]} deps */
+			depends: (...deps) => {
+				for (const dep of deps) {
+					const { href } = new URL(dep, event.url);
 
-					if (done && !uses.dependencies.has(href)) {
+					if (DEV) {
+						validate_depends(node.server_id || 'missing route ID', dep);
+
+						if (done && !uses.dependencies.has(href)) {
+							console.warn(
+								`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+							);
+						}
+					}
+
+					uses.dependencies.add(href);
+				}
+			},
+			params: new Proxy(event.params, {
+				get: (target, key) => {
+					if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
 						console.warn(
-							`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+							`${node.server_id}: Accessing \`params.${String(
+								key
+							)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
 						);
 					}
-				}
 
-				uses.dependencies.add(href);
-			}
-		},
-		params: new Proxy(event.params, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
+					if (is_tracking) {
+						uses.params.add(key);
+					}
+					return target[/** @type {string} */ (key)];
+				}
+			}),
+			parent: async () => {
+				if (DEV && done && !uses.parent) {
 					console.warn(
-						`${node.server_id}: Accessing \`params.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+						`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
 					);
 				}
 
 				if (is_tracking) {
-					uses.params.add(key);
+					uses.parent = true;
 				}
-				return target[/** @type {string} */ (key)];
-			}
-		}),
-		parent: async () => {
-			if (DEV && done && !uses.parent) {
-				console.warn(
-					`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-				);
-			}
+				return parent();
+			},
+			route: new Proxy(event.route, {
+				get: (target, key) => {
+					if (DEV && done && typeof key === 'string' && !uses.route) {
+						console.warn(
+							`${node.server_id}: Accessing \`route.${String(
+								key
+							)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+						);
+					}
 
-			if (is_tracking) {
-				uses.parent = true;
-			}
-			return parent();
-		},
-		route: new Proxy(event.route, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.route) {
-					console.warn(
-						`${node.server_id}: Accessing \`route.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-					);
+					if (is_tracking) {
+						uses.route = true;
+					}
+					return target[/** @type {'id'} */ (key)];
 				}
-
-				if (is_tracking) {
-					uses.route = true;
+			}),
+			url,
+			untrack(fn) {
+				is_tracking = false;
+				try {
+					return fn();
+				} finally {
+					is_tracking = true;
 				}
-				return target[/** @type {'id'} */ (key)];
 			}
-		}),
-		url,
-		untrack(fn) {
-			is_tracking = false;
-			try {
-				return fn();
-			} finally {
-				is_tracking = true;
-			}
-		}
-	});
+		})
+	);
 
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, node.server_id);
@@ -155,7 +166,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		type: 'data',
 		data: result ?? null,
 		uses,
-		slash: node.server.trailingSlash
+		slash
 	};
 }
 
@@ -242,7 +253,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				dependency = { response, body: null };
 				state.prerendering.dependencies.set(url.pathname, dependency);
 			}
-		} else {
+		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 			const mode = input instanceof Request ? input.mode : (init?.mode ?? 'cors');
 			if (mode === 'no-cors') {

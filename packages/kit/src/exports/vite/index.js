@@ -866,8 +866,12 @@ Tips:
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				const deps_of = /** @param {string} f */ (f) =>
-					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				/**
+				 * @param {string} entry
+				 * @param {boolean} [add_dynamic_css]
+				 */
+				const deps_of = (entry, add_dynamic_css = false) =>
+					find_deps(client_manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
 					const start = deps_of(`${runtime_directory}/client/entry.js`);
@@ -888,14 +892,20 @@ Tips:
 					// similar to that on the client, with as much information computed upfront so that we
 					// don't need to include any code of the actual routes in the server bundle.
 					if (svelte_config.kit.router.resolution === 'server') {
-						build_data.client.nodes = manifest_data.nodes.map((node, i) => {
+						const nodes = manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
-								return resolve_symlinks(
+								const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+								const deps = deps_of(entry, true);
+								const file = resolve_symlinks(
 									client_manifest,
 									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`
 								).chunk.file;
+
+								return { file, css: deps.stylesheets };
 							}
 						});
+						build_data.client.nodes = nodes.map((node) => node?.file);
+						build_data.client.css = nodes.map((node) => node?.css);
 
 						build_data.client.routes = compact(
 							manifest_data.routes.map((route) => {

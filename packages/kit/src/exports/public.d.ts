@@ -814,7 +814,7 @@ export type ClientInit = () => MaybePromise<void>;
  * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
  * @since 2.3.0
  */
-export type Reroute = (event: { url: URL }) => void | string;
+export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 /**
  * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
@@ -990,7 +990,7 @@ export interface NavigationEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1012,7 +1012,12 @@ export interface NavigationTarget {
 	/**
 	 * Info about the target route
 	 */
-	route: { id: string | null };
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 */
+		id: string | null;
+	};
 	/**
 	 * The URL that is navigated to
 	 */
@@ -1129,7 +1134,7 @@ export interface Page<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1177,7 +1182,7 @@ export interface RequestEvent<
 	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
 	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
-	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies)
+	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 	 */
 	fetch: typeof fetch;
 	/**
@@ -1189,7 +1194,7 @@ export interface RequestEvent<
 	 */
 	locals: App.Locals;
 	/**
-	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
 	params: Params;
 	/**
@@ -1197,15 +1202,15 @@ export interface RequestEvent<
 	 */
 	platform: Readonly<App.Platform> | undefined;
 	/**
-	 * The original request object
+	 * The original request object.
 	 */
 	request: Request;
 	/**
-	 * Info about the current route
+	 * Info about the current route.
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1302,15 +1307,16 @@ export class Server {
 }
 
 export interface ServerInitOptions {
-	/** A map of environment variables */
+	/** A map of environment variables. */
 	env: Record<string, string>;
-	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {
 	appDir: string;
 	appPath: string;
+	/** Static files from `kit.config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 
@@ -1321,7 +1327,7 @@ export interface SSRManifest {
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code */
+		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;
 	};
 }
@@ -1452,7 +1458,7 @@ export interface HttpError {
 }
 
 /**
- * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function
+ * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function.
  */
 export interface Redirect {
 	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */

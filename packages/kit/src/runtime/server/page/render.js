@@ -117,11 +117,6 @@ export async function render_response({
 	}
 
 	if (page_config.ssr) {
-		if (__SVELTEKIT_DEV__ && !branch.at(-1)?.node.component) {
-			// Can only be the leaf, layouts have a fallback component generated
-			throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
-		}
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
@@ -129,7 +124,15 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			constructors: await Promise.all(branch.map(({ node }) => node.component())),
+			constructors: await Promise.all(
+				branch.map(({ node }) => {
+					if (!node.component) {
+						// Can only be the leaf, layouts have a fallback component generated
+						throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
+					}
+					return node.component();
+				})
+			),
 			form: form_value
 		};
 

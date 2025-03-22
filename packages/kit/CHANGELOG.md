@@ -1,5 +1,86 @@
 # @sveltejs/kit
 
+## 2.20.2
+### Patch Changes
+
+
+- fix: allow non-prerendered API endpoint calls during reroute when prerendering ([#13616](https://github.com/sveltejs/kit/pull/13616))
+
+## 2.20.1
+### Patch Changes
+
+
+- fix: avoid using top-level await ([#13607](https://github.com/sveltejs/kit/pull/13607))
+
+## 2.20.0
+### Minor Changes
+
+
+- feat: add `getRequestEvent` to `$app/server` ([#13582](https://github.com/sveltejs/kit/pull/13582))
+
+## 2.19.2
+### Patch Changes
+
+
+- fix: lazily load CSS for dynamically imported components ([#13564](https://github.com/sveltejs/kit/pull/13564))
+
+## 2.19.1
+### Patch Changes
+
+
+- fix: allow reroute to point to prerendered route ([#13575](https://github.com/sveltejs/kit/pull/13575))
+
+## 2.19.0
+### Minor Changes
+
+
+- feat: provide `fetch` to `reroute` ([#13549](https://github.com/sveltejs/kit/pull/13549))
+
+
+### Patch Changes
+
+
+- chore: cache reroute results ([#13548](https://github.com/sveltejs/kit/pull/13548))
+
+## 2.18.0
+### Minor Changes
+
+
+- feat: allow async `reroute` ([#13520](https://github.com/sveltejs/kit/pull/13520))
+
+
+- feat: provide `normalizeUrl` helper ([#13539](https://github.com/sveltejs/kit/pull/13539))
+
+
+### Patch Changes
+
+
+- fix: correct navigation history with hash router and ensure load functions are rerun on user changes to URL hash ([#13492](https://github.com/sveltejs/kit/pull/13492))
+
+
+- fix: include universal load assets as server assets ([#13531](https://github.com/sveltejs/kit/pull/13531))
+
+
+- fix: Include root layout and error nodes even when apps have only prerendered pages ([#13522](https://github.com/sveltejs/kit/pull/13522))
+
+
+- fix: correctly preload data on `mousedown`/`touchstart` if code was preloaded on hover ([#13530](https://github.com/sveltejs/kit/pull/13530))
+
+## 2.17.3
+### Patch Changes
+
+
+- fix: avoid simulated CORS errors with non-HTTP URLs ([#13493](https://github.com/sveltejs/kit/pull/13493))
+
+
+- fix: correctly preload links on `mousedown`/`touchstart` ([#13486](https://github.com/sveltejs/kit/pull/13486))
+
+
+- fix: load CSS when using server-side route resolution ([#13498](https://github.com/sveltejs/kit/pull/13498))
+
+
+- fix: correctly find shared entry-point CSS files during inlining ([#13431](https://github.com/sveltejs/kit/pull/13431))
+
 ## 2.17.2
 ### Patch Changes
 

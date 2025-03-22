@@ -796,7 +796,7 @@ declare module '@sveltejs/kit' {
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: { url: URL }) => void | string;
+	export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 	/**
 	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
@@ -972,7 +972,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -994,7 +994,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Info about the target route
 		 */
-		route: { id: string | null };
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: string | null;
+		};
 		/**
 		 * The URL that is navigated to
 		 */
@@ -1111,7 +1116,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1159,7 +1164,7 @@ declare module '@sveltejs/kit' {
 		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
 		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies)
+		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 		 */
 		fetch: typeof fetch;
 		/**
@@ -1171,7 +1176,7 @@ declare module '@sveltejs/kit' {
 		 */
 		locals: App.Locals;
 		/**
-		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
 		params: Params;
 		/**
@@ -1179,15 +1184,15 @@ declare module '@sveltejs/kit' {
 		 */
 		platform: Readonly<App.Platform> | undefined;
 		/**
-		 * The original request object
+		 * The original request object.
 		 */
 		request: Request;
 		/**
-		 * Info about the current route
+		 * Info about the current route.
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1284,15 +1289,16 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface ServerInitOptions {
-		/** A map of environment variables */
+		/** A map of environment variables. */
 		env: Record<string, string>;
-		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
 		appDir: string;
 		appPath: string;
+		/** Static files from `kit.config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
 
@@ -1303,7 +1309,7 @@ declare module '@sveltejs/kit' {
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
-			/** A `[file]: size` map of all assets imported by server code */
+			/** A `[file]: size` map of all assets imported by server code. */
 			server_assets: Record<string, number>;
 		};
 	}
@@ -1434,7 +1440,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function
+	 * The object returned by the [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function.
 	 */
 	export interface Redirect {
 		/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
@@ -1715,18 +1721,24 @@ declare module '@sveltejs/kit' {
 		out_dir: string;
 		service_worker: string | null;
 		client: {
-			/** Path to the client entry point */
+			/** Path to the client entry point. */
 			start: string;
-			/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'` */
+			/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'`. */
 			app?: string;
-			/** JS files that the client entry point relies on */
+			/** JS files that the client entry point relies on. */
 			imports: string[];
 			/**
 			 * JS files that represent the entry points of the layouts/pages.
 			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
-			nodes?: (string | undefined)[];
+			nodes?: Array<string | undefined>;
+			/**
+			 * CSS files referenced in the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			css?: Array<string[] | undefined>;
 			/**
 			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
@@ -1736,7 +1748,7 @@ declare module '@sveltejs/kit' {
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
-			/** Only set in case of `bundleStrategy === 'inline'` */
+			/** Only set in case of `bundleStrategy === 'inline'`. */
 			inline?: {
 				script: string;
 				style: string | undefined;
@@ -1746,6 +1758,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface ManifestData {
+		/** Static files from `kit.config.files.assets`. */
 		assets: Asset[];
 		hooks: {
 			client: string | null;
@@ -1759,21 +1772,22 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
-		/** The +page/layout.svelte */
+		/** The `+page/layout.svelte`. */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
-		/** The +page/layout.js/.ts */
+		/** The `+page/layout.js/.ts`. */
 		universal?: string;
-		/** The +page/layout.server.js/ts */
+		/** The `+page/layout.server.js/ts`. */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
-		/** Filled with the pages that reference this layout (if this is a layout) */
+		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
 	}
 
 	type RecursiveRequired<T> = {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
@@ -1833,9 +1847,29 @@ declare module '@sveltejs/kit' {
 
 	type SSRComponentLoader = () => Promise<SSRComponent>;
 
+	interface UniversalNode {
+		load?: Load;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
+	interface ServerNode {
+		load?: ServerLoad;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		actions?: Actions;
+		config?: any;
+		entries?: PrerenderEntryGenerator;
+	}
+
 	interface SSRNode {
-		component: SSRComponentLoader;
-		/** index into the `nodes` array in the generated `client/app.js` */
+		/** index into the `nodes` array in the generated `client/app.js`. */
 		index: number;
 		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
 		imports: string[];
@@ -1843,32 +1877,18 @@ declare module '@sveltejs/kit' {
 		stylesheets: string[];
 		/** external font files that are loaded on the client */
 		fonts: string[];
-		/** inlined styles */
+
+		universal_id?: string;
+		server_id?: string;
+
+		/** inlined styles. */
 		inline_styles?(): MaybePromise<Record<string, string>>;
-
-		universal: {
-			load?: Load;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
-
-		server: {
-			load?: ServerLoad;
-			prerender?: PrerenderOption;
-			ssr?: boolean;
-			csr?: boolean;
-			trailingSlash?: TrailingSlash;
-			actions?: Actions;
-			config?: any;
-			entries?: PrerenderEntryGenerator;
-		};
-
-		universal_id: string;
-		server_id: string;
+		/** Svelte component */
+		component?: SSRComponentLoader;
+		/** +page.js or +layout.js */
+		universal?: UniversalNode;
+		/** +page.server.js, +layout.server.js, or +server.js */
+		server?: ServerNode;
 	}
 
 	type SSRNodeLoader = () => Promise<SSRNode>;
@@ -1996,6 +2016,24 @@ declare module '@sveltejs/kit' {
 	 * @param e The object to check.
 	 * */
 	export function isActionFailure(e: unknown): e is ActionFailure;
+	/**
+	 * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
+	 * Returns the normalized URL as well as a method for adding the potential suffix back
+	 * based on a new pathname (possibly including search) or URL.
+	 * ```js
+	 * import { normalizeUrl } from '@sveltejs/kit';
+	 *
+	 * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
+	 * console.log(url.pathname); // /blog/post
+	 * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
+	 * ```
+	 * @since 2.18.0
+	 */
+	export function normalizeUrl(url: URL | string): {
+		url: URL;
+		wasNormalized: boolean;
+		denormalize: (url?: string | URL) => URL;
+	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
@@ -2364,6 +2402,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
+	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2377,6 +2416,13 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+	/**
+	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
+	 *
+	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * @since 2.20.0
+	 */
+	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
 	export {};
 }
