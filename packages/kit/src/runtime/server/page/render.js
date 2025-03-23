@@ -33,7 +33,7 @@ const encoder = new TextEncoder();
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
- *   page_config: { ssr: boolean; csr: boolean };
+ *   page_config: { ssr: boolean; csr: boolean, embed: import('@sveltejs/kit').EmbedResult };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
@@ -217,6 +217,8 @@ export async function render_response({
 
 	let head = '';
 	let body = rendered.html;
+	let embed_script = ''
+	const is_embed = !!page_config.embed
 
 	const csp = new Csp(options.csp, {
 		prerender: !!state.prerendering
@@ -383,7 +385,19 @@ export async function render_response({
 
 		const args = ['element'];
 
-		blocks.push('const element = document.currentScript.parentElement;');
+		if (is_embed) {
+			if (!page_config.embed?.target) {
+				throw new Error('Embed target is required in embed mode');
+			}
+			blocks.push(`
+				const element = document.querySelector(${s(page_config.embed.target)});
+				if (!element) {
+					console.error('Embed target ${page_config.embed.target} not found');
+				}
+			`);
+		} else {
+			blocks.push('const element = document.currentScript.parentElement;');
+		}
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
@@ -471,6 +485,9 @@ export async function render_response({
 				}
 			`;
 		csp.add_script(init_app);
+		if(is_embed){
+			embed_script += init_app;
+		}
 
 		body += `\n\t\t\t<script${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
@@ -479,7 +496,7 @@ export async function render_response({
 
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
-		'content-type': 'text/html'
+		'content-type': is_embed ? 'application/javascript' : 'text/html',
 	});
 
 	if (state.prerendering) {
@@ -516,13 +533,30 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
-	const html = options.templates.app({
-		head,
-		body,
-		assets,
-		nonce: /** @type {string} */ (csp.nonce),
-		env: safe_public_env
-	});
+	if(is_embed){
+		// append head content to document head element
+		embed_script += `
+			document.head.insertAdjacentHTML('beforeend', ${s(head)});
+		`
+		// append body content to embed target
+		embed_script += `
+			document.querySelector(${s(page_config.embed.target)}).insertAdjacentHTML('beforeend', ${s(body)});
+		`
+	}
+
+	let html = ''
+	if (is_embed) {
+		html = embed_script;
+	} else {
+		html = options.templates.app({
+			head,
+			body,
+			assets,
+			nonce: /** @type {string} */ (csp.nonce),
+			env: safe_public_env
+		});
+	}
+
 
 	// TODO flush chunks as early as we can
 	const transformed =

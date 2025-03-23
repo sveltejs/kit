@@ -65,6 +65,7 @@ const valid_layout_exports = new Set([
 	'prerender',
 	'csr',
 	'ssr',
+	'embed',
 	'trailingSlash',
 	'config'
 ]);
