@@ -74,5 +74,6 @@ export function all_types(config, mode) {
  * @param {import('types').ValidatedConfig} config
  */
 export function server(config) {
+	console.log('start');
 	write_server(config, path.join(config.kit.outDir, 'generated'));
 }
