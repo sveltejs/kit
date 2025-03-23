@@ -73,3 +73,5 @@ export function read(asset) {
 }
 
 export { getRequestEvent } from './event.js';
+
+export { query, action, formAction } from './remote.js';

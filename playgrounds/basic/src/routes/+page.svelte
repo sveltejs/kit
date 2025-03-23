@@ -8,6 +8,8 @@
 
 <h1>Welcome to SvelteKit</h1>
 
+<div>From load fn: {data.sum}</div>
+
 <button
 	onclick={async () => {
 		const result = await add(2, 3);

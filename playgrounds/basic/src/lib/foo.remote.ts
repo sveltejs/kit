@@ -1,5 +1,5 @@
 import { x } from './relative';
-import { query, action, formAction } from '@sveltejs/kit';
+import { query, action, formAction } from '$app/server';
 
 export const add = query(async (a: number, b: number) => {
 	console.log('add', x, a, b);

@@ -173,6 +173,8 @@ let container;
 let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
+/** @type {Record<string, any>} */
+let remote_responses;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -276,6 +278,7 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
+	remote_responses = hydrate.remote;
 
 	await _app.hooks.init?.();
 
@@ -2954,14 +2957,21 @@ if (DEV) {
  * @param {string} id
  */
 export function remoteQuery(id) {
+	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
 	return async (/** @type {any} */ ...args) => {
 		const transport = app.hooks.transport;
 		const encoders = Object.fromEntries(
 			Object.entries(transport).map(([key, value]) => [key, value.encode])
 		);
 
+		const stringified_args = devalue.stringify(args, encoders);
+		if (!started) {
+			const result = remote_responses[id + stringified_args];
+			if (result) return result;
+		}
+
 		const response = await fetch(
-			`/${app_dir}/remote/${id}?args=${encodeURIComponent(devalue.stringify(args, encoders))}`
+			`/${app_dir}/remote/${id}?args=${encodeURIComponent(stringified_args)}`
 		);
 		const result = await response.json();
 

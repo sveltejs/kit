@@ -175,7 +175,12 @@ export async function respond(request, options, manifest, state) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
+		isSubRequest: state.depth > 0,
+		// TODO tidy up
+		_: {
+			remote_results: {},
+			transport: options.hooks.transport
+		}
 	};
 
 	event.fetch = create_fetch({

@@ -189,6 +189,7 @@ export async function render_response({
 			};
 
 			try {
+				// TODO once Svelte 5 has async we want to make this "with_event", too, so that RPC in here can hydrate stuff
 				rendered = options.root.render(props, render_opts);
 			} finally {
 				globalThis.fetch = fetch;
@@ -404,7 +405,8 @@ export async function render_response({
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
-				`error: ${serialized.error}`
+				`error: ${serialized.error}`,
+				`remote: ${s(event._.remote_results)}`
 			];
 
 			if (status !== 200) {

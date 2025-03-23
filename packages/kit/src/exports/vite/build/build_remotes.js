@@ -38,6 +38,9 @@ export function create_public_remote_file(exports, id, hash, svelte_config) {
         if (fn.__type === 'formAction') {
             fn._set_action('${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}/remote/${hash}/' + key);
         }
+		if (fn.__type === 'query') {
+			fn.__id = '${hash}/' + key;
+		}
     }
     export { ${exports.join(', ')} };
 `;
