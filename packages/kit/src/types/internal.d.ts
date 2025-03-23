@@ -372,6 +372,7 @@ export interface UniversalNode {
 	prerender?: PrerenderOption;
 	ssr?: boolean;
 	csr?: boolean;
+	embed?: (event: RequestEvent) => string | Promise<string>;
 	trailingSlash?: TrailingSlash;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
@@ -382,6 +383,7 @@ export interface ServerNode {
 	prerender?: PrerenderOption;
 	ssr?: boolean;
 	csr?: boolean;
+	embed?: (event: RequestEvent) => string | Promise<string>;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
 	config?: any;
