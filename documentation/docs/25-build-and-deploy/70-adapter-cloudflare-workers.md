@@ -2,9 +2,9 @@
 title: Cloudflare Workers
 ---
 
-To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
+> [!NOTE] `adapter-cloudflare-workers` has been deprecated in favour of [`adapter-cloudflare`](adapter-cloudflare). We recommend using `adapter-cloudflare` to deploy to Cloudflare Workers with [Static Assets](https://developers.cloudflare.com/workers/static-assets/) since Cloudflare Workers Sites will be deprecated in favour of it.
 
-> [!NOTE] Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use [`adapter-cloudflare`](adapter-cloudflare) instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
+To deploy to [Cloudflare Workers](https://workers.cloudflare.com/) with [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
 ## Usage
 
