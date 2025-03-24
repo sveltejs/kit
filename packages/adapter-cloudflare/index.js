@@ -62,6 +62,12 @@ export default function (options = {}) {
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+				replace: {
+					SERVER: `${relative_path}/index.js`,
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+				}
+			});
 
 
 			// _headers
