@@ -86,7 +86,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 		mime_types[ext] ??= mime.lookup(ext) || '';
 	}
 
-	const asset_prefix = path.resolve('_app', 'immutable', 'assets');
+	const asset_prefix = path.join('_app', 'immutable', 'assets');
 	const emitted_asset_dir = path.resolve(build_data.out_dir, 'server', asset_prefix);
 	if (fs.existsSync(emitted_asset_dir)) {
 		for (const file of fs.readdirSync(emitted_asset_dir)) {
