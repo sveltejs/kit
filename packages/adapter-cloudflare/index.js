@@ -245,7 +245,7 @@ function validate_config(config_file = undefined) {
 	// we don't support workers sites
 	if (wrangler_config.site) {
 		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare-workers#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
+			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
 		);
 	}
 
