@@ -96,6 +96,8 @@ export async function render_response({
 	 */
 	let base_expression = s(paths.base);
 
+	const is_embed = !!page_config.embed
+
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
 		if (!state.prerendering?.fallback) {
@@ -112,6 +114,11 @@ export async function render_response({
 		} else if (options.hash_routing) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
+		}
+
+		if (is_embed) {
+			// if we're in embed mode, we need to preprend the current script origin as the base path
+			base_expression = `new URL(document.currentScript.src).origin + ${base_expression}`;
 		}
 	}
 
@@ -218,7 +225,6 @@ export async function render_response({
 	let head = '';
 	let body = rendered.html;
 	let embed_script = ''
-	const is_embed = !!page_config.embed
 
 	const csp = new Csp(options.csp, {
 		prerender: !!state.prerendering

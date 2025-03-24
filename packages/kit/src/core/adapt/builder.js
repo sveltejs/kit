@@ -73,8 +73,6 @@ export function create_builder({
 		return facade;
 	});
 
-	console.log(routes);
-
 	return {
 		log,
 		rimraf,
