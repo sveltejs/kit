@@ -79,7 +79,7 @@ You can have up to 100 `include` and `exclude` rules combined. Generally you can
 
 ### Basic configuration
 
-This adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/configuration/sites/configuration/) in the project root. It should look something like this:
+When building for Cloudflare Workers, this adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/configuration/sites/configuration/) in the project root. It should look something like this:
 
 ```jsonc
 /// file: wrangler.jsonc
@@ -110,13 +110,13 @@ If you're using the [Git integration](https://developers.cloudflare.com/pages/ge
 - **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 
-### Notes
-
-Functions contained in the [`/functions` directory](https://developers.cloudflare.com/pages/functions/routing/) at the project's root will _not_ be included in the deployment. Instead, functions should be implemented as [server endpoints](routing#server) in your SvelteKit app, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/functions/advanced-mode/).
-
 ### Further reading
 
 You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site on Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-kit-site/).
+
+### Notes
+
+Functions contained in the [`/functions` directory](https://developers.cloudflare.com/pages/functions/routing/) at the project's root will _not_ be included in the deployment. Instead, functions should be implemented as [server endpoints](routing#server) in your SvelteKit app, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/functions/advanced-mode/).
 
 ## Runtime APIs
 
