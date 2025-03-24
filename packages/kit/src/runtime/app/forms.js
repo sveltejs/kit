@@ -2,6 +2,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
 import { app, applyAction } from '../client/client.js';
+import { embed_url, is_embed } from '__sveltekit/paths';
 
 export { applyAction };
 
@@ -104,8 +105,11 @@ export function enhance(form_element, submit = () => {}) {
 
 		// For success/failure results, only apply action if it belongs to the
 		// current page, otherwise `form` will be updated erroneously
+		// Exception: If the form is embedded in a third party page, we want to
+		// update it.
+		const location_url = is_embed ? new URL(embed_url) : location;
 		if (
-			location.origin + location.pathname === action.origin + action.pathname ||
+			location_url.origin + location_url.pathname === action.origin + action.pathname ||
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
