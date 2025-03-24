@@ -16,7 +16,7 @@ export interface AdapterOptions {
 	 * Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
 	 * exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
 	 * use `spa` instead to avoid showing an unstyled 404 page to users.
-	 * 
+	 *
 	 * See Cloudflare Pages' [Not Found behaviour](https://developers.cloudflare.com/pages/configuration/serving-pages/#not-found-behavior) for more info.
 	 *
 	 * @default 'plaintext'
