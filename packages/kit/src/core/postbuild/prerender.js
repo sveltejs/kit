@@ -236,6 +236,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				const filepath = saved.get(file);
 				if (filepath) return readFileSync(filepath);
 
+				// Static assets emitted during build
+				if (file.startsWith(config.appDir))
+					return readFileSync(join(config.outDir, 'output', 'server', file));
+
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
 			},
