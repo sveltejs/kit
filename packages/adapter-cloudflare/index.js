@@ -1,5 +1,6 @@
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
-import * as path from 'node:path';
+import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
@@ -28,7 +29,7 @@ export default function (options = {}) {
 
 			const { main, assets, configPath, pages_build_output_dir } = validate_config(options.config);
 			const building_for_cloudflare_pages =
-				!configPath || !!pages_build_output_dir || !main || !assets;
+				!!process.env.CF_PAGES || !configPath || !!pages_build_output_dir || !main || !assets;
 			const dest =
 				pages_build_output_dir || assets?.directory || builder.getBuildDirectory('cloudflare');
 			const worker_dest = main || `${dest}/_worker.js`;
