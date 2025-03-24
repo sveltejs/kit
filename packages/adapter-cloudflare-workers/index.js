@@ -1,4 +1,5 @@
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
@@ -22,44 +23,41 @@ export default function ({ config, platformProxy = {} } = {}) {
 
 			const { main, assets } = validate_config(builder, config);
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-			builder.log.minor('Generating worker...');
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			// Clear out old files
 			builder.rimraf(assets.directory);
 			builder.rimraf(main);
 
+			builder.mkdirp(tmp);
+
+			builder.log.minor('Generating worker...');
+
 			// Create the entry-point for the Worker
-			builder.copy(`${files}/worker.js`, `${main}/index.js`, {
+			const relative_path = path.posix.relative(main, builder.getServerDirectory());
+			builder.copy(`${files}/worker.js`, main, {
 				replace: {
-					SERVER: `${main}/server/index.js`,
-					MANIFEST: './manifest.js',
+					SERVER: `${relative_path}/index.js`,
+					MANIFEST: `${path.posix.relative(main, tmp)}/manifest.js`,
 					ASSETS: assets.binding || 'ASSETS'
 				}
 			});
-			builder.writeServer(`${main}/server`);
 
 			// Create the manifest for the Worker
-			let prerendered_entries = Array.from(builder.prerendered.pages.entries());
-			if (builder.config.kit.paths.base) {
-				prerendered_entries = prerendered_entries.map(([path, { file }]) => [
-					path,
-					{ file: `${builder.config.kit.paths.base}/${file}` }
-				]);
-			}
 			writeFileSync(
-				`${main}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
-					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: relative_path })};\n\n` +
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
+			// client assets and prerendered pages
 			builder.log.minor('Copying assets...');
 			const assets_dir = `${assets.directory}${builder.config.kit.paths.base}`;
 			builder.writeClient(assets_dir);
 			builder.writePrerendered(assets_dir);
-			writeFileSync(`${assets.directory}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
+			// _headers
 			const headers_file = `${assets.directory}/_headers`;
 			if (existsSync('_headers')) {
 				copyFileSync('_headers', headers_file);
@@ -68,6 +66,7 @@ export default function ({ config, platformProxy = {} } = {}) {
 				flag: 'a'
 			});
 
+			// _redirects
 			const redirects_file = `${assets.directory}/_redirects`;
 			if (existsSync('_redirects')) {
 				copyFileSync('_redirects', redirects_file);
@@ -77,6 +76,8 @@ export default function ({ config, platformProxy = {} } = {}) {
 					flag: 'a'
 				});
 			}
+
+			writeFileSync(`${assets.directory}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 
 		emulate() {
@@ -158,13 +159,13 @@ Sample wrangler.jsonc:
 
 	if (!wrangler_config.assets?.directory) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/`
+			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
 		);
 	}
 
-	if (wrangler_config.assets?.binding !== 'ASSETS') {
+	if (!wrangler_config.assets?.binding) {
 		throw new Error(
-			`You must set the \`assets.binding\` key to 'ASSETS' in ${wrangler_config.configPath}.`
+			`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
 		);
 	}
 

@@ -28,12 +28,12 @@ export default function (options = {}) {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const worker_dest = `${dest}/_worker.js`;
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			builder.rimraf(dest);
 
 			builder.mkdirp(dest);
-			builder.mkdirp(worker_dest);
+			builder.mkdirp(tmp);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
 			const fallback = path.join(dest, '404.html');
@@ -43,47 +43,49 @@ export default function (options = {}) {
 				writeFileSync(fallback, 'Not Found');
 			}
 
+			// client assets and prerendered pages
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
-			builder.writeServer(`${worker_dest}/server`);
 
+			// _worker.js
+			const relative_path = path.posix.relative(dest, builder.getServerDirectory());
+			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+				replace: {
+					SERVER: `${relative_path}/index.js`,
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+				}
+			});
 			writeFileSync(
-				`${worker_dest}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: relative_path })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
-			writeFileSync(
-				`${dest}/_routes.json`,
-				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
-			);
 
+			// _headers
 			if (existsSync('_headers')) {
 				copyFileSync('_headers', `${dest}/_headers`);
 			}
-
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
+			// _redirects
 			if (existsSync('_redirects')) {
 				copyFileSync('_redirects', `${dest}/_redirects`);
 			}
-
 			if (builder.prerendered.redirects.size > 0) {
 				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
 					flag: 'a'
 				});
 			}
 
-			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+			writeFileSync(
+				`${dest}/_routes.json`,
+				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
+			);
 
-			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
-				replace: {
-					SERVER: './server/index.js',
-					MANIFEST: './manifest.js'
-				}
-			});
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
