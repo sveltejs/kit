@@ -316,6 +316,8 @@ export function is_external_url(url, base, hash_routing) {
 		return true;
 	}
 
+	// in embed mode, the base should contain the origin,
+	// so it shouldnt' be checked against the url pathname
 	if (!is_embed && !url.pathname.startsWith(base)) {
 		return true;
 	}
