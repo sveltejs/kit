@@ -483,6 +483,8 @@ Tips:
 							export const base = ${global}?.base ?? ${s(base)};
 							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
 							export const app_dir = ${s(kit.appDir)};
+							export const is_embed = ${global}?.is_embed ?? false;
+							export const embed_url = ${global}?.embed_url ?? null;
 						`;
 					}
 
@@ -490,6 +492,8 @@ Tips:
 						export let base = ${s(base)};
 						export let assets = ${assets ? s(assets) : 'base'};
 						export const app_dir = ${s(kit.appDir)};
+						export const is_embed = ${global}?.is_embed ?? false;
+						export const embed_url = ${global}?.embed_url ?? null;
 
 						export const relative = ${svelte_config.kit.paths.relative};
 

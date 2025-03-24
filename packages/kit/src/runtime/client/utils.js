@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '__sveltekit/paths';
+import { assets, is_embed } from '__sveltekit/paths';
 import { version } from '__sveltekit/environment';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
@@ -312,7 +312,11 @@ export function create_updated_store() {
  * @param {boolean} hash_routing
  */
 export function is_external_url(url, base, hash_routing) {
-	if (url.origin !== origin || !url.pathname.startsWith(base)) {
+	if (url.origin !== origin) {
+		return true;
+	}
+
+	if (!is_embed && !url.pathname.startsWith(base)) {
 		return true;
 	}
 
