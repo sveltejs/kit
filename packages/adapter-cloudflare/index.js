@@ -69,7 +69,6 @@ export default function (options = {}) {
 				}
 			});
 
-
 			// _headers
 			if (existsSync('_headers')) {
 				copyFileSync('_headers', `${dest}/_headers`);
