@@ -1331,9 +1331,18 @@ async function get_navigation_intent(url, invalidating) {
 
 /** @param {URL} url */
 function get_url_path(url) {
+	let url_path = url.pathname.slice(base.length);
+	if (is_embed) {
+		let base_path = new URL(base).pathname;
+		if(base_path.endsWith('/')) {
+			base_path = base_path.slice(0, -1);
+		}
+		url_path = url.pathname.slice(base_path.length);
+	}
+
 	return (
 		decode_pathname(
-			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
+			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url_path
 		) || '/'
 	);
 }
