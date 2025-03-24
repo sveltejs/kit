@@ -33,7 +33,7 @@ const encoder = new TextEncoder();
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
- *   page_config: { ssr: boolean; csr: boolean, embed: import('@sveltejs/kit').EmbedResult };
+ *   page_config: { ssr: boolean; csr: boolean, embed?: import('@sveltejs/kit').EmbedResult };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
@@ -351,6 +351,11 @@ export async function render_response({
 		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
+
+		if(is_embed){
+			properties.push('is_embed: true');
+			properties.push('embed_url: document.currentScript.src');
+		}
 
 		if (paths.assets) {
 			properties.push(`assets: ${s(paths.assets)}`);

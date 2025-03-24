@@ -22,7 +22,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base, embed_url, is_embed } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -280,7 +280,7 @@ export async function start(_app, _target, hydrate) {
 	await _app.hooks.init?.();
 
 	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
-	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
+	container = __SVELTEKIT_EMBEDDED__ || is_embed ? _target : document.documentElement;
 	target = _target;
 
 	// we import the root layout/error nodes eagerly, so that
@@ -1288,6 +1288,7 @@ async function get_rerouted_url(url) {
  */
 async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
+
 	if (is_external_url(url, base, app.hash)) return;
 
 	if (__SVELTEKIT_CLIENT_ROUTING__) {
@@ -2559,7 +2560,7 @@ async function _hydrate(
 ) {
 	hydrated = true;
 
-	const url = new URL(location.href);
+	const url = is_embed ? new URL(embed_url) : new URL(location.href);
 
 	/** @type {import('types').CSRRoute | undefined} */
 	let parsed_route;
