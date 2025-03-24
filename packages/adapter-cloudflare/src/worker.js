@@ -43,6 +43,7 @@ export default {
 				: 'no-cache';
 
 			res.headers.set('cache-control', cache_control);
+			res.headers.set('x-robots-tag', 'noindex');
 		} else {
 			const stripped_pathname = pathname.replace(/\/$/, '');
 
