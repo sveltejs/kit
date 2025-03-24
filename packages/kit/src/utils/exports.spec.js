@@ -41,7 +41,7 @@ test('validates +layout.js', () => {
 		validate_layout_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, embed, trailingSlash, config, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -78,7 +78,7 @@ test('validates +page.js', () => {
 		validate_page_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, embed, trailingSlash, config, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_exports(
@@ -114,7 +114,7 @@ test('validates +layout.server.js', () => {
 		validate_layout_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, embed, trailingSlash, config, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -152,7 +152,7 @@ test('validates +page.server.js', () => {
 		validate_page_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, embed, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_server_exports({
