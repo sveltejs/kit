@@ -36,6 +36,12 @@ export default async (req, res) => {
 
 	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
+	const route_id = request.headers.get('x-sveltekit-matched-route');
+
+	if (route_id) {
+		res.setHeader('x-matched-route', route_id);
+	}
+
 	setResponse(
 		res,
 		await server.respond(request, {
