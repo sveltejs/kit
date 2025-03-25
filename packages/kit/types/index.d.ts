@@ -1430,7 +1430,7 @@ declare module '@sveltejs/kit' {
 		| { type: 'error'; status?: number; error: any };
 
 	export type EmbedResult = {
-		target: string
+		target: string;
 	} | null;
 
 	/**
@@ -1856,6 +1856,7 @@ declare module '@sveltejs/kit' {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
+		embed?: (event: RequestEvent) => EmbedResult | Promise<EmbedResult>;
 		trailingSlash?: TrailingSlash;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
@@ -1866,6 +1867,7 @@ declare module '@sveltejs/kit' {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
+		embed?: (event: RequestEvent) => EmbedResult | Promise<EmbedResult>;
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
 		config?: any;

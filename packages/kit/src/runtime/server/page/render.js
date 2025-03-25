@@ -33,7 +33,7 @@ const encoder = new TextEncoder();
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
- *   page_config: { ssr: boolean; csr: boolean, embed?: import('@sveltejs/kit').EmbedResult };
+ *   page_config: { ssr: boolean; csr: boolean, embed?: import('@sveltejs/kit').EmbedResult | undefined };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
@@ -401,9 +401,9 @@ export async function render_response({
 				throw new Error('Embed target is required in embed mode');
 			}
 			blocks.push(`
-				const element = document.querySelector(${s(page_config.embed.target)});
+				const element = document.querySelector(${s(page_config.embed?.target)});
 				if (!element) {
-					console.error('Embed target ${page_config.embed.target} not found');
+					console.error('Embed target ${page_config.embed?.target} not found');
 				}
 			`);
 		} else {
@@ -551,7 +551,7 @@ export async function render_response({
 		`;
 		// append body content to embed target
 		embed_script += `
-			document.querySelector(${s(page_config.embed.target)}).insertAdjacentHTML('beforeend', ${s(body)});
+			document.querySelector(${s(page_config.embed?.target)}).insertAdjacentHTML('beforeend', ${s(body)});
 		`;
 	}
 

@@ -20,7 +20,8 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transporter,
+	EmbedResult
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -372,7 +373,7 @@ export interface UniversalNode {
 	prerender?: PrerenderOption;
 	ssr?: boolean;
 	csr?: boolean;
-	embed?: (event: RequestEvent) => string | Promise<string>;
+	embed?: (event: RequestEvent) => EmbedResult | Promise<EmbedResult>;
 	trailingSlash?: TrailingSlash;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
@@ -383,7 +384,7 @@ export interface ServerNode {
 	prerender?: PrerenderOption;
 	ssr?: boolean;
 	csr?: boolean;
-	embed?: (event: RequestEvent) => string | Promise<string>;
+	embed?: (event: RequestEvent) => EmbedResult | Promise<EmbedResult>;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
 	config?: any;
