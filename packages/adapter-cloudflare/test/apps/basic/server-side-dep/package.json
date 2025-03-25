@@ -1,0 +1,9 @@
+{
+	"name": "server-side-dep",
+	"version": "0.0.1",
+	"type": "module",
+	"types": "./index.d.ts",
+	"exports": {
+		".": "./index.js"
+	}
+}

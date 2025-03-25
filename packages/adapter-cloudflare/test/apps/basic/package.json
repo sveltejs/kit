@@ -1,0 +1,23 @@
+{
+	"name": "~TODO~",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "wrangler pages dev .svelte-kit/cloudflare",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"server-side-dep": "file:server-side-dep",
+		"svelte": "^5.23.1",
+		"vite": "^6.0.11",
+		"wrangler": "^3.87.0"
+	},
+	"type": "module"
+}
