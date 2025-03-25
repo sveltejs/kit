@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { posix, dirname } from 'node:path';
+import { posix, dirname, resolve } from 'node:path';
+import { cwd } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
@@ -21,7 +22,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config, platformProxy = {} } = {}) {
+export default function ({ config, platformProxy = {}, handlers } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -47,7 +48,8 @@ export default function ({ config, platformProxy = {} } = {}) {
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					HANDLERS: './_handlers.js'
 				}
 			});
 
@@ -66,6 +68,18 @@ export default function ({ config, platformProxy = {} } = {}) {
 					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+
+			if (handlers) {
+				// TODO: find a more robust way to resolve files relative to svelte.config.js
+				const handlers_file = resolve(cwd(), handlers);
+				writeFileSync(
+					`${tmp}/_handlers.js`,
+					`import handlers from "${handlers_file}";\n\n` + 'export default handlers;'
+				);
+			} else {
+				// The handlers file must export a plain object as its default export.
+				writeFileSync(`${tmp}/_handlers.js`, 'export default {};');
+			}
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
 			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {
