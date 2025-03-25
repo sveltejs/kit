@@ -4,7 +4,7 @@ title: Cloudflare Workers
 
 > [!NOTE] `adapter-cloudflare-workers` has been deprecated in favour of [`adapter-cloudflare`](adapter-cloudflare). We recommend using `adapter-cloudflare` to deploy to Cloudflare Workers with [Static Assets](https://developers.cloudflare.com/workers/static-assets/) since Cloudflare Workers Sites will be deprecated in favour of it.
 
-To deploy to [Cloudflare Workers](https://workers.cloudflare.com/) with [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
+To deploy to [Cloudflare Workers](https://workers.cloudflare.com/) with [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/), use `adapter-cloudflare-workers`.
 
 ## Usage
 
