@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 6.0.2
+### Patch Changes
+
+
+- chore: remove `esbuild` as dependency ([#13633](https://github.com/sveltejs/kit/pull/13633))
+
+- Updated dependencies [[`370e9f95c1d6efd5393f73d2dbef68143b27f681`](https://github.com/sveltejs/kit/commit/370e9f95c1d6efd5393f73d2dbef68143b27f681)]:
+  - @sveltejs/kit@2.20.3
+
 ## 6.0.1
 ### Patch Changes
 
