@@ -80,31 +80,6 @@ importers:
         specifier: ^5.3.3
         version: 5.6.3
 
-  packages/adapter-cloudflare-workers:
-    dependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20250312.0
-        version: 4.20250312.0
-      esbuild:
-        specifier: ^0.24.0
-        version: 0.24.2
-      wrangler:
-        specifier: ^3.91.0 || ^4.0.0
-        version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
-    devDependencies:
-      '@cloudflare/kv-asset-handler':
-        specifier: ^0.4.0
-        version: 0.4.0
-      '@sveltejs/kit':
-        specifier: workspace:^
-        version: link:../kit
-      '@types/node':
-        specifier: ^18.19.48
-        version: 18.19.50
-      typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
-
   packages/adapter-netlify:
     dependencies:
       '@iarna/toml':
@@ -1124,9 +1099,6 @@ importers:
       '@sveltejs/adapter-cloudflare':
         specifier: workspace:*
         version: link:../../packages/adapter-cloudflare
-      '@sveltejs/adapter-cloudflare-workers':
-        specifier: workspace:*
-        version: link:../../packages/adapter-cloudflare-workers
       '@sveltejs/adapter-netlify':
         specifier: workspace:*
         version: link:../../packages/adapter-netlify
