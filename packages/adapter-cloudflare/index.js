@@ -183,7 +183,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 
 	const excess = include.length + exclude.length - 100;
 	if (excess > 0) {
-		const message = `Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`;
+		const message = `Cloudflare Pages Functions' includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`;
 		builder.log.warn(message);
 
 		exclude.length -= excess;
