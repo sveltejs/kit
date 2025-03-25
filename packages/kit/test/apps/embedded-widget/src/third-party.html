@@ -1,26 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Third party page</title>
-</head>
-<body>
-<div>
-	<p>
-		This is part of the 3rd party page.
-	</p>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Third party page</title>
+	</head>
+	<body>
+		<div>
+			<p>This is part of the 3rd party page.</p>
 
-	<section id="main">
-		<!-- This is the embed target -->
-	</section>
+			<section id="main">
+				<!-- This is the embed target -->
+			</section>
 
-	<p>
-		This is the rest of the 3rd party content.
-	</p>
-</div>
+			<p>This is the rest of the 3rd party content.</p>
+		</div>
 
-<!-- This is the embed script -->
-<script defer src="http://localhost:__PORT__/embed?target=section%23main"></script>
-
-</body>
+		<!-- This is the embed script -->
+		<script defer src="http://localhost:__PORT__/embed?target=section%23main"></script>
+	</body>
 </html>

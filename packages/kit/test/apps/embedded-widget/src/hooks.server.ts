@@ -12,7 +12,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				'Content-Type': 'text/html',
 				'Cache-Control': 'no-store'
 			}
-		})
+		});
 	}
 
 	return resolve(event);

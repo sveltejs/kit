@@ -1,10 +1,10 @@
 <script>
-		import { setup } from '../../../../setup.js';
-		import '../app.css';
+	import { setup } from '../../../../setup.js';
+	import '../app.css';
 
-		let { children } = $props();
+	let { children } = $props();
 
-		setup();
+	setup();
 </script>
 
 {@render children()}

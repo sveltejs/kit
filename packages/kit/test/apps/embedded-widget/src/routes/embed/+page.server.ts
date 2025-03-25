@@ -17,7 +17,7 @@ export const actions: Actions = {
 
 		return {
 			success: true,
-			answer: data.get('answer'),
+			answer: data.get('answer')
 		};
 	}
 };

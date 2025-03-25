@@ -15,11 +15,11 @@
 </div>
 
 <style>
-    div {
-        border: 1px solid black;
-        padding: 1rem;
+	div {
+		border: 1px solid black;
+		padding: 1rem;
 
-        background-color: #008080;
-        color: #DDD;
-    }
+		background-color: #008080;
+		color: #ddd;
+	}
 </style>
