@@ -23,7 +23,7 @@ test.describe('embedded-widget', () => {
 
 		await section.getByTestId('increment').click();
 		await expect(section.getByTestId('counter')).toHaveText('11');
-	})
+	});
 
 	test('forms work', async ({ page }) => {
 		await page.goto('/third-party');
@@ -33,7 +33,7 @@ test.describe('embedded-widget', () => {
 		await section.locator('[name="answer"]').fill('42');
 		await section.getByTestId('submit').click();
 		await expect(section.getByTestId('submitted')).toHaveText('The answer is 42');
-	})
+	});
 
 	test('links work', async ({ page }) => {
 		await page.goto('/third-party');
@@ -41,11 +41,11 @@ test.describe('embedded-widget', () => {
 		const section = await page.locator('section#main');
 
 		await section.getByTestId('about-link').click();
-		await expect(section).toContainText('It\'s the best widget of all time');
+		await expect(section).toContainText("It's the best widget of all time");
 		// The url should not change in embed mode
 		await expect(page).toHaveURL(/\/third-party$/);
 		// add small delay
 		await section.getByTestId('back').click();
 		await expect(section).toContainText('About this widget');
-	})
+	});
 });

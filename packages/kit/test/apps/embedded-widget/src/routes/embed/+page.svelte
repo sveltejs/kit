@@ -9,9 +9,7 @@
 
 <div>
 	<div>
-		<p>
-			This section is coming from the embed route.
-		</p>
+		<p>This section is coming from the embed route.</p>
 
 		<p>
 			Data loaded from the server:
@@ -25,15 +23,15 @@
 		</output>
 	</div>
 
-	<hr>
+	<hr />
 
 	<div>
 		Forms should be able to be embedded as well.
-		<br>
-		<br>
+		<br />
+		<br />
 		<form action="{base}/embed" method="post" use:enhance>
 			<label for="answer">Answer</label>
-			<input id="answer" name="answer" required type="text">
+			<input id="answer" name="answer" required type="text" />
 			<button type="submit" data-testid="submit">Submit</button>
 			<p data-testid="submitted">
 				The answer is {form?.answer || '--'}
@@ -41,28 +39,24 @@
 		</form>
 	</div>
 
-	<hr>
+	<hr />
 
 	<div>
 		How would links work?
 		<p>
 			<a data-testid="about-link" href="{base}/about">About this widget</a>
 		</p>
-		<p>
-			Links work as expected (the route loads fine), but we should not update the url bar.
-		</p>
-		<p>
-			Maybe this can be improved by using url hashes.
-		</p>
+		<p>Links work as expected (the route loads fine), but we should not update the url bar.</p>
+		<p>Maybe this can be improved by using url hashes.</p>
 	</div>
 </div>
 
 <style>
-    div {
-        border: 1px solid black;
-        padding: 1rem;
+	div {
+		border: 1px solid black;
+		padding: 1rem;
 
-        background-color: #008080;
-        color: #DDD;
-    }
+		background-color: #008080;
+		color: #ddd;
+	}
 </style>

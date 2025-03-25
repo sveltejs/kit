@@ -96,7 +96,7 @@ export async function render_response({
 	 */
 	let base_expression = s(paths.base);
 
-	const is_embed = !!page_config.embed
+	const is_embed = !!page_config.embed;
 
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
@@ -224,7 +224,7 @@ export async function render_response({
 
 	let head = '';
 	let body = rendered.html;
-	let embed_script = ''
+	let embed_script = '';
 
 	const csp = new Csp(options.csp, {
 		prerender: !!state.prerendering
@@ -352,7 +352,7 @@ export async function render_response({
 
 		const properties = [`base: ${base_expression}`];
 
-		if(is_embed){
+		if (is_embed) {
 			properties.push('is_embed: true');
 			properties.push('embed_url: document.currentScript.src');
 		}
@@ -496,7 +496,7 @@ export async function render_response({
 				}
 			`;
 		csp.add_script(init_app);
-		if(is_embed){
+		if (is_embed) {
 			embed_script += init_app;
 		}
 
@@ -507,7 +507,7 @@ export async function render_response({
 
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
-		'content-type': is_embed ? 'application/javascript' : 'text/html',
+		'content-type': is_embed ? 'application/javascript' : 'text/html'
 	});
 
 	if (state.prerendering) {
@@ -544,18 +544,18 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
-	if(is_embed){
+	if (is_embed) {
 		// append head content to document head element
 		embed_script += `
 			document.head.insertAdjacentHTML('beforeend', ${s(head)});
-		`
+		`;
 		// append body content to embed target
 		embed_script += `
 			document.querySelector(${s(page_config.embed.target)}).insertAdjacentHTML('beforeend', ${s(body)});
-		`
+		`;
 	}
 
-	let html = ''
+	let html = '';
 	if (is_embed) {
 		html = embed_script;
 	} else {
@@ -567,7 +567,6 @@ export async function render_response({
 			env: safe_public_env
 		});
 	}
-
 
 	// TODO flush chunks as early as we can
 	const transformed =
