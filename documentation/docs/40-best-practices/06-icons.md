@@ -4,7 +4,7 @@ title: Icons
 
 ## CSS
 
-A great way to use icons is to define them purely via CSS. Iconify offers support for [many popular icon sets](https://icon-sets.iconify.design/) that [can be included via CSS](https://iconify.design/docs/usage/css/). This method may be of particular interest if you're using one of the popular CSS frameworks which Iconify supports and are able to leverage their [Tailwind CSS plugin](https://iconify.design/docs/usage/css/tailwind/) or [UnoCSS plugin](https://iconify.design/docs/usage/css/unocss/). This method is quick and easy to use and doesn't require each icon to be imported in your `.svelte` file like libraries based on Svelte components do.
+A great way to use icons is to define them purely via CSS. Iconify offers support for [many popular icon sets](https://icon-sets.iconify.design/) that [can be included via CSS](https://iconify.design/docs/usage/css/). This method can also be used with popular CSS frameworks by leveraging the Iconify [Tailwind CSS plugin](https://iconify.design/docs/usage/css/tailwind/) or [UnoCSS plugin](https://iconify.design/docs/usage/css/unocss/). As opposed to libraries based on Svelte components, it doesn't require each icon to be imported into your `.svelte` file.
 
 ## Svelte
 
