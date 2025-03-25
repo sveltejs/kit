@@ -1,7 +1,5 @@
 import type { Actions, PageLoad } from './$types';
 
-// export const ssr = false;
-
 export const embed = (event) => {
 	const target = event.url.searchParams.get('target');
 	if (target) {

@@ -1,5 +1,4 @@
 <script>
-	import '../../app.css';
 	import { enhance } from '$app/forms';
 	import { base } from '$app/paths';
 
