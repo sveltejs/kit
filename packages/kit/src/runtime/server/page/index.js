@@ -173,6 +173,10 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 		const csr = nodes.csr();
 
+		const embed_fn = nodes.embed();
+		/** @type {import('@sveltejs/kit').EmbedResult | undefined} */
+		const embed = embed_fn ? await embed_fn(event) : undefined;
+
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.data.map((node, i) => {
 			if (load_error) throw load_error;
@@ -304,7 +308,8 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			resolve_opts,
 			page_config: {
 				csr: nodes.csr(),
-				ssr
+				ssr,
+				embed
 			},
 			status,
 			error: null,
