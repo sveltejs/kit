@@ -255,7 +255,7 @@ function validate_config(config_file = undefined) {
 	}
 
 	// probably deploying to Cloudflare Workers
-	if (wrangler_config.assets) {
+	if (wrangler_config.main || wrangler_config.assets) {
 		if (!wrangler_config.assets?.directory) {
 			throw new Error(
 				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
