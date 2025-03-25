@@ -1,5 +1,5 @@
 <script>
-	let { data } = $props();
+
 </script>
 
-{JSON.stringify(data, null, 2)}
+Main page - <a href="/third-party">Third party page</a>
