@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { experimental_readRawConfig, getPlatformProxy } from 'wrangler';
@@ -63,44 +63,37 @@ export default function (options = {}) {
 					MANIFEST: './manifest.js'
 				}
 			});
-			const { rawConfig: wrangler_config } = experimental_readRawConfig({});
-			const compatibility_date =
-				wrangler_config.compatibility_date || new Date().toISOString().split('T')[0];
-			const wrangler = `node ${path.dirname(fileURLToPath(import.meta.url))}/node_modules/wrangler/bin/wrangler.js`;
 
-			// if "pages_build_output_dir" is set, we need to temporarily override the
-			// user's Wrangler config otherwise the deploy command will fail
-			/** @type {string} */
-			let wrangler_config_override;
+			const wrangler_config_redirect = '.wrangler/deploy/config.json';
+			builder.rimraf(wrangler_config_redirect);
+
+			const { configPath, rawConfig: wrangler_config } = experimental_readRawConfig({});
+
+			// keep the generated wrangler config adjacent to the user wrangler config
+			// so that relative paths set by the user remain valid
+			const generated_wrangler_config = `${path.dirname(configPath)}/svelte-kit-generated-wrangler.jsonc`;
+
+			// if "pages_build_output_dir" is set, we need to temporarily unset it
+			// or the deploy command will fail
 			if (wrangler_config.pages_build_output_dir) {
 				wrangler_config.pages_build_output_dir = undefined;
-
-				const generated_wrangler_config = `${tmp}/generated-wrangler.jsonc`;
-				wrangler_config_override = '.wrangler/deploy/config.json';
 				mkdirSync('.wrangler/deploy', { recursive: true });
 				writeFileSync(
-					wrangler_config_override,
+					wrangler_config_redirect,
 					JSON.stringify({ configPath: generated_wrangler_config })
 				);
-
 				writeFileSync(generated_wrangler_config, JSON.stringify(wrangler_config, null, '\t'));
 			}
 
+			const wrangler = `node ${path.dirname(fileURLToPath(import.meta.url))}/node_modules/wrangler/bin/wrangler.js`;
 			execSync(
-				`${wrangler} deploy ${worker_tmp} --dry-run --outdir ${dest}/_worker.js --name svelte-kit --compatibility-date ${compatibility_date}`,
+				`${wrangler} deploy ${worker_tmp} --dry-run --outdir ${dest}/_worker.js --name ${wrangler_config.name || 'svelte-kit'} --compatibility-date ${wrangler_config.compatibility_date || new Date().toISOString().split('T')[0]}`,
 				{
 					stdio: 'inherit'
 				}
 			);
-			if (!wrangler_config.upload_source_maps) {
-				rmSync(`${dest}/_worker.js/index.js.map`);
-			}
-
-			// remove the generated Wrangler config so it doesn't affect the user's
-			// own Wrangler commands after we have finished bundling
-			if (wrangler_config_override) {
-				rmSync(wrangler_config_override);
-			}
+			builder.rimraf(wrangler_config_redirect);
+			builder.rimraf(generated_wrangler_config);
 
 			writeFileSync(
 				`${dest}/_routes.json`,
