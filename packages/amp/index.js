@@ -8,9 +8,9 @@ const boilerplate = `
 /** @param {string} html */
 export function transform(html) {
 	return html
-		.replace(/<style([^]+?)<\/style>/, (match, $1) => `<style amp-custom${$1}</style>`)
-		.replace(/<script[^]+?<\/script>/g, '')
-		.replace(/<link[^>]+>/g, (match) => {
+		.replace(/<style([^]+?)<\/style>/i, (match, $1) => `<style amp-custom${$1}</style>`)
+		.replace(/<script[^]+?<\/script>/gi, '')
+		.replace(/<link[^>]+>/gi, (match) => {
 			if (/rel=('|")?stylesheet\1/.test(match)) {
 				if (/ disabled /.test(match)) return '';
 				throw new Error(
