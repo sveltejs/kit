@@ -1547,11 +1547,13 @@ async function navigate({
 			[STATES_KEY]: state
 		};
 
-		const fn = replace_state ? history.replaceState : history.pushState;
-		fn.call(history, entry, '', url);
+		if(!is_embed) {
+			const fn = replace_state ? history.replaceState : history.pushState;
+			fn.call(history, entry, '', url);
 
-		if (!replace_state) {
-			clear_onward_history(current_history_index, current_navigation_index);
+			if (!replace_state) {
+				clear_onward_history(current_history_index, current_navigation_index);
+			}
 		}
 	}
 
