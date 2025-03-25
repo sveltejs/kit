@@ -65,18 +65,20 @@ export default function (options = {}) {
 			});
 
 			const wrangler_config_redirect = '.wrangler/deploy/config.json';
+			let generated_wrangler_config = 'svelte-kit-generated-wrangler.jsonc';
+
 			builder.rimraf(wrangler_config_redirect);
 
-			const { configPath, rawConfig: wrangler_config } = experimental_readRawConfig({});
-
-			// keep the generated wrangler config adjacent to the user wrangler config
-			// so that relative paths set by the user remain valid
-			const generated_wrangler_config = `${path.dirname(configPath)}/svelte-kit-generated-wrangler.jsonc`;
+			const { configPath: wrangler_config_path, rawConfig: wrangler_config } =
+				experimental_readRawConfig({});
 
 			// if "pages_build_output_dir" is set, we need to temporarily unset it
 			// or the deploy command will fail
 			if (wrangler_config.pages_build_output_dir) {
 				wrangler_config.pages_build_output_dir = undefined;
+				// keep the generated wrangler config adjacent to the user wrangler config
+				// so that relative paths set by the user remain valid
+				generated_wrangler_config = `${path.dirname(wrangler_config_path)}/${generated_wrangler_config}`;
 				mkdirSync('.wrangler/deploy', { recursive: true });
 				writeFileSync(
 					wrangler_config_redirect,
