@@ -27,8 +27,7 @@ const server_template = ({
 	runtime_directory,
 	template,
 	error_page
-}) => {
-	return `
+}) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
@@ -87,7 +86,6 @@ export async function get_hooks() {
 
 export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation, set_safe_public_env };
 `;
-};
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
 // created or changed, or src/service-worker.js is created or deleted.
