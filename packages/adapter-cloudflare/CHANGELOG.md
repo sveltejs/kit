@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 6.0.1
+### Patch Changes
+
+
+- fix: revert writing server files to the cloudflare build directory ([#13622](https://github.com/sveltejs/kit/pull/13622))
+
 ## 6.0.0
 ### Major Changes
 

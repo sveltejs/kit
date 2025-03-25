@@ -60,9 +60,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250312.0
         version: 4.20250312.0
-      esbuild:
-        specifier: ^0.24.0
-        version: 0.24.2
       worktop:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
@@ -76,9 +73,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
-      '@types/ws':
-        specifier: ^8.5.10
-        version: 8.5.10
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
@@ -1890,9 +1887,6 @@ packages:
 
   '@types/set-cookie-parser@2.4.7':
     resolution: {integrity: sha512-+ge/loa0oTozxip6zmhRIk8Z/boU51wl9Q6QdLZcokIGMzY5lFXYy/x7Htj2HTC6/KZP1hUbZ1ekx8DYXICvWg==}
-
-  '@types/ws@8.5.10':
-    resolution: {integrity: sha512-vmQSUcfalpIq0R9q7uTo2lXs6eGIpt9wtnLdMv9LVpIjCA/+ufZRozlVoVelIYixx1ugCBKDhn89vnsEGOCx9A==}
 
   '@typescript-eslint/eslint-plugin@8.26.0':
     resolution: {integrity: sha512-cLr1J6pe56zjKYajK6SSSre6nl1Gj6xDp1TY0trpgPzjVbgDwd09v2Ws37LABxzkicmUjhEeg/fAUjPJJB1v5Q==}
@@ -4199,10 +4193,6 @@ snapshots:
   '@types/semver@7.5.8': {}
 
   '@types/set-cookie-parser@2.4.7':
-    dependencies:
-      '@types/node': 18.19.50
-
-  '@types/ws@8.5.10':
     dependencies:
       '@types/node': 18.19.50
 

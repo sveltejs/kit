@@ -32,11 +32,12 @@ export default function (options = {}) {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
-			const worker_dest = `${dest}/_worker.js`;
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			builder.rimraf(dest);
 
-			builder.mkdirp(worker_dest);
+			builder.mkdirp(dest);
+			builder.mkdirp(tmp);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
 			// This file is served when a request that matches an entry in `routes.exclude` fails to match an asset.
@@ -52,20 +53,19 @@ export default function (options = {}) {
 			const client_assets = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
 
-			// _worker.js
-			builder.writeServer(`${worker_dest}/server`);
-			builder.copy(`${files}/worker.js`, `${worker_dest}/index.js`, {
-				replace: {
-					SERVER: './server/index.js',
-					MANIFEST: './manifest.js'
-				}
-			});
+			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
 			writeFileSync(
-				`${worker_dest}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './server' })};\n\n` +
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+				replace: {
+					SERVER: `${relativePath}/index.js`,
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+				}
+			});
 
 			// _headers
 			if (existsSync('_headers')) {
