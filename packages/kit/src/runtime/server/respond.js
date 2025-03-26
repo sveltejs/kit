@@ -244,7 +244,12 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 	let resolved_path;
 
+	const prerendering_reroute_state = state.prerendering?.inside_reroute;
 	try {
+		// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
+		// which would end up in the wrong logic path if not disabled.
+		if (state.prerendering) state.prerendering.inside_reroute = true;
+
 		// reroute could alter the given URL, so we pass a copy
 		resolved_path =
 			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
@@ -252,6 +257,8 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		return text('Internal Server Error', {
 			status: 500
 		});
+	} finally {
+		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
 	}
 
 	try {
@@ -427,7 +434,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		set_trailing_slash(trailing_slash);
 
-		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
+		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
+			disable_search(url);
+		}
 
 		/**
 		 * @param {(event: import('@sveltejs/kit').RequestEvent, page_nodes: PageNodes | undefined, opts?: import('@sveltejs/kit').ResolveOptions) => Promise<Response>} resolve

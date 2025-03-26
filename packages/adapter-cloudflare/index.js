@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
@@ -12,7 +12,19 @@ export default function (options = {}) {
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
-					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+					"Cloudflare's _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
 				);
 			}
 
@@ -21,7 +33,6 @@ export default function (options = {}) {
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			builder.rimraf(dest);
-			builder.rimraf(tmp);
 
 			builder.mkdirp(dest);
 			builder.mkdirp(tmp);
@@ -39,20 +50,33 @@ export default function (options = {}) {
 			builder.writePrerendered(dest_dir);
 
 			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
-
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
+				replace: {
+					SERVER: `${relativePath}/index.js`,
+					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
+				}
+			});
 
 			writeFileSync(
 				`${dest}/_routes.json`,
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
+			if (existsSync('_headers')) {
+				copyFileSync('_headers', `${dest}/_headers`);
+			}
+
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
+
+			if (existsSync('_redirects')) {
+				copyFileSync('_redirects', `${dest}/_redirects`);
+			}
 
 			if (builder.prerendered.redirects.size > 0) {
 				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
@@ -61,13 +85,6 @@ export default function (options = {}) {
 			}
 
 			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
-
-			builder.copy(`${files}/worker.js`, `${dest}/_worker.js`, {
-				replace: {
-					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(dest, tmp)}/manifest.js`
-				}
-			});
 		},
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.

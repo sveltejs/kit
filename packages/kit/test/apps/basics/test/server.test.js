@@ -815,6 +815,13 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/c');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
 	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/prerendered/to-destination');
 		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
