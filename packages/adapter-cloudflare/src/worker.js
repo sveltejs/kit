@@ -36,7 +36,7 @@ export default {
 
 		const stripped_pathname = pathname.replace(/\/$/, '');
 
-		// /static files, the service worker, and Vite imported server assets
+		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
 		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
