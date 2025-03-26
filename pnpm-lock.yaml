@@ -83,7 +83,7 @@ importers:
         specifier: ^5.3.3
         version: 5.6.3
 
-  packages/adapter-cloudflare/test/apps/basic:
+  packages/adapter-cloudflare/test/apps/pages:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -93,7 +93,28 @@ importers:
         version: 5.0.1(svelte@5.23.1)(vite@6.0.11(@types/node@18.19.50)(lightningcss@1.24.1))
       server-side-dep:
         specifier: file:server-side-dep
-        version: file:packages/adapter-cloudflare/test/apps/basic/server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
+      svelte:
+        specifier: ^5.23.1
+        version: 5.23.1
+      vite:
+        specifier: ^6.0.11
+        version: 6.0.11(@types/node@18.19.50)(lightningcss@1.24.1)
+      wrangler:
+        specifier: ^4.0.0
+        version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
+
+  packages/adapter-cloudflare/test/apps/workers:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.23.1)(vite@6.0.11(@types/node@18.19.50)(lightningcss@1.24.1))
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -3063,8 +3084,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep:
-    resolution: {directory: packages/adapter-cloudflare/test/apps/basic/server-side-dep, type: directory}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/pages/server-side-dep, type: directory}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
   set-cookie-parser@2.6.0:
     resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
@@ -5361,7 +5385,9 @@ snapshots:
 
   semver@7.7.1: {}
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep: {}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
   set-cookie-parser@2.6.0: {}
 
