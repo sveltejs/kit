@@ -38,7 +38,7 @@
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
 		"prepublishOnly": "pnpm build",
-		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
+		"test": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20250312.0",
