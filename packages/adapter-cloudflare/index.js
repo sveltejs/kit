@@ -32,17 +32,21 @@ export default function (options = {}) {
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
+			let assets_binding = 'ASSETS';
 
 			if (building_for_cloudflare_pages) {
 				if (wrangler_config.pages_build_output_dir) {
 					dest = wrangler_config.pages_build_output_dir;
 				}
 			} else {
+				if (wrangler_config.main) {
+					worker_dest = wrangler_config.main;
+				}
 				if (wrangler_config.assets?.directory) {
 					dest = wrangler_config.assets.directory;
 				}
-				if (wrangler_config.main) {
-					worker_dest = wrangler_config.main;
+				if (wrangler_config.assets?.binding) {
+					assets_binding = wrangler_config.assets.binding;
 				}
 			}
 
@@ -79,18 +83,18 @@ export default function (options = {}) {
 			}
 
 			// worker
-			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
+			const worker_dest_dir = path.dirname(worker_dest);
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
-					SERVER: `${relativePath}/index.js`,
-					MANIFEST: `${path.posix.relative(worker_dest, tmp)}/manifest.js`,
-					ASSETS: wrangler_config.assets.binding || 'ASSETS'
+					SERVER: `${path.posix.relative(worker_dest_dir, builder.getServerDirectory())}/index.js`,
+					MANIFEST: `${path.posix.relative(worker_dest_dir, tmp)}/manifest.js`,
+					ASSETS: assets_binding
 				}
 			});
 
