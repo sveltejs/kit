@@ -44,7 +44,7 @@ export default {
 
 ### config
 
-Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, you can specify it using this option.
+Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
 
 ### platformProxy
 
@@ -52,8 +52,11 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 ### fallback
 
-Only for Cloudflare Pages. Whether to render a plaintext 404.html page, or a rendered SPA fallback page. This page will
-only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
+Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
+
+For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback index.html page regardless of the `fallback` option specified.
+
+For Cloudflare Pages, this page will only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
 
 Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
 exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
@@ -154,7 +157,7 @@ export {};
 
 Cloudflare specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 3**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
 ## `_headers` and `_redirects`
 

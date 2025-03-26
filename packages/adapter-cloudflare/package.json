@@ -51,6 +51,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^3.91.0 || ^4.0.0"
+		"wrangler": "^4.0.0"
 	}
 }

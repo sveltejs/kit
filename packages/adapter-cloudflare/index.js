@@ -27,12 +27,25 @@ export default function (options = {}) {
 				);
 			}
 
-			const { main, assets, configPath, pages_build_output_dir } = validate_config(options.config);
-			const building_for_cloudflare_pages =
-				!!process.env.CF_PAGES || !configPath || !!pages_build_output_dir || !main || !assets;
-			const dest =
-				pages_build_output_dir || assets?.directory || builder.getBuildDirectory('cloudflare');
-			const worker_dest = main || `${dest}/_worker.js`;
+			const wrangler_config = validate_config(options.config);
+			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+
+			let dest = builder.getBuildDirectory('cloudflare');
+			let worker_dest = `${dest}/_worker.js`;
+
+			if (building_for_cloudflare_pages) {
+				if (wrangler_config.pages_build_output_dir) {
+					dest = wrangler_config.pages_build_output_dir;
+				}
+			} else {
+				if (wrangler_config.assets?.directory) {
+					dest = wrangler_config.assets.directory;
+				}
+				if (wrangler_config.main) {
+					worker_dest = wrangler_config.main;
+				}
+			}
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
@@ -42,20 +55,28 @@ export default function (options = {}) {
 			builder.mkdirp(dest);
 			builder.mkdirp(tmp);
 
-			if (building_for_cloudflare_pages) {
+			// client assets and prerendered pages
+			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
+			if (
+				building_for_cloudflare_pages ||
+				wrangler_config.assets?.not_found_handling === '404-page'
+			) {
 				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
-				const fallback = path.join(dest, '404.html');
+				const fallback = path.join(assets_dest, '404.html');
 				if (options.fallback === 'spa') {
 					await builder.generateFallback(fallback);
 				} else {
 					writeFileSync(fallback, 'Not Found');
 				}
 			}
-
-			// client assets and prerendered pages
-			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
-			const written_files = builder.writeClient(dest_dir);
-			builder.writePrerendered(dest_dir);
+			const client_assets = builder.writeClient(assets_dest);
+			builder.writePrerendered(assets_dest);
+			if (
+				!building_for_cloudflare_pages &&
+				wrangler_config.assets?.not_found_handling === 'single-page-application'
+			) {
+				await builder.generateFallback(path.join(assets_dest, 'index.html'));
+			}
 
 			// worker
 			const relativePath = path.posix.relative(dest, builder.getServerDirectory());
@@ -69,7 +90,7 @@ export default function (options = {}) {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: `${path.posix.relative(worker_dest, tmp)}/manifest.js`,
-					ASSETS: assets.binding || 'ASSETS'
+					ASSETS: wrangler_config.assets.binding || 'ASSETS'
 				}
 			});
 
@@ -94,7 +115,7 @@ export default function (options = {}) {
 			if (building_for_cloudflare_pages) {
 				writeFileSync(
 					`${dest}/_routes.json`,
-					JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
+					JSON.stringify(get_routes_json(builder, client_assets, options.routes ?? {}), null, '\t')
 				);
 			}
 		},
@@ -249,8 +270,7 @@ function validate_config(config_file = undefined) {
 		);
 	}
 
-	// probably deploying to Cloudflare Pages
-	if (!wrangler_config.configPath || wrangler_config.pages_build_output_dir) {
+	if (is_building_for_cloudflare_pages(wrangler_config)) {
 		return wrangler_config;
 	}
 
@@ -270,4 +290,18 @@ function validate_config(config_file = undefined) {
 	}
 
 	return wrangler_config;
+}
+
+/**
+ * @param {import('wrangler').Unstable_Config} wrangler_config
+ * @returns {boolean}
+ */
+function is_building_for_cloudflare_pages(wrangler_config) {
+	return (
+		!!process.env.CF_PAGES ||
+		!wrangler_config.configPath ||
+		!!wrangler_config.pages_build_output_dir ||
+		!wrangler_config.main ||
+		!wrangler_config.assets
+	);
 }

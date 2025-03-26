@@ -10,8 +10,19 @@ export interface AdapterOptions {
 	 */
 	config?: string;
 	/**
-	 * Only for Cloudflare Pages. Whether to render a plaintext 404.html page, or a rendered SPA fallback page. This page will
-	 * only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
+	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
+	 * for non-matching asset requests.
+	 *
+	 * For Cloudflare Workers, the default behaviour is to return a null-body
+	 * 404-status response for non-matching assets requests. However, if the
+	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
+	 * Wrangler configuration setting is set to `"404-page"`, this page will be
+	 * served if a request fails to match an asset. If `assets.not_found_handling`
+	 * is set to `"single-page-application"`, the adapter will render a SPA fallback
+	 * index.html page regardless of the `fallback` option specified.
+	 *
+	 * For Cloudflare Pages, this page will only be served when a request that
+	 * matches an entry in `routes.exclude` fails to match an asset.
 	 *
 	 * Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
 	 * exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
