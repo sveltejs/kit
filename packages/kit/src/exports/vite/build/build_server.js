@@ -101,6 +101,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
+			// TODO: avoid loading the module if ssr is false
 			imports.push(
 				`import * as universal from '../${
 					resolve_symlinks(server_manifest, node.universal).chunk.file

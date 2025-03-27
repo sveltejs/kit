@@ -288,7 +288,7 @@ export async function respond(request, options, manifest, state) {
 	let trailing_slash = 'never';
 
 	try {
-		/** @type {PageNodes|undefined} */
+		/** @type {PageNodes | undefined} */
 		const page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;

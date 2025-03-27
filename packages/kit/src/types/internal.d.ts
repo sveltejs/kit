@@ -409,6 +409,12 @@ export interface SSRNode {
 	universal?: UniversalNode;
 	/** +page.server.js, +layout.server.js, or +server.js */
 	server?: ServerNode;
+	statically_analysed_option?: {
+		ssr?: boolean;
+		csr?: boolean;
+		prerender?: boolean;
+		trailingSlash?: TrailingSlash;
+	};
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

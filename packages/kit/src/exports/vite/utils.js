@@ -1,6 +1,8 @@
 import path from 'node:path';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import { Parser } from 'acorn';
 import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify, read } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
@@ -156,3 +158,49 @@ export function normalize_id(id, lib, cwd) {
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
+
+const parser = Parser.extend(tsPlugin());
+
+/**
+ * @param {string} node_path
+ */
+export function statically_analyse_exports(node_path) {
+	const input = read(node_path);
+
+	const node = parser.parse(input, {
+		sourceType: 'module',
+		ecmaVersion: 'latest',
+		locations: true
+	});
+
+	/** @type {Map<string, any>} */
+	const exports = new Map();
+
+	node.body.forEach((statement) => {
+		// TODO: get all exports so we can validate them?
+		if (statement.type !== 'ExportNamedDeclaration') {
+			return;
+		}
+
+		// TODO: handle export specifiers referencing identifiers in the same file?
+
+		if (
+			statement.declaration?.type !== 'VariableDeclaration' ||
+			statement.declaration.kind !== 'const'
+		) {
+			return;
+		}
+
+		for (const declaration of statement.declaration.declarations) {
+			if (!declaration.init || declaration.init.type !== 'Literal') {
+				continue;
+			}
+
+			if (declaration.id.type === 'Identifier') {
+				exports.set(declaration.id.name, declaration.init.value);
+			}
+		}
+	});
+
+	return exports;
+}

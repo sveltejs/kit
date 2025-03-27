@@ -202,6 +202,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
+							// TODO: avoid loading the module if ssr is false
 							const { module, module_node } = await resolve(node.universal);
 							module_nodes.push(module_node);
 							result.universal = module;

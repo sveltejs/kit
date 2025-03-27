@@ -27,6 +27,7 @@ export class PageNodes {
 		for (const layout of this.layouts()) {
 			if (layout) {
 				validate_layout_server_exports(layout.server, /** @type {string} */ (layout.server_id));
+				// TODO: validate exports without loading the module?
 				validate_layout_exports(layout.universal, /** @type {string} */ (layout.universal_id));
 			}
 		}
@@ -34,6 +35,7 @@ export class PageNodes {
 		const page = this.page();
 		if (page) {
 			validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
+			// TODO: validate exports without loading the module?
 			validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
 		}
 	}

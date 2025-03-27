@@ -336,9 +336,15 @@ importers:
 
   packages/kit:
     dependencies:
+      '@sveltejs/acorn-typescript':
+        specifier: ^1.0.5
+        version: 1.0.5(acorn@8.14.1)
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
+      acorn:
+        specifier: ^8.14.1
+        version: 8.14.1
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
