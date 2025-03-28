@@ -22,7 +22,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { app_dir, base } from '__sveltekit/paths';
+import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -43,6 +43,7 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
 export { load_css };
+export { remoteAction, remoteFormAction, remoteQuery } from './remote.svelte.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -174,7 +175,7 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 /** @type {Record<string, any>} */
-let remote_responses;
+export let remote_responses;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -224,7 +225,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-let started = false;
+export let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -2951,74 +2952,4 @@ if (DEV) {
 			}
 		});
 	}
-}
-
-/**
- * @param {string} id
- */
-export function remoteQuery(id) {
-	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
-	return async (/** @type {any} */ ...args) => {
-		const transport = app.hooks.transport;
-		const encoders = Object.fromEntries(
-			Object.entries(transport).map(([key, value]) => [key, value.encode])
-		);
-
-		const stringified_args = devalue.stringify(args, encoders);
-		if (!started) {
-			const result = remote_responses[id + stringified_args];
-			if (result) return result;
-		}
-
-		const response = await fetch(
-			`/${app_dir}/remote/${id}?args=${encodeURIComponent(stringified_args)}`
-		);
-		const result = await response.json();
-
-		if (!response.ok) {
-			// TODO should this go through `handleError`?
-			throw new Error(result.message);
-		}
-
-		return devalue.parse(result, app.decoders);
-	};
-}
-
-/**
- * @param {string} id
- */
-export function remoteAction(id) {
-	return async (/** @type {any} */ ...args) => {
-		const transport = app.hooks.transport;
-		const encoders = Object.fromEntries(
-			Object.entries(transport).map(([key, value]) => [key, value.encode])
-		);
-
-		const response = await fetch(`/${app_dir}/remote/${id}`, {
-			method: 'POST',
-			body: devalue.stringify(args, encoders), // TODO maybe don't use devalue.stringify here
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-
-		const result = await response.json();
-
-		if (!response.ok) {
-			// TODO should this go through `handleError`?
-			throw new Error(result.message);
-		}
-
-		return devalue.parse(result, app.decoders);
-	};
-}
-
-/**
- * @param {string} id
- */
-export function remoteFormAction(id) {
-	return {
-		method: 'POST',
-		action: `/${app_dir}/remote/${id}`
-	};
 }

@@ -27,16 +27,15 @@ export function build_remotes(metadata, svelte_config, out) {
  * @param {string[]} exports
  * @param {string} id
  * @param {string} hash
- * @param {import('types').ValidatedConfig} svelte_config
  */
-export function create_public_remote_file(exports, id, hash, svelte_config) {
+export function create_public_remote_file(exports, id, hash) {
 	return dedent`
     import { ${exports.join(', ')} } from '${id}';
     let $$_exports = {${exports.join(',')}};
     for (const key in $$_exports) {
         const fn = $$_exports[key];
         if (fn.__type === 'formAction') {
-            fn._set_action('${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}/remote/${hash}/' + key);
+            fn._set_action('${hash}/' + key);
         }
 		if (fn.__type === 'query') {
 			fn.__id = '${hash}/' + key;

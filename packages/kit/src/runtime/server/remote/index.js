@@ -10,10 +10,15 @@ import { SvelteKitError } from '../../control.js';
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {string} [id]
  */
-export async function handle_remote_call(event, options, manifest) {
-	const id = event.url.pathname.replace(`/${app_dir}/remote/`, '');
-
+export async function handle_remote_call(
+	event,
+	options,
+	manifest,
+	id = event.url.pathname.replace(`/${app_dir}/remote/`, '')
+) {
+	console.log('id', id);
 	const [hash, func_name] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -38,9 +43,8 @@ export async function handle_remote_call(event, options, manifest) {
 		}
 
 		const form_data = await event.request.formData();
-		const data = await with_event(event, () => func.apply(null, form_data));
-		// TODO what should happen with the result? how to incorporate it into the page?
-		throw new Error('Form actions are not yet supported');
+		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
+		return json(stringify_rpc_response(data, transport));
 	} else {
 		const args_json =
 			func.__type === 'query'

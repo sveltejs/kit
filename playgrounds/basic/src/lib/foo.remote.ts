@@ -20,3 +20,11 @@ export const divide = formAction(async (form) => {
 
 	return a / b;
 });
+
+export const multiply2 = formAction(async (form) => {
+	const a = form.get('a');
+	const b = form.get('b');
+	console.log('multiply', a, b);
+
+	return a * b;
+});

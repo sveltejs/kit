@@ -15,6 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
+import { with_event } from '../../app/server/event.js';
 
 // TODO rename this function/module
 
@@ -189,8 +190,7 @@ export async function render_response({
 			};
 
 			try {
-				// TODO once Svelte 5 has async we want to make this "with_event", too, so that RPC in here can hydrate stuff
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
