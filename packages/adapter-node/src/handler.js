@@ -2,6 +2,7 @@ import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import crossws from 'crossws/adapters/node';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
@@ -34,9 +35,29 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const asset_dir = `${dir}/client${base}`;
 
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/node').NodeAdapter} */
+let ws;
+
+if (server.resolveWebSocketHooks) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req),
+		serverOptions: {
+			// we need to disable the `ws` package's default behaviour of automatically
+			// returning the request's sec-websocket-protocol header in the response
+			// to avoid sending that header multiple times if the user also returns that header.
+			// TODO: we could remove this if https://github.com/unjs/crossws/pull/142 standardises this behaviour
+			handleProtocols: () => false
+		}
+	});
+}
+
 await server.init({
 	env: process.env,
-	read: (file) => createReadableStream(`${asset_dir}/${file}`)
+	read: (file) => createReadableStream(`${asset_dir}/${file}`),
+	peers: ws?.peers,
+	publish: ws?.publish
 });
 
 /**
@@ -91,6 +112,55 @@ function serve_prerendered() {
 	};
 }
 
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+function get_options(req) {
+	return /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
+		platform: { req },
+		/**
+		 * @returns {string}
+		 */
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${ENV_PREFIX + 'ADDRESS_HEADER'}=${address_header} but is absent from request`
+					);
+				}
+
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${addresses.length} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
+			}
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+}
+
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
@@ -108,53 +178,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
-				}
-
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
-			}
-		})
-	);
+	await setResponse(res, await server.respond(request, get_options(req)));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -200,3 +224,56 @@ export const handler = sequence(
 		ssr
 	].filter(Boolean)
 );
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:stream').Duplex} socket
+ * @param {Buffer} head
+ */
+export async function upgradeHandler(req, socket, head) {
+	if (req.headers.upgrade === 'websocket' && ws) {
+		/** @type {Request} */
+		let request;
+
+		// the crossws Node adapter doesn't actually pass a Request object, so we need to create one
+		// see https://github.com/unjs/crossws/issues/137
+		try {
+			request = await getRequest({
+				base: origin || get_origin(req.headers),
+				request: req,
+				bodySizeLimit: body_size_limit
+			});
+		} catch {
+			socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+			socket.end();
+			return;
+		}
+
+		const hooks = await server.resolveWebSocketHooks(request, get_options(req));
+		resolve_websocket_hooks = () => hooks;
+
+		// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
+		await ws.handleUpgrade(req, socket, head);
+		// TODO: remove this block once https://github.com/unjs/crossws/pull/140 is merged
+		if (socket.writableFinished) {
+			socket.destroy();
+		} else {
+			socket.once('finish', socket.destroy);
+		}
+	}
+}
+
+export function closeAllWebSockets() {
+	if (ws) {
+		ws.closeAll();
+	}
+}
+
+export function terminateAllWebSockets() {
+	if (ws) {
+		// TODO: replace this once https://github.com/unjs/crossws/issues/145 is resolved
+		ws.peers.forEach((peer) => {
+			peer.terminate();
+		});
+	}
+}

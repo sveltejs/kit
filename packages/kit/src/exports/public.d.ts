@@ -36,18 +36,32 @@ export interface Adapter {
 	 */
 	adapt: (builder: Builder) => MaybePromise<void>;
 	/**
-	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 	 */
 	supports?: {
 		/**
-		 * Test support for `read` from `$app/server`
-		 * @param config The merged route config
+		 * Test support for `read` from `$app/server`.
+		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+		webSockets?: {
+			/**
+			 * Test support for the `socket` export from a `+server.js` file.
+			 */
+			socket: () => boolean;
+			/**
+			 * Test support for `getPeers` from `$app/server`.
+			 */
+			getPeers: (details: { route: { id: string } }) => boolean;
+			/**
+			 * Test support for `publish` from `$app/server`.
+			 */
+			publish: (details: { route: { id: string } }) => boolean;
+		};
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
-	 * during dev, build and prerendering
+	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 }
@@ -790,7 +804,7 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;
@@ -1304,6 +1318,10 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+	resolveWebSocketHooks(
+		request: Request,
+		options: RequestOptions
+	): Promise<Partial<import('crossws').Hooks>>;
 }
 
 export interface ServerInitOptions {
@@ -1311,6 +1329,10 @@ export interface ServerInitOptions {
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => ReadableStream;
+	/** A `Set` of WebSocket `Peer` instances. Required for the `getPeers` export from `$app/server` to work. */
+	peers?: import('crossws').AdapterInstance['peers'];
+	/** A function that publishes a message to WebSocket subscribers of a topic. Required for the `publish` export from `$app/server` to work. */
+	publish?: import('crossws').AdapterInstance['publish'];
 }
 
 export interface SSRManifest {
@@ -1409,7 +1431,7 @@ export interface ServerLoadEvent<
 }
 
 /**
- * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+ * Shape of a form action method that is part of `export const actions = {...}` in `+page.server.js`.
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Action<
@@ -1419,7 +1441,7 @@ export type Action<
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
- * Shape of the `export const actions = {..}` object in `+page.server.js`.
+ * Shape of the `export const actions = {...}` object in `+page.server.js`.
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Actions<
@@ -1494,7 +1516,49 @@ export type SubmitFunction<
 >;
 
 /**
- * The type of `export const snapshot` exported from a page or layout component.
+ * Shape of the `export const socket = {...}` object in `+server.js`.
+ * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+ * @since 2.21.0
+ */
+export interface Socket {
+	/**
+	 * The [upgrade](https://svelte.dev/docs/kit/websockets#Hooks-upgrade) hook runs every time a request is attempting to upgrade to a WebSocket connection.
+	 */
+	upgrade?: (
+		event: RequestEvent & { context: import('crossws').Peer['context'] }
+	) => MaybePromise<Response | ResponseInit | void>;
+	/** The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs every time a WebSocket connection is opened. */
+	open?: import('crossws').Hooks['open'];
+	/** The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook runs every time a message is received from a WebSocket client. */
+	message?: import('crossws').Hooks['message'];
+	/** The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs every time a WebSocket connection is closed. */
+	close?: import('crossws').Hooks['close'];
+	/** The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs every time a WebSocket error occurs. */
+	error?: import('crossws').Hooks['error'];
+}
+
+/**
+ * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects
+ * to the server, `crossws` creates a [`Peer`](https://crossws.unjs.io/guide/peer)
+ * object that allows interacting with the connected client.
+ * @since 2.21.0
+ */
+export type Peer = import('crossws').Peer;
+
+/**
+ * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
+ * hook, you'll receive a [`Message`](https://crossws.unjs.io/guide/message)
+ * object containing data from the client.
+ * @since 2.21.0
+ */
+export type Message = import('crossws').Message;
+
+/**
+ * Shape of the `export const snapshot = {...}` object in a page or layout component.
+ * You should import these from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
+ * rather than using `Snapshot` directly.
+ * See [snapshots](https://svelte.dev/docs/kit/snapshots) for more information.
+ * @since 1.5.0
  */
 export interface Snapshot<T = any> {
 	capture: () => T;
