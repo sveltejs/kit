@@ -279,7 +279,7 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
-	remote_responses = hydrate.remote;
+	remote_responses = hydrate?.remote;
 
 	await _app.hooks.init?.();
 
