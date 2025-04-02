@@ -9,5 +9,5 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["./*", "./mocks/**/*", "./prerendering/*"]
+	"include": ["./*"]
 }
