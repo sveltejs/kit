@@ -159,7 +159,7 @@ Cloudflare specific values in the `platform` property are emulated during dev an
 
 For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
-## `_headers` and `_redirects`
+## \_headers and \_redirects
 
 The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files specific can be used for static asset responses (like images) by putting them into the project root folder.
 
