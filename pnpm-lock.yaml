@@ -64,9 +64,12 @@ importers:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
       wrangler:
-        specifier: ^3.87.0 || ^4.0.0
+        specifier: ^4.0.0
         version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.44.1
+        version: 1.44.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -80,30 +83,47 @@ importers:
         specifier: ^5.3.3
         version: 5.6.3
 
-  packages/adapter-cloudflare-workers:
-    dependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20250312.0
-        version: 4.20250312.0
-      esbuild:
-        specifier: ^0.24.0
-        version: 0.24.2
-      wrangler:
-        specifier: ^3.91.0 || ^4.0.0
-        version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
+  packages/adapter-cloudflare/test/apps/pages:
     devDependencies:
-      '@cloudflare/kv-asset-handler':
-        specifier: ^0.4.0
-        version: 0.4.0
       '@sveltejs/kit':
         specifier: workspace:^
-        version: link:../kit
-      '@types/node':
-        specifier: ^18.19.48
-        version: 18.19.50
-      typescript:
-        specifier: ^5.3.3
-        version: 5.6.3
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.23.1)(vite@6.0.11(@types/node@18.19.50)(lightningcss@1.24.1))
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
+      svelte:
+        specifier: ^5.23.1
+        version: 5.23.1
+      vite:
+        specifier: ^6.0.11
+        version: 6.0.11(@types/node@18.19.50)(lightningcss@1.24.1)
+      wrangler:
+        specifier: ^4.0.0
+        version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
+
+  packages/adapter-cloudflare/test/apps/workers:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.23.1)(vite@6.0.11(@types/node@18.19.50)(lightningcss@1.24.1))
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
+      svelte:
+        specifier: ^5.23.1
+        version: 5.23.1
+      vite:
+        specifier: ^6.0.11
+        version: 6.0.11(@types/node@18.19.50)(lightningcss@1.24.1)
+      wrangler:
+        specifier: ^4.0.0
+        version: 4.0.0(@cloudflare/workers-types@4.20250312.0)
 
   packages/adapter-netlify:
     dependencies:
@@ -1124,9 +1144,6 @@ importers:
       '@sveltejs/adapter-cloudflare':
         specifier: workspace:*
         version: link:../../packages/adapter-cloudflare
-      '@sveltejs/adapter-cloudflare-workers':
-        specifier: workspace:*
-        version: link:../../packages/adapter-cloudflare-workers
       '@sveltejs/adapter-netlify':
         specifier: workspace:*
         version: link:../../packages/adapter-netlify
@@ -3065,6 +3082,12 @@ packages:
     resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/pages/server-side-dep, type: directory}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
   set-cookie-parser@2.6.0:
     resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
@@ -5357,6 +5380,10 @@ snapshots:
   semiver@1.1.0: {}
 
   semver@7.7.1: {}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
   set-cookie-parser@2.6.0: {}
 

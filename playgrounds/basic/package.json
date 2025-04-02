@@ -17,7 +17,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
-		"@sveltejs/adapter-cloudflare-workers": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
