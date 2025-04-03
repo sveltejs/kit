@@ -29,6 +29,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	};
 
 	const load = node.server.load;
+	// TODO: shouldn't this be calculated using PageNodes? there could be a trailingSlash option on a layout
 	const slash = node.server.trailingSlash;
 
 	if (!load) {
@@ -196,11 +197,12 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.universal?.load) {
+	const universal_load = await node?.universal?.load;
+	if (!node || !universal_load) {
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
+	const result = await universal_load.call(null, {
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,

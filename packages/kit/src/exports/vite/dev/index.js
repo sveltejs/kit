@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { not_found } from '../utils.js';
+import { not_found, statically_analyse_exports } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -202,10 +202,41 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							// TODO: avoid loading the module if ssr is false
-							const { module, module_node } = await resolve(node.universal);
-							module_nodes.push(module_node);
-							result.universal = module;
+							const mod = statically_analyse_exports(node.universal);
+
+							/** @type {{ module: Record<string, any>; module_node: import('vite').ModuleNode; }} */
+							let resolved;
+							const load_universal_module = async () => {
+								if (resolved) return resolved.module;
+								resolved = await resolve(/** @type {string} */ (node.universal));
+								module_nodes.push(resolved.module_node);
+								return resolved.module;
+							};
+
+							if (mod.reexports_all_named_exports) {
+								result.universal = await load_universal_module();
+							} else {
+								result.universal = new Proxy(Object.fromEntries(mod.static_exports), {
+									/**
+									 * @param {string} prop
+									 */
+									async get(target, prop) {
+										if (mod.dynamic_exports.has(prop)) {
+											return (await load_universal_module())[prop];
+										}
+										return target[prop];
+									},
+									/**
+									 * @param {string} prop
+									 */
+									has(target, prop) {
+										return prop in target || mod.dynamic_exports.has(prop);
+									},
+									ownKeys(target) {
+										return [...Reflect.ownKeys(target), ...mod.dynamic_exports];
+									}
+								});
+							}
 						}
 
 						if (node.server) {

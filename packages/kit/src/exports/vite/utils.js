@@ -174,33 +174,84 @@ export function statically_analyse_exports(node_path) {
 	});
 
 	/** @type {Map<string, any>} */
-	const exports = new Map();
+	const static_exports = new Map();
+	/** @type {Set<string>} */
+	const dynamic_exports = new Set();
+	/** @type {boolean} */
+	let reexports_all_named_exports = false;
 
-	node.body.forEach((statement) => {
-		// TODO: get all exports so we can validate them?
-		if (statement.type !== 'ExportNamedDeclaration') {
-			return;
+	/**
+	 * @param {import('acorn').Pattern | null} node
+	 */
+	const examine = (node) => {
+		if (!node) return;
+
+		if (node.type === 'Identifier') {
+			dynamic_exports.add(node.name);
+		} else if (node.type === 'ArrayPattern') {
+			node.elements.forEach(examine);
+		} else if (node.type === 'ObjectPattern') {
+			node.properties.forEach((property) => {
+				if (property.type === 'Property') {
+					examine(property.value);
+				} else {
+					examine(property.argument);
+				}
+			});
+		}
+	};
+
+	for (const statement of node.body) {
+		if (statement.type === 'ExportDefaultDeclaration') {
+			dynamic_exports.add('default');
+			continue;
+		} else if (statement.type === 'ExportAllDeclaration') {
+			reexports_all_named_exports = true;
+			continue;
+		} else if (statement.type !== 'ExportNamedDeclaration') {
+			continue;
 		}
 
-		// TODO: handle export specifiers referencing identifiers in the same file?
+		// TODO: handle exports referencing constants in the same file?
 
-		if (
-			statement.declaration?.type !== 'VariableDeclaration' ||
-			statement.declaration.kind !== 'const'
-		) {
-			return;
+		// export specifiers
+		if (statement.specifiers.length) {
+			for (const specifier of statement.specifiers) {
+				if (specifier.exported.type === 'Identifier') {
+					dynamic_exports.add(specifier.exported.name);
+				} else if (typeof specifier.exported.value === 'string') {
+					dynamic_exports.add(specifier.exported.value);
+				}
+			}
+			continue;
+		}
+
+		if (!statement.declaration) {
+			continue;
+		}
+
+		// exported classes and functions
+		if (statement.declaration.type !== 'VariableDeclaration') {
+			dynamic_exports.add(statement.declaration.id.name);
+			continue;
 		}
 
 		for (const declaration of statement.declaration.declarations) {
-			if (!declaration.init || declaration.init.type !== 'Literal') {
-				continue;
-			}
-
 			if (declaration.id.type === 'Identifier') {
-				exports.set(declaration.id.name, declaration.init.value);
+				if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
+					static_exports.set(declaration.id.name, declaration.init.value);
+				} else {
+					dynamic_exports.add(declaration.id.name);
+				}
+			} else {
+				examine(declaration.id);
 			}
 		}
-	});
+	}
 
-	return exports;
+	return {
+		static_exports,
+		dynamic_exports,
+		reexports_all_named_exports
+	};
 }

@@ -4,6 +4,8 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
+import { statically_analyse_exports } from '../utils.js';
+import { dedent } from '../../../core/sync/utils.js';
 
 /**
  * @param {string} out
@@ -101,13 +103,32 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			// TODO: avoid loading the module if ssr is false
-			imports.push(
-				`import * as universal from '../${
-					resolve_symlinks(server_manifest, node.universal).chunk.file
-				}';`
-			);
-			exports.push('export { universal };');
+			const mod = statically_analyse_exports(node.universal);
+			const universal_file = resolve_symlinks(server_manifest, node.universal).chunk.file;
+			if (mod.reexports_all_named_exports) {
+				imports.push(
+					`import * as universal from '../${universal_file}';`
+				);
+				exports.push('export { universal };');
+			} else {
+				exports.push(`const universal_dynamic_exports = new Set(${s(Array.from(mod.dynamic_exports))});`,
+					'let universal_cache;',
+					dedent`
+					export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
+						async get(target, prop) {
+							if (universal_dynamic_exports.has(prop)) {
+								return (universal_cache ??= await import('../${universal_file}'))[prop];
+							}
+							return target[prop];
+						},
+						has(target, prop) {
+							return prop in target || universal_dynamic_exports.has(prop);
+						},
+						ownKeys(target) {
+							return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
+						}
+					});`)
+			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 

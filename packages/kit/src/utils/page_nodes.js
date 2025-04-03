@@ -27,7 +27,6 @@ export class PageNodes {
 		for (const layout of this.layouts()) {
 			if (layout) {
 				validate_layout_server_exports(layout.server, /** @type {string} */ (layout.server_id));
-				// TODO: validate exports without loading the module?
 				validate_layout_exports(layout.universal, /** @type {string} */ (layout.universal_id));
 			}
 		}
@@ -35,51 +34,55 @@ export class PageNodes {
 		const page = this.page();
 		if (page) {
 			validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-			// TODO: validate exports without loading the module?
 			validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
 		}
 	}
 
 	/**
-	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
-	 * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
+	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
 	 * @param {Option} option
-	 * @returns {Value | undefined}
+	 * @returns {Promise<Value | undefined>}
 	 */
-	#get_option(option) {
-		return this.data.reduce((value, node) => {
-			return /** @type {Value} TypeScript's too dumb to understand this */ (
-				node?.universal?.[option] ?? node?.server?.[option] ?? value
-			);
-		}, /** @type {Value | undefined} */ (undefined));
+	async #get_option(option) {
+		/** @typedef {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value */
+
+		/** @type {Value | undefined} */
+		let value;
+		for (const node of this.data) {
+			// eslint-disable-next-line @typescript-eslint/await-thenable -- the universal node value could be a promise
+			value = (await node?.universal?.[option]) ?? node?.server?.[option] ?? value;
+		}
+
+		return value;
 	}
 
-	csr() {
-		return this.#get_option('csr') ?? true;
+	async csr() {
+		return (await this.#get_option('csr')) ?? true;
 	}
 
-	ssr() {
-		return this.#get_option('ssr') ?? true;
+	async ssr() {
+		return (await this.#get_option('ssr')) ?? true;
 	}
 
-	prerender() {
-		return this.#get_option('prerender') ?? false;
+	async prerender() {
+		return (await this.#get_option('prerender')) ?? false;
 	}
 
-	trailing_slash() {
-		return this.#get_option('trailingSlash') ?? 'never';
+	async trailing_slash() {
+		return (await this.#get_option('trailingSlash')) ?? 'never';
 	}
 
-	get_config() {
+	async get_config() {
 		/** @type {any} */
 		let current = {};
 
 		for (const node of this.data) {
-			if (!node?.universal?.config && !node?.server?.config) continue;
+			const universal_config = await node?.universal?.config;
+			if (!universal_config && !node?.server?.config) continue;
 
 			current = {
 				...current,
-				...node?.universal?.config,
+				...universal_config,
 				...node?.server?.config
 			};
 		}

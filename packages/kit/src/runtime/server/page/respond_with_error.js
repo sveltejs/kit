@@ -41,8 +41,8 @@ export async function respond_with_error({
 		const branch = [];
 		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
 		const nodes = new PageNodes([default_layout]);
-		const ssr = nodes.ssr();
-		const csr = nodes.csr();
+		const ssr = await nodes.ssr();
+		const csr = await nodes.csr();
 
 		if (ssr) {
 			state.error = true;
