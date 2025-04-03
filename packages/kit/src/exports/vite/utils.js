@@ -1,6 +1,4 @@
 import path from 'node:path';
-import { tsPlugin } from '@sveltejs/acorn-typescript';
-import { Parser } from 'acorn';
 import { loadEnv } from 'vite';
 import { posixify, read } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
@@ -159,48 +157,51 @@ export function normalize_id(id, lib, cwd) {
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
-const parser = Parser.extend(tsPlugin());
-
 /**
- * @param {string} node_path
+ * Collect all public exports (i.e. not starting with `_`) from a +page.js/+layout.js file.
+ * Returns `null` if those exports cannot be statically analyzed.
+ * @param {import('rollup').ProgramNode} ast
  */
-export function statically_analyse_exports(node_path) {
-	const input = read(node_path);
-
-	const node = parser.parse(input, {
-		sourceType: 'module',
-		ecmaVersion: 'latest',
-		locations: true
-	});
-
+export function statically_analyse_exports(ast) {
 	/** @type {Map<string, any>} */
 	const exports = new Map();
 
-	node.body.forEach((statement) => {
-		// TODO: get all exports so we can validate them?
-		if (statement.type !== 'ExportNamedDeclaration') {
-			return;
-		}
-
+	for (const statement of ast.body) {
+		if (statement.type === 'ExportAllDeclaration') return null;
+		if (statement.type !== 'ExportNamedDeclaration') continue;
 		// TODO: handle export specifiers referencing identifiers in the same file?
+		if (statement.specifiers.length > 0) return null;
+
+		if (statement.declaration?.type === 'FunctionDeclaration') {
+			if (statement.declaration.id.name.startsWith('_')) continue;
+			// We need to load the file during prerendering
+			if (statement.declaration.id.name === 'entries') return null;
+			// This includes load functions but also other invalid public function exports which our validator will catch
+			// TODO should instead just bail on everything invalid, to indirectly trigger validation? or error directly here?
+			exports.set(statement.declaration.id.name, 'function');
+			continue;
+		}
 
 		if (
 			statement.declaration?.type !== 'VariableDeclaration' ||
 			statement.declaration.kind !== 'const'
 		) {
-			return;
+			// TODO analyze that variable is not reassigned, i.e. so that `let` is also allowed?
+			return null;
 		}
 
 		for (const declaration of statement.declaration.declarations) {
+			if (declaration.id.type !== 'Identifier') return null;
+			if (declaration.id.name.startsWith('_') || declaration.id.name === 'load') continue;
+
 			if (!declaration.init || declaration.init.type !== 'Literal') {
-				continue;
+				// TODO try to statically analyze ObjectExpression in case of `export const config = { ... }`
+				return null;
 			}
 
-			if (declaration.id.type === 'Identifier') {
-				exports.set(declaration.id.name, declaration.init.value);
-			}
+			exports.set(declaration.id.name, declaration.init.value);
 		}
-	});
+	}
 
 	return exports;
 }

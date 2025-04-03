@@ -101,13 +101,17 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			// TODO: avoid loading the module if ssr is false
-			imports.push(
-				`import * as universal from '../${
-					resolve_symlinks(server_manifest, node.universal).chunk.file
-				}';`
-			);
-			exports.push('export { universal };');
+			if (node.universal_static_exports?.ssr === false) {
+				const universal_exports = Object.entries(node.universal_static_exports).map(([name, value]) => `${name}: ${s(value)}`);
+				exports.push(`export const universal = { ${universal_exports} };`);
+			} else {
+				imports.push(
+					`import * as universal from '../${
+						resolve_symlinks(server_manifest, node.universal).chunk.file
+					}';`
+				);
+				exports.push('export { universal };');
+			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
