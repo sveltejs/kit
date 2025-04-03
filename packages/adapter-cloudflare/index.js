@@ -37,6 +37,7 @@ export default function (options = {}) {
 			if (building_for_cloudflare_pages) {
 				if (wrangler_config.pages_build_output_dir) {
 					dest = wrangler_config.pages_build_output_dir;
+					worker_dest = `${dest}/_worker.js`;
 				}
 			} else {
 				if (wrangler_config.main) {
@@ -92,8 +93,11 @@ export default function (options = {}) {
 			);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
-					SERVER: `${path.posix.relative(worker_dest_dir, builder.getServerDirectory())}/index.js`,
-					MANIFEST: `${path.posix.relative(worker_dest_dir, tmp)}/manifest.js`,
+					// the paths returned by the Wrangler config might be Windows paths,
+					// so we need to convert them to POSIX paths or else the backslashes
+					// will be interpreted as escape characters and create an incorrect import path
+					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
+					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}
 			});
@@ -308,4 +312,9 @@ function is_building_for_cloudflare_pages(wrangler_config) {
 		!wrangler_config.main ||
 		!wrangler_config.assets
 	);
+}
+
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
 }
