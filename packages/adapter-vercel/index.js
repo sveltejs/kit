@@ -372,6 +372,47 @@ const plugin = function (defaults = {}) {
 					});
 				} else if (!singular) {
 					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
+				} else {
+					// Create a symlink for each route to the main function
+
+					// Use 'index' for the root route's filesystem representation
+					// Use an empty string ('') for the root route's destination name part in Vercel config
+					const isRoot = route.id === '/';
+					const route_fs_name = isRoot ? 'index' : route.id.slice(1);
+					const route_dest_name = isRoot ? '' : route.id.slice(1);
+
+					// Define paths using path.join for safety
+					const base_dir = path.join(dirs.functions, route_fs_name); // e.g., .vercel/output/functions/index
+					// The main symlink should be named based on the route, adjacent to its potential directory
+					const main_symlink_path = `${base_dir}.func`; // e.g., .vercel/output/functions/index.func
+					// The data symlink goes inside the directory
+					const data_symlink_path = path.join(base_dir, '__data.json.func'); // e.g., .vercel/output/functions/index/__data.json.func
+
+					const target = path.join(dirs.functions, `${name}.func`); // The actual function directory e.g., .vercel/output/functions/fn.func
+
+					// Ensure the directory for the data endpoint symlink exists (e.g., functions/index/)
+					builder.mkdirp(base_dir);
+
+					// Calculate relative paths FROM the directory containing the symlink TO the target
+					const relative_for_main = path.relative(
+						path.dirname(main_symlink_path),
+						target,
+					);
+					const relative_for_data = path.relative(
+						path.dirname(data_symlink_path),
+						target,
+					); // This is path.relative(base_dir, target)
+
+					// Create symlinks
+					fs.symlinkSync(relative_for_main, main_symlink_path); // Creates functions/index.func -> fn.func
+					fs.symlinkSync(relative_for_data, data_symlink_path); // Creates functions/index/__data.json.func -> ../fn.func
+
+					// Add route to the config
+					static_config.routes.push({
+						src: src + '(?:/__data.json)?$', // Matches the incoming request path
+						dest: `/${route_dest_name}`, // Maps to the function: '/' for root, '/about' for about, etc.
+						// Vercel uses this dest to find the corresponding .func dir/symlink
+					});
 				}
 			}
 
