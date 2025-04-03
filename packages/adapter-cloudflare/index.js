@@ -37,6 +37,7 @@ export default function (options = {}) {
 			if (building_for_cloudflare_pages) {
 				if (wrangler_config.pages_build_output_dir) {
 					dest = wrangler_config.pages_build_output_dir;
+					worker_dest = `${dest}/_worker.js`;
 				}
 			} else {
 				if (wrangler_config.main) {
