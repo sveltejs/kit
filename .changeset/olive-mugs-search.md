@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: replace internal class-replacement hack with package imports map
+chore: remove internal class-replacement hack that isn't needed anymore
