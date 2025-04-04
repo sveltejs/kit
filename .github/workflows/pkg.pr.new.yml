@@ -28,7 +28,7 @@ jobs:
 
       - run: pnpx pkg-pr-new publish --comment=off --json output.json --compact --no-template './packages/*'
       - name: Add metadata to output
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
