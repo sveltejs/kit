@@ -17,7 +17,13 @@ import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, normalize_id, strip_virtual_prefix } from './utils.js';
+import {
+	get_config_aliases,
+	get_env,
+	normalize_id,
+	statically_analyse_exports,
+	strip_virtual_prefix
+} from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -729,6 +735,19 @@ Tips:
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
+		},
+
+		transform(code, id) {
+			const route_path = id.slice(process.cwd().length + 1);
+			const node = manifest_data.nodes.find(
+				(node) => node.universal && node.universal === route_path
+			);
+			if (!node) return;
+
+			const exports = statically_analyse_exports(this.parse(code));
+			if (exports) {
+				node.universal_static_exports = Object.fromEntries(exports);
+			}
 		},
 
 		/**
