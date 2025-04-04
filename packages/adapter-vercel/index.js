@@ -373,7 +373,8 @@ const plugin = function (defaults = {}) {
 				} else if (!singular) {
 					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
 				} else {
-					// Create a symlink for each route to the main function
+					// Create a symlink for each route to the main function for better observability
+					// (without this, every request appears to go through `/fn` or `fn-{n}`)
 
 					// Use 'index' for the root route's filesystem representation
 					// Use an empty string ('') for the root route's destination name part in Vercel config
