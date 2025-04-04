@@ -272,6 +272,7 @@ export async function respond(request, options, manifest, state) {
 				route = candidate;
 				event.route = { id: route.id };
 				event.params = decode_params(matched);
+				headers['x-sveltekit-matched-route'] = route.id;
 				break;
 			}
 		}
