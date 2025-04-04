@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.0.1
+### Patch Changes
+
+
+- fix: correctly write the worker to the `pages_build_output_dir` path if set in the Wrangler configuration path ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+
+- fix: correctly resolve paths provided by the Wrangler config on Windows ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
 ## 7.0.0
 ### Major Changes
 
