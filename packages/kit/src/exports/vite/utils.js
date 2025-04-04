@@ -1,6 +1,8 @@
 import path from 'node:path';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import { Parser } from 'acorn';
 import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify, read } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
@@ -156,3 +158,100 @@ export function normalize_id(id, lib, cwd) {
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
+
+const parser = Parser.extend(tsPlugin());
+
+/**
+ * @param {string} node_path
+ */
+export function statically_analyse_exports(node_path) {
+	const input = read(node_path);
+
+	const node = parser.parse(input, {
+		sourceType: 'module',
+		ecmaVersion: 'latest',
+		locations: true
+	});
+
+	/** @type {Map<string, any>} */
+	const static_exports = new Map();
+	/** @type {Set<string>} */
+	const dynamic_exports = new Set();
+	/** @type {boolean} */
+	let reexports_all_named_exports = false;
+
+	/**
+	 * @param {import('acorn').Pattern | null} node
+	 */
+	const examine = (node) => {
+		if (!node) return;
+
+		if (node.type === 'Identifier') {
+			dynamic_exports.add(node.name);
+		} else if (node.type === 'ArrayPattern') {
+			node.elements.forEach(examine);
+		} else if (node.type === 'ObjectPattern') {
+			node.properties.forEach((property) => {
+				if (property.type === 'Property') {
+					examine(property.value);
+				} else {
+					examine(property.argument);
+				}
+			});
+		}
+	};
+
+	for (const statement of node.body) {
+		if (statement.type === 'ExportDefaultDeclaration') {
+			dynamic_exports.add('default');
+			continue;
+		} else if (statement.type === 'ExportAllDeclaration') {
+			reexports_all_named_exports = true;
+			continue;
+		} else if (statement.type !== 'ExportNamedDeclaration') {
+			continue;
+		}
+
+		// TODO: handle exports referencing constants in the same file?
+
+		// export specifiers
+		if (statement.specifiers.length) {
+			for (const specifier of statement.specifiers) {
+				if (specifier.exported.type === 'Identifier') {
+					dynamic_exports.add(specifier.exported.name);
+				} else if (typeof specifier.exported.value === 'string') {
+					dynamic_exports.add(specifier.exported.value);
+				}
+			}
+			continue;
+		}
+
+		if (!statement.declaration) {
+			continue;
+		}
+
+		// exported classes and functions
+		if (statement.declaration.type !== 'VariableDeclaration') {
+			dynamic_exports.add(statement.declaration.id.name);
+			continue;
+		}
+
+		for (const declaration of statement.declaration.declarations) {
+			if (declaration.id.type === 'Identifier') {
+				if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
+					static_exports.set(declaration.id.name, declaration.init.value);
+				} else {
+					dynamic_exports.add(declaration.id.name);
+				}
+			} else {
+				examine(declaration.id);
+			}
+		}
+	}
+
+	return {
+		static_exports,
+		dynamic_exports,
+		reexports_all_named_exports
+	};
+}
