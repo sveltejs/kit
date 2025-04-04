@@ -394,14 +394,8 @@ const plugin = function (defaults = {}) {
 					builder.mkdirp(base_dir);
 
 					// Calculate relative paths FROM the directory containing the symlink TO the target
-					const relative_for_main = path.relative(
-						path.dirname(main_symlink_path),
-						target,
-					);
-					const relative_for_data = path.relative(
-						path.dirname(data_symlink_path),
-						target,
-					); // This is path.relative(base_dir, target)
+					const relative_for_main = path.relative(path.dirname(main_symlink_path), target);
+					const relative_for_data = path.relative(path.dirname(data_symlink_path), target); // This is path.relative(base_dir, target)
 
 					// Create symlinks
 					fs.symlinkSync(relative_for_main, main_symlink_path); // Creates functions/index.func -> fn.func
@@ -410,7 +404,7 @@ const plugin = function (defaults = {}) {
 					// Add route to the config
 					static_config.routes.push({
 						src: src + '(?:/__data.json)?$', // Matches the incoming request path
-						dest: `/${route_dest_name}`, // Maps to the function: '/' for root, '/about' for about, etc.
+						dest: `/${route_dest_name}` // Maps to the function: '/' for root, '/about' for about, etc.
 						// Vercel uses this dest to find the corresponding .func dir/symlink
 					});
 				}
