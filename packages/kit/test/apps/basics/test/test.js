@@ -1544,5 +1544,8 @@ test.describe('getRequestEvent', () => {
 		await page.click('button');
 
 		expect(await page.textContent('h1')).toBe('from form: hello');
+
+		await page.goto('/get-request-event/with-error');
+		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
 	});
 });
