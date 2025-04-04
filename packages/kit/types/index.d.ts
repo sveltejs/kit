@@ -222,6 +222,16 @@ declare module '@sveltejs/kit' {
 		) => void;
 
 		/**
+		 * Sets a cookie from a string. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
+		 *
+		 * No default values. It will set only properties you specified in a cookie.
+		 *
+		 * If you do not specify name, value and path, it will throw an error.
+		 * @param cookie the cookie represented as string
+		 */
+		setFromString: (cookie: string) => void;
+
+		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 		 *
 		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children

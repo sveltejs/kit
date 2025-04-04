@@ -1,6 +1,7 @@
 import { parse, serialize } from 'cookie';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
+import * as set_cookie_parser from 'set-cookie-parser';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -127,6 +128,44 @@ export function get_cookies(request, url) {
 
 			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
+		},
+
+		/**
+		 * @param {string} cookie
+		 */
+		setFromString(cookie) {
+			if (cookie === '') {
+				throw new Error('Cannot pass empty string');
+			}
+
+			const parsed = set_cookie_parser.parseString(cookie);
+			const { name, value, path, sameSite, secure, httpOnly, ...opts } = parsed;
+
+			if (name === undefined || value === undefined || path === undefined) {
+				throw new Error('Name, Value and Path are mandatory for cookie to be created.');
+			}
+
+			/**
+			 * @type {true|false|"lax"|"strict"|"none"|undefined}
+			 */
+			const normalized_same_site = (() => {
+				if (sameSite === undefined || typeof sameSite === 'boolean') {
+					return sameSite;
+				}
+				const lower = sameSite.toLowerCase();
+				if (lower === 'lax' || lower === 'strict' || lower === 'none') {
+					return /** @type {"lax"|"strict"|"none"} */ (lower);
+				}
+				return undefined;
+			})();
+
+			this.set(name, value, {
+				...opts,
+				path,
+				sameSite: normalized_same_site,
+				secure: secure ?? false,
+				httpOnly: httpOnly ?? false
+			});
 		},
 
 		/**
