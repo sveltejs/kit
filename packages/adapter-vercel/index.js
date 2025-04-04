@@ -370,8 +370,6 @@ const plugin = function (defaults = {}) {
 						src: src + '/__data.json$',
 						dest: `/${isr_name}/__data.json${q}`
 					});
-				} else if (!singular) {
-					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
 				} else {
 					// Create a symlink for each route to the main function for better observability
 					// (without this, every request appears to go through `/fn` or `fn-{n}`)
