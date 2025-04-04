@@ -377,9 +377,9 @@ const plugin = function (defaults = {}) {
 
 					// Use 'index' for the root route's filesystem representation
 					// Use an empty string ('') for the root route's destination name part in Vercel config
-					const isRoot = route.id === '/';
-					const route_fs_name = isRoot ? 'index' : route.id.slice(1);
-					const route_dest_name = isRoot ? '' : route.id.slice(1);
+					const is_root = route.id === '/';
+					const route_fs_name = is_root ? 'index' : route.id.slice(1);
+					const route_dest_name = is_root ? '' : route.id.slice(1);
 
 					// Define paths using path.join for safety
 					const base_dir = path.join(dirs.functions, route_fs_name); // e.g., .vercel/output/functions/index
