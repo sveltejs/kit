@@ -22,7 +22,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base, embed_url, is_embed } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -280,7 +280,7 @@ export async function start(_app, _target, hydrate) {
 	await _app.hooks.init?.();
 
 	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
-	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
+	container = __SVELTEKIT_EMBEDDED__ || is_embed ? _target : document.documentElement;
 	target = _target;
 
 	// we import the root layout/error nodes eagerly, so that
@@ -1288,6 +1288,7 @@ async function get_rerouted_url(url) {
  */
 async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
+
 	if (is_external_url(url, base, app.hash)) return;
 
 	if (__SVELTEKIT_CLIENT_ROUTING__) {
@@ -1330,10 +1331,17 @@ async function get_navigation_intent(url, invalidating) {
 
 /** @param {URL} url */
 function get_url_path(url) {
+	let url_path = url.pathname.slice(base.length);
+	if (is_embed) {
+		let base_path = new URL(base).pathname;
+		if (base_path.endsWith('/')) {
+			base_path = base_path.slice(0, -1);
+		}
+		url_path = url.pathname.slice(base_path.length);
+	}
+
 	return (
-		decode_pathname(
-			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
-		) || '/'
+		decode_pathname(app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url_path) || '/'
 	);
 }
 
@@ -1537,11 +1545,13 @@ async function navigate({
 			[STATES_KEY]: state
 		};
 
-		const fn = replace_state ? history.replaceState : history.pushState;
-		fn.call(history, entry, '', url);
+		if (!is_embed) {
+			const fn = replace_state ? history.replaceState : history.pushState;
+			fn.call(history, entry, '', url);
 
-		if (!replace_state) {
-			clear_onward_history(current_history_index, current_navigation_index);
+			if (!replace_state) {
+				clear_onward_history(current_history_index, current_navigation_index);
+			}
 		}
 	}
 
@@ -2559,7 +2569,7 @@ async function _hydrate(
 ) {
 	hydrated = true;
 
-	const url = new URL(location.href);
+	const url = is_embed ? new URL(embed_url) : new URL(location.href);
 
 	/** @type {import('types').CSRRoute | undefined} */
 	let parsed_route;

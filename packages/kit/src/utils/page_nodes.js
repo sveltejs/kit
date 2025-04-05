@@ -39,7 +39,7 @@ export class PageNodes {
 	}
 
 	/**
-	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
+	 * @template {'prerender' | 'ssr' | 'csr' | 'embed' | 'trailingSlash' | 'entries'} Option
 	 * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
 	 * @param {Option} option
 	 * @returns {Value | undefined}
@@ -54,6 +54,10 @@ export class PageNodes {
 
 	csr() {
 		return this.#get_option('csr') ?? true;
+	}
+
+	embed() {
+		return this.#get_option('embed') ?? false;
 	}
 
 	ssr() {

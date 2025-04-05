@@ -1447,6 +1447,10 @@ export type ActionResult<
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
+export type EmbedResult = {
+	target: string;
+} | null;
+
 /**
  * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
  */
