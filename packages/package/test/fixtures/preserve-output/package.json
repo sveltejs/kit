@@ -1,0 +1,16 @@
+{
+	"name": "preserve-output",
+	"private": true,
+	"type": "module",
+	"description": "with additional things running before svelte-package",
+	"peerDependencies": {
+		"svelte": "^4.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		},
+		"./theme.css": "./dist/assets/theme.css"
+	}
+}
