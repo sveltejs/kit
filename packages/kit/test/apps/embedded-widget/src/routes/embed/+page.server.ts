@@ -1,6 +1,6 @@
-import type { Actions, PageLoad } from './$types';
+import type { Actions, PageServerLoad, PageServerLoadEvent } from './$types';
 
-export const embed = (event) => {
+export const embed = (event: PageServerLoadEvent) => {
 	const target = event.url.searchParams.get('target');
 	if (target) {
 		return {
@@ -22,7 +22,7 @@ export const actions: Actions = {
 	}
 };
 
-export const load: PageLoad = ({ params }) => {
+export const load: PageServerLoad = ({ params }) => {
 	return {
 		counter: 10
 	};
