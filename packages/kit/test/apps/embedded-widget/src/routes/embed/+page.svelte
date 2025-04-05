@@ -4,7 +4,7 @@
 
 	let { data, form } = $props();
 
-	let counter = $derived(data.counter);
+	let counter = $state(data.counter);
 </script>
 
 <div>
