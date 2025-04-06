@@ -277,9 +277,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			exports.push('export type PageProps = { data: PageData }');
 		}
 
-		exports.push(
-			'export type Embed = Kit.Embed<RouteParams, RouteId>'
-		);
+		exports.push('export type Embed = Kit.Embed<RouteParams, RouteId>');
 	}
 
 	if (route.layout) {
