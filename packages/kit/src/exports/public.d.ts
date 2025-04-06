@@ -1447,6 +1447,11 @@ export type ActionResult<
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
+export type Embed<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> = (event: RequestEvent<Params, RouteId>) => MaybePromise<EmbedResult>;
+
 export type EmbedResult = {
 	target: string;
 } | null;
