@@ -25,7 +25,7 @@ export function getRequestEvent() {
 
 	if (!event) {
 		let message =
-			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, and server endpoints, and `handleError`.';
+			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.';
 
 		if (!als) {
 			message +=
