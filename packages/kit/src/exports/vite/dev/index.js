@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { get_client_only_nodes, not_found } from '../utils.js';
+import { get_csr_only_nodes, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -124,7 +124,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const csr_only = await get_client_only_nodes(
+		const csr_only = await get_csr_only_nodes(
 			manifest_data,
 			async (server_node) => {
 				const { module } = await resolve(server_node);

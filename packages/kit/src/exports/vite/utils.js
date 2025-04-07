@@ -251,7 +251,7 @@ function is_not_a_page_option(name) {
  * @param {import('types').ManifestData} manifest_data
  * @param {(server_node: string) => Promise<Record<string, any>>} resolve
  */
-export async function get_client_only_nodes(manifest_data, resolve) {
+export async function get_csr_only_nodes(manifest_data, resolve) {
 	/** @type {Set<number>} */
 	const ssr_lookup = new Set();
 
@@ -287,6 +287,8 @@ export async function get_client_only_nodes(manifest_data, resolve) {
 				static_exports.set(index, exports);
 				Object.assign(options, exports);
 			} else {
+				// this node could be csr-only, so we add it to the map and it will be
+				// removed later if it's not
 				static_exports.set(index, {});
 			}
 		}
