@@ -255,7 +255,7 @@ export async function get_csr_only_nodes(manifest_data, resolve) {
 	/** @type {Set<number>} */
 	const ssr_lookup = new Set();
 
-	/** @type {Map<number, Record<string, any>>} */
+	/** @type {Map<number, Record<string, any> | null>} */
 	const static_exports = new Map();
 
 	for (const route of manifest_data.routes) {
@@ -263,7 +263,7 @@ export async function get_csr_only_nodes(manifest_data, resolve) {
 
 		/** @type {{ ssr: boolean; } | null} */
 		let options = {
-			ssr: true,
+			ssr: true
 		};
 
 		const node_indexes = [...route.page.layouts, route.page.leaf];
@@ -279,12 +279,18 @@ export async function get_csr_only_nodes(manifest_data, resolve) {
 			}
 
 			if (node.universal) {
-				const exports = statically_analyse_exports(node.universal);
+				let exports = static_exports.get(index);
+
+				if (exports === undefined) {
+					exports = statically_analyse_exports(node.universal);
+					static_exports.set(index, exports);
+				}
+
 				if (!exports) {
 					options = null;
 					break;
 				}
-				static_exports.set(index, exports);
+
 				Object.assign(options, exports);
 			} else {
 				// this node could be csr-only, so we add it to the map and it will be
