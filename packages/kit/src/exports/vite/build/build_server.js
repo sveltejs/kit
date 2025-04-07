@@ -75,7 +75,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 	}
 
 	const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
-		return import(path.join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file));
+		// Windows needs the file:// protocol for absolute path dynamic imports
+		return import(`file://${path.join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
 	});
 
 	manifest_data.nodes.forEach((node, i) => {
