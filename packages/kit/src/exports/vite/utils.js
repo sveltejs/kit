@@ -261,12 +261,9 @@ export async function get_client_only_nodes(manifest_data, resolve) {
 	for (const route of manifest_data.routes) {
 		if (!route.page) continue;
 
-		/** @type {Record<string, any> | null} */
+		/** @type {{ ssr: boolean; } | null} */
 		let options = {
-			prerender: false,
-			trailingSlash: 'never',
 			ssr: true,
-			csr: true
 		};
 
 		const node_indexes = [...route.page.layouts, route.page.leaf];
