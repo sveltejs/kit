@@ -31,7 +31,7 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		// app is undefined when running this on the server
+		// app is uninitialised on the server
 		parsed.data = devalue.parse(parsed.data, app?.decoders);
 	}
 
