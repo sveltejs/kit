@@ -17,6 +17,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["*.js", "scripts/**/*", "src/**/*", "src/types/**/*"],
+	"include": ["*.js", "scripts/**/*", "src/**/*"],
 	"exclude": ["./**/write_types/test/**"]
 }

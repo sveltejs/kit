@@ -21,17 +21,21 @@ if (server.resolveWebSocketHooks) {
 	});
 }
 
-/** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
-const worker = {
-	// @ts-ignore wtf is Cloudflare doing to these types
+export default {
+	/**
+	 * @param {Request} req
+	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
+	 * @param {ExecutionContext} context
+	 * @returns {Promise<Response>}
+	 */
 	async fetch(req, env, context) {
 		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
 			platform: {
 				env,
 				context,
-				// @ts-ignore
+				// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
 				caches,
-				// @ts-ignore
+				// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
 				cf: req.cf
 			},
 			getClientAddress() {
@@ -40,7 +44,7 @@ const worker = {
 		});
 
 		await server.init({
-			// @ts-ignore
+			// @ts-expect-error env contains environment variables and bindings
 			env,
 			peers: ws?.peers,
 			publish: ws?.publish
@@ -53,12 +57,8 @@ const worker = {
 				options
 			);
 			resolve_websocket_hooks = () => hooks;
-			return ws.handleUpgrade(
-				// @ts-ignore wtf is Cloudflare doing to these types
-				req,
-				env,
-				context
-			);
+			// @ts-ignore wtf is Cloudflare doing to these types
+			return ws.handleUpgrade(req, env, context);
 		}
 
 		// skip cache if "cache-control: no-cache" in request
@@ -75,7 +75,7 @@ const worker = {
 
 		const stripped_pathname = pathname.replace(/\/$/, '');
 
-		// prerendered pages and /static files
+		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
 		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
@@ -96,6 +96,7 @@ const worker = {
 		) {
 			res = await env.ASSETS.fetch(req);
 		} else if (location && prerendered.has(location)) {
+			// trailing slash redirect for prerendered pages
 			if (search) location += search;
 			res = new Response('', {
 				status: 308,
@@ -107,7 +108,7 @@ const worker = {
 			// dynamically-generated pages
 			res = await server.respond(
 				req,
-				// @ts-ignore
+				// @ts-ignore wtf is Cloudflare doing to these types
 				options
 			);
 		}
@@ -118,5 +119,3 @@ const worker = {
 		return pragma && res.status < 400 ? Cache.save(req, res, context) : res;
 	}
 };
-
-export default worker;
