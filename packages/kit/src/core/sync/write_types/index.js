@@ -347,6 +347,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	if (route.endpoint) {
 		exports.push('export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;');
+		exports.push('export type Socket = Kit.Socket<RouteParams, RouteId>;');
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {

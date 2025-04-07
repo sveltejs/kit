@@ -1520,20 +1520,36 @@ export type SubmitFunction<
  * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
  * @since 2.21.0
  */
-export interface Socket {
+export interface Socket<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> {
 	/**
-	 * The [upgrade](https://svelte.dev/docs/kit/websockets#Hooks-upgrade) hook runs every time a request is attempting to upgrade to a WebSocket connection.
+	 * The [upgrade](https://svelte.dev/docs/kit/websockets#Hooks-upgrade) hook runs
+	 * every time a request is attempting to upgrade to a WebSocket connection.
 	 */
 	upgrade?: (
-		event: RequestEvent & { context: import('crossws').Peer['context'] }
+		event: RequestEvent<Params, RouteId> & { context: import('crossws').Peer['context'] }
 	) => MaybePromise<Response | ResponseInit | void>;
-	/** The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs every time a WebSocket connection is opened. */
+	/**
+	 * The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs
+	 * every time a WebSocket connection is opened.
+	 */
 	open?: import('crossws').Hooks['open'];
-	/** The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook runs every time a message is received from a WebSocket client. */
+	/**
+	 * The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook
+	 * runs every time a message is received from a WebSocket client.
+	 */
 	message?: import('crossws').Hooks['message'];
-	/** The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs every time a WebSocket connection is closed. */
+	/**
+	 * The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs
+	 * every time a WebSocket connection is closed.
+	 */
 	close?: import('crossws').Hooks['close'];
-	/** The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs every time a WebSocket error occurs. */
+	/**
+	 * The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs
+	 * every time a WebSocket error occurs.
+	 */
 	error?: import('crossws').Hooks['error'];
 }
 

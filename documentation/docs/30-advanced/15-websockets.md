@@ -9,7 +9,7 @@ title: WebSockets
 A `+server.js` file can export a `socket` object with [hooks](https://crossws.unjs.io/guide/hooks), all optional, to handle the different stages of the WebSocket lifecycle.
 
 ```js
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	upgrade(event) {
         // ...
@@ -38,7 +38,7 @@ You can use the [`error`](@sveltejs-kit#error) function imported from `@sveltejs
 ```js
 import { error } from "@sveltejs/kit";
 
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	upgrade({ request }) {
 		if (request.headers.get('origin') !== 'my_allowed_origin') {
@@ -54,7 +54,7 @@ export const socket = {
 The `open` hook is called when a WebSocket connection is opened. It receives a [Peer](https://crossws.unjs.io/guide/peer) object to allow interacting with connected clients.
 
 ```js
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	open(peer) {
 		// ...
@@ -67,7 +67,7 @@ export const socket = {
 The `message` hook is called when a message is received from the client. It receives the [Peer](https://crossws.unjs.io/guide/peer) object to allow interacting with connected clients and the [Message](https://crossws.unjs.io/guide/message) object which contains data from the client.
 
 ```js
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	message(peer, message) {
 		// ...
@@ -80,7 +80,7 @@ export const socket = {
 The `close` hook is called when a WebSocket connection is closed. It receives the [Peer](https://crossws.unjs.io/guide/peer) object to allow interacting with connected clients and the close event object which contains the [WebSocket connection close code](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code#value) and reason.
 
 ```js
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	close(peer, event) {
 		// ...
@@ -93,7 +93,7 @@ export const socket = {
 The `error` hook is called when a connection with a WebSocket has been closed due to an error. It receives the [Peer](https://crossws.unjs.io/guide/peer) object to allow interacting with connected clients and the error.
 
 ```js
-/** @type {import('@sveltejs/kit').Socket} **/
+/** @type {import('./$types').Socket} **/
 export const socket = {
 	error(peer, error) {
 		// ...

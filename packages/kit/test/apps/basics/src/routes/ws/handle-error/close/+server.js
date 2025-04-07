@@ -1,4 +1,4 @@
-/** @type {import('@sveltejs/kit').Socket} */
+/** @type {import('./$types').Socket} */
 export const socket = {
 	message(peer) {
 		peer.close(1000, 'test close hook error');
