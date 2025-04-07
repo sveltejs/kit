@@ -161,13 +161,19 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const dictionary = ${dictionary};
 
+			// This indirection prevents Rollup from issuing a warning when hooks aren't defined
+			const HANDLE_ERROR = 'handleError';
+			const INIT = 'init';
+			const REROUTE = 'reroute';
+			const TRANSPORT = 'transport';
+
 			export const hooks = {
 				handleError: ${
-					client_hooks_file ? 'client_hooks.handleError || ' : ''
+					client_hooks_file ? 'client_hooks[HANDLE_ERROR] || ' : ''
 				}(({ error }) => { console.error(error) }),
-				${client_hooks_file ? 'init: client_hooks.init,' : ''}
-				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
-				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
+				${client_hooks_file ? 'init: client_hooks[INIT],' : ''}
+				reroute: ${universal_hooks_file ? 'universal_hooks[REROUTE] || ' : ''}(() => {}),
+				transport: ${universal_hooks_file ? 'universal_hooks[TRANSPORT] || ' : ''}{}
 			};
 
 			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
