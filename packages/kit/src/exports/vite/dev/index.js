@@ -124,13 +124,10 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const csr_only = await get_csr_only_nodes(
-			manifest_data,
-			async (server_node) => {
-				const { module } = await resolve(server_node);
-				return module;
-			}
-		);
+		const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
+			const { module } = await resolve(server_node);
+			return module;
+		});
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
