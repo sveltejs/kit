@@ -303,7 +303,7 @@ export async function respond(request, options, manifest, state) {
 				if (DEV) {
 					page_nodes.validate();
 				}
-				trailing_slash = await page_nodes.trailing_slash();
+				trailing_slash = page_nodes.trailing_slash();
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash ?? 'never';
@@ -340,8 +340,8 @@ export async function respond(request, options, manifest, state) {
 					config = node.config ?? config;
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
-					config = (await page_nodes.get_config()) ?? config;
-					prerender = await page_nodes.prerender();
+					config = page_nodes.get_config() ?? config;
+					prerender = page_nodes.prerender();
 				}
 
 				if (state.before_handle) {

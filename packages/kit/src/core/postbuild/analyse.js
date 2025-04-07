@@ -89,10 +89,10 @@ async function analyse({
 	for (const route of manifest._.routes) {
 		const page =
 			route.page &&
-			(await analyse_page(
+			analyse_page(
 				route.page.layouts.map((n) => (n === undefined ? n : nodes[n])),
 				nodes[route.page.leaf]
-			));
+			);
 
 		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
 
@@ -182,7 +182,7 @@ function analyse_endpoint(route, mod) {
  * @param {Array<import('types').SSRNode | undefined>} layouts
  * @param {import('types').SSRNode} leaf
  */
-async function analyse_page(layouts, leaf) {
+function analyse_page(layouts, leaf) {
 	/** @type {Array<'GET' | 'POST'>} */
 	const methods = ['GET'];
 	if (leaf.server?.actions) methods.push('POST');
@@ -191,10 +191,10 @@ async function analyse_page(layouts, leaf) {
 	nodes.validate();
 
 	return {
-		config: await nodes.get_config(),
-		entries: (await leaf.universal?.entries) ?? leaf.server?.entries,
+		config: nodes.get_config(),
+		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: await nodes.prerender()
+		prerender: nodes.prerender()
 	};
 }
 

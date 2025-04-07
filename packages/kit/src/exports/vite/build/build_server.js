@@ -3,9 +3,8 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename } from 'node:path';
-import { statically_analyse_exports } from '../utils.js';
-import { dedent } from '../../../core/sync/utils.js';
+import path, { basename } from 'node:path';
+import { get_client_only_nodes } from '../utils.js';
 
 /**
  * @param {string} out
@@ -16,7 +15,7 @@ import { dedent } from '../../../core/sync/utils.js';
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -75,6 +74,10 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 	}
 
+	const csr_only = await get_client_only_nodes(manifest_data, async (server_node) => {
+		return import(path.join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file));
+	});
+
 	manifest_data.nodes.forEach((node, i) => {
 		/** @type {string[]} */
 		const imports = [];
@@ -93,7 +96,9 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		let fonts = [];
 
-		if (node.component && client_manifest) {
+		const static_exports = csr_only.get(i);
+
+		if (node.component && client_manifest && !static_exports) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
@@ -103,31 +108,13 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			const mod = statically_analyse_exports(node.universal);
-			const universal_file = resolve_symlinks(server_manifest, node.universal).chunk.file;
-			if (mod.reexports_all_named_exports) {
+			if (static_exports) {
+				exports.push(`export const universal = ${s(static_exports, null, 2)};`)
+			} else {
 				imports.push(
-					`import * as universal from '../${universal_file}';`
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
 				);
 				exports.push('export { universal };');
-			} else {
-				exports.push(`const universal_dynamic_exports = new Set(${s(Array.from(mod.dynamic_exports))});`,
-					'let universal_cache;',
-					dedent`
-					export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
-						async get(target, prop) {
-							if (universal_dynamic_exports.has(prop)) {
-								return (universal_cache ??= await import('../${universal_file}'))[prop];
-							}
-							return target[prop];
-						},
-						has(target, prop) {
-							return prop in target || universal_dynamic_exports.has(prop);
-						},
-						ownKeys(target) {
-							return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
-						}
-					});`)
 			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}

@@ -809,7 +809,7 @@ Tips:
 				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,
@@ -971,7 +971,7 @@ Tips:
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,

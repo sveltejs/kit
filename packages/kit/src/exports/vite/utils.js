@@ -162,9 +162,11 @@ export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace
 const parser = Parser.extend(tsPlugin());
 
 /**
+ * Collect all exported page options from a +page.js/+layout.js file.
+ * Returns `null` if those exports cannot be statically analyzed.
  * @param {string} node_path
  */
-export function statically_analyse_exports(node_path) {
+function statically_analyse_exports(node_path) {
 	const input = read(node_path);
 
 	const node = parser.parse(input, {
@@ -175,39 +177,13 @@ export function statically_analyse_exports(node_path) {
 
 	/** @type {Map<string, any>} */
 	const static_exports = new Map();
-	/** @type {Set<string>} */
-	const dynamic_exports = new Set();
-	/** @type {boolean} */
-	let reexports_all_named_exports = false;
-
-	/**
-	 * @param {import('acorn').Pattern | null} node
-	 */
-	const examine = (node) => {
-		if (!node) return;
-
-		if (node.type === 'Identifier') {
-			dynamic_exports.add(node.name);
-		} else if (node.type === 'ArrayPattern') {
-			node.elements.forEach(examine);
-		} else if (node.type === 'ObjectPattern') {
-			node.properties.forEach((property) => {
-				if (property.type === 'Property') {
-					examine(property.value);
-				} else {
-					examine(property.argument);
-				}
-			});
-		}
-	};
 
 	for (const statement of node.body) {
-		if (statement.type === 'ExportDefaultDeclaration') {
-			dynamic_exports.add('default');
-			continue;
-		} else if (statement.type === 'ExportAllDeclaration') {
-			reexports_all_named_exports = true;
-			continue;
+		if (
+			statement.type === 'ExportDefaultDeclaration' ||
+			statement.type === 'ExportAllDeclaration'
+		) {
+			return null;
 		} else if (statement.type !== 'ExportNamedDeclaration') {
 			continue;
 		}
@@ -217,11 +193,13 @@ export function statically_analyse_exports(node_path) {
 		// export specifiers
 		if (statement.specifiers.length) {
 			for (const specifier of statement.specifiers) {
-				if (specifier.exported.type === 'Identifier') {
-					dynamic_exports.add(specifier.exported.name);
-				} else if (typeof specifier.exported.value === 'string') {
-					dynamic_exports.add(specifier.exported.value);
+				if (
+					specifier.exported.type === 'Identifier' &&
+					is_not_a_page_option(specifier.exported.name)
+				) {
+					continue;
 				}
+				return null;
 			}
 			continue;
 		}
@@ -230,28 +208,103 @@ export function statically_analyse_exports(node_path) {
 			continue;
 		}
 
-		// exported classes and functions
-		if (statement.declaration.type !== 'VariableDeclaration') {
-			dynamic_exports.add(statement.declaration.id.name);
+		if (
+			statement.declaration.type === 'FunctionDeclaration' &&
+			is_not_a_page_option(statement.declaration.id.name)
+		) {
 			continue;
+		}
+
+		// other exported classes and functions
+		if (statement.declaration.type !== 'VariableDeclaration') {
+			return null;
 		}
 
 		for (const declaration of statement.declaration.declarations) {
 			if (declaration.id.type === 'Identifier') {
-				if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
+				if (is_not_a_page_option(declaration.id.name)) {
+					continue;
+				} else if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
 					static_exports.set(declaration.id.name, declaration.init.value);
-				} else {
-					dynamic_exports.add(declaration.id.name);
+					continue;
 				}
+				// TODO analyze that variable is not reassigned, i.e. so that `let` is also allowed?
+			}
+			return null;
+		}
+	}
+
+	return Object.fromEntries(static_exports);
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+function is_not_a_page_option(name) {
+	return name === 'load' || name.startsWith('_');
+}
+
+/**
+ * Returns a map of universal nodes and their exports that we can determine are
+ * CSR-only through static analysis.
+ * @param {import('types').ManifestData} manifest_data
+ * @param {(server_node: string) => Promise<Record<string, any>>} resolve
+ */
+export async function get_client_only_nodes(manifest_data, resolve) {
+	/** @type {Set<number>} */
+	const ssr_lookup = new Set();
+
+	/** @type {Map<number, Record<string, any>>} */
+	const static_exports = new Map();
+
+	for (const route of manifest_data.routes) {
+		if (!route.page) continue;
+
+		/** @type {Record<string, any> | null} */
+		let options = {
+			prerender: false,
+			trailingSlash: 'never',
+			ssr: true,
+			csr: true
+		};
+
+		const node_indexes = [...route.page.layouts, route.page.leaf];
+
+		for (const index of node_indexes) {
+			if (!index) continue;
+
+			const node = manifest_data.nodes[index];
+
+			if (node.server) {
+				const module = await resolve(node.server);
+				Object.assign(options, module);
+			}
+
+			if (node.universal) {
+				const exports = statically_analyse_exports(node.universal);
+				if (!exports) {
+					options = null;
+					break;
+				}
+				static_exports.set(index, exports);
+				Object.assign(options, exports);
 			} else {
-				examine(declaration.id);
+				static_exports.set(index, {});
+			}
+		}
+
+		if (options?.ssr || options === null) {
+			for (const index of node_indexes) {
+				if (!index) continue;
+				ssr_lookup.add(index);
 			}
 		}
 	}
 
-	return {
-		static_exports,
-		dynamic_exports,
-		reexports_all_named_exports
-	};
+	for (const index of ssr_lookup) {
+		static_exports.delete(index);
+	}
+
+	return static_exports;
 }

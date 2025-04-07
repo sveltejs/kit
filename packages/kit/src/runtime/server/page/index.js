@@ -70,7 +70,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifest generated later
-		const should_prerender = await nodes.prerender();
+		const should_prerender = nodes.prerender();
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod?.actions) {
@@ -93,8 +93,8 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
-		const ssr = await nodes.ssr();
-		const csr = await nodes.csr();
+		const ssr = nodes.ssr();
+		const csr = nodes.csr();
 
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering

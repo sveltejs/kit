@@ -368,13 +368,13 @@ export interface SSRComponent {
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface UniversalNode {
-	load?: MaybePromise<Load>;
-	prerender?: MaybePromise<PrerenderOption>;
-	ssr?: MaybePromise<boolean>;
-	csr?: MaybePromise<boolean>;
-	trailingSlash?: MaybePromise<TrailingSlash>;
-	config?: MaybePromise<any>;
-	entries?: MaybePromise<PrerenderEntryGenerator>;
+	load?: Load;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
 }
 
 export interface ServerNode {
