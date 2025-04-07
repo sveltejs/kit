@@ -31,7 +31,8 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data, app.decoders);
+		// app is undefined when running this on the server
+		parsed.data = devalue.parse(parsed.data, app?.decoders);
 	}
 
 	return parsed;
