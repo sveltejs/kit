@@ -215,31 +215,26 @@ export async function dev(vite, vite_config, svelte_config) {
 
 							if (mod) {
 								result.universal = new Proxy(Object.fromEntries(mod.static_exports), {
-									/**
-									 * @param {string} prop
-									 */
 									async get(target, prop) {
-										if (mod.dynamic_exports.has(prop)) {
+										const key = String(prop);
+										if (mod.dynamic_exports.has(key)) {
 											try {
-												return (await load_universal_module())[prop];
+												return (await load_universal_module())[key];
 											} catch (error) {
 												console.error(
 													colors
 														.bold()
 														.red(
-															`${node.universal} was loaded because the value of the \`${prop}\` export could not be statically analysed`
+															`${node.universal} was loaded because the value of the \`${key}\` export could not be statically analysed`
 														)
 												);
 												throw error;
 											}
 										}
-										return target[prop];
+										return target[key];
 									},
-									/**
-									 * @param {string} prop
-									 */
 									has(target, prop) {
-										return prop in target || mod.dynamic_exports.has(prop);
+										return prop in target || mod.dynamic_exports.has(String(prop));
 									},
 									ownKeys(target) {
 										return [...Reflect.ownKeys(target), ...mod.dynamic_exports];

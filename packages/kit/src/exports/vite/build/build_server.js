@@ -111,18 +111,19 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 					dedent`
 						export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
 							async get(target, prop) {
-								if (universal_dynamic_exports.has(prop)) {
+								const key = String(prop);
+								if (universal_dynamic_exports.has(key)) {
 									try {
-										return (universal_cache ??= await import('../${universal_file}'))[prop];
+										return (universal_cache ??= await import('../${universal_file}'))[key];
 									} catch (error) {
-										console.error(\`${node.universal} was loaded because the value of the \\\`\${prop}\\\` export could not be statically analysed\`);
+										console.error(\`${node.universal} was loaded because the value of the \\\`\${key}\\\` export could not be statically analysed\`);
 										throw error;
 									}
 								}
-								return target[prop];
+								return target[key];
 							},
 							has(target, prop) {
-								return prop in target || universal_dynamic_exports.has(prop);
+								return prop in target || universal_dynamic_exports.has(String(prop));
 							},
 							ownKeys(target) {
 								return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
