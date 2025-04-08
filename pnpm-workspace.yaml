@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
+  - 'packages/adapter-cloudflare/test/apps/*'
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'

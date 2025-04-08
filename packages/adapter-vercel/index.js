@@ -8,7 +8,7 @@ import { get_pathname, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
-const DEFAULT_FUNCTION_NAME = 'fn';
+const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
 const get_default_runtime = () => {
 	const major = Number(process.version.slice(1).split('.')[0]);
@@ -319,7 +319,7 @@ const plugin = function (defaults = {}) {
 					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
 				// generate one function for the group
-				const name = singular ? DEFAULT_FUNCTION_NAME : `fn-${group.i}`;
+				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
 				await generate_function(
 					name,
@@ -332,12 +332,27 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
+			if (!singular) {
+				// we need to create a catch-all route so that 404s are handled
+				// by SvelteKit rather than Vercel
+
+				const runtime = defaults.runtime ?? get_default_runtime();
+				const generate_function =
+					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
+
+				await generate_function(
+					`${INTERNAL}/catchall`,
+					/** @type {any} */ ({ runtime, ...defaults }),
+					[]
+				);
+			}
+
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
 
 				const pattern = route.pattern.toString();
 				const src = pattern_to_src(pattern);
-				const name = functions.get(pattern) ?? 'fn-0';
+				const name = functions.get(pattern);
 
 				const isr = isr_config.get(route);
 				if (isr) {
@@ -370,24 +385,43 @@ const plugin = function (defaults = {}) {
 						src: src + '/__data.json$',
 						dest: `/${isr_name}/__data.json${q}`
 					});
-				} else if (!singular) {
-					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
+				} else {
+					// Create a symlink for each route to the main function for better observability
+					// (without this, every request appears to go through `/![-]`)
+
+					// Use 'index' for the root route's filesystem representation
+					// Use an empty string ('') for the root route's destination name part in Vercel config
+					const is_root = route.id === '/';
+					const route_fs_name = is_root ? 'index' : route.id.slice(1);
+					const route_dest_name = is_root ? '' : route.id.slice(1);
+
+					// Define paths using path.join for safety
+					const base_dir = path.join(dirs.functions, route_fs_name); // e.g., .vercel/output/functions/index
+					// The main symlink should be named based on the route, adjacent to its potential directory
+					const main_symlink_path = `${base_dir}.func`; // e.g., .vercel/output/functions/index.func
+					// The data symlink goes inside the directory
+					const data_symlink_path = path.join(base_dir, '__data.json.func'); // e.g., .vercel/output/functions/index/__data.json.func
+
+					const target = path.join(dirs.functions, `${name}.func`); // The actual function directory e.g., .vercel/output/functions/![-].func
+
+					// Ensure the directory for the data endpoint symlink exists (e.g., functions/index/)
+					builder.mkdirp(base_dir);
+
+					// Calculate relative paths FROM the directory containing the symlink TO the target
+					const relative_for_main = path.relative(path.dirname(main_symlink_path), target);
+					const relative_for_data = path.relative(path.dirname(data_symlink_path), target); // This is path.relative(base_dir, target)
+
+					// Create symlinks
+					fs.symlinkSync(relative_for_main, main_symlink_path); // Creates functions/index.func -> ![-].func
+					fs.symlinkSync(relative_for_data, data_symlink_path); // Creates functions/index/__data.json.func -> ../![-].func
+
+					// Add route to the config
+					static_config.routes.push({
+						src: src + '(?:/__data.json)?$', // Matches the incoming request path
+						dest: `/${route_dest_name}` // Maps to the function: '/' for root, '/about' for about, etc.
+						// Vercel uses this dest to find the corresponding .func dir/symlink
+					});
 				}
-			}
-
-			if (!singular) {
-				// we need to create a catch-all route so that 404s are handled
-				// by SvelteKit rather than Vercel
-
-				const runtime = defaults.runtime ?? get_default_runtime();
-				const generate_function =
-					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
-
-				await generate_function(
-					DEFAULT_FUNCTION_NAME,
-					/** @type {any} */ ({ runtime, ...defaults }),
-					[]
-				);
 			}
 
 			// optional chaining to support older versions that don't have this setting yet
@@ -412,7 +446,7 @@ const plugin = function (defaults = {}) {
 
 			// Catch-all route must come at the end, otherwise it will swallow all other routes,
 			// including ISR aliases if there is only one function
-			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
+			static_config.routes.push({ src: '/.*', dest: `/${INTERNAL}/catchall` });
 
 			builder.log.minor('Writing routes...');
 

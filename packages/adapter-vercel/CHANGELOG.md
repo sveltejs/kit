@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 5.7.0
+### Minor Changes
+
+
+- feat: create symlink functions for each route, for better observability ([#13679](https://github.com/sveltejs/kit/pull/13679))
+
+
+### Patch Changes
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
 ## 5.6.3
 ### Patch Changes
 

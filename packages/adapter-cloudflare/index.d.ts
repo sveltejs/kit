@@ -6,20 +6,36 @@ export default function plugin(options?: AdapterOptions): Adapter;
 
 export interface AdapterOptions {
 	/**
-	 * Whether to render a plaintext 404.html page, or a rendered SPA fallback page. This page will
-	 * only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
+	 * Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/).
+	 */
+	config?: string;
+	/**
+	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
+	 * for non-matching asset requests.
+	 *
+	 * For Cloudflare Workers, the default behaviour is to return a null-body
+	 * 404-status response for non-matching assets requests. However, if the
+	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
+	 * Wrangler configuration setting is set to `"404-page"`, this page will be
+	 * served if a request fails to match an asset. If `assets.not_found_handling`
+	 * is set to `"single-page-application"`, the adapter will render a SPA fallback
+	 * index.html page regardless of the `fallback` option specified.
+	 *
+	 * For Cloudflare Pages, this page will only be served when a request that
+	 * matches an entry in `routes.exclude` fails to match an asset.
 	 *
 	 * Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
 	 * exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
 	 * use `spa` instead to avoid showing an unstyled 404 page to users.
+	 *
+	 * See [Cloudflare Pages' Not Found behavior](https://developers.cloudflare.com/pages/configuration/serving-pages/#not-found-behavior) for more info.
 	 *
 	 * @default 'plaintext'
 	 */
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Customize the automatically-generated `_routes.json` file.
-	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
+	 * Only for Cloudflare Pages. Customize the automatically-generated [`_routes.json`](https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file) file.
 	 */
 	routes?: {
 		/**
@@ -45,7 +61,7 @@ export interface AdapterOptions {
 	};
 
 	/**
-	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
+	 * Config object passed to [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;

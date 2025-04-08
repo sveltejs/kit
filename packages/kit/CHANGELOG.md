@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.20.4
+### Patch Changes
+
+
+- chore: remove internal class-replacement hack that isn't needed anymore ([#13664](https://github.com/sveltejs/kit/pull/13664))
+
+## 2.20.3
+### Patch Changes
+
+
+- fix: only call `afterNavigate` once on app start when SSR is disabled ([#13593](https://github.com/sveltejs/kit/pull/13593))
+
 ## 2.20.2
 ### Patch Changes
 
