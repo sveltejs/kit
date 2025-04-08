@@ -115,7 +115,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 									try {
 										return (universal_cache ??= await import('../${universal_file}'))[prop];
 									} catch (error) {
-										console.error(\`${node.universal} was loaded because the value of the \${prop} export could not be statically analysed\`);
+										console.error(\`${node.universal} was loaded because the value of the \\\`\${prop}\\\` export could not be statically analysed\`);
 										throw error;
 									}
 								}
