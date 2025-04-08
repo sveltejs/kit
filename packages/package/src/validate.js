@@ -18,7 +18,7 @@ export function create_validator(options) {
 		},
 		validate() {
 			/** @type {Record<string, any>} */
-			const pkg = load_pkg_json();
+			const pkg = load_pkg_json(options.cwd);
 			const warnings = validate(pkg);
 			if (Object.keys(pkg).length === 0) {
 				warnings.push(
