@@ -162,6 +162,9 @@ export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace
 const parser = Parser.extend(tsPlugin());
 
 /**
+ * Collect all exports from a +page.js/+layout.js file.
+ * Returns `null` if we bail out from static analysis. E.g., it re-exports all
+ * named exports from another module and we can't be bothered to go down that rabbit hole.
  * @param {string} node_path
  */
 export function statically_analyse_exports(node_path) {
@@ -177,8 +180,6 @@ export function statically_analyse_exports(node_path) {
 	const static_exports = new Map();
 	/** @type {Set<string>} */
 	const dynamic_exports = new Set();
-	/** @type {boolean} */
-	let reexports_all_named_exports = false;
 
 	/**
 	 * @param {import('acorn').Pattern | null} node
@@ -206,8 +207,7 @@ export function statically_analyse_exports(node_path) {
 			dynamic_exports.add('default');
 			continue;
 		} else if (statement.type === 'ExportAllDeclaration') {
-			reexports_all_named_exports = true;
-			continue;
+			return null;
 		} else if (statement.type !== 'ExportNamedDeclaration') {
 			continue;
 		}
@@ -251,7 +251,6 @@ export function statically_analyse_exports(node_path) {
 
 	return {
 		static_exports,
-		dynamic_exports,
-		reexports_all_named_exports
+		dynamic_exports
 	};
 }

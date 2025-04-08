@@ -103,21 +103,21 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			const mod = statically_analyse_exports(node.universal);
 			const universal_file = resolve_symlinks(server_manifest, node.universal).chunk.file;
-			if (mod.reexports_all_named_exports) {
-				imports.push(
-					`import * as universal from '../${universal_file}';`
-				);
-				exports.push('export { universal };');
-			} else {
+			const mod = statically_analyse_exports(node.universal);
+			if (mod) {
 				exports.push(`const universal_dynamic_exports = new Set(${s(Array.from(mod.dynamic_exports))});`,
-					'let universal_cache;',
-					dedent`
+				'let universal_cache;',
+				dedent`
 					export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
 						async get(target, prop) {
 							if (universal_dynamic_exports.has(prop)) {
-								return (universal_cache ??= await import('../${universal_file}'))[prop];
+								try {
+									return (universal_cache ??= await import('../${universal_file}'))[prop];
+								} catch (error) {
+									console.error(\`${node.universal} was loaded because the value of the \${prop} export could not be statically analysed\`);
+									throw error;
+								}
 							}
 							return target[prop];
 						},
@@ -127,7 +127,18 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 						ownKeys(target) {
 							return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
 						}
-					});`)
+					});
+				`);
+			} else {
+				exports.push('export let universal;',
+					dedent`
+						try {
+							universal = await import('../${universal_file}');
+						} catch (error) {
+							console.error('${node.universal} was loaded because it re-exports all named exports from another module');
+							throw error;
+						}
+					`);
 			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}

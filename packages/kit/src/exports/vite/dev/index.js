@@ -213,16 +213,25 @@ export async function dev(vite, vite_config, svelte_config) {
 								return resolved.module;
 							};
 
-							if (mod.reexports_all_named_exports) {
-								result.universal = await load_universal_module();
-							} else {
+							if (mod) {
 								result.universal = new Proxy(Object.fromEntries(mod.static_exports), {
 									/**
 									 * @param {string} prop
 									 */
 									async get(target, prop) {
 										if (mod.dynamic_exports.has(prop)) {
-											return (await load_universal_module())[prop];
+											try {
+												return (await load_universal_module())[prop];
+											} catch (error) {
+												console.error(
+													colors
+														.bold()
+														.red(
+															`${node.universal} was loaded because the value of the \`${prop}\` export could not be statically analysed`
+														)
+												);
+												throw error;
+											}
 										}
 										return target[prop];
 									},
@@ -236,6 +245,19 @@ export async function dev(vite, vite_config, svelte_config) {
 										return [...Reflect.ownKeys(target), ...mod.dynamic_exports];
 									}
 								});
+							} else {
+								try {
+									result.universal = await load_universal_module();
+								} catch (error) {
+									console.error(
+										colors
+											.bold()
+											.red(
+												`${node.universal} was loaded because it re-exports all named exports from another module`
+											)
+									);
+									throw error;
+								}
 							}
 						}
 
