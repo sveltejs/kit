@@ -1517,22 +1517,25 @@ declare module '@sveltejs/kit' {
 		 * The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs
 		 * every time a WebSocket connection is opened.
 		 */
-		open?: import('crossws').Hooks['open'];
+		open?: (peer: Peer<Params, RouteId>) => MaybePromise<void>;
 		/**
 		 * The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook
 		 * runs every time a message is received from a WebSocket client.
 		 */
-		message?: import('crossws').Hooks['message'];
+		message?: (peer: Peer<Params, RouteId>, message: Message<Params, RouteId>) => MaybePromise<void>;
 		/**
 		 * The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs
 		 * every time a WebSocket connection is closed.
 		 */
-		close?: import('crossws').Hooks['close'];
+		close?: (
+			peer: Peer<Params, RouteId>,
+			details: { code?: number; reason?: string }
+		) => MaybePromise<void>;
 		/**
 		 * The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs
 		 * every time a WebSocket error occurs.
 		 */
-		error?: import('crossws').Hooks['error'];
+		error?: (peer: Peer<Params, RouteId>, error: import('crossws').WSError) => MaybePromise<void>;
 	}
 
 	/**
@@ -1541,7 +1544,15 @@ declare module '@sveltejs/kit' {
 	 * object that allows interacting with the connected client.
 	 * @since 2.21.0
 	 */
-	export type Peer = import('crossws').Peer;
+	export type Peer<
+		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		RouteId extends string | null = string | null
+	> = import('crossws').Peer & {
+		/** The original request object before upgrading to a WebSocket connection. */
+		request: Request;
+		/** Represents the initial request before upgrading to a WebSocket connection. */
+		event: RequestEvent<Params, RouteId>;
+	};
 
 	/**
 	 * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
@@ -1549,7 +1560,13 @@ declare module '@sveltejs/kit' {
 	 * object containing data from the client.
 	 * @since 2.21.0
 	 */
-	export type Message = import('crossws').Message;
+	export type Message<
+		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		RouteId extends string | null = string | null
+	> = import('crossws').Message & {
+		/** Access to the `Peer` that emitted the message. */
+		peer: Peer<Params, RouteId>;
+	};
 
 	/**
 	 * Shape of the `export const snapshot = {...}` object in a page or layout component.

@@ -1123,6 +1123,15 @@ test.describe('WebSockets', () => {
 		expect(error.message).toBe('close hook');
 	});
 
+	test('RequestEvent is available through Peer', async ({ page }) => {
+		await page.goto('/ws/request-event');
+		// test that event has been added to the Peer object
+		await expect(page.getByText('open: /ws/request-event')).toBeVisible();
+		// test that the modifications to Peer persists to other hooks
+		await page.locator('button', { hasText: 'send message' }).click();
+		await expect(page.getByText('message: /ws/request-event')).toBeVisible();
+	});
+
 	test('getPeers helper', async ({ page }) => {
 		await page.goto('/ws/helpers');
 		await expect(page.getByText('connected')).toBeVisible();

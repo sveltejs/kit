@@ -67,14 +67,14 @@ export async function respond(request, options, manifest, state) {
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {Promise<Partial<import('crossws').Hooks>>}
+ * @returns {Promise<import('@sveltejs/kit').Socket>}
  */
 export async function resolve_websocket_hooks(request, options, manifest, state) {
 	const result = await handle_request(request, options, manifest, state, true);
 
 	if (result instanceof Response) {
 		// if the result is a Response instead of WebSocket hooks, it means
-		// we should ignore the upgrade request and send back the response
+		// we should reject the upgrade
 		return {
 			upgrade: () => {
 				// we have to throw the Response to reject the upgrade
@@ -103,7 +103,7 @@ export async function resolve_websocket_hooks(request, options, manifest, state)
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean} upgrade
- * @returns {Promise<Response | import('crossws').Hooks>}
+ * @returns {Promise<Response | Required<import('@sveltejs/kit').Socket>>}
  */
 /**
  * @param {Request} request
@@ -111,7 +111,7 @@ export async function resolve_websocket_hooks(request, options, manifest, state)
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean=} upgrade
- * @returns {Promise<Response | import('crossws').Hooks>}
+ * @returns {Promise<Response | Required<import('@sveltejs/kit').Socket>>}
  */
 async function handle_request(request, options, manifest, state, upgrade) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
@@ -539,17 +539,29 @@ async function handle_request(request, options, manifest, state, upgrade) {
 						}
 
 						// if the x-sveltekit-upgrade header is missing we know we should
-						// abort the upgrade request because a custom response has been thrown
-						// from the upgrade hook or returned from the handle hook
+						// abort the upgrade request because it means a different response
+						// has been thrown from the upgrade hook or returned from the handle hook
 						if (!response.headers.has('x-sveltekit-upgrade')) {
 							throw response;
 						}
 
 						return response;
 					},
+					/**
+					 * @param {import('crossws').Peer} peer The Peer object before we modify it.
+					 */
 					open: async (peer) => {
+						// `peer.request` is a getter with no setter so this is the only way to override it
+						Object.defineProperty(peer, 'request', {
+							configurable: true,
+							enumerable: true,
+							get() {
+								return event.request;
+							}
+						});
+						/** @type {import('@sveltejs/kit').Peer} */ (peer).event = event;
 						try {
-							await node.socket?.open?.(peer);
+							await node.socket?.open?.(/** @type {import('@sveltejs/kit').Peer} */ (peer));
 						} catch (e) {
 							await handle_fatal_error(event, options, e);
 						}

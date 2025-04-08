@@ -101,7 +101,7 @@ If `adapter-node` can't correctly determine the URL of your deployment, you may 
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [`RequestEvent`](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
