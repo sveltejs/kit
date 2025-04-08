@@ -19,7 +19,7 @@ test('navigating to a non-existent route respects redirect thrown from the root 
 	expect(await page.textContent('h1')).toBe('home');
 });
 
-test('browser-only code is not executed on the server', async ({ page }) => {
+test('universal pages/layouts are not executed on the server', async ({ page }) => {
 	await page.goto('/browser-globals');
 	await expect(page.locator('p')).toHaveText('pathname: /browser-globals');
 });

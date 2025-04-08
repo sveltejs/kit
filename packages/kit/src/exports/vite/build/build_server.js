@@ -107,38 +107,32 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			const mod = statically_analyse_exports(node.universal);
 			if (mod) {
 				exports.push(`const universal_dynamic_exports = new Set(${s(Array.from(mod.dynamic_exports))});`,
-				'let universal_cache;',
-				dedent`
-					export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
-						async get(target, prop) {
-							if (universal_dynamic_exports.has(prop)) {
-								try {
-									return (universal_cache ??= await import('../${universal_file}'))[prop];
-								} catch (error) {
-									console.error(\`${node.universal} was loaded because the value of the \${prop} export could not be statically analysed\`);
-									throw error;
-								}
-							}
-							return target[prop];
-						},
-						has(target, prop) {
-							return prop in target || universal_dynamic_exports.has(prop);
-						},
-						ownKeys(target) {
-							return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
-						}
-					});
-				`);
-			} else {
-				exports.push('export let universal;',
+					'let universal_cache;',
 					dedent`
-						try {
-							universal = await import('../${universal_file}');
-						} catch (error) {
-							console.error('${node.universal} was loaded because it re-exports all named exports from another module');
-							throw error;
-						}
+						export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
+							async get(target, prop) {
+								if (universal_dynamic_exports.has(prop)) {
+									try {
+										return (universal_cache ??= await import('../${universal_file}'))[prop];
+									} catch (error) {
+										console.error(\`${node.universal} was loaded because the value of the \${prop} export could not be statically analysed\`);
+										throw error;
+									}
+								}
+								return target[prop];
+							},
+							has(target, prop) {
+								return prop in target || universal_dynamic_exports.has(prop);
+							},
+							ownKeys(target) {
+								return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
+							}
+						});
 					`);
+			} else {
+				// TODO: once we can use top-level await on the server we can log why the module was loaded when the import fails
+				imports.push(`import * as universal from '../${universal_file}';`);
+				exports.push('export { universal };');
 			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
