@@ -12,9 +12,14 @@ test('navigating to a non-existent route renders the default error page', async 
 	expect(await page.textContent('h1')).toBe('404');
 });
 
-test('navigating to a non-existent route redirects if redirect in the root layout', async ({
+test('navigating to a non-existent route respects redirect thrown from the root layout', async ({
 	page
 }) => {
 	await page.goto('/redirect');
 	expect(await page.textContent('h1')).toBe('home');
+});
+
+test('browser-only code is not executed on the server', async ({ page }) => {
+	await page.goto('/browser-globals');
+	await expect(page.locator('p')).toHaveText('pathname: /browser-globals');
 });
