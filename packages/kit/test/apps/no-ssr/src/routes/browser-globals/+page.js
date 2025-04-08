@@ -3,7 +3,7 @@
 const pathname = document.location.pathname;
 
 export function load() {
-  return {
-    pathname
-  }
+	return {
+		pathname
+	};
 }
