@@ -99,6 +99,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 
 		const static_exports = csr_only.get(i);
 
+		// TODO: delete server component code that is never used for SSR if we can be sure it's not imported by anything else
+
 		if (node.component && client_manifest && !static_exports) {
 			exports.push(
 				'let component_cache;',
