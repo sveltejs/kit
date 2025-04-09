@@ -3,7 +3,7 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import path, { basename } from 'node:path';
+import { basename, join } from 'node:path';
 import { get_csr_only_nodes } from '../utils.js';
 
 /**
@@ -76,7 +76,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 
 	const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
 		// Windows needs the file:// protocol for absolute path dynamic imports
-		return import(`file://${path.join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
 	});
 
 	manifest_data.nodes.forEach((node, i) => {
