@@ -269,7 +269,7 @@ export async function get_csr_only_nodes(manifest_data, resolve) {
 		const node_indexes = [...route.page.layouts, route.page.leaf];
 
 		for (const index of node_indexes) {
-			if (!index) continue;
+			if (index === undefined) continue;
 
 			const node = manifest_data.nodes[index];
 
@@ -293,15 +293,15 @@ export async function get_csr_only_nodes(manifest_data, resolve) {
 
 				Object.assign(options, exports);
 			} else {
-				// this node could be csr-only, so we add it to the map and it will be
-				// removed later if it's not
+				// if a node has no universal file, it could still inherit CSR-only mode
+				// from a parent node, so we add it to the map and remove it later if it's not
 				static_exports.set(index, {});
 			}
 		}
 
 		if (options?.ssr || options === null) {
 			for (const index of node_indexes) {
-				if (!index) continue;
+				if (index === undefined) continue;
 				ssr_lookup.add(index);
 			}
 		}
