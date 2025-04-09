@@ -216,8 +216,7 @@ export function create_builder({
 			if (!hooks) return;
 
 			const hooks_path = `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks].file}`;
-			const has_reroute_hook =
-				existsSync(hooks_path) && (await import(hooks_path).then((m) => 'reroute' in m));
+			const has_reroute_hook = existsSync(hooks_path) && !!(await import(hooks_path)).reroute;
 			if (has_reroute_hook) {
 				return hooks_path;
 			}
