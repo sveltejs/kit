@@ -22,7 +22,7 @@ export function create_validator(options) {
 			const warnings = validate(pkg);
 			if (Object.keys(pkg).length === 0) {
 				warnings.push(
-					'No package.json found in the current directory. Please create one or run this command in a package directory.'
+					'No package.json found in the current directory. Please create one or run this command in a directory containing one.'
 				);
 			}
 
