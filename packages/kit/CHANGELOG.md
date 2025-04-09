@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.20.5
+### Patch Changes
+
+
+- allow `HandleServerError` hook to access `getRequestEvent` ([#13666](https://github.com/sveltejs/kit/pull/13666))
+
+
+- fix: prevent Rollup warnings for undefined hooks ([#13687](https://github.com/sveltejs/kit/pull/13687))
+
 ## 2.20.4
 ### Patch Changes
 
