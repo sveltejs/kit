@@ -466,7 +466,7 @@ test.describe('Errors', () => {
 	test('error thrown from load on the server respects page options when rendering the error page', async ({
 		request
 	}) => {
-		const res = await request.get('/errors/load-error-page-options');
+		const res = await request.get('/errors/load-error-page-options/csr');
 		expect(res.status()).toBe(500);
 		const content = await res.text();
 		expect(content).toContain('Crashing now');
