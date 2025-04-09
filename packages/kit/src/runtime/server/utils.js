@@ -6,6 +6,7 @@ import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import { with_event } from '../app/server/event.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -107,7 +108,11 @@ export async function handle_error_and_jsonify(event, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (await options.hooks.handleError({ error, event, status, message })) ?? { message };
+	return (
+		(await with_event(event, () =>
+			options.hooks.handleError({ error, event, status, message })
+		)) ?? { message }
+	);
 }
 
 /**
@@ -162,4 +167,16 @@ export function stringify_uses(node) {
 	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * Returns `true` if the given path was prerendered
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {string} pathname Should include the base and be decoded
+ */
+export function has_prerendered_path(manifest, pathname) {
+	return (
+		manifest._.prerendered_routes.has(pathname) ||
+		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
+	);
 }

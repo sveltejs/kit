@@ -55,6 +55,18 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				);
 			}
 
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
 			const netlify_config = get_netlify_config();
 
 			// "build" is the default publish directory when Netlify detects SvelteKit
@@ -352,12 +364,12 @@ function generate_lambda_functions({ builder, publish, split, reroute_middleware
 	// so that generated redirects are appended to custom redirects
 	// rather than replaced by them
 	builder.log.minor('Writing redirects...');
-	const redirect_file = join(publish, '_redirects');
+	const redirects_file = join(publish, '_redirects');
 	if (existsSync('_redirects')) {
-		builder.copy('_redirects', redirect_file);
+		builder.copy('_redirects', redirects_file);
 	}
-	builder.mkdirp(dirname(redirect_file));
-	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
+	builder.mkdirp(dirname(redirects_file));
+	appendFileSync(redirects_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {

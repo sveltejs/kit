@@ -678,7 +678,19 @@ Tips:
 								manualChunks: split ? undefined : () => 'bundle',
 								inlineDynamicImports: false
 							},
-							preserveEntrySignatures: 'strict'
+							preserveEntrySignatures: 'strict',
+							onwarn(warning, handler) {
+								if (
+									warning.code === 'MISSING_EXPORT' &&
+									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
+								) {
+									// ignore e.g. undefined `handleError` hook when
+									// referencing `client_hooks.handleError`
+									return;
+								}
+
+								handler(warning);
+							}
 						},
 						ssrEmitAssets: true,
 						target: ssr ? 'node18.13' : undefined

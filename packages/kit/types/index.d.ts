@@ -807,7 +807,7 @@ declare module '@sveltejs/kit' {
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: { url: URL }) => MaybePromise<void | string>;
+	export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 	/**
 	 * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
@@ -983,7 +983,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1005,7 +1005,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Info about the target route
 		 */
-		route: { id: string | null };
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: string | null;
+		};
 		/**
 		 * The URL that is navigated to
 		 */
@@ -1013,7 +1018,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * - `enter`: The app has hydrated
+	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form>` with a GET method
 	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
 	 * - `link`: Navigation was triggered by a link click
@@ -1089,7 +1094,7 @@ declare module '@sveltejs/kit' {
 	export interface AfterNavigate extends Omit<Navigation, 'type'> {
 		/**
 		 * The type of navigation:
-		 * - `enter`: The app has hydrated
+		 * - `enter`: The app has hydrated/started
 		 * - `form`: The user submitted a `<form>`
 		 * - `link`: Navigation was triggered by a link click
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1122,7 +1127,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -1198,7 +1203,7 @@ declare module '@sveltejs/kit' {
 		 */
 		route: {
 			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
 			id: RouteId;
 		};
@@ -2422,6 +2427,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
+	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2435,6 +2441,13 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+	/**
+	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
+	 *
+	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * @since 2.20.0
+	 */
+	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
 	export {};
 }

@@ -825,7 +825,7 @@ export type ClientInit = () => MaybePromise<void>;
  * The [`reroute`](https://svelte.dev/docs/kit/hooks#Universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
  * @since 2.3.0
  */
-export type Reroute = (event: { url: URL }) => MaybePromise<void | string>;
+export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 /**
  * The [`transport`](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) hook allows you to transport custom types across the server/client boundary.
@@ -1001,7 +1001,7 @@ export interface NavigationEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1023,7 +1023,12 @@ export interface NavigationTarget {
 	/**
 	 * Info about the target route
 	 */
-	route: { id: string | null };
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 */
+		id: string | null;
+	};
 	/**
 	 * The URL that is navigated to
 	 */
@@ -1031,7 +1036,7 @@ export interface NavigationTarget {
 }
 
 /**
- * - `enter`: The app has hydrated
+ * - `enter`: The app has hydrated/started
  * - `form`: The user submitted a `<form>` with a GET method
  * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
  * - `link`: Navigation was triggered by a link click
@@ -1107,7 +1112,7 @@ export interface OnNavigate extends Navigation {
 export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
-	 * - `enter`: The app has hydrated
+	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form>`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1140,7 +1145,7 @@ export interface Page<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};
@@ -1216,7 +1221,7 @@ export interface RequestEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
 		id: RouteId;
 	};

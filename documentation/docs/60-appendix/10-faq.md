@@ -8,40 +8,16 @@ Please see [the Svelte FAQ](../svelte/faq) and [`vite-plugin-svelte` FAQ](https:
 
 ## What can I make with SvelteKit?
 
-SvelteKit can be used to create most kinds of applications. Out of the box, SvelteKit supports many features including:
-
-- Dynamic page content with [load](load) functions and [API routes](routing#server).
-- SEO-friendly dynamic content with [server-side rendering (SSR)](glossary#SSR).
-- User-friendly progressively-enhanced interactive pages with SSR and [Form Actions](form-actions).
-- Static pages with [prerendering](page-options#prerender).
-
-SvelteKit can also be deployed to a wide spectrum of hosted architectures via [adapters](adapters). In cases where SSR is used (or server-side logic is added without prerendering), those functions will be adapted to the target backend. Some examples include:
-
-- Self-hosted dynamic web applications with a [Node.js backend](adapter-node).
-- Serverless web applications with backend loaders and APIs deployed as remote functions. See [zero-config deployments](adapter-auto) for popular deployment options.
-- [Static pre-rendered sites](adapter-static) such as a blog or multi-page site hosted on a CDN or static host. Statically-generated sites are shipped without a backend.
-- [Single-page Applications (SPAs)](single-page-apps) with client-side routing and rendering for API-driven dynamic content. SPAs are shipped without a backend and are not server-rendered. This option is commonly chosen when bundling SvelteKit with an app written in PHP, .Net, Java, C, Golang, Rust, etc.
-- A mix of the above; some routes can be static, and some routes can use backend functions to fetch dynamic information. This can be configured with [page options](page-options) that includes the option to opt out of SSR.
-
-In order to support SSR, a JS backend — such as Node.js or Deno-based server, serverless function, or edge function — is required.
-
-It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [integrations](./integrations) for more examples and integrations.
+See [the documentation regarding project types](project-types) for more details.
 
 ## How do I include details from package.json in my application?
 
-You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](./configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
+If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
 
-```js
+```ts
+// @errors: 2732
 /// file: svelte.config.js
-// @filename: index.js
-/// <reference types="@types/node" />
-import { URL } from 'node:url';
-// ---cut---
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
-const path = fileURLToPath(new URL('package.json', import.meta.url));
-const pkg = JSON.parse(readFileSync(path, 'utf8'));
+import pkg from './package.json' with { type: 'json' };
 ```
 
 ## How do I fix the error I'm getting trying to include a package?

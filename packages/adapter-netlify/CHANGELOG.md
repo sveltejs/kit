@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 5.0.0
+### Major Changes
+
+
+- fix: error if the `_headers` and `_redirects` files are in the `/static` directory instead of the project root ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
 ## 4.4.2
 ### Patch Changes
 

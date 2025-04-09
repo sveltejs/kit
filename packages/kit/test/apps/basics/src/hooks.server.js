@@ -4,6 +4,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
+import { getRequestEvent } from '$app/server';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -36,6 +37,11 @@ export const handleError = ({ event, error: e, status, message }) => {
 		: {};
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+
+	if (event.url.pathname.startsWith('/get-request-event/')) {
+		const ev = getRequestEvent();
+		message = ev.locals.message;
+	}
 
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
@@ -150,6 +156,19 @@ export const handle = sequence(
 		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
 			event.locals.url = new URL(event.request.url);
 		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname.startsWith('/get-request-event/')) {
+			const e = getRequestEvent();
+
+			if (event !== e) {
+				throw new Error('event !== e');
+			}
+
+			e.locals.message = 'hello from hooks.server.js';
+		}
+
 		return resolve(event);
 	}
 );

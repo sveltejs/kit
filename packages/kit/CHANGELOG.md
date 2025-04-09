@@ -1,5 +1,59 @@
 # @sveltejs/kit
 
+## 2.20.4
+### Patch Changes
+
+
+- chore: remove internal class-replacement hack that isn't needed anymore ([#13664](https://github.com/sveltejs/kit/pull/13664))
+
+## 2.20.3
+### Patch Changes
+
+
+- fix: only call `afterNavigate` once on app start when SSR is disabled ([#13593](https://github.com/sveltejs/kit/pull/13593))
+
+## 2.20.2
+### Patch Changes
+
+
+- fix: allow non-prerendered API endpoint calls during reroute when prerendering ([#13616](https://github.com/sveltejs/kit/pull/13616))
+
+## 2.20.1
+### Patch Changes
+
+
+- fix: avoid using top-level await ([#13607](https://github.com/sveltejs/kit/pull/13607))
+
+## 2.20.0
+### Minor Changes
+
+
+- feat: add `getRequestEvent` to `$app/server` ([#13582](https://github.com/sveltejs/kit/pull/13582))
+
+## 2.19.2
+### Patch Changes
+
+
+- fix: lazily load CSS for dynamically imported components ([#13564](https://github.com/sveltejs/kit/pull/13564))
+
+## 2.19.1
+### Patch Changes
+
+
+- fix: allow reroute to point to prerendered route ([#13575](https://github.com/sveltejs/kit/pull/13575))
+
+## 2.19.0
+### Minor Changes
+
+
+- feat: provide `fetch` to `reroute` ([#13549](https://github.com/sveltejs/kit/pull/13549))
+
+
+### Patch Changes
+
+
+- chore: cache reroute results ([#13548](https://github.com/sveltejs/kit/pull/13548))
+
 ## 2.18.0
 ### Minor Changes
 

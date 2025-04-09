@@ -9,7 +9,7 @@ const mapping = {
 };
 
 /** @type {import("@sveltejs/kit").Reroute} */
-export const reroute = ({ url }) => {
+export const reroute = ({ url, fetch }) => {
 	//Try to rewrite the external url used in /reroute/external to the homepage - This should not work
 	if (browser && url.href.startsWith('https://expired.badssl.com')) {
 		return '/';
@@ -28,11 +28,15 @@ export const reroute = ({ url }) => {
 	}
 
 	if (url.pathname === '/reroute/async/a') {
-		return new Promise((resolve) => {
-			setTimeout(() => {
-				resolve('/reroute/async/b');
-			}, 100);
-		});
+		return fetch('/reroute/api').then((r) => r.text());
+	}
+
+	if (url.pathname === '/reroute/async/c') {
+		return fetch('/reroute/api/prerendered').then((r) => r.text());
+	}
+
+	if (url.pathname === '/reroute/prerendered/to-destination') {
+		return '/reroute/prerendered/destination';
 	}
 
 	if (url.pathname in mapping) {

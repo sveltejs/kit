@@ -335,8 +335,8 @@ test.describe('Load', () => {
 	}
 });
 
-test.describe('Page options', () => {
-	test('applies generated component styles with ssr=false (hides announcer)', async ({
+test.describe('SPA mode / no SSR', () => {
+	test('applies generated component styles (hides announcer)', async ({
 		page,
 		clicknav,
 		get_computed_style
@@ -346,9 +346,7 @@ test.describe('Page options', () => {
 
 		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
-});
 
-test.describe('SPA mode / no SSR', () => {
 	test('Can use browser-only global on client-only page through ssr config in handle', async ({
 		page,
 		read_errors
@@ -358,7 +356,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in +layout.js', async ({
+	test('can use browser-only global on client-only page through ssr config in +layout.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -367,7 +365,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in +page.js', async ({
+	test('can use browser-only global on client-only page through ssr config in +page.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -376,13 +374,18 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
 	});
 
-	test('Cannot use browser-only global on page because of ssr config in +page.js', async ({
+	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
+	});
+
+	test('afterNavigate is only called once during start', async ({ page }) => {
+		await page.goto('/no-ssr/after-navigate');
+		await expect(page.locator('p')).toHaveText('enter 1');
 	});
 });
 
@@ -1451,11 +1454,28 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply async reroute during client side navigation', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
 		await page.goto('/reroute/async');
 		await page.click("a[href='/reroute/async/a']");
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/async/a'
 		);
+	});
+
+	test('Apply async prerendered reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/c']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/prerendered');
+		await page.click("a[href='/reroute/prerendered/to-destination']");
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
 	});
 
 	test('Apply reroute after client-only redirects', async ({ page }) => {
