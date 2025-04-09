@@ -8,10 +8,9 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 export default async function middleware(request) {
 	const resolved_url = await applyReroute(request.url, reroute);
 
-	// a Netlify rewrite will invoke this function again but with the new URL,
-	// so we only return a URL if the rerouted path is different from the original
-	// to avoid an endless loop
-	if (request.url !== resolved_url.href) {
+	// to avoid an endless loop, we only rewrite the URL if the new pathname is different
+	// since a Netlify rewrite will always re-invoke this function with the returned URL
+	if (resolved_url) {
 		return resolved_url;
 	}
 }

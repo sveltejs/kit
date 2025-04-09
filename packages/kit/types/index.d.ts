@@ -2074,9 +2074,10 @@ declare module '@sveltejs/kit/adapter' {
 	 * If your deployment platform supports splitting your app into multiple functions,
 	 * you should run this in a middleware that runs before the main handler
 	 * to reroute the request to the correct function.
-	 * @since 2.19.0
+	 * @returns The new URL if the pathname was changed
+	 * @since 2.21.0
 	 */
-	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL>;
+	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL | void>;
 
 	export {};
 }

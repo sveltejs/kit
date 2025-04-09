@@ -1,5 +1,5 @@
 import { reroute } from '__HOOKS__';
-import { rewrite } from '@vercel/edge';
+import { rewrite, next } from '@vercel/edge';
 import { applyReroute } from '@sveltejs/kit/adapter';
 
 /**
@@ -8,5 +8,9 @@ import { applyReroute } from '@sveltejs/kit/adapter';
  */
 export default async function middleware(request) {
 	const resolved_url = await applyReroute(request.url, reroute);
-	return rewrite(resolved_url);
+	if (resolved_url) {
+		return rewrite(resolved_url);
+	}
+
+	return next();
 }
