@@ -213,3 +213,43 @@ test("set_internal isn't affected by defaults", () => {
 	expect(cookies.get('test')).toEqual('foo');
 	expect(new_cookies['test']?.options).toEqual(options);
 });
+
+test('no default values when setFromString is called', () => {
+	const { cookies, new_cookies } = cookies_setup();
+	const cookie_string = 'a=b; Path=/;';
+	cookies.setFromString(cookie_string);
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.secure, false);
+	assert.equal(opts?.httpOnly, false);
+	assert.equal(opts?.sameSite, undefined);
+});
+
+test('set all parameters when setFromString is called', () => {
+	const { cookies, new_cookies } = cookies_setup();
+	const cookie_string =
+		'a=b; Path=/; Max-Age=3600; Expires=Thu, 03 Apr 2025 00:41:07 GMT; Secure; HttpOnly; SameSite=Strict; domain=example.com';
+	cookies.setFromString(cookie_string);
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.sameSite, 'strict');
+	assert.equal(opts?.domain, 'example.com');
+	assert.equal(opts?.maxAge, 3600);
+	assert.isNotNull(opts.expires);
+});
+
+test('throw error when setFromString is called with empty string', () => {
+	const { cookies } = cookies_setup();
+	assert.throws(() => cookies.setFromString(''), 'Cannot pass empty string');
+});
+
+test('throw error when setFromString is called without name, value and path', () => {
+	const { cookies } = cookies_setup();
+	const cookie_string = 'Max-Age=3600; Expires=Thu, 03 Apr 2025 00:41:07 GMT; Secure; HttpOnly;';
+	assert.throws(
+		() => cookies.setFromString(cookie_string),
+		'Name, Value and Path are mandatory for cookie to be created.'
+	);
+});
