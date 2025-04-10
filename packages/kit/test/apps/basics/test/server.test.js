@@ -716,3 +716,10 @@ test.describe('getRequestEvent', () => {
 		expect(await response.text()).toBe('hello from hooks.server.js');
 	});
 });
+
+test.describe('$app/forms', () => {
+	test('deserialize works on the server', async ({ request }) => {
+		const response = await request.get('/deserialize');
+		expect(await response.json()).toEqual({ type: 'success', status: 200, data: { a: 1 } });
+	});
+});
