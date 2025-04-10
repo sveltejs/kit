@@ -4,6 +4,8 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
+import { statically_analyse_exports } from '../utils.js';
+import { dedent } from '../../../core/sync/utils.js';
 
 /**
  * @param {string} out
@@ -101,12 +103,38 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			imports.push(
-				`import * as universal from '../${
-					resolve_symlinks(server_manifest, node.universal).chunk.file
-				}';`
-			);
-			exports.push('export { universal };');
+			const universal_file = resolve_symlinks(server_manifest, node.universal).chunk.file;
+			const mod = statically_analyse_exports(node.universal);
+			if (mod) {
+				exports.push(`const universal_dynamic_exports = new Set(${s(Array.from(mod.dynamic_exports))});`,
+					'let universal_cache;',
+					dedent`
+						export const universal = new Proxy(${s(Object.fromEntries(mod.static_exports))}, {
+							async get(target, prop) {
+								const key = String(prop);
+								if (universal_dynamic_exports.has(key)) {
+									try {
+										return (universal_cache ??= await import('../${universal_file}'))[key];
+									} catch (error) {
+										console.error(\`${node.universal} was loaded because the value of the \\\`\${key}\\\` export could not be statically analysed\`);
+										throw error;
+									}
+								}
+								return target[key];
+							},
+							has(target, prop) {
+								return prop in target || universal_dynamic_exports.has(String(prop));
+							},
+							ownKeys(target) {
+								return [...Reflect.ownKeys(target), ...universal_dynamic_exports];
+							}
+						});
+					`);
+			} else {
+				// TODO: once we can use top-level await on the server we can log why the module was loaded when the import fails
+				imports.push(`import * as universal from '../${universal_file}';`);
+				exports.push('export { universal };');
+			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
