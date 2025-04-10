@@ -132,7 +132,7 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts.relativePath a relative path to the base directory of the app
 	 * @param opts.routes optional. In which format (esm or cjs) the manifest should be generated
-	 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler
+	 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler using the [`applyReroute`](https://svelte.dev/docs/kit/@sveltejs-kit-adapter#applyReroute) function
 	 */
 	generateManifest: (opts: {
 		relativePath: string;
@@ -153,7 +153,25 @@ export interface Builder {
 	getAppPath: () => string;
 	/**
 	 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
-	 * @since 2.19.0
+	 * @example
+	 * ```js
+	 * const reroutePath = builder.getReroutePath();
+	 * if (split && reroutePath) {
+	 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
+	 *   fs.writeFileSync(
+	 *     `${output}/manifest.js`,
+	 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
+	 *   );
+	 *
+	 *   // create a middleware that imports and runs the `reroute` hook
+	 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
+	 *     replace: {
+	 *       __HOOKS__: reroutePath
+	 *     }
+	 *   });
+	 * }
+	 * ```
+	 * @since 2.21.0
 	 */
 	getReroutePath: () => Promise<string | void>;
 

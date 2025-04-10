@@ -10,7 +10,7 @@ export default async function middleware(request) {
 
 	// to avoid an endless loop, we only rewrite the URL if the new pathname is different
 	// since a Netlify rewrite will always re-invoke this function with the returned URL
-	if (resolved_url) {
+	if (request.url !== resolved_url.href) {
 		return resolved_url;
 	}
 }
