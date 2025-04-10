@@ -246,6 +246,7 @@ export interface Cookies {
 	 *
 	 * If you do not specify name, value and path, it will throw an error.
 	 * @param cookie the cookie represented as string
+	 * @since 2.21.0
 	 */
 	setFromString: (cookie: string) => void;
 
