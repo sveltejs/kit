@@ -91,7 +91,6 @@ export async function POST({ request, platform }) {
 To make these types available to your app, install [`@cloudflare/workers-types`](https://www.npmjs.com/package/@cloudflare/workers-types) and reference them in your `src/app.d.ts`:
 
 ```ts
-// @errors: 2307
 /// file: src/app.d.ts
 +++import { KVNamespace, DurableObjectNamespace } from '@cloudflare/workers-types';+++
 
