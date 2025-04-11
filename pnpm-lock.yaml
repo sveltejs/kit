@@ -60,6 +60,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250312.0
         version: 4.20250312.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       worktop:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
@@ -198,6 +201,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       polka:
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -362,6 +368,9 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       devalue:
         specifier: ^5.1.0
         version: 5.1.0
@@ -2201,6 +2210,9 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
+  crossws@0.3.4:
+    resolution: {integrity: sha512-uj0O1ETYX1Bh6uSgktfPvwDiPYGQ3aI4qVsaC/LWpkIzGj1nUYm5FK3K+t11oOlpN01lGbprFCH4wBlKdJjVgw==}
+
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
@@ -3357,6 +3369,9 @@ packages:
 
   ufo@1.5.4:
     resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
+
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
 
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
@@ -4541,6 +4556,10 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
+  crossws@0.3.4:
+    dependencies:
+      uncrypto: 0.1.3
+
   cssesc@3.0.0: {}
 
   data-uri-to-buffer@2.0.2: {}
@@ -5642,6 +5661,8 @@ snapshots:
   typescript@5.6.3: {}
 
   ufo@1.5.4: {}
+
+  uncrypto@0.1.3: {}
 
   undici-types@5.26.5: {}
 

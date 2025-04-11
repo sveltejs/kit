@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler pages dev .svelte-kit/cloudflare  --port 8787",
+		"preview": "wrangler pages dev .svelte-kit/cloudflare --port 8787",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
