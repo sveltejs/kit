@@ -26,6 +26,8 @@
 				"**/.custom-out-dir/**",
 				"**/build/**",
 				"**/test-results/**",
+				"**/.netlify/**",
+				"**/dist/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
