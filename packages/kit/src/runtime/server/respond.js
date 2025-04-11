@@ -484,111 +484,107 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			});
 		};
 
-		if (upgrade && route?.endpoint) {
-			const node = await route.endpoint();
-			if (node.socket) {
-				if (DEV) {
-					__SVELTEKIT_TRACK__('websockets');
-				}
+		const node = upgrade && route?.endpoint ? await route.endpoint() : undefined;
+		if (node?.socket) {
+			if (DEV) {
+				__SVELTEKIT_TRACK__('websockets');
+			}
 
-				return {
-					upgrade: async ({ context }) => {
-						/** @type {Response} */
-						let response;
+			return {
+				upgrade: async ({ context }) => {
+					/** @type {Response} */
+					let response;
 
-						try {
-							response = await handle_hook(async (event) => {
-								/** @type {Response} */
-								let upgrade_response;
+					try {
+						response = await handle_hook(async (event) => {
+							/** @type {Response} */
+							let upgrade_response;
 
-								try {
-									/** @type {Response | ResponseInit | undefined} */
-									let result;
+							try {
+								/** @type {Response | ResponseInit | undefined} */
+								let result;
 
-									if (node.socket?.upgrade) {
-										Object.defineProperty(event, 'context', {
-											enumerable: true,
-											value: context
-										});
-										result =
-											(await node.socket.upgrade(
-												/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
-													event
-												)
-											)) ?? undefined;
-									}
-
-									upgrade_response =
-										result instanceof Response ? result : new Response(undefined, result);
-									upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
-								} catch (e) {
-									if (e instanceof HttpError) {
-										upgrade_response = text_or_json(e);
-									} else if (e instanceof Response) {
-										// crossws allows throwing a Response to abort the upgrade
-										upgrade_response = e;
-									} else {
-										throw e;
-									}
+								if (node.socket?.upgrade) {
+									Object.defineProperty(event, 'context', {
+										enumerable: true,
+										value: context
+									});
+									result =
+										(await node.socket.upgrade(
+											/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (event)
+										)) ?? undefined;
 								}
 
-								return upgrade_response;
-							});
-						} catch (e) {
-							return await redirect_or_fatal_error(e);
-						}
-
-						// if the x-sveltekit-upgrade header is missing we know we should
-						// abort the upgrade request because it means a different response
-						// has been thrown from the upgrade hook or returned from the handle hook
-						if (!response.headers.has('x-sveltekit-upgrade')) {
-							throw response;
-						}
-
-						return response;
-					},
-					/**
-					 * @param {import('crossws').Peer} peer The Peer object before we modify it.
-					 */
-					open: async (peer) => {
-						// `peer.request` is a getter with no setter so this is the only way to override it
-						Object.defineProperty(peer, 'request', {
-							configurable: true,
-							enumerable: true,
-							get() {
-								return event.request;
+								upgrade_response =
+									result instanceof Response ? result : new Response(undefined, result);
+								upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+							} catch (e) {
+								if (e instanceof HttpError) {
+									upgrade_response = text_or_json(e);
+								} else if (e instanceof Response) {
+									// crossws allows throwing a Response to abort the upgrade
+									upgrade_response = e;
+								} else {
+									throw e;
+								}
 							}
+
+							return upgrade_response;
 						});
-						/** @type {import('@sveltejs/kit').Peer} */ (peer).event = event;
-						try {
-							await node.socket?.open?.(/** @type {import('@sveltejs/kit').Peer} */ (peer));
-						} catch (e) {
-							await handle_fatal_error(event, options, e);
-						}
-					},
-					message: async (peer, message) => {
-						try {
-							await node.socket?.message?.(peer, message);
-						} catch (e) {
-							await handle_fatal_error(event, options, e);
-						}
-					},
-					close: async (peer, close_event) => {
-						try {
-							await node.socket?.close?.(peer, close_event);
-						} catch (e) {
-							await handle_fatal_error(event, options, e);
-						}
-					},
-					error: async (peer, error) => {
-						try {
-							await node.socket?.error?.(peer, error);
-						} catch (e) {
-							await handle_fatal_error(event, options, e);
-						}
+					} catch (e) {
+						return await redirect_or_fatal_error(e);
 					}
-				};
-			}
+
+					// if the x-sveltekit-upgrade header is missing we know we should
+					// abort the upgrade request because it means a different response
+					// has been thrown from the upgrade hook or returned from the handle hook
+					if (!response.headers.has('x-sveltekit-upgrade')) {
+						throw response;
+					}
+
+					return response;
+				},
+				/**
+				 * @param {import('crossws').Peer} peer The Peer object before we modify it.
+				 */
+				open: async (peer) => {
+					// `peer.request` is a getter with no setter so this is the only way to override it
+					Object.defineProperty(peer, 'request', {
+						configurable: true,
+						enumerable: true,
+						get() {
+							return event.request;
+						}
+					});
+					/** @type {import('@sveltejs/kit').Peer} */ (peer).event = event;
+					try {
+						await node.socket?.open?.(/** @type {import('@sveltejs/kit').Peer} */ (peer));
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				message: async (peer, message) => {
+					try {
+						await node.socket?.message?.(peer, message);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				close: async (peer, close_event) => {
+					try {
+						await node.socket?.close?.(peer, close_event);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				},
+				error: async (peer, error) => {
+					try {
+						await node.socket?.error?.(peer, error);
+					} catch (e) {
+						await handle_fatal_error(event, options, e);
+					}
+				}
+			};
 		}
 
 		const response = await handle_hook(resolve);
