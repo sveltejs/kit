@@ -13,26 +13,6 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-/**
- * TODO(serhalp) Replace this custom type with an import from `@netlify/edge-functions`,
- * once that type is fixed to include `excludedPath` and `function`.
- * @typedef {{
- *	 functions: Array<
- *		 | {
- *				 function: string;
- *				 path: string;
- *				 excludedPath?: string | string[];
- *		   }
- *		 | {
- *				 function: string;
- *				 pattern: string;
- *				 excludedPattern?: string | string[];
- *		   }
- *	 >;
- *	 version: 1;
- *	 }} HandlerManifest
- */
-
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -233,7 +213,7 @@ async function bundle_edge_function({ builder, name, reroute_middleware }) {
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
+	const excluded = [
 		// Contains static files
 		`/${builder.getAppPath()}/*`,
 		...builder.prerendered.paths,
@@ -251,13 +231,13 @@ async function bundle_edge_function({ builder, name, reroute_middleware }) {
 		'/.netlify/*'
 	];
 
-	/** @type {HandlerManifest} */
+	/** @type {import('@netlify/edge-functions').Manifest} */
 	const edge_manifest = {
 		functions: [
 			{
 				function: name,
 				path,
-				excludedPath
+				excludedPath: /** @type {`/${string}`[]} */ (excluded)
 			}
 		],
 		version: 1

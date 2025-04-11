@@ -46,6 +46,7 @@
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
+		"@netlify/edge-functions": "^2.11.1",
 		"@netlify/functions": "^3.0.0",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",

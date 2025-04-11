@@ -1,5 +1,5 @@
 import { reroute } from '__HOOKS__';
-import { rewrite, next } from '@vercel/edge';
+import { rewrite } from '@vercel/edge';
 import { applyReroute } from '@sveltejs/kit/adapter';
 
 /**
@@ -8,10 +8,5 @@ import { applyReroute } from '@sveltejs/kit/adapter';
  */
 export default async function middleware(request) {
 	const resolved_url = await applyReroute(request.url, reroute);
-	if (request.url !== resolved_url.href) {
-		// TODO: use header to store query params because Vercel discards empty value ones?
-		return rewrite(resolved_url);
-	}
-
-	return next();
+	return rewrite(resolved_url);
 }

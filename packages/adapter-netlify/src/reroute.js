@@ -1,16 +1,13 @@
 import { reroute } from '__HOOKS__';
 import { applyReroute } from '@sveltejs/kit/adapter';
 
-/**
- * @param {Request} request
- * @returns {Promise<URL | void>}
- */
-export default async function middleware(request) {
+/** @type {import('@netlify/edge-functions').EdgeFunction} */
+export default async function middleware(request, context) {
 	const resolved_url = await applyReroute(request.url, reroute);
 
-	// to avoid an endless loop, we only rewrite the URL if the new pathname is different
-	// since a Netlify rewrite will always re-invoke this function with the returned URL
-	if (request.url !== resolved_url.href) {
-		return resolved_url;
-	}
+	// Netlify rewrites can cause an endless loop because it will re-run this
+	// function with the rewritten URL. Therefore, we use `context.next` instead
+	// to specifically invoke the next function in the chain with the rewritten URL
+	const new_request = new Request(resolved_url, request);
+	return context.next(new_request);
 }
