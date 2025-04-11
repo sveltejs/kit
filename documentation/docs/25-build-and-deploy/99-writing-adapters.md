@@ -77,7 +77,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
-If your environment supports WebSockets, you will need to integrate [`crossws`](https://crossws.unjs.io/adapters) into your adapter by outputting code that:
+If your environment supports WebSockets, you will need to configure the `supports.webSockets` property returned by the adapter and integrate [`crossws`](https://crossws.unjs.io/adapters) into your adapter by outputting code that:
 
 - Initialises the server with the `crossws` adapter's `peers` and `publish` utilities by calling the `server.init({ env, peers, publish })` function
 - Listens for requests from the platform that have an `Upgrade: websocket` header, converts them to a standard `Request` if necessary, calls the `server.resolveWebSocketHooks(request, { getClientAddress })` function to resolve the WebSocket hooks, and passes it to the `crossws` adapter's `resolve` option.
