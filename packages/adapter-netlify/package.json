@@ -34,11 +34,13 @@
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
-		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
@@ -48,6 +50,7 @@
 	"devDependencies": {
 		"@netlify/edge-functions": "^2.11.1",
 		"@netlify/functions": "^3.0.0",
+		"@playwright/test": "^1.44.1",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",

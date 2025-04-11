@@ -37,9 +37,13 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@parcel/watcher",
+			"esbuild",
+			"netlify-cli",
+			"sharp",
 			"svelte-preprocess",
-			"workerd",
-			"esbuild"
+			"unix-dgram",
+			"workerd"
 		]
 	}
 }
