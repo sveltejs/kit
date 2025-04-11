@@ -4,8 +4,8 @@ import adapter from '../../../index.js';
 const config = {
 	kit: {
 		adapter: adapter({
-      split: true
-    })
+			split: true
+		})
 	}
 };
 
