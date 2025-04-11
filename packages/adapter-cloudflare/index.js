@@ -168,7 +168,7 @@ export default function (options = {}) {
 				socket: () => true,
 				getPeers: () => true,
 				publish: ({ route }) => {
-					// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable?
+					// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable
 					throw new Error(
 						`${name}: Cannot use \`publish\` from \`$app/server\` in route \`${route.id}\` because Cloudflare Workers cannot coordinate among multiple WebSocket connections without Durable Objects`
 					);
