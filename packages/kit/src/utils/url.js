@@ -1,4 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
+import getRelativePath from 'get-relative-path';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -75,6 +76,18 @@ export function decode_uri(uri) {
 		}
 		throw e;
 	}
+}
+
+/**
+ * Calculates the relative path between two URL pathnames.
+ * Note that `relative` from `node:path` works with file system paths which are subtly diffent.
+ * For example: it ignores trailing slashes, which are significant in URLs.
+ * @param {string} from
+ * @param {string} to
+ */
+export function relative_pathname(from, to) {
+	// TODO inline
+	return getRelativePath(from, to);
 }
 
 /**
