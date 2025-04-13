@@ -2145,6 +2145,12 @@ declare module '@sveltejs/kit/node' {
 	 * @since 2.4.0
 	 */
 	export function createReadableStream(file: string): ReadableStream;
+	/**
+	 * Calculates the relative path between two URL pathnames.
+	 * Note that `relative` from `node:path` works with file system paths which are subtly diffent.
+	 * For example: it ignores trailing slashes, which are significant in URLs.
+	 * */
+	export function relative_pathname(from: string, to: string): string;
 
 	export {};
 }
