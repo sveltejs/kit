@@ -658,6 +658,8 @@ function get_data(event, options, nodes, csp, global) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = e.path.slice(1);
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }

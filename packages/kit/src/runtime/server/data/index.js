@@ -263,6 +263,8 @@ export function get_data_json(event, options, nodes) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = 'data' + e.path;
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }
