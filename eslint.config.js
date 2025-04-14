@@ -14,6 +14,9 @@ export default [
 			'**/test-results',
 			'**/build',
 			'**/.custom-out-dir',
+			'**/.wrangler',
+			'**/.netlify',
+			'**/dist',
 			'packages/adapter-*/files'
 		]
 	},
@@ -32,9 +35,11 @@ export default [
 		ignores: [
 			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-netlify/test/apps/**/*',
+			'packages/adapter-netlify/rollup.config.js',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',
+			'packages/adapter-vercel/rollup.config.js',
 			'packages/create-svelte/shared/**/*',
 			'packages/create-svelte/templates/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',

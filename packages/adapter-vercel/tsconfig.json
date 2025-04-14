@@ -14,5 +14,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"exclude": ["src/edge", "files"]
+	"include": ["src/serverless.js", "index.js", "internal.d.ts", "utils.js", "test/**/*.js"]
 }
