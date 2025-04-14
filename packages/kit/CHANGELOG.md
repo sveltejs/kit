@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.7
+### Patch Changes
+
+
+- fix: regression when serializing server data ([#13709](https://github.com/sveltejs/kit/pull/13709))
+
 ## 2.20.6
 ### Patch Changes
 
