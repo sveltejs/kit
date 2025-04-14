@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.6
+### Patch Changes
+
+
+- fix: escape names of tracked search parameters ([`d3300c6a67908590266c363dba7b0835d9a194cf`](https://github.com/sveltejs/kit/commit/d3300c6a67908590266c363dba7b0835d9a194cf))
+
 ## 2.20.5
 ### Patch Changes
 
