@@ -1049,6 +1049,14 @@ test.describe('XSS', () => {
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
 	});
+
+	test('no xss via tracked search parameters', async ({ page }) => {
+		// https://github.com/sveltejs/kit/security/advisories/GHSA-6q87-84jw-cjhp
+		await page.goto('/xss/query-tracking?</script/><script>window.pwned%3D1</script/>');
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
+	});
 });
 
 test.describe('$app/server', () => {
