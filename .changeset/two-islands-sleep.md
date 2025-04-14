@@ -2,4 +2,4 @@
 '@sveltejs/adapter-auto': patch
 ---
 
-fix: better error message when exporting `socket`
+fix: add error message when using WebSockets as they are unsupported
