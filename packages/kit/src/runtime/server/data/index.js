@@ -253,7 +253,7 @@ export function get_data_json(event, options, nodes) {
 				return JSON.stringify(node);
 			}
 
-			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${JSON.stringify(
+			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
 				serialize_uses(node)
 			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 		});
