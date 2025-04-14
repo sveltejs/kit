@@ -1474,6 +1474,12 @@ packages:
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
 
+  '@eslint-community/eslint-utils@4.6.0':
+    resolution: {integrity: sha512-WhCn7Z7TauhBtmzhvKpoQs0Wwb/kBcy4CwpuI0/eEIr2Lx2auxmulAzLr91wVZJaz47iUZdkXOK7WlAfxGKCnA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
+
   '@eslint-community/regexpp@4.12.1':
     resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
@@ -3825,6 +3831,11 @@ snapshots:
       eslint: 9.6.0
       eslint-visitor-keys: 3.4.3
 
+  '@eslint-community/eslint-utils@4.6.0(eslint@9.6.0)':
+    dependencies:
+      eslint: 9.6.0
+      eslint-visitor-keys: 3.4.3
+
   '@eslint-community/regexpp@4.12.1': {}
 
   '@eslint/config-array@0.17.0':
@@ -4312,7 +4323,7 @@ snapshots:
 
   '@typescript-eslint/utils@8.29.1(eslint@9.6.0)(typescript@5.6.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.5.1(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.6.0(eslint@9.6.0)
       '@typescript-eslint/scope-manager': 8.29.1
       '@typescript-eslint/types': 8.29.1
       '@typescript-eslint/typescript-estree': 8.29.1(typescript@5.6.3)
@@ -4655,14 +4666,14 @@ snapshots:
 
   eslint-plugin-es-x@7.8.0(eslint@9.6.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.5.1(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.6.0(eslint@9.6.0)
       '@eslint-community/regexpp': 4.12.1
       eslint: 9.6.0
       eslint-compat-utils: 0.5.1(eslint@9.6.0)
 
   eslint-plugin-n@17.16.1(eslint@9.6.0)(typescript@5.6.3):
     dependencies:
-      '@eslint-community/eslint-utils': 4.5.1(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.6.0(eslint@9.6.0)
       '@typescript-eslint/utils': 8.29.1(eslint@9.6.0)(typescript@5.6.3)
       enhanced-resolve: 5.18.1
       eslint: 9.6.0
@@ -4679,7 +4690,7 @@ snapshots:
 
   eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.23.1):
     dependencies:
-      '@eslint-community/eslint-utils': 4.5.1(eslint@9.6.0)
+      '@eslint-community/eslint-utils': 4.6.0(eslint@9.6.0)
       '@jridgewell/sourcemap-codec': 1.5.0
       eslint: 9.6.0
       eslint-compat-utils: 0.5.1(eslint@9.6.0)
