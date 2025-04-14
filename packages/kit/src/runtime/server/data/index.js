@@ -253,7 +253,7 @@ export function get_data_json(event, options, nodes) {
 				return JSON.stringify(node);
 			}
 
-			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${JSON.stringify(
+			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
 				serialize_uses(node)
 			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 		});
@@ -263,6 +263,8 @@ export function get_data_json(event, options, nodes) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = 'data' + e.path;
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }
