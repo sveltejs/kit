@@ -8,11 +8,7 @@ const initialized = server.init({
 	env: Deno.env.toObject()
 });
 
-/**
- * @param { Request } request
- * @param { any } context
- * @returns { Promise<Response> }
- */
+/** @type {import('@netlify/edge-functions').EdgeFunction} */
 export default async function handler(request, context) {
 	await initialized;
 	return server.respond(request, {

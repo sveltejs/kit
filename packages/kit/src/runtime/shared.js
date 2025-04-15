@@ -14,3 +14,5 @@ export function validate_depends(route_id, dep) {
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
+
+export const ORIGINAL_PATH_PARAM = 'x-sveltekit-original-path';
