@@ -37,9 +37,10 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"esbuild",
+			"sharp",
 			"svelte-preprocess",
-			"workerd",
-			"esbuild"
+			"workerd"
 		]
 	}
 }
