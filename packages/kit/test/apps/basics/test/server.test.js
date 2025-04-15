@@ -616,11 +616,13 @@ test.describe('Static files', () => {
 		expect(await r2.json()).toEqual({ works: true });
 	});
 
-	test('Serves symlinked asset', async ({ request }) => {
-		const response = await request.get('/symlink-from/hello.txt');
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('hello');
-	});
+	if (process.platform !== 'win32') {
+		test('Serves symlinked asset', async ({ request }) => {
+			const response = await request.get('/symlink-from/hello.txt');
+			expect(response.status()).toBe(200);
+			expect(await response.text()).toBe('hello');
+		});
+	}
 });
 
 test.describe('setHeaders', () => {
