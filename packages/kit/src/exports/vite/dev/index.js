@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { not_found } from '../utils.js';
+import { not_found, statically_analyse_exports } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -202,9 +202,58 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const { module, module_node } = await resolve(node.universal);
-							module_nodes.push(module_node);
-							result.universal = module;
+							const mod = statically_analyse_exports(node.universal);
+
+							/** @type {{ module: Record<string, any>; module_node: import('vite').ModuleNode; }} */
+							let resolved;
+							const load_universal_module = async () => {
+								if (resolved) return resolved.module;
+								resolved = await resolve(/** @type {string} */ (node.universal));
+								module_nodes.push(resolved.module_node);
+								return resolved.module;
+							};
+
+							if (mod) {
+								result.universal = new Proxy(Object.fromEntries(mod.static_exports), {
+									async get(target, prop) {
+										const key = String(prop);
+										if (mod.dynamic_exports.has(key)) {
+											try {
+												return (await load_universal_module())[key];
+											} catch (error) {
+												console.error(
+													colors
+														.bold()
+														.red(
+															`${node.universal} was loaded because the value of the \`${key}\` export could not be statically analysed`
+														)
+												);
+												throw error;
+											}
+										}
+										return target[key];
+									},
+									has(target, prop) {
+										return prop in target || mod.dynamic_exports.has(String(prop));
+									},
+									ownKeys(target) {
+										return [...Reflect.ownKeys(target), ...mod.dynamic_exports];
+									}
+								});
+							} else {
+								try {
+									result.universal = await load_universal_module();
+								} catch (error) {
+									console.error(
+										colors
+											.bold()
+											.red(
+												`${node.universal} was loaded because it re-exports all named exports from another module`
+											)
+									);
+									throw error;
+								}
+							}
 						}
 
 						if (node.server) {
