@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import crossws from 'crossws/adapters/node';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
@@ -14,7 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{ middlewares: import('connect').Server }} vite
+ * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -45,13 +46,47 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	set_assets(assets);
 
+	/** @type {import('crossws').ResolveHooks} */
+	let resolve_websocket_hooks;
+	const ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req),
+		serverOptions: {
+			// we need to disable the `ws` package's default behaviour of automatically
+			// returning the request's sec-websocket-protocol header in the response
+			// to avoid sending that header multiple times if the user also returns that header.
+			// TODO: we could remove this if https://github.com/unjs/crossws/pull/142 standardises this behaviour
+			handleProtocols: () => false
+		}
+	});
+
 	const server = new Server(manifest);
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		read: (file) => createReadableStream(`${dir}/${file}`)
+		read: (file) => createReadableStream(`${dir}/${file}`),
+		peers: ws.peers,
+		publish: ws.publish
 	});
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	/**
+	 * @param {import('node:http').IncomingMessage} req
+	 */
+	function get_base(req) {
+		const host = req.headers[':authority'] || req.headers.host;
+		return `${protocol}://${host}`;
+	}
+
+	/**
+	 * @param {string} file
+	 */
+	function read(file) {
+		if (file in manifest._.server_assets) {
+			return fs.readFileSync(join(dir, file));
+		}
+
+		return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+	}
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -183,30 +218,52 @@ export async function preview(vite, vite_config, svelte_config) {
 			})
 		);
 
+		vite.httpServer.on(
+			'upgrade',
+			/**
+			 * @param {import('node:http').IncomingMessage} req
+			 * @param {import('node:stream').Duplex} socket
+			 * @param {Buffer} head
+			 */
+			async (req, socket, head) => {
+				if (req.headers.upgrade === 'websocket') {
+					const request = await getRequest({
+						base: get_base(req),
+						request: req
+					});
+
+					const hooks = await server.resolveWebSocketHooks(request, {
+						getClientAddress: get_client_address(req),
+						read,
+						emulator
+					});
+
+					resolve_websocket_hooks = () => hooks;
+
+					// eslint-disable-next-line @typescript-eslint/await-thenable -- this function call is awaitable but the crossws type fix hasn't been released yet
+					await ws.handleUpgrade(req, socket, head);
+					// TODO: remove this block once https://github.com/unjs/crossws/pull/140 is merged
+					if (socket.writableFinished) {
+						socket.destroy();
+					} else {
+						socket.once('finish', socket.destroy);
+					}
+				}
+			}
+		);
+
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers[':authority'] || req.headers.host;
-
 			const request = await getRequest({
-				base: `${protocol}://${host}`,
+				base: get_base(req),
 				request: req
 			});
 
 			await setResponse(
 				res,
 				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
+					getClientAddress: get_client_address(req),
+					read,
 					emulator
 				})
 			);
@@ -252,3 +309,14 @@ function scoped(scope, handler) {
 function is_file(path) {
 	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }
+
+/**
+ * @param {import('node:http').IncomingMessage} req
+ */
+const get_client_address = (req) => {
+	return () => {
+		const { remoteAddress } = req.socket;
+		if (remoteAddress) return remoteAddress;
+		throw new Error('Could not determine clientAddress');
+	};
+};

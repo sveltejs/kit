@@ -159,6 +159,34 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
+		const headers = event.request.headers;
+		const upgrade = headers.get('upgrade') === 'websocket';
+
+		if (
+			upgrade &&
+			event.url.pathname === '/ws/handle' &&
+			event.url.searchParams.has('set-cookie')
+		) {
+			event.cookies.set('ws', 'test', { path: '/ws' });
+		}
+
+		if (
+			upgrade &&
+			event.url.pathname === '/ws/handle' &&
+			event.url.searchParams.has('set-headers')
+		) {
+			event.setHeaders({ 'x-sveltekit-ws': 'test' });
+		}
+
+		const response = await resolve(event);
+
+		if (upgrade && event.url.pathname === '/ws/handle' && event.url.searchParams.has('custom')) {
+			return new Response('custom response');
+		}
+
+		return response;
+	},
+	async ({ event, resolve }) => {
 		if (event.url.pathname.startsWith('/get-request-event/')) {
 			const e = getRequestEvent();
 

@@ -34,7 +34,7 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 ### Compressing responses
 
-You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+You will typically want to compress responses coming from the server. If you're already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
 
 However, if you're building a [custom server](#Custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
 
@@ -101,7 +101,7 @@ If `adapter-node` can't correctly determine the URL of your deployment, you may 
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [`RequestEvent`](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
@@ -241,12 +241,12 @@ WantedBy=sockets.target
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
 
-Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
+Alternatively, you can import the `handler.js` file, which exports handlers suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 
 ```js
 // @errors: 2307 7006
 /// file: my-server.js
-import { handler } from './build/handler.js';
+import { handler, upgradeHandler } from './build/handler.js';
 import express from 'express';
 
 const app = express();
@@ -256,10 +256,15 @@ app.get('/healthcheck', (req, res) => {
 	res.end('ok');
 });
 
-// let SvelteKit handle everything else, including serving prerendered pages and static assets
+// let SvelteKit handle serving prerendered pages, static assets, and SSR
 app.use(handler);
 
-app.listen(3000, () => {
+const server = app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
+
+// let SvelteKit handle upgrades for WebSocket connections
+server.on('upgrade', upgradeHandler);
 ```
+
+If you're manually handling the `SIGTERM` and `SIGINT` signal events to implement your own graceful shutdown, you must use the `closeAllWebSockets` and the `terminateAllWebSockets` helpers imported from the `handler.js` file to gracefully close or immediately terminate all active WebSocket connections.
