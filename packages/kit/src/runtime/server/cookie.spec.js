@@ -250,6 +250,6 @@ test('throw error when setSerialized is called without name, value and path', ()
 	const cookie_string = 'Max-Age=3600; Expires=Thu, 03 Apr 2025 00:41:07 GMT; Secure; HttpOnly;';
 	assert.throws(
 		() => cookies.setSerialized(cookie_string),
-		'Name, Value and Path are mandatory for cookie to be created.'
+		'The name, value and path must be provided to create a cookie.'
 	);
 });
