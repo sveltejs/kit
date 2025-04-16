@@ -142,7 +142,7 @@ export function get_cookies(request, url) {
 			const { name, value, path, sameSite, secure, httpOnly, ...opts } = parsed;
 
 			if (name === undefined || value === undefined || path === undefined) {
-				throw new Error('Name, Value and Path are mandatory for cookie to be created.');
+				throw new Error('The name, value and path must be provided to create a cookie.');
 			}
 
 			/**
