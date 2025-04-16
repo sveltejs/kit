@@ -140,6 +140,10 @@ const plugin = function (defaults = {}) {
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
 						platform: 'browser',
+						conditions: [
+							"edge-light",
+							"module" // Matching behavior of esbuild without custom conditions
+						],
 						format: 'esm',
 						external: [
 							...compatible_node_modules,
