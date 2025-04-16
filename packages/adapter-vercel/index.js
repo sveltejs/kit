@@ -141,8 +141,8 @@ const plugin = function (defaults = {}) {
 						bundle: true,
 						platform: 'browser',
 						conditions: [
-							"edge-light",
-							"module" // Matching behavior of esbuild without custom conditions
+							'edge-light',
+							'module' // Matching behavior of esbuild without custom conditions
 						],
 						format: 'esm',
 						external: [
