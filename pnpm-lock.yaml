@@ -9,9 +9,6 @@ catalogs:
     '@playwright/test':
       specifier: ^1.51.1
       version: 1.51.1
-    playwright:
-      specifier: ^1.51.1
-      version: 1.51.1
 
 importers:
 
@@ -20,6 +17,9 @@ importers:
       '@changesets/cli':
         specifier: ^2.27.11
         version: 2.27.11
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.51.1
       '@sveltejs/eslint-config':
         specifier: ^8.1.0
         version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.16.1(eslint@9.6.0)(typescript@5.6.3))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.23.1))(eslint@9.6.0)(typescript-eslint@8.26.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)
@@ -29,9 +29,6 @@ importers:
       eslint:
         specifier: ^9.6.0
         version: 9.6.0
-      playwright:
-        specifier: 'catalog:'
-        version: 1.51.1
       prettier:
         specifier: ^3.1.1
         version: 3.3.3

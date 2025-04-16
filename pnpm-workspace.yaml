@@ -11,5 +11,4 @@ packages:
   - 'playgrounds/*'
 
 catalog:
-  "playwright": "^1.51.1"
   "@playwright/test": "^1.51.1"
