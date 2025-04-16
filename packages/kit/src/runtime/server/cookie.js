@@ -154,7 +154,7 @@ export function get_cookies(request, url) {
 				}
 				const lower = sameSite.toLowerCase();
 				if (lower === 'lax' || lower === 'strict' || lower === 'none') {
-					return /** @type {"lax"|"strict"|"none"} */ (lower);
+					return /** @type {'lax'|'strict'|'none'} */ (lower);
 				}
 				return undefined;
 			})();
