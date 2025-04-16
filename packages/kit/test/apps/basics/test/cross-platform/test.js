@@ -34,7 +34,8 @@ test.describe('CSS', () => {
 
 	test('applies styles correctly', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
-
+		// without this assertion, the WebKit browser seems to close before we can compute the styles
+		await expect(page.locator('.styled')).toBeVisible();
 		check_styles(get_computed_style);
 	});
 
