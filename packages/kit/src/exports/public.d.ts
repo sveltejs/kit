@@ -248,7 +248,7 @@ export interface Cookies {
 	 * @param cookie the serialized cookie
 	 * @since 2.21.0
 	 */
-	setFromString: (cookie: string) => void;
+	setSerialized: (cookie: string) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
