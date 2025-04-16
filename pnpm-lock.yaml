@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@playwright/test':
+      specifier: ^1.51.1
+      version: 1.51.1
+
 importers:
 
   .:
@@ -11,6 +17,9 @@ importers:
       '@changesets/cli':
         specifier: ^2.27.11
         version: 2.27.11
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.51.1
       '@sveltejs/eslint-config':
         specifier: ^8.1.0
         version: 8.1.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.6.0))(eslint-config-prettier@9.1.0(eslint@9.6.0))(eslint-plugin-n@17.16.1(eslint@9.6.0)(typescript@5.6.3))(eslint-plugin-svelte@2.41.0(eslint@9.6.0)(svelte@5.23.1))(eslint@9.6.0)(typescript-eslint@8.26.0(eslint@9.6.0)(typescript@5.6.3))(typescript@5.6.3)
@@ -20,9 +29,6 @@ importers:
       eslint:
         specifier: ^9.6.0
         version: 9.6.0
-      playwright:
-        specifier: ^1.44.1
-        version: 1.44.1
       prettier:
         specifier: ^3.1.1
         version: 3.3.3
@@ -68,8 +74,8 @@ importers:
         version: 4.11.0(@cloudflare/workers-types@4.20250415.0)
     devDependencies:
       '@playwright/test':
-        specifier: ^1.44.1
-        version: 1.44.1
+        specifier: 'catalog:'
+        version: 1.51.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -214,8 +220,8 @@ importers:
   packages/adapter-static:
     devDependencies:
       '@playwright/test':
-        specifier: ^1.44.1
-        version: 1.44.1
+        specifier: 'catalog:'
+        version: 1.51.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -391,8 +397,8 @@ importers:
         version: 3.0.0
     devDependencies:
       '@playwright/test':
-        specifier: ^1.44.1
-        version: 1.44.1
+        specifier: 'catalog:'
+        version: 1.51.1
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.1
         version: 5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
@@ -1688,9 +1694,9 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.44.1':
-    resolution: {integrity: sha512-1hZ4TNvD5z9VuhNJ/walIjvMVvYkZKf71axoF/uiAqpntQJXpG64dlXhoDXE3OczPuTuvjf/M5KWFg5VAVUS3Q==}
-    engines: {node: '>=16'}
+  '@playwright/test@1.51.1':
+    resolution: {integrity: sha512-nM+kEaTSAoVlXmMPH10017vn3FSiFqr/bh4fKg9vmAdMfd9SDqRZNvPSiAHADc/itWak+qPvMPZQOPwCBW7k7Q==}
+    engines: {node: '>=18'}
     hasBin: true
 
   '@polka/url@1.0.0-next.28':
@@ -2944,14 +2950,14 @@ packages:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
 
-  playwright-core@1.44.1:
-    resolution: {integrity: sha512-wh0JWtYTrhv1+OSsLPgFzGzt67Y7BE/ZS3jEqgGBlp2ppp1ZDj8c+9IARNW4dwf1poq5MgHreEM2KV/GuR4cFA==}
-    engines: {node: '>=16'}
+  playwright-core@1.51.1:
+    resolution: {integrity: sha512-/crRMj8+j/Nq5s8QcvegseuyeZPxpQCZb6HNk3Sos3BlZyAknRjoyJPFWkpNn8v0+P3WiwqFF8P+zQo4eqiNuw==}
+    engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.44.1:
-    resolution: {integrity: sha512-qr/0UJ5CFAtloI3avF95Y0L1xQo6r3LQArLIg/z/PoGJ6xa+EwzrwO5lpNr/09STxdHuUoP2mvuELJS+hLdtgg==}
-    engines: {node: '>=16'}
+  playwright@1.51.1:
+    resolution: {integrity: sha512-kkx+MB2KQRkyxjYPc3a0wLZZoDczmppyGJIvQ43l+aZihkaVvmu/21kiyaHeHjiFxjxNNFnUncKmcGIyOojsaw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   polka@1.0.0-next.28:
@@ -4033,9 +4039,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.44.1':
+  '@playwright/test@1.51.1':
     dependencies:
-      playwright: 1.44.1
+      playwright: 1.51.1
 
   '@polka/url@1.0.0-next.28': {}
 
@@ -5252,11 +5258,11 @@ snapshots:
 
   pify@4.0.1: {}
 
-  playwright-core@1.44.1: {}
+  playwright-core@1.51.1: {}
 
-  playwright@1.44.1:
+  playwright@1.51.1:
     dependencies:
-      playwright-core: 1.44.1
+      playwright-core: 1.51.1
     optionalDependencies:
       fsevents: 2.3.2
 

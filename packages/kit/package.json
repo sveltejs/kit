@@ -31,7 +31,7 @@
 		"sirv": "^3.0.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.44.1",
+		"@playwright/test": "catalog:",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/connect": "^3.4.38",
 		"@types/node": "^18.19.48",
