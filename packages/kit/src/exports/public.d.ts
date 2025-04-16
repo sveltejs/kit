@@ -245,7 +245,7 @@ export interface Cookies {
 	 * No default values. It will set only properties you specified in a cookie.
 	 *
 	 * If you do not specify name, value and path, it will throw an error.
-	 * @param cookie the cookie represented as string
+	 * @param cookie the serialized cookie
 	 * @since 2.21.0
 	 */
 	setFromString: (cookie: string) => void;
