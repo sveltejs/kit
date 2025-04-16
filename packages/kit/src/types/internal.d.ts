@@ -199,6 +199,8 @@ export interface PageNode {
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
 	/** The `+page/layout.js/.ts`. */
 	universal?: string;
+	/** The `+page/layout.js/.ts` exports we could analyze statically, and their values */
+	universal_static_exports?: Omit<UniversalNode, 'load' | 'entries'> & Record<string, any>;
 	/** The `+page/layout.server.js/ts`. */
 	server?: string;
 	parent_id?: string;
@@ -409,6 +411,12 @@ export interface SSRNode {
 	universal?: UniversalNode;
 	/** +page.server.js, +layout.server.js, or +server.js */
 	server?: ServerNode;
+	statically_analysed_option?: {
+		ssr?: boolean;
+		csr?: boolean;
+		prerender?: boolean;
+		trailingSlash?: TrailingSlash;
+	};
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
