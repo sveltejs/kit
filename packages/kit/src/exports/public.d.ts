@@ -240,7 +240,7 @@ export interface Cookies {
 	) => void;
 
 	/**
-	 * Sets a cookie from a string. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
+	 * Sets a cookie from a string representing the value of the `set-cookie` header. This will add the `set-cookie` header to the response, and also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
 	 * No default values. It will set only properties you specified in a cookie.
 	 *
