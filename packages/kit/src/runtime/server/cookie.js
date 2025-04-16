@@ -146,7 +146,7 @@ export function get_cookies(request, url) {
 			}
 
 			/**
-			 * @type {true|false|"lax"|"strict"|"none"|undefined}
+			 * @type {true|false|'lax'|'strict'|'none'|undefined}
 			 */
 			const normalized_same_site = (() => {
 				if (sameSite === undefined || typeof sameSite === 'boolean') {
