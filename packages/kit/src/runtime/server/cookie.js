@@ -133,7 +133,7 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} cookie
 		 */
-		setFromString(cookie) {
+		setSerialized(cookie) {
 			if (cookie === '') {
 				throw new Error('Cannot pass empty string');
 			}

@@ -222,15 +222,15 @@ declare module '@sveltejs/kit' {
 		) => void;
 
 		/**
-		 * Sets a cookie from a string. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
+		 * Sets a cookie from a string representing the value of the `set-cookie` header. This will add the `set-cookie` header to the response, and also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 		 *
 		 * No default values. It will set only properties you specified in a cookie.
 		 *
 		 * If you do not specify name, value and path, it will throw an error.
-		 * @param cookie the cookie represented as string
+		 * @param cookie the serialized cookie
 		 * @since 2.21.0
 		 */
-		setFromString: (cookie: string) => void;
+		setSerialized: (cookie: string) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.

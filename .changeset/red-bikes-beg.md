@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add `cookie.setFromString()` to set a cookie from a string
+feat: add `cookie.setSerialized()` to set a cookie from a string
