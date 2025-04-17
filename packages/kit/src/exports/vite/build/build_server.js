@@ -187,9 +187,9 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		const inline_styles = [];
 
-		stylesheets.forEach((file) => {
+		stylesheets.forEach((file, i) => {
 			if (stylesheets_to_inline.has(file)) {
-				const [filename] = basename(file).split('.');
+				const filename = basename(file);
 				const dest = `${out}/server/stylesheets/${filename}.js`;
 				const source = stylesheets_to_inline.get(file);
 				if (!source) {
@@ -197,7 +197,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 				}
 				fs.writeFileSync(dest, `// ${filename}\nexport default ${s(source)};`);
 
-				const name = `stylesheet_${filename}`;
+				const name = `stylesheet_${i}`;
 				imports.push(`import ${name} from '../stylesheets/${filename}.js';`);
 				inline_styles.push(`\t${s(file)}: ${name}`);
 			}
