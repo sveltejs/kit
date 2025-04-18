@@ -141,8 +141,11 @@ const plugin = function (defaults = {}) {
 						bundle: true,
 						platform: 'browser',
 						conditions: [
+							// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
 							'edge-light',
-							'module' // Matching behavior of esbuild without custom conditions
+							// re-include these since they are included by default when no conditions are specified
+							// https://esbuild.github.io/api/#conditions
+							'module'
 						],
 						format: 'esm',
 						external: [
