@@ -5,7 +5,12 @@ import process from 'node:process';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
+import {
+	getRequest,
+	setResponse,
+	createReadableStream,
+	relative_pathname
+} from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
@@ -81,8 +86,11 @@ function serve_prerendered() {
 		}
 
 		// remove or add trailing slash as appropriate
-		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(location)) {
+		const inverted_trailing_slash =
+			pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(inverted_trailing_slash)) {
+			// ensure preservation of (possibly invisible) path prefixes
+			let location = relative_pathname(pathname, inverted_trailing_slash);
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
