@@ -138,7 +138,8 @@ const plugin = function (defaults = {}) {
 						entryPoints: [`${tmp}/edge.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
-						// see https://edge-runtime.vercel.app/features/polyfills
+						// https://edge-runtime.vercel.app/features/polyfills
+						// TODO verify the latest ES version the edge runtime supports
 						target: 'es2020',
 						bundle: true,
 						platform: 'browser',
