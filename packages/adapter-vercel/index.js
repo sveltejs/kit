@@ -137,7 +137,9 @@ const plugin = function (defaults = {}) {
 					const result = await esbuild.build({
 						entryPoints: [`${tmp}/edge.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
-						target: 'es2020', // TODO verify what the edge runtime supports
+						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
+						// see https://edge-runtime.vercel.app/features/polyfills
+						target: 'es2020',
 						bundle: true,
 						platform: 'browser',
 						conditions: [
