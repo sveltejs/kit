@@ -181,6 +181,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
+	/** @type {import('vite')} */
 	const vite = await resolve_peer_dependency('vite');
 
 	const { kit } = svelte_config;
@@ -787,7 +788,7 @@ Tips:
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -828,6 +829,7 @@ Tips:
 					server_manifest,
 					null,
 					null,
+					null,
 					svelte_config.output
 				);
 
@@ -852,7 +854,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
+				const { output: client_bundle } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -895,7 +897,7 @@ Tips:
 						imports: [...start.imports, ...app.imports],
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_bundle.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
@@ -944,14 +946,14 @@ Tips:
 						imports: start.imports,
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_bundle.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
 						const style = /** @type {import('rollup').OutputAsset} */ (
-							output.find(
+							client_bundle.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
 									chunk.names.length === 1 &&
@@ -965,11 +967,6 @@ Tips:
 						};
 					}
 				}
-
-				const css = output.filter(
-					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
-					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
-				);
 
 				// regenerate manifest now that we have client entry...
 				fs.writeFileSync(
@@ -989,7 +986,8 @@ Tips:
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					css,
+					bundle,
+					client_bundle,
 					svelte_config.kit.output
 				);
 
