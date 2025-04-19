@@ -36,7 +36,7 @@
 		"@types/connect": "^3.4.38",
 		"@types/node": "^18.19.48",
 		"@types/set-cookie-parser": "^2.4.7",
-		"dts-buddy": "^0.5.5",
+		"dts-buddy": "^0.6.0",
 		"rollup": "^4.14.2",
 		"svelte": "^5.23.1",
 		"svelte-preprocess": "^6.0.0",
