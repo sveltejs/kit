@@ -1,5 +1,5 @@
 ---
-title: Cloudflare Workers
+title: Cloudflare Workers Sites
 ---
 
 > [!NOTE] `adapter-cloudflare-workers` has been deprecated in favour of [`adapter-cloudflare`](adapter-cloudflare). We recommend using `adapter-cloudflare` to deploy to Cloudflare Workers with [Static Assets](https://developers.cloudflare.com/workers/static-assets/) since Cloudflare Workers Sites will be deprecated in favour of it.
