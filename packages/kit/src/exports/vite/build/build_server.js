@@ -3,7 +3,8 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename } from 'node:path';
+import path, { basename } from 'node:path';
+import { get_csr_only_nodes } from '../utils.js';
 
 /**
  * @param {string} out
@@ -14,7 +15,7 @@ import { basename } from 'node:path';
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -73,6 +74,11 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 	}
 
+	const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
+		// Windows needs the file:// protocol for absolute path dynamic imports
+		return import(`file://${path.join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+	});
+
 	manifest_data.nodes.forEach((node, i) => {
 		/** @type {string[]} */
 		const imports = [];
@@ -91,7 +97,9 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		let fonts = [];
 
-		if (node.component && client_manifest) {
+		const static_exports = csr_only.get(i);
+
+		if (node.component && client_manifest && !static_exports) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
@@ -101,12 +109,14 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			imports.push(
-				`import * as universal from '../${
-					resolve_symlinks(server_manifest, node.universal).chunk.file
-				}';`
-			);
-			exports.push('export { universal };');
+			if (static_exports) {
+				exports.push(`export const universal = ${s(static_exports, null, 2)};`)
+			} else {
+				imports.push(
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
+				);
+				exports.push('export { universal };');
+			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 

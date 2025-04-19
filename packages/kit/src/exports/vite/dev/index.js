@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { not_found } from '../utils.js';
+import { get_csr_only_nodes, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -101,7 +101,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	function update_manifest() {
+	async function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
 
@@ -123,6 +123,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 			return;
 		}
+
+		const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
+			const { module } = await resolve(server_node);
+			return module;
+		});
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -202,9 +207,14 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const { module, module_node } = await resolve(node.universal);
-							module_nodes.push(module_node);
-							result.universal = module;
+							const static_exports = csr_only.get(index);
+							if (static_exports) {
+								result.universal = static_exports;
+							} else {
+								const { module, module_node } = await resolve(node.universal);
+								module_nodes.push(module_node);
+								result.universal = module;
+							}
 						}
 
 						if (node.server) {
@@ -302,7 +312,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return error.stack;
 	}
 
-	update_manifest();
+	await update_manifest();
 
 	/**
 	 * @param {string} event

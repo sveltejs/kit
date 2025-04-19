@@ -29,6 +29,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	};
 
 	const load = node.server.load;
+	// TODO: shouldn't this be calculated using PageNodes? there could be a trailingSlash option on a layout
 	const slash = node.server.trailingSlash;
 
 	if (!load) {
