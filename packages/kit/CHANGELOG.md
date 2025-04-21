@@ -1,5 +1,38 @@
 # @sveltejs/kit
 
+## 2.20.7
+### Patch Changes
+
+
+- fix: regression when serializing server data ([#13709](https://github.com/sveltejs/kit/pull/13709))
+
+## 2.20.6
+### Patch Changes
+
+
+- fix: escape names of tracked search parameters ([`d3300c6a67908590266c363dba7b0835d9a194cf`](https://github.com/sveltejs/kit/commit/d3300c6a67908590266c363dba7b0835d9a194cf))
+
+## 2.20.5
+### Patch Changes
+
+
+- allow `HandleServerError` hook to access `getRequestEvent` ([#13666](https://github.com/sveltejs/kit/pull/13666))
+
+
+- fix: prevent Rollup warnings for undefined hooks ([#13687](https://github.com/sveltejs/kit/pull/13687))
+
+## 2.20.4
+### Patch Changes
+
+
+- chore: remove internal class-replacement hack that isn't needed anymore ([#13664](https://github.com/sveltejs/kit/pull/13664))
+
+## 2.20.3
+### Patch Changes
+
+
+- fix: only call `afterNavigate` once on app start when SSR is disabled ([#13593](https://github.com/sveltejs/kit/pull/13593))
+
 ## 2.20.2
 ### Patch Changes
 

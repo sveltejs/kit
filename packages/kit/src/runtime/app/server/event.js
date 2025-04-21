@@ -15,7 +15,7 @@ import('node:async_hooks')
 	});
 
 /**
- * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
+ * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
  *
  * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
  * @since 2.20.0
@@ -25,7 +25,7 @@ export function getRequestEvent() {
 
 	if (!event) {
 		let message =
-			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, and server endpoints.';
+			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.';
 
 		if (!als) {
 			message +=

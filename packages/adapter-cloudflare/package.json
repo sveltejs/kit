@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "6.0.1",
+	"version": "7.0.1",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"keywords": [
 		"adapter",
@@ -37,20 +37,22 @@
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20250312.0",
+		"@cloudflare/workers-types": "^4.20250415.0",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
+		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
-		"esbuild": "^0.24.0",
+		"esbuild": "^0.25.2",
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^3.87.0 || ^4.0.0"
+		"wrangler": "^4.0.0"
 	}
 }

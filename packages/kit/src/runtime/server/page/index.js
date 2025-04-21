@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
+import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -245,16 +246,22 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							let j = i;
 							while (!branch[j]) j -= 1;
 
+							const layouts = compact(branch.slice(0, j + 1));
+							const nodes = new PageNodes(layouts.map((layout) => layout.node));
+
 							return await render_response({
 								event,
 								options,
 								manifest,
 								state,
 								resolve_opts,
-								page_config: { ssr: true, csr: true },
+								page_config: {
+									ssr: nodes.ssr(),
+									csr: nodes.csr()
+								},
 								status,
 								error,
-								branch: compact(branch.slice(0, j + 1)).concat({
+								branch: layouts.concat({
 									node,
 									data: null,
 									server_data: null
