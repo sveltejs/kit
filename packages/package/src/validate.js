@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import colors from 'kleur';
+import { load_pkg_json } from './config.js';
 
 /**
  * @param {import("./types.js").Options} options
@@ -19,8 +18,14 @@ export function create_validator(options) {
 		},
 		validate() {
 			/** @type {Record<string, any>} */
-			const pkg = JSON.parse(readFileSync(join(options.cwd, 'package.json'), 'utf-8'));
+			const pkg = load_pkg_json(options.cwd);
 			const warnings = validate(pkg);
+			if (Object.keys(pkg).length === 0) {
+				warnings.push(
+					'No package.json found in the current directory. Please create one or run this command in a directory containing one.'
+				);
+			}
+
 			// Just warnings, not errors, because
 			// - would be annoying in watch mode (would have to restart the server)
 			// - maybe there's a custom post-build script that fixes some of these

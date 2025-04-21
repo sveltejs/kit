@@ -1,5 +1,5 @@
 ---
-title: Cloudflare Pages
+title: Cloudflare
 ---
 
 To deploy to [Cloudflare Workers](https://workers.cloudflare.com/) or [Cloudflare Pages](https://pages.cloudflare.com/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare).

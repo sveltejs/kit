@@ -2,7 +2,7 @@ import { HttpError, SvelteKitError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
@@ -253,8 +253,8 @@ export function get_data_json(event, options, nodes) {
 				return JSON.stringify(node);
 			}
 
-			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${stringify_uses(
-				node
+			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
+				serialize_uses(node)
 			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 		});
 
@@ -263,6 +263,8 @@ export function get_data_json(event, options, nodes) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = 'data' + e.path;
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }
