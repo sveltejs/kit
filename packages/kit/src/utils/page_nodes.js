@@ -76,6 +76,7 @@ export class PageNodes {
 
 			current = {
 				...current,
+				// TODO: should we override the server config value with the universal value similar to other page options?
 				...node?.universal?.config,
 				...node?.server?.config
 			};

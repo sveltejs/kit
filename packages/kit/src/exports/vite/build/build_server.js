@@ -4,7 +4,7 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
-import { get_csr_only_nodes } from '../utils.js';
+import { create_static_analyser } from '../static_analysis.js';
 
 /**
  * @param {string} out
@@ -74,12 +74,14 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 	}
 
-	const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
+	const { get_page_options } = create_static_analyser(async (server_node) => {
 		// Windows needs the file:// protocol for absolute path dynamic imports
 		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
 	});
 
-	manifest_data.nodes.forEach((node, i) => {
+	for (let i = 0; i < manifest_data.nodes.length; i++) {
+		const node = manifest_data.nodes[i];
+
 		/** @type {string[]} */
 		const imports = [];
 
@@ -97,11 +99,15 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		/** @type {string[]} */
 		let fonts = [];
 
-		const static_exports = csr_only.get(i);
+		const page_options = await get_page_options(node);
 
-		// TODO: delete server component code that is never used for SSR if we can be sure it's not imported by anything else
+		const csr_only = !!page_options && page_options.ssr === false;
 
-		if (node.component && client_manifest && !static_exports) {
+		// TODO: delete server component chunk files from build output if we can be sure it's not imported by anything else
+
+		// TODO: error nodes don't have the parent property to know which layouts they use, how do we get the page options for them?
+
+		if (node.component && client_manifest && !csr_only) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
@@ -111,8 +117,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 
 		if (node.universal) {
-			if (static_exports) {
-				exports.push(`export const universal = ${s(static_exports, null, 2)};`)
+			if (csr_only) {
+				exports.push(`export const universal = ${s(page_options, null, 2)};`)
 			} else {
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
@@ -198,5 +204,5 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			`${out}/server/nodes/${i}.js`,
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
-	});
+	}
 }

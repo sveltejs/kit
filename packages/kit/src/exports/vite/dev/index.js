@@ -15,10 +15,11 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { get_csr_only_nodes, not_found } from '../utils.js';
+import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { create_static_analyser } from '../static_analysis.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -101,7 +102,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	async function update_manifest() {
+	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
 
@@ -124,7 +125,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const csr_only = await get_csr_only_nodes(manifest_data, async (server_node) => {
+		const { get_page_options } = create_static_analyser(async (server_node) => {
 			const { module } = await resolve(server_node);
 			return module;
 		});
@@ -207,9 +208,9 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const static_exports = csr_only.get(index);
-							if (static_exports) {
-								result.universal = static_exports;
+							const page_options = await get_page_options(node);
+							if (page_options?.ssr === false) {
+								result.universal = page_options;
 							} else {
 								const { module, module_node } = await resolve(node.universal);
 								module_nodes.push(module_node);
@@ -312,7 +313,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return error.stack;
 	}
 
-	await update_manifest();
+	update_manifest();
 
 	/**
 	 * @param {string} event
