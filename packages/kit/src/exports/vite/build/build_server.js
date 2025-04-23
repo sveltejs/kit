@@ -22,7 +22,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 	/** @type {Map<string, string>} */
 	const stylesheets_to_inline = new Map();
 
-	if (server_bundle && client_bundle) {
+	if (server_bundle && client_bundle && kit.inlineStyleThreshold > 0) {
 		/** @type {Map<string, string[]>} */
 		const client_stylesheets = new Map();
 		for (const chunk of client_bundle) {
