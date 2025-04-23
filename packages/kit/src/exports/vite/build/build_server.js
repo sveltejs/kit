@@ -23,66 +23,32 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 	const stylesheets_to_inline = new Map();
 
 	if (server_bundle && client_bundle && kit.inlineStyleThreshold > 0) {
-		/** @type {Map<string, string[]>} */
-		const client_stylesheets = new Map();
-		for (const chunk of client_bundle) {
-			if (chunk.type !== 'chunk' || !chunk.viteMetadata?.importedCss.size) {
-				continue;
-			}
-			const css = Array.from(chunk.viteMetadata.importedCss);
-			for (const id of chunk.moduleIds) {
-				client_stylesheets.set(id, css );
-			}
-		}
+		const client = get_stylesheets(client_bundle);
 
-		/** @type {Map<string, string[]>} */
-		const server_stylesheets = new Map();
-		for (const key in server_bundle) {
-			const chunk = server_bundle[key];
-			if (chunk.type !== 'chunk' || !chunk.viteMetadata?.importedCss.size) {
-				continue;
-			}
-			const css = Array.from(chunk.viteMetadata.importedCss);
-			for (const id of chunk.moduleIds) {
-				server_stylesheets.set(id, css );
-			}
-		}
+		const server_chunks = Object.values(server_bundle);
+		const server = get_stylesheets(server_chunks);
 
 		// map server stylesheet name to the client stylesheet name
-		for (const [id, client_css] of client_stylesheets) {
-			const server_css = server_stylesheets.get(id);
-			if (!server_css) {
+		for (const [id, client_stylesheet] of client.stylesheets_used) {
+			const server_stylesheet = server.stylesheets_used.get(id);
+			if (!server_stylesheet) {
 				continue;
 			}
-			client_css.forEach((file, i) => {
-				stylesheets_to_inline.set(file, server_css[i]);
+			client_stylesheet.forEach((file, i) => {
+				stylesheets_to_inline.set(file, server_stylesheet[i]);
 			}) 
 		}
 
 		// filter out stylesheets that should not be inlined
-		for (const chunk of client_bundle) {
-			if (
-				chunk.type === 'asset' &&
-				chunk.fileName.endsWith('.css') &&
-				chunk.source.length < kit.inlineStyleThreshold
-			) {
-				continue;
-			}
-			stylesheets_to_inline.delete(chunk.fileName);
-		}
-
-		/** @type {Map<string, string>} */
-		const server_stylesheet_sources = new Map();
-		for (const key in server_bundle) {
-			const chunk = server_bundle[key];
-			if (chunk.type === 'asset' && chunk.fileName.endsWith('.css')) {
-				server_stylesheet_sources.set(chunk.fileName, chunk.source.toString());
+		for (const [fileName, content] of client.stylesheet_content) {
+			if (content.length >= kit.inlineStyleThreshold) {
+				stylesheets_to_inline.delete(fileName);
 			}
 		}
 
 		// map server stylesheet source to the client stylesheet name
 		for (const [client_file, server_file] of stylesheets_to_inline) {
-			const source = server_stylesheet_sources.get(server_file);
+			const source = server.stylesheet_content.get(server_file);
 			if (!source) {
 				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
 			}
@@ -212,4 +178,38 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
 	});
+}
+
+/**
+ * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks 
+ */
+function get_stylesheets(chunks) {
+	/**
+	 * A map of module IDs and the stylesheets they use.
+	 * @type {Map<string, string[]>}
+	 */
+	const stylesheets_used = new Map();
+
+	/**
+	 * A map of stylesheet names and their content.
+	 * @type {Map<string, string>}
+	 */
+	const stylesheet_content = new Map();
+
+	for (const chunk of chunks) {
+		if (chunk.type === 'asset') {
+			if (chunk.fileName.endsWith('.css')) {
+				stylesheet_content.set(chunk.fileName, chunk.source.toString());
+			}
+			continue;
+		}
+
+		if (chunk.viteMetadata?.importedCss.size) {
+			const css = Array.from(chunk.viteMetadata.importedCss);
+			for (const id of chunk.moduleIds) {
+				stylesheets_used.set(id, css );
+			}
+		}
+	}
+	return { stylesheets_used, stylesheet_content };
 }

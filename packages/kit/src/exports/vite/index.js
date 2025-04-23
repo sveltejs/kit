@@ -854,7 +854,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output: client_bundle } = /** @type {import('vite').Rollup.RollupOutput} */ (
+				const { output: client_chunks } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -897,7 +897,7 @@ Tips:
 						imports: [...start.imports, ...app.imports],
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
-						uses_env_dynamic_public: client_bundle.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
@@ -946,14 +946,14 @@ Tips:
 						imports: start.imports,
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
-						uses_env_dynamic_public: client_bundle.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
 						const style = /** @type {import('rollup').OutputAsset} */ (
-							client_bundle.find(
+							client_chunks.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
 									chunk.names.length === 1 &&
@@ -987,7 +987,7 @@ Tips:
 					server_manifest,
 					client_manifest,
 					bundle,
-					client_bundle,
+					client_chunks,
 					svelte_config.kit.output
 				);
 
