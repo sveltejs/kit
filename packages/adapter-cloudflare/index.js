@@ -271,30 +271,29 @@ _redirects
 function validate_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	// we don't support workers sites
+	// we don't support Workers Sites
 	if (wrangler_config.site) {
 		throw new Error(
 			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
 		);
 	}
 
+	// we don't need to validate the config if there is no user Wrangler config
+	// or if we're building for Cloudflare Pages because it has fixed conventions
 	if (is_building_for_cloudflare_pages(wrangler_config)) {
 		return wrangler_config;
 	}
 
-	// probably deploying to Cloudflare Workers
-	if (wrangler_config.main || wrangler_config.assets) {
-		if (!wrangler_config.assets?.directory) {
-			throw new Error(
-				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-			);
-		}
+	if (!wrangler_config.assets?.directory) {
+		throw new Error(
+			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+		);
+	}
 
-		if (!wrangler_config.assets?.binding) {
-			throw new Error(
-				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-			);
-		}
+	if (!wrangler_config.assets?.binding) {
+		throw new Error(
+			`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+		);
 	}
 
 	return wrangler_config;
@@ -305,13 +304,10 @@ function validate_config(config_file = undefined) {
  * @returns {boolean}
  */
 function is_building_for_cloudflare_pages(wrangler_config) {
-	return (
-		!!process.env.CF_PAGES ||
-		!wrangler_config.configPath ||
-		!!wrangler_config.pages_build_output_dir ||
-		!wrangler_config.main ||
-		!wrangler_config.assets
-	);
+	if (!!process.env.WORKERS_CI || wrangler_config.main || wrangler_config.assets) {
+		return false;
+	}
+	return true;
 }
 
 /** @param {string} str */
