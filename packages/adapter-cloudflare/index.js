@@ -289,10 +289,6 @@ function validate_config(config_file = undefined) {
 		};
 	}
 
-	if (!wrangler_config.configPath) {
-		// TODO: generate wrangler config so it works out of the box?
-	}
-
 	if (!wrangler_config.assets?.directory) {
 		throw new Error(
 			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
