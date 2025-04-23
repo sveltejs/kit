@@ -129,11 +129,11 @@ export function create_static_analyser(resolve) {
 
 		if (node.server) {
 			const module = await resolve(node.server);
-      for (const key in inheritable_page_options) {
-        if (key in module) {
-          page_options[key] = module[key];
-        }
-      }
+			for (const key in inheritable_page_options) {
+				if (key in module) {
+					page_options[key] = module[key];
+				}
+			}
 		}
 
 		if (node.universal) {
