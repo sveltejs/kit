@@ -99,15 +99,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		/** @type {string[]} */
 		let fonts = [];
 
-		const page_options = await get_page_options(node);
-
-		const csr_only = !!page_options && page_options.ssr === false;
-
-		// TODO: delete server component chunk files from build output if we can be sure it's not imported by anything else
-
-		// TODO: error nodes don't have the parent property to know which layouts they use, how do we get the page options for them?
-
-		if (node.component && client_manifest && !csr_only) {
+		if (node.component && client_manifest) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
@@ -117,7 +109,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 
 		if (node.universal) {
-			if (csr_only) {
+			const page_options = await get_page_options(node);
+			if (!!page_options && page_options.ssr === false) {
 				exports.push(`export const universal = ${s(page_options, null, 2)};`)
 			} else {
 				imports.push(

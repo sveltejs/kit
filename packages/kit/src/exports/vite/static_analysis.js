@@ -11,8 +11,8 @@ const statically_analysable_page_options = new RegExp(
 const parser = Parser.extend(tsPlugin());
 
 /**
- * Collect all exported page options from a +page.js/+layout.js file.
- * Returns `null` if those exports cannot be statically analyzed.
+ * Collects exported page options from a +page.js/+layout.js file.
+ * Returns `null` if any export cannot be statically analyzed.
  * @param {string} node_path
  */
 function statically_analyse_exports(node_path) {
@@ -107,13 +107,13 @@ const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSl
 
 /**
  * @param {(server_node: string) => Promise<Record<string, any>>} resolve
- * @returns
  */
 export function create_static_analyser(resolve) {
 	/** @type {Map<string, Record<string, any> | null>} */
 	const static_exports = new Map();
 
 	/**
+	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
 	 * @returns {Promise<import('types').UniversalNode | null>}
 	 */
@@ -138,7 +138,6 @@ export function create_static_analyser(resolve) {
 
 		if (node.universal) {
 			let universal_exports = static_exports.get(node.universal);
-
 			if (universal_exports === undefined) {
 				universal_exports = statically_analyse_exports(node.universal);
 			}
@@ -154,6 +153,8 @@ export function create_static_analyser(resolve) {
 		if (node.parent) {
 			const parent_options = await get_page_options(node.parent);
 			if (parent_options === null) {
+				// if the parent cannot be statically analysed, we can't know what
+				// page options the current node inherits, so we invalidate it too
 				if (node.universal) {
 					static_exports.set(node.universal, null);
 				}
