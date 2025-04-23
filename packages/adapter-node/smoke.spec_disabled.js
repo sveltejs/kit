@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { assert, test } from 'vitest';
-import { create_kit_middleware } from '../src/handler.js';
+import { create_kit_middleware } from './src/handler.js';
 import fetch from 'node-fetch';
 import polka from 'polka';
 

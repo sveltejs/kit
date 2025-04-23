@@ -35,11 +35,13 @@
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
-		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
 		"@polka/url": "^1.0.0-next.28",

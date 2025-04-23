@@ -1,0 +1,19 @@
+{
+	"name": "test-node",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "node build",
+		"prepare": "svelte-kit sync || echo ''",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"svelte": "^5.23.1",
+		"vite": "^6.0.11"
+	},
+	"type": "module"
+}
