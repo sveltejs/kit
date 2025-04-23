@@ -1,8 +1,7 @@
 import process from 'node:process';
-import { handler, upgradeHandler } from 'HANDLER';
+import { handler, upgradeHandler, closeAllWebSockets, terminateAllWebSockets } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
-import { closeAllWebSockets, terminateAllWebSockets } from './handler.js';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');

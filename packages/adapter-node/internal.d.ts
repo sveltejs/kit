@@ -5,6 +5,8 @@ declare module 'ENV' {
 declare module 'HANDLER' {
 	export const handler: import('polka').Middleware;
 	export const upgradeHandler: import('crossws/adapters/node').NodeAdapter['handleUpgrade'];
+	export const closeAllWebSockets: () => void;
+	export const terminateAllWebSockets: () => void;
 }
 
 declare module 'MANIFEST' {
