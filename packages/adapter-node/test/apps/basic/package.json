@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "node build",
+		"preview": "ORIGIN=http://localhost:3000 node build",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
