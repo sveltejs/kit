@@ -27,8 +27,7 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_config(options.config);
-			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+			const { wrangler_config, building_for_cloudflare_pages } = validate_config(options.config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
@@ -266,7 +265,10 @@ _redirects
 
 /**
  * @param {string} config_file
- * @returns {import('wrangler').Unstable_Config}
+ * @returns {{
+ * 	wrangler_config: import('wrangler').Unstable_Config,
+ * 	building_for_cloudflare_pages: boolean
+ * }}
  */
 function validate_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
@@ -278,10 +280,17 @@ function validate_config(config_file = undefined) {
 		);
 	}
 
-	// we don't need to validate the config if there is no user Wrangler config
-	// or if we're building for Cloudflare Pages because it has fixed conventions
+	// we don't need to validate the config if we're building for Cloudflare Pages
+	// because the `main` and `assets` values cannot be changed
 	if (is_building_for_cloudflare_pages(wrangler_config)) {
-		return wrangler_config;
+		return {
+			wrangler_config,
+			building_for_cloudflare_pages: true
+		};
+	}
+
+	if (!wrangler_config.configPath) {
+		// TODO: generate wrangler config so it works out of the box?
 	}
 
 	if (!wrangler_config.assets?.directory) {
@@ -296,7 +305,10 @@ function validate_config(config_file = undefined) {
 		);
 	}
 
-	return wrangler_config;
+	return {
+		wrangler_config,
+		building_for_cloudflare_pages: false
+	};
 }
 
 /**
