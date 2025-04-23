@@ -84,7 +84,7 @@ async function get_adapter() {
 
 				console.log(`Successfully installed ${match.module}.`);
 				console.warn(
-					`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
+					`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster, more robust installs, and more control over deployment configuration.\n`
 				);
 			} catch (e) {
 				throw new Error(

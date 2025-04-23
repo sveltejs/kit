@@ -273,7 +273,7 @@ _redirects
 function validate_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	const wrangler_file = wrangler_config.configPath || ' your wrangler.jsonc file';
+	const wrangler_file = wrangler_config.configPath || 'your wrangler.jsonc file';
 
 	// we don't support Workers Sites
 	if (wrangler_config.site) {
