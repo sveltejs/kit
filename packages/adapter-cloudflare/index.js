@@ -273,10 +273,12 @@ _redirects
 function validate_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
+	const wrangler_file = wrangler_config.configPath || ' your wrangler.jsonc file';
+
 	// we don't support Workers Sites
 	if (wrangler_config.site) {
 		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
+			`You must remove all \`site\` keys in ${wrangler_file}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
 		);
 	}
 
@@ -291,13 +293,13 @@ function validate_config(config_file = undefined) {
 
 	if (!wrangler_config.assets?.directory) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+			`You must specify the \`assets.directory\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
 		);
 	}
 
 	if (!wrangler_config.assets?.binding) {
 		throw new Error(
-			`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+			`You must specify the \`assets.binding\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
 		);
 	}
 
