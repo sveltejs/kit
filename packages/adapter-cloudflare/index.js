@@ -95,7 +95,8 @@ export default function (options = {}) {
 					// the paths returned by the Wrangler config might be Windows paths,
 					// so we need to convert them to POSIX paths or else the backslashes
 					// will be interpreted as escape characters and create an incorrect import path.
-					// we also need to ensure the relative paths start with ./ since Wrangler errors if relative imports don't have it
+					// We also need to ensure the relative imports start with ./ since Wrangler
+					// errors if a relative import looks like a package import
 					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
 					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
