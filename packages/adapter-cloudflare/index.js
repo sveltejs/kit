@@ -299,19 +299,19 @@ function validate_config(config_file = undefined) {
 		wrangler_config.assets?.not_found_handling !== 'single-page-application'
 	) {
 		throw new Error(
-			`You must specify the \`main\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys`
+			`You must specify the \`main\` key in ${wrangler_file} to deploy a Worker script. Consult https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys`
 		);
 	}
 
 	if (!wrangler_config.assets?.directory) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+			`You must specify the \`assets.directory\` key in ${wrangler_file} to upload static assets. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
 		);
 	}
 
 	if (wrangler_config.main && !wrangler_config.assets?.binding) {
 		throw new Error(
-			`You must specify the \`assets.binding\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+			`You must specify the \`assets.binding\` key in ${wrangler_file} when deploying a Worker script. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
 		);
 	}
 
