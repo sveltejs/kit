@@ -17,8 +17,8 @@ test('dynamic value export', () => {
     export const ssr = process.env.SSR;
     export const prerender = true;
   `;
-  const exports = statically_analyse_exports(input);
-  expect(exports).toEqual(null);
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual(null);
 });
 
 test('no exported page options', () => {
@@ -35,23 +35,57 @@ test('no exported page options', () => {
 	expect(exports).toEqual({});
 });
 
-test('export all declaration', () => {
-	const inputs = [
-		"export * from './foo';",
-		"export\n*\nfrom\n'./foo'",
-		'export    *      from "./foo";',
-		"export   \n  *\n   from 'abc';  ",
-    "export * as ssr from './foo'"
-	];
-	for (const input of inputs) {
-		const exports = statically_analyse_exports(input);
-		expect(exports).toEqual(null);
-	}
+test.each([
+	"export * from './foo';",
+	"export\n*\nfrom\n'./foo'",
+	'export    *      from "./foo";',
+	"export   \n  *\n   from 'abc';  ",
+	"export * as ssr from './foo'"
+])('export all declaration: %s', (input) => {
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual(null);
 });
 
-// TODO: test `export let` not being reassigned returns exports
+test.each([
+	`
+    export let ssr = true;
+    export const prerender = true;
+  `,
+  `
+    export let ssr = true;
+    export const prerender = true;
+    function foo() {
+      let ssr = true;
+      ssr = false;
+    }
+  `,
+	`
+    let foo = true;
+    export let ssr = foo;
+    export const prerender = true;
+  `
+])('not reassigned: %s', (input) => {
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual({ ssr: true, prerender: true });
+});
 
-// TODO: test `export let` being reassigned returns null
+test.each([
+	`
+    export let ssr = true;
+    export const prerender = true;
+    ssr = false;
+  `,
+	`
+    export let ssr = true;
+    export const prerender = true;
+    function foo() {
+      ssr = false;
+    }
+  `
+])('reassigned: %s', (input) => {
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual(null);
+});
 
 // TODO: test export referencing another constant with a literal value in the same file returns exports
 

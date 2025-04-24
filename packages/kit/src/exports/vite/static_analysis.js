@@ -25,7 +25,7 @@ export function statically_analyse_exports(input) {
 		return {};
 	}
 
-	const node = parser.parse(input, {
+	const source = parser.parse(input, {
 		sourceType: 'module',
 		ecmaVersion: 'latest'
 	});
@@ -33,7 +33,7 @@ export function statically_analyse_exports(input) {
 	/** @type {Map<string, any>} */
 	const static_exports = new Map();
 
-	for (const statement of node.body) {
+	for (const statement of source.body) {
 		// ignore export all declarations with aliases that are not page options
 		if (
 			statement.type === 'ExportAllDeclaration' &&
@@ -85,18 +85,22 @@ export function statically_analyse_exports(input) {
 				return null;
 			}
 
-			if (page_options.has(declaration.id.name)) {
-				if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
-					static_exports.set(declaration.id.name, declaration.init.value);
-					continue;
-				}
+			if (!page_options.has(declaration.id.name)) {
+				continue;
 			}
 
-			// TODO: allow referencing variables that have a literal value and is never re-assigned
+			if (declaration.init?.type === 'Literal') {
+				// TODO analyze that variable is not reassigned
 
-			// TODO analyze that variable is not reassigned, i.e. so that `let` is also allowed?
+				static_exports.set(declaration.id.name, declaration.init.value);
+				continue;
+			}
 
-			// references a variable we can't evaluate statically
+			if (declaration.init?.type === 'Identifier') {
+				// TODO: allow referencing variables that have a literal value and is never re-assigned
+			}
+
+			// references a variable we can't easily evaluate statically
 			return null;
 		}
 	}
