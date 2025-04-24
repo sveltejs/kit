@@ -294,7 +294,10 @@ function validate_config(config_file = undefined) {
 		};
 	}
 
-	if (!wrangler_config.main) {
+	if (
+		!wrangler_config.main &&
+		wrangler_config.assets?.not_found_handling !== 'single-page-application'
+	) {
 		throw new Error(
 			`You must specify the \`main\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys`
 		);
@@ -306,7 +309,7 @@ function validate_config(config_file = undefined) {
 		);
 	}
 
-	if (!wrangler_config.assets?.binding) {
+	if (wrangler_config.main && !wrangler_config.assets?.binding) {
 		throw new Error(
 			`You must specify the \`assets.binding\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
 		);
