@@ -2,29 +2,22 @@ import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../utils/filesystem.js';
 
-const dynamic_page_options = new RegExp(`${['entries', 'config'].join('|')}`);
+const page_options = ['prerender', 'csr', 'ssr', 'trailingSlash', 'entries', 'config'];
 
-const statically_analysable_page_options = new RegExp(
-	`${['prerender', 'csr', 'ssr', 'trailingSlash'].join('|')}`
-);
+const skip_parsing_regex = new RegExp(`${page_options.join('|')}|(export[\\s\\n]+\\*[\\s\\n]+from)`);
 
 const parser = Parser.extend(tsPlugin());
 
 /**
  * Collects exported page options from a +page.js/+layout.js file.
- * Returns `null` if any export cannot be statically analyzed.
- * @param {string} node_path
+ * Returns `null` if any export is too difficult to analyse.
+ * @param {string} input
+ * @returns {Record<string, any> | null}
  */
-function statically_analyse_exports(node_path) {
-	const input = read(node_path);
-
-	// if there's something we can't analyse, we mark the node as not statically analysable
-	if (dynamic_page_options.test(input)) {
-		return null;
-	}
-
-	// if there's nothing to analyse, we can skip parsing
-	if (!statically_analysable_page_options.test(input)) {
+export function statically_analyse_exports(input) {
+	// if there's a chance there are no page exports or export all declaration,
+	// then we can skip the AST parsing which is expensive
+	if (!skip_parsing_regex.test(input)) {
 		return {};
 	}
 
@@ -139,7 +132,8 @@ export function create_static_analyser(resolve) {
 		if (node.universal) {
 			let universal_exports = static_exports.get(node.universal);
 			if (universal_exports === undefined) {
-				universal_exports = statically_analyse_exports(node.universal);
+				const input = read(node.universal);
+				universal_exports = statically_analyse_exports(input);
 			}
 
 			if (universal_exports === null) {
