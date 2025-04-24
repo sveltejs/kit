@@ -86,7 +86,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 {
 	"name": "<any-name-you-want>",
 	"main": ".svelte-kit/cloudflare/_worker.js",
-	"compatibility_date": "2025-01-01",
+	"compatibility_date": "<YYYY-MM-DD>",
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare",
