@@ -65,6 +65,11 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	/**
+	 *
+	 */
+	worker?: string;
 }
 
 export interface RoutesJSONSpec {

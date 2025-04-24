@@ -91,6 +91,16 @@ export default function (options = {}) {
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
+
+			let exports_path;
+
+			if (!building_for_cloudflare_pages && options.worker) {
+				exports_path = `${posixify(path.relative(worker_dest_dir, path.resolve(process.cwd(), options.worker)))}`;
+			} else {
+				writeFileSync(`${tmp}/exports.js`, 'export default {};\n\n');
+				exports_path = `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`;
+			}
+
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
@@ -98,7 +108,8 @@ export default function (options = {}) {
 					// will be interpreted as escape characters and create an incorrect import path
 					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
 					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
-					ASSETS: assets_binding
+					ASSETS: assets_binding,
+					WORKER: exports_path
 				}
 			});
 
