@@ -17,8 +17,8 @@ test('dynamic value export', () => {
     export const ssr = process.env.SSR;
     export const prerender = true;
   `;
-	const exports = statically_analyse_exports(input);
-	expect(exports).toEqual(null);
+  const exports = statically_analyse_exports(input);
+  expect(exports).toEqual(null);
 });
 
 test('no exported page options', () => {
@@ -40,7 +40,8 @@ test('export all declaration', () => {
 		"export * from './foo';",
 		"export\n*\nfrom\n'./foo'",
 		'export    *      from "./foo";',
-		"export   \n  *\n   from 'abc';  "
+		"export   \n  *\n   from 'abc';  ",
+    "export * as ssr from './foo'"
 	];
 	for (const input of inputs) {
 		const exports = statically_analyse_exports(input);

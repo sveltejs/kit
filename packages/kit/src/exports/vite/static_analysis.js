@@ -2,10 +2,12 @@ import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../utils/filesystem.js';
 
-const page_options = ['prerender', 'csr', 'ssr', 'trailingSlash', 'entries', 'config'];
+const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
+
+const page_options = new Set([...inheritable_page_options, 'entries']);
 
 const skip_parsing_regex = new RegExp(
-	`${page_options.join('|')}|(export[\\s\\n]+\\*[\\s\\n]+from)`
+	`${Array.from(page_options).join('|')}|(export[\\s\\n]+\\*[\\s\\n]+from)`
 );
 
 const parser = Parser.extend(tsPlugin());
@@ -32,6 +34,15 @@ export function statically_analyse_exports(input) {
 	const static_exports = new Map();
 
 	for (const statement of node.body) {
+		// ignore export all declarations with aliases that are not page options
+		if (
+			statement.type === 'ExportAllDeclaration' &&
+			statement.exported &&
+			!page_options.has(get_exported_name(statement))
+		) {
+			continue;
+		}
+
 		if (
 			statement.type === 'ExportDefaultDeclaration' ||
 			statement.type === 'ExportAllDeclaration'
@@ -41,48 +52,51 @@ export function statically_analyse_exports(input) {
 			continue;
 		}
 
-		// TODO: handle exports referencing constants in the same file?
-
 		// export specifiers
 		if (statement.specifiers.length) {
 			for (const specifier of statement.specifiers) {
-				if (
-					specifier.exported.type === 'Identifier' &&
-					is_not_a_page_option(specifier.exported.name)
-				) {
+				if (!page_options.has(get_exported_name(specifier))) {
 					continue;
 				}
+
+				if (!statement.source) {
+					// TODO: allow specifiers that reference a literal value and is never re-assigned?
+				}
+
 				return null;
 			}
-			continue;
 		}
 
 		if (!statement.declaration) {
 			continue;
 		}
 
-		if (
-			statement.declaration.type === 'FunctionDeclaration' &&
-			is_not_a_page_option(statement.declaration.id.name)
-		) {
+		// class and function export declarations
+		if (statement.declaration.type !== 'VariableDeclaration') {
+			if (page_options.has(statement.declaration.id.name)) {
+				return null;
+			}
 			continue;
 		}
 
-		// other exported classes and functions
-		if (statement.declaration.type !== 'VariableDeclaration') {
-			return null;
-		}
-
 		for (const declaration of statement.declaration.declarations) {
-			if (declaration.id.type === 'Identifier') {
-				if (is_not_a_page_option(declaration.id.name)) {
-					continue;
-				} else if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
+			if (declaration.id.type !== 'Identifier') {
+				// TODO: allow array and object destructuring?
+				return null;
+			}
+
+			if (page_options.has(declaration.id.name)) {
+				if (statement.declaration.kind === 'const' && declaration.init?.type === 'Literal') {
 					static_exports.set(declaration.id.name, declaration.init.value);
 					continue;
 				}
-				// TODO analyze that variable is not reassigned, i.e. so that `let` is also allowed?
 			}
+
+			// TODO: allow referencing variables that have a literal value and is never re-assigned
+
+			// TODO analyze that variable is not reassigned, i.e. so that `let` is also allowed?
+
+			// references a variable we can't evaluate statically
 			return null;
 		}
 	}
@@ -91,14 +105,15 @@ export function statically_analyse_exports(input) {
 }
 
 /**
- * @param {string} name
- * @returns {boolean}
+ *
+ * @param {import('acorn').ExportSpecifier | import('acorn').ExportAllDeclaration} node
+ * @returns {string}
  */
-function is_not_a_page_option(name) {
-	return name === 'load' || name.startsWith('_');
+function get_exported_name(node) {
+	return node.exported?.type === 'Identifier'
+		? node.exported.name
+		: /** @type {string} */ (node.exported?.value);
 }
-
-const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
 
 /**
  * @param {(server_node: string) => Promise<Record<string, any>>} resolve
