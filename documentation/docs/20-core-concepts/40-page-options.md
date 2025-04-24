@@ -127,7 +127,7 @@ export const ssr = false;
 
 If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
 
-> [!NOTE] If you have a page option that isn't a boolean or string literal, even with `ssr` set to `false`, code that relies on browser APIs should be imported in your `+page.svelte` or `+layout.svelte` file instead. This is because page options can be overridden and need to be evaluated by importing your `+page.js` or `+layout.js` file on the server (if you have a runtime) and at build time.
+> [!NOTE] If you have a page option that isn't a boolean or string literal, even with `ssr` set to `false`, code that relies on browser APIs should be imported in your `+page.svelte` or `+layout.svelte` file instead. This is because complex values for page options need to be evaluated by importing your `+page.js` or `+layout.js` file on the server (if you have a runtime) and at build time.
 
 ## csr
 
