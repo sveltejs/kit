@@ -4,7 +4,9 @@ import { read } from '../../utils/filesystem.js';
 
 const page_options = ['prerender', 'csr', 'ssr', 'trailingSlash', 'entries', 'config'];
 
-const skip_parsing_regex = new RegExp(`${page_options.join('|')}|(export[\\s\\n]+\\*[\\s\\n]+from)`);
+const skip_parsing_regex = new RegExp(
+	`${page_options.join('|')}|(export[\\s\\n]+\\*[\\s\\n]+from)`
+);
 
 const parser = Parser.extend(tsPlugin());
 
