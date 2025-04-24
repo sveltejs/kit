@@ -94,9 +94,10 @@ export default function (options = {}) {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
 					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path
-					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
+					// will be interpreted as escape characters and create an incorrect import path.
+					// we also need to ensure the relative paths start with ./ since Wrangler errors if relative imports don't have it
+					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
+					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}
 			});
@@ -283,12 +284,19 @@ function validate_config(config_file = undefined) {
 	}
 
 	// we don't need to validate the config if we're building for Cloudflare Pages
-	// because the `main` and `assets` values cannot be changed
-	if (is_building_for_cloudflare_pages(wrangler_config)) {
+	// because the `main` and `assets` values cannot be changed there
+	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+	if (building_for_cloudflare_pages) {
 		return {
 			wrangler_config,
-			building_for_cloudflare_pages: true
+			building_for_cloudflare_pages
 		};
+	}
+
+	if (!wrangler_config.main) {
+		throw new Error(
+			`You must specify the \`main\` key in ${wrangler_file}. Consult https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys`
+		);
 	}
 
 	if (!wrangler_config.assets?.directory) {
@@ -305,7 +313,7 @@ function validate_config(config_file = undefined) {
 
 	return {
 		wrangler_config,
-		building_for_cloudflare_pages: false
+		building_for_cloudflare_pages
 	};
 }
 
