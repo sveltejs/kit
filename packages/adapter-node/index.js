@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -48,14 +48,21 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			/** @type {Record<string, string>} */
+			const input = {
+				index: `${tmp}/index.js`,
+				manifest: `${tmp}/manifest.js`
+			};
+
+			if (existsSync(`${tmp}/instrument.server.js`)) {
+				input['instrument.server'] = `${tmp}/instrument.server.js`;
+			}
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
 			const bundle = await rollup({
-				input: {
-					index: `${tmp}/index.js`,
-					manifest: `${tmp}/manifest.js`
-				},
+				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
