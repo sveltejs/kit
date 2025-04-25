@@ -259,7 +259,7 @@ test.each([
       export const ssr = foo;
     `
 	],
-  [
+	[
 		'assigned after export',
 		`
       let foo = false;
@@ -281,7 +281,7 @@ test.each([
       export const ssr = foo;
     `
 	],
-  [
+	[
 		'from a different scope',
 		`
       let foo = false;
@@ -291,7 +291,7 @@ test.each([
       }
     `
 	],
-  [
+	[
 		'different scope',
 		`
       let foo = false;
