@@ -2,187 +2,306 @@ import { expect, test } from 'vitest';
 import { statically_analyse_exports } from './index.js';
 
 test.each([
-	`
-    export const ssr = false;
-    export const csr = true;
-    export const prerender = 'auto';
-    export const trailingSlash = 'always';
-  `,
-	`
-    export const ssr = false, csr = true, prerender = 'auto', trailingSlash = 'always';
-  `,
-	`
-    export const [ssr, csr, prerender, trailingSlash] = [false, true, 'auto', 'always'];
-  `,
-	`
-    export const { ssr, csr, prerender, trailingSlash } = {
-      ssr: false,
-      csr: true,
-      prerender: 'auto',
-      trailingSlash: 'always'
-    };
-  `
-])('page options with literal values: %s', (input) => {
+	[
+		'multi-line declarations',
+		`
+      export const ssr = false;
+      export const csr = true;
+      export const prerender = 'auto';
+      export const trailingSlash = 'always';
+    `
+	],
+	[
+		'single-line declarations',
+		`
+      export const ssr = false, csr = true, prerender = 'auto', trailingSlash = 'always';
+    `
+	],
+	[
+		'array destructuring',
+		`
+      export const [ssr, csr, prerender, trailingSlash] = [false, true, 'auto', 'always'];
+    `
+	],
+	[
+		'object destructuring',
+		`
+      export const { ssr, csr, prerender, trailingSlash } = {
+        ssr: false,
+        csr: true,
+        prerender: 'auto',
+        trailingSlash: 'always'
+      };
+    `
+	]
+])('page option is assigned a literal value: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual({ ssr: false, csr: true, prerender: 'auto', trailingSlash: 'always' });
 });
 
 test.each([
-	`
-    export const ssr = process.env.SSR;
-    export const prerender = true;
-  `,
-	`
-    export const ssr = false;
-    export const config = {
-      runtime: 'edge'
-    }
-  `,
-	`
-    export const prerender = true;
-    export const entries = () => {
-      return [
-        { slug: 'foo' }
-      ]
-    }
-  `
-])('page options with dynamic values cause it to fail: %s', (input) => {
+	[
+		'runtime value',
+		`
+      export const ssr = process.env.SSR;
+      export const prerender = true;
+    `
+	],
+	[
+		'object',
+		`
+      export const ssr = false;
+      export const config = {
+        runtime: 'edge'
+      }
+    `
+	],
+	[
+		'arrow function',
+		`
+      export const prerender = true;
+      export const entries = () => {
+        return [
+          { slug: 'foo' }
+        ]
+      }
+    `
+	],
+	['export all declaration alias', "export * as ssr from './foo'"]
+])('fails when page option is assigned a dynamic value: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual(null);
 });
 
-test('ignores non-page options', () => {
-	const input = `
-    export async function load () {
-      return {}
-    }
-
-    export _foo = 'bar';
-
-    export * as bar from './foo';
-  `;
+test.each([
+	['load function', 'export async function load () { return {} }'],
+	['private export', "export let _foo = 'bar'"],
+	['export all declaration alias', 'export * as bar from "./foo"'],
+	['non-page option export', "export const foo = 'bar'"]
+])('ignores %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual({});
 });
 
 test.each([
-	"export * from './foo';",
-	"export\n*\nfrom\n'./foo'",
-	'export    *      from "./foo";',
-	"export   \n  *\n   from 'abc';  ",
-	"export * as ssr from './foo'"
-])('export all declaration causes it to fail: %s', (input) => {
+	['single line', "export * from './foo';"],
+	['multiple lines', "export\n*\nfrom\n'./foo'"],
+	['whitespace', 'export    *      from "./foo";'],
+	['multiple lines and whitespace', "export   \n  *\n   from 'abc';  "]
+])('fails when export all declaration is used: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual(null);
 });
 
 test.each([
-	`
-    export let ssr = true;
-    export const prerender = true;
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      let ssr = true;
-      ssr = false;
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    switch (ssr) {
-      case true:
+	[
+		'let',
+		`
+      export let ssr = true;
+      export const prerender = true;
+    `
+	],
+	[
+		'block scoped assignment',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
         let ssr = true;
         ssr = false;
-        break;
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      let ssr = true;
-      {
-        ssr = false;
       }
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    let csr;
-    csr = ssr;
-  `
-])('non-reassigned page options: %s', (input) => {
+    `
+	],
+	[
+		'switch case scoped assignment',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      switch (ssr) {
+        case true:
+          let ssr = true;
+          ssr = false;
+          break;
+      }
+    `
+	],
+	[
+		'nested block scope assignment',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        let ssr = true;
+        {
+          ssr = false;
+        }
+      }
+    `
+	],
+	[
+		'used as assignment value',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      let csr;
+      csr = ssr;
+    `
+	]
+])('non-reassigned page options: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual({ ssr: true, prerender: true });
 });
 
 test.each([
-	`
-    export let ssr = true;
-    export const prerender = true;
-    ssr = false;
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function bar() {
-      let ssr = true;
-    }
-    function foo() {
-      {
-        ssr = false;
+	[
+		'same scope',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      ssr = false;
+    `
+	],
+	[
+		'different scope',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function bar() {
+        let ssr = true;
       }
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      ({ ssr } = {});
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      ([,ssr,] = []);
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      ([,{ ssr = false }] = []);
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    function foo() {
-      ([...ssr] = []);
-    }
-  `,
-	`
-    export let ssr = true;
-    export const prerender = true;
-    let csr;
-    csr = ssr = false;
-  `,
-	`
-    export let ssr = true;
-    export let prerender = true;
-    let csr;
-    csr = (prerender = false, ssr = false);
-  `
-])('reassigned page option causes it to fail: %s', (input) => {
+      function foo() {
+        {
+          ssr = false;
+        }
+      }
+    `
+	],
+	[
+		'array destructuring',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        ([,ssr,] = []);
+      }
+    `
+	],
+	[
+		'object destructuring',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        ({ ssr } = {});
+      }
+    `
+	],
+
+	[
+		'nested array/object destructuring',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        ([,{ ssr = false }] = []);
+      }
+    `
+	],
+	[
+		'array spread',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        ([...ssr] = []);
+      }
+    `
+	],
+	[
+		'object spread',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      function foo() {
+        ({...ssr} = {});
+      }
+    `
+	],
+	[
+		'multiple single-line',
+		`
+      export let ssr = true;
+      export const prerender = true;
+      let csr;
+      csr = ssr = false;
+    `
+	],
+	[
+		'comma operator',
+		`
+      export let ssr = true;
+      export let prerender = true;
+      let csr;
+      csr = (prerender = false, ssr = false);
+    `
+	]
+])('fails when page option is reassigned: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual(null);
 });
 
 // TODO: test export referencing another variable with a literal value in the same file that is never reassigned passes
+test.each([
+	[
+		'never reassigned',
+		`
+      let foo = false;
+      export const ssr = foo;
+    `
+	],
+  [
+		'assigned after export',
+		`
+      let foo = false;
+      export const ssr = foo;
+      foo = true;
+    `
+	]
+])('value is a reference to another variable that is: %s', (_, input) => {
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual({ ssr: false });
+});
 
-// TODO: test export referencing a dynamic variable fails
+test.each([
+	[
+		'before export',
+		`
+      let foo = false;
+      foo = true;
+      export const ssr = foo;
+    `
+	],
+  [
+		'from a different scope',
+		`
+      let foo = false;
+      export const ssr = foo;
+      function bar() {
+        foo = true;
+      }
+    `
+	],
+  [
+		'different scope',
+		`
+      let foo = false;
+      export const ssr = foo;
+      function bar() {
+        foo = true;
+      }
+    `
+	]
+])('fails when value is a reference to another variable that is reassigned: %s', (_, input) => {
+	const exports = statically_analyse_exports(input);
+	expect(exports).toEqual(null);
+});

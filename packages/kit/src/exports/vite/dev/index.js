@@ -212,6 +212,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							if (page_options?.ssr === false) {
 								result.universal = page_options;
 							} else {
+								// TODO: explain why file was loaded on the server if we fail to load it
 								const { module, module_node } = await resolve(node.universal);
 								module_nodes.push(module_node);
 								result.universal = module;

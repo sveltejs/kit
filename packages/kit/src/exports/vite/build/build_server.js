@@ -116,6 +116,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
 				);
+				// TODO: when building for analysis, explain why file was loaded on the server if we fail to load it
 				exports.push('export { universal };');
 			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);

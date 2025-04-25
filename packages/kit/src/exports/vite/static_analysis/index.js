@@ -26,6 +26,7 @@ export function statically_analyse_exports(input) {
 		return {};
 	}
 
+	// TODO: report which file was the cause of a parsing error
 	const source = parser.parse(input, {
 		sourceType: 'module',
 		ecmaVersion: 'latest'
@@ -61,7 +62,7 @@ export function statically_analyse_exports(input) {
 				}
 
 				if (!statement.source) {
-					// TODO: allow specifiers that reference a literal value and is never re-assigned?
+					// TODO: allow specifiers that reference another variable with a literal value and is never re-assigned?
 				}
 
 				return null;
