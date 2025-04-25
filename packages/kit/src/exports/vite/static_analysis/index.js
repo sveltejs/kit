@@ -1,6 +1,7 @@
 import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
-import { read } from '../../utils/filesystem.js';
+import { read } from '../../../utils/filesystem.js';
+import { get_exported_name, is_reassigned } from './utils.js';
 
 const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
 
@@ -81,7 +82,7 @@ export function statically_analyse_exports(input) {
 
 		for (const declaration of statement.declaration.declarations) {
 			if (declaration.id.type !== 'Identifier') {
-				// TODO: allow array and object destructuring?
+				// TODO: handle values of destructured variables
 				return null;
 			}
 
@@ -90,14 +91,22 @@ export function statically_analyse_exports(input) {
 			}
 
 			if (declaration.init?.type === 'Literal') {
-				// TODO analyze that variable is not reassigned
+				if (statement.declaration.kind === 'const') {
+					static_exports.set(declaration.id.name, declaration.init.value);
+					continue;
+				}
+
+				if (is_reassigned(source, declaration.id.name)) {
+					return null;
+				}
 
 				static_exports.set(declaration.id.name, declaration.init.value);
 				continue;
 			}
 
-			if (declaration.init?.type === 'Identifier') {
-				// TODO: allow referencing variables that have a literal value and is never re-assigned
+			if (declaration.init?.type === 'Identifier' && !is_reassigned(source, declaration.init.name)) {
+				// TODO: allow referencing declared variables that have a literal value and is never re-assigned
+				// continue;
 			}
 
 			// references a variable we can't easily evaluate statically
@@ -106,17 +115,6 @@ export function statically_analyse_exports(input) {
 	}
 
 	return Object.fromEntries(static_exports);
-}
-
-/**
- *
- * @param {import('acorn').ExportSpecifier | import('acorn').ExportAllDeclaration} node
- * @returns {string}
- */
-function get_exported_name(node) {
-	return node.exported?.type === 'Identifier'
-		? node.exported.name
-		: /** @type {string} */ (node.exported?.value);
 }
 
 /**

@@ -4,7 +4,7 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
-import { create_static_analyser } from '../static_analysis.js';
+import { create_static_analyser } from '../static_analysis/index.js';
 
 /**
  * @param {string} out

@@ -401,6 +401,9 @@ importers:
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
+      zimmerframe:
+        specifier: ^1.1.2
+        version: 1.1.2
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
