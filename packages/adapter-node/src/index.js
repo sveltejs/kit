@@ -6,12 +6,19 @@ const dirname = new URL('.', import.meta.url).pathname;
 const instrumentFile = join(dirname, 'server', 'instrument.server.js');
 
 if (existsSync(instrumentFile)) {
-	import(instrumentFile).then((hooks) => {
-		if (hooks?.instrument && typeof hooks.instrument === 'function') {
-			hooks.instrument();
-		}
-		import('./start.js');
-	});
+	import(instrumentFile)
+		.catch((err) => {
+			console.error('Failed to import instrument.server.js', err);
+		})
+		.finally(() => {
+			tryImportStart();
+		});
 } else {
-	import('c');
+	tryImportStart();
+}
+
+function tryImportStart() {
+	import('./start.js').catch((err) => {
+		console.error('Failed to import server (start.js)', err);
+	});
 }
