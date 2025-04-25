@@ -2,19 +2,19 @@ import { expect, test } from 'vitest';
 import { statically_analyse_exports } from './index.js';
 
 test.each([
-  `
+	`
     export const ssr = false;
     export const csr = true;
     export const prerender = 'auto';
     export const trailingSlash = 'always';
   `,
-  `
+	`
     export const ssr = false, csr = true, prerender = 'auto', trailingSlash = 'always';
   `,
-  `
+	`
     export const [ssr, csr, prerender, trailingSlash] = [false, true, 'auto', 'always'];
   `,
-  `
+	`
     export const { ssr, csr, prerender, trailingSlash } = {
       ssr: false,
       csr: true,
@@ -99,7 +99,7 @@ test.each([
         break;
     }
   `,
-  `
+	`
     export let ssr = true;
     export const prerender = true;
     function foo() {
@@ -109,7 +109,7 @@ test.each([
       }
     }
   `,
-  `
+	`
     export let ssr = true;
     export const prerender = true;
     let csr;
@@ -159,20 +159,20 @@ test.each([
       ([,{ ssr = false }] = []);
     }
   `,
-  `
+	`
     export let ssr = true;
     export const prerender = true;
     function foo() {
       ([...ssr] = []);
     }
   `,
-  `
+	`
     export let ssr = true;
     export const prerender = true;
     let csr;
     csr = ssr = false;
   `,
-  `
+	`
     export let ssr = true;
     export let prerender = true;
     let csr;

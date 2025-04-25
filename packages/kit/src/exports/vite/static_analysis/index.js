@@ -104,7 +104,10 @@ export function statically_analyse_exports(input) {
 				continue;
 			}
 
-			if (declaration.init?.type === 'Identifier' && !is_reassigned(source, declaration.init.name)) {
+			if (
+				declaration.init?.type === 'Identifier' &&
+				!is_reassigned(source, declaration.init.name)
+			) {
 				// TODO: allow referencing declared variables that have a literal value and is never re-assigned
 				// continue;
 			}
