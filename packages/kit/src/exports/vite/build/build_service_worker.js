@@ -126,7 +126,4 @@ export async function build_service_worker(
 			}
 		}
 	});
-
-	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
-	fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 }
