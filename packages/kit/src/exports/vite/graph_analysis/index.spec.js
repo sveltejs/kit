@@ -8,7 +8,6 @@ import * as module_ids from '../module_ids.js';
  * @param {string} [expected_error]
  */
 function check(graph, expected_error) {
-	// @ts-expect-error
 	const context = /** @type {import('vite').Rollup.PluginContext} */ ({
 		/** @param {string} id */
 		getModuleInfo(id) {
