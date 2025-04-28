@@ -694,34 +694,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				app.hash
 			),
 			async fetch(resource, init) {
-				if (resource instanceof Request) {
-					// we're not allowed to modify the received `Request` object, so in order
-					// to fixup relative urls we create a new equivalent `init` object instead
-					init = {
-						// the request body must be consumed in memory until browsers
-						// implement streaming request bodies and/or the body getter
-						body:
-							resource.method === 'GET' || resource.method === 'HEAD'
-								? undefined
-								: await resource.blob(),
-						cache: resource.cache,
-						credentials: resource.credentials,
-						// the headers are undefined on the server if the Headers object is empty
-						// so we need to make sure they are also undefined here if there are no headers
-						headers: [...resource.headers].length ? resource.headers : undefined,
-						integrity: resource.integrity,
-						keepalive: resource.keepalive,
-						method: resource.method,
-						mode: resource.mode,
-						redirect: resource.redirect,
-						referrer: resource.referrer,
-						referrerPolicy: resource.referrerPolicy,
-						signal: resource.signal,
-						...init
-					};
-				}
-
-				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+				const { resolved, promise } = await resolve_fetch_url(resource, init, url);
 
 				if (is_tracking) {
 					depends(resolved.href);
@@ -787,8 +760,37 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
  * @param {RequestInit | undefined} init
  * @param {URL} url
  */
-function resolve_fetch_url(input, init, url) {
-	let requested = input instanceof Request ? input.url : input;
+async function resolve_fetch_url(input, init, url) {
+	const input_is_request = input instanceof Request;
+
+	if (input_is_request) {
+		// we're not allowed to modify the received `Request` object, so in order
+		// to fixup relative urls we create a new equivalent `init` object instead
+		init = {
+			// the request body must be consumed in memory until browsers
+			// implement streaming request bodies and/or the body getter
+			body: input.method === 'GET' || input.method === 'HEAD' ? undefined : await input.blob(),
+			cache: input.cache,
+			credentials: input.credentials,
+			// the server sets headers to `undefined` if there are no headers but
+			// the client defaults to an empty Headers object in the Request object.
+			// To keep the two values in sync, we explicitly set the headers to `undefined`.
+			// Also, not sure why, but sometimes 0 is evaluated as truthy so we need to
+			// explicitly compare the headers length to a number here
+			headers: [...input.headers].length > 0 ? input?.headers : undefined,
+			integrity: input.integrity,
+			keepalive: input.keepalive,
+			method: input.method,
+			mode: input.mode,
+			redirect: input.redirect,
+			referrer: input.referrer,
+			referrerPolicy: input.referrerPolicy,
+			signal: input.signal,
+			...init
+		};
+	}
+
+	let requested = input_is_request ? input.url : input;
 
 	// we must fixup relative urls so they are resolved from the target page
 	const resolved = new URL(requested, url);
@@ -1240,7 +1242,7 @@ async function get_rerouted_url(url) {
 				(await app.hooks.reroute({
 					url: new URL(url),
 					fetch: async (input, init) => {
-						return resolve_fetch_url(input, init, url).promise;
+						return (await resolve_fetch_url(input, init, url)).promise;
 					}
 				})) ?? url;
 

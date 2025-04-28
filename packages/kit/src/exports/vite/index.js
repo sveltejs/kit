@@ -692,7 +692,7 @@ Tips:
 							// preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									warning.code === 'MISSING_EXPORT' &&
+									warning.code === 'IMPORT_IS_UNDEFINED' &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -776,9 +776,14 @@ Tips:
 		},
 
 		renderChunk(code, chunk) {
+			if (chunk.fileName.includes('server')) {
+				console.log(code);
+			}
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+					// Rolldown changes our single quotes to double quotes so that's what we
+					// check for in the regex instead
+					code: code.replace(/__SVELTEKIT_TRACK__\("(.+?)"\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
@@ -870,7 +875,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				// TODO: replace type assertion with RolldownOutput once Vite exports it
+				// TODO: replace type assertion with `RolldownOutput` type once Vite exports it
 				const { output } =
 					/** @type {Exclude<Awaited<ReturnType<typeof vite.build>>, unknown[]>} */ (
 						await vite.build({
