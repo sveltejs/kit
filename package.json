@@ -23,10 +23,10 @@
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.11",
+		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "^8.1.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"eslint": "^9.6.0",
-		"@playwright/test": "catalog:",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"typescript-eslint": "^8.24.0"
@@ -41,6 +41,7 @@
 		},
 		"onlyBuiltDependencies": [
 			"esbuild",
+			"rolldown",
 			"sharp",
 			"svelte-preprocess",
 			"workerd"
