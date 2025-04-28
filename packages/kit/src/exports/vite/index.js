@@ -126,10 +126,11 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * @param {{ configFile?: string }} options
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit({ configFile } = {}) {
+	const svelte_config = await load_config({ configFile });
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;

@@ -58,11 +58,18 @@ export function load_error_page(config) {
 
 /**
  * Loads and validates svelte.config.js
- * @param {{ cwd?: string }} options
+ * @param {{ configFile?: string, cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
-export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+export async function load_config({ cwd = process.cwd(), configFile = 'svelte.config.js' } = {}) {
+	/** @type {string} */
+	let config_file;
+
+	if (path.isAbsolute(configFile)) {
+		config_file = configFile;
+	} else {
+		config_file = path.join(cwd, configFile);
+	}
 
 	if (!fs.existsSync(config_file)) {
 		return process_config({}, { cwd });

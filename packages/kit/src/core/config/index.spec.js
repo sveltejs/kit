@@ -380,3 +380,11 @@ test('errors on loading config with incorrect default export', async () => {
 		'svelte.config.js must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
 });
+
+test('load config with custom filename', async () => {
+	const cwd = join(__dirname, 'fixtures/custom-filename');
+
+	const config = await load_config({ cwd, configFile: 'custom.svelte.config.js' });
+
+	expect(config.kit.outDir).toEqual(join(cwd, 'custom-out-dir'));
+});
