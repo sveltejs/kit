@@ -684,6 +684,7 @@ Tips:
 							onwarn(warning, handler) {
 								if (
 									warning.code === 'IMPORT_IS_UNDEFINED' &&
+									// TODO: rolldown doesn't seem to give us the `id` so this condition is never true
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
