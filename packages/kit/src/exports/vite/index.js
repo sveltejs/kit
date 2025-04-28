@@ -676,7 +676,6 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								// manualChunks: split ? undefined : () => 'bundle',
 								advancedChunks: split
 									? undefined
 									: {
@@ -686,9 +685,10 @@ Tips:
 												}
 											]
 										},
-								inlineDynamicImports: false
+								inlineDynamicImports: split ? false : true
 							},
-							// TODO: see https://github.com/rolldown/rolldown/issues/3500
+							// TODO: `preserveEntrySignatures` hasn't been implemented yet but it should currrently behave as if it were set to 'strict'
+							// see https://github.com/rolldown/rolldown/issues/3500
 							// preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
@@ -776,9 +776,6 @@ Tips:
 		},
 
 		renderChunk(code, chunk) {
-			if (chunk.fileName.includes('server')) {
-				console.log(code);
-			}
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
 					// Rolldown changes our single quotes to double quotes so that's what we
