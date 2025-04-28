@@ -36,6 +36,9 @@
 		"pnpm": ">=9.0.0"
 	},
 	"pnpm": {
+		"overrides": {
+			"vite": "npm:rolldown-vite@latest"
+		},
 		"onlyBuiltDependencies": [
 			"esbuild",
 			"sharp",

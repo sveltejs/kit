@@ -102,8 +102,7 @@ export async function build_service_worker(
 					'service-worker': service_worker_entry_file
 				},
 				output: {
-					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
-					entryFileNames: 'service-worker.mjs',
+					entryFileNames: 'service-worker.js',
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
 				}

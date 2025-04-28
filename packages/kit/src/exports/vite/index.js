@@ -181,6 +181,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
+	/** @type {import('vite')} */
 	const vite = await resolve_peer_dependency('vite');
 
 	const { kit } = svelte_config;
@@ -675,10 +676,20 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: split ? undefined : () => 'bundle',
+								// manualChunks: split ? undefined : () => 'bundle',
+								advancedChunks: split
+									? undefined
+									: {
+											groups: [
+												{
+													name: 'bundle'
+												}
+											]
+										},
 								inlineDynamicImports: false
 							},
-							preserveEntrySignatures: 'strict',
+							// TODO: see https://github.com/rolldown/rolldown/issues/3500
+							// preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
 									warning.code === 'MISSING_EXPORT' &&
@@ -705,6 +716,9 @@ Tips:
 								hoistTransitiveImports: false
 							}
 						}
+					},
+					experimental: {
+						enableNativePlugin: true
 					}
 				};
 			} else {
@@ -750,6 +764,8 @@ Tips:
 			if (secondary_build_started) return;
 
 			if (is_build) {
+				// TODO: remove this ts-expect-error once vite rolldown supports watch
+				// @ts-expect-error watch is currently not supported by vite rolldown?
 				if (!vite_config.build.watch) {
 					rimraf(out);
 				}
@@ -852,23 +868,25 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
-					await vite.build({
-						configFile: vite_config.configFile,
-						// CLI args
-						mode: vite_config_env.mode,
-						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen,
-						build: {
-							minify: initial_config.build?.minify,
-							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap
-						},
-						optimizeDeps: {
-							force: vite_config.optimizeDeps.force
-						}
-					})
-				);
+				// TODO: replace type assertion with RolldownOutput once Vite exports it
+				const { output } =
+					/** @type {Exclude<Awaited<ReturnType<typeof vite.build>>, unknown[]>} */ (
+						await vite.build({
+							configFile: vite_config.configFile,
+							// CLI args
+							mode: vite_config_env.mode,
+							logLevel: vite_config.logLevel,
+							clearScreen: vite_config.clearScreen,
+							build: {
+								minify: initial_config.build?.minify,
+								assetsInlineLimit: vite_config.build.assetsInlineLimit,
+								sourcemap: vite_config.build.sourcemap
+							},
+							optimizeDeps: {
+								force: vite_config.optimizeDeps.force
+							}
+						})
+					);
 
 				copy(
 					`${out}/server/${kit.appDir}/immutable/assets`,
@@ -1028,7 +1046,7 @@ Tips:
 							...vite_config,
 							build: {
 								...vite_config.build,
-								minify: initial_config.build?.minify ?? 'esbuild'
+								minify: initial_config.build?.minify ?? 'oxc'
 							}
 						},
 						manifest_data,
