@@ -676,16 +676,7 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								advancedChunks: split
-									? undefined
-									: {
-											groups: [
-												{
-													name: 'bundle'
-												}
-											]
-										},
-								inlineDynamicImports: split ? false : true
+								inlineDynamicImports: false
 							},
 							// TODO: `preserveEntrySignatures` hasn't been implemented yet but it should currrently behave as if it were set to 'strict'
 							// see https://github.com/rolldown/rolldown/issues/3500
@@ -723,6 +714,18 @@ Tips:
 					// 	enableNativePlugin: true
 					// }
 				};
+
+				if (split && new_config.build?.rollupOptions?.output) {
+					if (vite.rolldownVersion) {
+						/** @type {import('rollup').OutputOptions} */ (
+							new_config.build.rollupOptions.output
+						).inlineDynamicImports = true;
+					} else {
+						/** @type {import('rollup').OutputOptions} */ (
+							new_config.build.rollupOptions.output
+						).manualChunks = () => 'bundle';
+					}
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
@@ -766,8 +769,8 @@ Tips:
 			if (secondary_build_started) return;
 
 			if (is_build) {
-				// TODO: remove this ts-expect-error once vite rolldown supports watch
-				// @ts-expect-error watch is currently not supported by vite rolldown?
+				// TODO: remove this ts-expect-error once vite rolldown supports `watch`
+				// @ts-expect-error rolldown-vite does not support `watch` yet
 				if (!vite_config.build.watch) {
 					rimraf(out);
 				}
@@ -778,9 +781,8 @@ Tips:
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					// Rolldown changes our single quotes to double quotes so that's what we
-					// check for in the regex instead
-					code: code.replace(/__SVELTEKIT_TRACK__\("(.+?)"\)/g, (_, label) => {
+					// Rolldown changes our single quotes to double quotes so we need it in the regex too
+					code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
@@ -872,25 +874,23 @@ Tips:
 
 				secondary_build_started = true;
 
-				// TODO: replace type assertion with `RolldownOutput` type once Vite exports it
-				const { output } =
-					/** @type {Exclude<Awaited<ReturnType<typeof vite.build>>, unknown[]>} */ (
-						await vite.build({
-							configFile: vite_config.configFile,
-							// CLI args
-							mode: vite_config_env.mode,
-							logLevel: vite_config.logLevel,
-							clearScreen: vite_config.clearScreen,
-							build: {
-								minify: initial_config.build?.minify,
-								assetsInlineLimit: vite_config.build.assetsInlineLimit,
-								sourcemap: vite_config.build.sourcemap
-							},
-							optimizeDeps: {
-								force: vite_config.optimizeDeps.force
-							}
-						})
-					);
+				const { output } = /** @type {import('vite').Rollup.RolldownOutput} */ (
+					await vite.build({
+						configFile: vite_config.configFile,
+						// CLI args
+						mode: vite_config_env.mode,
+						logLevel: vite_config.logLevel,
+						clearScreen: vite_config.clearScreen,
+						build: {
+							minify: initial_config.build?.minify,
+							assetsInlineLimit: vite_config.build.assetsInlineLimit,
+							sourcemap: vite_config.build.sourcemap
+						},
+						optimizeDeps: {
+							force: vite_config.optimizeDeps.force
+						}
+					})
+				);
 
 				copy(
 					`${out}/server/${kit.appDir}/immutable/assets`,
