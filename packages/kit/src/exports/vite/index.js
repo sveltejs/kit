@@ -715,15 +715,14 @@ Tips:
 					// }
 				};
 
-				if (split && new_config.build?.rollupOptions?.output) {
+				if (!split && new_config.build?.rollupOptions?.output) {
+					const output_options = /** @type {import('rollup').OutputOptions} */ (
+						new_config.build.rollupOptions.output
+					);
 					if (vite.rolldownVersion) {
-						/** @type {import('rollup').OutputOptions} */ (
-							new_config.build.rollupOptions.output
-						).inlineDynamicImports = true;
+						output_options.inlineDynamicImports = true;
 					} else {
-						/** @type {import('rollup').OutputOptions} */ (
-							new_config.build.rollupOptions.output
-						).manualChunks = () => 'bundle';
+						output_options.manualChunks = () => 'bundle';
 					}
 				}
 			} else {
