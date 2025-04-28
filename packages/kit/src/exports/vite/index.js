@@ -716,10 +716,10 @@ Tips:
 								hoistTransitiveImports: false
 							}
 						}
-					},
-					experimental: {
-						enableNativePlugin: true
 					}
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
 			} else {
 				new_config = {
