@@ -55,3 +55,84 @@ if (is_legacy) {
 export function update(new_page) {
 	Object.assign(page, new_page);
 }
+
+/** @type {Map<Function, Set<string>>} */
+export const load_fns = new Map();
+
+/**
+ * @param {(context: { depends: Function }) => Promise<any>} data_fn
+ */
+export function load(data_fn) {
+	/** @type {Promise<any>} */
+	let data_promise;
+	let dependencies = new Set();
+	let data = $state.raw();
+	let pending = $state.raw(true);
+	let error = $state.raw(null);
+
+	/** @param {string} str */
+	function depends(str) {
+		dependencies.add(str);
+	}
+
+	// TODO handle race conditions etc
+	function load_data() {
+		pending = true;
+		error = null;
+		dependencies = new Set();
+		data_promise = data_fn({ depends });
+
+		data_promise
+			.then((result) => {
+				data = result;
+				pending = false;
+			})
+			.catch((err) => {
+				error = err;
+				pending = false;
+			})
+			.finally(() => {
+				load_fns.set(load_data, dependencies);
+			});
+	}
+
+	$effect.pre(() => {
+		load_fns.set(load_data, dependencies);
+		return () => {
+			load_fns.delete(load_data);
+		};
+	});
+
+	$effect.pre(() => {
+		load_data();
+	});
+
+	return {
+		get data() {
+			return data;
+		},
+		get pending() {
+			return pending;
+		},
+		get error() {
+			return error;
+		},
+		refetch: load_data,
+		/** @param {Function} fn */
+		then: (fn) => {
+			return new Promise(async (resolve, reject) => {
+				while (!data_promise) {
+					await new Promise((r) => setTimeout(r, 10));
+				}
+				data_promise
+					.then((result) => {
+						fn(result);
+						resolve(result);
+					})
+					.catch((err) => {
+						reject(err);
+					});
+			});
+		}
+	};
+}

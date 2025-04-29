@@ -39,7 +39,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
-import { page, update, navigating } from './state.svelte.js';
+import { page, update, navigating, load_fns } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
 export { load_css };
@@ -348,6 +348,15 @@ async function _invalidate() {
 	// was then triggered and is still running while the invalidation kicks in,
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
+
+	// Rerun component load functions
+	load_fns.forEach((dependencies, load) => {
+		for (const href of dependencies) {
+			if (force_invalidation || invalidated.some((fn) => fn(new URL(href)))) {
+				load();
+			}
+		}
+	});
 
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || nav_token !== token) return;

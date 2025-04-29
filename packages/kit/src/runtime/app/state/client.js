@@ -1,7 +1,8 @@
 import {
 	page as _page,
 	navigating as _navigating,
-	updated as _updated
+	updated as _updated,
+	load
 } from '../../client/state.svelte.js';
 import { stores } from '../../client/client.js';
 
@@ -66,3 +67,5 @@ export const updated = {
 	},
 	check: stores.updated.check
 };
+
+export { load };
