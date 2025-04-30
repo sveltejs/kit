@@ -107,7 +107,7 @@ export class DedupeCache {
 	 * @returns {boolean} - Whether the function call is cached.
 	 */
 	has(fn, ...args) {
-		const items = this._values.get(fn);
+		const items = this._values.get(getUnderlyingFunction(fn));
 		if (!items) {
 			return false;
 		}
@@ -122,7 +122,7 @@ export class DedupeCache {
 	 * @returns {boolean} - Whether the function call was removed.
 	 */
 	remove(fn, ...args) {
-		const items = this._values.get(fn);
+		const items = this._values.get(getUnderlyingFunction(fn));
 		if (!items) {
 			return false;
 		}

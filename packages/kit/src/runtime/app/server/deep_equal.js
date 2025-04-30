@@ -31,13 +31,26 @@ export function deep_equal(a, b) {
 
 	if (a instanceof Date) {
 		// Technically, the JSON check will handle this, but we can make it more accurate
+		if (!(b instanceof Date)) return false;
 		return a.getTime() === b.getTime();
 	}
 
-	try {
-		return JSON.stringify(a) === JSON.stringify(b);
-	} catch {
-		// This means they cannot be JSON-ified. This is annoying.
+	if (a instanceof Map) {
+		if (!(b instanceof Map)) return false;
+		for (const [key, value] of a) {
+			if (!b.has(key)) return false;
+			if (!deep_equal(value, b.get(key))) return false;
+		}
+		return a.size === b.size;
+	}
+
+	if (a instanceof Set) {
+		if (!(b instanceof Set)) return false;
+		for (const value of a) {
+			if (!b.has(value)) return false;
+			if (!deep_equal(value, b.get(value))) return false;
+		}
+		return a.size === b.size;
 	}
 
 	const a_is_array = Array.isArray(a);
@@ -51,16 +64,14 @@ export function deep_equal(a, b) {
 		return a.every((value, index) => deep_equal(value, b[index]));
 	}
 
-	if (a instanceof Map) {
-		return a.size === b.size && a.every((value, key) => deep_equal(value, b.get(key)));
-	}
-
-	if (a instanceof Set) {
-		return a.size === b.size && a.every((value) => b.has(value));
-	}
-
 	if (binary_constructors.includes(a.constructor)) {
 		return a.length === b.length && a.every((value, index) => value === b[index]);
+	}
+
+	try {
+		return JSON.stringify(a) === JSON.stringify(b);
+	} catch {
+		// This means they cannot be JSON-ified. This is annoying.
 	}
 
 	return Object.values(a).every((value, index) => deep_equal(value, b[index]));
