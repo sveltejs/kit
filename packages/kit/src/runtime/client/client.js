@@ -7,7 +7,14 @@ import {
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
-import { create_fetch, dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import {
+	create_fetch,
+	dev_fetch,
+	initial_fetch,
+	lock_fetch,
+	subsequent_fetch,
+	unlock_fetch
+} from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
