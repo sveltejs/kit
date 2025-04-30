@@ -90,11 +90,10 @@ export function create_fetch(app) {
 
 		return app.hooks.handleFetch({
 			request: original_request,
-			fetch: runtime_fetch,
+			fetch: runtime_fetch
 		});
 	};
 }
-
 
 const cache = new Map();
 
@@ -195,7 +194,6 @@ function build_selector(resource, opts) {
 
 	return selector;
 }
-
 
 /**
  * @param {RequestInfo | URL} info
