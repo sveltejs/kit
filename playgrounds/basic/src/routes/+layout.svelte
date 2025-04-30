@@ -13,6 +13,7 @@
 	<a href="/c">/c</a>
 	<a href="/d">/d</a>
 	<a href="/e">/e</a>
+	<a href="/client-fetch">/client-fetch</a>
 </nav>
 
 {@render children()}
