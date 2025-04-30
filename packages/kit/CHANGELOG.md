@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.20.8
+### Patch Changes
+
+
+- fix: ensure that `ssr` and `csr` page options apply to error pages rendered as a result of a load function error on the server ([#13695](https://github.com/sveltejs/kit/pull/13695))
+
 ## 2.20.7
 ### Patch Changes
 
