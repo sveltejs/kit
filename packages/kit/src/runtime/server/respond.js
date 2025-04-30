@@ -34,6 +34,7 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { with_event } from '../app/server/event.js';
+import { DedupeCache } from '../app/server/dedupe.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -136,6 +137,7 @@ export async function respond(request, options, manifest, state) {
 		platform: state.platform,
 		request,
 		route: { id: null },
+		dedupe: state.dedupe ?? new DedupeCache(),
 		setHeaders: (new_headers) => {
 			if (__SVELTEKIT_DEV__) {
 				validateHeaders(new_headers);
@@ -164,6 +166,10 @@ export async function respond(request, options, manifest, state) {
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
+
+	if (!state.dedupe) {
+		state.dedupe = event.dedupe;
+	}
 
 	event.fetch = create_fetch({
 		event,

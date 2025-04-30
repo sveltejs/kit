@@ -19,6 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { DedupeCache } from '../runtime/app/server/dedupe.js';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -1250,6 +1251,10 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+	/**
+	 * The cache responsible for deduplicating function calls.
+	 */
+	dedupe: DedupeCache;
 }
 
 /**

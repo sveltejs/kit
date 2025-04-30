@@ -1232,6 +1232,10 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
+		/**
+		 * The cache responsible for deduplicating function calls.
+		 */
+		dedupe: DedupeCache;
 	}
 
 	/**
@@ -1935,6 +1939,25 @@ declare module '@sveltejs/kit' {
 	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
 		adapter?: Adapter;
 	};
+	/** Defines the cache of functions for this request. */
+	class DedupeCache {
+		
+		private _values;
+		/**
+		 * Check if a given function call is cached.
+		 * @param fn - The function to check.
+		 * @param args - The arguments to check.
+		 * @returns - Whether the function call is cached.
+		 */
+		has<F extends (...args: any[]) => any>(fn: F, ...args: Parameters<F>): boolean;
+		/**
+		 * Remove a function call from the cache.
+		 * @param fn - The function to remove.
+		 * @param args - The arguments to remove.
+		 * @returns - Whether the function call was removed.
+		 */
+		remove<F extends (...args: any[]) => any>(fn: F, ...args: Parameters<F>): boolean;
+	}
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2423,6 +2446,40 @@ declare module '$app/server' {
 	 * @since 2.20.0
 	 */
 	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
+	/**
+	 * Gets the underlying function that was turned into a proxy.
+	 * @param fn - The function to get the underlying function from.
+	 * @returns The underlying function.
+	 */
+	export function getUnderlyingFunction<F extends (...args: any[]) => any>(fn: F): F;
+	/**
+	 * Creates a deduplicated function. This means that within a request, if multiple
+	 * calls are made with the same arguments, the underlying function will only be
+	 * called once and the result will be cached and returned for all subsequent calls.
+	 *
+	 * @param fn - The function to deduplicate.
+	 * @returns The deduplicated function.
+	 */
+	export function dedupe<F extends (...args: any[]) => any>(fn: F): F;
+	/** Defines the cache of functions for this request. */
+	export class DedupeCache {
+		
+		private _values;
+		/**
+		 * Check if a given function call is cached.
+		 * @param fn - The function to check.
+		 * @param args - The arguments to check.
+		 * @returns - Whether the function call is cached.
+		 */
+		has<F extends (...args: any[]) => any>(fn: F, ...args: Parameters<F>): boolean;
+		/**
+		 * Remove a function call from the cache.
+		 * @param fn - The function to remove.
+		 * @param args - The arguments to remove.
+		 * @returns - Whether the function call was removed.
+		 */
+		remove<F extends (...args: any[]) => any>(fn: F, ...args: Parameters<F>): boolean;
+	}
 
 	export {};
 }

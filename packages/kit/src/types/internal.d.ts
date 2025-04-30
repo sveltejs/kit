@@ -29,6 +29,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import type { DedupeCache } from '../runtime/app/server/dedupe.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -497,6 +498,7 @@ export interface SSRState {
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 	emulator?: Emulator;
+	dedupe?: DedupeCache;
 }
 
 export type StrictBody = string | ArrayBufferView;
