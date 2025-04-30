@@ -104,9 +104,15 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
 
+## Shared hooks
+
+The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
+
 ### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request that happens inside a `load`, `action` or `handle` function that runs on the server (or during prerendering).
+#### on the server
+
+This function allows you to modify (or replace) a `fetch` request that happens inside a `load`, `action` or `handle` function that runs on the server (or during pre-rendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
@@ -147,9 +153,33 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-## Shared hooks
+#### on the client
 
-The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
+This function allows you to modify (or replace) `fetch` requests that happens on the client.
+
+This allows, for example, to pass custom headers to server when running `load` or `action` function on the server *(inside a `+page.server.ts` or `+layout.server.ts`)*, to automatically includes credentials to requests to your API or to collect logs or metrics.
+
+*Note: on the client, the `event` argument is not passed to the hook.*
+
+
+```js
+/// file: src/hooks.client.js
+/** @type {import('@sveltejs/kit').HandleClientFetch} */
+export async function handleFetch({ request, fetch }) {
+	if (request.url.startsWith(location.origin)) {
+		request.headers.set('X-Auth-Token', 'my-custom-auth-token');
+	} else if (request.url.startsWith('https://api.my-domain.com/')) {
+		request.headers.set('Authorization', 'Bearer my-api-token');
+	}
+
+	console.time(`request: ${request.url}`);
+
+	return fetch(request).finally(() => {
+		console.timeEnd(`request: ${request.url}`);
+	});
+}
+```
+
 
 ### handleError
 
