@@ -85,14 +85,16 @@ export function create_fetch(app) {
 		};
 	}
 
-	window.fetch = async (input, init) => {
-		const original_request = normalize_fetch_input(input, init);
+	if (BROWSER) {
+		window.fetch = async (input, init) => {
+			const original_request = normalize_fetch_input(input, init);
 
-		return app.hooks.handleFetch({
-			request: original_request,
-			fetch: runtime_fetch
-		});
-	};
+			return app.hooks.handleFetch({
+				request: original_request,
+				fetch: runtime_fetch
+			});
+		};
+	}
 }
 
 const cache = new Map();
@@ -172,7 +174,7 @@ export function dev_fetch(resource, opts) {
  * @param {RequestInit} [opts]
  */
 function build_selector(resource, opts) {
-	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
+	const url = get_selector_url(resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
@@ -195,6 +197,20 @@ function build_selector(resource, opts) {
 }
 
 /**
+ * Build the cache url for a given request
+ * @param {URL | RequestInfo} resource
+ */
+function get_selector_url(resource) {
+	if (resource instanceof Request) {
+		resource = resource.url.startsWith(location.origin)
+			? resource.url.slice(location.origin.length)
+			: resource.url;
+	}
+
+	return JSON.stringify(resource);
+}
+
+/**
  * @param {RequestInfo | URL} info
  * @param {RequestInit | undefined} init
  * @returns {Request}
@@ -204,5 +220,5 @@ function normalize_fetch_input(info, init) {
 		return info;
 	}
 
-	return new Request(typeof info === 'string' ? new URL(info) : info, init);
+	return new Request(typeof info === 'string' ? new URL(info, location.href) : info, init);
 }
