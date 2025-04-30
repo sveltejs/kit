@@ -15,67 +15,86 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV && BROWSER) {
-	let can_inspect_stack_trace = false;
-
-	// detect whether async stack traces work
-	// eslint-disable-next-line @typescript-eslint/require-await
-	const check_stack_trace = async () => {
-		const stack = /** @type {string} */ (new Error().stack);
-		can_inspect_stack_trace = stack.includes('check_stack_trace');
-	};
-
-	void check_stack_trace();
-
+/**
+ * @param {import('./types.js').SvelteKitApp} app
+ */
+export function create_fetch(app) {
 	/**
-	 * @param {RequestInfo | URL} input
-	 * @param {RequestInit & Record<string, any> | undefined} init
+	 * @type {typeof fetch}
 	 */
-	window.fetch = (input, init) => {
-		// Check if fetch was called via load_node. the lock method only checks if it was called at the
-		// same time, but not necessarily if it was called from `load`.
-		// We use just the filename as the method name sometimes does not appear on the CI.
-		const url = input instanceof Request ? input.url : input.toString();
-		const stack_array = /** @type {string} */ (new Error().stack).split('\n');
-		// We need to do a cutoff because Safari and Firefox maintain the stack
-		// across events and for example traces a `fetch` call triggered from a button
-		// back to the creation of the event listener and the element creation itself,
-		// where at some point client.js will show up, leading to false positives.
-		const cutoff = stack_array.findIndex((a) => a.includes('load@') || a.includes('at load'));
-		const stack = stack_array.slice(0, cutoff + 2).join('\n');
+	let runtime_fetch;
+	if (DEV && BROWSER) {
+		let can_inspect_stack_trace = false;
 
-		const in_load_heuristic = can_inspect_stack_trace
-			? stack.includes('src/runtime/client/client.js')
-			: loading;
+		// detect whether async stack traces work
+		// eslint-disable-next-line @typescript-eslint/require-await
+		const check_stack_trace = async () => {
+			const stack = /** @type {string} */ (new Error().stack);
+			can_inspect_stack_trace = stack.includes('check_stack_trace');
+		};
 
-		// This flag is set in initial_fetch and subsequent_fetch
-		const used_kit_fetch = init?.__sveltekit_fetch__;
+		void check_stack_trace();
 
-		if (in_load_heuristic && !used_kit_fetch) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-			);
-		}
+		/**
+		 * @param {RequestInfo | URL} input
+		 * @param {RequestInit & Record<string, any> | undefined} init
+		 */
+		runtime_fetch = (input, init) => {
+			// Check if fetch was called via load_node. the lock method only checks if it was called at the
+			// same time, but not necessarily if it was called from `load`.
+			// We use just the filename as the method name sometimes does not appear on the CI.
+			const url = input instanceof Request ? input.url : input.toString();
+			const stack_array = /** @type {string} */ (new Error().stack).split('\n');
+			// We need to do a cutoff because Safari and Firefox maintain the stack
+			// across events and for example traces a `fetch` call triggered from a button
+			// back to the creation of the event listener and the element creation itself,
+			// where at some point client.js will show up, leading to false positives.
+			const cutoff = stack_array.findIndex((a) => a.includes('load@') || a.includes('at load'));
+			const stack = stack_array.slice(0, cutoff + 2).join('\n');
 
-		const method = input instanceof Request ? input.method : init?.method || 'GET';
+			const in_load_heuristic = can_inspect_stack_trace
+				? stack.includes('src/runtime/client/client.js')
+				: loading;
 
-		if (method !== 'GET') {
-			cache.delete(build_selector(input));
-		}
+			// This flag is set in initial_fetch and subsequent_fetch
+			const used_kit_fetch = init?.__sveltekit_fetch__;
 
-		return native_fetch(input, init);
-	};
-} else if (BROWSER) {
-	window.fetch = (input, init) => {
-		const method = input instanceof Request ? input.method : init?.method || 'GET';
+			if (in_load_heuristic && !used_kit_fetch) {
+				console.warn(
+					`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
+				);
+			}
 
-		if (method !== 'GET') {
-			cache.delete(build_selector(input));
-		}
+			const method = input instanceof Request ? input.method : init?.method || 'GET';
 
-		return native_fetch(input, init);
+			if (method !== 'GET') {
+				cache.delete(build_selector(input));
+			}
+
+			return native_fetch(input, init);
+		};
+	} else if (BROWSER) {
+		runtime_fetch = (input, init) => {
+			const method = input instanceof Request ? input.method : init?.method || 'GET';
+
+			if (method !== 'GET') {
+				cache.delete(build_selector(input));
+			}
+
+			return native_fetch(input, init);
+		};
+	}
+
+	window.fetch = async (input, init) => {
+		const original_request = normalize_fetch_input(input, init);
+
+		return app.hooks.handleFetch({
+			request: original_request,
+			fetch: runtime_fetch,
+		});
 	};
 }
+
 
 const cache = new Map();
 
@@ -174,4 +193,18 @@ function build_selector(resource, opts) {
 	}
 
 	return selector;
+}
+
+
+/**
+ * @param {RequestInfo | URL} info
+ * @param {RequestInit | undefined} init
+ * @returns {Request}
+ */
+function normalize_fetch_input(info, init) {
+	if (info instanceof Request) {
+		return info;
+	}
+
+	return new Request(typeof info === 'string' ? new URL(info) : info, init);
 }

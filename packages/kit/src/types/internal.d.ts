@@ -12,6 +12,7 @@ import {
 	ServerInitOptions,
 	HandleFetch,
 	Actions,
+	HandleClientFetch,
 	HandleClientError,
 	Reroute,
 	RequestEvent,
@@ -155,6 +156,7 @@ export interface ServerHooks {
 }
 
 export interface ClientHooks {
+	handleFetch: HandleClientFetch;
 	handleError: HandleClientError;
 	reroute: Reroute;
 	transport: Record<string, Transporter>;

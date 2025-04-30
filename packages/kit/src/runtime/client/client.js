@@ -7,7 +7,7 @@ import {
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
-import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import { create_fetch, dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
@@ -276,6 +276,7 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
+	create_fetch(_app);
 
 	await _app.hooks.init?.();
 
