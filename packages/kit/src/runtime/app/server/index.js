@@ -73,4 +73,4 @@ export function read(asset) {
 }
 
 export { getRequestEvent } from './event.js';
-export { getUnderlyingFunction, dedupe, DedupeCache } from './dedupe.js';
+export { getUnderlyingDedupeFunction, dedupe, DedupeCache } from './dedupe.js';

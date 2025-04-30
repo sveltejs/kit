@@ -33,7 +33,7 @@ const underlying_fn = Symbol('underlyingFn');
  * @param {F} fn - The function to get the underlying function from.
  * @returns {F} The underlying function.
  */
-export function getUnderlyingFunction(fn) {
+export function getUnderlyingDedupeFunction(fn) {
 	// @ts-expect-error: This is a magic value
 	return fn[underlying_fn] || fn;
 }
@@ -107,7 +107,7 @@ export class DedupeCache {
 	 * @returns {boolean} - Whether the function call is cached.
 	 */
 	has(fn, ...args) {
-		const items = this._values.get(getUnderlyingFunction(fn));
+		const items = this._values.get(getUnderlyingDedupeFunction(fn));
 		if (!items) {
 			return false;
 		}
@@ -122,7 +122,7 @@ export class DedupeCache {
 	 * @returns {boolean} - Whether the function call was removed.
 	 */
 	remove(fn, ...args) {
-		const items = this._values.get(getUnderlyingFunction(fn));
+		const items = this._values.get(getUnderlyingDedupeFunction(fn));
 		if (!items) {
 			return false;
 		}

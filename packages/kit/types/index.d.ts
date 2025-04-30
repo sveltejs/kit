@@ -2451,7 +2451,7 @@ declare module '$app/server' {
 	 * @param fn - The function to get the underlying function from.
 	 * @returns The underlying function.
 	 */
-	export function getUnderlyingFunction<F extends (...args: any[]) => any>(fn: F): F;
+	export function getUnderlyingDedupeFunction<F extends (...args: any[]) => any>(fn: F): F;
 	/**
 	 * Creates a deduplicated function. This means that within a request, if multiple
 	 * calls are made with the same arguments, the underlying function will only be
