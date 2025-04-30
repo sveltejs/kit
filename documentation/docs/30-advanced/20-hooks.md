@@ -104,7 +104,45 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
 
+### handleValidationError
+
+This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+
+Say you have a remote function that expects a string as its argument ...
+
+```js
+/// file: todos.remote.js
+import * as v from 'valibot';
+import { query } from '$app/server';
+
+export const getTodo = query(v.string(), (id) => {
+	// implementation...
+});
+```
+
+...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+
+To customise this message and add additional properties to the error object, implement `handleValidationError`:
+
+```js
+/// file: src/hooks.server.js
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export function handleValidationError({ issues }) {
+	return {
+		message: 'No thank you'
+	};
+}
+```
+
+Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
+
+## Shared hooks
+
+The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
+
 ### handleFetch
+
+#### on the server
 
 This function allows you to modify (or replace) the result of an [`event.fetch`](load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
 
@@ -143,41 +181,33 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-### handleValidationError
+#### on the client
 
-This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+This function allows you to modify (or replace) `fetch` requests that happens on the client.
 
-Say you have a remote function that expects a string as its argument ...
+This allows, for example, to pass custom headers to server when running `load` or `action` function on the server *(inside a `+page.server.ts` or `+layout.server.ts`)*, to automatically includes credentials to requests to your API or to collect logs or metrics.
 
-```js
-/// file: todos.remote.js
-import * as v from 'valibot';
-import { query } from '$app/server';
+*Note: on the client, the `event` argument is not passed to the hook.*
 
-export const getTodo = query(v.string(), (id) => {
-	// implementation...
-});
-```
-
-...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
-
-To customise this message and add additional properties to the error object, implement `handleValidationError`:
 
 ```js
-/// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export function handleValidationError({ issues }) {
-	return {
-		message: 'No thank you'
-	};
+/// file: src/hooks.client.js
+/** @type {import('@sveltejs/kit').HandleClientFetch} */
+export async function handleFetch({ request, fetch }) {
+	if (request.url.startsWith(location.origin)) {
+		request.headers.set('X-Auth-Token', 'my-custom-auth-token');
+	} else if (request.url.startsWith('https://api.my-domain.com/')) {
+		request.headers.set('Authorization', 'Bearer my-api-token');
+	}
+
+	console.time(`request: ${request.url}`);
+
+	return fetch(request).finally(() => {
+		console.timeEnd(`request: ${request.url}`);
+	});
 }
 ```
 
-Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
-
-## Shared hooks
-
-The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
