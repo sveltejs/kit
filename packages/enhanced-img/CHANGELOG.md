@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.5.0
+### Minor Changes
+
+
+- feat: add support for targeting `enhanced\:img` in CSS ([#13617](https://github.com/sveltejs/kit/pull/13617))
+
 ## 0.4.4
 ### Patch Changes
 
