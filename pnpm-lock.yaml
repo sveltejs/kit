@@ -338,6 +338,9 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
     devDependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.23.1)(vite@6.0.11(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.7
