@@ -8,8 +8,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let todos = load(({ depends }) => {
-		// depends('to:dos');
+	let todos = load(() => {
 		return get_todos();
 	});
 	// single flight
@@ -46,24 +45,39 @@
 
 <h2>Todos</h2>
 
+<h3>todo via JS</h3>
 <input
 	placeholder="Add Todo"
 	onkeyup={async (e) => {
 		if (e.key === 'Enter') {
-			todos.data = [...todos, { text: e.target.value }];
+			todos.data = [...todos.data, { text: e.target.value }];
 			await add_todo(e.target.value);
-			// invalidate('to:dos');
+			invalidate(get_todos.key);
 		}
 	}}
 />
 
-<form method="post" action={add_todo_form} use:enhance>
+<h3>todo via form</h3>
+<form {...add_todo_form.form}>
 	<input name="text" placeholder="Add Todo" />
 	<button type="submit">add</button>
 </form>
+<!-- <form method="post" action={add_todo_form} use:enhance>
+	<input name="text" placeholder="Add Todo" />
+	<button type="submit">add</button>
+</form> -->
 
 <ul>
 	{#each todos.data ?? [] as todo}
 		<li>{todo.text}</li>
 	{/each}
 </ul>
+
+<!-- with the await feature you could also do
+<ul>
+	{#each await get_todos() as todo}
+		<li>{todo.text}</li>
+	{/each}
+</ul>
+and it would be reactive
+-->

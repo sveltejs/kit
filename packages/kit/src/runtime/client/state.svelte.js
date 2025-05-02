@@ -111,6 +111,10 @@ export function load(data_fn) {
 		get data() {
 			return data;
 		},
+		// for optimistic updates
+		set data(new_data) {
+			data = new_data;
+		},
 		get pending() {
 			return pending;
 		},

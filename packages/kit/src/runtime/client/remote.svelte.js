@@ -1,37 +1,75 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, remote_responses, started } from './client.js';
+import { app, invalidateAll, remote_responses, started } from './client.js';
+
+/**
+ * Contains a map of query functions that currently exist in the app.
+ * Each value is a function that increases the associated version of that query which makes it rerun in case it was called in a reactive context.
+ */
+export const queryMap = new Map();
+const resultMap = new Map();
 
 /**
  * @param {string} id
  */
 export function remoteQuery(id) {
-	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
-	return async (/** @type {any} */ ...args) => {
+	function args_as_string(/** @type {any} */ ...args) {
 		const transport = app.hooks.transport;
 		const encoders = Object.fromEntries(
 			Object.entries(transport).map(([key, value]) => [key, value.encode])
 		);
+		return devalue.stringify(args, encoders);
+	}
 
-		const stringified_args = devalue.stringify(args, encoders);
-		if (!started) {
-			const result = remote_responses[id + stringified_args];
-			if (result) return result;
+	/** @type {Record<string, any>} */
+	let version = $state({});
+
+	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
+	const fn = async (/** @type {any} */ ...args) => {
+		const stringified_args = args_as_string(...args);
+
+		// Reading the version ensures that the function reruns in reactive contexts if the version changes
+		const key = `${fn.key}|${stringified_args}`;
+		if (!queryMap.has(key)) {
+			version[key] = 0;
+			queryMap.set(key, () => version[key]++);
 		}
+		version[key]; // yes this will mean it reruns once for the first call but that is ok because of our caching
 
-		const response = await fetch(
-			`/${app_dir}/remote/${id}?args=${encodeURIComponent(stringified_args)}`
-		);
-		const result = await response.json();
+		if (!resultMap.has(key)) {
+			// TODO all a bit brittle, cleanup once we're sure we want this
+			setTimeout(() => resultMap.delete(key), 2500);
+			const response = (async () => {
+				if (!started) {
+					const result = remote_responses[id + stringified_args];
+					if (result) return result;
+				}
 
-		if (!response.ok) {
-			// TODO should this go through `handleError`?
-			throw new Error(result.message);
+				const url = `/${app_dir}/remote/${id}?args=${encodeURIComponent(stringified_args)}`;
+				const response = await fetch(url);
+				const result = await response.json();
+
+				if (!response.ok) {
+					// TODO should this go through `handleError`?
+					throw new Error(result.message);
+				}
+
+				return devalue.parse(result, app.decoders);
+			})();
+			resultMap.set(key, response);
+			return response;
+		} else {
+			return resultMap.get(key);
 		}
-
-		return devalue.parse(result, app.decoders);
 	};
+
+	fn.key = `query:${id}`; // by having a colon in there we can pass it to invalidate as it's a valid URL constructor parameter
+	fn.keyFor = (/** @type {any} */ ...args) => {
+		return `${fn.key}|${args_as_string(...args)}`;
+	};
+
+	return fn;
 }
 
 /**
@@ -144,6 +182,9 @@ export function remoteFormAction(id) {
 					// TODO should this go through `handleError`?
 					throw new Error(json.message);
 				}
+
+				// TODO don't revalidate on validation error? should we bring fail() into this?
+				invalidateAll();
 
 				return (result = devalue.parse(json, app.decoders));
 			}

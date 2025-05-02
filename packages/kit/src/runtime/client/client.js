@@ -41,6 +41,7 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating, load_fns } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { queryMap } from './remote.svelte.js';
 
 export { load_css };
 export { remoteAction, remoteFormAction, remoteQuery } from './remote.svelte.js';
@@ -355,6 +356,13 @@ async function _invalidate() {
 			if (force_invalidation || invalidated.some((fn) => fn(new URL(href)))) {
 				load();
 			}
+		}
+	});
+	// Rerun queries
+	queryMap.forEach((rerun, key) => {
+		// TODO allow invalidation of non-exact queries? i.e. you do foo.queryFor(1) when foo has two parameters, i.e. the second is optional?
+		if (force_invalidation || invalidated.some((fn) => fn(new URL(key)))) {
+			rerun();
 		}
 	});
 
