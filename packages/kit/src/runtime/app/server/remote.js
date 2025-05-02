@@ -89,6 +89,12 @@ export function query(fn) {
 		enumerable: true,
 		configurable: false
 	});
+	Object.defineProperty(wrapper, 'key', {
+		get() {
+			return `query:${wrapper.__id}|`;
+		}
+	});
+	// TODO how do we do `keyFor`? We don't have access to the serializer here as it's in the client
 	// @ts-expect-error
 	return wrapper;
 }

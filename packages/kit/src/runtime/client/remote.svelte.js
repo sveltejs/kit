@@ -1,7 +1,7 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, invalidateAll, remote_responses, started } from './client.js';
+import { app, invalidate, invalidateAll, remote_responses, started } from './client.js';
 
 /**
  * Contains a map of query functions that currently exist in the app.
@@ -15,6 +15,7 @@ const resultMap = new Map();
  */
 export function remoteQuery(id) {
 	function args_as_string(/** @type {any} */ ...args) {
+		if (args.length === 0) return '';
 		const transport = app.hooks.transport;
 		const encoders = Object.fromEntries(
 			Object.entries(transport).map(([key, value]) => [key, value.encode])
@@ -39,14 +40,14 @@ export function remoteQuery(id) {
 
 		if (!resultMap.has(key)) {
 			// TODO all a bit brittle, cleanup once we're sure we want this
-			setTimeout(() => resultMap.delete(key), 2500);
+			setTimeout(() => resultMap.delete(key), 500);
 			const response = (async () => {
 				if (!started) {
 					const result = remote_responses[id + stringified_args];
 					if (result) return result;
 				}
 
-				const url = `/${app_dir}/remote/${id}?args=${encodeURIComponent(stringified_args)}`;
+				const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${encodeURIComponent(stringified_args)}` : ''}`;
 				const response = await fetch(url);
 				const result = await response.json();
 
@@ -95,6 +96,10 @@ export function remoteAction(id) {
 		if (!response.ok) {
 			// TODO should this go through `handleError`?
 			throw new Error(result.message);
+		}
+
+		for (const key of JSON.parse(response.headers.get('x-sveltekit-rpc-invalidate') ?? '[]')) {
+			invalidate(key);
 		}
 
 		return devalue.parse(result, app.decoders);

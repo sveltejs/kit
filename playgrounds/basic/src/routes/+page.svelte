@@ -50,9 +50,8 @@
 	placeholder="Add Todo"
 	onkeyup={async (e) => {
 		if (e.key === 'Enter') {
-			todos.data = [...todos.data, { text: e.target.value }];
+			// todos.data = [...todos.data, { text: e.target.value }];
 			await add_todo(e.target.value);
-			invalidate(get_todos.key);
 		}
 	}}
 />

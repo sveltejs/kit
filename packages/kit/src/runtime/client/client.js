@@ -42,6 +42,7 @@ import { writable } from 'svelte/store';
 import { page, update, navigating, load_fns } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { queryMap } from './remote.svelte.js';
+import { getRequestEvent } from '../app/server/event.js';
 
 export { load_css };
 export { remoteAction, remoteFormAction, remoteQuery } from './remote.svelte.js';
@@ -1967,7 +1968,18 @@ export function goto(url, opts = {}) {
  */
 export function invalidate(resource) {
 	if (!BROWSER) {
-		throw new Error('Cannot call invalidate(...) on the server');
+		try {
+			// TODO getRpcEvent or sth like that?
+			const event = getRequestEvent();
+			if (typeof resource === 'function') {
+				throw new Error('Cannot use function as resource in invalidate(...) on the server');
+			} else {
+				event._.remote_invalidations.add(typeof resource === 'string' ? resource : resource.href);
+				return Promise.resolve(); // TODO what should happen when someone wants to await this on the server?
+			}
+		} catch (e) {
+			throw new Error('Cannot call invalidate(...) on the server');
+		}
 	}
 
 	push_invalidated(resource);
