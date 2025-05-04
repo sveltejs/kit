@@ -45,7 +45,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-		+++enhancedImages(), // Must be placed *before* sveltekit()+++
+		+++enhancedImages(), // must come before the SvelteKit plugin+++
 		sveltekit()
 	]
 });
