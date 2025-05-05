@@ -678,9 +678,6 @@ Tips:
 								sourcemapIgnoreList,
 								inlineDynamicImports: false
 							},
-							// TODO: `preserveEntrySignatures` hasn't been implemented yet but it should currrently behave as if it were set to 'strict'
-							// see https://github.com/rolldown/rolldown/issues/3500
-							// preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
 									warning.code === 'IMPORT_IS_UNDEFINED' &&
@@ -715,6 +712,14 @@ Tips:
 					// 	enableNativePlugin: true
 					// }
 				};
+
+				if (!vite.rolldownVersion) {
+					// TODO: always set this once `preserveEntrySignatures` is implemented in rolldown
+					// https://github.com/rolldown/rolldown/issues/3500
+					// rolldown always does 'strict' in the meantime, so it's fine to only set this in non-rolldown mode
+					// @ts-ignore
+					new_config.build.rollupOptions.preserveEntrySignatures = 'strict';
+				}
 
 				if (!split && new_config.build?.rollupOptions?.output) {
 					const output_options = /** @type {import('rollup').OutputOptions} */ (
