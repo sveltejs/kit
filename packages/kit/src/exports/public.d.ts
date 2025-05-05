@@ -44,6 +44,20 @@ export interface Adapter {
 		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+		webSockets?: {
+			/**
+			 * Test support for the `socket` export from a `+server.js` file.
+			 */
+			socket: () => boolean;
+			/**
+			 * Test support for `getPeers` from `$app/server`.
+			 */
+			getPeers: (details: { route: { id: string } }) => boolean;
+			/**
+			 * Test support for `publish` from `$app/server`.
+			 */
+			publish: (details: { route: { id: string } }) => boolean;
+		};
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -1304,6 +1318,10 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+	resolveWebSocketHooks(
+		request: Request,
+		options: RequestOptions
+	): Promise<Partial<import('crossws').Hooks>>;
 }
 
 export interface ServerInitOptions {
@@ -1311,6 +1329,10 @@ export interface ServerInitOptions {
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => ReadableStream;
+	/** A `Set` of WebSocket `Peer` instances. Required for the `getPeers` export from `$app/server` to work. */
+	peers?: import('crossws').AdapterInstance['peers'];
+	/** A function that publishes a message to WebSocket subscribers of a topic. Required for the `publish` export from `$app/server` to work. */
+	publish?: import('crossws').AdapterInstance['publish'];
 }
 
 export interface SSRManifest {
@@ -1494,7 +1516,82 @@ export type SubmitFunction<
 >;
 
 /**
- * The type of `export const snapshot` exported from a page or layout component.
+ * Shape of the `export const socket = {...}` object in `+server.js`.
+ * See [WebSockets](https://svelte.dev/docs/kit/websockets) for more information.
+ * @since 2.21.0
+ */
+export interface Socket<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> {
+	/**
+	 * The [upgrade](https://svelte.dev/docs/kit/websockets#Hooks-upgrade) hook runs
+	 * every time a request is attempting to upgrade to a WebSocket connection.
+	 */
+	upgrade?: (
+		event: RequestEvent<Params, RouteId> & { context: import('crossws').Peer['context'] }
+	) => MaybePromise<Response | ResponseInit | void>;
+	/**
+	 * The [open](https://svelte.dev/docs/kit/websockets#Hooks-open) hook runs
+	 * every time a WebSocket connection is opened.
+	 */
+	open?: (peer: Peer<Params, RouteId>) => MaybePromise<void>;
+	/**
+	 * The [message](https://svelte.dev/docs/kit/websockets#Hooks-message) hook
+	 * runs every time a message is received from a WebSocket client.
+	 */
+	message?: (peer: Peer<Params, RouteId>, message: Message<Params, RouteId>) => MaybePromise<void>;
+	/**
+	 * The [close](https://svelte.dev/docs/kit/websockets#Hooks-close) hook runs
+	 * every time a WebSocket connection is closed.
+	 */
+	close?: (
+		peer: Peer<Params, RouteId>,
+		details: { code?: number; reason?: string }
+	) => MaybePromise<void>;
+	/**
+	 * The [error](https://svelte.dev/docs/kit/websockets#Hooks-error) hook runs
+	 * every time a WebSocket error occurs.
+	 */
+	error?: (peer: Peer<Params, RouteId>, error: import('crossws').WSError) => MaybePromise<void>;
+}
+
+/**
+ * When a new [WebSocket](https://svelte.dev/docs/kit/websockets) client connects
+ * to the server, `crossws` creates a [`Peer`](https://crossws.unjs.io/guide/peer)
+ * object that allows interacting with the connected client.
+ * @since 2.21.0
+ */
+export type Peer<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> = import('crossws').Peer & {
+	/** The original request object before upgrading to a WebSocket connection. */
+	request: Request;
+	/** Represents the initial request before upgrading to a WebSocket connection. */
+	event: RequestEvent<Params, RouteId>;
+};
+
+/**
+ * During a WebSocket [`message`](https://svelte.dev/docs/kit/websockets#Hooks-message)
+ * hook, you'll receive a [`Message`](https://crossws.unjs.io/guide/message)
+ * object containing data from the client.
+ * @since 2.21.0
+ */
+export type Message<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> = import('crossws').Message & {
+	/** Access to the `Peer` that emitted the message. */
+	peer: Peer<Params, RouteId>;
+};
+
+/**
+ * Shape of the `export const snapshot = {...}` object in a page or layout component.
+ * You should import these from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
+ * rather than using `Snapshot` directly.
+ * See [snapshots](https://svelte.dev/docs/kit/snapshots) for more information.
+ * @since 1.5.0
  */
 export interface Snapshot<T = any> {
 	capture: () => T;

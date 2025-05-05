@@ -66,6 +66,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250415.0
         version: 4.20250415.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       worktop:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
@@ -204,6 +207,9 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       polka:
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -216,6 +222,21 @@ importers:
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/node@18.19.50)(lightningcss@1.24.1)
+
+  packages/adapter-node/test/apps/basic:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.1
+        version: 5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
+      svelte:
+        specifier: ^5.23.1
+        version: 5.23.1
+      vite:
+        specifier: ^6.0.11
+        version: 6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static:
     devDependencies:
@@ -312,7 +333,7 @@ importers:
     dependencies:
       '@sveltejs/kit':
         specifier: ^1.0.0 || ^2.0.0
-        version: link:../kit
+        version: 2.20.7(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -371,6 +392,9 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
+      crossws:
+        specifier: ^0.3.4
+        version: 0.3.4
       devalue:
         specifier: ^5.1.0
         version: 5.1.0
@@ -1868,6 +1892,15 @@ packages:
       typescript: '>= 5'
       typescript-eslint: '>= 7.5'
 
+  '@sveltejs/kit@2.20.7':
+    resolution: {integrity: sha512-dVbLMubpJJSLI4OYB+yWYNHGAhgc2bVevWuBjDj8jFUXIJOAnLwYP3vsmtcgoxNGUXoq0rHS5f7MFCsryb6nzg==}
+    engines: {node: '>=18.13'}
+    hasBin: true
+    peerDependencies:
+      '@sveltejs/vite-plugin-svelte': ^3.0.0 || ^4.0.0-next.1 || ^5.0.0
+      svelte: ^4.0.0 || ^5.0.0-next.0
+      vite: ^5.0.3 || ^6.0.0
+
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1':
     resolution: {integrity: sha512-J/Nmb2Q2y7mck2hyCX4ckVHcR5tu2J+MtBEQqpDrrgELZ2uvraQcK/ioCV61AqkdXFgriksOKIceDcQmqnGhVw==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22}
@@ -2222,6 +2255,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  crossws@0.3.4:
+    resolution: {integrity: sha512-uj0O1ETYX1Bh6uSgktfPvwDiPYGQ3aI4qVsaC/LWpkIzGj1nUYm5FK3K+t11oOlpN01lGbprFCH4wBlKdJjVgw==}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -3380,6 +3416,9 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
+
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
@@ -4192,6 +4231,23 @@ snapshots:
       typescript: 5.6.3
       typescript-eslint: 8.26.0(eslint@9.6.0)(typescript@5.6.3)
 
+  '@sveltejs/kit@2.20.7(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
+      '@types/cookie': 0.6.0
+      cookie: 0.6.0
+      devalue: 5.1.0
+      esm-env: 1.2.2
+      import-meta-resolve: 4.1.0
+      kleur: 4.1.5
+      magic-string: 0.30.17
+      mrmime: 2.0.0
+      sade: 1.8.1
+      set-cookie-parser: 2.6.0
+      sirv: 3.0.0
+      svelte: 5.23.1
+      vite: 6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)
+
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
@@ -4597,6 +4653,10 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  crossws@0.3.4:
+    dependencies:
+      uncrypto: 0.1.3
 
   cssesc@3.0.0: {}
 
@@ -5699,6 +5759,8 @@ snapshots:
   typescript@5.6.3: {}
 
   ufo@1.6.1: {}
+
+  uncrypto@0.1.3: {}
 
   undici-types@5.26.5: {}
 

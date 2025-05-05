@@ -125,6 +125,21 @@ export default () => ({
 			supports_error(
 				'The read function imported from $app/server only works in certain environments'
 			);
+		},
+		webSockets: {
+			socket: () => {
+				supports_error('The socket export only works in environments that support WebSockets');
+			},
+			getPeers: () => {
+				supports_error(
+					'The getPeers function imported from $app/server only works in environments that support WebSockets'
+				);
+			},
+			publish: () => {
+				supports_error(
+					'The publish function imported from $app/server only works in environments that support WebSockets'
+				);
+			}
 		}
 	}
 });

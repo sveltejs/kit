@@ -4,10 +4,12 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
+const name = '@sveltejs/adapter-cloudflare';
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name,
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -160,6 +162,18 @@ export default function (options = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			webSockets: {
+				socket: () => true,
+				getPeers: () => true,
+				publish: ({ route }) => {
+					// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable
+					throw new Error(
+						`${name}: Cannot use \`publish\` from \`$app/server\` in route \`${route.id}\` because Cloudflare Workers cannot coordinate among multiple WebSocket connections without Durable Objects`
+					);
+				}
+			}
 		}
 	};
 }

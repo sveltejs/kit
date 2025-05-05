@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { with_event } from '../app/server/event.js';
@@ -11,7 +12,23 @@ import { method_not_allowed } from './utils.js';
  * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, mod, state) {
+	if (DEV && mod.socket) {
+		__SVELTEKIT_TRACK__('websockets');
+	}
+
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
+
+	// if we've ended up here, it means the request does not have both the
+	// `Upgrade: websocket` and the `Connect: upgrade` headers
+	if (method === 'GET' && !mod.GET && mod.socket) {
+		return new Response('This service requires use of the websocket protocol.', {
+			status: 426,
+			headers: {
+				upgrade: 'websocket',
+				connect: 'Upgrade'
+			}
+		});
+	}
 
 	let handler = mod[method] || mod.fallback;
 

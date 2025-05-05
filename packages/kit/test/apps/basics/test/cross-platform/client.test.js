@@ -1030,3 +1030,119 @@ test.describe('Load', () => {
 		});
 	}
 });
+
+test.describe('WebSockets', () => {
+	test('upgrade hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'with sub-protocols' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+		await expect(page.getByText('protocol: bar')).toBeVisible();
+	});
+
+	test('open hook', async ({ page }) => {
+		await page.goto('/ws');
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+		await expect(page.getByText('open hook works')).toBeVisible();
+	});
+
+	test('message hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'ping' }).click();
+		await expect(page.getByText('pong')).toBeVisible();
+	});
+
+	test('publish and subscribe', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'join' }).click();
+		await expect(page.getByText('joined the chat')).toBeVisible();
+
+		await page.locator('button', { hasText: 'chat' }).click();
+		await expect(page.getByText('hello')).toBeVisible();
+	});
+
+	test('close hook', async ({ page }) => {
+		await page.goto('/ws');
+
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+
+		await page.locator('button', { hasText: 'join' }).click();
+		await expect(page.getByText('joined the chat')).toBeVisible();
+
+		await page.locator('button', { hasText: 'leave' }).click();
+		await expect(page.getByText('left the chat')).toBeVisible();
+		await expect(page.getByText('close: 1000 test')).toBeVisible();
+	});
+
+	// TODO: test error hook runs and can invoke handleError once we know how to trigger the error hook
+
+	test('upgrade hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/upgrade');
+		await page.locator('button', { hasText: 'upgrade' }).click();
+		await expect(page.getByText('error')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/upgrade');
+		expect(error.message).toBe('upgrade hook');
+	});
+
+	test('open hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/open');
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('opened')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/open');
+		expect(error.message).toBe('open hook');
+	});
+
+	test('message hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/message');
+		await page.locator('button', { hasText: 'message' }).click();
+		await expect(page.getByText('message received')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/message');
+		expect(error.message).toBe('message hook');
+	});
+
+	test('close hook throwing an error invokes handleError', async ({ page, read_errors }) => {
+		await page.goto('/ws/handle-error/close');
+		await page.locator('button', { hasText: 'open' }).click();
+		await expect(page.getByText('connected')).toBeVisible();
+		await page.locator('button', { hasText: 'close' }).click();
+		await expect(page.getByText('closed')).toBeVisible();
+		await page.waitForTimeout(100); // we need to wait for the error to be written to disk
+		const error = read_errors('/ws/handle-error/close');
+		expect(error.message).toBe('close hook');
+	});
+
+	test('RequestEvent is available through Peer', async ({ page }) => {
+		await page.goto('/ws/request-event');
+		// test that event has been added to the Peer object
+		await expect(page.getByText('open: /ws/request-event')).toBeVisible();
+		// test that the modifications to Peer persists to other hooks
+		await page.locator('button', { hasText: 'send message' }).click();
+		await expect(page.getByText('message: /ws/request-event')).toBeVisible();
+	});
+
+	test('getPeers helper', async ({ page }) => {
+		await page.goto('/ws/helpers');
+		await expect(page.getByText('connected')).toBeVisible();
+		await page.locator('button', { hasText: 'message all peers' }).click();
+		await expect(page.getByText('sent to each peer')).toBeVisible();
+	});
+
+	test('publish helper', async ({ page }) => {
+		await page.goto('/ws/helpers');
+		await expect(page.getByText('connected')).toBeVisible();
+		await page.locator('button', { hasText: 'create user' }).click();
+		await expect(page.getByText('created a new user')).toBeVisible();
+	});
+});
