@@ -48,7 +48,7 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.48",
-		"esbuild": "^0.25.2",
+		"esbuild": "^0.25.3",
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {

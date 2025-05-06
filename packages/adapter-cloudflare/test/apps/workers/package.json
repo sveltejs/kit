@@ -14,7 +14,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"server-side-dep": "file:server-side-dep",
 		"svelte": "^5.23.1",
-		"vite": "^6.2.6",
+		"vite": "^6.2.7",
 		"wrangler": "^4.11.0"
 	},
 	"type": "module"
