@@ -681,7 +681,7 @@ Tips:
 							onwarn(warning, handler) {
 								if (
 									warning.code === 'IMPORT_IS_UNDEFINED' &&
-									// TODO: rolldown doesn't seem to give us the `id` so this condition is never true
+									// TODO: rolldown doesn't seem to provide `warning.id` so this condition is never true https://github.com/rolldown/rolldown/issues/4427
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -722,13 +722,14 @@ Tips:
 				}
 
 				if (!split && new_config.build?.rollupOptions?.output) {
-					const output_options = /** @type {import('rollup').OutputOptions} */ (
+					const output_options = /** @type {import('vite').Rolldown.OutputOptions} */ (
 						new_config.build.rollupOptions.output
 					);
 					if (vite.rolldownVersion) {
 						output_options.inlineDynamicImports = true;
 					} else {
-						output_options.manualChunks = () => 'bundle';
+						/** @type {import('Rollup').OutputOptions} */ (output_options).manualChunks = () =>
+							'bundle';
 					}
 				}
 			} else {
@@ -774,8 +775,6 @@ Tips:
 			if (secondary_build_started) return;
 
 			if (is_build) {
-				// TODO: remove this ts-expect-error once vite rolldown supports `watch`
-				// @ts-expect-error rolldown-vite does not support `watch` yet
 				if (!vite_config.build.watch) {
 					rimraf(out);
 				}
@@ -879,7 +878,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RolldownOutput} */ (
+				const { output } = /** @type {import('vite').Rolldown.RolldownOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -977,7 +976,7 @@ Tips:
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {import('rollup').OutputAsset} */ (
+						const style = /** @type {import('vite').Rolldown.OutputAsset} */ (
 							output.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
@@ -994,7 +993,7 @@ Tips:
 				}
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rolldown.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
