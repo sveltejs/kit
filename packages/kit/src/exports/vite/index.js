@@ -728,7 +728,7 @@ Tips:
 					if (vite.rolldownVersion) {
 						output_options.inlineDynamicImports = true;
 					} else {
-						/** @type {import('Rollup').OutputOptions} */ (output_options).manualChunks = () =>
+						/** @type {import('rollup').OutputOptions} */ (output_options).manualChunks = () =>
 							'bundle';
 					}
 				}
