@@ -122,9 +122,20 @@ export default () => ({
 	},
 	supports: {
 		read: () => {
-			throw new Error(
-				"The read function imported from $app/server only works in certain environments. Since you're using @sveltejs/adapter-auto, SvelteKit cannot determine whether it will work when your app is deployed. Please replace it with an adapter tailored to your target environment."
+			supports_error(
+				'The read function imported from $app/server only works in certain environments'
 			);
 		}
 	}
 });
+
+/**
+ * @param {string} message
+ * @returns {never}
+ * @throws {Error}
+ */
+function supports_error(message) {
+	throw new Error(
+		`${message}. Since you're using @sveltejs/adapter-auto, SvelteKit cannot determine whether it will work when your app is deployed. Please replace it with an adapter tailored to your target environment.`
+	);
+}

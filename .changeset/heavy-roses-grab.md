@@ -3,4 +3,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-chore(deps): upgrade esbuild to 0.25.2
+chore(deps): upgrade to esbuild 0.25.3
