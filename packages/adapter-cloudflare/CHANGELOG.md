@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.0.3
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250507.0 ([#13773](https://github.com/sveltejs/kit/pull/13773))
+
 ## 7.0.2
 ### Patch Changes
 
