@@ -168,6 +168,9 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
+/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
+let remote_exports = undefined;
+
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
@@ -588,8 +591,6 @@ Tips:
 	const remote_virtual_suffix = '.__virtual';
 	/** @type {Record<string, string>} */
 	const remote_cache = {};
-	/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
-	let remote_exports = undefined;
 
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {

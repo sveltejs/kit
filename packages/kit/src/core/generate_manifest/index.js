@@ -102,7 +102,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					${(node_paths).map(loader).join(',\n')}
 				],
 				remotes: {
-					${build_data.manifest_data.remotes.map((filename) => `'${hash(filename)}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, filename).chunk.file))}`).join('\n\t\t\t\t\t')}
+					${build_data.manifest_data.remotes.map((filename) => `'${hash(filename)}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, filename).chunk.file))}`).join(',\n\t\t\t\t\t')}
 				},
 				routes: [
 					${routes.map(route => {
