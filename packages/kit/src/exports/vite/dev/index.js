@@ -356,6 +356,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
+		// TODO: update manifest when a universal node changes
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
