@@ -27,8 +27,7 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_config(options.config);
-			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+			const { wrangler_config, building_for_cloudflare_pages } = validate_config(options.config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
@@ -95,9 +94,11 @@ export default function (options = {}) {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
 					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path
-					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
+					// will be interpreted as escape characters and create an incorrect import path.
+					// We also need to ensure the relative imports start with ./ since Wrangler
+					// errors if a relative import looks like a package import
+					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
+					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}
 			});
@@ -266,38 +267,58 @@ _redirects
 
 /**
  * @param {string} config_file
- * @returns {import('wrangler').Unstable_Config}
+ * @returns {{
+ * 	wrangler_config: import('wrangler').Unstable_Config,
+ * 	building_for_cloudflare_pages: boolean
+ * }}
  */
 function validate_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	// we don't support workers sites
+	const wrangler_file = wrangler_config.configPath || 'your wrangler.jsonc file';
+
+	// we don't support Workers Sites
 	if (wrangler_config.site) {
 		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
+			`You must remove all \`site\` keys in ${wrangler_file}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
 		);
 	}
 
-	if (is_building_for_cloudflare_pages(wrangler_config)) {
-		return wrangler_config;
+	// we don't need to validate the config if we're building for Cloudflare Pages
+	// because the `main` and `assets` values cannot be changed there
+	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+	if (building_for_cloudflare_pages) {
+		return {
+			wrangler_config,
+			building_for_cloudflare_pages
+		};
 	}
 
-	// probably deploying to Cloudflare Workers
-	if (wrangler_config.main || wrangler_config.assets) {
-		if (!wrangler_config.assets?.directory) {
-			throw new Error(
-				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-			);
-		}
-
-		if (!wrangler_config.assets?.binding) {
-			throw new Error(
-				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-			);
-		}
+	if (
+		!wrangler_config.main &&
+		wrangler_config.assets?.not_found_handling !== 'single-page-application'
+	) {
+		throw new Error(
+			`You must specify the \`main\` key in ${wrangler_file} to deploy a Worker script. Consult https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys`
+		);
 	}
 
-	return wrangler_config;
+	if (!wrangler_config.assets?.directory) {
+		throw new Error(
+			`You must specify the \`assets.directory\` key in ${wrangler_file} to upload static assets. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+		);
+	}
+
+	if (wrangler_config.main && !wrangler_config.assets?.binding) {
+		throw new Error(
+			`You must specify the \`assets.binding\` key in ${wrangler_file} when deploying a Worker script. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+		);
+	}
+
+	return {
+		wrangler_config,
+		building_for_cloudflare_pages
+	};
 }
 
 /**
@@ -305,13 +326,10 @@ function validate_config(config_file = undefined) {
  * @returns {boolean}
  */
 function is_building_for_cloudflare_pages(wrangler_config) {
-	return (
-		!!process.env.CF_PAGES ||
-		!wrangler_config.configPath ||
-		!!wrangler_config.pages_build_output_dir ||
-		!wrangler_config.main ||
-		!wrangler_config.assets
-	);
+	if (!!process.env.WORKERS_CI || wrangler_config.main || wrangler_config.assets) {
+		return false;
+	}
+	return true;
 }
 
 /** @param {string} str */
