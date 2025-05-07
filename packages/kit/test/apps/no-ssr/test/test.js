@@ -22,5 +22,3 @@ test('universal pages/layouts are not executed on the server', async ({ page }) 
 	await expect(page.locator('p')).toHaveText('pathname: /browser-globals');
 });
 
-// TODO: test manifest is updated when +page.js is changed
-
