@@ -163,14 +163,14 @@ test.each([
       export { ssr };
     `
 	],
-  [
+	[
 		'import default specifier',
 		`
       import ssr from './foo';
       export { ssr };
     `
 	],
-  [
+	[
 		'import namespace specifier',
 		`
       import * as ssr from './foo';

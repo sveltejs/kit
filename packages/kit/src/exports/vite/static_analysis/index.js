@@ -135,7 +135,7 @@ export function statically_analyse_exports(filename, input) {
 			if (!statement.declaration) {
 				continue;
 			}
-		
+
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
 				if (page_options.has(statement.declaration.id.name)) {
@@ -143,21 +143,21 @@ export function statically_analyse_exports(filename, input) {
 				}
 				continue;
 			}
-		
+
 			for (const declaration of statement.declaration.declarations) {
 				if (declaration.id.type !== 'Identifier') {
 					return null;
 				}
-		
+
 				if (!page_options.has(declaration.id.name)) {
 					continue;
 				}
-		
+
 				if (declaration.init?.type === 'Literal') {
 					static_exports.set(declaration.id.name, declaration.init.value);
 					continue;
 				}
-		
+
 				// references a declaration we can't easily evaluate statically
 				return null;
 			}
