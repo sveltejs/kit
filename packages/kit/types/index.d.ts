@@ -18,18 +18,18 @@ declare module '@sveltejs/kit' {
 		 */
 		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
-		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 		 */
 		supports?: {
 			/**
-			 * Test support for `read` from `$app/server`
-			 * @param config The merged route config
+			 * Test support for `read` from `$app/server`.
+			 * @param details.config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
-		 * during dev, build and prerendering
+		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 	}
@@ -772,7 +772,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during prerendering).
 	 */
 	export type HandleFetch = (input: {
 		event: RequestEvent;
@@ -1391,7 +1391,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+	 * Shape of a form action method that is part of `export const actions = {...}` in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
@@ -1401,7 +1401,7 @@ declare module '@sveltejs/kit' {
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
-	 * Shape of the `export const actions = {..}` object in `+page.server.js`.
+	 * Shape of the `export const actions = {...}` object in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
