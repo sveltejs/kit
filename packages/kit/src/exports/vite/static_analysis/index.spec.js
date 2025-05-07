@@ -18,7 +18,7 @@ test.each([
     `
 	]
 ])('page option is assigned a literal value: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual({ ssr: false, csr: true, prerender: 'auto', trailingSlash: 'always' });
 });
 
@@ -52,7 +52,7 @@ test.each([
 	],
 	['export all declaration alias', "export * as ssr from './foo'"]
 ])('fails when page option is assigned a dynamic value: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual(null);
 });
 
@@ -62,7 +62,7 @@ test.each([
 	['export all declaration alias', 'export * as bar from "./foo"'],
 	['non-page option export', "export const foo = 'bar'"]
 ])('ignores %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual({});
 });
 
@@ -72,7 +72,7 @@ test.each([
 	['whitespace', 'export    *      from "./foo";'],
 	['multiple lines and whitespace', "export   \n  *\n   from 'abc';  "]
 ])('fails when export all declaration is used: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual(null);
 });
 
@@ -131,73 +131,60 @@ test.each([
     `
 	]
 ])('non-reassigned page options: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual({ ssr: true, prerender: true });
 });
 
 test.each([
 	[
-		'same scope',
+		'declaration',
 		`
-      export let ssr = true;
-      export const prerender = true;
-      ssr = false;
+      let ssr = false;
+      export { ssr };
     `
 	],
 	[
-		'different scope',
+		'export named declaration',
 		`
-      export let ssr = true;
-      export const prerender = true;
-      function bar() {
-        let ssr = true;
-      }
-      function foo() {
-        {
-          ssr = false;
-        }
-      }
-    `
-	],
-	[
-		'array spread',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      function foo() {
-        ([...ssr] = []);
-      }
-    `
-	],
-	[
-		'object spread',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      function foo() {
-        ({...ssr} = {});
-      }
-    `
-	],
-	[
-		'multiple single-line',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      let csr;
-      csr = ssr = false;
-    `
-	],
-	[
-		'comma operator',
-		`
-      export let ssr = true;
-      export let prerender = true;
-      let csr;
-      csr = (prerender = false, ssr = false);
+      export let foo = false;
+      export { foo as ssr };
     `
 	]
-])('fails when page option is reassigned: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
+])('export specifier references: %s', (_, input) => {
+	const exports = statically_analyse_exports('', input);
+	expect(exports).toEqual({ ssr: false });
+});
+
+test.each([
+	[
+		'import specifier',
+		`
+      import { ssr } from './foo';
+      export { ssr };
+    `
+	],
+  [
+		'import default specifier',
+		`
+      import ssr from './foo';
+      export { ssr };
+    `
+	],
+  [
+		'import namespace specifier',
+		`
+      import * as ssr from './foo';
+      export { ssr };
+    `
+	],
+	[
+		'array destructured declaration',
+		`
+      let { ssr } = { ssr: false };
+      export { ssr };
+    `
+	]
+])('fails when export specifier references: %s', (_, input) => {
+	const exports = statically_analyse_exports('', input);
 	expect(exports).toEqual(null);
 });
