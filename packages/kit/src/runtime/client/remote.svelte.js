@@ -128,6 +128,8 @@ export function remoteQuery(id) {
 	return fn;
 }
 
+export const remotePrerender = remoteQuery;
+
 /**
  * @param {string} id
  */

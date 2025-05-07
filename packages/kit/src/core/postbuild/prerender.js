@@ -460,8 +460,22 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	const remote_functions = [];
+
+	for (const remote of Object.values(manifest._.remotes)) {
+		const functions = Object.values(await remote()).filter(
+			(value) => typeof value === 'function' && value.__type === 'prerender'
+		);
+		if (functions.length > 0) {
+			has_prerenderable_routes = true;
+			remote_functions.push(...functions);
+		}
+	}
+
 	if (
-		(config.prerender.entries.length === 0 && route_level_entries.length === 0) ||
+		(config.prerender.entries.length === 0 &&
+			route_level_entries.length === 0 &&
+			remote_functions.length === 0) ||
 		!has_prerenderable_routes
 	) {
 		return { prerendered, prerender_map };
@@ -496,6 +510,20 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
 			void enqueue(null, config.paths.base + entry, undefined, id);
+		}
+	}
+
+	for (const remote_function of remote_functions) {
+		if (remote_function.__entries) {
+			for (const entry of remote_function.__entries()) {
+				// TODO translate args into a pathname somehow
+			}
+		} else {
+			// TODO this writes to /prerender/pages/... eventually, should it go into /prerender/dependencies?
+			void enqueue(
+				null,
+				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__id
+			);
 		}
 	}
 

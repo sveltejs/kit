@@ -677,7 +677,7 @@ Tips:
 
 			/** @param {string} name */
 			function name_to_client_export(name) {
-				// remoteQuery, remoteAction, remoteFormAction
+				// remoteQuery, remoteAction, remoteFormAction, remotePrerender
 				return 'remote' + name[0].toUpperCase() + name.slice(1);
 			}
 

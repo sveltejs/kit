@@ -161,3 +161,43 @@ export function action(fn) {
 	});
 	return fn;
 }
+
+/**
+ * @template {(...args: any[]) => any} T
+ * @param {T} fn
+ * @param {{entries:() => import('types').MaybePromise<Array<any[]>>}} entries
+ * @returns {T}
+ */
+export function prerender(fn, { entries } = {}) {
+	/** @param {...Parameters<T>} args */
+	const wrapper = async (...args) => {
+		// TODO deduplicate this with query
+		const event = getRequestEvent();
+		const result = await fn(...args);
+		const stringified_args = stringify(args, event._.transport);
+		event._.remote_results[wrapper.__id + stringified_args] = uneval_remote_response(
+			result,
+			event._.transport
+		);
+		if (event._.remote_prerendering) {
+			const body = stringify_rpc_response(result, event._.transport);
+			// TODO for prerendering we need to make the query args part of the pathname
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+				body,
+				response: json(body)
+			});
+		}
+		return result;
+	};
+	wrapper.__entries = entries;
+	// Better safe than sorry: Seal these properties to prevent modification
+	Object.defineProperty(wrapper, '__type', {
+		value: 'prerender',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+
+	// @ts-expect-error
+	return wrapper;
+}
