@@ -72,7 +72,7 @@ test.describe('Filesystem updates', () => {
 			fs.writeFileSync(file, contents.replace(/export const ssr = .*;/, 'export const ssr = !1;'));
 			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
-			await expect(page.locator('h1')).toHaveText('Internal Error')
+			await expect(page.locator('h1')).toHaveText('Internal Error');
 		} finally {
 			fs.writeFileSync(
 				file,
