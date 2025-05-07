@@ -2,7 +2,7 @@
 title: Accessibility
 ---
 
-SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](https://svelte.dev/docs#accessibility-warnings) will also apply to any SvelteKit application you build.
+SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](../svelte/compiler-warnings) will also apply to any SvelteKit application you build.
 
 Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible. Keep in mind that while SvelteKit provides an accessible foundation, you are still responsible for making sure your application code is accessible. If you're new to accessibility, see the ["further reading"](accessibility#Further-reading) section of this guide for additional resources.
 
@@ -29,7 +29,7 @@ This will allow screen readers and other assistive technology to identify the ne
 
 In traditional server-rendered applications, every navigation will reset focus to the top of the page. This ensures that people browsing the web with a keyboard or screen reader will start interacting with the page from the beginning.
 
-To simulate this behavior during client-side routing, SvelteKit focuses the `<body>` element after each navigation and [enhanced form submission](https://kit.svelte.dev/docs/form-actions#progressive-enhancement). There is one exception - if an element with the [`autofocus`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus) attribute is present, SvelteKit will focus that element instead. Make sure to [consider the implications for assistive technology](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus#accessibility_considerations) when using that attribute.
+To simulate this behavior during client-side routing, SvelteKit focuses the `<body>` element after each navigation and [enhanced form submission](form-actions#Progressive-enhancement). There is one exception - if an element with the [`autofocus`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus) attribute is present, SvelteKit will focus that element instead. Make sure to [consider the implications for assistive technology](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus#accessibility_considerations) when using that attribute.
 
 If you want to customize SvelteKit's focus management, you can use the `afterNavigate` hook:
 

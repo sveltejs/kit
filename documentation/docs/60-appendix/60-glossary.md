@@ -10,6 +10,10 @@ Client-side rendering (CSR) is the generation of the page contents in the web br
 
 In SvelteKit, client-side rendering will be used by default, but you can turn off JavaScript with [the `csr = false` page option](page-options#csr).
 
+## Edge
+
+Rendering on the edge refers to rendering an application in a content delivery network (CDN) near the user. Edge rendering allows the request and response for a page to travel a shorter distance thus improving latency.
+
 ## Hybrid app
 
 SvelteKit uses a hybrid rendering mode by default where it loads the initial HTML from the server (SSR), and then updates the page contents on subsequent navigations via client-side rendering (CSR).
@@ -20,6 +24,14 @@ Svelte components store some state and update the DOM when the state is updated.
 
 In SvelteKit, pages will be hydrated by default, but you can turn off JavaScript with [the `csr = false` page option](page-options#csr).
 
+## ISR
+
+Incremental static regeneration (ISR) allows you to generate static pages on your site as visitors request those pages without redeploying. This may reduces build times compared to [SSG](#SSG) sites with a large number of pages. You can do [ISR with `adapter-vercel`](adapter-vercel#Incremental-Static-Regeneration).
+
+## MPA
+
+Traditional applications that render each page view on the server — such as those written in languages other than JavaScript — are often referred to as multi-page apps (MPA).
+
 ## Prerendering
 
 Prerendering means computing the contents of a page at build time and saving the HTML for display. This approach has the same benefits as traditional server-rendered pages, but avoids recomputing the page for each visitor and so scales nearly for free as the number of visitors increases. The tradeoff is that the build process is more expensive and prerendered content can only be updated by building and deploying a new version of the application.
@@ -29,6 +41,10 @@ Not all pages can be prerendered. The basic rule is this: for content to be prer
 Pre-rendered pages are not limited to static content. You can build personalized pages if user-specific data is fetched and rendered client-side. This is subject to the caveat that you will experience the downsides of not doing SSR for that content as discussed above.
 
 In SvelteKit, you can control prerendering with [the `prerender` page option](page-options#prerender) and [`prerender` config](configuration#prerender) in `svelte.config.js`.
+
+## PWA
+
+A progressive web app (PWA) is an app that's built using web APIs and technologies, but functions like a mobile or desktop app. Sites served as [PWAs can be installed](https://web.dev/learn/pwa/installation), allowing you to add a shortcut to the application on your launcher, home screen, or start menu. Many PWAs will utilize [service workers](service-workers) to build offline capabilities.
 
 ## Routing
 
@@ -44,7 +60,7 @@ In SvelteKit, you can [build SPAs with `adapter-static`](single-page-apps).
 
 ## SSG
 
-Static Site Generation (SSG) is a term that refers to a site where every page is prerendered. SvelteKit was not built to do only static site generation like some tools and so may not scale as well to efficiently render a very large number of pages as tools built specifically for that purpose. However, in contrast to most purpose-built SSGs, SvelteKit does nicely allow for mixing and matching different rendering types on different pages. One benefit of fully prerendering a site is that you do not need to maintain or pay for servers to perform SSR. Once generated, the site can be served from CDNs, leading to great "time to first byte" performance. This delivery model is often referred to as JAMstack.
+Static Site Generation (SSG) is a term that refers to a site where every page is prerendered. One benefit of fully prerendering a site is that you do not need to maintain or pay for servers to perform SSR. Once generated, the site can be served from CDNs, leading to great “time to first byte” performance. This delivery model is often referred to as JAMstack.
 
 In SvelteKit, you can do static site generation by using [`adapter-static`](adapter-static) or by configuring every page to be prerendered using [the `prerender` page option](page-options#prerender) or [`prerender` config](configuration#prerender) in `svelte.config.js`.
 
@@ -52,4 +68,4 @@ In SvelteKit, you can do static site generation by using [`adapter-static`](adap
 
 Server-side rendering (SSR) is the generation of the page contents on the server. Returning the page contents from the server via SSR or prerendering is highly preferred for performance and SEO. It drastically improves performance by avoiding the introduction of an extra round trip necessary in a SPA and makes your app accessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)). While some search engines can index content that is dynamically generated on the client-side, it is likely to take longer even in these cases.
 
-In SvelteKit, pages are server-side rendered by default. You can disable SSR with [the `ssr` page option](https://kit.svelte.dev/docs/page-options#ssr).
+In SvelteKit, pages are server-side rendered by default. You can disable SSR with [the `ssr` page option](page-options#ssr).

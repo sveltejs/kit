@@ -22,7 +22,7 @@ jobs:
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,7 +42,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens

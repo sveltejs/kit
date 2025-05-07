@@ -57,7 +57,7 @@ You can reduce the size of font files by [subsetting](https://web.dev/learn/perf
 
 ### Svelte version
 
-We recommend running the latest version of Svelte. Svelte 4 is smaller and faster than Svelte 3. (The [Svelte 5 preview](https://svelte-5-preview.vercel.app/) is much smaller and faster still, but we don't recommend that you upgrade to this version until it's production ready.)
+We recommend running the latest version of Svelte. Svelte 5 is smaller and faster than Svelte 4, which is smaller and faster than Svelte 3.
 
 ### Packages
 
@@ -96,7 +96,7 @@ Waterfalls can also occur on calls to the backend whether made from the browser 
 
 ## Hosting
 
-Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-route basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many SvelteKit adapters will do this automatically.
+Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-route basis](page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many SvelteKit adapters will do this automatically.
 
 Ensure your host uses HTTP/2 or newer. Vite's code splitting creates numerous small files for improved cacheability, which results in excellent performance, but this does assume that your files can be loaded in parallel with HTTP/2.
 

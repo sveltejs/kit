@@ -4,19 +4,19 @@ title: Introduction
 
 ## Before we begin
 
-> [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](https://learn.svelte.dev).
+> [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](/tutorial/kit).
 >
-> If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+> If you get stuck, reach out for help in the [Discord chatroom](/chat).
 
 ## What is SvelteKit?
 
-SvelteKit is a framework for rapidly developing robust, performant web applications using [Svelte](https://svelte.dev/). If you're coming from React, SvelteKit is similar to Next. If you're coming from Vue, SvelteKit is similar to Nuxt.
+SvelteKit is a framework for rapidly developing robust, performant web applications using [Svelte](../svelte). If you're coming from React, SvelteKit is similar to Next. If you're coming from Vue, SvelteKit is similar to Nuxt.
 
-To learn more about the kinds of applications you can build with SvelteKit, see the [FAQ](faq#What-can-I-make-with-SvelteKit).
+To learn more about the kinds of applications you can build with SvelteKit, see the [documentation regarding project types](project-types).
 
 ## What is Svelte?
 
-In short, Svelte is a way of writing user interface components — like a navigation bar, comment section, or contact form — that users see and interact with in their browsers. The Svelte compiler converts your components to JavaScript that can be run to render the HTML for the page and to CSS that styles the page. You don't need to know Svelte to understand the rest of this guide, but it will help. If you'd like to learn more, check out [the Svelte tutorial](https://svelte.dev/tutorial).
+In short, Svelte is a way of writing user interface components — like a navigation bar, comment section, or contact form — that users see and interact with in their browsers. The Svelte compiler converts your components to JavaScript that can be run to render the HTML for the page and to CSS that styles the page. You don't need to know Svelte to understand the rest of this guide, but it will help. If you'd like to learn more, check out [the Svelte tutorial](/tutorial).
 
 ## SvelteKit vs Svelte
 

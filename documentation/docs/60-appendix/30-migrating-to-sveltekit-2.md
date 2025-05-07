@@ -4,7 +4,7 @@ title: Migrating to SvelteKit v2
 
 Upgrading from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx sv migrate sveltekit-2` to migrate some of these changes automatically.
 
-We highly recommend upgrading to the most recent 1.x version before upgrading to 2.0, so that you can take advantage of targeted deprecation warnings. We also recommend [updating to Svelte 4](https://svelte.dev/docs/v4-migration-guide) first: Later versions of SvelteKit 1.x support it, and SvelteKit 2.0 requires it.
+We highly recommend upgrading to the most recent 1.x version before upgrading to 2.0, so that you can take advantage of targeted deprecation warnings. We also recommend [updating to Svelte 4](../svelte/v4-migration-guide) first: Later versions of SvelteKit 1.x support it, and SvelteKit 2.0 requires it.
 
 ## `redirect` and `error` are no longer thrown by you
 
@@ -40,7 +40,7 @@ export function load({ cookies }) {
 
 ## Top-level promises are no longer awaited
 
-In SvelteKit version 1, if the top-level properties of the object returned from a `load` function were promises, they were automatically awaited. With the introduction of [streaming](https://svelte.dev/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep.
+In SvelteKit version 1, if the top-level properties of the object returned from a `load` function were promises, they were automatically awaited. With the introduction of [streaming](/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep.
 
 As of version 2, SvelteKit no longer differentiates between top-level and non-top-level promises. To get back the blocking behavior, use `await` (with `Promise.all` to prevent waterfalls, where appropriate):
 
@@ -129,7 +129,7 @@ The `$env/dynamic/public` and `$env/dynamic/private` modules provide access to _
 
 During prerendering in SvelteKit 1, they are one and the same. As such, prerendered pages that make use of 'dynamic' environment variables are really 'baking in' build time values, which is incorrect. Worse, `$env/dynamic/public` is populated in the browser with these stale values if the user happens to land on a prerendered page before navigating to dynamically-rendered pages.
 
-Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `_env.js` — this can be configured with `config.kit.env.publicModule`) instead of reading them from the server-rendered HTML.
+Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `/_app/env.js`) instead of reading them from the server-rendered HTML.
 
 ## `form` and `data` have been removed from `use:enhance` callbacks
 
@@ -173,3 +173,21 @@ SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependenc
 `svelte-migrate` will update your `package.json` for you.
 
 As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `tsconfig.json` extends from) now uses `"moduleResolution": "bundler"` (which is recommended by the TypeScript team, as it properly resolves types from packages with an `exports` map in package.json) and `verbatimModuleSyntax` (which replaces the existing `importsNotUsedAsValues ` and `preserveValueImports` flags — if you have those in your `tsconfig.json`, remove them. `svelte-migrate` will do this for you).
+
+## SvelteKit 2.12: $app/stores deprecated
+
+SvelteKit 2.12 introduced `$app/state` based on the [Svelte 5 runes API](/docs/svelte/what-are-runes). `$app/state` provides everything that `$app/stores` provides but with more flexibility as to where and how you use it. Most importantly, the `page` object is now fine-grained, e.g. updates to `page.state` will not invalidate `page.data` and vice-versa.
+
+As a consequence, `$app/stores` is deprecated and subject to be removed in SvelteKit 3. We recommend [upgrading to Svelte 5](/docs/svelte/v5-migration-guide), if you haven't already, and then migrate away from `$app/stores`. Most of the replacements should be pretty simple: Replace the `$app/stores` import with `$app/state` and remove the `$` prefixes from the usage sites.
+
+```svelte
+<script>
+	---import { page } from '$app/stores';---
+	+++import { page } from '$app/state';+++
+</script>
+
+---{$page.data}---
++++{page.data}+++
+```
+
+Use `npx sv migrate app-state` to auto-migrate most of your `$app/stores` usages inside `.svelte` components.

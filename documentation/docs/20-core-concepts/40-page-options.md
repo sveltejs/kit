@@ -6,7 +6,7 @@ By default, SvelteKit will render (or [prerender](glossary#Prerendering)) any co
 
 You can control each of these on a page-by-page basis by exporting options from [`+page.js`](routing#page-page.js) or [`+page.server.js`](routing#page-page.server.js), or for groups of pages using a shared [`+layout.js`](routing#layout-layout.js) or [`+layout.server.js`](routing#layout-layout.server.js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
-You can mix and match these options in different areas of your app. For example you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
+You can mix and match these options in different areas of your app. For example, you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
 
 ## prerender
 
@@ -31,7 +31,7 @@ Routes with `prerender = true` will be excluded from manifests used for dynamic 
 export const prerender = 'auto';
 ```
 
-> [!NOTE] If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/main/packages/adapter-static), which will output files suitable for use with any static webserver.
+> [!NOTE] If your entire app is suitable for prerendering, you can use [`adapter-static`](adapter-static), which will output files suitable for use with any static webserver.
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
@@ -127,6 +127,8 @@ export const ssr = false;
 
 If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
 
+> [!NOTE] Even with `ssr` set to `false`, code that relies on browser APIs should be imported in your `+page.svelte` or `+layout.svelte` file instead. This is because page options can be overriden and need to be evaluated by importing your `+page.js` or `+layout.js` file on the server (if you have a runtime) or at build time (in case of prerendering).
+
 ## csr
 
 Ordinarily, SvelteKit [hydrates](glossary#Hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
@@ -219,4 +221,4 @@ export const config = {
 
 ## Further reading
 
-- [Tutorial: Page options](https://learn.svelte.dev/tutorial/page-options)
+- [Tutorial: Page options](/tutorial/kit/page-options)

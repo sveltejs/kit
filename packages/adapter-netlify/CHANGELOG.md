@@ -1,5 +1,56 @@
 # @sveltejs/adapter-netlify
 
+## 5.0.1
+### Patch Changes
+
+
+- chore(deps): upgrade esbuild to 0.25.2 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 5.0.0
+### Major Changes
+
+
+- fix: error if the `_headers` and `_redirects` files are in the `/static` directory instead of the project root ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+## 4.4.2
+### Patch Changes
+
+
+- fix: correctly import manifest on Windows machines ([#13495](https://github.com/sveltejs/kit/pull/13495))
+
+- Updated dependencies [[`28cf64589a331ea4770c0883216c5e16d1de7496`](https://github.com/sveltejs/kit/commit/28cf64589a331ea4770c0883216c5e16d1de7496), [`ef1e8047225e7a79c6d121d8ed1a571e5ea44f08`](https://github.com/sveltejs/kit/commit/ef1e8047225e7a79c6d121d8ed1a571e5ea44f08), [`2e6527b92875976b79cc00e7b75ee0ad8b69a239`](https://github.com/sveltejs/kit/commit/2e6527b92875976b79cc00e7b75ee0ad8b69a239), [`0c0172e1463218fe63a67c587173bb3065a53c49`](https://github.com/sveltejs/kit/commit/0c0172e1463218fe63a67c587173bb3065a53c49)]:
+  - @sveltejs/kit@2.17.3
+
+## 4.4.1
+### Patch Changes
+
+
+- fix: avoid unnecessary Netlify edge function invocations for static files, which resolves a conflict between Netlify Edge Functions and Netlify Identity ([#12052](https://github.com/sveltejs/kit/pull/12052))
+
+## 4.4.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 4.3.6
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
 ## 4.3.5
 ### Patch Changes
 

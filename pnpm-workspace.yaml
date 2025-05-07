@@ -1,6 +1,6 @@
 packages:
   - 'packages/*'
-  - 'sites/*'
+  - 'packages/adapter-cloudflare/test/apps/*'
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'
@@ -9,3 +9,6 @@ packages:
   - 'packages/create-svelte/templates/*'
   - '!.test-tmp/**'
   - 'playgrounds/*'
+
+catalog:
+  "@playwright/test": "^1.51.1"

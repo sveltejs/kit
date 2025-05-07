@@ -34,7 +34,7 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 ### Compressing responses
 
-You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+You will typically want to compress responses coming from the server. If you're already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
 
 However, if you're building a [custom server](#Custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
 
@@ -101,7 +101,7 @@ If `adapter-node` can't correctly determine the URL of your deployment, you may 
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [`RequestEvent`](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
@@ -187,7 +187,7 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 
 1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
 2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
-3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#Environment-variables-SHUTDOWN-TIMEOUT) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#Environment-variables-SHUTDOWN_TIMEOUT) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
 
 > [!NOTE] If you want to customize this behaviour you can use a [custom server](#Custom-server).
 
@@ -205,7 +205,7 @@ The parameter `reason` has one of the following values:
 
 - `SIGINT` - shutdown was triggered by a `SIGINT` signal
 - `SIGTERM` - shutdown was triggered by a `SIGTERM` signal
-- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#Environment-variables-IDLE-TIMEOUT)
+- `IDLE` - shutdown was triggered by [`IDLE_TIMEOUT`](#Environment-variables-IDLE_TIMEOUT)
 
 ## Socket activation
 
@@ -215,7 +215,7 @@ Most Linux operating systems today use a modern process manager called systemd t
 
 To take advantage of socket activation follow these steps.
 
-1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#Environment-variables-IDLE-TIMEOUT) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#Environment-variables-IDLE_TIMEOUT) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
 
 ```ini
 /// file: /etc/systemd/system/myapp.service

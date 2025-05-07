@@ -121,6 +121,27 @@ test.describe('Endpoints', () => {
 		});
 	});
 
+	test('Partially Prerendered +server.js called from a non-prerendered +server.js works', async ({
+		baseURL
+	}) => {
+		for (const [description, url] of [
+			['direct', `${baseURL}/prerendering/prerendered-endpoint/api-with-param/prerendered`],
+			[
+				'proxied',
+				`${baseURL}/prerendering/prerendered-endpoint/proxy?api-with-param-option=prerendered`
+			]
+		]) {
+			await test.step(description, async () => {
+				const res = await fetch(url);
+
+				expect(res.status).toBe(200);
+				expect(await res.json()).toStrictEqual({
+					message: 'Im prerendered and called from a non-prerendered +page.server.js'
+				});
+			});
+		}
+	});
+
 	test('invalid request method returns allow header', async ({ request }) => {
 		const response = await request.post('/endpoint-output/body');
 
@@ -373,7 +394,9 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No actions exist for this page (405 Method Not Allowed)'
+				message: process.env.DEV
+					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
+					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)'
 			}
 		});
 	});
@@ -439,6 +462,17 @@ test.describe('Errors', () => {
 			});
 		}
 	});
+
+	test('error thrown from load on the server respects page options when rendering the error page', async ({
+		request
+	}) => {
+		const res = await request.get('/errors/load-error-page-options/csr');
+		expect(res.status()).toBe(500);
+		const content = await res.text();
+		expect(content).toContain('Crashing now');
+		// the hydration script should not be present if the csr page option is respected
+		expect(content).not.toContain('kit.start(app');
+	});
 });
 
 test.describe('Load', () => {
@@ -452,6 +486,11 @@ test.describe('Load', () => {
 	test('fetch does not load a file with a # character', async ({ request }) => {
 		const response = await request.get('/load/static-file-with-hash');
 		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('fetch reads universal load assets on the server', async ({ page }) => {
+		await page.goto('/load/fetch-asset');
+		await expect(page.locator('p')).toHaveText('1');
 	});
 
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
@@ -588,11 +627,13 @@ test.describe('Static files', () => {
 		expect(await r2.json()).toEqual({ works: true });
 	});
 
-	test('Serves symlinked asset', async ({ request }) => {
-		const response = await request.get('/symlink-from/hello.txt');
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('hello');
-	});
+	if (process.platform !== 'win32') {
+		test('Serves symlinked asset', async ({ request }) => {
+			const response = await request.get('/symlink-from/hello.txt');
+			expect(response.status()).toBe(200);
+			expect(await response.text()).toBe('hello');
+		});
+	}
 });
 
 test.describe('setHeaders', () => {
@@ -630,16 +671,61 @@ test.describe('Miscellaneous', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('foo');
 	});
+
+	test('serves prerendered non-latin pages', async ({ request }) => {
+		const response = await request.get('/prerendering/中文');
+		expect(response.status()).toBe(200);
+	});
 });
 
 test.describe('reroute', () => {
 	test('Apply reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/basic/a');
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
+	});
+
+	test('Apply async reroute when directly accessing a page', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
+		await page.goto('/reroute/async/a');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
+		);
+	});
+
+	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/c');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/prerendered/to-destination');
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
 	});
 
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
 		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);
+	});
+});
+
+test.describe('init', () => {
+	test('init server hook is called once before the load function', async ({ page }) => {
+		await page.goto('/init-hooks');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('1');
+	});
+});
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in server endpoints', async ({ request }) => {
+		const response = await request.get('/get-request-event/endpoint');
+		expect(await response.text()).toBe('hello from hooks.server.js');
 	});
 });

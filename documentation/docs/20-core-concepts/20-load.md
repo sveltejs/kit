@@ -24,17 +24,27 @@ export function load({ params }) {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
 </script>
 
 <h1>{data.post.title}</h1>
 <div>{@html data.post.content}</div>
 ```
 
+> [!LEGACY]
+> Before version 2.16.0, the props of a page and layout had to be typed individually:
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData }} */
+> let { data } = $props();
+> ```
+>
+> In Svelte 4, you'd use `export let data` instead.
+
 Thanks to the generated `$types` module, we get full type safety.
 
-A `load` function in a `+page.js` file runs both on the server and in the browser (unless combined with `export const ssr = false`, in which case it will [only run in the browser](https://kit.svelte.dev/docs/page-options#ssr)). If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
+A `load` function in a `+page.js` file runs both on the server and in the browser (unless combined with `export const ssr = false`, in which case it will [only run in the browser](page-options#ssr)). If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
 
 A more realistic version of your blog post's `load` function, that only runs on the server and pulls data from a database, might look like this:
 
@@ -85,13 +95,13 @@ export async function load() {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutData} */
-	export let data;
+	/** @type {import('./$types').LayoutProps} */
+	let { data, children } = $props();
 </script>
 
 <main>
-	<!-- +page.svelte is rendered in this <slot> -->
-	<slot />
+	<!-- +page.svelte is `@render`ed here -->
+	{@render children()}
 </main>
 
 <aside>
@@ -108,20 +118,28 @@ export async function load() {
 </aside>
 ```
 
+> [!LEGACY]
+> `LayoutProps` was added in 2.16.0. In earlier versions, properties had to be typed individually:
+> ```js
+> /// file: +layout.svelte
+> /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+> let { data, children } = $props();
+> ```
+
 Data returned from layout `load` functions is available to child `+layout.svelte` components and the `+page.svelte` component as well as the layout that it 'belongs' to.
 
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	+++import { page } from '$app/stores';+++
+	+++import { page } from '$app/state';+++
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
 
 +++	// we can access `data.posts` because it's returned from
 	// the parent layout `load` function
-	$: index = data.posts.findIndex(post => post.slug === $page.params.slug);
-	$: next = data.posts[index - 1];+++
+	let index = $derived(data.posts.findIndex(post => post.slug === page.params.slug));
+	let next = $derived(data.posts[index + 1]);+++
 </script>
 
 <h1>{data.post.title}</h1>
@@ -134,24 +152,28 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 > [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
 
-## $page.data
+## page.data
 
 The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
 
-In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
+In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `page.data`:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<title>{$page.data.title}</title>
+	<title>{page.data.title}</title>
 </svelte:head>
 ```
 
-Type information for `$page.data` is provided by `App.PageData`.
+Type information for `page.data` is provided by `App.PageData`.
+
+> [!LEGACY]
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
+> It provides a `page` store with the same interface that you can subscribe to, e.g. `$page.data.title`.
 
 ## Universal vs server
 
@@ -319,8 +341,8 @@ export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/products.json`;
 	const response = await fetch(url);
 
-	// cache the page for the same length of time
-	// as the underlying data
+	// Headers are only set during SSR, caching the page's HTML
+	// for the same length of time as the underlying data.
 	setHeaders({
 		age: response.headers.get('age'),
 		'cache-control': response.headers.get('cache-control')
@@ -330,7 +352,7 @@ export async function load({ fetch, setHeaders }) {
 }
 ```
 
-Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
+Setting the same header multiple times (even in separate `load` functions) is an error. You can only set a given header once using the `setHeaders` function. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
 
 ## Using parent data
 
@@ -365,8 +387,8 @@ export async function load({ parent }) {
 ```svelte
 <!--- file: src/routes/abc/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
 </script>
 
 <!-- renders `1 + 2 = 3` -->
@@ -504,8 +526,8 @@ This is useful for creating skeleton loading states, for example:
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
 </script>
 
 <h1>{data.post.title}</h1>
@@ -645,8 +667,8 @@ export async function load({ fetch, depends }) {
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {import('./$types').PageProps} */
+	let { data } = $props();
 
 	function rerunLoadFunction() {
 		// any of these will cause the `load` function to rerun
@@ -658,7 +680,7 @@ export async function load({ fetch, depends }) {
 </script>
 
 <p>random number: {data.number}</p>
-<button on:click={rerunLoadFunction}>Update random number</button>
+<button onclick={rerunLoadFunction}>Update random number</button>
 ```
 
 ### When do load functions rerun?
@@ -675,7 +697,7 @@ To summarize, a `load` function will rerun in the following situations:
 
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#GET-vs-POST), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).
 
-Note that rerunning a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`]($app-navigation#afterNavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+Note that rerunning a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`]($app-navigation#afterNavigate) callback, and/or wrap your component in a [`{#key ...}`](../svelte/key) block.
 
 ## Implications for authentication
 
@@ -691,8 +713,76 @@ To prevent data waterfalls and preserve layout `load` caches:
 
 Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
 
+## Using `getRequestEvent`
+
+When running server `load` functions, the `event` object passed to the function as an argument can also be retrieved with [`getRequestEvent`]($app-server#getRequestEvent). This allows shared logic (such as authentication guards) to access information about the current request without it needing to be passed around.
+
+For example, you might have a function that requires users to be logged in, and redirects them to `/login` if not:
+
+```js
+/// file: src/lib/server/auth.js
+// @filename: ambient.d.ts
+interface User {
+	name: string;
+}
+
+declare namespace App {
+	interface Locals {
+		user?: User;
+	}
+}
+
+// @filename: index.ts
+// ---cut---
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
+export function requireLogin() {
+	const { locals, url } = getRequestEvent();
+
+	// assume `locals.user` is populated in `handle`
+	if (!locals.user) {
+		const redirectTo = url.pathname + url.search;
+		const params = new URLSearchParams({ redirectTo });
+
+		redirect(307, `/login?${params}`);
+	}
+
+	return locals.user;
+}
+```
+
+Now, you can call `requireLogin` in any `load` function (or [form action](form-actions), for example) to guarantee that the user is logged in:
+
+```js
+/// file: +page.server.js
+// @filename: ambient.d.ts
+
+declare module '$lib/server/auth' {
+	interface User {
+		name: string;
+	}
+
+	export function requireLogin(): User;
+}
+
+// @filename: index.ts
+// ---cut---
+import { requireLogin } from '$lib/server/auth';
+
+export function load() {
+	const user = requireLogin();
+
+	// `user` is guaranteed to be a user object here, because otherwise
+	// `requireLogin` would throw a redirect and we wouldn't get here
+	return {
+		message: `hello ${user.name}!`
+	};
+}
+```
+
 ## Further reading
 
-- [Tutorial: Loading data](https://learn.svelte.dev/tutorial/page-data)
-- [Tutorial: Errors and redirects](https://learn.svelte.dev/tutorial/error-basics)
-- [Tutorial: Advanced loading](https://learn.svelte.dev/tutorial/await-parent)
+- [Tutorial: Loading data](/tutorial/kit/page-data)
+- [Tutorial: Errors and redirects](/tutorial/kit/error-basics)
+- [Tutorial: Advanced loading](/tutorial/kit/await-parent)

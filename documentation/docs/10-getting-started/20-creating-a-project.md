@@ -15,7 +15,7 @@ The first command will scaffold a new project in the `my-app` directory asking y
 
 There are two basic concepts:
 
-- Each page of your app is a [Svelte](https://svelte.dev) component
+- Each page of your app is a [Svelte](../svelte) component
 - You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
 
 Try editing the files to get a feel for how everything works.
