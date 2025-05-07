@@ -936,7 +936,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens on the client
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the client
 	 */
 	export type HandleClientFetch = (input: {
 		request: Request;

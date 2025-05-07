@@ -703,7 +703,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.1
-        version: 5.0.1(svelte@5.23.1)(vite@6.2.6(@types/node@18.19.50)(lightningcss@1.24.1))
+        version: 5.0.3(svelte@5.23.1)(vite@6.2.7(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -718,7 +718,7 @@ importers:
         version: 5.6.3
       vite:
         specifier: ^6.2.6
-        version: 6.2.6(@types/node@18.19.50)(lightningcss@1.24.1)
+        version: 6.2.7(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
