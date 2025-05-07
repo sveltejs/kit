@@ -34,12 +34,12 @@
 	}}>multiply</button
 >
 
-<form {...divide.form}>
+<!-- <form {...divide.form}>
 	<input name="a" value="2" />
 	<input name="b" value="1" />
 	<button>divide ({divide.result})</button>
 	<button {...multiply2.formAction}>multiply2 ({multiply2.result})</button>
-</form>
+</form> -->
 
 <hr />
 
@@ -51,15 +51,33 @@
 	onkeyup={async (e) => {
 		if (e.key === 'Enter') {
 			// todos.data = [...todos.data, { text: e.target.value }];
+			get_todos.override((todos) => {
+				return [...todos, { text: e.target.value }];
+			});
 			await add_todo(e.target.value);
+			get_todos.refresh();
 		}
 	}}
 />
 
 <h3>todo via form</h3>
-<form {...add_todo_form.form}>
+<form {...add_todo_form}>
 	<input name="text" placeholder="Add Todo" />
 	<button type="submit">add</button>
+</form>
+<form
+	{...add_todo_form.enhance(async ({ submit }) => {
+		console.log('hey there');
+		const result = await submit();
+		console.log(result);
+	})}
+>
+	<input name="text" placeholder="Add Todo enhanced" />
+	<button type="submit">add</button>
+</form>
+<form>
+	<input name="text" placeholder="Add Todo through formAction on button" />
+	<button {...add_todo_form.formAction}>add</button>
 </form>
 <!-- <form method="post" action={add_todo_form} use:enhance>
 	<input name="text" placeholder="Add Todo" />

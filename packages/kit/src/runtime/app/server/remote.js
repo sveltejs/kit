@@ -12,18 +12,36 @@ export function formAction(fn) {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(form_data);
-		event._.remote_results[wrapper.form.action] = uneval_remote_response(result, event._.transport);
+		event._.remote_results[wrapper.action] = uneval_remote_response(result, event._.transport);
 		return result;
 	};
+	// TODO clean up
 	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(wrapper, 'form', {
-		value: { method: 'POST', action: '' },
+	Object.defineProperty(wrapper, 'method', {
+		value: 'POST',
 		writable: false,
 		enumerable: true,
 		configurable: false
 	});
+	Object.defineProperty(wrapper, 'action', {
+		value: '',
+		writable: true
+	});
+	Object.defineProperty(wrapper, 'enhance', {
+		value: () => {
+			return { action: wrapper.action, method: wrapper.method };
+		},
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
 	Object.defineProperty(wrapper, 'formAction', {
-		value: { formaction: '' },
+		value: {
+			formaction: '',
+			enhance: () => {
+				return { formaction: wrapper.formAction.formaction };
+			}
+		},
 		writable: false,
 		enumerable: true,
 		configurable: false
@@ -40,7 +58,7 @@ export function formAction(fn) {
 		value: (action) => {
 			if (set) return;
 			set = true;
-			wrapper.form.action = `?/remote=${encodeURIComponent(action)}`;
+			wrapper.action = `?/remote=${encodeURIComponent(action)}`;
 			wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
 		},
 		writable: false,
@@ -51,7 +69,7 @@ export function formAction(fn) {
 		get() {
 			try {
 				const event = getRequestEvent();
-				return event._.remote_results[wrapper.form.action] ?? null;
+				return event._.remote_results[wrapper.action] ?? null;
 			} catch (e) {
 				return null;
 			}

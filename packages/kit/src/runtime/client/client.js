@@ -258,7 +258,7 @@ let token;
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
-let pending_invalidate;
+export let pending_invalidate;
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
