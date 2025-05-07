@@ -74,11 +74,11 @@ export function remoteQuery(id) {
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${encodeURIComponent(stringified_args)}` : ''}`;
 				const response = await fetch(url);
-				const result = await response.json();
+				const result = await response.text();
 
 				if (!response.ok) {
 					// TODO should this go through `handleError`?
-					throw new Error(result.message);
+					throw new Error(JSON.parse(result).message);
 				}
 
 				const parsed_result = devalue.parse(result, app.decoders);

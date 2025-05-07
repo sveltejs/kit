@@ -179,6 +179,7 @@ export async function respond(request, options, manifest, state) {
 		// TODO tidy up
 		_: {
 			remote_results: {},
+			remote_prerendering: state.prerendering,
 			transport: options.hooks.transport
 		}
 	};

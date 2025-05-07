@@ -1,5 +1,8 @@
 import { stringify, uneval } from 'devalue';
 import { getRequestEvent } from './event.js';
+import { stringify_rpc_response } from '../../server/remote/index.js';
+import { json } from '../../../exports/index.js';
+import { app_dir } from '__sveltekit/paths';
 
 /**
  * @template {(formData: FormData) => any} T
@@ -98,6 +101,14 @@ export function query(fn) {
 			result,
 			event._.transport
 		);
+		if (event._.remote_prerendering) {
+			const body = stringify_rpc_response(result, event._.transport);
+			// TODO for prerendering we need to make the query args part of the pathname
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+				body,
+				response: json(body)
+			});
+		}
 		return result;
 	};
 	// Better safe than sorry: Seal these properties to prevent modification
