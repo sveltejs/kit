@@ -772,10 +772,18 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during prerendering).
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 	 */
 	export type HandleFetch = (input: {
 		event: RequestEvent;
+		request: Request;
+		fetch: typeof fetch;
+	}) => MaybePromise<Response>;
+
+	/**
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the client
+	 */
+	export type HandleClientFetch = (input: {
 		request: Request;
 		fetch: typeof fetch;
 	}) => MaybePromise<Response>;

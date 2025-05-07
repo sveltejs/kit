@@ -1,0 +1,25 @@
+{
+	"name": "test-embed",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
+		"check": "svelte-kit sync && tsc && svelte-check",
+		"test": "pnpm test:dev && pnpm test:build",
+		"test:dev": "cross-env DEV=true playwright test",
+		"test:build": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"cross-env": "^7.0.3",
+		"svelte": "^5.23.1",
+		"svelte-check": "^4.1.1",
+		"typescript": "^5.5.4",
+		"vite": "^6.2.6"
+	},
+	"type": "module"
+}
