@@ -588,7 +588,10 @@ Tips:
 	/** @type {import('vite').ViteDevServer} */
 	let dev_server;
 
-	const remote_virtual_suffix = '.__virtual';
+	// Making it a query parameter solves two cases:
+	// 1. We don't need to worry about source maps as the file name is still the same
+	// 2. We work around a strange Vite behavior where the module is not reloaded when the file changes
+	const remote_virtual_suffix = '?__original';
 	/** @type {Record<string, string>} */
 	const remote_cache = {};
 
@@ -613,7 +616,7 @@ Tips:
 			}
 		},
 
-		async load(id) {
+		load(id) {
 			if (id.endsWith(remote_virtual_suffix)) {
 				return remote_cache[posixify(process.cwd()) + id.slice(0, -remote_virtual_suffix.length)];
 			}
