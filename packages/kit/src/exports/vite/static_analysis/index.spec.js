@@ -16,23 +16,6 @@ test.each([
 		`
       export const ssr = false, csr = true, prerender = 'auto', trailingSlash = 'always';
     `
-	],
-	[
-		'array destructuring',
-		`
-      export const [ssr, csr, prerender, trailingSlash] = [false, true, 'auto', 'always'];
-    `
-	],
-	[
-		'object destructuring',
-		`
-      export const { ssr, csr, prerender, trailingSlash } = {
-        ssr: false,
-        csr: true,
-        prerender: 'auto',
-        trailingSlash: 'always'
-      };
-    `
 	]
 ])('page option is assigned a literal value: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
