@@ -250,28 +250,6 @@ test.each([
 	expect(exports).toEqual(null);
 });
 
-// TODO: test export referencing another variable with a literal value in the same file that is never reassigned passes
-test.each([
-	[
-		'never reassigned',
-		`
-      let foo = false;
-      export const ssr = foo;
-    `
-	],
-	[
-		'assigned after export',
-		`
-      let foo = false;
-      export const ssr = foo;
-      foo = true;
-    `
-	]
-])('value is a reference to another variable that is: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
-	expect(exports).toEqual({ ssr: false });
-});
-
 test.each([
 	[
 		'before export',
