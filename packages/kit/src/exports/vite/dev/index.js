@@ -102,6 +102,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
+	/** @type {(file: string) => void} */
+	let invalidate_page_options;
+
 	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
@@ -125,10 +128,11 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const { get_page_options } = create_static_analyser(async (server_node) => {
+		const static_analyser = create_static_analyser(async (server_node) => {
 			const { module } = await resolve(server_node);
 			return module;
 		});
+		invalidate_page_options = static_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -208,7 +212,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const page_options = await get_page_options(node);
+							const page_options = await static_analyser.get_page_options(node);
 							if (page_options?.ssr === false) {
 								result.universal = page_options;
 							} else {
@@ -356,7 +360,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
-		// TODO: update manifest when a universal node changes
+		invalidate_page_options(path.relative(cwd, file));
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;

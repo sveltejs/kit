@@ -7,3 +7,5 @@ export function load() {
 		pathname
 	};
 }
+
+export const ssr = false;

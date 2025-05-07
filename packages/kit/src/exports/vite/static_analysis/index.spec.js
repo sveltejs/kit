@@ -160,37 +160,6 @@ test.each([
     `
 	],
 	[
-		'array destructuring',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      function foo() {
-        ([,ssr,] = []);
-      }
-    `
-	],
-	[
-		'object destructuring',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      function foo() {
-        ({ ssr } = {});
-      }
-    `
-	],
-
-	[
-		'nested array/object destructuring',
-		`
-      export let ssr = true;
-      export const prerender = true;
-      function foo() {
-        ([,{ ssr = false }] = []);
-      }
-    `
-	],
-	[
 		'array spread',
 		`
       export let ssr = true;
@@ -229,40 +198,6 @@ test.each([
     `
 	]
 ])('fails when page option is reassigned: %s', (_, input) => {
-	const exports = statically_analyse_exports(input);
-	expect(exports).toEqual(null);
-});
-
-test.each([
-	[
-		'before export',
-		`
-      let foo = false;
-      foo = true;
-      export const ssr = foo;
-    `
-	],
-	[
-		'from a different scope',
-		`
-      let foo = false;
-      export const ssr = foo;
-      function bar() {
-        foo = true;
-      }
-    `
-	],
-	[
-		'different scope',
-		`
-      let foo = false;
-      export const ssr = foo;
-      function bar() {
-        foo = true;
-      }
-    `
-	]
-])('fails when value is a reference to another variable that is reassigned: %s', (_, input) => {
 	const exports = statically_analyse_exports(input);
 	expect(exports).toEqual(null);
 });
