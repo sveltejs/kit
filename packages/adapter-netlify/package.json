@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "5.0.1",
+	"version": "5.0.2",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -42,7 +42,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.25.3",
+		"esbuild": "^0.25.4",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {

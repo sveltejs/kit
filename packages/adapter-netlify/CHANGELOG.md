@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 5.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade to esbuild 0.25.4 ([#13770](https://github.com/sveltejs/kit/pull/13770))
+
 ## 5.0.1
 ### Patch Changes
 
