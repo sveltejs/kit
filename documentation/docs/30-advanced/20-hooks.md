@@ -106,7 +106,7 @@ Note that `resolve(...)` will never throw an error, it will always return a `Pro
 
 ### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request that happens inside a `load` or `action` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) a `fetch` request that happens inside a `load`, `action` or `handle` function that runs on the server (or during prerendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
@@ -153,7 +153,7 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an [unexpected error](errors#Unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
@@ -307,7 +307,7 @@ Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for 
 // @errors: 2304
 
 /** @type {import('@sveltejs/kit').Reroute} */
-export function reroute({ url, fetch }) {
+export async function reroute({ url, fetch }) {
 	// Ask a special endpoint within your app about the destination
 	if (url.pathname === '/api/reroute') return;
 

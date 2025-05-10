@@ -320,8 +320,10 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		await goto(app.hash ? decode_hash(new URL(location.href)) : location.href, {
-			replaceState: true
+		await navigate({
+			type: 'enter',
+			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
+			replace_state: true
 		});
 	}
 
@@ -479,20 +481,22 @@ function initialize(result, target, hydrate) {
 
 	restore_snapshot(current_navigation_index);
 
-	/** @type {import('@sveltejs/kit').AfterNavigate} */
-	const navigation = {
-		from: null,
-		to: {
-			params: current.params,
-			route: { id: current.route?.id ?? null },
-			url: new URL(location.href)
-		},
-		willUnload: false,
-		type: 'enter',
-		complete: Promise.resolve()
-	};
+	if (hydrate) {
+		/** @type {import('@sveltejs/kit').AfterNavigate} */
+		const navigation = {
+			from: null,
+			to: {
+				params: current.params,
+				route: { id: current.route?.id ?? null },
+				url: new URL(location.href)
+			},
+			willUnload: false,
+			type: 'enter',
+			complete: Promise.resolve()
+		};
 
-	after_navigate_callbacks.forEach((fn) => fn(navigation));
+		after_navigate_callbacks.forEach((fn) => fn(navigation));
+	}
 
 	started = true;
 }
@@ -1373,7 +1377,7 @@ function _before_navigate({ url, type, intent, delta }) {
 
 /**
  * @param {{
- *   type: import('@sveltejs/kit').Navigation["type"];
+ *   type: import('@sveltejs/kit').NavigationType;
  *   url: URL;
  *   popped?: {
  *     state: Record<string, any>;
@@ -1407,7 +1411,10 @@ async function navigate({
 	token = nav_token;
 
 	const intent = await get_navigation_intent(url, false);
-	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
+	const nav =
+		type === 'enter'
+			? create_navigation(current, intent, url, type)
+			: _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
 		block();
@@ -1423,7 +1430,7 @@ async function navigate({
 
 	is_navigating = true;
 
-	if (started) {
+	if (started && nav.navigation.type !== 'enter') {
 		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
@@ -2847,10 +2854,11 @@ function reset_focus() {
 }
 
 /**
+ * @template {import('@sveltejs/kit').NavigationType} T
  * @param {import('./types.js').NavigationState} current
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
- * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
+ * @param {T} type
  */
 function create_navigation(current, intent, url, type) {
 	/** @type {(value: any) => void} */
@@ -2867,7 +2875,7 @@ function create_navigation(current, intent, url, type) {
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(() => {});
 
-	/** @type {import('@sveltejs/kit').Navigation} */
+	/** @type {Omit<import('@sveltejs/kit').Navigation, 'type'> & { type: T }} */
 	const navigation = {
 		from: {
 			params: current.params,

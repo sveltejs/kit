@@ -18,18 +18,18 @@ declare module '@sveltejs/kit' {
 		 */
 		adapt: (builder: Builder) => MaybePromise<void>;
 		/**
-		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 		 */
 		supports?: {
 			/**
-			 * Test support for `read` from `$app/server`
-			 * @param config The merged route config
+			 * Test support for `read` from `$app/server`.
+			 * @param details.config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
-		 * during dev, build and prerendering
+		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 	}
@@ -772,7 +772,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during prerendering).
 	 */
 	export type HandleFetch = (input: {
 		event: RequestEvent;
@@ -1007,7 +1007,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * - `enter`: The app has hydrated
+	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form>` with a GET method
 	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
 	 * - `link`: Navigation was triggered by a link click
@@ -1083,7 +1083,7 @@ declare module '@sveltejs/kit' {
 	export interface AfterNavigate extends Omit<Navigation, 'type'> {
 		/**
 		 * The type of navigation:
-		 * - `enter`: The app has hydrated
+		 * - `enter`: The app has hydrated/started
 		 * - `form`: The user submitted a `<form>`
 		 * - `link`: Navigation was triggered by a link click
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1391,7 +1391,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+	 * Shape of a form action method that is part of `export const actions = {...}` in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
@@ -1401,7 +1401,7 @@ declare module '@sveltejs/kit' {
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
-	 * Shape of the `export const actions = {..}` object in `+page.server.js`.
+	 * Shape of the `export const actions = {...}` object in `+page.server.js`.
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
@@ -2417,7 +2417,7 @@ declare module '$app/server' {
 	 */
 	export function read(asset: string): Response;
 	/**
-	 * Returns the current `RequestEvent`. Can be used inside `handle`, `load` and actions (and functions called by them).
+	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
 	 *
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0

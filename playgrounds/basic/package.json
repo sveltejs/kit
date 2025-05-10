@@ -17,7 +17,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
-		"@sveltejs/adapter-cloudflare-workers": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
@@ -30,10 +29,10 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.3.0",
-		"svelte": "^5.2.9",
+		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.0",
-		"vite": "^6.0.11"
+		"vite": "^6.2.7"
 	},
 	"type": "module",
 	"exports": {

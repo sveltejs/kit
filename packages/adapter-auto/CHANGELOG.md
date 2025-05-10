@@ -1,5 +1,17 @@
 # @sveltejs/adapter-auto
 
+## 6.0.0
+### Major Changes
+
+
+- feat: upgrade `@sveltejs/adapter-cloudflare` to version 7 ([#13661](https://github.com/sveltejs/kit/pull/13661))
+
+## 5.0.0
+### Major Changes
+
+
+- feat: update Netlify and Cloudflare Pages major versions ([#13615](https://github.com/sveltejs/kit/pull/13615))
+
 ## 4.0.0
 ### Major Changes
 
