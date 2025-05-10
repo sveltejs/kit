@@ -35,6 +35,14 @@ export function image_plugin(imagetools_plugin) {
 		enforce: 'pre',
 		async configResolved(config) {
 			vite_config = config;
+			for (const plugin of (config.plugins || [])) {
+				if (plugin.name === name) {
+					break;
+				}
+				if (plugin.name === 'vite-plugin-svelte') {
+					throw new Error('@sveltejs/enhanced-img must come before the Svelte or SvelteKit plugins');
+				}
+			}
 			svelte_config = await loadSvelteConfig();
 			if (!svelte_config) throw new Error('Could not load Svelte config file');
 		},
