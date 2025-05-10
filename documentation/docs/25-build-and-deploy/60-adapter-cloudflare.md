@@ -112,6 +112,9 @@ If you're using the [Git integration](https://developers.cloudflare.com/pages/ge
 - **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 
+
+Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage).
+
 ### Further reading
 
 You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site on Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-kit-site/).
@@ -157,7 +160,7 @@ export {};
 
 Cloudflare specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare --compatibility-flag=nodejs_als` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
 ## Headers and redirects
 
