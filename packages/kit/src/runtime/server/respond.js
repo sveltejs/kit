@@ -11,7 +11,13 @@ import {
 	method_not_allowed,
 	redirect_response
 } from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
+import {
+	decode_pathname,
+	decode_params,
+	disable_search,
+	normalize_path,
+	relative_pathname
+} from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -321,9 +327,8 @@ export async function respond(request, options, manifest, state) {
 						headers: {
 							'x-sveltekit-normalize': '1',
 							location:
-								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-								(url.search === '?' ? '' : url.search)
+								// ensure preservation of (possibly invisible) path prefixes
+								relative_pathname(url.pathname, normalized) + (url.search === '?' ? '' : url.search)
 						}
 					});
 				}

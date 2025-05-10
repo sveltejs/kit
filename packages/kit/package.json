@@ -22,6 +22,7 @@
 		"cookie": "^0.6.0",
 		"devalue": "^5.1.0",
 		"esm-env": "^1.2.2",
+		"get-relative-path": "^1.0.2",
 		"import-meta-resolve": "^4.1.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",

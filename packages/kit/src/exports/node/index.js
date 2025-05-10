@@ -222,3 +222,5 @@ export async function setResponse(res, response) {
 export function createReadableStream(file) {
 	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
 }
+
+export { relative_pathname } from '../../utils/url.js';
