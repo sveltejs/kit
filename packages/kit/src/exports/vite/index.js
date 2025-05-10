@@ -631,6 +631,11 @@ Tips:
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+
+					const instrument_server = resolve_entry('src/instrument.server');
+					if (instrument_server) {
+						input['instrument.server'] = instrument_server;
+					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
