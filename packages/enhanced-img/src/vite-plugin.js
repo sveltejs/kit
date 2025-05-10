@@ -30,8 +30,10 @@ export function image_plugin(imagetools_plugin) {
 	/** @type {Partial<import('@sveltejs/vite-plugin-svelte').SvelteConfig | undefined>} */
 	let svelte_config;
 
+	const name = 'vite-plugin-enhanced-img-markup';
+
 	return {
-		name: 'vite-plugin-enhanced-img-markup',
+		name,
 		enforce: 'pre',
 		async configResolved(config) {
 			vite_config = config;
