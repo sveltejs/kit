@@ -1881,7 +1881,7 @@ declare module '@sveltejs/kit' {
 		universal_id?: string;
 		server_id?: string;
 
-		/** inlined styles. */
+		/** inlined styles */
 		inline_styles?(): MaybePromise<Record<string, string>>;
 		/** Svelte component */
 		component?: SSRComponentLoader;

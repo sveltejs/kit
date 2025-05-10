@@ -3,7 +3,8 @@ import { mkdirp } from '../../../utils/filesystem.js';
 import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename } from 'node:path';
+import { basename, join } from 'node:path';
+import { create_static_analyser } from '../static_analysis/index.js';
 
 /**
  * @param {string} out
@@ -14,7 +15,7 @@ import { basename } from 'node:path';
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -73,7 +74,14 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 	}
 
-	manifest_data.nodes.forEach((node, i) => {
+	const { get_page_options } = create_static_analyser(async (server_node) => {
+		// Windows needs the file:// protocol for absolute path dynamic imports
+		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+	});
+
+	for (let i = 0; i < manifest_data.nodes.length; i++) {
+		const node = manifest_data.nodes[i];
+
 		/** @type {string[]} */
 		const imports = [];
 
@@ -101,12 +109,16 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			imports.push(
-				`import * as universal from '../${
-					resolve_symlinks(server_manifest, node.universal).chunk.file
-				}';`
-			);
-			exports.push('export { universal };');
+			const page_options = await get_page_options(node);
+			if (!!page_options && page_options.ssr === false) {
+				exports.push(`export const universal = ${s(page_options, null, 2)};`)
+			} else {
+				imports.push(
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
+				);
+				// TODO: when building for analysis, explain why the file was loaded on the server if we fail to load it
+				exports.push('export { universal };');
+			}
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
@@ -186,5 +198,5 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			`${out}/server/nodes/${i}.js`,
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
-	});
+	}
 }
