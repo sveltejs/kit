@@ -98,7 +98,7 @@ export default function (options = {}) {
 				exports_path = `${posixify(path.relative(worker_dest_dir, path.resolve(process.cwd(), options.worker)))}`;
 			} else {
 				writeFileSync(`${tmp}/exports.js`, 'export default {};\n\n');
-				exports_path = `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`;
+				exports_path = `${posixify(path.relative(worker_dest_dir, tmp))}/exports.js`;
 			}
 
 			builder.copy(`${files}/worker.js`, worker_dest, {
