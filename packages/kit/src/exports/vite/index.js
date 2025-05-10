@@ -181,6 +181,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
+	/** @type {import('vite')} */
 	const vite = await resolve_peer_dependency('vite');
 
 	const { kit } = svelte_config;
@@ -675,13 +676,12 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: split ? undefined : () => 'bundle',
 								inlineDynamicImports: false
 							},
-							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									warning.code === 'MISSING_EXPORT' &&
+									warning.code === 'IMPORT_IS_UNDEFINED' &&
+									// TODO: rolldown doesn't seem to provide `warning.id` so this condition is never true https://github.com/rolldown/rolldown/issues/4427
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -706,7 +706,32 @@ Tips:
 							}
 						}
 					}
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://vite.dev/guide/rolldown#enabling-native-plugins
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
+
+				if (!vite.rolldownVersion) {
+					// TODO: always set this once `preserveEntrySignatures` is implemented in rolldown
+					// https://github.com/rolldown/rolldown/issues/3500
+					// rolldown always does 'strict' in the meantime, so it's fine to only set this in non-rolldown mode
+					// @ts-ignore
+					new_config.build.rollupOptions.preserveEntrySignatures = 'strict';
+				}
+
+				if (!split && new_config.build?.rollupOptions?.output) {
+					const output_options = /** @type {import('vite').Rolldown.OutputOptions} */ (
+						new_config.build.rollupOptions.output
+					);
+					if (vite.rolldownVersion) {
+						output_options.inlineDynamicImports = true;
+					} else {
+						/** @type {import('rollup').OutputOptions} */ (output_options).manualChunks = () =>
+							'bundle';
+					}
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
@@ -760,7 +785,8 @@ Tips:
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+					// Rolldown changes our single quotes to double quotes so we need it in the regex too
+					code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
@@ -852,7 +878,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
+				const { output } = /** @type {import('vite').Rolldown.RolldownOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -950,7 +976,7 @@ Tips:
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {import('rollup').OutputAsset} */ (
+						const style = /** @type {import('vite').Rolldown.OutputAsset} */ (
 							output.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
@@ -967,7 +993,7 @@ Tips:
 				}
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rolldown.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
@@ -1028,7 +1054,7 @@ Tips:
 							...vite_config,
 							build: {
 								...vite_config.build,
-								minify: initial_config.build?.minify ?? 'esbuild'
+								minify: initial_config.build?.minify ?? 'oxc'
 							}
 						},
 						manifest_data,
