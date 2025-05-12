@@ -28,11 +28,13 @@ export async function handle_remote_call(
 
 	if (!func) error(404);
 
+	/** @type {import('types').RemoteInfo} */
+	const info = func.__;
 	const transport = options.hooks.transport;
 
 	event._.remote_invalidations = new Set();
 
-	if (func.__type === 'formAction') {
+	if (info.type === 'formAction') {
 		if (!is_form_content_type(event.request)) {
 			throw new SvelteKitError(
 				415,
@@ -52,7 +54,7 @@ export async function handle_remote_call(
 		});
 	} else {
 		const args_json =
-			func.__type === 'query' || func.__type === 'cache'
+			info.type === 'query' || info.type === 'cache'
 				? /** @type {string} */ (event.url.searchParams.get('args'))
 				: await event.request.text();
 		const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));

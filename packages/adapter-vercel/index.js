@@ -397,8 +397,9 @@ const plugin = function (defaults = {}) {
 					const src = pathToFileURL(`${builder.getServerDirectory()}/remote/${remote}`);
 					const module = await import(src.href);
 					for (const value of Object.values(module)) {
-						if (value.__type === 'cache') {
-							const isr_name = value.__id;
+						// For __ see the RemoteInfo type
+						if (value.__?.type === 'cache') {
+							const isr_name = value.__.id;
 							const base = `${dirs.functions}/${isr_name}`;
 							builder.mkdirp(base);
 
@@ -410,7 +411,7 @@ const plugin = function (defaults = {}) {
 							// route name so that we can derive the correct URL
 							fs.symlinkSync(relative, `${base}.func`);
 
-							const pathname = `/${builder.getAppPath()}/remote/${value.__id}`;
+							const pathname = `/${builder.getAppPath()}/remote/${value.__.id}`;
 							const json = JSON.stringify(
 								{
 									expiration: value.__config.expiration,

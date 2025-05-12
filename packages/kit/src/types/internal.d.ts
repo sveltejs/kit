@@ -522,5 +522,26 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 	adapter?: Adapter;
 };
 
+export type RemoteInfo =
+	| {
+			type: 'query' | 'action';
+			id: string;
+	  }
+	| {
+			type: 'formAction';
+			id: string;
+			set_action: (action: string) => void;
+	  }
+	| {
+			type: 'prerender';
+			id: string;
+			entries?: PrerenderEntryGenerator;
+	  }
+	| {
+			type: 'cache';
+			id: string;
+			config: { expiration: number | false; [adapterSpecific: string]: any };
+	  };
+
 export * from '../exports/index.js';
 export * from './private.js';

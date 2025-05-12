@@ -247,18 +247,18 @@ export function remoteFormAction(id) {
 						method: 'POST',
 						body: form_data
 					});
-					const json = await response.json();
+					const text = await response.text();
 
 					if (!response.ok) {
 						// TODO should this go through `handleError`?
-						throw new Error(json.message);
+						throw new Error(JSON.parse(text).message);
 					}
 
 					// TODO don't revalidate on validation error? should we bring fail() into this?
 					// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
 					invalidateAll();
 
-					return (result = devalue.parse(json, app.decoders));
+					return (result = devalue.parse(text, app.decoders));
 				}
 			});
 		};
@@ -309,18 +309,18 @@ export function remoteFormAction(id) {
 						method: 'POST',
 						body: form_data
 					});
-					const json = await response.json();
+					const text = await response.text();
 
 					if (!response.ok) {
 						// TODO should this go through `handleError`?
-						throw new Error(json.message);
+						throw new Error(JSON.parse(text).message);
 					}
 
 					// TODO don't revalidate on validation error? should we bring fail() into this?
 					// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
 					invalidateAll();
 
-					return (result = devalue.parse(json, app.decoders));
+					return (result = devalue.parse(text, app.decoders));
 				}
 			});
 		};

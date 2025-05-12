@@ -19,18 +19,10 @@ export function formAction(fn) {
 		event._.remote_results[wrapper.action] = uneval_remote_response(result, event._.transport);
 		return result;
 	};
-	// TODO clean up
-	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(wrapper, 'method', {
-		value: 'POST',
-		writable: false,
-		enumerable: true,
-		configurable: false
-	});
-	Object.defineProperty(wrapper, 'action', {
-		value: '',
-		writable: true
-	});
+
+	wrapper.method = 'POST';
+	wrapper.action = '';
+
 	Object.defineProperty(wrapper, 'enhance', {
 		value: () => {
 			return { action: wrapper.action, method: wrapper.method };
@@ -39,36 +31,40 @@ export function formAction(fn) {
 		enumerable: false,
 		configurable: false
 	});
+
+	const form_action = {
+		formaction: ''
+	};
+	Object.defineProperty(form_action, 'enhance', {
+		value: () => {
+			return { formaction: wrapper.formAction.formaction };
+		},
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
 	Object.defineProperty(wrapper, 'formAction', {
-		value: {
-			formaction: '',
-			enhance: () => {
-				return { formaction: wrapper.formAction.formaction };
+		value: form_action,
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
+
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {import('types').RemoteInfo} */ ({
+			type: 'formAction',
+			id: 'unused for forms',
+			// This allows us to deduplicate some logic at the callsites
+			set_action: (action) => {
+				wrapper.action = `?/remote=${encodeURIComponent(action)}`;
+				wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
 			}
-		},
+		}),
 		writable: false,
-		enumerable: true,
+		enumerable: false,
 		configurable: false
 	});
-	Object.defineProperty(wrapper, '__type', {
-		value: 'formAction',
-		writable: false,
-		enumerable: true,
-		configurable: false
-	});
-	let set = false;
-	Object.defineProperty(wrapper, '_set_action', {
-		/** @param {string} action */
-		value: (action) => {
-			if (set) return;
-			set = true;
-			wrapper.action = `?/remote=${encodeURIComponent(action)}`;
-			wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
-		},
-		writable: false,
-		enumerable: true,
-		configurable: false
-	});
+
 	Object.defineProperty(wrapper, 'result', {
 		get() {
 			try {
@@ -78,7 +74,7 @@ export function formAction(fn) {
 				return null;
 			}
 		},
-		enumerable: true,
+		enumerable: false,
 		configurable: false
 	});
 
@@ -98,33 +94,28 @@ export function query(fn) {
 		const event = getRequestEvent();
 		const result = await fn(...args);
 		const stringified_args = stringify(args, event._.transport);
-		event._.remote_results[wrapper.__id + stringified_args] = uneval_remote_response(
+		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
 			result,
 			event._.transport
 		);
 		if (event._.remote_prerendering) {
 			const body = stringify_rpc_response(result, event._.transport);
 			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
 				body,
 				response: json(body)
 			});
 		}
 		return result;
 	};
-	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(wrapper, '__type', {
-		value: 'query',
+
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {import('types').RemoteInfo} */ ({ type: 'query', id: 'filled later' }),
 		writable: false,
-		enumerable: true,
+		enumerable: false,
 		configurable: false
 	});
-	Object.defineProperty(wrapper, 'key', {
-		get() {
-			return `query:${wrapper.__id}|`;
-		}
-	});
-	// TODO how do we do `keyFor`? We don't have access to the serializer here as it's in the client
+
 	// @ts-expect-error
 	return wrapper;
 }
@@ -167,12 +158,8 @@ function parse_remote_response(data, transport) {
  * @returns {T}
  */
 export function action(fn) {
-	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(fn, '__type', {
-		value: 'action',
-		writable: false,
-		enumerable: true,
-		configurable: false
+	/** @type {any} */ (fn).__ = /** @type {import('types').RemoteInfo} */ ({
+		type: 'action'
 	});
 	return fn;
 }
@@ -180,7 +167,7 @@ export function action(fn) {
 /**
  * @template {(...args: any[]) => any} T
  * @param {T} fn
- * @param {{entries:() => import('types').MaybePromise<Array<any[]>>}} entries
+ * @param {{ entries?: import('types').PrerenderEntryGenerator }} entries
  * @returns {T}
  */
 export function prerender(fn, { entries } = {}) {
@@ -190,27 +177,25 @@ export function prerender(fn, { entries } = {}) {
 		const event = getRequestEvent();
 		const result = await fn(...args);
 		const stringified_args = stringify(args, event._.transport);
-		event._.remote_results[wrapper.__id + stringified_args] = uneval_remote_response(
+		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
 			result,
 			event._.transport
 		);
 		if (event._.remote_prerendering) {
 			const body = stringify_rpc_response(result, event._.transport);
 			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
 				body,
 				response: json(body)
 			});
 		}
 		return result;
 	};
-	wrapper.__entries = entries;
-	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(wrapper, '__type', {
-		value: 'prerender',
-		writable: false,
-		enumerable: true,
-		configurable: false
+
+	wrapper.__ = /** @type {import('types').RemoteInfo} */ ({
+		type: 'prerender',
+		id: '',
+		entries: entries
 	});
 
 	// @ts-expect-error
@@ -239,7 +224,7 @@ export function cache(fn, config) {
 			result = await fn(...args);
 		}
 
-		event._.remote_results[wrapper.__id + stringified_args] = uneval_remote_response(
+		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
 			result,
 			event._.transport
 		);
@@ -247,7 +232,7 @@ export function cache(fn, config) {
 		if (event._.remote_prerendering) {
 			const body = stringify_rpc_response(result, event._.transport);
 			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
 				body,
 				response: json(body)
 			});
@@ -257,10 +242,9 @@ export function cache(fn, config) {
 		}
 		return result;
 	};
-	wrapper.__config = config;
 
 	if (DEV) {
-		// In memory cache that hopefully resets on changes?
+		// In memory cache
 		/** @type {Record<string, string>} */
 		const cached = {};
 		wrapper.cache = {
@@ -272,9 +256,11 @@ export function cache(fn, config) {
 			},
 			set(input, output) {
 				cached[input] = output;
-				setTimeout(() => {
-					delete cached[input];
-				}, wrapper.__config.expiration * 1000);
+				if (typeof wrapper.__.config.expiration === 'number') {
+					setTimeout(() => {
+						delete cached[input];
+					}, wrapper.__.config.expiration * 1000);
+				}
 			},
 			delete(input) {
 				delete cached[input];
@@ -291,14 +277,15 @@ export function cache(fn, config) {
 			delete() {}
 		};
 	}
+
 	wrapper.refresh = (...args) => {
 		// TODO is this agnostic enough / fine to require people calling this during a request event?
 		const event = getRequestEvent();
 		wrapper.cache.delete(stringify(args, event._.transport));
 	};
-	// Better safe than sorry: Seal these properties to prevent modification
-	Object.defineProperty(wrapper, '__type', {
-		value: 'cache',
+
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {import('types').RemoteInfo} */ ({ type: 'cache', id: '', config }),
 		writable: false,
 		enumerable: true,
 		configurable: false

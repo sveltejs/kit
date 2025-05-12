@@ -604,6 +604,7 @@ Tips:
 
 			// For SSR, use a self-import to iterate over all exports of the file and add the necessary metadata
 			if (opts?.ssr) {
+				/** using @type {import('types').RemoteInfo} in here */
 				return (
 					code +
 					dedent`
@@ -611,11 +612,11 @@ Tips:
 						import * as $$_self_$$ from './${path.basename(id)}';
 						for (const key in $$_self_$$) {
 							const fn = $$_self_$$[key];
-							if (fn.__type === 'formAction') {
-								fn._set_action('${hashed_id}/' + key);
+							if (fn.__?.type === 'formAction') {
+								fn.__.set_action('${hashed_id}/' + key);
 							}
-							if (fn.__type === 'query' || fn.__type === 'prerender' || fn.__type === 'cache') {
-								fn.__id = '${hashed_id}/' + key;
+							if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
+								fn.__.id = '${hashed_id}/' + key;
 							}
 						}
 					`
@@ -639,8 +640,8 @@ Tips:
 			} else if (dev_server) {
 				const modules = await dev_server.ssrLoadModule(id);
 				for (const [name, value] of Object.entries(modules)) {
-					if (value.__type) {
-						const type = name_to_client_export(value.__type);
+					if (value.__?.type) {
+						const type = name_to_client_export(value.__.type);
 						remotes.set(type, (remotes.get(type) ?? []).concat(name));
 					}
 				}

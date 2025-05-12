@@ -149,7 +149,7 @@ async function analyse({
 		const modules = await manifest._.remotes[remote]();
 		const exports = new Map();
 		for (const [name, value] of Object.entries(modules)) {
-			const type = value.__type ?? 'other';
+			const type = /** @type {import('types').RemoteInfo} */ (value.__)?.type ?? 'other';
 			exports.set(type, (exports.get(type) ?? []).concat(name));
 		}
 		metadata.remotes.set(remote, exports);

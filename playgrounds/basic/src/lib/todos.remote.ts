@@ -24,7 +24,7 @@ export const get_todos_cached = cache(
 export const add_todo = action(async (text: string) => {
 	const asd = getRequestEvent();
 	_todos.push({ text, done: false, id: Math.random() });
-	invalidate(get_todos.key);
+	// invalidate(get_todos.key);
 });
 
 export const add_todo_form = formAction(async (form) => {

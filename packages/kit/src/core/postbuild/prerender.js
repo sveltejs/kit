@@ -460,11 +460,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	/** @type {Array<Function & { __: import('types').RemoteInfo & { type: 'prerender'}}>} */
 	const remote_functions = [];
 
 	for (const remote of Object.values(manifest._.remotes)) {
 		const functions = Object.values(await remote()).filter(
-			(value) => typeof value === 'function' && value.__type === 'prerender'
+			(value) =>
+				typeof value === 'function' &&
+				/** @type {import('types').RemoteInfo} */ (value.__)?.type === 'prerender'
 		);
 		if (functions.length > 0) {
 			has_prerenderable_routes = true;
@@ -514,15 +517,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	for (const remote_function of remote_functions) {
-		if (remote_function.__entries) {
-			for (const entry of remote_function.__entries()) {
+		if (remote_function.__.entries) {
+			for (const entry of await remote_function.__.entries()) {
 				// TODO translate args into a pathname somehow
 			}
 		} else {
 			// TODO this writes to /prerender/pages/... eventually, should it go into /prerender/dependencies?
 			void enqueue(
 				null,
-				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__id
+				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__.id
 			);
 		}
 	}
