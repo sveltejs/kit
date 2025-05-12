@@ -52,7 +52,7 @@ export async function handle_remote_call(
 		});
 	} else {
 		const args_json =
-			func.__type === 'query' || func.__type === 'prerender' || func.__type === 'cache'
+			func.__type === 'query' || func.__type === 'cache'
 				? /** @type {string} */ (event.url.searchParams.get('args'))
 				: await event.request.text();
 		const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));

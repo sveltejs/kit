@@ -392,8 +392,6 @@ const plugin = function (defaults = {}) {
 
 			if (fs.existsSync(`${builder.getServerDirectory()}/remote`)) {
 				for (const remote of fs.readdirSync(`${builder.getServerDirectory()}/remote`)) {
-					if (remote.endsWith('__internal.js')) continue;
-
 					// For now we're not caching when a full-page-hit is responded to, and make it an ISR function for client-side hits.
 					// Once Vercel data cache is available, use that instead, using a mechanism similar to the Node adapter
 					const src = pathToFileURL(`${builder.getServerDirectory()}/remote/${remote}`);

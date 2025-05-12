@@ -36,7 +36,6 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { build_remotes, create_public_remote_file } from './build/build_remotes.js';
 
 const cwd = process.cwd();
 
@@ -588,38 +587,12 @@ Tips:
 	/** @type {import('vite').ViteDevServer} */
 	let dev_server;
 
-	// Making it a query parameter solves two cases:
-	// 1. We don't need to worry about source maps as the file name is still the same
-	// 2. We work around a strange Vite behavior where the module is not reloaded when the file changes
-	const remote_virtual_suffix = '?__original';
-	/** @type {Record<string, string>} */
-	const remote_cache = {};
-
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
 		configureServer(_dev_server) {
 			dev_server = _dev_server;
-		},
-
-		async resolveId(id, importer) {
-			if (id.endsWith(remote_virtual_suffix)) {
-				return id;
-			}
-
-			if (importer?.endsWith(remote_virtual_suffix)) {
-				return this.resolve(
-					id,
-					posixify(process.cwd()) + importer.slice(0, -remote_virtual_suffix.length)
-				);
-			}
-		},
-
-		load(id) {
-			if (id.endsWith(remote_virtual_suffix)) {
-				return remote_cache[posixify(process.cwd()) + id.slice(0, -remote_virtual_suffix.length)];
-			}
 		},
 
 		async transform(code, id, opts) {
@@ -629,20 +602,27 @@ Tips:
 
 			const hashed_id = hash(posixify(id));
 
+			// For SSR, use a self-import to iterate over all exports of the file and add the necessary metadata
 			if (opts?.ssr) {
-				// build does this in a separate step because dev_server is not available to it
-				if (!dev_server) return;
-
-				remote_cache[id] = code;
-				const module = await dev_server.ssrLoadModule(id + remote_virtual_suffix);
-				const exports = Object.keys(module);
-				return create_public_remote_file(
-					exports,
-					id + remote_virtual_suffix,
-					hashed_id,
-					svelte_config
+				return (
+					code +
+					dedent`
+						// Auto-generated part, do not edit
+						import * as $$_self_$$ from './${path.basename(id)}';
+						for (const key in $$_self_$$) {
+							const fn = $$_self_$$[key];
+							if (fn.__type === 'formAction') {
+								fn._set_action('${hashed_id}/' + key);
+							}
+							if (fn.__type === 'query' || fn.__type === 'prerender' || fn.__type === 'cache') {
+								fn.__id = '${hashed_id}/' + key;
+							}
+						}
+					`
 				);
 			}
+
+			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
 			/** @type {Map<string, string[]>} */
 			const remotes = new Map();
@@ -966,8 +946,6 @@ Tips:
 				remote_exports = metadata.remotes;
 
 				log.info('Building app');
-
-				build_remotes(metadata, svelte_config, out);
 
 				// create client build
 				write_client_manifest(
