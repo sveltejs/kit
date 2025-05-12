@@ -46,9 +46,6 @@
 		"typescript": "^5.3.3",
 		"vitest": "^3.1.1"
 	},
-	"dependencies": {
-		"import-meta-resolve": "^4.1.0"
-	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"
 	}

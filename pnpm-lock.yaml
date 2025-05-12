@@ -40,10 +40,6 @@ importers:
         version: 8.26.0(eslint@9.6.0)(typescript@5.6.3)
 
   packages/adapter-auto:
-    dependencies:
-      import-meta-resolve:
-        specifier: ^4.1.0
-        version: 4.1.0
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -377,9 +373,6 @@ importers:
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
-      import-meta-resolve:
-        specifier: ^4.1.0
-        version: 4.1.0
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
@@ -2694,9 +2687,6 @@ packages:
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
-
-  import-meta-resolve@4.1.0:
-    resolution: {integrity: sha512-I6fiaX09Xivtk+THaMfAwnA3MVA5Big1WHF1Dfx9hFuvNIWpXnorlkzhcQf6ehrqQiiZECRt1poOAkPmer3ruw==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -5153,8 +5143,6 @@ snapshots:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-
-  import-meta-resolve@4.1.0: {}
 
   imurmurhash@0.1.4: {}
 
