@@ -622,11 +622,6 @@ Tips:
 			}
 		},
 
-		/**
-		 * @param {string} code
-		 * @param {string} id
-		 * @param {any} opts
-		 */
 		async transform(code, id, opts) {
 			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
 				return;
@@ -634,7 +629,7 @@ Tips:
 
 			const hashed_id = hash(posixify(id));
 
-			if (opts.ssr) {
+			if (opts?.ssr) {
 				// build does this in a separate step because dev_server is not available to it
 				if (!dev_server) return;
 
@@ -677,7 +672,7 @@ Tips:
 
 			/** @param {string} name */
 			function name_to_client_export(name) {
-				// remoteQuery, remoteAction, remoteFormAction, remotePrerender
+				// remoteQuery, remoteAction, remoteFormAction, remotePrerender, remoteCache
 				return 'remote' + name[0].toUpperCase() + name.slice(1);
 			}
 

@@ -1,8 +1,9 @@
-import { stringify, uneval } from 'devalue';
+import { stringify, uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
 import { stringify_rpc_response } from '../../server/remote/index.js';
 import { json } from '../../../exports/index.js';
 import { app_dir } from '__sveltekit/paths';
+import { DEV } from 'esm-env';
 
 /**
  * @template {(formData: FormData) => any} T
@@ -147,6 +148,20 @@ export function uneval_remote_response(data, transport) {
 }
 
 /**
+ * @param {any} data
+ * @param {import('types').ServerHooks['transport']} transport
+ */
+function parse_remote_response(data, transport) {
+	/** @type {Record<string, any>} */
+	const revivers = {};
+	for (const key in transport) {
+		revivers[key] = transport[key].decode;
+	}
+
+	return parse(data, revivers);
+}
+
+/**
  * @template {(...args: any[]) => any} T
  * @param {T} fn
  * @returns {T}
@@ -171,7 +186,7 @@ export function action(fn) {
 export function prerender(fn, { entries } = {}) {
 	/** @param {...Parameters<T>} args */
 	const wrapper = async (...args) => {
-		// TODO deduplicate this with query
+		// TODO deduplicate this with query/cache
 		const event = getRequestEvent();
 		const result = await fn(...args);
 		const stringified_args = stringify(args, event._.transport);
@@ -193,6 +208,97 @@ export function prerender(fn, { entries } = {}) {
 	// Better safe than sorry: Seal these properties to prevent modification
 	Object.defineProperty(wrapper, '__type', {
 		value: 'prerender',
+		writable: false,
+		enumerable: true,
+		configurable: false
+	});
+
+	// @ts-expect-error
+	return wrapper;
+}
+
+/**
+ * @template {(...args: any[]) => any} T
+ * @param {T} fn
+ * @param {Record<string, any>} config
+ * @returns {T}
+ */
+export function cache(fn, config) {
+	/** @param {...Parameters<T>} args */
+	const wrapper = async (...args) => {
+		// TODO deduplicate this with query/prerender
+		const event = getRequestEvent();
+		const stringified_args = stringify(args, event._.transport);
+
+		let result;
+		const is_cached = wrapper.cache.has(stringified_args);
+		if (is_cached) {
+			// TODO brings back stringified which we need to decode but thats stupid because we decode and stringify right away again
+			result = parse_remote_response(wrapper.cache.get(stringified_args), event._.transport);
+		} else {
+			result = await fn(...args);
+		}
+
+		event._.remote_results[wrapper.__id + stringified_args] = uneval_remote_response(
+			result,
+			event._.transport
+		);
+
+		if (event._.remote_prerendering) {
+			const body = stringify_rpc_response(result, event._.transport);
+			// TODO for prerendering we need to make the query args part of the pathname
+			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__id}`, {
+				body,
+				response: json(body)
+			});
+		} else if (!is_cached) {
+			const body = stringify_rpc_response(result, event._.transport);
+			wrapper.cache.set(stringified_args, body);
+		}
+		return result;
+	};
+	wrapper.__config = config;
+
+	if (DEV) {
+		// In memory cache that hopefully resets on changes?
+		/** @type {Record<string, string>} */
+		const cached = {};
+		wrapper.cache = {
+			get(input) {
+				return cached[input];
+			},
+			has(input) {
+				return input in cached;
+			},
+			set(input, output) {
+				cached[input] = output;
+				setTimeout(() => {
+					delete cached[input];
+				}, wrapper.__config.expiration * 1000);
+			},
+			delete(input) {
+				delete cached[input];
+			}
+		};
+	} else {
+		wrapper.cache = {
+			// TODO warn somehow when adapter does not support cache?
+			get() {},
+			has() {
+				return false;
+			},
+			set() {},
+			delete() {}
+		};
+	}
+	wrapper.refresh = (...args) => {
+		// TODO is this agnostic enough / fine to require people calling this during a request event?
+		const event = getRequestEvent();
+		wrapper.cache.delete(stringify(args, event._.transport));
+	};
+	// Better safe than sorry: Seal these properties to prevent modification
+	Object.defineProperty(wrapper, '__type', {
+		value: 'cache',
 		writable: false,
 		enumerable: true,
 		configurable: false

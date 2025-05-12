@@ -129,6 +129,7 @@ export function remoteQuery(id) {
 }
 
 export const remotePrerender = remoteQuery;
+export const remoteCache = remoteQuery;
 
 /**
  * @param {string} id

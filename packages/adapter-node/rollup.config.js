@@ -49,5 +49,13 @@ export default [
 			format: 'esm'
 		},
 		plugins: [nodeResolve(), commonjs(), prefixBuiltinModules()]
+	},
+	{
+		input: 'src/cache.js',
+		output: {
+			file: 'files/cache.js',
+			format: 'esm'
+		},
+		plugins: [nodeResolve(), commonjs(), prefixBuiltinModules()]
 	}
 ];

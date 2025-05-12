@@ -45,7 +45,13 @@ import { queryMap } from './remote.svelte.js';
 import { getRequestEvent } from '../app/server/event.js';
 
 export { load_css };
-export { remoteAction, remoteFormAction, remoteQuery, remotePrerender } from './remote.svelte.js';
+export {
+	remoteAction,
+	remoteFormAction,
+	remoteQuery,
+	remotePrerender,
+	remoteCache
+} from './remote.svelte.js';
 
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 

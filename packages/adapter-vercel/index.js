@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname, pattern_to_src } from './utils.js';
@@ -388,6 +388,56 @@ const plugin = function (defaults = {}) {
 					/** @type {any} */ ({ runtime, ...defaults }),
 					[]
 				);
+			}
+
+			if (fs.existsSync(`${builder.getServerDirectory()}/remote`)) {
+				for (const remote of fs.readdirSync(`${builder.getServerDirectory()}/remote`)) {
+					if (remote.endsWith('__internal.js')) continue;
+
+					// For now we're not caching when a full-page-hit is responded to, and make it an ISR function for client-side hits.
+					// Once Vercel data cache is available, use that instead, using a mechanism similar to the Node adapter
+					const src = pathToFileURL(`${builder.getServerDirectory()}/remote/${remote}`);
+					const module = await import(src.href);
+					for (const value of Object.values(module)) {
+						if (value.__type === 'cache') {
+							const isr_name = value.__id;
+							const base = `${dirs.functions}/${isr_name}`;
+							builder.mkdirp(base);
+
+							// This is either the single function or the fallback function; both have all the remote files
+							const target = `${dirs.functions}/${DEFAULT_FUNCTION_NAME}.func`;
+							const relative = path.relative(path.dirname(base), target);
+
+							// create a symlink to the actual function, but use the
+							// route name so that we can derive the correct URL
+							fs.symlinkSync(relative, `${base}.func`);
+
+							const pathname = `/${builder.getAppPath()}/remote/${value.__id}`;
+							const json = JSON.stringify(
+								{
+									expiration: value.__config.expiration,
+									bypassToken: value.__config.bypassToken,
+									allowQuery: ['__pathname', 'args'],
+									passQuery: true
+								},
+								null,
+								'\t'
+							);
+
+							write(`${base}.prerender-config.json`, json);
+
+							static_config.routes.push({
+								src: pathname + '$',
+								dest: `/${isr_name}?__pathname=${pathname}`
+							});
+						}
+					}
+
+					static_config.routes.push({
+						src: `/${builder.getAppPath()}/immutable/${remote}(.+)`,
+						dest: `/${builder.getAppPath()}/immutable/${remote}$1`
+					});
+				}
 			}
 
 			// optional chaining to support older versions that don't have this setting yet

@@ -37,7 +37,7 @@ export function create_public_remote_file(exports, id, hash) {
         if (fn.__type === 'formAction') {
             fn._set_action('${hash}/' + key);
         }
-		if (fn.__type === 'query' || fn.__type === 'prerender') {
+		if (fn.__type === 'query' || fn.__type === 'prerender' || fn.__type === 'cache') {
 			fn.__id = '${hash}/' + key;
 		}
     }

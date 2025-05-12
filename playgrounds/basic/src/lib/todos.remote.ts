@@ -1,11 +1,25 @@
 import { invalidate } from '$app/navigation';
-import { query, action, formAction, getRequestEvent } from '$app/server';
+import { query, prerender, cache, action, formAction, getRequestEvent } from '$app/server';
 
 let _todos: any[] = [];
 
 export const get_todos = query(() => {
+	console.log('get_todos');
 	return _todos;
 });
+
+export const get_todos_prerendered = prerender(() => {
+	console.log('get_todos prerendered');
+	return _todos;
+});
+
+export const get_todos_cached = cache(
+	() => {
+		console.log('get_todos cached');
+		return _todos;
+	},
+	{ expiration: 10 }
+);
 
 export const add_todo = action(async (text: string) => {
 	const asd = getRequestEvent();
@@ -16,5 +30,5 @@ export const add_todo = action(async (text: string) => {
 export const add_todo_form = formAction(async (form) => {
 	const text = form.get('text');
 	_todos.push({ text, done: false, id: Math.random() });
-	return 'returned something from the form action';
+	return 'returned something from ddaathe a';
 });
