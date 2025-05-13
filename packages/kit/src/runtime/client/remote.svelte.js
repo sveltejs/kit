@@ -11,6 +11,7 @@ import {
 	pending_invalidate,
 	started
 } from './client.js';
+import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 
 /**
  * Contains a map of query functions that currently exist in the app.
@@ -28,22 +29,14 @@ let pending_fresh = false;
  * @returns {RemoteQuery<any, any>}
  */
 export function query(id) {
-	function args_as_string(/** @type {any} */ ...args) {
-		if (args.length === 0) return '';
-		const transport = app.hooks.transport;
-		const encoders = Object.fromEntries(
-			Object.entries(transport).map(([key, value]) => [key, value.encode])
-		);
-		return devalue.stringify(args, encoders);
-	}
-
 	let version = $state(0);
 
 	queryMap.set(id, () => version++);
 
 	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
 	const fn = async (/** @type {any} */ ...args) => {
-		const stringified_args = args_as_string(...args);
+		const stringified_args = stringify_remote_args(args, app.hooks.transport);
+		const cache_key = create_remote_cache_key(id, stringified_args);
 
 		// Reading the version ensures that the function reruns in reactive contexts if the version changes
 		version;
@@ -63,7 +56,7 @@ export function query(id) {
 				tracking = false;
 				// TODO this needs a counter of subscriptions to only delete when the last one is gone
 				// reuse our subscribe function for this? (could be hard to do because if we do `import * as svelte from 'svelte'` we can't treeshake unused methods)
-				overrideMap.delete(id + stringified_args);
+				overrideMap.delete(cache_key);
 			});
 		}
 
@@ -72,7 +65,7 @@ export function query(id) {
 			setTimeout(() => resultMap.delete(id), 500);
 			const response = (async () => {
 				if (!started) {
-					const result = remote_responses[id + stringified_args];
+					const result = remote_responses[cache_key];
 					if (result) return result;
 				}
 
@@ -90,7 +83,7 @@ export function query(id) {
 					// TODO this is a bit of a hack, but we need to make sure that the result is not cached
 					// if the user is tracking it. This is because we don't know when the user will stop tracking
 					// so we need to make sure that the result is not cached until then.
-					overrideMap.set(id + stringified_args, parsed_result);
+					overrideMap.set(cache_key, parsed_result);
 				}
 				return parsed_result;
 			})();
@@ -102,7 +95,7 @@ export function query(id) {
 				// TODO this is a bit of a hack, but we need to make sure that the result is not cached
 				// if the user is tracking it. This is because we don't know when the user will stop tracking
 				// so we need to make sure that the result is not cached until then.
-				overrideMap.set(id + stringified_args, parsed_result);
+				overrideMap.set(cache_key, parsed_result);
 			}
 			return parsed_result;
 		}
@@ -120,8 +113,8 @@ export function query(id) {
 
 	/** @type {RemoteQuery<any, any>['override']} */
 	fn.override = (args, update) => {
-		const stringified_args = args_as_string(...args);
-		const key = id + stringified_args;
+		const stringified_args = stringify_remote_args(args, app.hooks.transport);
+		const key = create_remote_cache_key(id, stringified_args);
 		if (overrideMap.has(key)) {
 			resultMap.set(key, update(overrideMap.get(key)));
 			version++;
@@ -208,7 +201,9 @@ export function form(id) {
 	const action = '?/remote=' + encodeURIComponent(id);
 
 	/** @type {any} */
-	let result = $state(!started ? (remote_responses[action] ?? null) : null);
+	let result = $state(
+		!started ? (remote_responses[create_remote_cache_key(action, '')] ?? null) : null
+	);
 
 	/** @param {FormData} form_data */
 	async function submit(form_data) {

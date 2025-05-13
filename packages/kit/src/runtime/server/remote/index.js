@@ -1,3 +1,6 @@
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { PrerenderOptions, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
+
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { app_dir } from '__sveltekit/paths';
@@ -5,11 +8,12 @@ import { error } from 'console';
 import { with_event } from '../../app/server/event.js';
 import { is_form_content_type } from '../../../utils/http.js';
 import { SvelteKitError } from '../../control.js';
+import { stringify } from '../../shared.js';
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {RequestEvent} event
+ * @param {SSROptions} options
+ * @param {SSRManifest} manifest
  * @param {string} [id]
  */
 export async function handle_remote_call(
@@ -28,11 +32,9 @@ export async function handle_remote_call(
 
 	if (!func) error(404);
 
-	/** @type {import('types').RemoteInfo} */
+	/** @type {RemoteInfo} */
 	const info = func.__;
 	const transport = options.hooks.transport;
-
-	event._.remote_invalidations = new Set();
 
 	if (info.type === 'form') {
 		if (!is_form_content_type(event.request)) {
@@ -47,11 +49,7 @@ export async function handle_remote_call(
 
 		const form_data = await event.request.formData();
 		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
-		return text(stringify_rpc_response(data, transport), {
-			headers: {
-				'x-sveltekit-rpc-invalidate': JSON.stringify([...event._.remote_invalidations])
-			}
-		});
+		return text(stringify(data, transport));
 	} else {
 		const args_json =
 			info.type === 'query' || info.type === 'cache'
@@ -61,23 +59,54 @@ export async function handle_remote_call(
 		const args = args_json ? devalue.parse(args_json, decoders) : [];
 		const data = await with_event(event, () => func.apply(null, args));
 
-		return text(stringify_rpc_response(data, transport), {
-			headers: {
-				'x-sveltekit-rpc-invalidate': JSON.stringify([...event._.remote_invalidations])
-			}
-		});
+		return text(stringify(data, transport));
 	}
 }
 
 /**
- * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
- * @param {any} data
- * @param {import('types').ServerHooks['transport']} transport
+ * @typedef {{
+ * 	remote_results: Record<string, unknown>;
+ * 	remote_prerendering: PrerenderOptions | undefined
+ *  transport: ServerHooks['transport'];
+ * }} RemoteEventInfo
  */
-export function stringify_rpc_response(data, transport) {
-	const encoders = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.encode])
-	);
 
-	return devalue.stringify(data, encoders);
+const remote_info = Symbol('remote');
+
+/**
+ * Adds the remote info on a hidden property of the event object
+ * @param {RequestEvent} event
+ * @param {SSRState} state
+ * @param {SSROptions} options
+ */
+export function add_remote_info(event, state, options) {
+	Object.defineProperty(event, remote_info, {
+		value: /** @type {RemoteEventInfo} */ ({
+			remote_results: {},
+			remote_prerendering: state.prerendering,
+			transport: options.hooks.transport
+			// remote_invalidations: new Set() // <- this is how we could do refresh on the server
+		}),
+		configurable: false,
+		writable: false,
+		enumerable: false
+	});
+}
+
+/**
+ * Gets the remote info on a hidden property of the event object
+ * @template {boolean | undefined} [Optional=false]
+ * @param {RequestEvent} event
+ * @param {Optional} [optional]
+ * @returns {Optional extends true ? RemoteEventInfo | undefined : RemoteEventInfo}
+ */
+export function get_remote_info(event, optional) {
+	if (!(remote_info in event)) {
+		// @ts-expect-error TS is not smart enough for this
+		if (optional) return undefined;
+		throw new Error('get_remote_info called without add_remote_info');
+	}
+
+	// @ts-expect-error TS is not smart enough for this
+	return /** @type {RemoteEventInfo} */ (event[remote_info]);
 }

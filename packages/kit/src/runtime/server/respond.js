@@ -33,7 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { handle_remote_call } from './remote/index.js';
+import { add_remote_info, handle_remote_call } from './remote/index.js';
 import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -175,14 +175,10 @@ export async function respond(request, options, manifest, state) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0,
-		// TODO tidy up
-		_: {
-			remote_results: {},
-			remote_prerendering: state.prerendering,
-			transport: options.hooks.transport
-		}
+		isSubRequest: state.depth > 0
 	};
+
+	add_remote_info(event, state, options);
 
 	event.fetch = create_fetch({
 		event,

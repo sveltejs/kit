@@ -1,12 +1,13 @@
-/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery, RequestEvent } from '@sveltejs/kit' */
 /** @import { PrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
 
-import { stringify, uneval, parse } from 'devalue';
+import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
-import { stringify_rpc_response } from '../../server/remote/index.js';
+import { get_remote_info } from '../../server/remote/index.js';
 import { json } from '../../../exports/index.js';
 import { app_dir } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
+import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.
@@ -42,7 +43,9 @@ export function form(fn) {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(form_data);
-		event._.remote_results[wrapper.action] = uneval_remote_response(result, event._.transport);
+		// We don't need to care about args, because uneval results are only relevant in full page reloads
+		// where only one form submission is active at the same time
+		uneval_remote_response(wrapper.action, [], result, event);
 		return result;
 	};
 
@@ -98,7 +101,7 @@ export function form(fn) {
 		get() {
 			try {
 				const event = getRequestEvent();
-				return event._.remote_results[wrapper.action] ?? null;
+				return get_remote_info(event).remote_results[wrapper.action] ?? null;
 			} catch (e) {
 				return null;
 			}
@@ -143,19 +146,8 @@ export function query(fn) {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(...args);
-		const stringified_args = stringify(args, event._.transport);
-		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
-			result,
-			event._.transport
-		);
-		if (event._.remote_prerendering) {
-			const body = stringify_rpc_response(result, event._.transport);
-			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
-				body,
-				response: json(body)
-			});
-		}
+		uneval_remote_response(wrapper.__.id, args, result, event);
+		save_prerendered_result(wrapper.__.id, result, event);
 		return result;
 	};
 
@@ -175,24 +167,6 @@ export function query(fn) {
 	});
 
 	return wrapper;
-}
-
-/**
- * @param {any} data
- * @param {ServerHooks['transport']} transport
- */
-export function uneval_remote_response(data, transport) {
-	const replacer = (/** @type {any} */ thing) => {
-		for (const key in transport) {
-			const encoded = transport[key].encode(thing);
-			if (encoded) {
-				return `app.decode('${key}', ${uneval(encoded, replacer)})`;
-			}
-		}
-	};
-
-	// TODO try_serialize
-	return uneval(data, replacer);
 }
 
 /**
@@ -282,19 +256,8 @@ export function prerender(fn, { entries } = {}) {
 		// TODO deduplicate this with query/cache
 		const event = getRequestEvent();
 		const result = await fn(...args);
-		const stringified_args = stringify(args, event._.transport);
-		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
-			result,
-			event._.transport
-		);
-		if (event._.remote_prerendering) {
-			const body = stringify_rpc_response(result, event._.transport);
-			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
-				body,
-				response: json(body)
-			});
-		}
+		uneval_remote_response(wrapper.__.id, args, result, event);
+		save_prerendered_result(wrapper.__.id, result, event);
 		return result;
 	};
 
@@ -342,33 +305,29 @@ export function cache(fn, config) {
 	const wrapper = async (...args) => {
 		// TODO deduplicate this with query/prerender
 		const event = getRequestEvent();
-		const stringified_args = stringify(args, event._.transport);
+		const info = get_remote_info(event);
+		const stringified_args = stringify_remote_args(args, info.transport);
 
-		let result;
-		const is_cached = wrapper.cache.has(stringified_args);
-		if (is_cached) {
+		let is_cached = false;
+		/** @type {any} */
+		let result = await wrapper.cache.get(stringified_args);
+
+		if (typeof result === 'string') {
+			is_cached = true;
 			// TODO brings back stringified which we need to decode but thats stupid because we decode and stringify right away again
-			result = parse_remote_response(wrapper.cache.get(stringified_args), event._.transport);
+			result = parse_remote_response(wrapper.cache.get(stringified_args), info.transport);
 		} else {
 			result = await fn(...args);
 		}
 
-		event._.remote_results[wrapper.__.id + stringified_args] = uneval_remote_response(
-			result,
-			event._.transport
-		);
+		uneval_remote_response(wrapper.__.id, args, result, event);
+		save_prerendered_result(wrapper.__.id, result, event);
 
-		if (event._.remote_prerendering) {
-			const body = stringify_rpc_response(result, event._.transport);
-			// TODO for prerendering we need to make the query args part of the pathname
-			event._.remote_prerendering.dependencies.set(`/${app_dir}/remote/${wrapper.__.id}`, {
-				body,
-				response: json(body)
-			});
-		} else if (!is_cached) {
-			const body = stringify_rpc_response(result, event._.transport);
+		if (!info.remote_prerendering && !is_cached) {
+			const body = stringify(result, info.transport);
 			wrapper.cache.set(stringified_args, body);
 		}
+
 		return result;
 	};
 
@@ -379,9 +338,6 @@ export function cache(fn, config) {
 		wrapper.cache = {
 			get(input) {
 				return cached[input];
-			},
-			has(input) {
-				return input in cached;
 			},
 			set(input, output) {
 				cached[input] = output;
@@ -399,9 +355,6 @@ export function cache(fn, config) {
 		wrapper.cache = {
 			// TODO warn somehow when adapter does not support cache?
 			get() {},
-			has() {
-				return false;
-			},
 			set() {},
 			delete() {}
 		};
@@ -410,9 +363,9 @@ export function cache(fn, config) {
 	/** @type {RemoteQuery<any, any>['refresh']} */
 	wrapper.refresh = (...args) => {
 		// TODO is this agnostic enough / fine to require people calling this during a request event?
-		const event = getRequestEvent();
+		const info = get_remote_info(getRequestEvent());
 		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
-		wrapper.cache.delete(stringify(args, event._.transport));
+		wrapper.cache.delete(stringify(args, info.transport));
 	};
 
 	wrapper.override = () => {
@@ -427,4 +380,45 @@ export function cache(fn, config) {
 	});
 
 	return wrapper;
+}
+
+/**
+ * @param {string} id
+ * @param {any[]} args
+ * @param {any} result
+ * @param {RequestEvent} event
+ */
+function uneval_remote_response(id, args, result, event) {
+	const info = get_remote_info(event);
+	const cache_key = create_remote_cache_key(id, stringify(args, info.transport));
+
+	const replacer = (/** @type {any} */ thing) => {
+		for (const key in info.transport) {
+			const encoded = info.transport[key].encode(thing);
+			if (encoded) {
+				return `app.decode('${key}', ${uneval(encoded, replacer)})`;
+			}
+		}
+	};
+
+	// TODO better error when this fails?
+	info.remote_results[cache_key] = uneval(result, replacer);
+}
+
+/**
+ * @param {string} id
+ * @param {any} result
+ * @param {RequestEvent} event
+ */
+function save_prerendered_result(id, result, event) {
+	const info = get_remote_info(event);
+
+	if (info.remote_prerendering) {
+		const body = stringify(result, info.transport);
+		// TODO for prerendering we need to make the query args part of the pathname
+		info.remote_prerendering.dependencies.set(`/${app_dir}/remote/${id}`, {
+			body,
+			response: json(body)
+		});
+	}
 }

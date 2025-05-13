@@ -16,6 +16,7 @@ import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
 import { with_event } from '../../app/server/event.js';
+import { get_remote_info } from '../remote/index.js';
 
 // TODO rename this function/module
 
@@ -406,7 +407,7 @@ export async function render_response({
 				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`,
-				`remote: ${s(event._.remote_results)}`
+				`remote: ${s(get_remote_info(event, true)?.remote_results)}`
 			];
 
 			if (status !== 200) {

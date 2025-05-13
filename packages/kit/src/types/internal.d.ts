@@ -20,7 +20,7 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transport
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -150,14 +150,14 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	reroute: Reroute;
-	transport: Record<string, Transporter>;
+	transport: Transport;
 	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
-	transport: Record<string, Transporter>;
+	transport: Transport;
 	init?: ClientInit;
 }
 

@@ -20,12 +20,8 @@ class Cache {
 		return join(dir, encodeURIComponent(this.id + '|' + input));
 	}
 	/** @param {string} input */
-	has(input) {
-		return existsSync(this.path(input));
-	}
-	/** @param {string} input */
 	get(input) {
-		return readFileSync(this.path(input));
+		return existsSync(this.path(input)) ? readFileSync(this.path(input)) : undefined;
 	}
 	/**
 	 * @param {string} input
