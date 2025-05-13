@@ -1,3 +1,5 @@
+/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
+
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
@@ -21,9 +23,11 @@ const overrideMap = new Map();
 let pending_fresh = false;
 
 /**
+ * Client-version of the `query` function from `$app/server`.
  * @param {string} id
+ * @returns {RemoteQuery<any, any>}
  */
-export function remoteQuery(id) {
+export function query(id) {
 	function args_as_string(/** @type {any} */ ...args) {
 		if (args.length === 0) return '';
 		const transport = app.hooks.transport;
@@ -114,11 +118,12 @@ export function remoteQuery(id) {
 		queryMap.get(id)();
 	};
 
-	fn.override = (/** @type {any} */ ...args) => {
-		const stringified_args = args_as_string(...args.slice(0, -1));
+	/** @type {RemoteQuery<any, any>['override']} */
+	fn.override = (args, update) => {
+		const stringified_args = args_as_string(...args);
 		const key = id + stringified_args;
 		if (overrideMap.has(key)) {
-			resultMap.set(key, args[args.length - 1](overrideMap.get(key)));
+			resultMap.set(key, update(overrideMap.get(key)));
 			version++;
 			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
 			setTimeout(() => resultMap.delete(id), 500);
@@ -128,13 +133,21 @@ export function remoteQuery(id) {
 	return fn;
 }
 
-export const remotePrerender = remoteQuery;
-export const remoteCache = remoteQuery;
+/**
+ * Client-version of the `prerender` function from `$app/server`.
+ */
+export const prerender = query;
 
 /**
+ * Client-version of the `cache` function from `$app/server`.
+ */
+export const cache = query;
+
+/**
+ * Client-version of the `command` function from `$app/server`.
  * @param {string} id
  */
-export function remoteAction(id) {
+export function command(id) {
 	return async (/** @type {any} */ ...args) => {
 		const transport = app.hooks.transport;
 		const encoders = Object.fromEntries(
@@ -143,17 +156,17 @@ export function remoteAction(id) {
 
 		const response = await fetch(`/${app_dir}/remote/${id}`, {
 			method: 'POST',
-			body: devalue.stringify(args, encoders), // TODO maybe don't use devalue.stringify here
+			body: devalue.stringify(args, encoders),
 			headers: {
 				'Content-Type': 'application/json'
 			}
 		});
 
-		const result = await response.json();
+		const result = await response.text();
 
 		if (!response.ok) {
 			// TODO should this go through `handleError`?
-			throw new Error(result.message);
+			throw new Error(JSON.parse(result).message);
 		}
 
 		// If we want to invalidate from the server, this is how we would do it
@@ -166,7 +179,6 @@ export function remoteAction(id) {
 			queueMicrotask(() => {
 				// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
 				// If that doesn't happen within a microtask we assume they want to invalidate everything.
-				console.log('pending_invalidate', pending_invalidate, pending_fresh);
 				if (pending_invalidate || pending_fresh) return;
 				invalidateAll();
 			});
@@ -177,9 +189,11 @@ export function remoteAction(id) {
 }
 
 /**
+ * Client-version of the `form` function from `$app/server`.
  * @param {string} id
+ * @returns {RemoteFormAction<any>}
  */
-export function remoteFormAction(id) {
+export function form(id) {
 	/**
 	 * Shallow clone an element, so that we can access e.g. `form.action` without worrying
 	 * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
@@ -196,6 +210,57 @@ export function remoteFormAction(id) {
 	/** @type {any} */
 	let result = $state(!started ? (remote_responses[action] ?? null) : null);
 
+	/** @param {FormData} form_data */
+	async function submit(form_data) {
+		const response = await fetch(`/${app_dir}/remote/${id}`, {
+			method: 'POST',
+			body: form_data
+		});
+		const text = await response.text();
+
+		if (!response.ok) {
+			// TODO should this go through `handleError`?
+			throw new Error(JSON.parse(text).message);
+		}
+
+		// TODO don't revalidate on validation error? should we bring fail() into this?
+		// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
+		invalidateAll();
+
+		return (result = devalue.parse(text, app.decoders));
+	}
+
+	/**
+	 * @param {HTMLFormElement} form_element
+	 * @param {HTMLElement | null} submitter
+	 */
+	function create_form_data(form_element, submitter) {
+		const form_data = new FormData(form_element);
+
+		if (DEV) {
+			const enctype = submitter?.hasAttribute('formenctype')
+				? /** @type {HTMLButtonElement | HTMLInputElement} */ (submitter).formEnctype
+				: clone(form_element).enctype;
+			if (enctype !== 'multipart/form-data') {
+				for (const value of form_data.values()) {
+					if (value instanceof File) {
+						throw new Error(
+							'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
+						);
+					}
+				}
+			}
+		}
+
+		const submitter_name = submitter?.getAttribute('name');
+		if (submitter_name) {
+			form_data.append(submitter_name, submitter?.getAttribute('value') ?? '');
+		}
+
+		return form_data;
+	}
+
+	/** @param {Parameters<RemoteFormAction<any>['enhance']>[0]} callback */
 	const form_onsubmit = (callback) => {
 		/** @param {SubmitEvent} event */
 		return async (event) => {
@@ -219,57 +284,17 @@ export function remoteFormAction(id) {
 
 			event.preventDefault();
 
-			const form_data = new FormData(form_element);
-
-			if (DEV) {
-				const enctype = event.submitter?.hasAttribute('formenctype')
-					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
-					: clone(form_element).enctype;
-				if (enctype !== 'multipart/form-data') {
-					for (const value of form_data.values()) {
-						if (value instanceof File) {
-							throw new Error(
-								'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-							);
-						}
-					}
-				}
-			}
-
-			const submitter_name = event.submitter?.getAttribute('name');
-			if (submitter_name) {
-				form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
-			}
-
 			callback({
-				submit: async () => {
-					const response = await fetch(`/${app_dir}/remote/${id}`, {
-						method: 'POST',
-						body: form_data
-					});
-					const text = await response.text();
-
-					if (!response.ok) {
-						// TODO should this go through `handleError`?
-						throw new Error(JSON.parse(text).message);
-					}
-
-					// TODO don't revalidate on validation error? should we bring fail() into this?
-					// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
-					invalidateAll();
-
-					return (result = devalue.parse(text, app.decoders));
-				}
+				submit: () => submit(create_form_data(form_element, event.submitter))
 			});
 		};
 	};
 
-	const form = {
-		method: 'POST',
-		action,
-		onsubmit: form_onsubmit(({ submit }) => submit())
-	};
+	submit.method = 'POST';
+	submit.action = action;
+	submit.onsubmit = form_onsubmit(({ submit }) => submit());
 
+	/** @param {Parameters<RemoteFormAction<any>['formAction']['enhance']>[0]} callback */
 	const form_action_onclick = (callback) => {
 		/** @param {Event} event */
 		return async (event) => {
@@ -281,77 +306,33 @@ export function remoteFormAction(id) {
 			event.stopPropagation();
 			event.preventDefault();
 
-			const form_data = new FormData(form_element);
-
-			if (DEV) {
-				const enctype = target.hasAttribute('formenctype')
-					? target.formEnctype
-					: clone(form_element).enctype;
-				if (enctype !== 'multipart/form-data') {
-					for (const value of form_data.values()) {
-						if (value instanceof File) {
-							throw new Error(
-								'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-							);
-						}
-					}
-				}
-			}
-
-			const submitter_name = target.getAttribute('name');
-			if (submitter_name) {
-				form_data.append(submitter_name, target.getAttribute('value') ?? '');
-			}
-
 			callback({
-				submit: async () => {
-					const response = await fetch(`/${app_dir}/remote/${id}`, {
-						method: 'POST',
-						body: form_data
-					});
-					const text = await response.text();
-
-					if (!response.ok) {
-						// TODO should this go through `handleError`?
-						throw new Error(JSON.parse(text).message);
-					}
-
-					// TODO don't revalidate on validation error? should we bring fail() into this?
-					// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
-					invalidateAll();
-
-					return (result = devalue.parse(text, app.decoders));
-				}
+				submit: () => submit(create_form_data(form_element, target))
 			});
 		};
 	};
 
+	/** @type {RemoteFormAction<any>['formAction']} */
+	// @ts-expect-error we gotta set enhance as a non-enumerable property
 	const form_action = {
 		type: 'submit',
 		formaction: action,
 		onclick: form_action_onclick(({ submit }) => submit())
 	};
 
-	Object.defineProperties(form_action, {
-		result: {
-			get() {
-				return result;
-			},
-			enumerable: false
+	Object.defineProperty(form_action, 'enhance', {
+		/** @type {RemoteFormAction<any>['formAction']['enhance']} */
+		value: (callback) => {
+			return {
+				type: 'submit',
+				formaction: action,
+				onclick: form_action_onclick(callback)
+			};
 		},
-		enhance: {
-			value: (callback) => {
-				return {
-					type: 'submit',
-					formaction: action,
-					onclick: form_action_onclick(callback)
-				};
-			},
-			enumerable: false
-		}
+		enumerable: false
 	});
 
-	Object.defineProperties(form, {
+	Object.defineProperties(submit, {
 		formAction: {
 			value: form_action,
 			enumerable: false
@@ -363,6 +344,7 @@ export function remoteFormAction(id) {
 			enumerable: false
 		},
 		enhance: {
+			/** @type {RemoteFormAction<any>['enhance']} */
 			value: (callback) => {
 				return {
 					method: 'POST',
@@ -374,5 +356,6 @@ export function remoteFormAction(id) {
 		}
 	});
 
-	return form;
+	// @ts-expect-error we gotta set enhance etc as a non-enumerable properties
+	return submit;
 }

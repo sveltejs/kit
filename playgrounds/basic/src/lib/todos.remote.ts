@@ -1,5 +1,5 @@
 import { invalidate } from '$app/navigation';
-import { query, prerender, cache, action, formAction, getRequestEvent } from '$app/server';
+import { query, prerender, cache, command, form, getRequestEvent } from '$app/server';
 
 let _todos: any[] = [];
 
@@ -21,13 +21,13 @@ export const get_todos_cached = cache(
 	{ expiration: 10 }
 );
 
-export const add_todo = action(async (text: string) => {
+export const add_todo = command(async (text: string) => {
 	const asd = getRequestEvent();
 	_todos.push({ text, done: false, id: Math.random() });
 	// invalidate(get_todos.key);
 });
 
-export const add_todo_form = formAction(async (form) => {
+export const add_todo_form = form(async (form) => {
 	const text = form.get('text');
 	_todos.push({ text, done: false, id: Math.random() });
 	return 'returned something from ddaathe a';

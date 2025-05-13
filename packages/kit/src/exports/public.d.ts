@@ -1503,4 +1503,96 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
+/**
+ * The return value of a remote `form` function.
+ * Spread it onto a `<form>` element to connect the form with the remote form action.
+ * ```svelte
+ * <script>
+ *   import { createTodo } from './todos.remote.js';
+ * </script>
+ *
+ * <form {...createTodo}>
+ *   <input type="text" name="name" />
+ *   <!-- ... -->
+ * </form>
+ * ```
+ * Use the `enhance` method to influence what happens when the form is submitted.
+ * ```svelte
+ * <script>
+ *   import { getTodos, createTodo } from './todos.remote.js';
+ * </script>
+ *
+ * <form {...myFormAction.enhance(async ({ formData, submit }) => {
+ *   // do something with the form data, e.g. optimistic UI update
+ *   getTodos.override([], (todos) => [...todos, { text: formData.get('text') }]);
+ *   // submit the form
+ *   const result = await submit();
+ *   // do something with the result
+ * })}>
+ *   <input type="text" name="name" />
+ *   <!-- ... -->
+ * </form>
+ *
+ * <ul>
+ * 	{#each await getTodos() as todo}
+ * 		<li>{todo.text}</li>
+ * 	{/each}
+ * </ul>
+ * ```
+ */
+export type RemoteFormAction<T> = ((form: FormData) => Promise<T>) & {
+	method: 'POST';
+	/** The URL to send the form to. */
+	action: string;
+	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+	onsubmit: (event: SubmitEvent) => void;
+	/** Use the `enhance` method to influence what happens when the form is submitted. */
+	enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+		method: 'POST';
+		action: string;
+		onsubmit: (event: SubmitEvent) => void;
+	};
+	/** Spread this onto a button or input of type submit */
+	formAction: {
+		type: 'submit';
+		formaction: string;
+		onclick: (event: Event) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+			type: 'submit';
+			formaction: string;
+			onclick: (event: Event) => void;
+		};
+	};
+};
+
+/**
+ * The return value of a remote `query`, `cache`, or `prerender` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call through to the underlying function.
+ * On the client, this will do a fetch to the server to retrieve the value.
+ * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+ */
+export type RemoteQuery<Input extends any[], Output> = ((
+	...args: Input
+) => Promise<Awaited<Output>>) & {
+	/**
+	 * On the client, this function will re-fetch the query from the server.
+	 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
+	 *
+	 * Queries of type `cache` can also call this function on the server to invalidate the cache.
+	 * Cannot be called on the server for `type: query`, has no effect for `type: prerender`.
+	 */
+	refresh: () => void;
+	/**
+	 * Temporarily override the value of a query. Useful for optimistic UI updates.
+	 * The first argument is are the input arguments for the query value that should be overridden.
+	 * The second argument is a function which will be called with the current value of the query,
+	 * and its return value will be used as the new value.
+	 *
+	 * Can only be called on the client
+	 */
+	override: (args: Input, update: (input: Output) => Output) => void;
+};
+
 export * from './index.js';

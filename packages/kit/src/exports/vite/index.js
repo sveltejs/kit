@@ -612,7 +612,7 @@ Tips:
 						import * as $$_self_$$ from './${path.basename(id)}';
 						for (const key in $$_self_$$) {
 							const fn = $$_self_$$[key];
-							if (fn.__?.type === 'formAction') {
+							if (fn.__?.type === 'form') {
 								fn.__.set_action('${hashed_id}/' + key);
 							}
 							if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
@@ -625,7 +625,7 @@ Tips:
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, string[]>} */
+			/** @type {Map<import('types').RemoteInfo['type'], string[]>} */
 			const remotes = new Map();
 
 			if (remote_exports) {
@@ -633,15 +633,13 @@ Tips:
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
-					if (name === 'other') continue;
-					const type = name_to_client_export(name);
-					remotes.set(type, value);
+					remotes.set(name, value);
 				}
 			} else if (dev_server) {
 				const modules = await dev_server.ssrLoadModule(id);
 				for (const [name, value] of Object.entries(modules)) {
-					if (value.__?.type) {
-						const type = name_to_client_export(value.__.type);
+					const type = value?.__?.type;
+					if (type) {
 						remotes.set(type, (remotes.get(type) ?? []).concat(name));
 					}
 				}
@@ -649,12 +647,6 @@ Tips:
 				throw new Error(
 					'plugin-remote error: Expected one of dev_server and remote_exports to be available'
 				);
-			}
-
-			/** @param {string} name */
-			function name_to_client_export(name) {
-				// remoteQuery, remoteAction, remoteFormAction, remotePrerender, remoteCache
-				return 'remote' + name[0].toUpperCase() + name.slice(1);
 			}
 
 			const exports = [];
@@ -672,7 +664,7 @@ Tips:
 			 * @param {string[]} names
 			 */
 			function exports_and_fn(remote_import, names) {
-				// belt and braces — guard against an existing `export function remote() {...}`
+				// belt and braces — guard against an existing `export function query/command/prerender/cache/form() {...}`
 				let n = 1;
 				let fn = remote_import;
 				while (names.includes(fn)) fn = `${fn}$${n++}`;

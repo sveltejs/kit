@@ -348,8 +348,8 @@ export interface ServerMetadata {
 		has_server_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
-	/** For each hashed remote file, its export names grouped by query/action/formAction/other */
-	remotes: Map<string, Map<string, string[]>>;
+	/** For each hashed remote file, its export names grouped by query/command/form/cache/prerender */
+	remotes: Map<string, Map<RemoteInfo['type'], string[]>>;
 }
 
 export interface SSRComponent {
@@ -524,11 +524,11 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 
 export type RemoteInfo =
 	| {
-			type: 'query' | 'action';
+			type: 'query' | 'command';
 			id: string;
 	  }
 	| {
-			type: 'formAction';
+			type: 'form';
 			id: string;
 			set_action: (action: string) => void;
 	  }

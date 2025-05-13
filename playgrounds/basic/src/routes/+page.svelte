@@ -56,7 +56,7 @@
 	onkeyup={async (e) => {
 		if (e.key === 'Enter') {
 			// todos.data = [...todos.data, { text: e.target.value }];
-			get_todos.override((todos) => {
+			get_todos.override([], (todos) => {
 				return [...todos, { text: e.target.value }];
 			});
 			await add_todo(e.target.value);

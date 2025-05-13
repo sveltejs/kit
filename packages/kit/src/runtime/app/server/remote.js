@@ -1,3 +1,6 @@
+/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
+/** @import { PrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
+
 import { stringify, uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
 import { stringify_rpc_response } from '../../server/remote/index.js';
@@ -6,11 +9,34 @@ import { app_dir } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 
 /**
+ * Creates a form action. The passed function will be called when the form is submitted.
+ * Returns an object that can be spread onto a form element to connect it to the function.
+ * ```ts
+ * import { createPost } from '$lib/server/db';
+ *
+ * export const createPost = form((formData) => {
+ * 	const title = formData.get('title');
+ * 	const content = formData.get('content');
+ * 	return createPost({ title, content });
+ * });
+ * ```
+ * ```svelte
+ * <script>
+ * 	import { createPost } from './blog.remote.js';
+ * </script>
+ *
+ * <form {...createPost}>
+ * 	<input type="text" name="title" />
+ * 	<textarea name="content" />
+ * 	<button type="submit">Create</button>
+ * </form>
+ * ```
+ *
  * @template {(formData: FormData) => any} T
  * @param {T} fn
- * @returns {T}
+ * @returns {RemoteFormAction<T>}
  */
-export function formAction(fn) {
+export function form(fn) {
 	/** @param {FormData} form_data */
 	const wrapper = async (form_data) => {
 		// TODO don't do the additional work when we're being called from the client?
@@ -20,12 +46,13 @@ export function formAction(fn) {
 		return result;
 	};
 
-	wrapper.method = 'POST';
+	wrapper.method = /** @type {'POST'} */ ('POST');
 	wrapper.action = '';
+	wrapper.onsubmit = () => {};
 
 	Object.defineProperty(wrapper, 'enhance', {
 		value: () => {
-			return { action: wrapper.action, method: wrapper.method };
+			return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
 		},
 		writable: false,
 		enumerable: false,
@@ -33,11 +60,13 @@ export function formAction(fn) {
 	});
 
 	const form_action = {
-		formaction: ''
+		type: 'submit',
+		formaction: '',
+		onclick: () => {}
 	};
 	Object.defineProperty(form_action, 'enhance', {
 		value: () => {
-			return { formaction: wrapper.formAction.formaction };
+			return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
 		},
 		writable: false,
 		enumerable: false,
@@ -51,8 +80,8 @@ export function formAction(fn) {
 	});
 
 	Object.defineProperty(wrapper, '__', {
-		value: /** @type {import('types').RemoteInfo} */ ({
-			type: 'formAction',
+		value: /** @type {RemoteInfo} */ ({
+			type: 'form',
 			id: 'unused for forms',
 			// This allows us to deduplicate some logic at the callsites
 			set_action: (action) => {
@@ -78,17 +107,38 @@ export function formAction(fn) {
 		configurable: false
 	});
 
-	// @ts-expect-error
+	// @ts-expect-error TS doesn't get the types right
 	return wrapper;
 }
 
 /**
- * @template {(...args: any[]) => any} T
- * @param {T} fn
- * @returns {T}
+ * Creates a remote function that can be invoked like a regular function within components.
+ * The given function is invoked directly on the backend and via a fetch call on the client.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = query(() => blogPosts.getAll());
+ * ```
+ * ```svelte
+ * <script>
+ *   import { blogPosts } from './blog.remote.js';
+ * </script>
+ *
+ * {#await blogPosts() then posts}
+ *   <!-- ... -->
+ * {/await}
+ * ```
+ *
+ * @template {any[]} Input
+ * @template Output
+ * @param {(...args: Input) => Output} fn
+ * @returns {RemoteQuery<Input, Output>}
  */
 export function query(fn) {
-	/** @param {...Parameters<T>} args */
+	/**
+	 * @param {Input} args
+	 * @returns {Promise<Awaited<Output>>}
+	 */
 	const wrapper = async (...args) => {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
@@ -109,20 +159,27 @@ export function query(fn) {
 		return result;
 	};
 
+	wrapper.refresh = () => {
+		throw new Error('Cannot call refresh on the server');
+	};
+
+	wrapper.override = () => {
+		throw new Error('Cannot call override on the server');
+	};
+
 	Object.defineProperty(wrapper, '__', {
-		value: /** @type {import('types').RemoteInfo} */ ({ type: 'query', id: 'filled later' }),
+		value: /** @type {RemoteInfo} */ ({ type: 'query', id: '' }),
 		writable: false,
 		enumerable: false,
 		configurable: false
 	});
 
-	// @ts-expect-error
 	return wrapper;
 }
 
 /**
  * @param {any} data
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 export function uneval_remote_response(data, transport) {
 	const replacer = (/** @type {any} */ thing) => {
@@ -140,7 +197,7 @@ export function uneval_remote_response(data, transport) {
 
 /**
  * @param {any} data
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 function parse_remote_response(data, transport) {
 	/** @type {Record<string, any>} */
@@ -153,25 +210,74 @@ function parse_remote_response(data, transport) {
 }
 
 /**
+ * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ *
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export interface BlogPost {
+ * 	id: string;
+ * 	title: string;
+ * 	content: string;
+ * }
+ *
+ * export const like = command((postId: string) => {
+ * 	blogPosts.get(postId).like();
+ * });
+ * ```
+ *
+ * ```svelte
+ * <script lang="ts">
+ * 	import { like } from './blog.remote.js';
+ *
+ * 	let post: BlogPost = $props();
+ * </script>
+ *
+ * <h1>{post.title}</h1>
+ * <p>{post.content}</p>
+ * <button onclick={() => like(post.id)}>♡</button>
+ * ```
+ *
  * @template {(...args: any[]) => any} T
  * @param {T} fn
  * @returns {T}
  */
-export function action(fn) {
-	/** @type {any} */ (fn).__ = /** @type {import('types').RemoteInfo} */ ({
-		type: 'action'
+export function command(fn) {
+	/** @type {any} */ (fn).__ = /** @type {RemoteInfo} */ ({
+		type: 'command'
 	});
 	return fn;
 }
 
 /**
- * @template {(...args: any[]) => any} T
- * @param {T} fn
- * @param {{ entries?: import('types').PrerenderEntryGenerator }} entries
- * @returns {T}
+ * Creates a pererendered remote function. The given function is invoked at build time and the result is stored to disk.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = prerender(() => blogPosts.getAll());
+ * ```
+ *
+ * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPost = prerender(
+ * 	(id: string) => blogPosts.get(id)
+ * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ * );
+ * ```
+ *
+ * @template {any[]} Input
+ * @template Output
+ * @param {(...args: Input) => Output} fn
+ * @param {{ entries?: PrerenderEntryGenerator }} entries
+ * @returns {RemoteQuery<Input, Output>}
  */
 export function prerender(fn, { entries } = {}) {
-	/** @param {...Parameters<T>} args */
+	/**
+	 * @param {Input} args
+	 * @returns {Promise<Awaited<Output>>}
+	 */
 	const wrapper = async (...args) => {
 		// TODO deduplicate this with query/cache
 		const event = getRequestEvent();
@@ -192,24 +298,47 @@ export function prerender(fn, { entries } = {}) {
 		return result;
 	};
 
-	wrapper.__ = /** @type {import('types').RemoteInfo} */ ({
+	wrapper.refresh = () => {
+		throw new Error('Cannot call refresh on the server');
+	};
+
+	wrapper.override = () => {
+		throw new Error('Cannot call override on the server');
+	};
+
+	wrapper.__ = /** @type {RemoteInfo} */ ({
 		type: 'prerender',
 		id: '',
 		entries: entries
 	});
 
-	// @ts-expect-error
 	return wrapper;
 }
 
 /**
- * @template {(...args: any[]) => any} T
- * @param {T} fn
+ * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = cache(
+ * 	() => blogPosts.getAll(),
+ * 	// cache for 60 seconds
+ * 	{ expiration: 60 }
+ * );
+ * ```
+ * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
+ *
+ * @template {any[]} Input
+ * @template Output
+ * @param {(...args: Input) => Output} fn
  * @param {Record<string, any>} config
- * @returns {T}
+ * @returns {RemoteQuery<Input, Output>}
  */
 export function cache(fn, config) {
-	/** @param {...Parameters<T>} args */
+	/**
+	 * @param {Input} args
+	 * @returns {Promise<Awaited<Output>>}
+	 */
 	const wrapper = async (...args) => {
 		// TODO deduplicate this with query/prerender
 		const event = getRequestEvent();
@@ -278,19 +407,24 @@ export function cache(fn, config) {
 		};
 	}
 
+	/** @type {RemoteQuery<any, any>['refresh']} */
 	wrapper.refresh = (...args) => {
 		// TODO is this agnostic enough / fine to require people calling this during a request event?
 		const event = getRequestEvent();
+		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
 		wrapper.cache.delete(stringify(args, event._.transport));
 	};
 
+	wrapper.override = () => {
+		throw new Error('Cannot call override on the server');
+	};
+
 	Object.defineProperty(wrapper, '__', {
-		value: /** @type {import('types').RemoteInfo} */ ({ type: 'cache', id: '', config }),
+		value: /** @type {RemoteInfo} */ ({ type: 'cache', id: '', config }),
 		writable: false,
 		enumerable: true,
 		configurable: false
 	});
 
-	// @ts-expect-error
 	return wrapper;
 }

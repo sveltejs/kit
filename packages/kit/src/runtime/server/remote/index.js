@@ -34,7 +34,7 @@ export async function handle_remote_call(
 
 	event._.remote_invalidations = new Set();
 
-	if (info.type === 'formAction') {
+	if (info.type === 'form') {
 		if (!is_form_content_type(event.request)) {
 			throw new SvelteKitError(
 				415,

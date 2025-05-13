@@ -1484,6 +1484,98 @@ declare module '@sveltejs/kit' {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
+
+	/**
+	 * The return value of a remote `form` function.
+	 * Spread it onto a `<form>` element to connect the form with the remote form action.
+	 * ```svelte
+	 * <script>
+	 *   import { createTodo } from './todos.remote.js';
+	 * </script>
+	 *
+	 * <form {...createTodo}>
+	 *   <input type="text" name="name" />
+	 *   <!-- ... -->
+	 * </form>
+	 * ```
+	 * Use the `enhance` method to influence what happens when the form is submitted.
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, createTodo } from './todos.remote.js';
+	 * </script>
+	 *
+	 * <form {...myFormAction.enhance(async ({ formData, submit }) => {
+	 *   // do something with the form data, e.g. optimistic UI update
+	 *   getTodos.override([], (todos) => [...todos, { text: formData.get('text') }]);
+	 *   // submit the form
+	 *   const result = await submit();
+	 *   // do something with the result
+	 * })}>
+	 *   <input type="text" name="name" />
+	 *   <!-- ... -->
+	 * </form>
+	 *
+	 * <ul>
+	 * 	{#each await getTodos() as todo}
+	 * 		<li>{todo.text}</li>
+	 * 	{/each}
+	 * </ul>
+	 * ```
+	 */
+	export type RemoteFormAction<T> = ((form: FormData) => Promise<T>) & {
+		method: 'POST';
+		/** The URL to send the form to. */
+		action: string;
+		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+		onsubmit: (event: SubmitEvent) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+			method: 'POST';
+			action: string;
+			onsubmit: (event: SubmitEvent) => void;
+		};
+		/** Spread this onto a button or input of type submit */
+		formAction: {
+			type: 'submit';
+			formaction: string;
+			onclick: (event: Event) => void;
+			/** Use the `enhance` method to influence what happens when the form is submitted. */
+			enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+				type: 'submit';
+				formaction: string;
+				onclick: (event: Event) => void;
+			};
+		};
+	};
+
+	/**
+	 * The return value of a remote `query`, `cache`, or `prerender` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call through to the underlying function.
+	 * On the client, this will do a fetch to the server to retrieve the value.
+	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+	 */
+	export type RemoteQuery<Input extends any[], Output> = ((
+		...args: Input
+	) => Promise<Awaited<Output>>) & {
+		/**
+		 * On the client, this function will re-fetch the query from the server.
+		 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
+		 *
+		 * Queries of type `cache` can also call this function on the server to invalidate the cache.
+		 * Cannot be called on the server for `type: query`, has no effect for `type: prerender`.
+		 */
+		refresh: () => void;
+		/**
+		 * Temporarily override the value of a query. Useful for optimistic UI updates.
+		 * The first argument is are the input arguments for the query value that should be overridden.
+		 * The second argument is a function which will be called with the current value of the query,
+		 * and its return value will be used as the new value.
+		 *
+		 * Can only be called on the client
+		 */
+		override: (args: Input, update: (input: Output) => Output) => void;
+	};
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2037,12 +2129,6 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
-
-	export function formAction<T extends (formData: FormData) => any>(fn: T): T;
-
-	export function query<T extends (...args: any[]) => any>(fn: T): T;
-
-	export function action<T extends (...args: any[]) => any>(fn: T): T;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
@@ -2411,7 +2497,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2432,6 +2518,122 @@ declare module '$app/server' {
 	 * @since 2.20.0
 	 */
 	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
+	/**
+	 * Creates a form action. The passed function will be called when the form is submitted.
+	 * Returns an object that can be spread onto a form element to connect it to the function.
+	 * ```ts
+	 * import { createPost } from '$lib/server/db';
+	 *
+	 * export const createPost = form((formData) => {
+	 * 	const title = formData.get('title');
+	 * 	const content = formData.get('content');
+	 * 	return createPost({ title, content });
+	 * });
+	 * ```
+	 * ```svelte
+	 * <script>
+	 * 	import { createPost } from './blog.remote.js';
+	 * </script>
+	 *
+	 * <form {...createPost}>
+	 * 	<input type="text" name="title" />
+	 * 	<textarea name="content" />
+	 * 	<button type="submit">Create</button>
+	 * </form>
+	 * ```
+	 *
+	 * */
+	export function form<T extends (formData: FormData) => any>(fn: T): RemoteFormAction<T>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Input extends any[], Output>(fn: (...args: Input) => Output): RemoteQuery<Input, Output>;
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<T extends (...args: any[]) => any>(fn: T): T;
+	/**
+	 * Creates a pererendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 * 	(id: string) => blogPosts.get(id)
+	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, { entries }?: {
+		entries?: PrerenderEntryGenerator;
+	}): RemoteQuery<Input, Output>;
+	/**
+	 * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = cache(
+	 * 	() => blogPosts.getAll(),
+	 * 	// cache for 60 seconds
+	 * 	{ expiration: 60 }
+	 * );
+	 * ```
+	 * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
+	 *
+	 * */
+	export function cache<Input extends any[], Output>(fn: (...args: Input) => Output, config: Record<string, any>): RemoteQuery<Input, Output>;
+	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
 }
@@ -2492,6 +2694,27 @@ declare module '$app/state' {
 	export const updated: {
 		get current(): boolean;
 		check(): Promise<boolean>;
+	};
+	export const load: typeof load_1 | typeof load_1_2;
+	function load_1_2(data_fn: (context: {
+		depends: Function;
+	}) => Promise<any>): {
+		readonly data: null;
+		readonly pending: boolean;
+		readonly error: null;
+		refetch: () => void;
+		
+		then: (fn: Function) => void;
+	};
+	function load_1(data_fn: (context: {
+		depends: Function;
+	}) => Promise<any>): {
+		data: any;
+		readonly pending: boolean;
+		readonly error: null;
+		refetch: () => void;
+		
+		then: (fn: Function) => Promise<any>;
 	};
 
 	export {};
