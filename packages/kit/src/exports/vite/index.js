@@ -34,7 +34,7 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { resolve_peer_dependency } from '../../utils/import.js';
+import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 
 const cwd = process.cwd();
@@ -155,7 +155,7 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+	const { svelte } = await import_peer('@sveltejs/vite-plugin-svelte');
 
 	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
@@ -181,7 +181,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	const vite = await resolve_peer_dependency('vite');
+	const vite = await import_peer('vite');
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -821,7 +821,7 @@ Tips:
 				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,
@@ -983,7 +983,7 @@ Tips:
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,
