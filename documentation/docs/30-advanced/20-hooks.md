@@ -106,7 +106,7 @@ Note that `resolve(...)` will never throw an error, it will always return a `Pro
 
 ### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request that happens inside a `load`, `action` or `handle` function that runs on the server (or during prerendering).
+This function allows you to modify (or replace) the result of the `fetch` function provided to an endpoint, `load`, `action`, `handle`, `handleError` or `reroute` function that runs on the server (or during prerendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
@@ -126,7 +126,7 @@ export async function handleFetch({ request, fetch }) {
 }
 ```
 
-**Credentials**
+#### Credentials
 
 For same-origin requests, SvelteKit's `fetch` implementation will forward `cookie` and `authorization` headers unless the `credentials` option is set to `"omit"`.
 
