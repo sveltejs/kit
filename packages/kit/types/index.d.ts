@@ -2615,7 +2615,7 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, { entries }?: {
-		entries?: PrerenderEntryGenerator;
+		entries?: RemotePrerenderEntryGenerator<Input>;
 	}): RemoteQuery<Input, Output>;
 	/**
 	 * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
@@ -2632,7 +2632,9 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function cache<Input extends any[], Output>(fn: (...args: Input) => Output, config: Record<string, any>): RemoteQuery<Input, Output>;
-	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
+		Array<Input>
+	>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};

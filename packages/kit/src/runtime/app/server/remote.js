@@ -1,13 +1,14 @@
 /** @import { RemoteFormAction, RemoteQuery, RequestEvent } from '@sveltejs/kit' */
-/** @import { PrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
+/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
 import { get_remote_info } from '../../server/remote/index.js';
 import { json } from '../../../exports/index.js';
-import { app_dir } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
+import { prerendering } from '__sveltekit/environment';
+import { app_dir, base } from '__sveltekit/paths';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.
@@ -40,6 +41,11 @@ import { create_remote_cache_key, stringify, stringify_remote_args } from '../..
 export function form(fn) {
 	/** @param {FormData} form_data */
 	const wrapper = async (form_data) => {
+		if (prerendering) {
+			throw new Error(
+				'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		}
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(form_data);
@@ -101,7 +107,7 @@ export function form(fn) {
 		get() {
 			try {
 				const event = getRequestEvent();
-				return get_remote_info(event).remote_results[wrapper.action] ?? null;
+				return get_remote_info(event).results[wrapper.action] ?? null;
 			} catch (e) {
 				return null;
 			}
@@ -143,11 +149,16 @@ export function query(fn) {
 	 * @returns {Promise<Awaited<Output>>}
 	 */
 	const wrapper = async (...args) => {
+		if (prerendering) {
+			throw new Error(
+				'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		}
+
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(...args);
 		uneval_remote_response(wrapper.__.id, args, result, event);
-		save_prerendered_result(wrapper.__.id, result, event);
 		return result;
 	};
 
@@ -217,9 +228,19 @@ function parse_remote_response(data, transport) {
  * @returns {T}
  */
 export function command(fn) {
+	if (prerendering) {
+		// @ts-expect-error TS complains about this returning `never`
+		fn = () => {
+			throw new Error(
+				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		};
+	}
+
 	/** @type {any} */ (fn).__ = /** @type {RemoteInfo} */ ({
 		type: 'command'
 	});
+
 	return fn;
 }
 
@@ -244,7 +265,7 @@ export function command(fn) {
  * @template {any[]} Input
  * @template Output
  * @param {(...args: Input) => Output} fn
- * @param {{ entries?: PrerenderEntryGenerator }} entries
+ * @param {{ entries?: RemotePrerenderEntryGenerator<Input> }} entries
  * @returns {RemoteQuery<Input, Output>}
  */
 export function prerender(fn, { entries } = {}) {
@@ -253,11 +274,35 @@ export function prerender(fn, { entries } = {}) {
 	 * @returns {Promise<Awaited<Output>>}
 	 */
 	const wrapper = async (...args) => {
-		// TODO deduplicate this with query/cache
 		const event = getRequestEvent();
-		const result = await fn(...args);
+		const info = get_remote_info(event);
+		const url =
+			info.prerendering &&
+			`${base}/${app_dir}/remote/${wrapper.__.id}/${stringify_remote_args(args, info.transport)}`;
+
+		// Deduplicate function calls
+		if (url && info.prerendering?.remote_responses.has(url)) {
+			return info.prerendering.remote_responses.get(url);
+		}
+
+		const maybe_promise = fn(...args);
+
+		if (url && info.prerendering) {
+			info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
+		}
+
+		const result = await maybe_promise;
+
 		uneval_remote_response(wrapper.__.id, args, result, event);
-		save_prerendered_result(wrapper.__.id, result, event);
+
+		if (url && info.prerendering) {
+			const body = stringify(result, info.transport);
+			info.prerendering.dependencies.set(url, {
+				body,
+				response: json(body)
+			});
+		}
+
 		return result;
 	};
 
@@ -303,7 +348,12 @@ export function cache(fn, config) {
 	 * @returns {Promise<Awaited<Output>>}
 	 */
 	const wrapper = async (...args) => {
-		// TODO deduplicate this with query/prerender
+		if (prerendering) {
+			throw new Error(
+				'Cannot call cache() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		}
+
 		const event = getRequestEvent();
 		const info = get_remote_info(event);
 		const stringified_args = stringify_remote_args(args, info.transport);
@@ -321,9 +371,8 @@ export function cache(fn, config) {
 		}
 
 		uneval_remote_response(wrapper.__.id, args, result, event);
-		save_prerendered_result(wrapper.__.id, result, event);
 
-		if (!info.remote_prerendering && !is_cached) {
+		if (!is_cached) {
 			const body = stringify(result, info.transport);
 			wrapper.cache.set(stringified_args, body);
 		}
@@ -365,7 +414,7 @@ export function cache(fn, config) {
 		// TODO is this agnostic enough / fine to require people calling this during a request event?
 		const info = get_remote_info(getRequestEvent());
 		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
-		wrapper.cache.delete(stringify(args, info.transport));
+		wrapper.cache.delete(stringify_remote_args(args, info.transport));
 	};
 
 	wrapper.override = () => {
@@ -390,7 +439,7 @@ export function cache(fn, config) {
  */
 function uneval_remote_response(id, args, result, event) {
 	const info = get_remote_info(event);
-	const cache_key = create_remote_cache_key(id, stringify(args, info.transport));
+	const cache_key = create_remote_cache_key(id, stringify_remote_args(args, info.transport));
 
 	const replacer = (/** @type {any} */ thing) => {
 		for (const key in info.transport) {
@@ -402,23 +451,5 @@ function uneval_remote_response(id, args, result, event) {
 	};
 
 	// TODO better error when this fails?
-	info.remote_results[cache_key] = uneval(result, replacer);
-}
-
-/**
- * @param {string} id
- * @param {any} result
- * @param {RequestEvent} event
- */
-function save_prerendered_result(id, result, event) {
-	const info = get_remote_info(event);
-
-	if (info.remote_prerendering) {
-		const body = stringify(result, info.transport);
-		// TODO for prerendering we need to make the query args part of the pathname
-		info.remote_prerendering.dependencies.set(`/${app_dir}/remote/${id}`, {
-			body,
-			response: json(body)
-		});
-	}
+	info.results[cache_key] = uneval(result, replacer);
 }

@@ -22,7 +22,7 @@ export async function handle_remote_call(
 	manifest,
 	id = event.url.pathname.replace(`/${app_dir}/remote/`, '')
 ) {
-	const [hash, func_name] = id.split('/');
+	const [hash, func_name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) error(404);
@@ -51,12 +51,20 @@ export async function handle_remote_call(
 		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
 		return text(stringify(data, transport));
 	} else {
-		const args_json =
-			info.type === 'query' || info.type === 'cache'
-				? /** @type {string} */ (event.url.searchParams.get('args'))
-				: await event.request.text();
+		const stringified_args =
+			info.type === 'prerender'
+				? prerender_args
+				: info.type === 'query' || info.type === 'cache'
+					? /** @type {string} */ (event.url.searchParams.get('args'))
+					: await event.request.text();
 		const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
-		const args = args_json ? devalue.parse(args_json, decoders) : [];
+		const args = stringified_args
+			? devalue.parse(
+					// We don't need to add back the `=`-padding because atob can handle it
+					atob(stringified_args.replace(/-/g, '+').replace(/_/g, '/')),
+					decoders
+				)
+			: [];
 		const data = await with_event(event, () => func.apply(null, args));
 
 		return text(stringify(data, transport));
@@ -65,8 +73,8 @@ export async function handle_remote_call(
 
 /**
  * @typedef {{
- * 	remote_results: Record<string, unknown>;
- * 	remote_prerendering: PrerenderOptions | undefined
+ * 	results: Record<string, string>;
+ * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
  * }} RemoteEventInfo
  */
@@ -82,8 +90,8 @@ const remote_info = Symbol('remote');
 export function add_remote_info(event, state, options) {
 	Object.defineProperty(event, remote_info, {
 		value: /** @type {RemoteEventInfo} */ ({
-			remote_results: {},
-			remote_prerendering: state.prerendering,
+			results: {},
+			prerendering: state.prerendering,
 			transport: options.hooks.transport
 			// remote_invalidations: new Set() // <- this is how we could do refresh on the server
 		}),

@@ -14,6 +14,7 @@ import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
+import { stringify_remote_args } from '../../runtime/shared.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -186,6 +187,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 	const seen = new Set();
 	const written = new Set();
+	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
@@ -229,7 +231,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
-				dependencies
+				dependencies,
+				remote_responses
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -516,13 +519,25 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	const transport = (await internal.get_hooks()).transport ?? {};
 	for (const remote_function of remote_functions) {
+		// TODO this writes to /prerender/pages/... eventually, should it go into
+		// /prerender/dependencies like indirect calls due to page prerenders?
+		// Does it really matter?
 		if (remote_function.__.entries) {
 			for (const entry of await remote_function.__.entries()) {
-				// TODO translate args into a pathname somehow
+				void enqueue(
+					null,
+					config.paths.base +
+						'/' +
+						config.appDir +
+						'/remote/' +
+						remote_function.__.id +
+						'/' +
+						stringify_remote_args(entry, transport)
+				);
 			}
 		} else {
-			// TODO this writes to /prerender/pages/... eventually, should it go into /prerender/dependencies?
 			void enqueue(
 				null,
 				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__.id

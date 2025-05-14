@@ -42,7 +42,6 @@ import { writable } from 'svelte/store';
 import { page, update, navigating, load_fns } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { queryMap } from './remote.svelte.js';
-import { getRequestEvent } from '../app/server/event.js';
 
 export { load_css };
 export { command, form, query, prerender, cache } from './remote.svelte.js';

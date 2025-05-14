@@ -24,11 +24,12 @@ const overrideMap = new Map();
 let pending_fresh = false;
 
 /**
- * Client-version of the `query` function from `$app/server`.
+ * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @param {string} id
+ * @param {boolean} prerender
  * @returns {RemoteQuery<any, any>}
  */
-export function query(id) {
+function remote_request(id, prerender) {
 	let version = $state(0);
 
 	queryMap.set(id, () => version++);
@@ -60,16 +61,16 @@ export function query(id) {
 			});
 		}
 
-		if (!resultMap.has(id)) {
+		if (!resultMap.has(cache_key)) {
 			// TODO all a bit brittle, cleanup once we're sure we want this
-			setTimeout(() => resultMap.delete(id), 500);
+			setTimeout(() => resultMap.delete(cache_key), 500);
 			const response = (async () => {
 				if (!started) {
 					const result = remote_responses[cache_key];
 					if (result) return result;
 				}
 
-				const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${encodeURIComponent(stringified_args)}` : ''}`;
+				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
 				const response = await fetch(url);
 				const result = await response.text();
 
@@ -87,10 +88,10 @@ export function query(id) {
 				}
 				return parsed_result;
 			})();
-			resultMap.set(id, response);
+			resultMap.set(cache_key, response);
 			return response;
 		} else {
-			const parsed_result = resultMap.get(id);
+			const parsed_result = resultMap.get(cache_key);
 			if (tracking) {
 				// TODO this is a bit of a hack, but we need to make sure that the result is not cached
 				// if the user is tracking it. This is because we don't know when the user will stop tracking
@@ -114,12 +115,12 @@ export function query(id) {
 	/** @type {RemoteQuery<any, any>['override']} */
 	fn.override = (args, update) => {
 		const stringified_args = stringify_remote_args(args, app.hooks.transport);
-		const key = create_remote_cache_key(id, stringified_args);
-		if (overrideMap.has(key)) {
-			resultMap.set(key, update(overrideMap.get(key)));
+		const cache_key = create_remote_cache_key(id, stringified_args);
+		if (overrideMap.has(cache_key)) {
+			resultMap.set(cache_key, update(overrideMap.get(cache_key)));
 			version++;
 			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
-			setTimeout(() => resultMap.delete(id), 500);
+			setTimeout(() => resultMap.delete(cache_key), 500);
 		}
 	};
 
@@ -127,14 +128,25 @@ export function query(id) {
 }
 
 /**
- * Client-version of the `prerender` function from `$app/server`.
+ * @param {string} id
  */
-export const prerender = query;
+export function query(id) {
+	return remote_request(id, false);
+}
 
 /**
- * Client-version of the `cache` function from `$app/server`.
+ * @param {string} id
  */
-export const cache = query;
+export function cache(id) {
+	return remote_request(id, false);
+}
+
+/**
+ * @param {string} id
+ */
+export function prerender(id) {
+	return remote_request(id, true);
+}
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -142,14 +154,9 @@ export const cache = query;
  */
 export function command(id) {
 	return async (/** @type {any} */ ...args) => {
-		const transport = app.hooks.transport;
-		const encoders = Object.fromEntries(
-			Object.entries(transport).map(([key, value]) => [key, value.encode])
-		);
-
 		const response = await fetch(`/${app_dir}/remote/${id}`, {
 			method: 'POST',
-			body: devalue.stringify(args, encoders),
+			body: stringify_remote_args(args, app.hooks.transport),
 			headers: {
 				'Content-Type': 'application/json'
 			}

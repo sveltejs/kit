@@ -33,12 +33,15 @@ export function stringify(data, transport) {
 }
 
 /**
+ * Stringifies the arguments for a remote function in such a way that
+ * they are both a valid URL and a valid file name (necessary for prerendering).
  * @param {any[]} args
  * @param {Transport} transport
  */
 export function stringify_remote_args(args, transport) {
 	if (args.length === 0) return '';
-	return stringify(args, transport);
+	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
+	return btoa(stringify(args, transport)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 /**

@@ -45,6 +45,7 @@ export interface ServerInternalModule {
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	get_hooks: () => Promise<Record<string, any>>;
 }
 
 export interface Asset {
@@ -217,6 +218,11 @@ export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
+	/**
+	 * For each key the (possibly still pending) result of a prerendered remote function.
+	 * Used to deduplicate requests to the same remote function with the same arguments.
+	 */
+	remote_responses: Map<string, Promise<any>>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }
@@ -448,6 +454,9 @@ export interface PageNodeIndexes {
 }
 
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+export type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
+	Array<Input>
+>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
@@ -535,7 +544,7 @@ export type RemoteInfo =
 	| {
 			type: 'prerender';
 			id: string;
-			entries?: PrerenderEntryGenerator;
+			entries?: RemotePrerenderEntryGenerator;
 	  }
 	| {
 			type: 'cache';

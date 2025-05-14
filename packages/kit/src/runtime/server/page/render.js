@@ -407,7 +407,9 @@ export async function render_response({
 				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`,
-				`remote: ${s(get_remote_info(event, true)?.remote_results)}`
+				`remote: {${Object.entries(get_remote_info(event, true)?.results || {})
+					.map(([key, value]) => `"${key}": ${value}`)
+					.join(', ')}}`
 			];
 
 			if (status !== 200) {
