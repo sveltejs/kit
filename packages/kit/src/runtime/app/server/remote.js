@@ -1,5 +1,5 @@
 /** @import { RemoteFormAction, RemoteQuery, RequestEvent } from '@sveltejs/kit' */
-/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
+/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
@@ -374,40 +374,44 @@ export function cache(fn, config) {
 
 		if (!is_cached) {
 			const body = stringify(result, info.transport);
-			wrapper.cache.set(stringified_args, body);
+			await wrapper.cache.set(stringified_args, body);
 		}
 
 		return result;
+	};
+
+	/** @type {{ get(input: string): MaybePromise<any>; set(input:string, output: string): MaybePromise<void>; delete(input:string): MaybePromise<void> }} */
+	let cache = {
+		// TODO warn somehow when adapter does not support cache?
+		get() {},
+		set() {},
+		delete() {}
 	};
 
 	if (DEV) {
 		// In memory cache
 		/** @type {Record<string, string>} */
 		const cached = {};
-		wrapper.cache = {
+		cache = {
 			get(input) {
 				return cached[input];
 			},
 			set(input, output) {
+				const config = /** @type {RemoteInfo & { type: 'cache' }} */ (wrapper.__).config;
 				cached[input] = output;
-				if (typeof wrapper.__.config.expiration === 'number') {
+				if (typeof config.expiration === 'number') {
 					setTimeout(() => {
 						delete cached[input];
-					}, wrapper.__.config.expiration * 1000);
+					}, config.expiration * 1000);
 				}
 			},
 			delete(input) {
 				delete cached[input];
 			}
 		};
-	} else {
-		wrapper.cache = {
-			// TODO warn somehow when adapter does not support cache?
-			get() {},
-			set() {},
-			delete() {}
-		};
 	}
+
+	wrapper.cache = cache;
 
 	/** @type {RemoteQuery<any, any>['refresh']} */
 	wrapper.refresh = (...args) => {
