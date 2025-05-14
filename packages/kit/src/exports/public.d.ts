@@ -1250,6 +1250,11 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+	/**
+	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+	 * related to the data request in this case. Use this property instead if the distinction is important to you.
+	 */
+	isRemoteRequest: boolean;
 }
 
 /**

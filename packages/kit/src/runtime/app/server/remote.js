@@ -364,7 +364,7 @@ export function cache(fn, config) {
 
 		if (typeof result === 'string') {
 			is_cached = true;
-			// TODO brings back stringified which we need to decode but thats stupid because we decode and stringify right away again
+			// TODO brings back stringified which we need to decode but thats stupid because we encode and stringify right away again
 			result = parse_remote_response(wrapper.cache.get(stringified_args), info.transport);
 		} else {
 			result = await fn(...args);
@@ -439,6 +439,10 @@ export function cache(fn, config) {
  */
 function uneval_remote_response(id, args, result, event) {
 	const info = get_remote_info(event);
+
+	// We only need to do this for full page visits where we stringify the result into the HTML
+	if (event.isRemoteRequest) return;
+
 	const cache_key = create_remote_cache_key(id, stringify_remote_args(args, info.transport));
 
 	const replacer = (/** @type {any} */ thing) => {

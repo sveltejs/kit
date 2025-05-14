@@ -3,7 +3,7 @@
 
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import { error } from 'console';
 import { with_event } from '../../app/server/event.js';
 import { is_form_content_type } from '../../../utils/http.js';
@@ -14,14 +14,9 @@ import { stringify } from '../../shared.js';
  * @param {RequestEvent} event
  * @param {SSROptions} options
  * @param {SSRManifest} manifest
- * @param {string} [id]
+ * @param {string} id
  */
-export async function handle_remote_call(
-	event,
-	options,
-	manifest,
-	id = event.url.pathname.replace(`/${app_dir}/remote/`, '')
-) {
+export async function handle_remote_call(event, options, manifest, id) {
 	const [hash, func_name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -69,6 +64,23 @@ export async function handle_remote_call(
 
 		return text(stringify(data, transport));
 	}
+}
+
+/**
+ * @param {URL} url
+ */
+export function get_remote_id(url) {
+	return (
+		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
+		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
+	);
+}
+
+/**
+ * @param {URL} url
+ */
+export function get_remote_action(url) {
+	return url.searchParams.get('/remote');
 }
 
 /**

@@ -15,7 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
-import { handle_remote_call } from '../remote/index.js';
+import { get_remote_action, handle_remote_call } from '../remote/index.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -54,13 +54,9 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
-			if (event.url.searchParams.has('/remote')) {
-				await handle_remote_call(
-					event,
-					options,
-					manifest,
-					/** @type {string} */ (event.url.searchParams.get('/remote'))
-				);
+			const remote_id = get_remote_action(event.url);
+			if (remote_id) {
+				await handle_remote_call(event, options, manifest, remote_id);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)

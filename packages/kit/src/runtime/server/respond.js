@@ -33,7 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { add_remote_info, handle_remote_call } from './remote/index.js';
+import { add_remote_info, get_remote_id, handle_remote_call } from './remote/index.js';
 import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -65,13 +65,13 @@ export async function respond(request, options, manifest, state) {
 
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
-	const is_remote_request = url.pathname.startsWith(`/${app_dir}/remote/`);
+	const remote_id = get_remote_id(url);
 
 	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
 		const opts = { status: 403 };
 
 		if (
-			is_remote_request &&
+			remote_id &&
 			// TODO get doesn't have an origin header - any way we can still forbid other origins?
 			request.method !== 'GET'
 		) {
@@ -122,6 +122,9 @@ export async function respond(request, options, manifest, state) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
+	} else if (remote_id) {
+		url.pathname = base;
+		url.search = '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -175,7 +178,8 @@ export async function respond(request, options, manifest, state) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
+		isSubRequest: state.depth > 0,
+		isRemoteRequest: !!remote_id
 	};
 
 	add_remote_info(event, state, options);
@@ -198,7 +202,7 @@ export async function respond(request, options, manifest, state) {
 
 	let resolved_path = url.pathname;
 
-	if (!is_remote_request) {
+	if (!remote_id) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -269,14 +273,14 @@ export async function respond(request, options, manifest, state) {
 		return get_public_env(request);
 	}
 
-	if (!is_remote_request && resolved_path.startsWith(`/${app_dir}`)) {
+	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !remote_id) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
@@ -491,8 +495,8 @@ export async function respond(request, options, manifest, state) {
 				});
 			}
 
-			if (is_remote_request) {
-				return handle_remote_call(event, options, manifest);
+			if (remote_id) {
+				return handle_remote_call(event, options, manifest, remote_id);
 			}
 
 			if (route) {
