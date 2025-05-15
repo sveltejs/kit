@@ -19,7 +19,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { create_static_analyser } from '../static_analysis/index.js';
+import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -128,11 +128,13 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const static_analyser = create_static_analyser(async (server_node) => {
-			const { module } = await resolve(server_node);
-			return module;
+		const node_analyser = create_node_analyser({
+			resolve: async (server_node) => {
+				const { module } = await resolve(server_node);
+				return module;
+			}
 		});
-		invalidate_page_options = static_analyser.invalidate_page_options;
+		invalidate_page_options = node_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -212,7 +214,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const page_options = await static_analyser.get_page_options(node);
+							const page_options = await node_analyser.get_page_options(node);
 							if (page_options?.ssr === false) {
 								result.universal = page_options;
 							} else {
