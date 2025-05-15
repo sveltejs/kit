@@ -64,20 +64,27 @@ test.describe('Filesystem updates', () => {
 		const file = fileURLToPath(new URL('../src/routes/universal/+page.js', import.meta.url));
 		const contents = fs.readFileSync(file, 'utf-8');
 
-		await page.goto('/universal');
+		try {
+			fs.writeFileSync(file, contents.replace(/export const ssr = false;\n/, ''));
+			await page.goto('/universal', { wait_for_started: false });
+			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
+			await expect(page.locator('h1')).toHaveText('Internal Error');
+		} finally {
+			fs.writeFileSync(file, contents);
+		}
 
+		await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
+		await page.reload();
 		expect(await get_computed_style('body', 'background-color')).toBe('rgb(255, 0, 0)');
 
 		try {
 			fs.writeFileSync(file, contents.replace(/export const ssr = .*;/, 'export const ssr = !1;'));
 			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
+			await page.goto('/universal', { wait_for_started: false });
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
 			await expect(page.locator('h1')).toHaveText('Internal Error');
 		} finally {
-			fs.writeFileSync(
-				file,
-				contents.replace(/export const ssr = .*;/, 'export const ssr = false;')
-			);
+			fs.writeFileSync(file, contents.replace(/\\nexport const ssr = false;\\n/, ''));
 		}
 	});
 });
