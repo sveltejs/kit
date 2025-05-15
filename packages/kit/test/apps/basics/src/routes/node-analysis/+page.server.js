@@ -5,5 +5,5 @@
 import { env } from '$env/dynamic/public';
 
 if (!env.PUBLIC_DYNAMIC) {
-  throw Error('this should not happen');
+	throw Error('this should not happen');
 }
