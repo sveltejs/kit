@@ -128,9 +128,11 @@ export async function dev(vite, vite_config, svelte_config) {
 			return;
 		}
 
-		const node_analyser = create_node_analyser(async (server_node) => {
-			const { module } = await resolve(server_node);
-			return module;
+		const node_analyser = create_node_analyser({
+			resolve: async (server_node) => {
+				const { module } = await resolve(server_node);
+				return module;
+			}
 		});
 		invalidate_page_options = node_analyser.invalidate_page_options;
 

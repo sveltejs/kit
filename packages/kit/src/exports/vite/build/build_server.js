@@ -6,10 +6,6 @@ import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
 
-/** @type {(server_node: string) => Promise<Record<string, any>>} */
-let resolve;
-
-const { get_page_options } = create_node_analyser((server_node) => resolve(server_node));
 
 /**
  * @param {string} out
@@ -19,14 +15,9 @@ const { get_page_options } = create_node_analyser((server_node) => resolve(serve
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {Map<string, Record<string, any> | null>} static_exports
  */
-export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
-	
-	resolve = async (server_node) => {
-		// Windows needs the file:// protocol for absolute path dynamic imports
-		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
-	};
-
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config, static_exports) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -84,6 +75,14 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			stylesheet_lookup.set(asset.fileName, index);
 		}
 	}
+
+	const { get_page_options } = create_node_analyser({
+		resolve: (server_node) => {
+			// Windows needs the file:// protocol for absolute path dynamic imports
+			return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+		},
+		static_exports
+	});
 
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];

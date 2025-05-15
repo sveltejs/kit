@@ -181,12 +181,12 @@ export function get_name(node) {
 }
 
 /**
- * @param {(server_node: string) => Promise<Record<string, any>>} resolve function to evaluate the `+page.server`/`+layout.server` files so that we can get any the page options
+ * @param {{
+ *   resolve: (file: string) => Promise<Record<string, any>>;
+ *   static_exports?: Map<string, Record<string, any> | null>;
+ * }} opts
  */
-export function create_node_analyser(resolve) {
-	/** @type {Map<string, Record<string, any> | null>} */
-	const static_exports = new Map();
-
+export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	/**
 	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node

@@ -820,7 +820,7 @@ Tips:
 
 				log.info('Analysing routes');
 
-				const metadata = await analyse({
+				const { metadata, static_exports } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -981,7 +981,8 @@ Tips:
 					server_manifest,
 					client_manifest,
 					css,
-					svelte_config.kit.output
+					svelte_config.kit.output,
+					static_exports
 				);
 
 				// ...and prerender

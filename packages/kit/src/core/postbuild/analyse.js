@@ -21,9 +21,9 @@ export default forked(import.meta.url, analyse);
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
- *   env: Record<string, string>
- *   out: string
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>
+ *   env: Record<string, string>;
+ *   out: string;
+ *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  * }} opts
  */
 async function analyse({
@@ -63,8 +63,19 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
+	const static_exports = new Map();
+
 	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(out, config, manifest_data, server_manifest, null, null, output_config);
+	await build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		output_config,
+		static_exports
+	);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -151,7 +162,7 @@ async function analyse({
 		});
 	}
 
-	return metadata;
+	return { metadata, static_exports };
 }
 
 /**
