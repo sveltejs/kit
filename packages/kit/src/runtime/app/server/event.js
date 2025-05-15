@@ -1,9 +1,10 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { SWRequestEvent } from "types" */
 
-/** @type {RequestEvent | null} */
+/** @type { RequestEvent | SWRequestEvent | null} */
 let request_event = null;
 
-/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null>} */
+/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | SWRequestEvent | null>} */
 let als;
 
 import('node:async_hooks')
@@ -40,7 +41,7 @@ export function getRequestEvent() {
 
 /**
  * @template T
- * @param {RequestEvent | null} event
+ * @param {RequestEvent | SWRequestEvent | null} event
  * @param {() => T} fn
  */
 export function with_event(event, fn) {

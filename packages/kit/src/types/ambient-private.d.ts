@@ -27,3 +27,12 @@ declare module '__sveltekit/server' {
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
+
+declare module '__sveltekit/service-worker' {
+	import { SWRManifest } from 'types';
+
+	export let manifest: SWRManifest;
+	export function read_implementation(path: string): ReadableStream;
+	export function set_manifest(manifest: SWRManifest): void;
+	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+}

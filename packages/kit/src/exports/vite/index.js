@@ -12,7 +12,7 @@ import { runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
-import { build_service_worker } from './build/build_service_worker.js';
+import { build_service_worker, build_service_worker_nodes } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
@@ -1021,6 +1021,16 @@ Tips:
 
 					log.info('Building service worker');
 
+					build_service_worker_nodes(
+						out,
+						kit,
+						manifest_data,
+						server_manifest,
+						client_manifest,
+						css,
+						svelte_config.kit.output
+					);
+
 					await build_service_worker(
 						out,
 						kit,
@@ -1034,7 +1044,9 @@ Tips:
 						manifest_data,
 						service_worker_entry_file,
 						prerendered,
-						client_manifest
+						client_manifest,
+						build_data,
+						prerender_map
 					);
 				}
 
