@@ -6,6 +6,11 @@ import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
 
+/** @type {(server_node: string) => Promise<Record<string, any>>} */
+let resolve;
+
+const { get_page_options } = create_node_analyser((server_node) => resolve(server_node));
+
 /**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
@@ -16,6 +21,12 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
 export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config) {
+	
+	resolve = async (server_node) => {
+		// Windows needs the file:// protocol for absolute path dynamic imports
+		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+	};
+
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -74,11 +85,6 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 	}
 
-	const { get_page_options } = create_node_analyser(async (server_node) => {
-		// Windows needs the file:// protocol for absolute path dynamic imports
-		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
-	});
-
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -109,12 +115,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 
 		if (node.universal) {
-			let page_options;
-
-			if (!client_manifest) {
-				page_options = await get_page_options(node);
-			}
-
+			const page_options = await get_page_options(node);
 			if (!!page_options && page_options.ssr === false) {
 				exports.push(`export const universal = ${s(page_options, null, 2)};`)
 			} else {
