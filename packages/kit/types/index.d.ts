@@ -2001,12 +2001,12 @@ declare module '@sveltejs/kit' {
 	 */
 	export function text(body: string, init?: ResponseInit | undefined): Response;
 	/**
-	 * Create an `ActionFailure` object.
+	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * */
 	export function fail(status: number): ActionFailure<undefined>;
 	/**
-	 * Create an `ActionFailure` object.
+	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
