@@ -21,6 +21,15 @@ export default [
 			format: 'esm'
 		},
 		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json(), prefixBuiltinModules()],
+		external: ['./start.js']
+	},
+	{
+		input: 'src/start.js',
+		output: {
+			file: 'files/start.js',
+			format: 'esm'
+		},
+		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json(), prefixBuiltinModules()],
 		external: ['ENV', 'HANDLER']
 	},
 	{
