@@ -818,18 +818,7 @@ Tips:
 					})};\n`
 				);
 
-				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
-
-				await build_server_nodes(
-					out,
-					kit,
-					manifest_data,
-					server_manifest,
-					null,
-					null,
-					svelte_config.output
-				);
 
 				const metadata = await analyse({
 					hash: kit.router.type === 'hash',
@@ -837,7 +826,9 @@ Tips:
 					manifest_data,
 					server_manifest,
 					tracked_features,
-					env: { ...env.private, ...env.public }
+					env: { ...env.private, ...env.public },
+					out,
+					output_config: svelte_config.output
 				});
 
 				log.info('Building app');

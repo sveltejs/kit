@@ -181,9 +181,9 @@ export function get_name(node) {
 }
 
 /**
- * @param {(server_node: string) => Promise<Record<string, any>>} resolve
+ * @param {(server_node: string) => Promise<Record<string, any>>} resolve function to evaluate the `+page.server`/`+layout.server` files so that we can get any the page options
  */
-export function create_static_analyser(resolve) {
+export function create_node_analyser(resolve) {
 	/** @type {Map<string, Record<string, any> | null>} */
 	const static_exports = new Map();
 

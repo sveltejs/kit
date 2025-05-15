@@ -4,7 +4,7 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
-import { create_static_analyser } from '../static_analysis/index.js';
+import { create_node_analyser } from '../static_analysis/index.js';
 
 /**
  * @param {string} out
@@ -74,7 +74,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 	}
 
-	const { get_page_options } = create_static_analyser(async (server_node) => {
+	const { get_page_options } = create_node_analyser(async (server_node) => {
 		// Windows needs the file:// protocol for absolute path dynamic imports
 		return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
 	});
