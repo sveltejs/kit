@@ -102,15 +102,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	/**
-	 *
-	 * @param {string} server_node
-	 * @returns {Promise<Record<string, any>>}
-	 */
-	const resolve_server_node = async (server_node) => {
-		const { module } = await resolve(server_node);
-		return module;
-	};
+	/** @type {(file: string) => void} */
+	let invalidate_page_options;
 
 	function update_manifest() {
 		try {
@@ -134,6 +127,12 @@ export async function dev(vite, vite_config, svelte_config) {
 
 			return;
 		}
+
+		const static_analyser = create_static_analyser(async (server_node) => {
+			const { module } = await resolve(server_node);
+			return module;
+		});
+		invalidate_page_options = static_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -211,8 +210,6 @@ export async function dev(vite, vite_config, svelte_config) {
 								return module.default;
 							};
 						}
-
-						const static_analyser = create_static_analyser(resolve_server_node);
 
 						if (node.universal) {
 							const page_options = await static_analyser.get_page_options(node);
@@ -363,6 +360,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
+		invalidate_page_options(path.relative(cwd, file));
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -389,10 +387,14 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// changing the svelte config requires restarting the dev server
-	// the config is only read on start and passed on to vite-plugin-svelte
-	// which needs up-to-date values to operate correctly
 	vite.watcher.on('change', async (file) => {
+		if (file.match(/\+(page|layout).*$/)) {
+			invalidate_page_options(path.relative(cwd, file));
+		}
+
+		// changing the svelte config requires restarting the dev server
+		// the config is only read on start and passed on to vite-plugin-svelte
+		// which needs up-to-date values to operate correctly
 		if (path.basename(file) === 'svelte.config.js') {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;

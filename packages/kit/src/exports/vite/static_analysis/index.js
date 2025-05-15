@@ -247,5 +247,13 @@ export function create_static_analyser(resolve) {
 		return page_options;
 	};
 
-	return { get_page_options };
+	/**
+	 * @param {string} file
+	 * @returns {void}
+	 */
+	const invalidate_page_options = (file) => {
+		static_exports.delete(file);
+	};
+
+	return { get_page_options, invalidate_page_options };
 }

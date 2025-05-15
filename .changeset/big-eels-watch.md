@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: avoid static analysis stale cache results
+fix: correctly invalidate static analysis cache when modifying a universal `+page`/`+layout` file
