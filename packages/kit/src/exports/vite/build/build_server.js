@@ -109,7 +109,12 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 
 		if (node.universal) {
-			const page_options = await get_page_options(node);
+			let page_options;
+
+			if (!client_manifest) {
+				page_options = await get_page_options(node);
+			}
+
 			if (!!page_options && page_options.ssr === false) {
 				exports.push(`export const universal = ${s(page_options, null, 2)};`)
 			} else {
