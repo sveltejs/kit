@@ -46,7 +46,7 @@ export default function (opts = {}) {
 				].join('\n\n')
 			);
 
-			var external;
+			let external;
 
 			if (externalDependencies === 'auto') {
 				const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
