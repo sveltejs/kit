@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { statically_analyse_exports } from './index.js';
+import { statically_analyse_page_options } from './index.js';
 
 test.each([
 	[
@@ -18,7 +18,7 @@ test.each([
     `
 	]
 ])('page option is assigned a literal value: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual({ ssr: false, csr: true, prerender: 'auto', trailingSlash: 'always' });
 });
 
@@ -52,7 +52,7 @@ test.each([
 	],
 	['export all declaration alias', "export * as ssr from './foo'"]
 ])('fails when page option is assigned a dynamic value: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual(null);
 });
 
@@ -62,7 +62,7 @@ test.each([
 	['export all declaration alias', 'export * as bar from "./foo"'],
 	['non-page option export', "export const foo = 'bar'"]
 ])('ignores %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual({});
 });
 
@@ -72,7 +72,7 @@ test.each([
 	['whitespace', 'export    *      from "./foo";'],
 	['multiple lines and whitespace', "export   \n  *\n   from 'abc';  "]
 ])('fails when export all declaration is used: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual(null);
 });
 
@@ -131,7 +131,7 @@ test.each([
     `
 	]
 ])('non-reassigned page options: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual({ ssr: true, prerender: true });
 });
 
@@ -151,7 +151,7 @@ test.each([
     `
 	]
 ])('export specifier references: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual({ ssr: false });
 });
 
@@ -185,6 +185,6 @@ test.each([
     `
 	]
 ])('fails when export specifier references: %s', (_, input) => {
-	const exports = statically_analyse_exports('', input);
+	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual(null);
 });
