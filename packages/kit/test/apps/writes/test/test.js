@@ -95,7 +95,9 @@ test.describe('Filesystem updates', () => {
 	}) => {
 		test.skip(!process.env.DEV || !javaScriptEnabled);
 
-		const file = fileURLToPath(new URL('../src/routes/universal/parent-changed/+layout.js', import.meta.url));
+		const file = fileURLToPath(
+			new URL('../src/routes/universal/parent-changed/+layout.js', import.meta.url)
+		);
 		const contents = fs.readFileSync(file, 'utf-8');
 
 		try {
@@ -103,7 +105,7 @@ test.describe('Filesystem updates', () => {
 			expect(await get_computed_style('body', 'background-color')).toBe('rgb(255, 0, 0)');
 
 			fs.writeFileSync(file, contents.replace(/export const ssr = false;/, ''));
-		await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
+			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
 			await expect(page.locator('h1')).toHaveText('Internal Error');
 		} finally {
