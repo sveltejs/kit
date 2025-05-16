@@ -1,5 +1,5 @@
 import { CookieSerializeOptions } from 'cookie';
-import { SSRNode, CspDirectives, ServerDataNode } from 'types';
+import { SWRNode, CspDirectives, ServerDataNode } from 'types';
 
 export interface Fetched {
 	url: string;
@@ -12,7 +12,7 @@ export interface Fetched {
 }
 
 export type Loaded = {
-	node: SSRNode;
+	node: SWRNode;
 	data: Record<string, any> | null;
 	server_data: ServerDataNode | null;
 };

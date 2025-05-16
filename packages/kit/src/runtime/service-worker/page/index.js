@@ -13,7 +13,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
-import { PageNodes } from '../../../utils/page_nodes.js';
+import { SWPageNodes } from '../../../utils/page_nodes.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -26,7 +26,7 @@ const MAX_DEPTH = 10;
  * @param {import('types').SWROptions} options
  * @param {import('types').SWRManifest} manifest
  * @param {import('types').SWRState} state
- * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
+ * @param {import('../../../utils/page_nodes.js').SWPageNodes} nodes
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
@@ -142,16 +142,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 					return await load_server_data({
 						event,
-						node,
-						parent: async () => {
-							/** @type {Record<string, any>} */
-							const data = {};
-							for (let j = 0; j < i; j += 1) {
-								const parent = await server_promises[j];
-								if (parent) Object.assign(data, parent.data);
-							}
-							return data;
-						}
+						node
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
@@ -219,7 +210,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							while (!branch[j]) j -= 1;
 
 							const layouts = compact(branch.slice(0, j + 1));
-							const nodes = new PageNodes(layouts.map((layout) => layout.node));
+							const nodes = new SWPageNodes(layouts.map((layout) => layout.node));
 
 							return await render_response({
 								event,

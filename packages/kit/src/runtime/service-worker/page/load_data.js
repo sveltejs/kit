@@ -1,21 +1,24 @@
 import { DEV } from 'esm-env';
 import { make_trackable } from '../../../utils/url.js';
-import { validate_depends } from '../../shared.js';
 import { b64_encode } from '../../utils.js';
+import * as devalue from 'devalue';
+import { HttpError } from '../../control.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../../shared.js';
+import { add_data_suffix } from '../../pathname.js';
+
+/** @type {Array<((url: URL) => boolean)>} */
+const invalidated = [];
 
 /**
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').SWRequestEvent;
  *   node: import('types').SWRNode | undefined;
- *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, node, parent }) {
+export async function load_server_data({ event, node }) {
 	if (!node?.server) return null;
-
-	let is_tracking = true;
 
 	const uses = {
 		dependencies: new Set(),
@@ -42,9 +45,7 @@ export async function load_server_data({ event, node, parent }) {
 				);
 			}
 
-			if (is_tracking) {
-				uses.url = true;
-			}
+			uses.url = true;
 		},
 		(param) => {
 			if (DEV && done && !uses.search_params.has(param)) {
@@ -53,113 +54,157 @@ export async function load_server_data({ event, node, parent }) {
 				);
 			}
 
-			if (is_tracking) {
-				uses.search_params.add(param);
-			}
+			uses.search_params.add(param);
 		}
 	);
 
-	let done = false;
+	/** @type {import('../../client/types.js').NavigationState} */
+	const current = {
+		branch: [],
+		error: null,
+		// @ts-ignore - we need the initial value to be null
+		url: null
+	};
 
-	const result = await load.call(null, {
-		...event,
-		fetch: (info, init) => {
-			const url = new URL(info instanceof Request ? info.url : info, event.url);
+	const {  layouts, leaf } = route;
 
-			if (DEV && done && !uses.dependencies.has(url.href)) {
-				console.warn(
-					`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-				);
-			}
+	const loaders = [...layouts, leaf];
 
-			// Note: server fetches are not added to uses.depends due to security concerns
-			return event.fetch(info, init);
-		},
-		/** @param {string[]} deps */
-		depends: (...deps) => {
-			for (const dep of deps) {
-				const { href } = new URL(dep, event.url);
+	const url_changed = current.url ? id !== get_page_key(current.url) : false;
+	const route_changed = current.route ? route.id !== current.route.id : false;
+	const search_params_changed = diff_search_params(current.url, url);
 
-				if (DEV) {
-					validate_depends(node.server_id || 'missing route ID', dep);
+	let parent_invalid = false;
+	const invalid_server_nodes = loaders.map((loader, i) => {
+		const previous = current.branch[i];
 
-					if (done && !uses.dependencies.has(href)) {
-						console.warn(
-							`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-						);
+		const invalid =
+			!!loader?.[0] &&
+			(previous?.loader !== loader[1] ||
+				has_changed(
+					parent_invalid,
+					route_changed,
+					url_changed,
+					search_params_changed,
+					previous.server?.uses,
+					event.params,
+					event
+				));
+
+		if (invalid) {
+			// For the next one
+			parent_invalid = true;
+		}
+
+		return invalid;
+	});
+
+	const invalid = invalid_server_nodes;
+
+	const done = false;
+	const data_url = new URL(event.url);
+	data_url.pathname = add_data_suffix(event.url.pathname);
+	if (url.pathname.endsWith('/')) {
+		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
+	}
+	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
+		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
+	}
+	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
+
+	// use self.fetch directly to allow using a 3rd party-patched fetch implementation
+	const fetcher = self.fetch;
+	const res = await fetcher(data_url.href, {});
+
+	if (!res.ok) {
+		// error message is a JSON-stringified string which devalue can't handle at the top level
+		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
+		// if `__data.json` doesn't exist or the server has an internal error,
+		// avoid parsing the HTML error page as a JSON
+		/** @type {string | undefined} */
+		let message;
+		if (res.headers.get('content-type')?.includes('application/json')) {
+			message = await res.json();
+		} else if (res.status === 404) {
+			message = 'Not Found';
+		} else if (res.status === 500) {
+			message = 'Internal Error';
+		}
+		throw new HttpError(res.status, message);
+	}
+
+	// TODO: fix eslint error / figure out if it actually applies to our situation
+	// eslint-disable-next-line
+	return new Promise(async (resolve) => {
+		/**
+		 * Map of deferred promises that will be resolved by a subsequent chunk of data
+		 * @type {Map<string, import('types').Deferred>}
+		 */
+		const deferreds = new Map();
+		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+		const decoder = new TextDecoder();
+
+		/**
+		 * @param {any} data
+		 */
+		function deserialize(data) {
+			return devalue.unflatten(data, {
+				...app.decoders,
+				Promise: (id) => {
+					return new Promise((fulfil, reject) => {
+						deferreds.set(id, { fulfil, reject });
+					});
+				}
+			});
+		}
+
+		let text = '';
+
+		while (true) {
+			// Format follows ndjson (each line is a JSON object) or regular JSON spec
+			const { done, value } = await reader.read();
+			if (done && !text) break;
+
+			text += !value && text ? '\n' : decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
+
+			while (true) {
+				const split = text.indexOf('\n');
+				if (split === -1) {
+					break;
+				}
+
+				const node = JSON.parse(text.slice(0, split));
+				text = text.slice(split + 1);
+
+				if (node.type === 'redirect') {
+					return resolve(node);
+				}
+
+				if (node.type === 'data') {
+					// This is the first (and possibly only, if no pending promises) chunk
+					node.nodes?.forEach((/** @type {any} */ node) => {
+						if (node?.type === 'data') {
+							node.uses = deserialize_uses(node.uses);
+							node.data = deserialize(node.data);
+						}
+					});
+
+					resolve(node);
+				} else if (node.type === 'chunk') {
+					// This is a subsequent chunk containing deferred data
+					const { id, data, error } = node;
+					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+					deferreds.delete(id);
+
+					if (error) {
+						deferred.reject(deserialize(error));
+					} else {
+						deferred.fulfil(deserialize(data));
 					}
 				}
-
-				uses.dependencies.add(href);
-			}
-		},
-		params: new Proxy(event.params, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
-					console.warn(
-						`${node.server_id}: Accessing \`params.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
-					);
-				}
-
-				if (is_tracking) {
-					uses.params.add(key);
-				}
-				return target[/** @type {string} */ (key)];
-			}
-		}),
-		parent: async () => {
-			if (DEV && done && !uses.parent) {
-				console.warn(
-					`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-				);
-			}
-
-			if (is_tracking) {
-				uses.parent = true;
-			}
-			return parent();
-		},
-		route: new Proxy(event.route, {
-			get: (target, key) => {
-				if (DEV && done && typeof key === 'string' && !uses.route) {
-					console.warn(
-						`${node.server_id}: Accessing \`route.${String(
-							key
-						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-					);
-				}
-
-				if (is_tracking) {
-					uses.route = true;
-				}
-				return target[/** @type {'id'} */ (key)];
-			}
-		}),
-		url,
-		untrack(fn) {
-			is_tracking = false;
-			try {
-				return fn();
-			} finally {
-				is_tracking = true;
 			}
 		}
 	});
-
-	if (__SVELTEKIT_DEV__) {
-		validate_load_response(result, node.server_id);
-	}
-
-	done = true;
-
-	return {
-		type: 'data',
-		data: result ?? null,
-		uses,
-		slash
-	};
 }
 
 /**
@@ -389,4 +434,82 @@ function validate_load_response(data, id) {
 			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 		);
 	}
+}
+
+/**
+ * @param {any} uses
+ * @return {import('types').Uses}
+ */
+function deserialize_uses(uses) {
+	return {
+		dependencies: new Set(uses?.dependencies ?? []),
+		params: new Set(uses?.params ?? []),
+		parent: !!uses?.parent,
+		route: !!uses?.route,
+		url: !!uses?.url,
+		search_params: new Set(uses?.search_params ?? [])
+	};
+}
+
+/**
+ * @param {boolean} parent_changed
+ * @param {boolean} route_changed
+ * @param {boolean} url_changed
+ * @param {Set<string>} search_params_changed
+ * @param {import('types').Uses | undefined} uses
+ * @param {Record<string, string>} params
+ * @param {import('types').SWRequestEvent} current
+ */
+function has_changed(
+	parent_changed,
+	route_changed,
+	url_changed,
+	search_params_changed,
+	uses,
+	params,
+	current
+) {
+	if (!uses) return false;
+
+	if (uses.parent && parent_changed) return true;
+	if (uses.route && route_changed) return true;
+	if (uses.url && url_changed) return true;
+
+	for (const tracked_params of uses.search_params) {
+		if (search_params_changed.has(tracked_params)) return true;
+	}
+
+	for (const param of uses.params) {
+		if (params[param] !== current.params[param]) return true;
+	}
+
+	for (const href of uses.dependencies) {
+		if (invalidated.some((fn) => fn(new URL(href)))) return true;
+	}
+
+	return false;
+}
+
+/**
+ * @param {URL | null} old_url
+ * @param {URL} new_url
+ */
+function diff_search_params(old_url, new_url) {
+	if (!old_url) return new Set(new_url.searchParams.keys());
+
+	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
+
+	for (const key of changed) {
+		const old_values = old_url.searchParams.getAll(key);
+		const new_values = new_url.searchParams.getAll(key);
+
+		if (
+			old_values.every((value) => new_values.includes(value)) &&
+			new_values.every((value) => old_values.includes(value))
+		) {
+			changed.delete(key);
+		}
+	}
+
+	return changed;
 }

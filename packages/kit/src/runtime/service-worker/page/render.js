@@ -3,9 +3,9 @@ import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import * as paths from '__sveltekit/paths';
 import { hash } from '../../hash.js';
-import { serialize_data } from './serialize_data.js';
+import { serialize_data } from '../../server/page/serialize_data.js';
 import { s } from '../../../utils/misc.js';
-import { Csp } from './csp.js';
+import { Csp } from '../../server/page/csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { public_env, safe_public_env } from '../../shared-server.js';
@@ -529,7 +529,7 @@ export async function render_response({
  * @param {import('types').SWRequestEvent} event
  * @param {import('types').SWROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
- * @param {import('./csp.js').Csp} csp
+ * @param {import('../../server/page/csp.js').Csp} csp
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
