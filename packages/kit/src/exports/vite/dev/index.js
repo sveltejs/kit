@@ -353,13 +353,14 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
+	// These watchers only run for routes, param matchers, and client hooks.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		if (timeout || restarting) return;
 
-		if (is_universal_file(file)) {
+		if (/\+(page|layout).*$/.test(file)) {
 			invalidate_page_options(path.relative(cwd, file));
 		}
 
@@ -391,10 +392,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	vite.watcher.on('change', async (file) => {
-		if (is_universal_file(file)) {
-			invalidate_page_options(path.relative(cwd, file));
-		}
-
 		// changing the svelte config requires restarting the dev server
 		// the config is only read on start and passed on to vite-plugin-svelte
 		// which needs up-to-date values to operate correctly
@@ -653,12 +650,4 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
-}
-
-/**
- * @param {string} file
- * @returns {boolean}
- */
-function is_universal_file(file) {
-	return /\+(page|layout).*$/.test(file);
 }

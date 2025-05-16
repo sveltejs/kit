@@ -252,6 +252,7 @@ export function create_static_analyser(resolve) {
 	 * @returns {void}
 	 */
 	const invalidate_page_options = (file) => {
+		// TODO: this needs to invalidate nodes lower in the branch too
 		static_exports.delete(file);
 	};
 
