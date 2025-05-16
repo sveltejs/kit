@@ -729,3 +729,54 @@ test.describe('getRequestEvent', () => {
 		expect(await response.text()).toBe('hello from hooks.server.js');
 	});
 });
+
+test.describe('dedupe', () => {
+	test('sync dedupe on api route', async ({ request }) => {
+		const response = await request.get('/dedupe/sync/api');
+		expect(response.status()).toBe(204);
+	});
+
+	test('async dedupe on api route', async ({ request }) => {
+		const response = await request.get('/dedupe/async/api');
+		expect(response.status()).toBe(204);
+	});
+
+	test('sync dedupe on page route', async ({ page }) => {
+		await page.goto('/dedupe/sync/page');
+		expect(await page.textContent('h1')).toContain('sync dedupe on page route');
+	});
+
+	test('async dedupe on page route', async ({ page }) => {
+		await page.goto('/dedupe/async/page');
+		expect(await page.textContent('h1')).toContain('async dedupe on page route');
+	});
+
+	const test_types = [
+		'array',
+		'bigint',
+		'boolean',
+		'function',
+		'map',
+		'null',
+		'number',
+		'object',
+		'set',
+		'string',
+		'symbol',
+		'Uint8Array',
+		'Uint16Array',
+		'Uint32Array',
+		'Uint8ClampedArray',
+		'Float32Array',
+		'Float64Array',
+		'undefined',
+		'void'
+	];
+	for (const type of test_types) {
+		test(`sync dedupe on ${type} route`, async ({ request }) => {
+			const response = await request.get(`/dedupe/types/${type}`);
+			const error = response.status() === 204 ? null : await response.text();
+			expect(error).toBeNull();
+		});
+	}
+});
