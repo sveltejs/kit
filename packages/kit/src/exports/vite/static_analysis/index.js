@@ -194,13 +194,14 @@ export function create_static_analyser(resolve) {
 	const get_page_options = async (node) => {
 		const key = node.universal || node.server;
 		if (key && cache.has(key)) {
-			return /** @type {Record<string, any> | null} */ (cache.get(key));
+			return { .../** @type {Record<string, any> | null} */ (cache.get(key)) };
 		}
 
 		/** @type {Record<string, any>} */
 		let page_options = {};
 
 		if (node.parent) {
+			// TODO: dedupe analysis from other nodes being loaded
 			const parent_options = await get_page_options(node.parent);
 			if (parent_options === null) {
 				// if the parent cannot be analysed, we can't know what page options
@@ -211,7 +212,7 @@ export function create_static_analyser(resolve) {
 				return null;
 			}
 
-			page_options = { ...parent_options.page_options };
+			page_options = { ...parent_options };
 		}
 
 		if (node.server) {
