@@ -1,12 +1,11 @@
 import fs, { writeFileSync } from 'node:fs';
 import path, { basename, } from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 import { create_static_module } from '../../../core/env.js';
 import { generate_manifest } from '../../../core/generate_manifest/index.js';
 import { dedent } from '../../../core/sync/utils.js';
-import { copy, mkdirp, rimraf } from '../../../utils/filesystem.js';
+import { mkdirp } from '../../../utils/filesystem.js';
 import { s } from '../../../utils/misc.js';
 import { env_static_public } from '../module_ids.js';
 import { get_config_aliases, get_env, normalize_id, strip_virtual_prefix } from '../utils.js';
@@ -81,28 +80,9 @@ export async function build_service_worker(
 	const route_data = build_data.manifest_data.routes.filter((route) => route.page);
 
 
-		let dest = `${kit.outDir}/service-worker`;
-		let worker_dest = `${dest}/_worker.js`;
-		let assets_binding = 'ASSETS';
-
-		const files = fileURLToPath(new URL('./files', import.meta.url).href);
-		const tmp = `${kit.outDir}/service-worker`;
-
-		rimraf(dest);
-	rimraf(worker_dest);
-
-		mkdirp(dest);
-	mkdirp(tmp);
-
-		// client assets and prerendered pages
-		const assets_dest = `${dest}${kit.paths.base}`;
-
-	const source = `${kit.outDir}/output/prerendered`;
+	const tmp = `${kit.outDir}/service-worker`;
 	
-	copy(`${source}/pages`, assets_dest); copy(`${source}/dependencies`, assets_dest);
-
-		// worker
-	const worker_dest_dir = path.dirname(worker_dest);
+	mkdirp(tmp);
 	
 		writeFileSync(
 			`${tmp}/manifest.js`,
@@ -117,8 +97,10 @@ export async function build_service_worker(
 		);
 	
 	writeFileSync(
-		`${tmp}/manifest.js`,
+		`${tmp}/service-worker.js`,
 		dedent`
+		import { manifest } from "./manifest.js";
+
 		export const base = /*@__PURE__*/ ${base};
 
 		export const build = [
@@ -139,20 +121,14 @@ export async function build_service_worker(
 		];
 
 		export const version = ${s(kit.version.name)};
+
+		let server;
+
+		export function respond() {
+				return 
+		}
 	`
-	)
-	
-		copy(`${files}/worker.js`, worker_dest, {
-			replace: {
-				// the paths returned by the Wrangler config might be Windows paths,
-				// so we need to convert them to POSIX paths or else the backslashes
-				// will be interpreted as escape characters and create an incorrect import path
-				SERVER: `${posixify(path.relative(worker_dest_dir, `${kit.outDir}/output/server`))}/index.js`,
-				MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
-				ASSETS: assets_binding
-			}
-		});
-	
+	)	
 
 	await vite.build({
 		build: {
@@ -177,7 +153,7 @@ export async function build_service_worker(
 		publicDir: false,
 		plugins: [sw_virtual_modules],
 		resolve: {
-			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: "" }]
+			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: `${tmp}/service-worker.js` }]
 		},
 		experimental: {
 			renderBuiltUrl(filename) {
@@ -254,6 +230,7 @@ export function build_service_worker_nodes(out, kit, manifest_data, service_work
 			const sources = filenames.map((filename) => {
 				return fs.readFileSync(`${out}/service-worker/${filename}`, 'utf-8');
 			});
+			
 			fs.writeFileSync(file, `// ${filenames.join(', ')}\nexport default ${s(sources.join('\n'))};`);
 
 			stylesheet_lookup.set(asset.fileName, index);
@@ -366,9 +343,4 @@ export function build_service_worker_nodes(out, kit, manifest_data, service_work
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
 	});
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }

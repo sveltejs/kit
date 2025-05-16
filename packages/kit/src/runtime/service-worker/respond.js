@@ -3,7 +3,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { PageNodes } from '../../utils/page_nodes.js';
+import { SWPageNodes } from '../../utils/page_nodes.js';
 import { exec } from '../../utils/routing.js';
 import { decode_params, decode_pathname, normalize_path } from '../../utils/url.js';
 import { HttpError, Redirect } from '../control.js';
@@ -31,7 +31,7 @@ import { action_json_redirect, is_action_json_request } from './page/actions.js'
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { resolve_route } from './page/server_routing.js';
-import { is_endpoint_request } from './endpoint.js';
+import { is_endpoint_request } from '../server/endpoint.js';
 
 /* global __SVELTEKIT_DEV__ */
 
@@ -250,9 +250,9 @@ export async function respond(request, options, manifest, state) {
 	let trailing_slash = 'never';
 
 	try {
-		/** @type {PageNodes|undefined} */
+		/** @type {SWPageNodes|undefined} */
 		const page_nodes = route?.page
-			? new PageNodes(await load_page_nodes(route.page, manifest))
+			? new SWPageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
@@ -385,7 +385,7 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 * @param {import('types').SWRequestEvent} event
-	 * @param {PageNodes | undefined} page_nodes
+	 * @param {SWPageNodes | undefined} page_nodes
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {

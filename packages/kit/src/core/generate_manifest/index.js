@@ -7,7 +7,7 @@ import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
-import { find_server_assets, find_service_worker_assets } from './find_server_assets.js';
+import { find_server_assets } from './find_server_assets.js';
 import { uneval } from 'devalue';
 
 /**
@@ -173,7 +173,7 @@ export function generate_service_worker_manifest({
 	 */
 	const used_nodes = new Set([0, 1]);
 
-	const server_assets = find_service_worker_assets(build_data, routes);
+	const server_assets = find_server_assets(build_data, routes);
 
 	for (const route of routes) {
 		if (route.page) {

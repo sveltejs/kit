@@ -3,7 +3,7 @@ import { set_private_env, set_public_env, set_safe_public_env } from '../shared-
 import { options, get_hooks } from '__SERVICE_WORKER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_read_implementation, set_manifest } from '__sveltekit/service-worker';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -12,10 +12,10 @@ export class Server {
 	/** @type {import('types').SWROptions} */
 	#options;
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SWRManifest} */
 	#manifest;
 
-	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
+	/** @param {import('types').SWRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SWROptions} */
 		this.#options = options;
