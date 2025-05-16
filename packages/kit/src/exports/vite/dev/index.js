@@ -359,8 +359,11 @@ export async function dev(vite, vite_config, svelte_config) {
 		// Don't run for a single file if the whole manifest is about to get updated
 		if (timeout || restarting) return;
 
+		if (is_universal_file(file)) {
+			invalidate_page_options(path.relative(cwd, file));
+		}
+
 		sync.update(svelte_config, manifest_data, file);
-		invalidate_page_options(path.relative(cwd, file));
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -388,7 +391,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	vite.watcher.on('change', async (file) => {
-		if (file.match(/\+(page|layout).*$/)) {
+		if (is_universal_file(file)) {
 			invalidate_page_options(path.relative(cwd, file));
 		}
 
@@ -650,4 +653,12 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * @param {string} file
+ * @returns {boolean}
+ */
+function is_universal_file(file) {
+	return /\+(page|layout).*$/.test(file);
 }
