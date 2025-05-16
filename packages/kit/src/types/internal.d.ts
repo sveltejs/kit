@@ -20,7 +20,9 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transporter,
+	Cookies,
+	ParamMatcher
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -365,7 +367,25 @@ export interface SSRComponent {
 	};
 }
 
+export interface SWRComponent {
+	default: {
+		render(
+			props: Record<string, any>,
+			opts: { context: Map<any, any> }
+		): {
+			html: string;
+			head: string;
+			css: {
+				code: string;
+				map: any; // TODO
+			};
+		};
+	};
+}
+
 export type SSRComponentLoader = () => Promise<SSRComponent>;
+
+export type SWRComponentLoader = () => Promise<SWRComponent>;
 
 export interface UniversalNode {
 	load?: Load;
@@ -384,6 +404,17 @@ export interface ServerNode {
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+}
+
+export interface SWServerNode {
+	load?: boolean;
+	prerender?: PrerenderOption;
+	ssr?: boolean;
+	csr?: boolean;
+	trailingSlash?: TrailingSlash;
+	actions?: string[];
 	config?: any;
 	entries?: PrerenderEntryGenerator;
 }
@@ -411,7 +442,32 @@ export interface SSRNode {
 	server?: ServerNode;
 }
 
+export interface SWRNode {
+	/** index into the `nodes` array in the generated `client/app.js`. */
+	index: number;
+	/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
+	imports: string[];
+	/** external CSS files that are loaded on the client */
+	stylesheets: string[];
+	/** external font files that are loaded on the client */
+	fonts: string[];
+
+	universal_id?: string;
+	server_id?: string;
+
+	/** inlined styles. */
+	inline_styles?(): MaybePromise<Record<string, string>>;
+	/** Svelte component */
+	component?: SWRComponentLoader;
+	/** +page.js or +layout.js */
+	universal?: UniversalNode;
+	/** +page.server.js, +layout.server.js, or +server.js */
+	server?: SWServerNode;
+}
+
 export type SSRNodeLoader = () => Promise<SSRNode>;
+
+export type SWRNodeLoader = () => Promise<SWRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
@@ -422,6 +478,31 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
+	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
+	root: SSRComponent['default'];
+	service_worker: boolean;
+	templates: {
+		app(values: {
+			head: string;
+			body: string;
+			assets: string;
+			nonce: string;
+			env: Record<string, string>;
+		}): string;
+		error(values: { message: string; status: number }): string;
+	};
+	version_hash: string;
+}
+
+export interface SWROptions {
+	app_template_contains_nonce: boolean;
+	csp: ValidatedConfig['kit']['csp'];
+	csrf_check_origin: boolean;
+	embedded: boolean;
+	env_public_prefix: string;
+	env_private_prefix: string;
+	hash_routing: boolean;
+	hooks: ClientHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
@@ -454,6 +535,13 @@ export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	fallback?: RequestHandler;
 };
 
+export type SWREndpoint = Partial<Set<HttpMethod>> & {
+	trailingSlash?: TrailingSlash;
+	config?: any;
+	entries?: PrerenderEntryGenerator;
+	fallback?: true;
+};
+
 export interface SSRRoute {
 	id: string;
 	pattern: RegExp;
@@ -463,7 +551,25 @@ export interface SSRRoute {
 	endpoint_id?: string;
 }
 
+export interface SWRRoute {
+	id: string;
+	pattern: RegExp;
+	params: RouteParam[];
+	page: PageNodeIndexes | null;
+	endpoint: (() => Promise<SWREndpoint>) | null;
+	endpoint_id?: string;
+}
+
 export interface SSRClientRoute {
+	id: string;
+	pattern: RegExp;
+	params: RouteParam[];
+	errors: Array<number | undefined>;
+	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, node_id: number];
+}
+
+export interface SWRClientRoute {
 	id: string;
 	pattern: RegExp;
 	params: RouteParam[];
@@ -497,6 +603,112 @@ export interface SSRState {
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 	emulator?: Emulator;
+}
+
+export interface SWRState {
+	fallback?: string;
+	/**
+	 * True if we're currently attempting to render an error page.
+	 */
+	error: boolean;
+	/**
+	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
+	 */
+	depth: number;
+	read?: (file: string) => Buffer;
+	/**
+	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
+	 */
+	before_handle?: (event: SWRequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
+}
+
+export interface SWRequestEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
+> {
+	/**
+	 * Get or set cookies related to the current request
+	 */
+	cookies: Cookies;
+	/**
+	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
+	 *
+	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
+	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
+	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
+	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
+	 *
+	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
+	 */
+	fetch: typeof fetch;
+	/**
+	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+	 */
+	params: Params;
+	/**
+	 * The original request object.
+	 */
+	request: Request;
+	/**
+	 * Info about the current route.
+	 */
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 */
+		id: RouteId;
+	};
+	/**
+	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
+	 *
+	 *	```js
+	 *	/// file: src/routes/blog/+page.js
+	 *	export async function load({ fetch, setHeaders }) {
+	 *		const url = `https://cms.example.com/articles.json`;
+	 *		const response = await fetch(url);
+	 *
+	 *		setHeaders({
+	 *			age: response.headers.get('age'),
+	 *			'cache-control': response.headers.get('cache-control')
+	 *		});
+	 *
+	 *		return response.json();
+	 *	}
+	 *	```
+	 *
+	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
+	 *
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
+	 */
+	setHeaders: (headers: Record<string, string>) => void;
+	/**
+	 * The requested URL.
+	 */
+	url: URL;
+	/**
+	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
+	 */
+	isSubRequest: boolean;
+}
+
+export interface SWRManifest {
+	appDir: string;
+	appPath: string;
+	/** Static files from `kit.config.files.assets`. */
+	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
+	/** private fields */
+	client: NonNullable<BuildData['client']>;
+	nodes: SWRNodeLoader[];
+	routes: SWRRoute[];
+	prerendered_routes: Set<string>;
+	matchers: () => Promise<Record<string, ParamMatcher>>;
+	/** A `[file]: size` map of all assets imported by server code. */
+	server_assets: Record<string, number>;
 }
 
 export type StrictBody = string | ArrayBufferView;
