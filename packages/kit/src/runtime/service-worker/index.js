@@ -1,8 +1,8 @@
 import { respond } from './respond.js';
-import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
+import { set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVICE_WORKER__/internal.js';
 import { DEV } from 'esm-env';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_public_env } from '../../utils/env.js';
 import { set_manifest } from '__sveltekit/service-worker';
 
 /** @type {Promise<any>} */
@@ -40,10 +40,8 @@ export class Server {
 			private_prefix: this.#options.env_private_prefix
 		};
 
-		const private_env = filter_private_env(env, prefixes);
 		const public_env = filter_public_env(env, prefixes);
 
-		set_private_env(private_env);
 		set_public_env(public_env);
 		set_safe_public_env(public_env);
 
@@ -80,11 +78,10 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {import('types').RequestOptions} options
+	 * @returns {Promise<Response>}
 	 */
-	async respond(request, options) {
+	async respond(request) {
 		return respond(request, this.#options, this.#manifest, {
-			...options,
 			error: false,
 			depth: 0
 		});

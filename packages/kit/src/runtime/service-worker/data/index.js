@@ -157,7 +157,7 @@ export function redirect_json_response(redirect) {
  * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
  *  @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-export function get_data_json(event, options, nodes) {
+function get_data_json(event, options, nodes) {
 	let promise_id = 1;
 	let count = 0;
 

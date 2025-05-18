@@ -629,7 +629,6 @@ export interface SWRState {
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
 	before_handle?: (event: SWRequestEvent, config: any, prerender: PrerenderOption) => void;
-	emulator?: Emulator;
 }
 
 export interface SWRequestEvent<

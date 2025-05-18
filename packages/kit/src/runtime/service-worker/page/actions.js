@@ -5,7 +5,6 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
-import { with_event } from '../../app/service-worker/index.js';
 
 /** @param {import('types').SWRequestEvent} event */
 export function is_action_json_request(event) {
@@ -217,7 +216,7 @@ function check_named_default_separate(actions) {
  * @param {NonNullable<import('types').SWServerNode['actions']>} actions
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, actions) {
+function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -246,7 +245,7 @@ async function call_action(event, actions) {
 		);
 	}
 
-	return with_event(event, () => fetch(event.request));
+	return fetch(event.request);
 }
 
 /** @param {any} data */

@@ -142,6 +142,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 					return await load_server_data({
 						event,
+						options,
 						node
 					});
 				} catch (e) {

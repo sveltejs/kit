@@ -78,11 +78,3 @@ export function all_types(config, mode) {
 export function server(config) {
 	write_server(config, path.join(config.kit.outDir, 'generated'));
 }
-
-/**
- * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
- * @param {import('types').ValidatedConfig} config
- */
-export function service_worker(config) {
-	write_service_worker(config, path.join(config.kit.outDir, 'generated'));
-}

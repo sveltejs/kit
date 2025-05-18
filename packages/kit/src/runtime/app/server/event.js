@@ -1,6 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 
-/** @type { RequestEvent | null} */
+/** @type {RequestEvent | null} */
 let request_event = null;
 
 /** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null>} */
