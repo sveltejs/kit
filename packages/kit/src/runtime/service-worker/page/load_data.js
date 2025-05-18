@@ -5,9 +5,7 @@ import * as devalue from 'devalue';
 import { HttpError } from '../../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../../shared.js';
 import { add_data_suffix } from '../../pathname.js';
-
-/** @type {Array<((url: URL) => boolean)>} */
-const invalidated = [];
+import { options } from '__SERVICE_WORKER__/internal.js';
 
 /**
  * Calls the user's server `load` function.
@@ -58,59 +56,17 @@ export async function load_server_data({ event, node }) {
 		}
 	);
 
-	/** @type {import('../../client/types.js').NavigationState} */
-	const current = {
-		branch: [],
-		error: null,
-		// @ts-ignore - we need the initial value to be null
-		url: null
-	};
-
-	const {  layouts, leaf } = route;
-
-	const loaders = [...layouts, leaf];
-
-	const url_changed = current.url ? id !== get_page_key(current.url) : false;
-	const route_changed = current.route ? route.id !== current.route.id : false;
-	const search_params_changed = diff_search_params(current.url, url);
-
-	let parent_invalid = false;
-	const invalid_server_nodes = loaders.map((loader, i) => {
-		const previous = current.branch[i];
-
-		const invalid =
-			!!loader?.[0] &&
-			(previous?.loader !== loader[1] ||
-				has_changed(
-					parent_invalid,
-					route_changed,
-					url_changed,
-					search_params_changed,
-					previous.server?.uses,
-					event.params,
-					event
-				));
-
-		if (invalid) {
-			// For the next one
-			parent_invalid = true;
-		}
-
-		return invalid;
-	});
-
-	const invalid = invalid_server_nodes;
-
 	const done = false;
 	const data_url = new URL(event.url);
 	data_url.pathname = add_data_suffix(event.url.pathname);
+
 	if (url.pathname.endsWith('/')) {
 		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
 	}
+
 	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
 		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
-	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
 	// use self.fetch directly to allow using a 3rd party-patched fetch implementation
 	const fetcher = self.fetch;
@@ -144,12 +100,16 @@ export async function load_server_data({ event, node }) {
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
 		const decoder = new TextDecoder();
 
+		const decoders = Object.fromEntries(
+			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.decode])
+		);
+
 		/**
 		 * @param {any} data
 		 */
 		function deserialize(data) {
 			return devalue.unflatten(data, {
-				...app.decoders,
+				...decoders,
 				Promise: (id) => {
 					return new Promise((fulfil, reject) => {
 						deferreds.set(id, { fulfil, reject });
@@ -449,67 +409,4 @@ function deserialize_uses(uses) {
 		url: !!uses?.url,
 		search_params: new Set(uses?.search_params ?? [])
 	};
-}
-
-/**
- * @param {boolean} parent_changed
- * @param {boolean} route_changed
- * @param {boolean} url_changed
- * @param {Set<string>} search_params_changed
- * @param {import('types').Uses | undefined} uses
- * @param {Record<string, string>} params
- * @param {import('types').SWRequestEvent} current
- */
-function has_changed(
-	parent_changed,
-	route_changed,
-	url_changed,
-	search_params_changed,
-	uses,
-	params,
-	current
-) {
-	if (!uses) return false;
-
-	if (uses.parent && parent_changed) return true;
-	if (uses.route && route_changed) return true;
-	if (uses.url && url_changed) return true;
-
-	for (const tracked_params of uses.search_params) {
-		if (search_params_changed.has(tracked_params)) return true;
-	}
-
-	for (const param of uses.params) {
-		if (params[param] !== current.params[param]) return true;
-	}
-
-	for (const href of uses.dependencies) {
-		if (invalidated.some((fn) => fn(new URL(href)))) return true;
-	}
-
-	return false;
-}
-
-/**
- * @param {URL | null} old_url
- * @param {URL} new_url
- */
-function diff_search_params(old_url, new_url) {
-	if (!old_url) return new Set(new_url.searchParams.keys());
-
-	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
-
-	for (const key of changed) {
-		const old_values = old_url.searchParams.getAll(key);
-		const new_values = new_url.searchParams.getAll(key);
-
-		if (
-			old_values.every((value) => new_values.includes(value)) &&
-			new_values.every((value) => old_values.includes(value))
-		) {
-			changed.delete(key);
-		}
-	}
-
-	return changed;
 }

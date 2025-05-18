@@ -17,7 +17,7 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { BuildData, SSRNodeLoader, SSRRoute, SWRequestEvent, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
@@ -772,6 +772,13 @@ export type Handle = (input: {
 export type HandleServerError = (input: {
 	error: unknown;
 	event: RequestEvent;
+	status: number;
+	message: string;
+}) => MaybePromise<void | App.Error>;
+
+export type HandleServiceWorkerError = (input: {
+	error: unknown;
+	event: SWRequestEvent;
 	status: number;
 	message: string;
 }) => MaybePromise<void | App.Error>;

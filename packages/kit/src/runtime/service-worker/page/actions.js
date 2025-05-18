@@ -5,7 +5,7 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
-import { with_event } from '../../app/server/event.js';
+import { with_event } from '../../app/service-worker/index.js';
 
 /** @param {import('types').SWRequestEvent} event */
 export function is_action_json_request(event) {

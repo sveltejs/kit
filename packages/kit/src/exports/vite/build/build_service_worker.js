@@ -78,28 +78,18 @@ export async function build_service_worker(
 	};
 
 	const route_data = build_data.manifest_data.routes.filter((route) => route.page);
-
-
-	const tmp = `${kit.outDir}/service-worker`;
-	
-	mkdirp(tmp);
-	
-		writeFileSync(
-			`${tmp}/manifest.js`,
-			`export const manifest = ${generate_manifest({
-				build_data,
-				prerendered: prerendered.paths,
-				relative_path: path.posix.relative(tmp, `${kit.outDir}/output/server`),
-				routes:  route_data.filter((route) => prerender_map.get(route.id) !== true)
-			})};\n\n` +
-				`export const prerendered = new Set(${JSON.stringify(prerendered.paths)});\n\n` +
-				`export const base_path = ${JSON.stringify(kit.paths.base)};\n`
-		);
 	
 	writeFileSync(
-		`${tmp}/service-worker.js`,
+		`${kit.outDir}/output/service-worker/index.js`,
 		dedent`
-		import { manifest } from "./manifest.js";
+		const manifest = ${generate_manifest({
+				build_data,
+				prerendered: prerendered.paths,
+				relative_path: path.posix.relative(`${kit.outDir}/output/service-worker`, `${kit.outDir}/output/service-worker`),
+				routes:  route_data.filter((route) => prerender_map.get(route.id) !== true)
+		})};
+			
+		const prerendered = new Set(${JSON.stringify(prerendered.paths)});
 
 		export const base = /*@__PURE__*/ ${base};
 
@@ -124,8 +114,8 @@ export async function build_service_worker(
 
 		let server;
 
-		export function respond() {
-				return 
+		export function respond(event) {
+				return "Hello World!";
 		}
 	`
 	)	
@@ -153,7 +143,7 @@ export async function build_service_worker(
 		publicDir: false,
 		plugins: [sw_virtual_modules],
 		resolve: {
-			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: `${tmp}/service-worker.js` }]
+			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: path.relative(service_worker_entry_file, `${out}/service-worker/service-worker.js`) }]
 		},
 		experimental: {
 			renderBuiltUrl(filename) {

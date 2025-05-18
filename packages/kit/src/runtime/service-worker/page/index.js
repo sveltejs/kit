@@ -126,7 +126,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let load_error = null;
 
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
-		const server_promises = nodes.data.map((node, i) => {
+		const server_promises = nodes.data.map((node) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
 				throw load_error;

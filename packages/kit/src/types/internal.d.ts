@@ -22,7 +22,8 @@ import {
 	ClientInit,
 	Transporter,
 	Cookies,
-	ParamMatcher
+	ParamMatcher,
+	HandleServiceWorkerError
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -154,6 +155,14 @@ export interface ServerHooks {
 	reroute: Reroute;
 	transport: Record<string, Transporter>;
 	init?: ServerInit;
+}
+
+export interface ServiceWorkerHooks {
+	handleFetch: HandleFetch;
+	handle: Handle;
+	handleError: HandleServiceWorkerError;
+	reroute: Reroute;
+	transport: Record<string, Transporter>;
 }
 
 export interface ClientHooks {
@@ -502,9 +511,9 @@ export interface SWROptions {
 	env_public_prefix: string;
 	env_private_prefix: string;
 	hash_routing: boolean;
-	hooks: ClientHooks;
+	hooks: ServiceWorkerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
-	root: SSRComponent['default'];
+	root: SWRComponent['default'];
 	service_worker: boolean;
 	templates: {
 		app(values: {
@@ -615,7 +624,6 @@ export interface SWRState {
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	depth: number;
-	read?: (file: string) => Buffer;
 	/**
 	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.

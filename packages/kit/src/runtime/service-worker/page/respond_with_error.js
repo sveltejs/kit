@@ -3,7 +3,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { Redirect } from '../../control.js';
 import { get_status } from '../../../utils/error.js';
-import { PageNodes } from '../../../utils/page_nodes.js';
+import { SWPageNodes } from '../../../utils/page_nodes.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -40,7 +40,7 @@ export async function respond_with_error({
 	try {
 		const branch = [];
 		const default_layout = await manifest.nodes[0](); // 0 is always the root layout
-		const nodes = new PageNodes([default_layout]);
+		const nodes = new SWPageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
 
@@ -49,9 +49,7 @@ export async function respond_with_error({
 
 			const server_data_promise = load_server_data({
 				event,
-				node: default_layout,
-				// eslint-disable-next-line @typescript-eslint/require-await
-				parent: async () => ({})
+				node: default_layout
 			});
 
 			const server_data = await server_data_promise;

@@ -412,6 +412,11 @@ declare module '@sveltejs/kit' {
 				 */
 				server?: string;
 				/**
+				 * The location of your service worker [hooks](https://svelte.dev/docs/kit/hooks).
+				 * @default "src/hooks.worker"
+				 */
+				serviceWorker?: string;
+				/**
 				 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
 				 * @default "src/hooks"
 				 * @since 2.3.0
@@ -754,6 +759,13 @@ declare module '@sveltejs/kit' {
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
+		status: number;
+		message: string;
+	}) => MaybePromise<void | App.Error>;
+
+	export type HandleServiceWorkerError = (input: {
+		error: unknown;
+		event: SWRequestEvent;
 		status: number;
 		message: string;
 	}) => MaybePromise<void | App.Error>;
@@ -1927,6 +1939,76 @@ declare module '@sveltejs/kit' {
 		leaf: [has_server_load: boolean, node_id: number];
 	}
 
+	interface SWRequestEvent<
+		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		RouteId extends string | null = string | null
+	> {
+		/**
+		 * Get or set cookies related to the current request
+		 */
+		cookies: Cookies;
+		/**
+		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
+		 *
+		 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
+		 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
+		 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
+		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
+		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
+		 *
+		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
+		 */
+		fetch: typeof fetch;
+		/**
+		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+		 */
+		params: Params;
+		/**
+		 * The original request object.
+		 */
+		request: Request;
+		/**
+		 * Info about the current route.
+		 */
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: RouteId;
+		};
+		/**
+		 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
+		 *
+		 *	```js
+		 *	/// file: src/routes/blog/+page.js
+		 *	export async function load({ fetch, setHeaders }) {
+		 *		const url = `https://cms.example.com/articles.json`;
+		 *		const response = await fetch(url);
+		 *
+		 *		setHeaders({
+		 *			age: response.headers.get('age'),
+		 *			'cache-control': response.headers.get('cache-control')
+		 *		});
+		 *
+		 *		return response.json();
+		 *	}
+		 *	```
+		 *
+		 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
+		 *
+		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
+		 */
+		setHeaders: (headers: Record<string, string>) => void;
+		/**
+		 * The requested URL.
+		 */
+		url: URL;
+		/**
+		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
+		 */
+		isSubRequest: boolean;
+	}
+
 	type ValidatedConfig = Config & {
 		kit: ValidatedKitConfig;
 		extensions: string[];
@@ -2402,7 +2484,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { Cookies } from '@sveltejs/kit';
+	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2422,76 +2504,7 @@ declare module '$app/server' {
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
 	 */
-	export function getRequestEvent(): SWRequestEvent<Partial<Record<string, string>>, string | null>;
-	interface SWRequestEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
-	> {
-		/**
-		 * Get or set cookies related to the current request
-		 */
-		cookies: Cookies;
-		/**
-		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
-		 *
-		 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
-		 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
-		 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
-		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
-		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
-		 */
-		fetch: typeof fetch;
-		/**
-		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-		 */
-		params: Params;
-		/**
-		 * The original request object.
-		 */
-		request: Request;
-		/**
-		 * Info about the current route.
-		 */
-		route: {
-			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-			 */
-			id: RouteId;
-		};
-		/**
-		 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
-		 *
-		 *	```js
-		 *	/// file: src/routes/blog/+page.js
-		 *	export async function load({ fetch, setHeaders }) {
-		 *		const url = `https://cms.example.com/articles.json`;
-		 *		const response = await fetch(url);
-		 *
-		 *		setHeaders({
-		 *			age: response.headers.get('age'),
-		 *			'cache-control': response.headers.get('cache-control')
-		 *		});
-		 *
-		 *		return response.json();
-		 *	}
-		 *	```
-		 *
-		 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
-		 *
-		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
-		 */
-		setHeaders: (headers: Record<string, string>) => void;
-		/**
-		 * The requested URL.
-		 */
-		url: URL;
-		/**
-		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
-		 */
-		isSubRequest: boolean;
-	}
+	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 
 	export {};
 }

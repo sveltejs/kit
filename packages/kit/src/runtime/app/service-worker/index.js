@@ -1,18 +1,7 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { SWRequestEvent } from "types" */
 
-/** @type { RequestEvent | null} */
+/** @type { SWRequestEvent | null} */
 let request_event = null;
-
-/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null>} */
-let als;
-
-import('node:async_hooks')
-	.then((hooks) => (als = new hooks.AsyncLocalStorage()))
-	.catch(() => {
-		// can't use AsyncLocalStorage, but can still call getRequestEvent synchronously.
-		// this isn't behind `supports` because it's basically just StackBlitz (i.e.
-		// in-browser usage) that doesn't support it AFAICT
-	});
 
 /**
  * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
@@ -21,16 +10,14 @@ import('node:async_hooks')
  * @since 2.20.0
  */
 export function getRequestEvent() {
-	const event = request_event ?? als?.getStore();
+	const event = request_event;
 
 	if (!event) {
 		let message =
 			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.';
 
-		if (!als) {
-			message +=
-				' In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.';
-		}
+		message +=
+			' In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.';
 
 		throw new Error(message);
 	}
@@ -40,13 +27,13 @@ export function getRequestEvent() {
 
 /**
  * @template T
- * @param {RequestEvent | null} event
+ * @param {SWRequestEvent | null} event
  * @param {() => T} fn
  */
 export function with_event(event, fn) {
 	try {
 		request_event = event;
-		return als ? als.run(event, fn) : fn();
+		return fn();
 	} finally {
 		request_event = null;
 	}

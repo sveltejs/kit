@@ -3,7 +3,7 @@ import { set_private_env, set_public_env, set_safe_public_env } from '../shared-
 import { options, get_hooks } from '__SERVICE_WORKER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/service-worker';
+import { set_manifest } from '__sveltekit/service-worker';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -27,10 +27,9 @@ export class Server {
 	/**
 	 * @param {{
 	 *   env: Record<string, string>;
-	 *   read?: (file: string) => ReadableStream;
 	 * }} opts
 	 */
-	async init({ env, read }) {
+	async init({ env }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -48,10 +47,6 @@ export class Server {
 		set_public_env(public_env);
 		set_safe_public_env(public_env);
 
-		if (read) {
-			set_read_implementation(read);
-		}
-
 		// During DEV and for some adapters this function might be called in quick succession,
 		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
 		await (init_promise ??= (async () => {
@@ -59,18 +54,20 @@ export class Server {
 				const module = await get_hooks();
 
 				this.#options.hooks = {
+					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
+					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
 				};
-
-				if (module.init) {
-					await module.init();
-				}
 			} catch (error) {
 				if (DEV) {
 					this.#options.hooks = {
+						handle: () => {
+							throw error;
+						},
 						handleError: ({ error }) => console.error(error),
+						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: () => {},
 						transport: {}
 					};

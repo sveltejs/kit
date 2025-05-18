@@ -34,7 +34,7 @@ export async function render_data(event, route, options, invalidated_data_nodes,
 		const url = new URL(event.url);
 		url.pathname = normalize_path(url.pathname, trailing_slash);
 
-		const functions = node_ids.map((n, i) => {
+		const functions = node_ids.map(() => {
 			return once(() => {
 				try {
 					if (aborted) {
@@ -51,6 +51,7 @@ export async function render_data(event, route, options, invalidated_data_nodes,
 			});
 		});
 
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const promises = functions.map(async (fn, i) => {
 			if (!invalidated[i]) {
 				return /** @type {import('types').ServerDataSkippedNode} */ ({

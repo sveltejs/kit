@@ -1,7 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
-import { read_implementation } from '__sveltekit/service-worker';
 import { has_prerendered_path } from './utils.js';
 
 /**
@@ -81,28 +80,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 			manifest.assets.has(filename_html) || filename_html in manifest.server_assets;
 
 		if (is_asset || is_asset_html) {
-			const file = is_asset ? filename : filename_html;
-
-			if (state.read) {
-				const type = is_asset
-					? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
-					: 'text/html';
-
-				return new Response(state.read(file), {
-					headers: type ? { 'content-type': type } : {}
-				});
-			} else if (read_implementation && file in manifest.server_assets) {
-				const length = manifest.server_assets[file];
-				const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
-
-				return new Response(read_implementation(file), {
-					headers: {
-						'Content-Length': '' + length,
-						'Content-Type': type
-					}
-				});
-			}
-
 			return await fetch(request);
 		}
 
