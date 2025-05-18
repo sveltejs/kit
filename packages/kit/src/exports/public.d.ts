@@ -480,6 +480,12 @@ export interface KitConfig {
 	 */
 	moduleExtensions?: string[];
 	/**
+	 * An array of file extensions that SvelteKit will treat as test files and will ignore.
+	 *
+	 * @default [".test.js", ".test.ts", ".spec.js", ".spec.ts", ".stories.svelte"]
+	 */
+	testExtensions?: string[];
+	/**
 	 * The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
 	 * @default ".svelte-kit"
 	 */
