@@ -108,9 +108,9 @@ Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/ge
 
 If you're using the [Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/), your build settings should look like this:
 
-- **Framework preset** – SvelteKit
-- **Build command** – `npm run build` or `vite build`
-- **Build output directory** – `.svelte-kit/cloudflare`
+- Framework preset – SvelteKit
+- Build command – `npm run build` or `vite build`
+- Build output directory – `.svelte-kit/cloudflare`
 
 ### Further reading
 
@@ -157,7 +157,7 @@ export {};
 
 Cloudflare specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
 ## Headers and redirects
 
