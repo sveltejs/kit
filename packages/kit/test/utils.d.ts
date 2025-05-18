@@ -16,6 +16,7 @@ export const test: TestType<
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
+				invalidateAll(): Promise<void>;
 				beforeNavigate(url: URL): void | boolean;
 				afterNavigate(url: URL): void;
 				preloadCode(pathname: string): Promise<void>;
