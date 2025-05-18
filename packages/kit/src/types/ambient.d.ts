@@ -79,7 +79,7 @@ declare module '$service-worker' {
 	 */
 	export const version: string;
 	/**
-	 *
+	 * This function can be used to respond to a `FetchEvent` using SvelteKit.  
 	 */
 	export const respond: (event: Request) => Promise<Response>;
 }

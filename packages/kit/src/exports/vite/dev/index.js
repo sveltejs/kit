@@ -387,12 +387,6 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	vite.watcher.on('all', (_, file) => {
-		if (file === appTemplate || file === errorTemplate || file.startsWith(hooks.server)) {
-			sync.service_worker(svelte_config);
-		}
-	});
-
 	// changing the svelte config requires restarting the dev server
 	// the config is only read on start and passed on to vite-plugin-svelte
 	// which needs up-to-date values to operate correctly

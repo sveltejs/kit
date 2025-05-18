@@ -3,7 +3,7 @@ import path, { basename, } from 'node:path';
 import process from 'node:process';
 import * as vite from 'vite';
 import { create_static_module } from '../../../core/env.js';
-import { generate_manifest } from '../../../core/generate_manifest/index.js';
+import {  generate_service_worker_manifest } from '../../../core/generate_manifest/index.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { s } from '../../../utils/misc.js';
@@ -80,17 +80,15 @@ export async function build_service_worker(
 	const route_data = build_data.manifest_data.routes.filter((route) => route.page);
 	
 	writeFileSync(
-		`${kit.outDir}/output/service-worker/index.js`,
+		`${out}/service-worker/index.js`,
 		dedent`
-		const manifest = ${generate_manifest({
+		const manifest = ${generate_service_worker_manifest({
 				build_data,
 				prerendered: prerendered.paths,
-				relative_path: path.posix.relative(`${kit.outDir}/output/service-worker`, `${kit.outDir}/output/service-worker`),
+				relative_path: path.posix.relative(`${out}/service-worker`, `${out}/service-worker`),
 				routes:  route_data.filter((route) => prerender_map.get(route.id) !== true)
 		})};
 			
-		const prerendered = new Set(${JSON.stringify(prerendered.paths)});
-
 		export const base = /*@__PURE__*/ ${base};
 
 		export const build = [
@@ -143,7 +141,7 @@ export async function build_service_worker(
 		publicDir: false,
 		plugins: [sw_virtual_modules],
 		resolve: {
-			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: path.relative(service_worker_entry_file, `${out}/service-worker/service-worker.js`) }]
+			alias: [...get_config_aliases(kit), { find: "$service-worker", replacement: `${out}/service-worker/index.js` }]
 		},
 		experimental: {
 			renderBuiltUrl(filename) {
