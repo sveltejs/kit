@@ -5,17 +5,17 @@ import * as devalue from 'devalue';
 import { HttpError } from '../../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../../shared.js';
 import { add_data_suffix } from '../../pathname.js';
-import { options } from '__SERVICE_WORKER__/internal.js';
 
 /**
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').SWRequestEvent;
+ *   options: import('types').SWROptions;
  *   node: import('types').SWRNode | undefined;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, node }) {
+export async function load_server_data({ event, options, node }) {
 	if (!node?.server) return null;
 
 	const uses = {

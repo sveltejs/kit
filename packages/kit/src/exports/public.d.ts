@@ -425,6 +425,11 @@ export interface KitConfig {
 			 */
 			client?: string;
 			/**
+			 * The location of the your service worker [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @default "src/hooks.worker"
+			 */
+			serviceWorker?: string;
+			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
 			 * @default "src/hooks.server"
 			 */

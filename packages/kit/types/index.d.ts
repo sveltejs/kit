@@ -407,15 +407,15 @@ declare module '@sveltejs/kit' {
 				 */
 				client?: string;
 				/**
+				 * The location of the your service worker [hooks](https://svelte.dev/docs/kit/hooks).
+				 * @default "src/hooks.worker"
+				 */
+				serviceWorker?: string;
+				/**
 				 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
 				 * @default "src/hooks.server"
 				 */
 				server?: string;
-				/**
-				 * The location of your service worker [hooks](https://svelte.dev/docs/kit/hooks).
-				 * @default "src/hooks.worker"
-				 */
-				serviceWorker?: string;
 				/**
 				 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
 				 * @default "src/hooks"
