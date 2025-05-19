@@ -38,5 +38,11 @@ export const adapters = [
 		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
 		version: '5'
+	},
+	{
+		name: 'Deno Deploy',
+		test: () => !!process.env.DENO_DEPLOY,
+		module: '@deno/svelte-adapter',
+		version: '0.1'
 	}
 ];
