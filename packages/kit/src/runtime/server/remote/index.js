@@ -50,7 +50,10 @@ export async function handle_remote_call(event, options, manifest, id) {
 			info.type === 'prerender'
 				? prerender_args
 				: info.type === 'query' || info.type === 'cache'
-					? /** @type {string} */ (event.url.searchParams.get('args'))
+					? /** @type {string} */ (
+							// new URL(...) necessary because we're hiding the URL from the user in the event object
+							new URL(event.request.url).searchParams.get('args')
+						)
 					: await event.request.text();
 		const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
 		const args = stringified_args

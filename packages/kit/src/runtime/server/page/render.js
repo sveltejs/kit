@@ -198,7 +198,7 @@ export async function render_response({
 			}
 		} else {
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				paths.reset();
 			}

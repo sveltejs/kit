@@ -1534,18 +1534,20 @@ declare module '@sveltejs/kit' {
 		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 		onsubmit: (event: SubmitEvent) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+		enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
 			method: 'POST';
 			action: string;
 			onsubmit: (event: SubmitEvent) => void;
 		};
+		/** The result of the form submission */
+		get result(): T | undefined;
 		/** Spread this onto a button or input of type submit */
 		formAction: {
 			type: 'submit';
 			formaction: string;
 			onclick: (event: Event) => void;
 			/** Use the `enhance` method to influence what happens when the form is submitted. */
-			enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+			enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
 				type: 'submit';
 				formaction: string;
 				onclick: (event: Event) => void;
@@ -2548,7 +2550,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T extends (formData: FormData) => any>(fn: T): RemoteFormAction<T>;
+	export function form<T>(fn: (formData: FormData) => T): RemoteFormAction<T>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2599,7 +2601,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<T extends (...args: any[]) => any>(fn: T): T;
+	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>>;
 	/**
 	 * Creates a pererendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2636,7 +2638,9 @@ declare module '$app/server' {
 	 * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
 	 *
 	 * */
-	export function cache<Input extends any[], Output>(fn: (...args: Input) => Output, config: Record<string, any>): RemoteQuery<Input, Output>;
+	export function cache<Input extends any[], Output>(fn: (...args: Input) => Output, config: {
+		expiration: number;
+	} & Record<string, any>): RemoteQuery<Input, Output>;
 	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
 		Array<Input>
 	>;

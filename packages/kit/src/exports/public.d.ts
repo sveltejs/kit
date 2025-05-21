@@ -1552,18 +1552,20 @@ export type RemoteFormAction<T> = ((form: FormData) => Promise<T>) & {
 	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 	onsubmit: (event: SubmitEvent) => void;
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
-	enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+	enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
 		method: 'POST';
 		action: string;
 		onsubmit: (event: SubmitEvent) => void;
 	};
+	/** The result of the form submission */
+	get result(): T | undefined;
 	/** Spread this onto a button or input of type submit */
 	formAction: {
 		type: 'submit';
 		formaction: string;
 		onclick: (event: Event) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance: (callback: (opts: { submit: () => Promise<T> }) => void) => {
+		enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
 			type: 'submit';
 			formaction: string;
 			onclick: (event: Event) => void;

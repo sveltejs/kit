@@ -21,7 +21,7 @@ export const queryMap = new Map();
 const resultMap = new Map();
 const overrideMap = new Map();
 
-let pending_fresh = false;
+let pending_refresh = false;
 
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
@@ -57,22 +57,33 @@ function remote_request(id, prerender) {
 				tracking = false;
 				// TODO this needs a counter of subscriptions to only delete when the last one is gone
 				// reuse our subscribe function for this? (could be hard to do because if we do `import * as svelte from 'svelte'` we can't treeshake unused methods)
-				overrideMap.delete(cache_key);
+				return () => overrideMap.delete(cache_key);
 			});
 		}
 
 		if (!resultMap.has(cache_key)) {
-			// TODO all a bit brittle, cleanup once we're sure we want this
-			setTimeout(() => resultMap.delete(cache_key), 500);
 			const response = (async () => {
 				if (!started) {
 					const result = remote_responses[cache_key];
-					if (result) return result;
+					if (result) {
+						if (tracking) {
+							// TODO this is a bit of a hack, but we need to make sure that the result is not cached
+							// if the user is tracking it. This is because we don't know when the user will stop tracking
+							// so we need to make sure that the result is not cached until then.
+							overrideMap.set(cache_key, result);
+						}
+						return result;
+					}
 				}
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
 				const response = await fetch(url);
 				const result = await response.text();
+
+				// TODO all a bit brittle, cleanup once we're sure we want this
+				// The idea is to cache the result for a short time so that you could for example prefetch it higher up the tree
+				// and reuse it in downstream components without it fetching it again
+				setTimeout(() => resultMap.delete(cache_key), 300);
 
 				if (!response.ok) {
 					// TODO should this go through `handleError`?
@@ -107,8 +118,8 @@ function remote_request(id, prerender) {
 	// 	return `${fn.key}|${args_as_string(...args)}`;
 	// };
 	fn.refresh = () => {
-		pending_fresh = true;
-		queueMicrotask(() => (pending_fresh = false)); // TODO does that work? could it falsify a new true?
+		pending_refresh = true;
+		queueMicrotask(() => (pending_refresh = false)); // TODO does that work? could it falsify a new true?
 		queryMap.get(id)();
 	};
 
@@ -120,7 +131,10 @@ function remote_request(id, prerender) {
 			resultMap.set(cache_key, update(overrideMap.get(cache_key)));
 			version++;
 			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
-			setTimeout(() => resultMap.delete(cache_key), 500);
+			// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)
+			// We could also declare that overrides are valid for given args until you call refresh, but might be confusing
+			// So far this seems to be the best solution:
+			queueMicrotask(() => queueMicrotask(() => resultMap.delete(cache_key)));
 		}
 	};
 
@@ -179,7 +193,7 @@ export function command(id) {
 			queueMicrotask(() => {
 				// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
 				// If that doesn't happen within a microtask we assume they want to invalidate everything.
-				if (pending_invalidate || pending_fresh) return;
+				if (pending_invalidate || pending_refresh) return;
 				invalidateAll();
 			});
 		});
@@ -286,8 +300,11 @@ export function form(id) {
 
 			event.preventDefault();
 
+			const formData = create_form_data(form_element, event.submitter);
+
 			callback({
-				submit: () => submit(create_form_data(form_element, event.submitter))
+				formData,
+				submit: () => submit(formData)
 			});
 		};
 	};
@@ -308,8 +325,11 @@ export function form(id) {
 			event.stopPropagation();
 			event.preventDefault();
 
+			const formData = create_form_data(form_element, target);
+
 			callback({
-				submit: () => submit(create_form_data(form_element, target))
+				formData,
+				submit: () => submit(formData)
 			});
 		};
 	};

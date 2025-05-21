@@ -34,8 +34,8 @@ import { app_dir, base } from '__sveltekit/paths';
  * </form>
  * ```
  *
- * @template {(formData: FormData) => any} T
- * @param {T} fn
+ * @template T
+ * @param {(formData: FormData) => T} fn
  * @returns {RemoteFormAction<T>}
  */
 export function form(fn) {
@@ -107,7 +107,7 @@ export function form(fn) {
 		get() {
 			try {
 				const event = getRequestEvent();
-				return get_remote_info(event).results[wrapper.action] ?? null;
+				return get_remote_info(event).results[create_remote_cache_key(wrapper.action, '')] ?? null;
 			} catch (e) {
 				return null;
 			}
@@ -223,25 +223,31 @@ function parse_remote_response(data, transport) {
  * <button onclick={() => like(post.id)}>♡</button>
  * ```
  *
- * @template {(...args: any[]) => any} T
- * @param {T} fn
- * @returns {T}
+ * @template {any[]} Input
+ * @template Output
+ * @param {(...args: Input) => Output} fn
+ * @returns {(...args: Input) => Promise<Awaited<Output>>}
  */
 export function command(fn) {
-	if (prerendering) {
-		// @ts-expect-error TS complains about this returning `never`
-		fn = () => {
+	/**
+	 * @param {Input} args
+	 * @returns {Promise<Awaited<Output>>}
+	 */
+	const wrapper = async (...args) => {
+		if (prerendering) {
 			throw new Error(
 				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
 			);
-		};
-	}
+		}
 
-	/** @type {any} */ (fn).__ = /** @type {RemoteInfo} */ ({
+		return /** @type {Awaited<Output>} */ (fn(...args));
+	};
+
+	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({
 		type: 'command'
 	});
 
-	return fn;
+	return wrapper;
 }
 
 /**
@@ -339,7 +345,7 @@ export function prerender(fn, { entries } = {}) {
  * @template {any[]} Input
  * @template Output
  * @param {(...args: Input) => Output} fn
- * @param {Record<string, any>} config
+ * @param {{expiration: number } & Record<string, any>} config
  * @returns {RemoteQuery<Input, Output>}
  */
 export function cache(fn, config) {
