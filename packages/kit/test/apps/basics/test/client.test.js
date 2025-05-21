@@ -1582,3 +1582,123 @@ test.describe('binding_property_non_reactive warn', () => {
 		expect(is_warning_thrown).toBeFalsy();
 	});
 });
+
+test.describe('remote functions', () => {
+	test('hydrated data is reused; override and refresh update and reset the value', async ({
+		page
+	}) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		// only the calls in the template are done, not the one in the load function
+		expect(request_count).toBe(2);
+
+		// override the value
+		await page.click('#override-btn');
+		await expect(page.locator('#sum-result')).toHaveText('99');
+		expect(request_count).toBe(2);
+
+		// refresh should reset to original value
+		await page.click('#refresh-btn');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		expect(request_count).toBe(3);
+	});
+
+	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		await page.waitForTimeout(300); // there's some query caching which could mess with the test
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-btn');
+		await expect(page.locator('#multiply-result')).toHaveText('2');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(3); // 1 for the command, 2 for the refresh
+	});
+
+	test('command returns correct sum and refreshes only specific data if refresh called afterwards', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		await page.waitForTimeout(300); // there's some query caching which could mess with the test
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-refresh-btn');
+		await expect(page.locator('#multiply-result')).toHaveText('2');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(2); // 1 for the command, 1 for the refresh
+	});
+
+	test('form.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-n-enhance', '6');
+		await page.click('#submit-btn-enhance-one');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-1')).not.toHaveText('7');
+
+		await page.fill('#input-n-enhance', '4');
+		await page.click('#submit-btn-enhance-one');
+		await expect(page.locator('#form-result-1')).toHaveText('5');
+	});
+
+	test('form.formAction.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-n-enhance', '6');
+		await page.click('#submit-btn-enhance-two');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-2')).not.toHaveText('8');
+
+		await page.fill('#input-n-enhance', '4');
+		await page.click('#submit-btn-enhance-two');
+		await expect(page.locator('#form-result-2')).toHaveText('6');
+	});
+
+	test('prerendered entries not called in prod', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+		await page.goto('/remote/prerender');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
+
+		await page.click('#fetch-prerendered');
+		await page.waitForTimeout(100); // allow fetch to happen
+		if (process.env.DEV) {
+			expect(request_count).toBe(1);
+		} else {
+			expect(request_count).toBe(0);
+		}
+
+		await page.click('#fetch-not-prerendered');
+		await page.waitForTimeout(100); // allow fetch to happen
+		if (process.env.DEV) {
+			expect(request_count).toBe(2);
+		} else {
+			expect(request_count).toBe(1);
+		}
+	});
+
+	// test('add_one does not call function at runtime for prerendered entry in production', async ({
+	// 	page
+	// }) => {
+	// 	await page.goto('/remote/prerender_test');
+	// 	await page.click('#add-one-42-btn');
+	// 	await page.waitForSelector('#result-42, #error-message');
+	// 	const error_message = await page.textContent('#error-message');
+	// 	// In dev or build, this should not error. In production, should not call function at runtime.
+	// 	// We check that there is no error message in dev, but in production, the error message should be set.
+	// 	// This test will pass in both environments, but you may want to assert differently in CI.
+	// 	// For now, just check that either result_42 is '43' or error_message is set.
+	// 	const result_42 = await page.textContent('#result-42');
+	// 	if (error_message && error_message.includes('prerendered function should not be called')) {
+	// 		expect(error_message).toContain('prerendered function should not be called');
+	// 	} else {
+	// 		expect(result_42).toBe('43');
+	// 	}
+	// });
+});

@@ -1546,3 +1546,27 @@ test.describe('getRequestEvent', () => {
 		expect(await page.textContent('h1')).toBe('from form: hello');
 	});
 });
+
+test.describe('remote functions', () => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#sum-result')).toHaveText('5');
+		}
+	});
+
+	test('form works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-n', '10');
+		await page.click('#submit-btn-one');
+		await expect(page.locator('#form-result-1')).toHaveText('11');
+	});
+
+	test('form.formAction works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-n', '10');
+		await page.click('#submit-btn-two');
+		await expect(page.locator('#form-result-2')).toHaveText('12');
+	});
+});
