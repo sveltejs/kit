@@ -282,18 +282,33 @@ export function prerender(fn, { entries } = {}) {
 	const wrapper = async (...args) => {
 		const event = getRequestEvent();
 		const info = get_remote_info(event);
-		const url =
-			info.prerendering &&
-			`${base}/${app_dir}/remote/${wrapper.__.id}/${stringify_remote_args(args, info.transport)}`;
+		const url = `${base}/${app_dir}/remote/${wrapper.__.id}/${stringify_remote_args(args, info.transport)}`;
+
+		if (!info.prerendering && !DEV && !event.isRemoteRequest) {
+			try {
+				// We do a fetch request to ourselves which will return the prerendered response.
+				// TODO make use of $app/server#read somehow?
+				const response = await fetch(event.url.origin + url);
+				if (response.ok) {
+					const prerendered = await response.text();
+					// TODO brings back stringified which we need to decode but thats stupid because we encode and stringify right away again
+					const result = parse_remote_response(prerendered, info.transport);
+					uneval_remote_response(wrapper.__.id, args, result, event);
+					return result;
+				}
+			} catch (e) {
+				// not available prerendered, fallback to normal function
+			}
+		}
 
 		// Deduplicate function calls
-		if (url && info.prerendering?.remote_responses.has(url)) {
+		if (info.prerendering?.remote_responses.has(url)) {
 			return info.prerendering.remote_responses.get(url);
 		}
 
 		const maybe_promise = fn(...args);
 
-		if (url && info.prerendering) {
+		if (info.prerendering) {
 			info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
 		}
 
@@ -301,7 +316,7 @@ export function prerender(fn, { entries } = {}) {
 
 		uneval_remote_response(wrapper.__.id, args, result, event);
 
-		if (url && info.prerendering) {
+		if (info.prerendering) {
 			const body = stringify(result, info.transport);
 			info.prerendering.dependencies.set(url, {
 				body,

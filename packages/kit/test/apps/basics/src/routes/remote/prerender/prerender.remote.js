@@ -11,7 +11,8 @@ export const prerendered = prerender(() => {
 
 export const prerendered_entries = prerender(
 	(x) => {
-		if (!building && !dev && !['a', 'b', 'c'].includes(x)) {
+		// a,b directly through entries below, c indirectly through prerendering a page
+		if (!building && !dev && ['a', 'b', 'c'].includes(x)) {
 			throw new Error(
 				'prerender should not be called at runtime in production with parameter ' + x
 			);

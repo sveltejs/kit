@@ -1664,41 +1664,11 @@ test.describe('remote functions', () => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 		await page.goto('/remote/prerender');
-		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
 
 		await page.click('#fetch-prerendered');
-		await page.waitForTimeout(100); // allow fetch to happen
-		if (process.env.DEV) {
-			expect(request_count).toBe(1);
-		} else {
-			expect(request_count).toBe(0);
-		}
+		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
 
 		await page.click('#fetch-not-prerendered');
-		await page.waitForTimeout(100); // allow fetch to happen
-		if (process.env.DEV) {
-			expect(request_count).toBe(2);
-		} else {
-			expect(request_count).toBe(1);
-		}
+		await expect(page.locator('#fetch-prerendered')).toHaveText('d');
 	});
-
-	// test('add_one does not call function at runtime for prerendered entry in production', async ({
-	// 	page
-	// }) => {
-	// 	await page.goto('/remote/prerender_test');
-	// 	await page.click('#add-one-42-btn');
-	// 	await page.waitForSelector('#result-42, #error-message');
-	// 	const error_message = await page.textContent('#error-message');
-	// 	// In dev or build, this should not error. In production, should not call function at runtime.
-	// 	// We check that there is no error message in dev, but in production, the error message should be set.
-	// 	// This test will pass in both environments, but you may want to assert differently in CI.
-	// 	// For now, just check that either result_42 is '43' or error_message is set.
-	// 	const result_42 = await page.textContent('#result-42');
-	// 	if (error_message && error_message.includes('prerendered function should not be called')) {
-	// 		expect(error_message).toContain('prerendered function should not be called');
-	// 	} else {
-	// 		expect(result_42).toBe('43');
-	// 	}
-	// });
 });

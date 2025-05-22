@@ -1,6 +1,4 @@
-import { prerendered, prerendered_entries } from './prerender.remote';
-
-export const prerender = true;
+import { prerendered, prerendered_entries } from '../prerender.remote';
 
 export async function load() {
 	const [r1, r2, r3] = await Promise.all([

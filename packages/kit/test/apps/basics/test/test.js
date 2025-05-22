@@ -1569,4 +1569,14 @@ test.describe('remote functions', () => {
 		await page.click('#submit-btn-two');
 		await expect(page.locator('#form-result-2')).toHaveText('12');
 	});
+
+	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/whole-page"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
+
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/functions-only"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
+	});
 });
