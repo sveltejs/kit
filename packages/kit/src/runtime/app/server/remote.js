@@ -282,7 +282,8 @@ export function prerender(fn, { entries } = {}) {
 	const wrapper = async (...args) => {
 		const event = getRequestEvent();
 		const info = get_remote_info(event);
-		const url = `${base}/${app_dir}/remote/${wrapper.__.id}/${stringify_remote_args(args, info.transport)}`;
+		const stringified_args = stringify_remote_args(args, info.transport);
+		const url = `${base}/${app_dir}/remote/${wrapper.__.id}/${stringified_args}`;
 
 		if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 			try {
@@ -291,10 +292,8 @@ export function prerender(fn, { entries } = {}) {
 				const response = await fetch(event.url.origin + url);
 				if (response.ok) {
 					const prerendered = await response.text();
-					// TODO brings back stringified which we need to decode but thats stupid because we encode and stringify right away again
-					const result = parse_remote_response(prerendered, info.transport);
-					uneval_remote_response(wrapper.__.id, args, result, event);
-					return result;
+					info.results[create_remote_cache_key(wrapper.__.id, stringified_args)] = prerendered;
+					return parse_remote_response(prerendered, info.transport);
 				}
 			} catch (e) {
 				// not available prerendered, fallback to normal function
@@ -378,27 +377,20 @@ export function cache(fn, config) {
 		const event = getRequestEvent();
 		const info = get_remote_info(event);
 		const stringified_args = stringify_remote_args(args, info.transport);
+		const cached = await wrapper.cache.get(stringified_args);
 
-		let is_cached = false;
-		/** @type {any} */
-		let result = await wrapper.cache.get(stringified_args);
-
-		if (typeof result === 'string') {
-			is_cached = true;
-			// TODO brings back stringified which we need to decode but thats stupid because we encode and stringify right away again
-			result = parse_remote_response(wrapper.cache.get(stringified_args), info.transport);
+		if (typeof cached === 'string') {
+			if (!event.isRemoteRequest) {
+				info.results[stringified_args] = cached;
+			}
+			// TODO in case of a remote request we will stringify the result again right aftewards - save the work somehow?
+			return parse_remote_response(cached, info.transport);
 		} else {
-			result = await fn(...args);
+			const result = await fn(...args);
+			uneval_remote_response(wrapper.__.id, args, result, event);
+			await wrapper.cache.set(stringified_args, stringify(result, info.transport));
+			return result;
 		}
-
-		uneval_remote_response(wrapper.__.id, args, result, event);
-
-		if (!is_cached) {
-			const body = stringify(result, info.transport);
-			await wrapper.cache.set(stringified_args, body);
-		}
-
-		return result;
 	};
 
 	/** @type {{ get(input: string): MaybePromise<any>; set(input:string, output: string): MaybePromise<void>; delete(input:string): MaybePromise<void> }} */
