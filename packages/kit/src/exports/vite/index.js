@@ -488,7 +488,7 @@ Tips:
 
 					return dedent`
 						export let base = ${s(base)};
-						export let assets = ${relative ? '.' : ''} + ${assets ? s(assets) : 'base'};
+						export let assets = ${relative ? "'.' + " : ''}${assets ? s(assets) : 'base'};
 						export const app_dir = ${s(kit.appDir)};
 
 						export const relative = ${relative};
