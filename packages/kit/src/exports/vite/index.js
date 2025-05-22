@@ -473,7 +473,7 @@ Tips:
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
 				case sveltekit_paths: {
-					const { assets, base } = svelte_config.kit.paths;
+					const { assets, base, relative } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
 					// for the sake of things like Vitest which may import this module
@@ -488,10 +488,10 @@ Tips:
 
 					return dedent`
 						export let base = ${s(base)};
-						export let assets = ${assets ? s(assets) : 'base'};
+						export let assets = ${relative ? '.' : ''} + ${assets ? s(assets) : 'base'};
 						export const app_dir = ${s(kit.appDir)};
 
-						export const relative = ${svelte_config.kit.paths.relative};
+						export const relative = ${relative};
 
 						const initial = { base, assets };
 
