@@ -7,6 +7,7 @@ declare global {
 
 interface AdapterOptions {
 	out?: string;
+	externalDependencies?: string[] | 'auto';
 	precompress?: boolean;
 	envPrefix?: string;
 }
