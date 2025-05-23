@@ -2,13 +2,12 @@
 /** @import { PrerenderOptions, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
 import { text } from '../../exports/index.js';
-import * as devalue from 'devalue';
 import { app_dir, base } from '__sveltekit/paths';
 import { error } from 'console';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { SvelteKitError } from '../control.js';
-import { stringify } from '../shared.js';
+import { parse_remote_args, stringify } from '../shared.js';
 
 /**
  * @param {RequestEvent} event
@@ -55,15 +54,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 							new URL(event.request.url).searchParams.get('args')
 						)
 					: await event.request.text();
-		const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
-		const args = stringified_args
-			? devalue.parse(
-					// We don't need to add back the `=`-padding because atob can handle it
-					atob(stringified_args.replace(/-/g, '+').replace(/_/g, '/')),
-					decoders
-				)
-			: [];
-		const data = await with_event(event, () => func.apply(null, args));
+		const data = await with_event(event, () =>
+			func.apply(null, parse_remote_args(stringified_args, transport))
+		);
 
 		return text(stringify(data, transport));
 	}

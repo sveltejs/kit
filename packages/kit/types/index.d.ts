@@ -1585,13 +1585,15 @@ declare module '@sveltejs/kit' {
 		refresh: () => void;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
-		 * The first argument is are the input arguments for the query value that should be overridden.
-		 * The second argument is a function which will be called with the current value of the query,
-		 * and its return value will be used as the new value.
+		 * `override` expects a callback function which is potentially called multiple times.
+		 * It will be called one time for each variant of the query that is currently active,
+		 * each with its output as the first argument and the input arguments of the query value as the following arguments.
+		 * For example, if you did call `getTodo(1)` and `getTodo(2)`, the callback would be called twice,
+		 * once with the output of `getTodo(1)` and the number `1`, and once with the output of `getTodo(2)` and the number `2`.
 		 *
 		 * Can only be called on the client
 		 */
-		override: (args: Input, update: (input: Output) => Output) => void;
+		override: (update: (current: Output, ...input: Input) => Output) => void;
 	};
 	interface AdapterEntry {
 		/**

@@ -1617,7 +1617,7 @@ test.describe('remote functions', () => {
 		await page.click('#multiply-btn');
 		await expect(page.locator('#multiply-result')).toHaveText('2');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(3); // 1 for the command, 2 for the refresh
+		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
 	});
 
 	test('command returns correct sum and refreshes only specific data if refresh called afterwards', async ({
@@ -1669,7 +1669,7 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
 
 		await page.click('#fetch-not-prerendered');
-		await expect(page.locator('#fetch-prerendered')).toHaveText('d');
+		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
 	});
 
 	test('refreshAll reloads remote functions and load functions', async ({ page }) => {

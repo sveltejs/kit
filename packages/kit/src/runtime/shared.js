@@ -1,6 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 
-import { stringify as _stringify } from 'devalue';
+import { stringify as _stringify, parse } from 'devalue';
 
 /**
  * @param {string} route_id
@@ -42,6 +42,23 @@ export function stringify_remote_args(args, transport) {
 	if (args.length === 0) return '';
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
 	return btoa(stringify(args, transport)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+/**
+ * Parses the arguments for a remote function
+ * @param {string} stringified_args
+ * @param {Transport} transport
+ */
+export function parse_remote_args(stringified_args, transport) {
+	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
+
+	return stringified_args
+		? parse(
+				// We don't need to add back the `=`-padding because atob can handle it
+				atob(stringified_args.replace(/-/g, '+').replace(/_/g, '/')),
+				decoders
+			)
+		: [];
 }
 
 /**

@@ -4,7 +4,7 @@ import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, invalidateAll, remote_responses, pending_invalidate, started } from './client.js';
-import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
+import { create_remote_cache_key, parse_remote_args, stringify_remote_args } from '../shared.js';
 
 /**
  * Contains a map of query functions that currently exist in the app.
@@ -119,18 +119,27 @@ function remote_request(id, prerender) {
 	};
 
 	/** @type {RemoteQuery<any, any>['override']} */
-	fn.override = (args, update) => {
-		const stringified_args = stringify_remote_args(args, app.hooks.transport);
-		const cache_key = create_remote_cache_key(id, stringified_args);
-		if (overrideMap.has(cache_key)) {
-			resultMap.set(cache_key, Promise.resolve(update(overrideMap.get(cache_key))));
-			version++;
-			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
-			// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)
-			// We could also declare that overrides are valid for given args until you call refresh, but might be confusing
-			// Once we depend on Svelte 5 we could use `await settled()` to wait for Svelte to finish rerendering?
-			// So far this seems to be the best solution:
-			queueMicrotask(() => queueMicrotask(() => resultMap.delete(cache_key)));
+	fn.override = (update) => {
+		const prefix = `${id}|`;
+		let refetched = false;
+
+		for (const [key, value] of overrideMap) {
+			if (key.startsWith(prefix)) {
+				const stringified_args = key.slice(prefix.length);
+				const result = update(value, ...parse_remote_args(stringified_args, app.hooks.transport));
+				resultMap.set(key, Promise.resolve(result));
+
+				if (!refetched) {
+					refetched = true;
+					version++;
+					// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
+					// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)
+					// We could also declare that overrides are valid for given args until you call refresh, but might be confusing
+					// Once we depend on Svelte 5 we could use `await settled()` to wait for Svelte to finish rerendering?
+					// So far this seems to be the best solution:
+					queueMicrotask(() => queueMicrotask(() => resultMap.delete(key)));
+				}
+			}
 		}
 	};
 

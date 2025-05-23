@@ -18,7 +18,17 @@
 <p id="multiply-result">{multiply_result}</p>
 
 <button onclick={() => add.refresh()} id="refresh-btn">Refresh</button>
-<button onclick={() => add.override([2, 3], () => 99)} id="override-btn">Override</button>
+<button
+	onclick={() => {
+		add.override((current, operator1, operator2) => {
+			if (operator1 === 2 && operator2 === 3) {
+				return 99;
+			}
+			return current;
+		});
+	}}
+	id="override-btn">Override</button
+>
 
 <button
 	onclick={async () => {
