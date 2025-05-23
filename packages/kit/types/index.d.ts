@@ -2699,27 +2699,6 @@ declare module '$app/state' {
 		get current(): boolean;
 		check(): Promise<boolean>;
 	};
-	export const load: typeof load_1 | typeof load_1_2;
-	function load_1_2(data_fn: (context: {
-		depends: Function;
-	}) => Promise<any>): {
-		readonly data: null;
-		readonly pending: boolean;
-		readonly error: null;
-		refetch: () => void;
-		
-		then: (fn: Function) => void;
-	};
-	function load_1(data_fn: (context: {
-		depends: Function;
-	}) => Promise<any>): {
-		data: any;
-		readonly pending: boolean;
-		readonly error: null;
-		refetch: () => void;
-		
-		then: (fn: Function) => Promise<any>;
-	};
 
 	export {};
 }

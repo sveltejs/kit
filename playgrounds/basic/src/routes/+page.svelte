@@ -1,20 +1,12 @@
 <script lang="ts">
-	import { load } from '$app/state';
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 	import { add, multiply, multiply2, divide } from '$lib/foo.remote.ts';
-	import { add_todo, add_todo_form, get_todos, get_todos_cached } from '$lib/todos.remote';
+	import { add_todo, add_todo_form, get_todos } from '$lib/todos.remote';
 	import { invalidate } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
-	let todos = load(() => {
-		return get_todos();
-	});
-	let todos_cache = load(() => {
-		console.log('load get_todos_cached');
-		return get_todos_cached();
-	});
 	// single flight
 	// deps at declaration site (depends/invalidate on server)
 	// use:enhance could work by inspecting header and wrapping it
@@ -23,7 +15,6 @@
 <h1>Welcome to SvelteKit</h1>
 
 <div>From load fn: {data.sum}</div>
-<div>From todos cache: {JSON.stringify(todos_cache.data)}</div>
 
 <button
 	onclick={async () => {
@@ -90,9 +81,11 @@
 </form> -->
 
 <ul>
-	{#each todos.data ?? [] as todo}
-		<li>{todo.text}</li>
-	{/each}
+	{#await get_todos() then todos}
+		{#each todos as todo}
+			<li>{todo.text}</li>
+		{/each}
+	{/await}
 </ul>
 
 <!-- with the await feature you could also do

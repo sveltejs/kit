@@ -1,5 +1,4 @@
-import { invalidate } from '$app/navigation';
-import { query, prerender, cache, command, form, getRequestEvent } from '$app/server';
+import { query, prerender, command, form, getRequestEvent } from '$app/server';
 
 let _todos: any[] = [];
 
@@ -13,12 +12,12 @@ export const get_todos_prerendered = prerender(() => {
 	return _todos;
 });
 
-export const get_todos_cached = cache(
-	() => {
-		console.log('get_todos cached');
-		return _todos;
+export const get_todo_prerendered = prerender(
+	(id: number) => {
+		console.log('get_todo prerendered', id);
+		return id;
 	},
-	{ expiration: 10 }
+	{ entries: () => [[1]] as Array<[number]> } // TODO can we beat TS into infering that this is an array of tuples?
 );
 
 export const add_todo = command(async (text: string) => {

@@ -1,14 +1,12 @@
 import {
 	page as client_page,
 	navigating as client_navigating,
-	updated as client_updated,
-	load as client_load
+	updated as client_updated
 } from './client.js';
 import {
 	page as server_page,
 	navigating as server_navigating,
-	updated as server_updated,
-	load as server_load
+	updated as server_updated
 } from './server.js';
 import { BROWSER } from 'esm-env';
 
@@ -64,5 +62,3 @@ export const navigating = BROWSER ? client_navigating : server_navigating;
  * @type {{ get current(): boolean; check(): Promise<boolean>; }}
  */
 export const updated = BROWSER ? client_updated : server_updated;
-
-export const load = BROWSER ? client_load : server_load;
