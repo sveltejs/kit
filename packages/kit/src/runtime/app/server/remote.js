@@ -343,110 +343,111 @@ export function prerender(fn, { entries } = {}) {
 	return wrapper;
 }
 
-/**
- * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export const blogPosts = cache(
- * 	() => blogPosts.getAll(),
- * 	// cache for 60 seconds
- * 	{ expiration: 60 }
- * );
- * ```
- * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
- *
- * @template {any[]} Input
- * @template Output
- * @param {(...args: Input) => Output} fn
- * @param {{expiration: number } & Record<string, any>} config
- * @returns {RemoteQuery<Input, Output>}
- */
-export function cache(fn, config) {
-	/**
-	 * @param {Input} args
-	 * @returns {Promise<Awaited<Output>>}
-	 */
-	const wrapper = async (...args) => {
-		if (prerendering) {
-			throw new Error(
-				'Cannot call cache() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
-			);
-		}
+// TODO decide how we wanna shape this API, until then commented out
+// /**
+//  * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
+//  * ```ts
+//  * import { blogPosts } from '$lib/server/db';
+//  *
+//  * export const blogPosts = cache(
+//  * 	() => blogPosts.getAll(),
+//  * 	// cache for 60 seconds
+//  * 	{ expiration: 60 }
+//  * );
+//  * ```
+//  * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
+//  *
+//  * @template {any[]} Input
+//  * @template Output
+//  * @param {(...args: Input) => Output} fn
+//  * @param {{expiration: number } & Record<string, any>} config
+//  * @returns {RemoteQuery<Input, Output>}
+//  */
+// export function cache(fn, config) {
+// 	/**
+// 	 * @param {Input} args
+// 	 * @returns {Promise<Awaited<Output>>}
+// 	 */
+// 	const wrapper = async (...args) => {
+// 		if (prerendering) {
+// 			throw new Error(
+// 				'Cannot call cache() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+// 			);
+// 		}
 
-		const event = getRequestEvent();
-		const info = get_remote_info(event);
-		const stringified_args = stringify_remote_args(args, info.transport);
-		const cached = await wrapper.cache.get(stringified_args);
+// 		const event = getRequestEvent();
+// 		const info = get_remote_info(event);
+// 		const stringified_args = stringify_remote_args(args, info.transport);
+// 		const cached = await wrapper.cache.get(stringified_args);
 
-		if (typeof cached === 'string') {
-			if (!event.isRemoteRequest) {
-				info.results[stringified_args] = cached;
-			}
-			// TODO in case of a remote request we will stringify the result again right aftewards - save the work somehow?
-			return parse_remote_response(cached, info.transport);
-		} else {
-			const result = await fn(...args);
-			uneval_remote_response(wrapper.__.id, args, result, event);
-			await wrapper.cache.set(stringified_args, stringify(result, info.transport));
-			return result;
-		}
-	};
+// 		if (typeof cached === 'string') {
+// 			if (!event.isRemoteRequest) {
+// 				info.results[stringified_args] = cached;
+// 			}
+// 			// TODO in case of a remote request we will stringify the result again right aftewards - save the work somehow?
+// 			return parse_remote_response(cached, info.transport);
+// 		} else {
+// 			const result = await fn(...args);
+// 			uneval_remote_response(wrapper.__.id, args, result, event);
+// 			await wrapper.cache.set(stringified_args, stringify(result, info.transport));
+// 			return result;
+// 		}
+// 	};
 
-	/** @type {{ get(input: string): MaybePromise<any>; set(input:string, output: string): MaybePromise<void>; delete(input:string): MaybePromise<void> }} */
-	let cache = {
-		// TODO warn somehow when adapter does not support cache?
-		get() {},
-		set() {},
-		delete() {}
-	};
+// 	/** @type {{ get(input: string): MaybePromise<any>; set(input:string, output: string): MaybePromise<void>; delete(input:string): MaybePromise<void> }} */
+// 	let cache = {
+// 		// TODO warn somehow when adapter does not support cache?
+// 		get() {},
+// 		set() {},
+// 		delete() {}
+// 	};
 
-	if (DEV) {
-		// In memory cache
-		/** @type {Record<string, string>} */
-		const cached = {};
-		cache = {
-			get(input) {
-				return cached[input];
-			},
-			set(input, output) {
-				const config = /** @type {RemoteInfo & { type: 'cache' }} */ (wrapper.__).config;
-				cached[input] = output;
-				if (typeof config.expiration === 'number') {
-					setTimeout(() => {
-						delete cached[input];
-					}, config.expiration * 1000);
-				}
-			},
-			delete(input) {
-				delete cached[input];
-			}
-		};
-	}
+// 	if (DEV) {
+// 		// In memory cache
+// 		/** @type {Record<string, string>} */
+// 		const cached = {};
+// 		cache = {
+// 			get(input) {
+// 				return cached[input];
+// 			},
+// 			set(input, output) {
+// 				const config = /** @type {RemoteInfo & { type: 'cache' }} */ (wrapper.__).config;
+// 				cached[input] = output;
+// 				if (typeof config.expiration === 'number') {
+// 					setTimeout(() => {
+// 						delete cached[input];
+// 					}, config.expiration * 1000);
+// 				}
+// 			},
+// 			delete(input) {
+// 				delete cached[input];
+// 			}
+// 		};
+// 	}
 
-	wrapper.cache = cache;
+// 	wrapper.cache = cache;
 
-	/** @type {RemoteQuery<any, any>['refresh']} */
-	wrapper.refresh = (...args) => {
-		// TODO is this agnostic enough / fine to require people calling this during a request event?
-		const info = get_remote_info(getRequestEvent());
-		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
-		wrapper.cache.delete(stringify_remote_args(args, info.transport));
-	};
+// 	/** @type {RemoteQuery<any, any>['refresh']} */
+// 	wrapper.refresh = (...args) => {
+// 		// TODO is this agnostic enough / fine to require people calling this during a request event?
+// 		const info = get_remote_info(getRequestEvent());
+// 		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
+// 		wrapper.cache.delete(stringify_remote_args(args, info.transport));
+// 	};
 
-	wrapper.override = () => {
-		throw new Error('Cannot call override on the server');
-	};
+// 	wrapper.override = () => {
+// 		throw new Error('Cannot call override on the server');
+// 	};
 
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({ type: 'cache', id: '', config }),
-		writable: false,
-		enumerable: true,
-		configurable: false
-	});
+// 	Object.defineProperty(wrapper, '__', {
+// 		value: /** @type {RemoteInfo} */ ({ type: 'cache', id: '', config }),
+// 		writable: false,
+// 		enumerable: true,
+// 		configurable: false
+// 	});
 
-	return wrapper;
-}
+// 	return wrapper;
+// }
 
 /**
  * @param {string} id

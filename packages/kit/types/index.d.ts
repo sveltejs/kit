@@ -2624,23 +2624,6 @@ declare module '$app/server' {
 	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, { entries }?: {
 		entries?: RemotePrerenderEntryGenerator<Input>;
 	}): RemoteQuery<Input, Output>;
-	/**
-	 * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = cache(
-	 * 	() => blogPosts.getAll(),
-	 * 	// cache for 60 seconds
-	 * 	{ expiration: 60 }
-	 * );
-	 * ```
-	 * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
-	 *
-	 * */
-	export function cache<Input extends any[], Output>(fn: (...args: Input) => Output, config: {
-		expiration: number;
-	} & Record<string, any>): RemoteQuery<Input, Output>;
 	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
 		Array<Input>
 	>;
