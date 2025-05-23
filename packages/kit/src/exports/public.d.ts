@@ -410,6 +410,16 @@ export interface KitConfig {
 		privatePrefix?: string;
 	};
 	/**
+	 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+	 */
+	experimental?: {
+		/**
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+		 * @default false
+		 */
+		remoteFunctions?: boolean;
+	};
+	/**
 	 * Where to find various files within your project.
 	 */
 	files?: {

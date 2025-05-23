@@ -39,6 +39,8 @@ import { app_dir, base } from '__sveltekit/paths';
  * @returns {RemoteFormAction<T>}
  */
 export function form(fn) {
+	check_experimental('form');
+
 	/** @param {FormData} form_data */
 	const wrapper = async (form_data) => {
 		if (prerendering) {
@@ -144,6 +146,8 @@ export function form(fn) {
  * @returns {RemoteQuery<Input, Output>}
  */
 export function query(fn) {
+	check_experimental('query');
+
 	/**
 	 * @param {Input} args
 	 * @returns {Promise<Awaited<Output>>}
@@ -229,6 +233,8 @@ function parse_remote_response(data, transport) {
  * @returns {(...args: Input) => Promise<Awaited<Output>>}
  */
 export function command(fn) {
+	check_experimental('command');
+
 	/**
 	 * @param {Input} args
 	 * @returns {Promise<Awaited<Output>>}
@@ -275,6 +281,8 @@ export function command(fn) {
  * @returns {RemoteQuery<Input, Output>}
  */
 export function prerender(fn, { entries } = {}) {
+	check_experimental('prerender');
+
 	/**
 	 * @param {Input} args
 	 * @returns {Promise<Awaited<Output>>}
@@ -474,4 +482,13 @@ function uneval_remote_response(id, args, result, event) {
 
 	// TODO better error when this fails?
 	info.results[cache_key] = uneval(result, replacer);
+}
+
+/** @param {string} feature */
+function check_experimental(feature) {
+	if (!__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__) {
+		throw new Error(
+			`Cannot use \`${feature}\` from \`$app/server\` without the experimental flag set to true. Please set kit.experimental.remoteFunctions to \`true\` in your config.`
+		);
+	}
 }

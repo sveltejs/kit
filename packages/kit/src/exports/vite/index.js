@@ -324,6 +324,9 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: kit.experimental.remoteFunctions
+						? 'true'
+						: 'false',
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
 
@@ -335,6 +338,9 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: kit.experimental.remoteFunctions
+						? 'true'
+						: 'false',
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
 
@@ -1182,7 +1188,13 @@ Tips:
 		}
 	};
 
-	return [plugin_setup, plugin_remote, plugin_virtual_modules, plugin_guard, plugin_compile];
+	return [
+		plugin_setup,
+		kit.experimental.remoteFunctions && plugin_remote,
+		plugin_virtual_modules,
+		plugin_guard,
+		plugin_compile
+	].filter((p) => !!p);
 }
 
 /**
