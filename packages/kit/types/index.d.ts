@@ -2434,6 +2434,13 @@ declare module '$app/navigation' {
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**
+	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+	 * Returns a `Promise` that resolves when the page is subsequently updated.
+	 * */
+	export function refreshAll({ includeLoadFunctions }?: {
+		includeLoadFunctions?: boolean;
+	} | undefined): Promise<void>;
+	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
 	 *  2. calling the page's load function with the appropriate options.

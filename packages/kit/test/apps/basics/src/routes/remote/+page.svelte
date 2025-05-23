@@ -1,5 +1,6 @@
 <script>
 	import { browser } from '$app/environment';
+	import { refreshAll } from '$app/navigation';
 	import { add, add2, multiply } from './query-command.remote.js';
 
 	let { data } = $props();
@@ -35,4 +36,9 @@
 	id="multiply-refresh-btn"
 >
 	command (targeted refresh)
+</button>
+
+<button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>
+<button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
+	refreshAll (remote functions only)
 </button>

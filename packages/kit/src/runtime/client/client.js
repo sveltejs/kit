@@ -41,7 +41,7 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
-import { queryMap } from './remote.svelte.js';
+import { queryMap, resultMap } from './remote.svelte.js';
 
 export { load_css };
 export { command, form, query, prerender, cache } from './remote.svelte.js';
@@ -333,7 +333,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate() {
+async function _invalidate(includeLoadFunctions = true, reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -366,20 +366,29 @@ async function _invalidate() {
 		}
 	});
 
-	const navigation_result = intent && (await load_route(intent));
-	if (!navigation_result || nav_token !== token) return;
+	if (includeLoadFunctions) {
+		const prev_state = page.state;
+		const navigation_result = intent && (await load_route(intent));
+		if (!navigation_result || nav_token !== token) return;
 
-	if (navigation_result.type === 'redirect') {
-		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		if (navigation_result.type === 'redirect') {
+			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		}
+
+		// This is a bit hacky but allows us having to pass that boolean around, making things harder to reason about
+		if (!reset_page_state) {
+			navigation_result.props.page.state = prev_state;
+		}
+		update(navigation_result.props.page);
+		current = navigation_result.state;
+		reset_invalidation();
+		root.$set(navigation_result.props);
+	} else {
+		reset_invalidation();
 	}
 
-	if (navigation_result.props.page) {
-		Object.assign(page, navigation_result.props.page);
-	}
-	current = navigation_result.state;
-	reset_invalidation();
-	root.$set(navigation_result.props);
-	update(navigation_result.props.page);
+	// Don't use allSettled yet because it's too new
+	await Promise.all(resultMap.values()).catch(noop);
 }
 
 function reset_invalidation() {
@@ -1998,6 +2007,21 @@ export function invalidateAll() {
 
 	force_invalidation = true;
 	return _invalidate();
+}
+
+/**
+ * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+ * Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {{ includeLoadFunctions?: boolean }} [options]
+ * @returns {Promise<void>}
+ */
+export function refreshAll({ includeLoadFunctions = true } = {}) {
+	if (!BROWSER) {
+		throw new Error('Cannot call refreshAll() on the server');
+	}
+
+	force_invalidation = true;
+	return _invalidate(includeLoadFunctions, false);
 }
 
 /**

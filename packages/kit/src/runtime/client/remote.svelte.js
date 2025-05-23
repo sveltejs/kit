@@ -3,14 +3,7 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import {
-	app,
-	invalidate,
-	invalidateAll,
-	remote_responses,
-	pending_invalidate,
-	started
-} from './client.js';
+import { app, invalidateAll, remote_responses, pending_invalidate, started } from './client.js';
 import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 
 /**
@@ -18,7 +11,8 @@ import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
  * Each value is a function that increases the associated version of that query which makes it rerun in case it was called in a reactive context.
  */
 export const queryMap = new Map();
-const resultMap = new Map();
+/** @type {Map<string, Promise<any>>} */
+export const resultMap = new Map();
 const overrideMap = new Map();
 
 let pending_refresh = false;
@@ -129,7 +123,7 @@ function remote_request(id, prerender) {
 		const stringified_args = stringify_remote_args(args, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 		if (overrideMap.has(cache_key)) {
-			resultMap.set(cache_key, update(overrideMap.get(cache_key)));
+			resultMap.set(cache_key, Promise.resolve(update(overrideMap.get(cache_key))));
 			version++;
 			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
 			// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)

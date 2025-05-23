@@ -1671,4 +1671,30 @@ test.describe('remote functions', () => {
 		await page.click('#fetch-not-prerendered');
 		await expect(page.locator('#fetch-prerendered')).toHaveText('d');
 	});
+
+	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-all');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(3);
+	});
+
+	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-remote-only');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(2);
+	});
 });
