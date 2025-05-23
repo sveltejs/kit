@@ -33,7 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { add_remote_info, get_remote_id, handle_remote_call } from './remote/index.js';
+import { add_remote_info, get_remote_id, handle_remote_call } from './remote.js';
 import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */

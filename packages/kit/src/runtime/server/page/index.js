@@ -15,7 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
-import { get_remote_action, handle_remote_call } from '../remote/index.js';
+import { get_remote_action, handle_remote_call } from '../remote.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop

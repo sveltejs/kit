@@ -3,7 +3,7 @@
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
-import { get_remote_info } from '../../server/remote/index.js';
+import { get_remote_info } from '../../server/remote.js';
 import { json } from '../../../exports/index.js';
 import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';

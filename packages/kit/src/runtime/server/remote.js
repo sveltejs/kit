@@ -1,14 +1,14 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PrerenderOptions, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
-import { text } from '../../../exports/index.js';
+import { text } from '../../exports/index.js';
 import * as devalue from 'devalue';
 import { app_dir, base } from '__sveltekit/paths';
 import { error } from 'console';
-import { with_event } from '../../app/server/event.js';
-import { is_form_content_type } from '../../../utils/http.js';
-import { SvelteKitError } from '../../control.js';
-import { stringify } from '../../shared.js';
+import { with_event } from '../app/server/event.js';
+import { is_form_content_type } from '../../utils/http.js';
+import { SvelteKitError } from '../control.js';
+import { stringify } from '../shared.js';
 
 /**
  * @param {RequestEvent} event
