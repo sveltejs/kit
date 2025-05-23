@@ -80,11 +80,6 @@ function remote_request(id, prerender) {
 				const response = await fetch(url);
 				const result = await response.text();
 
-				// TODO all a bit brittle, cleanup once we're sure we want this
-				// The idea is to cache the result for a short time so that you could for example prefetch it higher up the tree
-				// and reuse it in downstream components without it fetching it again
-				setTimeout(() => resultMap.delete(cache_key), 300);
-
 				if (!response.ok) {
 					// TODO should this go through `handleError`?
 					throw new Error(JSON.parse(result).message);
@@ -99,7 +94,13 @@ function remote_request(id, prerender) {
 				}
 				return parsed_result;
 			})();
+
+			// For the duration of the request (but max 500ms to not break on disconnects or similar) we cache the response so other queries can reuse it
 			resultMap.set(cache_key, response);
+			Promise.race([response, new Promise((resolve) => setTimeout(resolve, 500))]).then(() =>
+				resultMap.delete(cache_key)
+			);
+
 			return response;
 		} else {
 			const parsed_result = resultMap.get(cache_key);
@@ -119,7 +120,7 @@ function remote_request(id, prerender) {
 	// };
 	fn.refresh = () => {
 		pending_refresh = true;
-		queueMicrotask(() => (pending_refresh = false)); // TODO does that work? could it falsify a new true?
+		queueMicrotask(() => (pending_refresh = false));
 		queryMap.get(id)();
 	};
 
@@ -133,6 +134,7 @@ function remote_request(id, prerender) {
 			// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
 			// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)
 			// We could also declare that overrides are valid for given args until you call refresh, but might be confusing
+			// Once we depend on Svelte 5 we could use `await settled()` to wait for Svelte to finish rerendering?
 			// So far this seems to be the best solution:
 			queueMicrotask(() => queueMicrotask(() => resultMap.delete(cache_key)));
 		}
