@@ -368,7 +368,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 
 ### Customising use:enhance
 
-To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
+To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
 
 ```svelte
 <form
@@ -390,7 +390,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. You can do so with `applyAction`:
+Note that if you return a callback, the default behavior mentioned above is not triggered. The simplest way to get it back is to call `update`. You can customize it by passing `reset: false` and/or `invalidateAll: false` to `update`, or customize it even more by manually reproducing parts of the `use:enhance` behavior with `applyAction`:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
