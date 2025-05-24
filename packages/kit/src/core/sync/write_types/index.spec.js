@@ -59,7 +59,7 @@ test('Rewrites types for a TypeScript module', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -84,7 +84,7 @@ test('Rewrites types for a TypeScript module without param', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -110,7 +110,7 @@ test('Rewrites types for a TypeScript module without param and jsdoc without typ
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -137,7 +137,7 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -164,7 +164,7 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -191,7 +191,7 @@ test('Appends @ts-nocheck after @ts-check', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(source, false);
+	const rewritten = tweak_types(source, 'page');
 
 	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
@@ -220,7 +220,7 @@ test('Rewrites action types for a JavaScript module', () => {
 		}
 	`;
 
-	const rewritten = tweak_types(source, true);
+	const rewritten = tweak_types(source, 'page.server');
 
 	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
@@ -249,7 +249,7 @@ test('Rewrites action types for a TypeScript module', () => {
 		}
 	`;
 
-	const rewritten = tweak_types(source, true);
+	const rewritten = tweak_types(source, 'page.server');
 
 	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
@@ -282,7 +282,7 @@ test('Leaves satisfies operator untouched', () => {
 		} satisfies Actions
 	`;
 
-	const rewritten = tweak_types(source, true);
+	const rewritten = tweak_types(source, 'page.server');
 
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
