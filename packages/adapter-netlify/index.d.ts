@@ -1,3 +1,11 @@
 import { Adapter } from '@sveltejs/kit';
 
 export default function plugin(opts?: { split?: boolean; edge?: boolean }): Adapter;
+
+export interface Config {
+	/**
+	 * Whether to use [Edge Functions](https://docs.netlify.com/edge-functions/overview/) (`'edge'`)
+	 * @default undefined
+	 */
+	runtime?: 'edge';
+}
