@@ -180,12 +180,12 @@ export function get_name(node) {
 }
 
 /**
- * @param {(server_node: string) => Promise<Record<string, any>>} resolve
+ * @param {{
+ *   resolve: (file: string) => Promise<Record<string, any>>;
+ *   static_exports?: Map<string, Record<string, any> | null>;
+ * }} opts
  */
-export function create_static_analyser(resolve) {
-	/** @type {Map<string, Record<string, any> | null>} */
-	const cache = new Map();
-
+export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	/**
 	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
@@ -193,8 +193,8 @@ export function create_static_analyser(resolve) {
 	 */
 	const get_page_options = async (node) => {
 		const key = node.universal || node.server;
-		if (key && cache.has(key)) {
-			return { .../** @type {Record<string, any> | null} */ (cache.get(key)) };
+		if (key && static_exports.has(key)) {
+			return { .../** @type {Record<string, any> | null} */ (static_exports.get(key)) };
 		}
 
 		/** @type {Record<string, any>} */
@@ -207,7 +207,7 @@ export function create_static_analyser(resolve) {
 				// if the parent cannot be analysed, we can't know what page options
 				// the child node inherits, so we also mark it as unanalysable
 				if (key) {
-					cache.set(key, null);
+					static_exports.set(key, null);
 				}
 				return null;
 			}
@@ -229,7 +229,7 @@ export function create_static_analyser(resolve) {
 			const universal_page_options = statically_analyse_page_options(node.universal, input);
 
 			if (universal_page_options === null) {
-				cache.set(node.universal, null);
+				static_exports.set(node.universal, null);
 				return null;
 			}
 
@@ -237,7 +237,7 @@ export function create_static_analyser(resolve) {
 		}
 
 		if (key) {
-			cache.set(key, page_options);
+			static_exports.set(key, page_options);
 		}
 
 		console.log(node.server, node.universal, node.component, page_options);
@@ -250,7 +250,7 @@ export function create_static_analyser(resolve) {
 	 */
 	const invalidate_page_options = (file) => {
 		// TODO: invalidate children if it's a layout
-		cache.delete(file);
+		static_exports.delete(file);
 	};
 
 	return { get_page_options, invalidate_page_options };
