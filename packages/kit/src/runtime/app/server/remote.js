@@ -9,6 +9,7 @@ import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { app_dir, base } from '__sveltekit/paths';
+import { ActionFailure } from '../../control.js';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.
@@ -35,8 +36,9 @@ import { app_dir, base } from '__sveltekit/paths';
  * ```
  *
  * @template T
- * @param {(formData: FormData) => T} fn
- * @returns {RemoteFormAction<T>}
+ * @template [U=never]
+ * @param {(formData: FormData) => T | ActionFailure<U>} fn
+ * @returns {RemoteFormAction<T, U>}
  */
 export function form(fn) {
 	check_experimental('form');
@@ -51,9 +53,19 @@ export function form(fn) {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(form_data);
+
 		// We don't need to care about args, because uneval results are only relevant in full page reloads
 		// where only one form submission is active at the same time
-		uneval_remote_response(wrapper.action, [], result, event);
+		if (!event.isRemoteRequest) {
+			uneval_remote_response(
+				wrapper.action,
+				[],
+				result instanceof ActionFailure ? result.data : result,
+				event
+			);
+			get_remote_info(event).form_result = result instanceof ActionFailure ? result.data : result;
+		}
+
 		return result;
 	};
 
@@ -109,10 +121,19 @@ export function form(fn) {
 		get() {
 			try {
 				const event = getRequestEvent();
-				return get_remote_info(event).results[create_remote_cache_key(wrapper.action, '')] ?? null;
+				return get_remote_info(event).form_result;
 			} catch (e) {
 				return null;
 			}
+		},
+		enumerable: false,
+		configurable: false
+	});
+
+	Object.defineProperty(wrapper, 'error', {
+		get() {
+			// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
+			return /** @type {any} */ (null);
 		},
 		enumerable: false,
 		configurable: false

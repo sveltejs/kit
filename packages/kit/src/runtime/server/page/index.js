@@ -15,7 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
-import { get_remote_action, handle_remote_call } from '../remote.js';
+import { get_remote_action, handle_remote_form_post } from '../remote.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -56,20 +56,21 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
 			if (remote_id) {
-				await handle_remote_call(event, options, manifest, remote_id);
+				action_result = await handle_remote_form_post(event, manifest, remote_id);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)
 				action_result = await handle_action_request(event, leaf_node.server);
-				if (action_result?.type === 'redirect') {
-					return redirect_response(action_result.status, action_result.location);
-				}
-				if (action_result?.type === 'error') {
-					status = get_status(action_result.error);
-				}
-				if (action_result?.type === 'failure') {
-					status = action_result.status;
-				}
+			}
+
+			if (action_result?.type === 'redirect') {
+				return redirect_response(action_result.status, action_result.location);
+			}
+			if (action_result?.type === 'error') {
+				status = get_status(action_result.error);
+			}
+			if (action_result?.type === 'failure') {
+				status = action_result.status;
 			}
 		}
 

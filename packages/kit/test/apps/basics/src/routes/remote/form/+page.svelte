@@ -1,32 +1,45 @@
 <script>
-	import { add_one, add_two } from './form.remote.js';
+	import { task_one, task_two } from './form.remote.js';
 </script>
 
-<form {...add_one}>
-	<input id="input-n" name="n" type="number" />
-	<button id="submit-btn-one" type="submit">Add One</button>
-	<button id="submit-btn-two" type="submit" {...add_two.formAction}>Add Two</button>
+<form {...task_one}>
+	<input id="input-task" name="task" />
+	<button id="submit-btn-one" type="submit">Task One</button>
+	<button id="submit-btn-two" type="submit" {...task_two.formAction}>Task Two</button>
 </form>
 
 <form
-	{...add_one.enhance(async ({ formData, submit }) => {
-		const n = parseInt(formData.get('n'), 10);
-		if (n > 5) return;
-		await submit();
+	{...task_one.enhance(async ({ data, submit }) => {
+		const task = data.get('task');
+		if (task === 'abort') return;
+		const { type, apply } = await submit();
+		if (type !== 'error') {
+			apply();
+		}
 	})}
 >
-	<input id="input-n-enhance" name="n" type="number" />
-	<button id="submit-btn-enhance-one" type="submit">Add One (enhanced)</button>
+	<input id="input-task-enhance" name="task" />
+	<button id="submit-btn-enhance-one" type="submit">Task One (enhanced)</button>
 	<button
 		id="submit-btn-enhance-two"
 		type="submit"
-		{...add_two.formAction.enhance(async ({ formData, submit }) => {
-			const n = parseInt(formData.get('n'), 10);
-			if (n > 5) return;
-			await submit();
-		})}>Add Two</button
+		{...task_two.formAction.enhance(async ({ data, submit }) => {
+			const task = data.get('task');
+			if (task === 'abort') return;
+			const { type, apply } = await submit();
+			if (type !== 'error') {
+				apply();
+			}
+		})}>Task Two</button
 	>
 </form>
 
-<p id="form-result-1">{add_one.result}</p>
-<p id="form-result-2">{add_two.result}</p>
+<p id="form-result-1">
+	{typeof task_one.result === 'string' ? task_one.result : task_one.result?.message}
+</p>
+<p id="form-result-2">
+	{typeof task_two.result === 'string' ? task_two.result : task_two.result?.message}
+</p>
+
+<p id="form-error-1">{task_one.error?.message}</p>
+<p id="form-error-2">{task_two.error?.message}</p>

@@ -287,7 +287,13 @@ export type ServerNodesResponse = {
 	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 };
 
-export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
+export type RemoteFunctionResponse =
+	| ServerRedirectNode
+	| ServerErrorNode
+	| {
+			type: 'result';
+			result: string;
+	  };
 
 /**
  * Signals a successful response of the server `load` function.

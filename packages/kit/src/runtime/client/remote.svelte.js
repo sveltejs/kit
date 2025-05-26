@@ -1,10 +1,20 @@
-/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery, RemoteFormResult } from '@sveltejs/kit' */
+/** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, invalidateAll, remote_responses, pending_invalidate, started } from './client.js';
+import {
+	app,
+	invalidateAll,
+	remote_responses,
+	pending_invalidate,
+	started,
+	goto,
+	set_nearest_error_page
+} from './client.js';
 import { create_remote_cache_key, parse_remote_args, stringify_remote_args } from '../shared.js';
+import { HttpError } from '../control.js';
 
 /**
  * Contains a map of query functions that currently exist in the app.
@@ -72,21 +82,27 @@ function remote_request(id, prerender) {
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
 				const response = await fetch(url);
-				const result = await response.text();
-
 				if (!response.ok) {
-					// TODO should this go through `handleError`?
-					throw new Error(JSON.parse(result).message);
+					// We only end up here in case of a network error or if the server has an internal error
+					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+					throw new Error('Failed to execute remote function');
 				}
 
-				const parsed_result = devalue.parse(result, app.decoders);
-				if (tracking) {
-					// TODO this is a bit of a hack, but we need to make sure that the result is not cached
-					// if the user is tracking it. This is because we don't know when the user will stop tracking
-					// so we need to make sure that the result is not cached until then.
-					overrideMap.set(cache_key, parsed_result);
+				const result = /** @type { RemoteFunctionResponse} */ (await response.json());
+				if (result.type === 'redirect') {
+					return goto(result.location);
+				} else if (result.type === 'error') {
+					throw new HttpError(result.status ?? 500, result.error);
+				} else {
+					const parsed_result = devalue.parse(result.result, app.decoders);
+					if (tracking) {
+						// TODO this is a bit of a hack, but we need to make sure that the result is not cached
+						// if the user is tracking it. This is because we don't know when the user will stop tracking
+						// so we need to make sure that the result is not cached until then.
+						overrideMap.set(cache_key, parsed_result);
+					}
+					return parsed_result;
 				}
-				return parsed_result;
 			})();
 
 			// For the duration of the request (but max 500ms to not break on disconnects or similar) we cache the response so other queries can reuse it
@@ -181,36 +197,42 @@ export function command(id) {
 			}
 		});
 
-		const result = await response.text();
-
 		if (!response.ok) {
-			// TODO should this go through `handleError`?
-			throw new Error(JSON.parse(result).message);
+			// We only end up here in case of a network error or if the server has an internal error
+			// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+			throw new Error('Failed to execute remote function');
 		}
 
-		// If we want to invalidate from the server, this is how we would do it
-		// for (const key of JSON.parse(response.headers.get('x-sveltekit-rpc-invalidate') ?? '[]')) {
-		// 	invalidate(key);
-		// }
+		const result = /** @type { RemoteFunctionResponse} */ (await response.json());
+		if (result.type === 'redirect') {
+			return goto(result.location, { invalidateAll: true });
+		} else if (result.type === 'error') {
+			throw new HttpError(result.status ?? 500, result.error);
+		} else {
+			// If we want to invalidate from the server, this is how we would do it
+			// for (const key of JSON.parse(response.headers.get('x-sveltekit-rpc-invalidate') ?? '[]')) {
+			// 	invalidate(key);
+			// }
 
-		// We gotta do two microtasks here because the first one will resolve with the promise so it will run too soon
-		queueMicrotask(() => {
+			// We gotta do two microtasks here because the first one will resolve with the promise so it will run too soon
 			queueMicrotask(() => {
-				// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-				// If that doesn't happen within a microtask we assume they want to invalidate everything.
-				if (pending_invalidate || pending_refresh) return;
-				invalidateAll();
+				queueMicrotask(() => {
+					// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
+					// If that doesn't happen within a microtask we assume they want to invalidate everything.
+					if (pending_invalidate || pending_refresh) return;
+					invalidateAll();
+				});
 			});
-		});
 
-		return devalue.parse(result, app.decoders);
+			return devalue.parse(result.result, app.decoders);
+		}
 	};
 }
 
 /**
  * Client-version of the `form` function from `$app/server`.
  * @param {string} id
- * @returns {RemoteFormAction<any>}
+ * @returns {RemoteFormAction<any, any>}
  */
 export function form(id) {
 	/**
@@ -228,27 +250,61 @@ export function form(id) {
 
 	/** @type {any} */
 	let result = $state(
-		!started ? (remote_responses[create_remote_cache_key(action, '')] ?? null) : null
+		!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
 	);
+	/** @type {any} */
+	let error = $state(undefined);
 
-	/** @param {FormData} form_data */
-	async function submit(form_data) {
+	/**
+	 * @param {HTMLFormElement} form
+	 * @param {FormData} data
+	 */
+	async function submit(form, data) {
 		const response = await fetch(`/${app_dir}/remote/${id}`, {
 			method: 'POST',
-			body: form_data
+			body: data
 		});
-		const text = await response.text();
+
+		const form_result = /** @type {RemoteFormResult<any, any>} */ ({
+			type: 'error',
+			result: undefined,
+			error: /** @type {any} */ (undefined),
+			status: undefined,
+			location: undefined,
+			apply: async () => {
+				if (form_result.type === 'redirect') {
+					await goto(form_result.location, { invalidateAll: true });
+				} else if (form_result.type === 'error') {
+					await set_nearest_error_page(form_result.error, form_result.status);
+				} else if (form_result.type === 'success') {
+					form.reset();
+					await invalidateAll();
+				}
+			}
+		});
 
 		if (!response.ok) {
-			// TODO should this go through `handleError`?
-			throw new Error(JSON.parse(text).message);
+			// We only end up here in case of a network error or if the server has an internal error
+			// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+			form_result.error = error = { message: 'Failed to execute remote function' };
+			form_result.status = 500;
+			result = undefined;
+			return form_result;
 		}
 
-		// TODO don't revalidate on validation error? should we bring fail() into this?
-		// TODO only do when not enhanced? how to do for enhanced? have applyX for redirect? what about redirect in general?
-		invalidateAll();
+		Object.assign(form_result, /** @type { RemoteFunctionResponse} */ (await response.json()));
+		if (form_result.type === 'error') {
+			result = undefined;
+			error = form_result.error;
+		} else if (form_result.type === 'success' || form_result.type === 'failure') {
+			error = undefined;
+			form_result.result = result = devalue.parse(
+				/** @type {any} */ (form_result.result),
+				app.decoders
+			);
+		}
 
-		return (result = devalue.parse(text, app.decoders));
+		return form_result;
 	}
 
 	/**
@@ -281,14 +337,14 @@ export function form(id) {
 		return form_data;
 	}
 
-	/** @param {Parameters<RemoteFormAction<any>['enhance']>[0]} callback */
+	/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
 	const form_onsubmit = (callback) => {
 		/** @param {SubmitEvent} event */
 		return async (event) => {
-			const form_element = /** @type {HTMLFormElement} */ (event.target);
+			const form = /** @type {HTMLFormElement} */ (event.target);
 			const method = event.submitter?.hasAttribute('formmethod')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
-				: clone(form_element).method;
+				: clone(form).method;
 
 			if (method !== 'post') return;
 
@@ -296,7 +352,7 @@ export function form(id) {
 				// We can't do submitter.formAction directly because that property is always set
 				event.submitter?.hasAttribute('formaction')
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-					: clone(form_element).action
+					: clone(form).action
 			);
 
 			if (action.searchParams.get('/remote') !== id) {
@@ -305,50 +361,52 @@ export function form(id) {
 
 			event.preventDefault();
 
-			const formData = create_form_data(form_element, event.submitter);
+			const data = create_form_data(form, event.submitter);
 
 			callback({
-				formData,
-				submit: () => submit(formData)
+				form,
+				data,
+				submit: () => submit(form, data)
 			});
 		};
 	};
 
 	submit.method = 'POST';
 	submit.action = action;
-	submit.onsubmit = form_onsubmit(({ submit }) => submit());
+	submit.onsubmit = form_onsubmit(({ submit }) => submit().then((r) => r.apply()));
 
-	/** @param {Parameters<RemoteFormAction<any>['formAction']['enhance']>[0]} callback */
+	/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
 	const form_action_onclick = (callback) => {
 		/** @param {Event} event */
 		return async (event) => {
 			const target = /** @type {HTMLButtonElement} */ (event.target);
-			const form_element = target.form;
-			if (!form_element) return;
+			const form = target.form;
+			if (!form) return;
 
 			// Prevent this from firing the form's submit event
 			event.stopPropagation();
 			event.preventDefault();
 
-			const formData = create_form_data(form_element, target);
+			const data = create_form_data(form, target);
 
 			callback({
-				formData,
-				submit: () => submit(formData)
+				form,
+				data,
+				submit: () => submit(form, data)
 			});
 		};
 	};
 
-	/** @type {RemoteFormAction<any>['formAction']} */
+	/** @type {RemoteFormAction<any, any>['formAction']} */
 	// @ts-expect-error we gotta set enhance as a non-enumerable property
 	const form_action = {
 		type: 'submit',
 		formaction: action,
-		onclick: form_action_onclick(({ submit }) => submit())
+		onclick: form_action_onclick(({ submit }) => submit().then((r) => r.apply()))
 	};
 
 	Object.defineProperty(form_action, 'enhance', {
-		/** @type {RemoteFormAction<any>['formAction']['enhance']} */
+		/** @type {RemoteFormAction<any, any>['formAction']['enhance']} */
 		value: (callback) => {
 			return {
 				type: 'submit',
@@ -370,8 +428,14 @@ export function form(id) {
 			},
 			enumerable: false
 		},
+		error: {
+			get() {
+				return error;
+			},
+			enumerable: false
+		},
 		enhance: {
-			/** @type {RemoteFormAction<any>['enhance']} */
+			/** @type {RemoteFormAction<any, any>['enhance']} */
 			value: (callback) => {
 				return {
 					method: 'POST',

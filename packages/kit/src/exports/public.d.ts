@@ -73,7 +73,7 @@ type OptionalUnion<
 
 declare const uniqueSymbol: unique symbol;
 
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+export interface ActionFailure<T = undefined> {
 	status: number;
 	data: T;
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -1464,6 +1464,19 @@ export type ActionResult<
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
+export type RemoteFormResult<Success, Failure> = { apply: () => void } & (
+	| {
+			type: 'success';
+			status?: undefined;
+			result: Success;
+			location?: undefined;
+			error?: undefined;
+	  }
+	| { type: 'failure'; status: number; result: Failure; location?: undefined; error?: undefined }
+	| { type: 'redirect'; status: number; result?: undefined; location: string; error?: undefined }
+	| { type: 'error'; status?: number; result?: undefined; location?: undefined; error: App.Error }
+);
+
 /**
  * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
  */
@@ -1555,27 +1568,44 @@ export interface Snapshot<T = any> {
  * </ul>
  * ```
  */
-export type RemoteFormAction<T> = ((form: FormData) => Promise<T>) & {
+export type RemoteFormAction<Success, Failure> = ((
+	form: HTMLFormElement,
+	data: FormData
+) => Promise<RemoteFormResult<Success, Failure>>) & {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
 	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 	onsubmit: (event: SubmitEvent) => void;
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
-	enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
+	enhance: (
+		callback: (opts: {
+			form: HTMLFormElement;
+			data: FormData;
+			submit: () => Promise<RemoteFormResult<Success, Failure>>;
+		}) => void
+	) => {
 		method: 'POST';
 		action: string;
 		onsubmit: (event: SubmitEvent) => void;
 	};
 	/** The result of the form submission */
-	get result(): T | undefined;
+	get result(): Success | Failure | undefined;
+	/** When there's an error during form submission, it appears on this property */
+	get error(): App.Error | undefined;
 	/** Spread this onto a button or input of type submit */
 	formAction: {
 		type: 'submit';
 		formaction: string;
 		onclick: (event: Event) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
+		enhance: (
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<RemoteFormResult<Success, Failure>>;
+			}) => void
+		) => {
 			type: 'submit';
 			formaction: string;
 			onclick: (event: Event) => void;

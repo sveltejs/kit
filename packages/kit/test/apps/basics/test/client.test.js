@@ -1638,26 +1638,38 @@ test.describe('remote functions', () => {
 
 	test('form.enhance works', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-n-enhance', '6');
+		await page.fill('#input-task-enhance', 'abort');
 		await page.click('#submit-btn-enhance-one');
 		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-1')).not.toHaveText('7');
+		await expect(page.locator('#form-result-1')).toHaveText('');
 
-		await page.fill('#input-n-enhance', '4');
+		await page.fill('#input-task-enhance', 'hi');
 		await page.click('#submit-btn-enhance-one');
-		await expect(page.locator('#form-result-1')).toHaveText('5');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+		await expect(page.locator('#form-error-1')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-one');
+		await expect(page.locator('#form-result-1')).toHaveText('');
+		await expect(page.locator('#form-error-1')).toHaveText('Expected error');
 	});
 
 	test('form.formAction.enhance works', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-n-enhance', '6');
+		await page.fill('#input-task-enhance', 'abort');
 		await page.click('#submit-btn-enhance-two');
 		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-2')).not.toHaveText('8');
+		await expect(page.locator('#form-result-2')).toHaveText('');
 
-		await page.fill('#input-n-enhance', '4');
+		await page.fill('#input-task-enhance', 'hi');
 		await page.click('#submit-btn-enhance-two');
-		await expect(page.locator('#form-result-2')).toHaveText('6');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+		await expect(page.locator('#form-error-2')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-two');
+		await expect(page.locator('#form-result-2')).toHaveText('');
+		await expect(page.locator('#form-error-2')).toHaveText('Unexpected error (500 Internal Error)');
 	});
 
 	test('prerendered entries not called in prod', async ({ page }) => {

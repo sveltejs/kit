@@ -280,7 +280,7 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
-	remote_responses = hydrate?.remote;
+	remote_responses = hydrate?.remote ?? {};
 
 	await _app.hooks.init?.();
 
@@ -2205,29 +2205,7 @@ export async function applyAction(result) {
 	}
 
 	if (result.type === 'error') {
-		const url = new URL(location.href);
-
-		const { branch, route } = current;
-		if (!route) return;
-
-		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
-		if (error_load) {
-			const navigation_result = get_navigation_result_from_branch({
-				url,
-				params: current.params,
-				branch: branch.slice(0, error_load.idx).concat(error_load.node),
-				status: result.status ?? 500,
-				error: result.error,
-				route
-			});
-
-			current = navigation_result.state;
-
-			root.$set(navigation_result.props);
-			update(navigation_result.props.page);
-
-			void tick().then(reset_focus);
-		}
+		await set_nearest_error_page(result.error, result.status);
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
@@ -2249,6 +2227,36 @@ export async function applyAction(result) {
 		if (result.type === 'success') {
 			reset_focus();
 		}
+	}
+}
+
+/**
+ * @param {any} error
+ * @param {number} status
+ */
+export async function set_nearest_error_page(error, status = 500) {
+	const url = new URL(location.href);
+
+	const { branch, route } = current;
+	if (!route) return;
+
+	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
+	if (error_load) {
+		const navigation_result = get_navigation_result_from_branch({
+			url,
+			params: current.params,
+			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			status: status,
+			error: error,
+			route
+		});
+
+		current = navigation_result.state;
+
+		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
+
+		void tick().then(reset_focus);
 	}
 }
 

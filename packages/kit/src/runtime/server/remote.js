@@ -1,13 +1,17 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PrerenderOptions, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
-import { text } from '../../exports/index.js';
+import { json, error } from '../../exports/index.js';
 import { app_dir, base } from '__sveltekit/paths';
-import { error } from 'console';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { SvelteKitError } from '../control.js';
+import { ActionFailure, HttpError, Redirect, SvelteKitError } from '../control.js';
 import { parse_remote_args, stringify } from '../shared.js';
+import { redirect_json_response } from './data/index.js';
+import { handle_error_and_jsonify } from './utils.js';
+import { normalize_error } from '../../utils/error.js';
+import { check_incorrect_fail_use } from './page/actions.js';
+import { DEV } from 'esm-env';
 
 /**
  * @param {RequestEvent} event
@@ -30,35 +34,121 @@ export async function handle_remote_call(event, options, manifest, id) {
 	const info = func.__;
 	const transport = options.hooks.transport;
 
-	if (info.type === 'form') {
-		if (!is_form_content_type(event.request)) {
-			throw new SvelteKitError(
-				415,
-				'Unsupported Media Type',
-				`Form actions expect form-encoded data — received ${event.request.headers.get(
-					'content-type'
-				)}`
+	try {
+		if (info.type === 'form') {
+			if (!is_form_content_type(event.request)) {
+				throw new SvelteKitError(
+					415,
+					'Unsupported Media Type',
+					`Form actions expect form-encoded data — received ${event.request.headers.get(
+						'content-type'
+					)}`
+				);
+			}
+
+			const form_data = await event.request.formData();
+			const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
+
+			if (data instanceof ActionFailure) {
+				return json({
+					type: 'failure',
+					result: stringify(data.data, transport),
+					status: data.status
+				});
+			} else {
+				return json({ type: 'success', result: stringify(data, transport) });
+			}
+		} else {
+			const stringified_args =
+				info.type === 'prerender'
+					? prerender_args
+					: info.type === 'query' || info.type === 'cache'
+						? /** @type {string} */ (
+								// new URL(...) necessary because we're hiding the URL from the user in the event object
+								new URL(event.request.url).searchParams.get('args')
+							)
+						: await event.request.text();
+			const data = await with_event(event, () =>
+				func.apply(null, parse_remote_args(stringified_args, transport))
 			);
+
+			return json({ type: 'result', result: stringify(data, transport) });
+		}
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return redirect_json_response(error);
 		}
 
+		return json(
+			/** @type {import('types').ServerErrorNode} */ ({
+				type: 'error',
+				error: await handle_error_and_jsonify(event, options, error),
+				status:
+					error instanceof HttpError || error instanceof SvelteKitError ? error.status : undefined
+			})
+		);
+	}
+}
+
+/**
+ * @param {RequestEvent} event
+ * @param {SSRManifest} manifest
+ * @param {string} id
+ * @returns {Promise<ActionResult>}
+ */
+export async function handle_remote_form_post(event, manifest, id) {
+	const [hash, func_name] = id.split('/');
+	const remotes = manifest._.remotes;
+	const module = await remotes[hash]?.();
+	const func = module?.[func_name];
+
+	if (!func) {
+		event.setHeaders({
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+			// "The server must generate an Allow header field in a 405 status code response"
+			allow: 'GET'
+		});
+		return {
+			type: 'error',
+			error: new SvelteKitError(
+				405,
+				'Method Not Allowed',
+				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+			)
+		};
+	}
+
+	try {
 		const form_data = await event.request.formData();
 		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
-		return text(stringify(data, transport));
-	} else {
-		const stringified_args =
-			info.type === 'prerender'
-				? prerender_args
-				: info.type === 'query' || info.type === 'cache'
-					? /** @type {string} */ (
-							// new URL(...) necessary because we're hiding the URL from the user in the event object
-							new URL(event.request.url).searchParams.get('args')
-						)
-					: await event.request.text();
-		const data = await with_event(event, () =>
-			func.apply(null, parse_remote_args(stringified_args, transport))
-		);
 
-		return text(stringify(data, transport));
+		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
+		if (data instanceof ActionFailure) {
+			return {
+				type: 'failure',
+				status: data.status
+			};
+		} else {
+			return {
+				type: 'success',
+				status: 200
+			};
+		}
+	} catch (e) {
+		const err = normalize_error(e);
+
+		if (err instanceof Redirect) {
+			return {
+				type: 'redirect',
+				status: err.status,
+				location: err.location
+			};
+		}
+
+		return {
+			type: 'error',
+			error: check_incorrect_fail_use(err)
+		};
 	}
 }
 
@@ -82,6 +172,7 @@ export function get_remote_action(url) {
 /**
  * @typedef {{
  * 	results: Record<string, string>;
+ *  form_result: any;
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
  * }} RemoteEventInfo
@@ -99,6 +190,7 @@ export function add_remote_info(event, state, options) {
 	Object.defineProperty(event, remote_info, {
 		value: /** @type {RemoteEventInfo} */ ({
 			results: {},
+			form_result: undefined,
 			prerendering: state.prerendering,
 			transport: options.hooks.transport
 			// remote_invalidations: new Set() // <- this is how we could do refresh on the server

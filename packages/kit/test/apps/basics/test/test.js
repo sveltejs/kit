@@ -1558,16 +1558,48 @@ test.describe('remote functions', () => {
 
 	test('form works', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-n', '10');
+		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-one');
-		await expect(page.locator('#form-result-1')).toHaveText('11');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+	});
+
+	test('form fail works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'fail');
+		await page.click('#submit-btn-one');
+		await expect(page.locator('#form-result-1')).toHaveText('failed');
+	});
+
+	test('form error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
 	});
 
 	test('form.formAction works', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-n', '10');
+		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-two');
-		await expect(page.locator('#form-result-2')).toHaveText('12');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+	});
+
+	test('form.formAction fail works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'fail');
+		await page.click('#submit-btn-two');
+		await expect(page.locator('#form-result-2')).toHaveText('failed');
+	});
+
+	test('form.formAction error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
