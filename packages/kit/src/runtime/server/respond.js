@@ -573,6 +573,12 @@ export async function respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
+				// causing console spam. TODO should we instead respond with some actual data?
+				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+					return new Response(undefined, { status: 404 });
+				}
+
 				return await respond_with_error({
 					event,
 					options,
