@@ -14,16 +14,14 @@ import {
 	set_nearest_error_page
 } from './client.js';
 import { create_remote_cache_key, parse_remote_args, stringify_remote_args } from '../shared.js';
-import { HttpError } from '../control.js';
-
+import { HttpError, Redirect } from '../control.js';
 /**
  * Contains a map of query functions that currently exist in the app.
- * Each value is a function that increases the associated version of that query which makes it rerun in case it was called in a reactive context.
+ * Each value is a query's refresh function which will rerun the query.
  */
-export const queryMap = new Map();
-/** @type {Map<string, Promise<any>>} */
+export const refreshMap = new Map();
+/** @type {Map<string, [number, Promise<any>]>} */
 export const resultMap = new Map();
-const overrideMap = new Map();
 
 let pending_refresh = false;
 
@@ -35,8 +33,6 @@ let pending_refresh = false;
  */
 function remote_request(id, prerender) {
 	let version = $state(0);
-
-	queryMap.set(id, () => version++);
 
 	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
 	const fn = async (/** @type {any} */ ...args) => {
@@ -59,23 +55,25 @@ function remote_request(id, prerender) {
 			tracking = true;
 			$effect(() => () => {
 				tracking = false;
-				// TODO this needs a counter of subscriptions to only delete when the last one is gone
-				// reuse our subscribe function for this? (could be hard to do because if we do `import * as svelte from 'svelte'` we can't treeshake unused methods)
-				return () => overrideMap.delete(cache_key);
+				const entry = resultMap.get(cache_key);
+				if (entry) {
+					entry[0]--;
+					queueMicrotask(() => {
+						if (entry[0] === 0) {
+							resultMap.delete(cache_key);
+						}
+					});
+				}
 			});
 		}
 
-		if (!resultMap.has(cache_key)) {
+		const entry = resultMap.get(cache_key);
+
+		if (!entry) {
 			const response = (async () => {
 				if (!started) {
 					const result = remote_responses[cache_key];
 					if (result) {
-						if (tracking) {
-							// TODO this is a bit of a hack, but we need to make sure that the result is not cached
-							// if the user is tracking it. This is because we don't know when the user will stop tracking
-							// so we need to make sure that the result is not cached until then.
-							overrideMap.set(cache_key, result);
-						}
 						return result;
 					}
 				}
@@ -83,55 +81,58 @@ function remote_request(id, prerender) {
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
 				const response = await fetch(url);
 				if (!response.ok) {
-					// We only end up here in case of a network error or if the server has an internal error
-					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
 					throw new Error('Failed to execute remote function');
 				}
 
 				const result = /** @type { RemoteFunctionResponse} */ (await response.json());
 				if (result.type === 'redirect') {
-					return goto(result.location);
+					throw new Redirect(307, result.location);
 				} else if (result.type === 'error') {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
-					const parsed_result = devalue.parse(result.result, app.decoders);
-					if (tracking) {
-						// TODO this is a bit of a hack, but we need to make sure that the result is not cached
-						// if the user is tracking it. This is because we don't know when the user will stop tracking
-						// so we need to make sure that the result is not cached until then.
-						overrideMap.set(cache_key, parsed_result);
-					}
-					return parsed_result;
+					return devalue.parse(result.result, app.decoders);
 				}
 			})();
 
-			// For the duration of the request (but max 500ms to not break on disconnects or similar) we cache the response so other queries can reuse it
-			resultMap.set(cache_key, response);
-			Promise.race([response, new Promise((resolve) => setTimeout(resolve, 500))]).then(() =>
-				resultMap.delete(cache_key)
-			);
+			resultMap.set(cache_key, [tracking ? 1 : 0, response]);
+
+			response
+				.then(() => {
+					// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+					const entry = resultMap.get(cache_key);
+					if (entry && entry[0] === 0) {
+						resultMap.delete(cache_key);
+					}
+				})
+				.catch((error) => {
+					// Errors/redirects are exceptions that delete the cache right away
+					resultMap.delete(cache_key);
+					if (error instanceof Redirect) {
+						return goto(error.location);
+					}
+				});
 
 			return response;
 		} else {
-			const parsed_result = resultMap.get(cache_key);
 			if (tracking) {
-				// TODO this is a bit of a hack, but we need to make sure that the result is not cached
-				// if the user is tracking it. This is because we don't know when the user will stop tracking
-				// so we need to make sure that the result is not cached until then.
-				overrideMap.set(cache_key, parsed_result);
+				entry[0]++;
 			}
-			return parsed_result;
+			return entry[1];
 		}
 	};
 
-	// fn.key = `query:${id}`; // by having a colon in there we can pass it to invalidate as it's a valid URL constructor parameter
-	// fn.keyFor = (/** @type {any} */ ...args) => {
-	// 	return `${fn.key}|${args_as_string(...args)}`;
-	// };
 	fn.refresh = () => {
 		pending_refresh = true;
 		queueMicrotask(() => (pending_refresh = false));
-		queryMap.get(id)();
+
+		const prefix = `${id}|`;
+		for (const key of resultMap.keys()) {
+			if (key.startsWith(prefix)) {
+				resultMap.delete(key);
+			}
+		}
+
+		version++;
 	};
 
 	/** @type {RemoteQuery<any, any>['override']} */
@@ -139,25 +140,24 @@ function remote_request(id, prerender) {
 		const prefix = `${id}|`;
 		let refetched = false;
 
-		for (const [key, value] of overrideMap) {
+		for (const [key, entry] of resultMap) {
 			if (key.startsWith(prefix)) {
 				const stringified_args = key.slice(prefix.length);
-				const result = update(value, ...parse_remote_args(stringified_args, app.hooks.transport));
-				resultMap.set(key, Promise.resolve(result));
+				const result = update(
+					entry[1],
+					...parse_remote_args(stringified_args, app.hooks.transport)
+				);
+				entry[1] = Promise.resolve(result);
 
 				if (!refetched) {
 					refetched = true;
-					version++;
-					// TODO how to reliably invalidate this right after the microtask that the svelte runtime uses to rerun template effects?
-					// setTimeout(() => resultMap.delete(cache_key), 500); // <- too slow if someone presses refresh quickly after (like playwright lol)
-					// We could also declare that overrides are valid for given args until you call refresh, but might be confusing
-					// Once we depend on Svelte 5 we could use `await settled()` to wait for Svelte to finish rerendering?
-					// So far this seems to be the best solution:
-					queueMicrotask(() => queueMicrotask(() => resultMap.delete(key)));
+					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
 				}
 			}
 		}
 	};
+
+	refreshMap.set(id, fn.refresh);
 
 	return fn;
 }
