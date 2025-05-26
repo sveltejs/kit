@@ -575,6 +575,7 @@ export async function respond(request, options, manifest, state) {
 			if (state.depth === 0) {
 				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
 				// causing console spam. TODO should we instead respond with some actual data?
+				// https://chromium.googlesource.com/devtools/devtools-frontend/+/main/docs/ecosystem/automatic_workspace_folders.md
 				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
 					return new Response(undefined, { status: 404 });
 				}
