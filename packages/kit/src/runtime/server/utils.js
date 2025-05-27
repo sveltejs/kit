@@ -6,6 +6,7 @@ import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import { with_event } from '../app/server/event.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -107,7 +108,11 @@ export async function handle_error_and_jsonify(event, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (await options.hooks.handleError({ error, event, status, message })) ?? { message };
+	return (
+		(await with_event(event, () =>
+			options.hooks.handleError({ error, event, status, message })
+		)) ?? { message }
+	);
 }
 
 /**
@@ -128,7 +133,7 @@ export function redirect_response(status, location) {
  */
 export function clarify_devalue_error(event, error) {
 	if (error.path) {
-		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path})`;
 	}
 
 	if (error.path === '') {
@@ -142,26 +147,26 @@ export function clarify_devalue_error(event, error) {
 /**
  * @param {import('types').ServerDataNode} node
  */
-export function stringify_uses(node) {
-	const uses = [];
+export function serialize_uses(node) {
+	const uses = {};
 
 	if (node.uses && node.uses.dependencies.size > 0) {
-		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+		uses.dependencies = Array.from(node.uses.dependencies);
 	}
 
 	if (node.uses && node.uses.search_params.size > 0) {
-		uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
+		uses.search_params = Array.from(node.uses.search_params);
 	}
 
 	if (node.uses && node.uses.params.size > 0) {
-		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+		uses.params = Array.from(node.uses.params);
 	}
 
-	if (node.uses?.parent) uses.push('"parent":1');
-	if (node.uses?.route) uses.push('"route":1');
-	if (node.uses?.url) uses.push('"url":1');
+	if (node.uses?.parent) uses.parent = 1;
+	if (node.uses?.route) uses.route = 1;
+	if (node.uses?.url) uses.url = 1;
 
-	return `"uses":{${uses.join(',')}}`;
+	return uses;
 }
 
 /**

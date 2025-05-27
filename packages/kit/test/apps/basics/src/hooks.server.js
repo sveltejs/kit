@@ -38,6 +38,11 @@ export const handleError = ({ event, error: e, status, message }) => {
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
 
+	if (event.url.pathname.startsWith('/get-request-event/')) {
+		const ev = getRequestEvent();
+		message = ev.locals.message;
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };
