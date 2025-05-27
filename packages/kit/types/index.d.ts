@@ -55,7 +55,7 @@ declare module '@sveltejs/kit' {
 
 	const uniqueSymbol: unique symbol;
 
-	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	export interface ActionFailure<T = undefined> {
 		status: number;
 		data: T;
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -1446,6 +1446,19 @@ declare module '@sveltejs/kit' {
 		| { type: 'redirect'; status: number; location: string }
 		| { type: 'error'; status?: number; error: any };
 
+	export type RemoteFormResult<Success, Failure> = { apply: () => void } & (
+		| {
+				type: 'success';
+				status?: undefined;
+				result: Success;
+				location?: undefined;
+				error?: undefined;
+		  }
+		| { type: 'failure'; status: number; result: Failure; location?: undefined; error?: undefined }
+		| { type: 'redirect'; status: number; result?: undefined; location: string; error?: undefined }
+		| { type: 'error'; status?: number; result?: undefined; location?: undefined; error: App.Error }
+	);
+
 	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
 	 */
@@ -1537,27 +1550,44 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteFormAction<T> = ((form: FormData) => Promise<T>) & {
+	export type RemoteFormAction<Success, Failure> = ((
+		form: HTMLFormElement,
+		data: FormData
+	) => Promise<RemoteFormResult<Success, Failure>>) & {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
 		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 		onsubmit: (event: SubmitEvent) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
+		enhance: (
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<RemoteFormResult<Success, Failure>>;
+			}) => void
+		) => {
 			method: 'POST';
 			action: string;
 			onsubmit: (event: SubmitEvent) => void;
 		};
 		/** The result of the form submission */
-		get result(): T | undefined;
+		get result(): Success | Failure | undefined;
+		/** When there's an error during form submission, it appears on this property */
+		get error(): App.Error | undefined;
 		/** Spread this onto a button or input of type submit */
 		formAction: {
 			type: 'submit';
 			formaction: string;
 			onclick: (event: Event) => void;
 			/** Use the `enhance` method to influence what happens when the form is submitted. */
-			enhance: (callback: (opts: { formData: FormData; submit: () => Promise<T> }) => void) => {
+			enhance: (
+				callback: (opts: {
+					form: HTMLFormElement;
+					data: FormData;
+					submit: () => Promise<RemoteFormResult<Success, Failure>>;
+				}) => void
+			) => {
 				type: 'submit';
 				formaction: string;
 				onclick: (event: Event) => void;
@@ -2124,7 +2154,7 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
+	export function fail<T = undefined>(status: number, data: T): ActionFailure<T>;
 	/**
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
@@ -2523,7 +2553,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
+	import type { RequestEvent, ActionFailure, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2569,7 +2599,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T>(fn: (formData: FormData) => T): RemoteFormAction<T>;
+	export function form<T, U = never>(fn: (formData: FormData) => T | ActionFailure<U>): RemoteFormAction<T, U>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.

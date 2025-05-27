@@ -1,5 +1,5 @@
-/** @import { RemoteFormAction, RemoteQuery, RequestEvent } from '@sveltejs/kit' */
-/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
+/** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure } from '@sveltejs/kit' */
+/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
@@ -9,7 +9,6 @@ import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { app_dir, base } from '__sveltekit/paths';
-import { ActionFailure } from '../../control.js';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.

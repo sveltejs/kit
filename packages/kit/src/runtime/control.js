@@ -49,7 +49,7 @@ export class SvelteKitError extends Error {
 }
 
 /**
- * @template {Record<string, unknown> | undefined} [T=undefined]
+ * @template [T=undefined]
  */
 export class ActionFailure {
 	/**
