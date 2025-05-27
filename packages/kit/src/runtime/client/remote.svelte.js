@@ -86,7 +86,11 @@ function remote_request(id, prerender) {
 
 				const result = /** @type { RemoteFunctionResponse} */ (await response.json());
 				if (result.type === 'redirect') {
-					throw new Redirect(307, result.location);
+					await goto(result.location);
+					fn.refresh();
+					// We return a promise that never resolves so the current query does not error (we don't know the desired shape),
+					// and the refresh just above should cause the query to rerun in case it's still around.
+					return new Promise(() => {});
 				} else if (result.type === 'error') {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
