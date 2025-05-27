@@ -620,9 +620,10 @@ Tips:
 							const fn = $$_self_$$[key];
 							if (fn.__?.type === 'form') {
 								fn.__.set_action('${hashed_id}/' + key);
-							}
-							if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
+							} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
 								fn.__.id = '${hashed_id}/' + key;
+							} else if (fn.__?.type !== 'command') {
+								throw new Error('Invalid export from remote file ${id}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
 							}
 						}
 					`
