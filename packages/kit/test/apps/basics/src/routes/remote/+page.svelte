@@ -42,6 +42,7 @@
 	onclick={async () => {
 		multiply_result = await multiply(1, 2);
 		add.refresh();
+		add2.refresh(() => false);
 	}}
 	id="multiply-refresh-btn"
 >

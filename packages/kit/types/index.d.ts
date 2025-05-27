@@ -1612,7 +1612,7 @@ declare module '@sveltejs/kit' {
 		 * Queries of type `cache` can also call this function on the server to invalidate the cache.
 		 * Cannot be called on the server for `type: query`, has no effect for `type: prerender`.
 		 */
-		refresh: () => void;
+		refresh: (filter?: (current: Output, ...input: Input) => boolean) => void;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
 		 * `override` expects a callback function which is potentially called multiple times.

@@ -125,18 +125,35 @@ function remote_request(id, prerender) {
 		}
 	};
 
-	fn.refresh = () => {
+	/** @type {RemoteQuery<any, any>['refresh']} */
+	fn.refresh = (filter) => {
 		pending_refresh = true;
-		queueMicrotask(() => (pending_refresh = false));
+		queueMicrotask(() => {
+			console.log('back to false');
+			pending_refresh = false;
+		});
 
+		let refresh = false;
 		const prefix = `${id}|`;
-		for (const key of resultMap.keys()) {
+		for (const [key, entry] of resultMap) {
 			if (key.startsWith(prefix)) {
-				resultMap.delete(key);
+				if (!filter) {
+					resultMap.delete(key);
+					refresh = true;
+				} else {
+					const stringified_args = key.slice(prefix.length);
+					if (filter(entry[1], ...parse_remote_args(stringified_args, app.hooks.transport))) {
+						resultMap.delete(key);
+						refresh = true;
+					}
+				}
 			}
 		}
 
-		version++;
+		console.trace(refresh);
+		if (refresh) {
+			version++;
+		}
 	};
 
 	/** @type {RemoteQuery<any, any>['override']} */
@@ -218,13 +235,15 @@ export function command(id) {
 			// 	invalidate(key);
 			// }
 
-			// We gotta do two microtasks here because the first one will resolve with the promise so it will run too soon
+			// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
 			queueMicrotask(() => {
 				queueMicrotask(() => {
-					// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-					// If that doesn't happen within a microtask we assume they want to invalidate everything.
-					if (pending_invalidate || pending_refresh) return;
-					invalidateAll();
+					queueMicrotask(() => {
+						// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
+						// If that doesn't happen within a microtask we assume they want to invalidate everything.
+						if (pending_invalidate || pending_refresh) return;
+						invalidateAll();
+					});
 				});
 			});
 
