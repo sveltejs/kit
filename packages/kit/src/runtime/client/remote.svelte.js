@@ -53,7 +53,7 @@ function remote_request(id, prerender) {
 
 		if ($effect.tracking()) {
 			tracking = true;
-			$effect(() => () => {
+			$effect.pre(() => () => {
 				tracking = false;
 				const entry = resultMap.get(cache_key);
 				if (entry) {
@@ -108,12 +108,9 @@ function remote_request(id, prerender) {
 						resultMap.delete(cache_key);
 					}
 				})
-				.catch((error) => {
-					// Errors/redirects are exceptions that delete the cache right away
+				// Exceptions delete the cache right away
+				.catch(() => {
 					resultMap.delete(cache_key);
-					if (error instanceof Redirect) {
-						return goto(error.location);
-					}
 				});
 
 			return response;
@@ -129,7 +126,6 @@ function remote_request(id, prerender) {
 	fn.refresh = (filter) => {
 		pending_refresh = true;
 		queueMicrotask(() => {
-			console.log('back to false');
 			pending_refresh = false;
 		});
 
@@ -150,7 +146,6 @@ function remote_request(id, prerender) {
 			}
 		}
 
-		console.trace(refresh);
 		if (refresh) {
 			version++;
 		}
