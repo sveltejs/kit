@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
 /** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
 
 import { uneval, parse } from 'devalue';
@@ -9,6 +9,7 @@ import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { app_dir, base } from '__sveltekit/paths';
+import { ActionFailure } from '../../control.js';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.
@@ -36,9 +37,10 @@ import { app_dir, base } from '__sveltekit/paths';
  *
  * @template T
  * @template [U=never]
- * @param {(formData: FormData) => T | ActionFailure<U>} fn
+ * @param {(formData: FormData) => T | IActionFailure<U>} fn
  * @returns {RemoteFormAction<T, U>}
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function form(fn) {
 	check_experimental('form');
 
@@ -165,6 +167,7 @@ export function form(fn) {
  * @param {(...args: Input) => Output} fn
  * @returns {RemoteQuery<Input, Output>}
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function query(fn) {
 	check_experimental('query');
 
@@ -252,6 +255,7 @@ function parse_remote_response(data, transport) {
  * @param {(...args: Input) => Output} fn
  * @returns {(...args: Input) => Promise<Awaited<Output>>}
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function command(fn) {
 	check_experimental('command');
 
@@ -277,7 +281,7 @@ export function command(fn) {
 }
 
 /**
- * Creates a pererendered remote function. The given function is invoked at build time and the result is stored to disk.
+ * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
  * ```ts
  * import { blogPosts } from '$lib/server/db';
  *
@@ -289,7 +293,7 @@ export function command(fn) {
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
- * 	(id: string) => blogPosts.get(id)
+ * 	(id: string) => blogPosts.get(id),
  * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
  * );
  * ```
@@ -297,10 +301,11 @@ export function command(fn) {
  * @template {any[]} Input
  * @template Output
  * @param {(...args: Input) => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<Input> }} entries
+ * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<Input, Output>}
  */
-export function prerender(fn, { entries } = {}) {
+/*@__NO_SIDE_EFFECTS__*/
+export function prerender(fn, options) {
 	check_experimental('prerender');
 
 	/**
@@ -319,9 +324,11 @@ export function prerender(fn, { entries } = {}) {
 				// TODO make use of $app/server#read somehow?
 				const response = await fetch(event.url.origin + url);
 				if (response.ok) {
-					const prerendered = await response.text();
-					info.results[create_remote_cache_key(wrapper.__.id, stringified_args)] = prerendered;
-					return parse_remote_response(prerendered, info.transport);
+					// Below we only save results for prerendering, not redirects or errors, so this is safe
+					const prerendered = await response.json();
+					info.results[create_remote_cache_key(wrapper.__.id, stringified_args)] =
+						prerendered.result;
+					return parse_remote_response(prerendered.result, info.transport);
 				}
 			} catch (e) {
 				// not available prerendered, fallback to normal function
@@ -337,6 +344,7 @@ export function prerender(fn, { entries } = {}) {
 
 		if (info.prerendering) {
 			info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
+			Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
 		}
 
 		const result = await maybe_promise;
@@ -344,9 +352,9 @@ export function prerender(fn, { entries } = {}) {
 		uneval_remote_response(wrapper.__.id, args, result, event);
 
 		if (info.prerendering) {
-			const body = stringify(result, info.transport);
+			const body = { type: 'result', result: stringify(result, info.transport) };
 			info.prerendering.dependencies.set(url, {
-				body,
+				body: JSON.stringify(body),
 				response: json(body)
 			});
 		}
@@ -365,7 +373,8 @@ export function prerender(fn, { entries } = {}) {
 	wrapper.__ = /** @type {RemoteInfo} */ ({
 		type: 'prerender',
 		id: '',
-		entries: entries
+		entries: options?.entries,
+		dynamic: options?.dynamic
 	});
 
 	return wrapper;

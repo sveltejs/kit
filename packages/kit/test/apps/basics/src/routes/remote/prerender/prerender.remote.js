@@ -20,5 +20,5 @@ export const prerendered_entries = prerender(
 
 		return x;
 	},
-	{ entries: () => [['a'], ['b']] }
+	{ entries: () => [['a'], ['b']], dynamic: true }
 );

@@ -36,6 +36,7 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 
 const cwd = process.cwd();
 
@@ -184,7 +185,7 @@ let remote_exports = undefined;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	const vite = await import_peer('vite');
+	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -608,12 +609,14 @@ Tips:
 
 			const hashed_id = hash(posixify(id));
 
-			// For SSR, use a self-import to iterate over all exports of the file and add the necessary metadata
+			// For SSR, use a self-import at dev time and a separate function at build time
+			// to iterate over all exports of the file and add the necessary metadata
 			if (opts?.ssr) {
 				/** using @type {import('types').RemoteInfo} in here */
-				return (
-					code +
-					dedent`
+				return !dev_server
+					? code
+					: code +
+							dedent`
 						// Auto-generated part, do not edit
 						import * as $$_self_$$ from './${path.basename(id)}';
 						for (const key in $$_self_$$) {
@@ -626,8 +629,7 @@ Tips:
 								throw new Error('Invalid export from remote file ${id}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
 							}
 						}
-					`
-				);
+					`;
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
@@ -710,6 +712,7 @@ Tips:
 				if (ssr) {
 					input.index = `${runtime_directory}/server/index.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
+					input['remote-entry'] = `${runtime_directory}/app/server/remote.js`;
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -1102,6 +1105,9 @@ Tips:
 					static_exports
 				);
 
+				// ...make sure remote exports have their IDs assigned...
+				build_remotes(out);
+
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
 					hash: kit.router.type === 'hash',
@@ -1122,6 +1128,9 @@ Tips:
 						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
 					})};\n`
 				);
+
+				// remove prerendered remote functions
+				await treeshake_prerendered_remotes(out);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {

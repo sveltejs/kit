@@ -2553,7 +2553,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, ActionFailure, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
+	import type { RequestEvent, ActionFailure as IActionFailure, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2599,7 +2599,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | ActionFailure<U>): RemoteFormAction<T, U>;
+	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2652,7 +2652,7 @@ declare module '$app/server' {
 	 * */
 	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>>;
 	/**
-	 * Creates a pererendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
 	 * import { blogPosts } from '$lib/server/db';
 	 *
@@ -2664,17 +2664,21 @@ declare module '$app/server' {
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
-	 * 	(id: string) => blogPosts.get(id)
+	 * 	(id: string) => blogPosts.get(id),
 	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
 	 * );
 	 * ```
 	 *
 	 * */
-	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, { entries }?: {
+	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, options?: {
 		entries?: RemotePrerenderEntryGenerator<Input>;
-	}): RemoteQuery<Input, Output>;
+		dynamic?: boolean;
+	} | undefined): RemoteQuery<Input, Output>;
 	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
-		Array<Input>
+		// the spread ensures things are widened from [id: number, x: string] to [number, string],
+		// which is important because else people are required to write entries using type casts
+		// like `{ entries: () => [[1]] as Array<[number]>}`
+		Array<[...Input]>
 	>;
 	type MaybePromise<T> = T | Promise<T>;
 
