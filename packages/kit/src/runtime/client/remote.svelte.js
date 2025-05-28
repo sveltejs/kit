@@ -11,17 +11,12 @@ import {
 	pending_invalidate,
 	started,
 	goto,
-	set_nearest_error_page
+	set_nearest_error_page,
+	resultMap,
+	refreshMap
 } from './client.js';
 import { create_remote_cache_key, parse_remote_args, stringify_remote_args } from '../shared.js';
-import { HttpError, Redirect } from '../control.js';
-/**
- * Contains a map of query functions that currently exist in the app.
- * Each value is a query's refresh function which will rerun the query.
- */
-export const refreshMap = new Map();
-/** @type {Map<string, [number, Promise<any>]>} */
-export const resultMap = new Map();
+import { HttpError } from '../control.js';
 
 let pending_refresh = false;
 

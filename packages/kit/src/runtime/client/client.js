@@ -41,11 +41,8 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
-import { refreshMap, resultMap } from './remote.svelte.js';
 
 export { load_css };
-export { command, form, query, prerender, cache } from './remote.svelte.js';
-
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
@@ -258,6 +255,18 @@ const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
 export let pending_invalidate;
+
+/**
+ * @type {Map<string, () => void>}
+ * A map of query functions that currently exist in the app.
+ * Each value is a query's refresh function which will rerun the query.
+ */
+export const refreshMap = new Map();
+/**
+ * @type {Map<string, [number, Promise<any>]>}
+ * A map of results of queries that currently exist in the app.
+ */
+export const resultMap = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
