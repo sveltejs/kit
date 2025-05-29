@@ -186,9 +186,6 @@ export function get_name(node) {
  * }} opts
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
-	/** @type {Promise<Record<string, any> | null> | undefined} */
-	let current_task;
-
 	/**
 	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
@@ -204,15 +201,10 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		let page_options = {};
 
 		if (node.parent) {
-			// this await allows us to suspend early and let the previous layout analysis
-			// complete before we start analysing the same layout
-			if (current_task) await current_task;
-			const task = get_page_options(node.parent);
-			current_task = task;
-			const parent_options = await task;
+			const parent_options = await get_page_options(node.parent);
 
 			const parent_key = node.parent.universal || node.parent.server;
-			if (key && parent_key && static_exports.has(parent_key)) {
+			if (key && parent_key) {
 				static_exports.get(parent_key)?.children.push(key);
 			}
 
