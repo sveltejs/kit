@@ -15,7 +15,7 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('vite').Rollup.OutputAsset[] | null} css
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, Record<string, any> | null>} static_exports
+ * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
 export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config, static_exports) {
 	mkdirp(`${out}/server/nodes`);

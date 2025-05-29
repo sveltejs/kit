@@ -182,7 +182,7 @@ export function get_name(node) {
 /**
  * @param {{
  *   resolve: (file: string) => Promise<Record<string, any>>;
- *   static_exports?: Map<string, Record<string, any> | null>;
+ *   static_exports?: Map<string, { page_options: Record<string, any> | null, children: string[] }>;
  * }} opts
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
@@ -197,7 +197,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	const get_page_options = async (node) => {
 		const key = node.universal || node.server;
 		if (key && static_exports.has(key)) {
-			return { .../** @type {Record<string, any> | null} */ (static_exports.get(key)) };
+			return { ...static_exports.get(key)?.page_options };
 		}
 
 		/** @type {Record<string, any>} */
@@ -210,11 +210,17 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 			const task = get_page_options(node.parent);
 			current_task = task;
 			const parent_options = await task;
+
+			const parent_key = node.parent.universal || node.parent.server;
+			if (key && parent_key && static_exports.has(parent_key)) {
+				static_exports.get(parent_key)?.children.push(key);
+			}
+
 			if (parent_options === null) {
 				// if the parent cannot be analysed, we can't know what page options
 				// the child node inherits, so we also mark it as unanalysable
 				if (key) {
-					static_exports.set(key, null);
+					static_exports.set(key, { page_options: null, children: [] });
 				}
 				return null;
 			}
@@ -236,7 +242,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 			const universal_page_options = statically_analyse_page_options(node.universal, input);
 
 			if (universal_page_options === null) {
-				static_exports.set(node.universal, null);
+				static_exports.set(node.universal, { page_options: null, children: [] });
 				return null;
 			}
 
@@ -244,7 +250,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		}
 
 		if (key) {
-			static_exports.set(key, page_options);
+			static_exports.set(key, { page_options, children: [] });
 		}
 
 		return page_options;
@@ -254,7 +260,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	 * @param {string} file
 	 */
 	const invalidate_page_options = (file) => {
-		// TODO: invalidate children if it's a layout
+		static_exports.get(file)?.children.forEach((child) => static_exports.delete(child));
 		static_exports.delete(file);
 	};
 

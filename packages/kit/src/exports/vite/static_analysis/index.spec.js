@@ -197,7 +197,7 @@ test('nodes are analysed sequentially so that layout analysis is done only once'
 	/** @type {string[]} */
 	const cache_used = [];
 
-	/** @type {Map<string, Record<string, any> | null>} */
+	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
 	const static_exports = new Map();
 
 	const originalGet = static_exports.get;
@@ -244,6 +244,8 @@ test('nodes are analysed sequentially so that layout analysis is done only once'
 
 	expect(cache_used.map((key) => key.slice(dir.length + 1))).toEqual([
 		'fixtures/+layout.js',
+		'fixtures/+layout.js',
+		'fixtures/nested/+layout.js',
 		'fixtures/nested/+layout.js'
 	]);
 	expect(results).toEqual([
