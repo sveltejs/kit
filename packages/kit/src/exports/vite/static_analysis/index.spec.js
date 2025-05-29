@@ -211,16 +211,23 @@ test('nodes are analysed sequentially so that layout analysis is done only once'
 		static_exports
 	});
 
+	const root_layout_path = path.join('fixtures', '+layout.js');
+	const nested_layout_path = path.join('fixtures', 'nested', '+layout.js');
+
 	const root_layout = {
 		depth: 0,
-		universal: path.join(dir, 'fixtures/+layout.js')
+		universal: path.join(dir, root_layout_path)
 	};
-	const layout = {
+	const nested_layout = {
 		depth: 1,
-		universal: path.join(dir, 'fixtures/nested/+layout.js'),
+		universal: path.join(dir, nested_layout_path),
 		parent: root_layout
 	};
-	const leaf = { depth: 1, universal: path.join(dir, 'fixtures/nested/+page.js'), parent: layout };
+	const leaf = {
+		depth: 1,
+		universal: path.join(dir, 'fixtures/nested/+page.js'),
+		parent: nested_layout
+	};
 
 	const nodes = [
 		async () => {
@@ -230,7 +237,7 @@ test('nodes are analysed sequentially so that layout analysis is done only once'
 		},
 		async () => {
 			return {
-				universal: await node_analyser.get_page_options(layout)
+				universal: await node_analyser.get_page_options(nested_layout)
 			};
 		},
 		async () => {
@@ -243,10 +250,10 @@ test('nodes are analysed sequentially so that layout analysis is done only once'
 	const results = await Promise.all(nodes.map((node) => node()));
 
 	expect(cache_used.map((key) => key.slice(dir.length + 1))).toEqual([
-		'fixtures/+layout.js',
-		'fixtures/+layout.js',
-		'fixtures/nested/+layout.js',
-		'fixtures/nested/+layout.js'
+		root_layout,
+		root_layout,
+		nested_layout,
+		nested_layout
 	]);
 	expect(results).toEqual([
 		{ universal: { ssr: false } },
