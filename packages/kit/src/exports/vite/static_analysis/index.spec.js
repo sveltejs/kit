@@ -1,7 +1,5 @@
 import { expect, test } from 'vitest';
-import { create_node_analyser, statically_analyse_page_options } from './index.js';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { statically_analyse_page_options } from './index.js';
 
 test.each([
 	[
