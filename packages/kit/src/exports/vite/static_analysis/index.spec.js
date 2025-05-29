@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest';
-import { statically_analyse_page_options } from './index.js';
+import { create_node_analyser, statically_analyse_page_options } from './index.js';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 test.each([
 	[
@@ -187,4 +189,66 @@ test.each([
 ])('fails when export specifier references: %s', (_, input) => {
 	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual(null);
+});
+
+const dir = path.dirname(fileURLToPath(import.meta.url));
+
+test('nodes are analysed sequentially so that layout analysis is done only once', async () => {
+	/** @type {string[]} */
+	const cache_used = [];
+
+	/** @type {Map<string, Record<string, any> | null>} */
+	const static_exports = new Map();
+
+	const originalGet = static_exports.get;
+	static_exports.get = function (key) {
+		cache_used.push(key);
+		return originalGet.call(this, key);
+	};
+
+	const node_analyser = create_node_analyser({
+		resolve: () => Promise.resolve({}),
+		static_exports
+	});
+
+	const root_layout = {
+		depth: 0,
+		universal: path.join(dir, 'fixtures/+layout.js')
+	};
+	const layout = {
+		depth: 1,
+		universal: path.join(dir, 'fixtures/nested/+layout.js'),
+		parent: root_layout
+	};
+	const leaf = { depth: 1, universal: path.join(dir, 'fixtures/nested/+page.js'), parent: layout };
+
+	const nodes = [
+		async () => {
+			return {
+				universal: await node_analyser.get_page_options(root_layout)
+			};
+		},
+		async () => {
+			return {
+				universal: await node_analyser.get_page_options(layout)
+			};
+		},
+		async () => {
+			return {
+				universal: await node_analyser.get_page_options(leaf)
+			};
+		}
+	];
+
+	const results = await Promise.all(nodes.map((node) => node()));
+
+	expect(cache_used.map((key) => key.slice(dir.length + 1))).toEqual([
+		'fixtures/+layout.js',
+		'fixtures/nested/+layout.js'
+	]);
+	expect(results).toEqual([
+		{ universal: { ssr: false } },
+		{ universal: { ssr: false, prerender: true } },
+		{ universal: { ssr: false, prerender: false } }
+	]);
 });

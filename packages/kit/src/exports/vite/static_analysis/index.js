@@ -186,6 +186,9 @@ export function get_name(node) {
  * }} opts
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
+	/** @type {Promise<Record<string, any> | null> | undefined} */
+	let current_task;
+
 	/**
 	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
@@ -201,8 +204,12 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		let page_options = {};
 
 		if (node.parent) {
-			// TODO: dedupe analysis from other nodes being loaded
-			const parent_options = await get_page_options(node.parent);
+			// this await allows us to suspend early and let the previous layout analysis
+			// complete before we start analysing the same layout
+			if (current_task) await current_task;
+			const task = get_page_options(node.parent);
+			current_task = task;
+			const parent_options = await task;
 			if (parent_options === null) {
 				// if the parent cannot be analysed, we can't know what page options
 				// the child node inherits, so we also mark it as unanalysable
@@ -240,8 +247,6 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 			static_exports.set(key, page_options);
 		}
 
-		console.log(node.server, node.universal, node.component, page_options);
-
 		return page_options;
 	};
 
@@ -253,5 +258,8 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		static_exports.delete(file);
 	};
 
-	return { get_page_options, invalidate_page_options };
+	return {
+		get_page_options,
+		invalidate_page_options
+	};
 }
