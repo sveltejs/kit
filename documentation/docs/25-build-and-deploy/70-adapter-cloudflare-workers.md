@@ -112,7 +112,7 @@ export {};
 
 Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) **version 4**. Once you have built your site, run `wrangler dev`.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev`.
 
 ## Troubleshooting
 

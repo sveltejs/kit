@@ -9,3 +9,9 @@
 </div>
 <br />
 <div><enhanced:img src="./svelte-logo.svg" alt="Svelte" /></div>
+
+<style>
+	enhanced\:img {
+		margin-top: 10px;
+	}
+</style>

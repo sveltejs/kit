@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 2.21.1
+### Patch Changes
+
+
+- chore: clarify which functions `handleFetch` affects ([#13788](https://github.com/sveltejs/kit/pull/13788))
+
+
+- fix: ensure `$env` and `$app/environment` are correctly set while analysing server nodes ([#13790](https://github.com/sveltejs/kit/pull/13790))
+
+## 2.21.0
+### Minor Changes
+
+
+- feat: allow running client-side code at the top-level of universal pages/layouts when SSR is disabled and page options are only boolean or string literals ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+
+- fix: remove component code from server nodes that are never used for SSR ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+## 2.20.8
+### Patch Changes
+
+
+- fix: ensure that `ssr` and `csr` page options apply to error pages rendered as a result of a load function error on the server ([#13695](https://github.com/sveltejs/kit/pull/13695))
+
 ## 2.20.7
 ### Patch Changes
 

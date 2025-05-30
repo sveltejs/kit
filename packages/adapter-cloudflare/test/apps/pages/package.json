@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler pages dev .svelte-kit/cloudflare  --port 8787",
+		"preview": "wrangler pages dev .svelte-kit/cloudflare --port 8787",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
@@ -14,8 +14,8 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"server-side-dep": "file:server-side-dep",
 		"svelte": "^5.23.1",
-		"vite": "^6.2.6",
-		"wrangler": "^4.11.0"
+		"vite": "^6.2.7",
+		"wrangler": "^4.14.3"
 	},
 	"type": "module"
 }

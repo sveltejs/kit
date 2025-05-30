@@ -34,7 +34,7 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { resolve_peer_dependency } from '../../utils/import.js';
+import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 
 const cwd = process.cwd();
@@ -155,7 +155,7 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+	const { svelte } = await import_peer('@sveltejs/vite-plugin-svelte');
 
 	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
@@ -181,8 +181,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	/** @type {import('vite')} */
-	const vite = await resolve_peer_dependency('vite');
+	const vite = await import_peer('vite');
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -819,27 +818,17 @@ Tips:
 					})};\n`
 				);
 
-				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(
-					out,
-					kit,
-					manifest_data,
-					server_manifest,
-					null,
-					null,
-					null,
-					svelte_config.output
-				);
-
-				const metadata = await analyse({
+				const { metadata, static_exports } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
 					server_manifest,
 					tracked_features,
-					env: { ...env.private, ...env.public }
+					env: { ...env.private, ...env.public },
+					out,
+					output_config: svelte_config.output
 				});
 
 				log.info('Building app');
@@ -980,7 +969,7 @@ Tips:
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,
@@ -988,7 +977,8 @@ Tips:
 					client_manifest,
 					bundle,
 					client_chunks,
-					svelte_config.kit.output
+					svelte_config.kit.output,
+					static_exports
 				);
 
 				// ...and prerender

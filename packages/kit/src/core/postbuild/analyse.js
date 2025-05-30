@@ -10,6 +10,7 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
+import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -20,7 +21,9 @@ export default forked(import.meta.url, analyse);
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   out: string;
+ *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  * }} opts
  */
 async function analyse({
@@ -29,7 +32,9 @@ async function analyse({
 	manifest_data,
 	server_manifest,
 	tracked_features,
-	env
+	env,
+	out,
+	output_config
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -57,6 +62,21 @@ async function analyse({
 	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
+
+	const static_exports = new Map();
+
+	// first, build server nodes without the client manifest so we can analyse it
+	await build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		output_config,
+		static_exports
+	);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -143,7 +163,7 @@ async function analyse({
 		});
 	}
 
-	return metadata;
+	return { metadata, static_exports };
 }
 
 /**
