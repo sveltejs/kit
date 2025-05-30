@@ -322,8 +322,9 @@ async function kit({ svelte_config }) {
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
 						'@sveltejs/kit',
-						// We need to bundle any packages depending on @sveltejs/kit so that they use
-						// the same instances of classes such as `Redirect`
+						// We need to bundle any packages depending on @sveltejs/kit so that
+						// everyone uses the same instances of classes such as `Redirect`
+						// which we use in `instanceof` checks
 						...packages_depending_on_svelte_kit
 					]
 				}
