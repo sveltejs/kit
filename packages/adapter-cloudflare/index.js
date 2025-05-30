@@ -309,8 +309,7 @@ function is_building_for_cloudflare_pages(wrangler_config) {
 		!!process.env.CF_PAGES ||
 		!wrangler_config.configPath ||
 		!!wrangler_config.pages_build_output_dir ||
-		!wrangler_config.main ||
-		!wrangler_config.assets
+		!(wrangler_config.main || wrangler_config.assets)
 	);
 }
 
