@@ -616,6 +616,11 @@ test.describe('Redirects', () => {
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
+
+	test('works when used from another package', async ({ page }) => {
+		await page.goto('/redirect/package');
+		expect(await page.textContent('h1')).toBe('c');
+	});
 });
 
 test.describe('Routing', () => {
