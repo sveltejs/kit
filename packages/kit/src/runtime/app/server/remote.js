@@ -54,6 +54,7 @@ export function form(fn) {
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
 		const result = await fn(form_data);
+		const info = get_remote_info(event);
 
 		// We don't need to care about args, because uneval results are only relevant in full page reloads
 		// where only one form submission is active at the same time
@@ -64,7 +65,7 @@ export function form(fn) {
 				result instanceof ActionFailure ? result.data : result,
 				event
 			);
-			get_remote_info(event).form_result = result instanceof ActionFailure ? result.data : result;
+			info.form_result = result instanceof ActionFailure ? result.data : result;
 		}
 
 		return result;
@@ -171,30 +172,37 @@ export function form(fn) {
 export function query(fn) {
 	check_experimental('query');
 
-	/**
-	 * @param {Input} args
-	 * @returns {Promise<Awaited<Output>>}
-	 */
-	const wrapper = async (...args) => {
-		if (prerendering) {
-			throw new Error(
-				'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+	/** @type {RemoteQuery<Input, Output>} */
+	const wrapper = (...args) => {
+		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
+		const promise = new Promise(async (resolve) => {
+			if (prerendering) {
+				throw new Error(
+					'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+				);
+			}
+
+			// TODO don't do the additional work when we're being called from the client?
+			const event = getRequestEvent();
+			const result = await fn(...args);
+			uneval_remote_response(
+				/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+				args,
+				result,
+				event
 			);
-		}
+			return resolve(result);
+		});
 
-		// TODO don't do the additional work when we're being called from the client?
-		const event = getRequestEvent();
-		const result = await fn(...args);
-		uneval_remote_response(wrapper.__.id, args, result, event);
-		return result;
-	};
+		promise.refresh = async () => {
+			throw new Error('Cannot call refresh on the server');
+		};
 
-	wrapper.refresh = () => {
-		throw new Error('Cannot call refresh on the server');
-	};
+		promise.override = () => {
+			throw new Error('Cannot call override on the server');
+		};
 
-	wrapper.override = () => {
-		throw new Error('Cannot call override on the server');
+		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
 	};
 
 	Object.defineProperty(wrapper, '__', {
@@ -270,6 +278,13 @@ export function command(fn) {
 			);
 		}
 
+		const event = getRequestEvent();
+
+		if (!event.isRemoteRequest) {
+			throw new Error(
+				'Cannot call command() from $app/server during server side rendering. Only the remote functiosn query() and prerender() are allowed.'
+			);
+		}
 		return /** @type {Awaited<Output>} */ (fn(...args));
 	};
 

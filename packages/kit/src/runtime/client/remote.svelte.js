@@ -15,7 +15,7 @@ import {
 	resultMap,
 	refreshMap
 } from './client.js';
-import { create_remote_cache_key, parse_remote_args, stringify_remote_args } from '../shared.js';
+import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 import { HttpError } from '../control.js';
 
 let pending_refresh = false;
@@ -30,145 +30,169 @@ function remote_request(id, prerender) {
 	let version = $state(0);
 
 	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
-	const fn = async (/** @type {any} */ ...args) => {
+	/** @type {RemoteQuery<any, any>} */
+	const fn = (/** @type {any} */ ...args) => {
 		const stringified_args = stringify_remote_args(args, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 
-		// Reading the version ensures that the function reruns in reactive contexts if the version changes
-		version;
-		// TODO this is how we could get granular with the cache invalidation
-		// const id = `${fn.key}|${stringified_args}`;
-		// if (!queryMap.has(id)) {
-		// 	version[id] = 0;
-		// 	queryMap.set(id, () => version[id]++);
-		// }
-		// version[id]; // yes this will mean it reruns once for the first call but that is ok because of our caching
+		return {
+			// TODO catch, finally, [Symbol.toStringTag] to really make it extend a promise
+			// TODO potentially do the work earlier already, i.e. the result is just returned in `then`; needs a new API though, i.e. $effect.tracking() doesn't work (we could try-catch an effect though to see if we're in an effect)
+			get then() {
+				// Reading the version ensures that the function reruns in reactive contexts if the version changes
+				// We gotta do it here in the getter and then in return a function because `await promise` would call
+				// the function asynchronously, which would mean "$effect.tracking" is always false. The getter on the other hand
+				// is called synchronously, so we can check if we're in an effect there.
+				version;
+				// TODO this is how we could get granular with the cache invalidation
+				// const id = `${fn.key}|${stringified_args}`;
+				// if (!queryMap.has(id)) {
+				// 	version[id] = 0;
+				// 	queryMap.set(id, () => version[id]++);
+				// }
+				// version[id]; // yes this will mean it reruns once for the first call but that is ok because of our caching
 
-		let tracking = false;
+				let tracking = false;
 
-		if ($effect.tracking()) {
-			tracking = true;
-			$effect.pre(() => () => {
-				tracking = false;
-				const entry = resultMap.get(cache_key);
-				if (entry) {
-					entry[0]--;
-					queueMicrotask(() => {
-						if (entry[0] === 0) {
-							resultMap.delete(cache_key);
+				if ($effect.tracking()) {
+					tracking = true;
+					$effect.pre(() => () => {
+						tracking = false;
+						const entry = resultMap.get(cache_key);
+						if (entry) {
+							entry[0]--;
+							queueMicrotask(() => {
+								if (entry[0] === 0) {
+									resultMap.delete(cache_key);
+								}
+							});
 						}
 					});
 				}
-			});
-		}
 
-		const entry = resultMap.get(cache_key);
-
-		if (!entry) {
-			const response = (async () => {
-				if (!started) {
-					const result = remote_responses[cache_key];
-					if (result) {
-						return result;
-					}
-				}
-
-				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
-				const response = await fetch(url);
-				if (!response.ok) {
-					throw new Error('Failed to execute remote function');
-				}
-
-				const result = /** @type { RemoteFunctionResponse} */ (await response.json());
-				if (result.type === 'redirect') {
-					await goto(result.location);
-					fn.refresh();
-					// We return a promise that never resolves so the current query does not error (we don't know the desired shape),
-					// and the refresh just above should cause the query to rerun in case it's still around.
-					return new Promise(() => {});
-				} else if (result.type === 'error') {
-					throw new HttpError(result.status ?? 500, result.error);
-				} else {
-					return devalue.parse(result.result, app.decoders);
-				}
-			})();
-
-			resultMap.set(cache_key, [tracking ? 1 : 0, response]);
-
-			response
-				.then(() => {
-					// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+				return async (fulfill, reject) => {
 					const entry = resultMap.get(cache_key);
-					if (entry && entry[0] === 0) {
-						resultMap.delete(cache_key);
+
+					if (!entry) {
+						const response = (async () => {
+							if (!started) {
+								const result = remote_responses[cache_key];
+								if (result) {
+									return result;
+								}
+							}
+
+							const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
+							const response = await fetch(url);
+							if (!response.ok) {
+								throw new Error('Failed to execute remote function');
+							}
+
+							const result = /** @type { RemoteFunctionResponse} */ (await response.json());
+							if (result.type === 'redirect') {
+								await goto(result.location);
+								resultMap.delete(cache_key);
+								version++;
+								// We never resolve so the current query does not error (we don't know the desired shape),
+								// and the refresh just above should cause the query to rerun in case it's still around.
+								return new Promise(() => {});
+							} else if (result.type === 'error') {
+								throw new HttpError(result.status ?? 500, result.error);
+							} else {
+								return devalue.parse(result.result, app.decoders);
+							}
+						})();
+
+						resultMap.set(cache_key, [tracking ? 1 : 0, response]);
+
+						return (
+							response
+								.then((result) => {
+									// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+									const entry = resultMap.get(cache_key);
+									if (entry && entry[0] === 0) {
+										resultMap.delete(cache_key);
+									}
+									return result;
+								})
+								// Exceptions delete the cache right away
+								.catch((e) => {
+									resultMap.delete(cache_key);
+									throw e;
+								})
+								.then(fulfill, reject)
+						);
+					} else {
+						if (tracking) {
+							entry[0]++;
+						}
+						return entry[1].then(fulfill, reject);
 					}
-				})
-				// Exceptions delete the cache right away
-				.catch(() => {
-					resultMap.delete(cache_key);
+				};
+			},
+			refresh: () => {
+				pending_refresh = true;
+				// two because it's three in the corresponding "possibly invalidate all logic" in the command function
+				queueMicrotask(() => {
+					queueMicrotask(() => {
+						pending_refresh = false;
+					});
 				});
 
-			return response;
-		} else {
-			if (tracking) {
-				entry[0]++;
-			}
-			return entry[1];
-		}
-	};
+				resultMap.delete(cache_key);
+				version++;
+			},
+			override: async (update) => {
+				const entry = resultMap.get(cache_key);
+				if (!entry) return; // TODO warn in dev mode?
 
-	/** @type {RemoteQuery<any, any>['refresh']} */
-	fn.refresh = (filter) => {
-		pending_refresh = true;
-		queueMicrotask(() => {
-			pending_refresh = false;
-		});
-
-		let refresh = false;
-		const prefix = `${id}|`;
-		for (const [key, entry] of resultMap) {
-			if (key.startsWith(prefix)) {
-				if (!filter) {
-					resultMap.delete(key);
-					refresh = true;
+				if (typeof update === 'function') {
+					const result = update(await entry[1]);
+					entry[1] = Promise.resolve(result);
 				} else {
-					const stringified_args = key.slice(prefix.length);
-					if (filter(entry[1], ...parse_remote_args(stringified_args, app.hooks.transport))) {
-						resultMap.delete(key);
-						refresh = true;
-					}
+					entry[1] = Promise.resolve(update);
 				}
-			}
-		}
 
-		if (refresh) {
-			version++;
-		}
-	};
+				version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+			},
+			optimistic: async (update, command) => {
+				// TODO deduplicate with override
+				const entry = resultMap.get(cache_key);
+				let prev = entry?.[1];
+				// TODO warn in dev mode?
+				if (entry) {
+					if (typeof update === 'function') {
+						const result = update(await prev);
+						entry[1] = prev = Promise.resolve(result);
+					} else {
+						entry[1] = prev = Promise.resolve(update);
+					}
 
-	/** @type {RemoteQuery<any, any>['override']} */
-	fn.override = (update) => {
-		const prefix = `${id}|`;
-		let refetched = false;
-
-		for (const [key, entry] of resultMap) {
-			if (key.startsWith(prefix)) {
-				const stringified_args = key.slice(prefix.length);
-				const result = update(
-					entry[1],
-					...parse_remote_args(stringified_args, app.hooks.transport)
-				);
-				entry[1] = Promise.resolve(result);
-
-				if (!refetched) {
-					refetched = true;
 					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
 				}
+
+				try {
+					return await command();
+				} catch (e) {
+					// If the command fails, we revert the optimistic update
+					if (entry) {
+						entry[1] = /** @type {Promise<any>} */ (prev);
+					}
+					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+					throw e; // rethrow the error so it can be handled by the caller
+				}
 			}
-		}
+		};
 	};
 
-	refreshMap.set(id, fn.refresh);
+	refreshMap.set(id, () => {
+		for (const key of resultMap.keys()) {
+			if (key.startsWith(id + '|')) {
+				resultMap.delete(key);
+			}
+		}
+		version++;
+	});
 
 	return fn;
 }
@@ -226,6 +250,7 @@ export function command(id) {
 			// }
 
 			// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
+			// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
 			queueMicrotask(() => {
 				queueMicrotask(() => {
 					queueMicrotask(() => {

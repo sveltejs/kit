@@ -1620,28 +1620,34 @@ export type RemoteFormAction<Success, Failure> = ((
  * On the client, this will do a fetch to the server to retrieve the value.
  * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
  */
-export type RemoteQuery<Input extends any[], Output> = ((
-	...args: Input
-) => Promise<Awaited<Output>>) & {
+export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promise<
+	Awaited<Output>
+> & {
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
 	 *
-	 * Queries of type `cache` can also call this function on the server to invalidate the cache.
-	 * Cannot be called on the server for `type: query`, has no effect for `type: prerender`.
+	 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
+	 * transport the updated data to the client along with the response, if the action was successful.
 	 */
-	refresh: (filter?: (current: Output, ...input: Input) => boolean) => void;
+	refresh: () => void;
 	/**
 	 * Temporarily override the value of a query. Useful for optimistic UI updates.
-	 * `override` expects a callback function which is potentially called multiple times.
-	 * It will be called one time for each variant of the query that is currently active,
-	 * each with its output as the first argument and the input arguments of the query value as the following arguments.
-	 * For example, if you did call `getTodo(1)` and `getTodo(2)`, the callback would be called twice,
-	 * once with the output of `getTodo(1)` and the number `1`, and once with the output of `getTodo(2)` and the number `2`.
+	 * `override` expects either the new value directly, or a function that takes the current value and returns the new value.
 	 *
-	 * Can only be called on the client
+	 * Can only be called on the client.
 	 */
-	override: (update: (current: Output, ...input: Input) => Output) => void;
+	override: (update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)) => void;
+	/**
+	 * Like `override`, but with a command that will be executed after the override. If that command fails, the override will be reverted.
+	 * This is useful for optimistic UI updates that are closely tied to a command.
+	 *
+	 * Can only be called on the client.
+	 */
+	optimistic: <T>(
+		update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>),
+		command: () => Promise<T>
+	) => Promise<T>;
 };
 
 export * from './index.js';
