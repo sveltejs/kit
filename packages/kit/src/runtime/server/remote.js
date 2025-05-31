@@ -56,7 +56,11 @@ export async function handle_remote_call(event, options, manifest, id) {
 					status: data.status
 				});
 			} else {
-				return json({ type: 'success', result: stringify(data, transport) });
+				return json({
+					type: 'success',
+					result: stringify(data, transport),
+					refreshes: stringify(get_remote_info(event).refreshes, transport)
+				});
 			}
 		} else {
 			const stringified_args =
@@ -72,7 +76,11 @@ export async function handle_remote_call(event, options, manifest, id) {
 				func.apply(null, parse_remote_args(stringified_args, transport))
 			);
 
-			return json({ type: 'result', result: stringify(data, transport) });
+			return json({
+				type: 'result',
+				result: stringify(data, transport),
+				refreshes: stringify(get_remote_info(event).refreshes, transport)
+			});
 		}
 	} catch (error) {
 		if (error instanceof Redirect) {
@@ -175,6 +183,7 @@ export function get_remote_action(url) {
  *  form_result: any;
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
+ *  refreshes?: Record<string, any>;
  * }} RemoteEventInfo
  */
 

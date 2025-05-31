@@ -1612,7 +1612,7 @@ declare module '@sveltejs/kit' {
 		 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
 		 * transport the updated data to the client along with the response, if the action was successful.
 		 */
-		refresh: () => void;
+		refresh: () => Promise<void>;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
 		 * `override` expects either the new value directly, or a function that takes the current value and returns the new value.

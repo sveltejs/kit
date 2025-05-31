@@ -257,7 +257,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, () => void>}
+ * @type {Map<string, (remove?: boolean) => void>}
  * A map of query functions that currently exist in the app.
  * Each value is a query's refresh function which will rerun the query.
  */

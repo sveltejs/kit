@@ -53,8 +53,13 @@ export function form(fn) {
 		}
 		// TODO don't do the additional work when we're being called from the client?
 		const event = getRequestEvent();
-		const result = await fn(form_data);
 		const info = get_remote_info(event);
+
+		if (!info.refreshes) {
+			info.refreshes = {};
+		}
+
+		const result = await fn(form_data);
 
 		// We don't need to care about args, because uneval results are only relevant in full page reloads
 		// where only one form submission is active at the same time
@@ -195,7 +200,21 @@ export function query(fn) {
 		});
 
 		promise.refresh = async () => {
-			throw new Error('Cannot call refresh on the server');
+			const event = getRequestEvent();
+			const info = get_remote_info(event);
+			const refreshes = info.refreshes;
+			if (!refreshes) {
+				throw new Error(
+					'Cannot call refresh on a query that is not executed in the context of a command/form remote function'
+				);
+			}
+
+			refreshes[
+				create_remote_cache_key(
+					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+					stringify_remote_args(args, info.transport)
+				)
+			] = await /** @type {Promise<any>} */ (promise);
 		};
 
 		promise.override = () => {
@@ -284,6 +303,10 @@ export function command(fn) {
 			throw new Error(
 				'Cannot call command() from $app/server during server side rendering. Only the remote functiosn query() and prerender() are allowed.'
 			);
+		}
+
+		if (!get_remote_info(event).refreshes) {
+			get_remote_info(event).refreshes = {};
 		}
 		return /** @type {Awaited<Output>} */ (fn(...args));
 	};

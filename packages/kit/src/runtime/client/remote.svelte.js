@@ -185,10 +185,12 @@ function remote_request(id, prerender) {
 		};
 	};
 
-	refreshMap.set(id, () => {
-		for (const key of resultMap.keys()) {
-			if (key.startsWith(id + '|')) {
-				resultMap.delete(key);
+	refreshMap.set(id, (remove = true) => {
+		if (remove) {
+			for (const key of resultMap.keys()) {
+				if (key.startsWith(id + '|')) {
+					resultMap.delete(key);
+				}
 			}
 		}
 		version++;
@@ -251,16 +253,30 @@ export function command(id) {
 
 			// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
 			// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
-			queueMicrotask(() => {
+			if (result.refreshes) {
+				for (const [key, value] of Object.entries(result.refreshes)) {
+					const entry = resultMap.get(key);
+					if (entry) {
+						entry[1] = Promise.resolve(devalue.parse(value, app.decoders));
+						for (const [k, refresh] of refreshMap) {
+							if (key.startsWith(k)) {
+								refresh(false);
+							}
+						}
+					}
+				}
+			} else {
 				queueMicrotask(() => {
 					queueMicrotask(() => {
-						// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-						// If that doesn't happen within a microtask we assume they want to invalidate everything.
-						if (pending_invalidate || pending_refresh) return;
-						invalidateAll();
+						queueMicrotask(() => {
+							// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
+							// If that doesn't happen within a microtask we assume they want to invalidate everything.
+							if (pending_invalidate || pending_refresh) return;
+							invalidateAll();
+						});
 					});
 				});
-			});
+			}
 
 			return devalue.parse(result.result, app.decoders);
 		}
@@ -316,7 +332,23 @@ export function form(id) {
 					await set_nearest_error_page(form_result.error, form_result.status);
 				} else if (form_result.type === 'success') {
 					form.reset();
-					await invalidateAll();
+					if (form_result.refreshes) {
+						for (const [key, value] of Object.entries(
+							devalue.parse(form_result.refreshes, app.decoders)
+						)) {
+							const entry = resultMap.get(key);
+							if (entry) {
+								entry[1] = Promise.resolve(value);
+								for (const [k, refresh] of refreshMap) {
+									if (key.startsWith(k)) {
+										refresh(false);
+									}
+								}
+							}
+						}
+					} else {
+						await invalidateAll();
+					}
 				}
 			}
 		});
