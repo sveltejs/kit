@@ -301,7 +301,7 @@ export function command(fn) {
 
 		if (!event.isRemoteRequest) {
 			throw new Error(
-				'Cannot call command() from $app/server during server side rendering. Only the remote functiosn query() and prerender() are allowed.'
+				'Cannot call command() from $app/server during server side rendering. The only callable remote functions are query() and prerender().'
 			);
 		}
 
@@ -346,73 +346,96 @@ export function command(fn) {
 export function prerender(fn, options) {
 	check_experimental('prerender');
 
-	/**
-	 * @param {Input} args
-	 * @returns {Promise<Awaited<Output>>}
-	 */
-	const wrapper = async (...args) => {
-		const event = getRequestEvent();
-		const info = get_remote_info(event);
-		const stringified_args = stringify_remote_args(args, info.transport);
-		const url = `${base}/${app_dir}/remote/${wrapper.__.id}/${stringified_args}`;
+	/** @type {RemoteQuery<Input, Output>} */
+	const wrapper = (...args) => {
+		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
+		const promise = new Promise(async (resolve) => {
+			const event = getRequestEvent();
+			const info = get_remote_info(event);
+			const stringified_args = stringify_remote_args(args, info.transport);
+			const id = /** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id;
+			const url = `${base}/${app_dir}/remote/${id}/${stringified_args}`;
 
-		if (!info.prerendering && !DEV && !event.isRemoteRequest) {
-			try {
-				// We do a fetch request to ourselves which will return the prerendered response.
-				// TODO make use of $app/server#read somehow?
-				const response = await fetch(event.url.origin + url);
-				if (response.ok) {
-					// Below we only save results for prerendering, not redirects or errors, so this is safe
-					const prerendered = await response.json();
-					info.results[create_remote_cache_key(wrapper.__.id, stringified_args)] =
-						prerendered.result;
-					return parse_remote_response(prerendered.result, info.transport);
+			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
+				try {
+					const response = await fetch(event.url.origin + url);
+					if (response.ok) {
+						const prerendered = await response.json();
+						info.results[create_remote_cache_key(id, stringified_args)] = prerendered.result;
+						return resolve(parse_remote_response(prerendered.result, info.transport));
+					}
+				} catch (e) {
+					// not available prerendered, fallback to normal function
 				}
-			} catch (e) {
-				// not available prerendered, fallback to normal function
 			}
-		}
 
-		// Deduplicate function calls
-		if (info.prerendering?.remote_responses.has(url)) {
-			return info.prerendering.remote_responses.get(url);
-		}
+			if (info.prerendering?.remote_responses.has(url)) {
+				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
+			}
 
-		const maybe_promise = fn(...args);
+			const maybe_promise = fn(...args);
 
-		if (info.prerendering) {
-			info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
-			Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
-		}
+			if (info.prerendering) {
+				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
+				Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
+			}
 
-		const result = await maybe_promise;
+			const result = await maybe_promise;
 
-		uneval_remote_response(wrapper.__.id, args, result, event);
+			uneval_remote_response(id, args, result, event);
 
-		if (info.prerendering) {
-			const body = { type: 'result', result: stringify(result, info.transport) };
-			info.prerendering.dependencies.set(url, {
-				body: JSON.stringify(body),
-				response: json(body)
-			});
-		}
+			if (info.prerendering) {
+				const body = { type: 'result', result: stringify(result, info.transport) };
+				info.prerendering.dependencies.set(url, {
+					body: JSON.stringify(body),
+					response: json(body)
+				});
+			}
 
-		return result;
+			return resolve(result);
+		});
+
+		promise.refresh = async () => {
+			if (!options?.dynamic) {
+				console.warn(
+					'Calling refresh on a prerendered function that is not dynamic will not have any effect'
+				);
+			}
+
+			const event = getRequestEvent();
+			const info = get_remote_info(event);
+			const refreshes = info.refreshes;
+			if (!refreshes) {
+				throw new Error(
+					'Cannot call refresh on a prerender function that is not executed in the context of a command/form remote function'
+				);
+			}
+
+			refreshes[
+				create_remote_cache_key(
+					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+					stringify_remote_args(args, info.transport)
+				)
+			] = await /** @type {Promise<any>} */ (promise);
+		};
+
+		promise.override = () => {
+			throw new Error('Cannot call override on the server');
+		};
+
+		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
 	};
 
-	wrapper.refresh = () => {
-		throw new Error('Cannot call refresh on the server');
-	};
-
-	wrapper.override = () => {
-		throw new Error('Cannot call override on the server');
-	};
-
-	wrapper.__ = /** @type {RemoteInfo} */ ({
-		type: 'prerender',
-		id: '',
-		entries: options?.entries,
-		dynamic: options?.dynamic
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {RemoteInfo} */ ({
+			type: 'prerender',
+			id: '',
+			entries: options?.entries,
+			dynamic: options?.dynamic
+		}),
+		configurable: false,
+		writable: false,
+		enumerable: false
 	});
 
 	return wrapper;
