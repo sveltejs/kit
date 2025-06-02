@@ -293,7 +293,7 @@ export type RemoteFunctionResponse =
 	| {
 			type: 'result';
 			result: string;
-			refreshes?: Record<string, string>;
+			refreshes: Record<string, string>;
 	  };
 
 /**

@@ -56,6 +56,10 @@ function remote_request(id, prerender) {
 
 				if ($effect.tracking()) {
 					tracking = true;
+					// We have to increase the listener count here since not every get is necessarily a new call,
+					// (e.g. `typeof x.then === 'function'`), so we would count down more than up otherwise.
+					const entry = resultMap.get(cache_key);
+					if (entry) entry[0]++;
 					$effect.pre(() => () => {
 						tracking = false;
 						const entry = resultMap.get(cache_key);
@@ -123,14 +127,12 @@ function remote_request(id, prerender) {
 								.then(fulfill, reject)
 						);
 					} else {
-						if (tracking) {
-							entry[0]++;
-						}
+						// See comment above why we don't increase count here
 						return entry[1].then(fulfill, reject);
 					}
 				};
 			},
-			refresh: () => {
+			refresh: async () => {
 				pending_refresh = true;
 				// two because it's three in the corresponding "possibly invalidate all logic" in the command function
 				queueMicrotask(() => {
@@ -246,26 +248,22 @@ export function command(id) {
 		} else if (result.type === 'error') {
 			throw new HttpError(result.status ?? 500, result.error);
 		} else {
-			// If we want to invalidate from the server, this is how we would do it
-			// for (const key of JSON.parse(response.headers.get('x-sveltekit-rpc-invalidate') ?? '[]')) {
-			// 	invalidate(key);
-			// }
-
-			// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
-			// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
-			if (result.refreshes) {
-				for (const [key, value] of Object.entries(result.refreshes)) {
+			const refreshes = devalue.parse(/** @type {any} */ (result.refreshes), app.decoders);
+			if (Object.keys(refreshes).length > 0) {
+				for (const [key, value] of Object.entries(refreshes)) {
 					const entry = resultMap.get(key);
 					if (entry) {
-						entry[1] = Promise.resolve(devalue.parse(value, app.decoders));
+						entry[1] = Promise.resolve(value);
 						for (const [k, refresh] of refreshMap) {
-							if (key.startsWith(k)) {
+							if (key.startsWith(`${k}|`)) {
 								refresh(false);
 							}
 						}
 					}
 				}
 			} else {
+				// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
+				// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
 				queueMicrotask(() => {
 					queueMicrotask(() => {
 						queueMicrotask(() => {

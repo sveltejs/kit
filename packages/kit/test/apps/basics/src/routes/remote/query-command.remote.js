@@ -5,3 +5,8 @@ export const add = query((a, b) => a + b);
 export const add2 = query((a, b) => a + b);
 
 export const multiply = command((a, b) => a * b);
+
+export const server_refresh = command(async () => {
+	await add(2, 3).refresh();
+	return 'works';
+});

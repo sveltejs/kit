@@ -1618,7 +1618,7 @@ test.describe('remote functions', () => {
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-btn');
-		await expect(page.locator('#multiply-result')).toHaveText('2');
+		await expect(page.locator('#command-result')).toHaveText('2');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
 	});
@@ -1634,9 +1634,28 @@ test.describe('remote functions', () => {
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-refresh-btn');
-		await expect(page.locator('#multiply-result')).toHaveText('2');
+		await expect(page.locator('#command-result')).toHaveText('2');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(2); // 1 for the command, 1 for the refresh
+	});
+
+	test('command does single flight mutation', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		await page.waitForTimeout(300); // there's some query caching which could mess with the test
+
+		// override the value
+		await page.click('#override-btn');
+		await expect(page.locator('#sum-result')).toHaveText('99');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('works');
+		await expect(page.locator('#sum-result')).toHaveText('5');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
 	test('form.enhance works', async ({ page }) => {
