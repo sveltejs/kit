@@ -12,145 +12,6 @@ import { app_dir, base } from '__sveltekit/paths';
 import { ActionFailure } from '../../control.js';
 
 /**
- * Creates a form action. The passed function will be called when the form is submitted.
- * Returns an object that can be spread onto a form element to connect it to the function.
- * ```ts
- * import { createPost } from '$lib/server/db';
- *
- * export const createPost = form((formData) => {
- * 	const title = formData.get('title');
- * 	const content = formData.get('content');
- * 	return createPost({ title, content });
- * });
- * ```
- * ```svelte
- * <script>
- * 	import { createPost } from './blog.remote.js';
- * </script>
- *
- * <form {...createPost}>
- * 	<input type="text" name="title" />
- * 	<textarea name="content" />
- * 	<button type="submit">Create</button>
- * </form>
- * ```
- *
- * @template T
- * @template [U=never]
- * @param {(formData: FormData) => T | IActionFailure<U>} fn
- * @returns {RemoteFormAction<T, U>}
- */
-/*@__NO_SIDE_EFFECTS__*/
-export function form(fn) {
-	check_experimental('form');
-
-	/** @param {FormData} form_data */
-	const wrapper = async (form_data) => {
-		if (prerendering) {
-			throw new Error(
-				'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
-			);
-		}
-		// TODO don't do the additional work when we're being called from the client?
-		const event = getRequestEvent();
-		const info = get_remote_info(event);
-
-		if (!info.refreshes) {
-			info.refreshes = {};
-		}
-
-		const result = await fn(form_data);
-
-		// We don't need to care about args, because uneval results are only relevant in full page reloads
-		// where only one form submission is active at the same time
-		if (!event.isRemoteRequest) {
-			uneval_remote_response(
-				wrapper.action,
-				[],
-				result instanceof ActionFailure ? result.data : result,
-				event
-			);
-			info.form_result = result instanceof ActionFailure ? result.data : result;
-		}
-
-		return result;
-	};
-
-	wrapper.method = /** @type {'POST'} */ ('POST');
-	wrapper.action = '';
-	wrapper.onsubmit = () => {};
-
-	Object.defineProperty(wrapper, 'enhance', {
-		value: () => {
-			return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
-		},
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-
-	const form_action = {
-		type: 'submit',
-		formaction: '',
-		onclick: () => {}
-	};
-	Object.defineProperty(form_action, 'enhance', {
-		value: () => {
-			return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
-		},
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-	Object.defineProperty(wrapper, 'formAction', {
-		value: form_action,
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({
-			type: 'form',
-			id: 'unused for forms',
-			// This allows us to deduplicate some logic at the callsites
-			set_action: (action) => {
-				wrapper.action = `?/remote=${encodeURIComponent(action)}`;
-				wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
-			}
-		}),
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-
-	Object.defineProperty(wrapper, 'result', {
-		get() {
-			try {
-				const event = getRequestEvent();
-				return get_remote_info(event).form_result;
-			} catch (e) {
-				return null;
-			}
-		},
-		enumerable: false,
-		configurable: false
-	});
-
-	Object.defineProperty(wrapper, 'error', {
-		get() {
-			// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
-			return /** @type {any} */ (null);
-		},
-		enumerable: false,
-		configurable: false
-	});
-
-	// @ts-expect-error TS doesn't get the types right
-	return wrapper;
-}
-
-/**
  * Creates a remote function that can be invoked like a regular function within components.
  * The given function is invoked directly on the backend and via a fetch call on the client.
  * ```ts
@@ -229,90 +90,6 @@ export function query(fn) {
 		writable: false,
 		enumerable: false,
 		configurable: false
-	});
-
-	return wrapper;
-}
-
-/**
- * @param {any} data
- * @param {ServerHooks['transport']} transport
- */
-function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
-	}
-
-	return parse(data, revivers);
-}
-
-/**
- * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
- *
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export interface BlogPost {
- * 	id: string;
- * 	title: string;
- * 	content: string;
- * }
- *
- * export const like = command((postId: string) => {
- * 	blogPosts.get(postId).like();
- * });
- * ```
- *
- * ```svelte
- * <script lang="ts">
- * 	import { like } from './blog.remote.js';
- *
- * 	let post: BlogPost = $props();
- * </script>
- *
- * <h1>{post.title}</h1>
- * <p>{post.content}</p>
- * <button onclick={() => like(post.id)}>♡</button>
- * ```
- *
- * @template {any[]} Input
- * @template Output
- * @param {(...args: Input) => Output} fn
- * @returns {(...args: Input) => Promise<Awaited<Output>>}
- */
-/*@__NO_SIDE_EFFECTS__*/
-export function command(fn) {
-	check_experimental('command');
-
-	/**
-	 * @param {Input} args
-	 * @returns {Promise<Awaited<Output>>}
-	 */
-	const wrapper = async (...args) => {
-		if (prerendering) {
-			throw new Error(
-				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
-			);
-		}
-
-		const event = getRequestEvent();
-
-		if (!event.isRemoteRequest) {
-			throw new Error(
-				'Cannot call command() from $app/server during server side rendering. The only callable remote functions are query() and prerender().'
-			);
-		}
-
-		if (!get_remote_info(event).refreshes) {
-			get_remote_info(event).refreshes = {};
-		}
-		return /** @type {Awaited<Output>} */ (fn(...args));
-	};
-
-	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({
-		type: 'command'
 	});
 
 	return wrapper;
@@ -548,6 +325,215 @@ export function prerender(fn, options) {
 // }
 
 /**
+ * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ *
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export interface BlogPost {
+ * 	id: string;
+ * 	title: string;
+ * 	content: string;
+ * }
+ *
+ * export const like = command((postId: string) => {
+ * 	blogPosts.get(postId).like();
+ * });
+ * ```
+ *
+ * ```svelte
+ * <script lang="ts">
+ * 	import { like } from './blog.remote.js';
+ *
+ * 	let post: BlogPost = $props();
+ * </script>
+ *
+ * <h1>{post.title}</h1>
+ * <p>{post.content}</p>
+ * <button onclick={() => like(post.id)}>♡</button>
+ * ```
+ *
+ * @template {any[]} Input
+ * @template Output
+ * @param {(...args: Input) => Output} fn
+ * @returns {(...args: Input) => Promise<Awaited<Output>>}
+ */
+/*@__NO_SIDE_EFFECTS__*/
+export function command(fn) {
+	check_experimental('command');
+
+	/**
+	 * @param {Input} args
+	 * @returns {Promise<Awaited<Output>>}
+	 */
+	const wrapper = async (...args) => {
+		if (prerendering) {
+			throw new Error(
+				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		}
+
+		const event = getRequestEvent();
+
+		if (!event.isRemoteRequest) {
+			throw new Error(
+				'Cannot call command() from $app/server during server side rendering. The only callable remote functions are query() and prerender().'
+			);
+		}
+
+		if (!get_remote_info(event).refreshes) {
+			get_remote_info(event).refreshes = {};
+		}
+		return /** @type {Awaited<Output>} */ (fn(...args));
+	};
+
+	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({
+		type: 'command'
+	});
+
+	return wrapper;
+}
+
+/**
+ * Creates a form action. The passed function will be called when the form is submitted.
+ * Returns an object that can be spread onto a form element to connect it to the function.
+ * ```ts
+ * import { createPost } from '$lib/server/db';
+ *
+ * export const createPost = form((formData) => {
+ * 	const title = formData.get('title');
+ * 	const content = formData.get('content');
+ * 	return createPost({ title, content });
+ * });
+ * ```
+ * ```svelte
+ * <script>
+ * 	import { createPost } from './blog.remote.js';
+ * </script>
+ *
+ * <form {...createPost}>
+ * 	<input type="text" name="title" />
+ * 	<textarea name="content" />
+ * 	<button type="submit">Create</button>
+ * </form>
+ * ```
+ *
+ * @template T
+ * @template [U=never]
+ * @param {(formData: FormData) => T | IActionFailure<U>} fn
+ * @returns {RemoteFormAction<T, U>}
+ */
+/*@__NO_SIDE_EFFECTS__*/
+export function form(fn) {
+	check_experimental('form');
+
+	/** @param {FormData} form_data */
+	const wrapper = async (form_data) => {
+		if (prerendering) {
+			throw new Error(
+				'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+			);
+		}
+		// TODO don't do the additional work when we're being called from the client?
+		const event = getRequestEvent();
+		const info = get_remote_info(event);
+
+		if (!info.refreshes) {
+			info.refreshes = {};
+		}
+
+		const result = await fn(form_data);
+
+		// We don't need to care about args, because uneval results are only relevant in full page reloads
+		// where only one form submission is active at the same time
+		if (!event.isRemoteRequest) {
+			uneval_remote_response(
+				wrapper.action,
+				[],
+				result instanceof ActionFailure ? result.data : result,
+				event
+			);
+			info.form_result = result instanceof ActionFailure ? result.data : result;
+		}
+
+		return result;
+	};
+
+	wrapper.method = /** @type {'POST'} */ ('POST');
+	wrapper.action = '';
+	wrapper.onsubmit = () => {};
+
+	Object.defineProperty(wrapper, 'enhance', {
+		value: () => {
+			return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
+		},
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
+
+	const form_action = {
+		type: 'submit',
+		formaction: '',
+		onclick: () => {}
+	};
+	Object.defineProperty(form_action, 'enhance', {
+		value: () => {
+			return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
+		},
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
+	Object.defineProperty(wrapper, 'formAction', {
+		value: form_action,
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
+
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {RemoteInfo} */ ({
+			type: 'form',
+			id: 'unused for forms',
+			// This allows us to deduplicate some logic at the callsites
+			set_action: (action) => {
+				wrapper.action = `?/remote=${encodeURIComponent(action)}`;
+				wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
+			}
+		}),
+		writable: false,
+		enumerable: false,
+		configurable: false
+	});
+
+	Object.defineProperty(wrapper, 'result', {
+		get() {
+			try {
+				const event = getRequestEvent();
+				return get_remote_info(event).form_result;
+			} catch (e) {
+				return null;
+			}
+		},
+		enumerable: false,
+		configurable: false
+	});
+
+	Object.defineProperty(wrapper, 'error', {
+		get() {
+			// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
+			return /** @type {any} */ (null);
+		},
+		enumerable: false,
+		configurable: false
+	});
+
+	// @ts-expect-error TS doesn't get the types right
+	return wrapper;
+}
+
+/**
  * @param {string} id
  * @param {any[]} args
  * @param {any} result
@@ -581,4 +567,18 @@ function check_experimental(feature) {
 			`Cannot use \`${feature}\` from \`$app/server\` without the experimental flag set to true. Please set kit.experimental.remoteFunctions to \`true\` in your config.`
 		);
 	}
+}
+
+/**
+ * @param {any} data
+ * @param {ServerHooks['transport']} transport
+ */
+function parse_remote_response(data, transport) {
+	/** @type {Record<string, any>} */
+	const revivers = {};
+	for (const key in transport) {
+		revivers[key] = transport[key].decode;
+	}
+
+	return parse(data, revivers);
 }
