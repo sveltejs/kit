@@ -31,7 +31,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	let no_svelte_3;
 	try {
 		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
-	} catch (e) {
+	} catch (_) {
 		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
 		no_svelte_3 = true;
 	}
