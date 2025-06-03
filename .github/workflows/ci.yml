@@ -95,7 +95,7 @@ jobs:
       matrix:
         include:
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
             mode: 'dev'
           - node-version: 18
@@ -107,7 +107,7 @@ jobs:
             e2e-browser: 'webkit'
             mode: 'dev'
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
             mode: 'build'
           - node-version: 18
