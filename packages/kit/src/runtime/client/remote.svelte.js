@@ -374,217 +374,263 @@ export function form(id) {
 		return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
 	}
 
-	const action = '?/remote=' + encodeURIComponent(id);
+	const instance_cache = new Map();
 
-	/** @type {any} */
-	let result = $state(
-		!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
-	);
-	/** @type {any} */
-	let error = $state(undefined);
+	/** @param {string | number | boolean} [key] */
+	function create_instance(key) {
+		const action_id = id + (key ? `/${JSON.stringify(key)}` : '');
+		const action = '?/remote=' + encodeURIComponent(action_id);
 
-	/**
-	 * @param {HTMLFormElement} form
-	 * @param {FormData} data
-	 */
-	async function submit(form, data) {
-		const response = await fetch(`/${app_dir}/remote/${id}`, {
-			method: 'POST',
-			body: data
-		});
+		/** @type {any} */
+		let result = $state(
+			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
+		);
+		/** @type {any} */
+		let error = $state(undefined);
 
-		const form_result = /** @type {RemoteFormResult<any, any>} */ ({
-			type: 'error',
-			result: undefined,
-			error: /** @type {any} */ (undefined),
-			status: undefined,
-			location: undefined,
-			apply: async () => {
-				if (form_result.type === 'redirect') {
-					await goto(form_result.location, { invalidateAll: true });
-				} else if (form_result.type === 'error') {
-					await set_nearest_error_page(form_result.error, form_result.status);
-				} else if (form_result.type === 'success') {
-					form.reset();
-					if (form_result.refreshes) {
-						for (const [key, value] of Object.entries(
-							devalue.parse(form_result.refreshes, app.decoders)
-						)) {
-							// Call the override function to update the query with the new value
-							const entry = resultMap.get(key);
-							entry?.[2](value);
+		/**
+		 * @param {HTMLFormElement} form
+		 * @param {FormData} data
+		 */
+		async function submit(form, data) {
+			const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+				method: 'POST',
+				body: data
+			});
+
+			const form_result = /** @type {RemoteFormResult<any, any>} */ ({
+				type: 'error',
+				result: undefined,
+				error: /** @type {any} */ (undefined),
+				status: undefined,
+				location: undefined,
+				apply: async () => {
+					if (form_result.type === 'redirect') {
+						await goto(form_result.location, { invalidateAll: true });
+					} else if (form_result.type === 'error') {
+						await set_nearest_error_page(form_result.error, form_result.status);
+					} else if (form_result.type === 'success') {
+						form.reset();
+						if (form_result.refreshes) {
+							for (const [key, value] of Object.entries(
+								devalue.parse(form_result.refreshes, app.decoders)
+							)) {
+								// Call the override function to update the query with the new value
+								const entry = resultMap.get(key);
+								entry?.[2](value);
+							}
+						} else {
+							await invalidateAll();
 						}
-					} else {
-						await invalidateAll();
 					}
 				}
-			}
-		});
+			});
 
-		if (!response.ok) {
-			// We only end up here in case of a network error or if the server has an internal error
-			// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-			form_result.error = error = { message: 'Failed to execute remote function' };
-			form_result.status = 500;
-			result = undefined;
+			if (!response.ok) {
+				// We only end up here in case of a network error or if the server has an internal error
+				// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+				form_result.error = error = { message: 'Failed to execute remote function' };
+				form_result.status = 500;
+				result = undefined;
+				return form_result;
+			}
+
+			Object.assign(form_result, /** @type { RemoteFunctionResponse} */ (await response.json()));
+			if (form_result.type === 'error') {
+				result = undefined;
+				error = form_result.error;
+			} else if (form_result.type === 'success' || form_result.type === 'failure') {
+				error = undefined;
+				form_result.result = result = devalue.parse(
+					/** @type {any} */ (form_result.result),
+					app.decoders
+				);
+			}
+
 			return form_result;
 		}
 
-		Object.assign(form_result, /** @type { RemoteFunctionResponse} */ (await response.json()));
-		if (form_result.type === 'error') {
-			result = undefined;
-			error = form_result.error;
-		} else if (form_result.type === 'success' || form_result.type === 'failure') {
-			error = undefined;
-			form_result.result = result = devalue.parse(
-				/** @type {any} */ (form_result.result),
-				app.decoders
-			);
-		}
+		/**
+		 * @param {HTMLFormElement} form_element
+		 * @param {HTMLElement | null} submitter
+		 */
+		function create_form_data(form_element, submitter) {
+			const form_data = new FormData(form_element);
 
-		return form_result;
-	}
-
-	/**
-	 * @param {HTMLFormElement} form_element
-	 * @param {HTMLElement | null} submitter
-	 */
-	function create_form_data(form_element, submitter) {
-		const form_data = new FormData(form_element);
-
-		if (DEV) {
-			const enctype = submitter?.hasAttribute('formenctype')
-				? /** @type {HTMLButtonElement | HTMLInputElement} */ (submitter).formEnctype
-				: clone(form_element).enctype;
-			if (enctype !== 'multipart/form-data') {
-				for (const value of form_data.values()) {
-					if (value instanceof File) {
-						throw new Error(
-							'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-						);
+			if (DEV) {
+				const enctype = submitter?.hasAttribute('formenctype')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (submitter).formEnctype
+					: clone(form_element).enctype;
+				if (enctype !== 'multipart/form-data') {
+					for (const value of form_data.values()) {
+						if (value instanceof File) {
+							throw new Error(
+								'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
+							);
+						}
 					}
 				}
 			}
-		}
 
-		const submitter_name = submitter?.getAttribute('name');
-		if (submitter_name) {
-			form_data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-		}
-
-		return form_data;
-	}
-
-	/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
-	const form_onsubmit = (callback) => {
-		/** @param {SubmitEvent} event */
-		return async (event) => {
-			const form = /** @type {HTMLFormElement} */ (event.target);
-			const method = event.submitter?.hasAttribute('formmethod')
-				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
-				: clone(form).method;
-
-			if (method !== 'post') return;
-
-			const action = new URL(
-				// We can't do submitter.formAction directly because that property is always set
-				event.submitter?.hasAttribute('formaction')
-					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-					: clone(form).action
-			);
-
-			if (action.searchParams.get('/remote') !== id) {
-				return;
+			const submitter_name = submitter?.getAttribute('name');
+			if (submitter_name) {
+				form_data.append(submitter_name, submitter?.getAttribute('value') ?? '');
 			}
 
-			event.preventDefault();
+			return form_data;
+		}
 
-			const data = create_form_data(form, event.submitter);
+		/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
+		const form_onsubmit = (callback) => {
+			/** @param {SubmitEvent} event */
+			return async (event) => {
+				const form = /** @type {HTMLFormElement} */ (event.target);
+				const method = event.submitter?.hasAttribute('formmethod')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
+					: clone(form).method;
 
-			callback({
-				form,
-				data,
-				submit: () => submit(form, data)
-			});
-		};
-	};
+				if (method !== 'post') return;
 
-	submit.method = 'POST';
-	submit.action = action;
-	submit.onsubmit = form_onsubmit(({ submit }) => submit().then((r) => r.apply()));
+				const action = new URL(
+					// We can't do submitter.formAction directly because that property is always set
+					event.submitter?.hasAttribute('formaction')
+						? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+						: clone(form).action
+				);
 
-	/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
-	const form_action_onclick = (callback) => {
-		/** @param {Event} event */
-		return async (event) => {
-			const target = /** @type {HTMLButtonElement} */ (event.target);
-			const form = target.form;
-			if (!form) return;
+				if (action.searchParams.get('/remote') !== action_id) {
+					return;
+				}
 
-			// Prevent this from firing the form's submit event
-			event.stopPropagation();
-			event.preventDefault();
+				event.preventDefault();
 
-			const data = create_form_data(form, target);
+				const data = create_form_data(form, event.submitter);
 
-			callback({
-				form,
-				data,
-				submit: () => submit(form, data)
-			});
-		};
-	};
-
-	/** @type {RemoteFormAction<any, any>['formAction']} */
-	// @ts-expect-error we gotta set enhance as a non-enumerable property
-	const form_action = {
-		type: 'submit',
-		formaction: action,
-		onclick: form_action_onclick(({ submit }) => submit().then((r) => r.apply()))
-	};
-
-	Object.defineProperty(form_action, 'enhance', {
-		/** @type {RemoteFormAction<any, any>['formAction']['enhance']} */
-		value: (callback) => {
-			return {
-				type: 'submit',
-				formaction: action,
-				onclick: form_action_onclick(callback)
+				callback({
+					form,
+					data,
+					submit: () => submit(form, data)
+				});
 			};
-		},
-		enumerable: false
-	});
+		};
 
-	Object.defineProperties(submit, {
-		formAction: {
-			value: form_action,
-			enumerable: false
-		},
-		result: {
-			get() {
-				return result;
-			},
-			enumerable: false
-		},
-		error: {
-			get() {
-				return error;
-			},
-			enumerable: false
-		},
-		enhance: {
-			/** @type {RemoteFormAction<any, any>['enhance']} */
+		submit.method = 'POST';
+		submit.action = action;
+		submit.onsubmit = form_onsubmit(({ submit }) => submit().then((r) => r.apply()));
+
+		/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
+		const form_action_onclick = (callback) => {
+			/** @param {Event} event */
+			return async (event) => {
+				const target = /** @type {HTMLButtonElement} */ (event.target);
+				const form = target.form;
+				if (!form) return;
+
+				// Prevent this from firing the form's submit event
+				event.stopPropagation();
+				event.preventDefault();
+
+				const data = create_form_data(form, target);
+
+				callback({
+					form,
+					data,
+					submit: () => submit(form, data)
+				});
+			};
+		};
+
+		/** @type {RemoteFormAction<any, any>['formAction']} */
+		// @ts-expect-error we gotta set enhance as a non-enumerable property
+		const form_action = {
+			type: 'submit',
+			formaction: action,
+			onclick: form_action_onclick(({ submit }) => submit().then((r) => r.apply()))
+		};
+
+		Object.defineProperty(form_action, 'enhance', {
+			/** @type {RemoteFormAction<any, any>['formAction']['enhance']} */
 			value: (callback) => {
 				return {
-					method: 'POST',
-					action,
-					onsubmit: form_onsubmit(callback)
+					type: 'submit',
+					formaction: action,
+					onclick: form_action_onclick(callback)
 				};
 			},
 			enumerable: false
+		});
+
+		Object.defineProperties(submit, {
+			formAction: {
+				value: form_action,
+				enumerable: false
+			},
+			result: {
+				get() {
+					return result;
+				},
+				enumerable: false
+			},
+			error: {
+				get() {
+					return error;
+				},
+				enumerable: false
+			},
+			enhance: {
+				/** @type {RemoteFormAction<any, any>['enhance']} */
+				value: (callback) => {
+					return {
+						method: 'POST',
+						action,
+						onsubmit: form_onsubmit(callback)
+					};
+				},
+				enumerable: false
+			}
+		});
+
+		if (!key) {
+			Object.defineProperty(submit, 'for', {
+				/** @type {RemoteFormAction<any, any>['for']} */
+				value: (key) => {
+					let entry = instance_cache.get(key);
+
+					let tracking = true;
+					try {
+						$effect.pre(() => {
+							return () => {
+								entry[0]--;
+								queueMicrotask(() => {
+									if (entry[0] === 0) {
+										instance_cache.delete(key);
+									}
+								});
+							};
+						});
+					} catch {
+						tracking = false;
+					}
+
+					if (tracking) {
+						if (!entry) {
+							instance_cache.set(key, (entry = [1, create_instance(key)]));
+						} else {
+							entry[0]++;
+						}
+					} else if (!entry) {
+						entry = [0, create_instance(key)];
+					}
+
+					return entry[1];
+				},
+				enumerable: false
+			});
 		}
-	});
+
+		return submit;
+	}
 
 	// @ts-expect-error we gotta set enhance etc as a non-enumerable properties
-	return submit;
+	return create_instance();
 }

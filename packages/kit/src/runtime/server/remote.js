@@ -105,10 +105,10 @@ export async function handle_remote_call(event, options, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 export async function handle_remote_form_post(event, manifest, id) {
-	const [hash, func_name] = id.split('/');
+	const [hash, func_name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
-	const func = module?.[func_name];
+	let func = module?.[func_name];
 
 	if (!func) {
 		event.setHeaders({
@@ -126,8 +126,13 @@ export async function handle_remote_form_post(event, manifest, id) {
 		};
 	}
 
+	if (action_id) {
+		func = with_event(event, () => func.for(JSON.parse(action_id)));
+	}
+
 	try {
 		const form_data = await event.request.formData();
+		get_remote_info(event);
 		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
@@ -180,9 +185,10 @@ export function get_remote_action(url) {
 /**
  * @typedef {{
  * 	results: Record<string, string>;
- *  form_result: any;
+ *  form_result?: [key: any, value: any];
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
+ *  form_instances: Map<any, any>;
  *  refreshes?: Record<string, any>;
  * }} RemoteEventInfo
  */
@@ -201,8 +207,8 @@ export function add_remote_info(event, state, options) {
 			results: {},
 			form_result: undefined,
 			prerendering: state.prerendering,
-			transport: options.hooks.transport
-			// remote_invalidations: new Set() // <- this is how we could do refresh on the server
+			transport: options.hooks.transport,
+			form_instances: new Map()
 		}),
 		configurable: false,
 		writable: false,

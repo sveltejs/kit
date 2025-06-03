@@ -427,110 +427,141 @@ export function command(fn) {
 export function form(fn) {
 	check_experimental('form');
 
-	/** @param {FormData} form_data */
-	const wrapper = async (form_data) => {
-		if (prerendering) {
-			throw new Error(
-				'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
-			);
-		}
-		// TODO don't do the additional work when we're being called from the client?
-		const event = getRequestEvent();
-		const info = get_remote_info(event);
-
-		if (!info.refreshes) {
-			info.refreshes = {};
-		}
-
-		const result = await fn(form_data);
-
-		// We don't need to care about args, because uneval results are only relevant in full page reloads
-		// where only one form submission is active at the same time
-		if (!event.isRemoteRequest) {
-			uneval_remote_response(
-				wrapper.action,
-				[],
-				result instanceof ActionFailure ? result.data : result,
-				event
-			);
-			info.form_result = result instanceof ActionFailure ? result.data : result;
-		}
-
-		return result;
-	};
-
-	wrapper.method = /** @type {'POST'} */ ('POST');
-	wrapper.action = '';
-	wrapper.onsubmit = () => {};
-
-	Object.defineProperty(wrapper, 'enhance', {
-		value: () => {
-			return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
-		},
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-
-	const form_action = {
-		type: 'submit',
-		formaction: '',
-		onclick: () => {}
-	};
-	Object.defineProperty(form_action, 'enhance', {
-		value: () => {
-			return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
-		},
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-	Object.defineProperty(wrapper, 'formAction', {
-		value: form_action,
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
-
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({
-			type: 'form',
-			id: 'unused for forms',
-			// This allows us to deduplicate some logic at the callsites
-			set_action: (action) => {
-				wrapper.action = `?/remote=${encodeURIComponent(action)}`;
-				wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
+	/**
+	 * @param {string | number | boolean} [key]
+	 * @param {string} [action]
+	 */
+	function create_instance(key, action = '') {
+		/** @param {FormData} form_data */
+		const wrapper = async (form_data) => {
+			if (prerendering) {
+				throw new Error(
+					'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+				);
 			}
-		}),
-		writable: false,
-		enumerable: false,
-		configurable: false
-	});
+			// TODO don't do the additional work when we're being called from the client?
+			const event = getRequestEvent();
+			const info = get_remote_info(event);
 
-	Object.defineProperty(wrapper, 'result', {
-		get() {
-			try {
-				const event = getRequestEvent();
-				return get_remote_info(event).form_result;
-			} catch (e) {
-				return null;
+			if (!info.refreshes) {
+				info.refreshes = {};
 			}
-		},
-		enumerable: false,
-		configurable: false
-	});
 
-	Object.defineProperty(wrapper, 'error', {
-		get() {
-			// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
-			return /** @type {any} */ (null);
-		},
-		enumerable: false,
-		configurable: false
-	});
+			const result = await fn(form_data);
+
+			// We don't need to care about args, because uneval results are only relevant in full page reloads
+			// where only one form submission is active at the same time
+			if (!event.isRemoteRequest) {
+				uneval_remote_response(
+					wrapper.action,
+					[],
+					result instanceof ActionFailure ? result.data : result,
+					event
+				);
+				info.form_result = [key, result instanceof ActionFailure ? result.data : result];
+			}
+
+			return result;
+		};
+
+		wrapper.method = /** @type {'POST'} */ ('POST');
+		wrapper.action = action; // This will be set by generated server code on startup, and for nested instances by the `for` method it is set by the calling parent
+		wrapper.onsubmit = () => {};
+
+		Object.defineProperty(wrapper, 'enhance', {
+			value: () => {
+				return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
+			},
+			writable: false,
+			enumerable: false,
+			configurable: false
+		});
+
+		const form_action = {
+			type: 'submit',
+			formaction: action,
+			onclick: () => {}
+		};
+		Object.defineProperty(form_action, 'enhance', {
+			value: () => {
+				return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
+			},
+			writable: false,
+			enumerable: false,
+			configurable: false
+		});
+		Object.defineProperty(wrapper, 'formAction', {
+			value: form_action,
+			writable: false,
+			enumerable: false,
+			configurable: false
+		});
+
+		Object.defineProperty(wrapper, '__', {
+			value: /** @type {RemoteInfo} */ ({
+				type: 'form',
+				id: 'unused for forms',
+				// This allows us to deduplicate some logic at the callsites
+				set_action: (action) => {
+					wrapper.action = `?/remote=${encodeURIComponent(action)}`;
+					wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
+				}
+			}),
+			writable: false,
+			enumerable: false,
+			configurable: false
+		});
+
+		Object.defineProperty(wrapper, 'result', {
+			get() {
+				try {
+					const info = get_remote_info(getRequestEvent());
+					console.log('checking', info.form_result, key);
+					return info.form_result && info.form_result[0] === key ? info.form_result[1] : undefined;
+				} catch (e) {
+					return undefined;
+				}
+			},
+			enumerable: false,
+			configurable: false
+		});
+
+		Object.defineProperty(wrapper, 'error', {
+			get() {
+				// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
+				return /** @type {any} */ (null);
+			},
+			enumerable: false,
+			configurable: false
+		});
+
+		if (!key) {
+			Object.defineProperty(wrapper, 'for', {
+				/** @type {RemoteFormAction<any, any>['for']} */
+				value: (key) => {
+					const info = get_remote_info(getRequestEvent());
+					let entry = info.form_instances.get(key);
+
+					if (!entry) {
+						info.form_instances.set(
+							key,
+							(entry = create_instance(
+								key,
+								wrapper.action + encodeURIComponent(`/${JSON.stringify(key)}`)
+							))
+						);
+					}
+
+					return entry;
+				}
+			});
+		}
+
+		return wrapper;
+	}
 
 	// @ts-expect-error TS doesn't get the types right
-	return wrapper;
+	return create_instance();
 }
 
 /**

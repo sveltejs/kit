@@ -1571,6 +1571,21 @@ declare module '@sveltejs/kit' {
 			action: string;
 			onsubmit: (event: SubmitEvent) => void;
 		};
+		/**
+		 * Create an instance of the form for the given key.
+		 * The key is stringified and used for deduplication to potentially reuse existing instances.
+		 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+		 * ```svelte
+		 * {#each todos as todo}
+		 *	{@const todoForm = updateTodo.for(todo.id)}
+		 *	<form {...todoForm}>
+		 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+		 *		...
+		 *	</form>
+		 *	{/each}
+		 * ```
+		 */
+		for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
 		/** The result of the form submission */
 		get result(): Success | Failure | undefined;
 		/** When there's an error during form submission, it appears on this property */
