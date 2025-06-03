@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RemoteFormResult } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
@@ -324,33 +324,15 @@ export function command(id) {
 			throw new Error('Failed to execute remote function');
 		}
 
-		const result = /** @type { RemoteFunctionResponse} */ (await response.json());
+		const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 		if (result.type === 'redirect') {
-			return goto(result.location, { invalidateAll: true });
+			throw new Error(
+				'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+			);
 		} else if (result.type === 'error') {
 			throw new HttpError(result.status ?? 500, result.error);
 		} else {
-			const refreshes = devalue.parse(/** @type {any} */ (result.refreshes), app.decoders);
-			if (Object.keys(refreshes).length > 0) {
-				for (const [key, value] of Object.entries(refreshes)) {
-					// Call the override function to update the query with the new value
-					const entry = resultMap.get(key);
-					entry?.[2](value);
-				}
-			} else {
-				// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
-				// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
-				queueMicrotask(() => {
-					queueMicrotask(() => {
-						queueMicrotask(() => {
-							// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-							// If that doesn't happen within a microtask we assume they want to invalidate everything.
-							if (pending_invalidate || pending_refresh) return;
-							invalidateAll();
-						});
-					});
-				});
-			}
+			refresh_queries(result);
 
 			return devalue.parse(result.result, app.decoders);
 		}
@@ -388,66 +370,52 @@ export function form(id) {
 		/** @type {any} */
 		let error = $state(undefined);
 
-		/**
-		 * @param {HTMLFormElement} form
-		 * @param {FormData} data
-		 */
-		async function submit(form, data) {
+		/** @param {FormData} data */
+		async function submit(data) {
 			const response = await fetch(`/${app_dir}/remote/${action_id}`, {
 				method: 'POST',
 				body: data
 			});
 
-			const form_result = /** @type {RemoteFormResult<any, any>} */ ({
-				type: 'error',
-				result: undefined,
-				error: /** @type {any} */ (undefined),
-				status: undefined,
-				location: undefined,
-				apply: async () => {
-					if (form_result.type === 'redirect') {
-						await goto(form_result.location, { invalidateAll: true });
-					} else if (form_result.type === 'error') {
-						await set_nearest_error_page(form_result.error, form_result.status);
-					} else if (form_result.type === 'success') {
-						form.reset();
-						if (form_result.refreshes) {
-							for (const [key, value] of Object.entries(
-								devalue.parse(form_result.refreshes, app.decoders)
-							)) {
-								// Call the override function to update the query with the new value
-								const entry = resultMap.get(key);
-								entry?.[2](value);
-							}
-						} else {
-							await invalidateAll();
-						}
-					}
-				}
-			});
-
 			if (!response.ok) {
 				// We only end up here in case of a network error or if the server has an internal error
 				// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-				form_result.error = error = { message: 'Failed to execute remote function' };
-				form_result.status = 500;
+				error = { message: 'Failed to execute remote function' };
 				result = undefined;
-				return form_result;
+				throw new Error(error.message);
 			}
 
-			Object.assign(form_result, /** @type { RemoteFunctionResponse} */ (await response.json()));
-			if (form_result.type === 'error') {
+			const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+
+			if (form_result.type === 'result') {
+				error = undefined;
+				result = devalue.parse(form_result.result, app.decoders);
+
+				refresh_queries(form_result);
+			} else if (form_result.type === 'redirect') {
+				const refreshes = form_result.refreshes
+					? Object.entries(devalue.parse(form_result.refreshes, app.decoders))
+					: [];
+				for (const [key, value] of refreshes) {
+					// Call the override function to update the query with the new value
+					const entry = resultMap.get(key);
+					entry?.[2](value);
+				}
+				goto(form_result.location, { invalidateAll: refreshes.length === 0 });
+			} else {
 				result = undefined;
 				error = form_result.error;
-			} else if (form_result.type === 'success' || form_result.type === 'failure') {
-				error = undefined;
-				form_result.result = result = devalue.parse(
-					/** @type {any} */ (form_result.result),
-					app.decoders
-				);
+				throw new HttpError(500, error);
 			}
+		}
 
-			return form_result;
+		/** @param {() => Promise<void>} submit */
+		function default_submit(submit) {
+			submit().catch((e) => {
+				const error = e instanceof HttpError ? e.body : { message: e.message };
+				const status = e instanceof HttpError ? e.status : 500;
+				set_nearest_error_page(error, status);
+			});
 		}
 
 		/**
@@ -509,14 +477,14 @@ export function form(id) {
 				callback({
 					form,
 					data,
-					submit: () => submit(form, data)
+					submit: () => submit(data)
 				});
 			};
 		};
 
 		submit.method = 'POST';
 		submit.action = action;
-		submit.onsubmit = form_onsubmit(({ submit }) => submit().then((r) => r.apply()));
+		submit.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
 
 		/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -535,7 +503,7 @@ export function form(id) {
 				callback({
 					form,
 					data,
-					submit: () => submit(form, data)
+					submit: () => submit(data)
 				});
 			};
 		};
@@ -545,7 +513,7 @@ export function form(id) {
 		const form_action = {
 			type: 'submit',
 			formaction: action,
-			onclick: form_action_onclick(({ submit }) => submit().then((r) => r.apply()))
+			onclick: form_action_onclick(({ submit }) => default_submit(submit))
 		};
 
 		Object.defineProperty(form_action, 'enhance', {
@@ -633,4 +601,31 @@ export function form(id) {
 
 	// @ts-expect-error we gotta set enhance etc as a non-enumerable properties
 	return create_instance();
+}
+
+/**
+ * @param {RemoteFunctionResponse & { type: 'result'}} result
+ */
+function refresh_queries(result) {
+	const refreshes = Object.entries(devalue.parse(result.refreshes, app.decoders));
+	if (refreshes.length > 0) {
+		for (const [key, value] of refreshes) {
+			// Call the override function to update the query with the new value
+			const entry = resultMap.get(key);
+			entry?.[2](value);
+		}
+	} else {
+		// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
+		// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
+		queueMicrotask(() => {
+			queueMicrotask(() => {
+				queueMicrotask(() => {
+					// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
+					// If that doesn't happen within a microtask we assume they want to invalidate everything.
+					if (pending_invalidate || pending_refresh) return;
+					invalidateAll();
+				});
+			});
+		});
+	}
 }

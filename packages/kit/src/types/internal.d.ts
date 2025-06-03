@@ -288,12 +288,16 @@ export type ServerNodesResponse = {
 };
 
 export type RemoteFunctionResponse =
-	| ServerRedirectNode
+	| (ServerRedirectNode & {
+			/** devalue'd Record<string, any> */
+			refreshes?: string;
+	  })
 	| ServerErrorNode
 	| {
 			type: 'result';
 			result: string;
-			refreshes: Record<string, string>;
+			/** devalue'd Record<string, any> */
+			refreshes: string;
 	  };
 
 /**

@@ -1,5 +1,5 @@
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PrerenderOptions, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
+/** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
 import { json, error } from '../../exports/index.js';
 import { app_dir, base } from '__sveltekit/paths';
@@ -49,19 +49,13 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const form_data = await event.request.formData();
 			const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
 
-			if (data instanceof ActionFailure) {
-				return json({
-					type: 'failure',
-					result: stringify(data.data, transport),
-					status: data.status
-				});
-			} else {
-				return json({
-					type: 'success',
-					result: stringify(data, transport),
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(data instanceof ActionFailure ? data.data : data, transport),
 					refreshes: stringify(get_remote_info(event).refreshes, transport)
-				});
-			}
+				})
+			);
 		} else {
 			const stringified_args =
 				info.type === 'prerender'
@@ -76,19 +70,26 @@ export async function handle_remote_call(event, options, manifest, id) {
 				func.apply(null, parse_remote_args(stringified_args, transport))
 			);
 
-			return json({
-				type: 'result',
-				result: stringify(data, transport),
-				refreshes: stringify(get_remote_info(event).refreshes, transport)
-			});
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(data, transport),
+					refreshes: stringify(get_remote_info(event).refreshes, transport)
+				})
+			);
 		}
 	} catch (error) {
 		if (error instanceof Redirect) {
-			return redirect_json_response(error);
+			const refreshes = get_remote_info(event).refreshes; // could be set by form actions
+			return json({
+				type: 'redirect',
+				location: error.location,
+				refreshes: refreshes && stringify(refreshes, transport)
+			});
 		}
 
 		return json(
-			/** @type {import('types').ServerErrorNode} */ ({
+			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: await handle_error_and_jsonify(event, options, error),
 				status:

@@ -12,10 +12,9 @@
 	{...task_one.enhance(async ({ data, submit }) => {
 		const task = data.get('task');
 		if (task === 'abort') return;
-		const { type, apply } = await submit();
-		if (type !== 'error') {
-			apply();
-		}
+		try {
+			await submit();
+		} catch {}
 	})}
 >
 	<input id="input-task-enhance" name="task" />
@@ -25,20 +24,15 @@
 		{...task_two.formAction.enhance(async ({ data, submit }) => {
 			const task = data.get('task');
 			if (task === 'abort') return;
-			const { type, apply } = await submit();
-			if (type !== 'error') {
-				apply();
-			}
+			try {
+				await submit();
+			} catch {}
 		})}>Task Two</button
 	>
 </form>
 
-<p id="form-result-1">
-	{typeof task_one.result === 'string' ? task_one.result : task_one.result?.message}
-</p>
-<p id="form-result-2">
-	{typeof task_two.result === 'string' ? task_two.result : task_two.result?.message}
-</p>
+<p id="form-result-1">{task_one.result}</p>
+<p id="form-result-2">{task_two.result}</p>
 
 <p id="form-error-1">{task_one.error?.message}</p>
 <p id="form-error-2">{task_two.error?.message}</p>

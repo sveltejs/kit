@@ -1582,6 +1582,13 @@ test.describe('remote functions', () => {
 		);
 	});
 
+	test('form redirect works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'redirect');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#echo-result')).toBe('Hello world');
+	});
+
 	test('form.formAction works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'hi');

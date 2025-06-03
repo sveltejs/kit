@@ -1446,19 +1446,6 @@ declare module '@sveltejs/kit' {
 		| { type: 'redirect'; status: number; location: string }
 		| { type: 'error'; status?: number; error: any };
 
-	export type RemoteFormResult<Success, Failure> = { apply: () => void } & (
-		| {
-				type: 'success';
-				status?: undefined;
-				result: Success;
-				location?: undefined;
-				error?: undefined;
-		  }
-		| { type: 'failure'; status: number; result: Failure; location?: undefined; error?: undefined }
-		| { type: 'redirect'; status: number; result?: undefined; location: string; error?: undefined }
-		| { type: 'error'; status?: number; result?: undefined; location?: undefined; error: App.Error }
-	);
-
 	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
 	 */
@@ -1550,10 +1537,7 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteFormAction<Success, Failure> = ((
-		form: HTMLFormElement,
-		data: FormData
-	) => Promise<RemoteFormResult<Success, Failure>>) & {
+	export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1561,11 +1545,7 @@ declare module '@sveltejs/kit' {
 		onsubmit: (event: SubmitEvent) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance: (
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: FormData;
-				submit: () => Promise<RemoteFormResult<Success, Failure>>;
-			}) => void
+			callback: (opts: { form: HTMLFormElement; data: FormData; submit: () => Promise<void> }) => void
 		) => {
 			method: 'POST';
 			action: string;
@@ -1600,7 +1580,7 @@ declare module '@sveltejs/kit' {
 				callback: (opts: {
 					form: HTMLFormElement;
 					data: FormData;
-					submit: () => Promise<RemoteFormResult<Success, Failure>>;
+					submit: () => Promise<void>;
 				}) => void
 			) => {
 				type: 'submit';

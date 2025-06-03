@@ -2247,7 +2247,7 @@ export async function applyAction(result) {
 }
 
 /**
- * @param {any} error
+ * @param {App.Error} error
  * @param {number} status
  */
 export async function set_nearest_error_page(error, status = 500) {
