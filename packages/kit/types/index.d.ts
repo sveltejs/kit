@@ -1616,14 +1616,31 @@ declare module '@sveltejs/kit' {
 		refresh: () => Promise<void>;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
-		 * `override` expects either the new value directly, or a function that takes the current value and returns the new value.
-		 * Returns a function that, when called, will revert the override and restore the previous value, unless something else updated the value in the meantime.
+		 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
+		 * Overrides are applied on new values, too, until they are released.
+		 *
+		 * ```svelte
+		 * <script>
+		 *   import { getTodos, addTodo } from './todos.remote.js';
+		 *   const todos = getTodos();
+		 * </script>
+		 *
+		 * <form {...addTodo.enhance(async ({ data, submit }) => {
+		 *   const release = await getTodos.override((todos) => [...todos, { text: data.get('text') }]);
+		 *   try {
+		 *     await submit();
+		 *   } finally {
+		 *     release();
+		 *   }
+		 * }}>
+		 *   <input type="text" name="text" />
+		 *   <button type="submit">Add Todo</button>
+		 * </form>
+		 * ```
 		 *
 		 * Can only be called on the client.
 		 */
-		override: (
-			update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)
-		) => () => void;
+		override: (update: (current: Awaited<Output>) => Awaited<Output>) => Promise<() => void>;
 	};
 	interface AdapterEntry {
 		/**

@@ -261,12 +261,12 @@ export let pending_invalidate;
  * A map of query functions that currently exist in the app.
  * Each value is a query's refresh function which will rerun the query.
  */
-export const refreshMap = new Map();
+export const refresh_map = new Map();
 /**
- * @type {Map<string, [number, Promise<any>, ReturnType<import('@sveltejs/kit').RemoteQuery<any, any>>['override']]>}
+ * @type {Map<string, [count: number, result: Promise<any>, update: (v: any) => void, override_result: Promise<any>]>}
  * A map of results of queries that currently exist in the app.
  */
-export const resultMap = new Map();
+export const result_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -370,7 +370,7 @@ async function _invalidate(includeLoadFunctions = true, reset_page_state = true)
 	// 	}
 	// });
 	// Rerun queries
-	refreshMap.forEach((rerun, key) => {
+	refresh_map.forEach((rerun, key) => {
 		// TODO allow invalidation of non-exact queries? i.e. you do foo.queryFor(1) when foo has two parameters, i.e. the second is optional?
 		if (force_invalidation || invalidated.some((fn) => fn(new URL(key)))) {
 			rerun();
@@ -399,7 +399,7 @@ async function _invalidate(includeLoadFunctions = true, reset_page_state = true)
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...resultMap.values()].map(([_, p]) => p)).catch(noop);
+	await Promise.all([...result_map.values()].map(([_, p]) => p)).catch(noop);
 }
 
 function reset_invalidation() {

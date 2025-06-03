@@ -1586,39 +1586,34 @@ test.describe('binding_property_non_reactive warn', () => {
 	});
 });
 
-test.describe('remote functions', () => {
-	test('hydrated data is reused; override and refresh update and reset the value', async ({
-		page
-	}) => {
+// have to run in serial because commands mutate in-memory data on the server
+test.describe.serial('remote functions', () => {
+	test.afterEach(async ({ page }) => {
+		if (page.url().endsWith('/remote')) {
+			await page.click('#reset-btn');
+		}
+	});
+
+	test('hydrated data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		// only the calls in the template are done, not the one in the load function
 		expect(request_count).toBe(2);
-
-		// override the value
-		await page.click('#override-btn');
-		await expect(page.locator('#sum-result')).toHaveText('99 / 99 (false)');
-		expect(request_count).toBe(2);
-
-		// refresh should reset to original value
-		await page.click('#refresh-btn');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
-		expect(request_count).toBe(3);
 	});
 
 	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
-		await page.waitForTimeout(300); // there's some query caching which could mess with the test
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-btn');
 		await expect(page.locator('#command-result')).toHaveText('2');
+		await expect(page.locator('#count-result')).toHaveText('2 / 2 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
 	});
@@ -1627,35 +1622,60 @@ test.describe('remote functions', () => {
 		page
 	}) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-refresh-btn');
-		await expect(page.locator('#command-result')).toHaveText('2');
+		await expect(page.locator('#command-result')).toHaveText('3');
+		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(2); // 1 for the command, 1 for the refresh
 	});
 
 	test('command does single flight mutation', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		await page.waitForTimeout(300); // there's some query caching which could mess with the test
-
-		// override the value
-		await page.click('#override-btn');
-		await expect(page.locator('#sum-result')).toHaveText('99 / 99 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-server-refresh-btn');
-		await expect(page.locator('#command-result')).toHaveText('works');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#command-result')).toHaveText('4');
+		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('override works and persists across updates or refreshes', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		await page.waitForTimeout(300); // there's some query caching which could mess with the test
+
+		// override the value
+		await page.click('#override-btn');
+		await expect(page.locator('#count-result')).toHaveText('10 / 10 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('10 / 10 (false)');
+
+		await page.click('#multiply-btn');
+		await expect(page.locator('#count-result')).toHaveText('12 / 12 (false)');
+
+		await page.click('#multiply-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('13 / 13 (false)');
+
+		await page.click('#multiply-server-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('14 / 14 (false)');
+
+		await page.click('#release-btn');
+		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
 	});
 
 	test('form.enhance works', async ({ page }) => {
@@ -1708,7 +1728,7 @@ test.describe('remote functions', () => {
 
 	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1722,7 +1742,7 @@ test.describe('remote functions', () => {
 		page
 	}) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

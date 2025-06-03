@@ -2,11 +2,15 @@ import { command, query } from '$app/server';
 
 export const echo = query((value) => value);
 export const add = query((a, b) => a + b);
-export const add2 = query((a, b) => a + b);
 
-export const multiply = command((a, b) => a * b);
+let count = 0;
 
-export const server_refresh = command(async () => {
-	await add(2, 3).refresh();
-	return 'works';
+export const get_count = query(() => count);
+
+export const set_count = command((c) => (count = c));
+
+export const set_count_server = command(async (c) => {
+	count = c;
+	await get_count().refresh();
+	return c;
 });

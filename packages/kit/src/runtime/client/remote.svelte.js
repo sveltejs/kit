@@ -12,13 +12,21 @@ import {
 	started,
 	goto,
 	set_nearest_error_page,
-	resultMap,
-	refreshMap
+	result_map,
+	refresh_map
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 import { HttpError, Redirect } from '../control.js';
 
 let pending_refresh = false;
+
+/**
+ * @type {Map<string, Array<(value: any) => any>>}
+ * A map of remote function ids to their overrides.
+ * Separate from `result_map` because we want to be able to refresh queries (which deletes the `result_map` entry)
+ * but keep the overrides until they are released or no query is in a reactive context anymore.
+ */
+const overrides_map = new Map();
 
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
@@ -38,21 +46,24 @@ function remote_request(id, prerender) {
 		let always_tracking = true;
 		/** True once a real fetch (not override) has resolved (_not_ rejected) for the first time */
 		let initialized = false;
+		/** @type {any} */
+		let original_current;
 		let current = $state.raw();
 		let error = $state.raw();
 		let pending = $state.raw(true);
 
 		try {
-			const entry = resultMap.get(cache_key);
+			const entry = result_map.get(cache_key);
 			$effect.pre(() => {
 				if (entry) entry[0]++;
 				return () => {
-					const entry = resultMap.get(cache_key);
+					const entry = result_map.get(cache_key);
 					if (entry) {
 						entry[0]--;
 						queueMicrotask(() => {
 							if (entry[0] === 0) {
-								resultMap.delete(cache_key);
+								result_map.delete(cache_key);
+								overrides_map.delete(cache_key);
 							}
 						});
 					}
@@ -68,7 +79,7 @@ function remote_request(id, prerender) {
 
 		/** @param {boolean} tracking */
 		function retrieve(tracking) {
-			const entry = resultMap.get(cache_key);
+			const entry = result_map.get(cache_key);
 
 			if (!entry) {
 				const response = (async () => {
@@ -87,7 +98,7 @@ function remote_request(id, prerender) {
 
 					const result = /** @type { RemoteFunctionResponse} */ (await response.json());
 					if (result.type === 'redirect') {
-						resultMap.delete(cache_key);
+						result_map.delete(cache_key);
 						version++;
 						await goto(result.location);
 						// We throw because we don't know the desired shape. We do so after a timeout so that
@@ -102,39 +113,51 @@ function remote_request(id, prerender) {
 					}
 				})();
 
-				resultMap.set(cache_key, [tracking ? 1 : 0, response, override]);
-
-				return response
+				const user_visible_response = response
 					.then((result) => {
-						const entry = resultMap.get(cache_key);
+						const entry = result_map.get(cache_key);
 						// Only update if response wasn't superseeded by a new call
 						if (entry && entry[1] === response) {
 							// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
 							if (entry[0] === 0) {
-								resultMap.delete(cache_key);
+								result_map.delete(cache_key);
+								overrides_map.delete(cache_key);
 							}
 
 							initialized = true;
 							pending = false;
-							current = result;
+							original_current = result;
+							current = apply_overrides(result);
 							error = undefined;
-						}
 
-						return result;
+							return current;
+						} else {
+							return apply_overrides(result);
+						}
 					})
 					.catch((e) => {
 						// Exceptions delete the cache right away unless they're already superseeded by a new call
-						if (response === resultMap.get(cache_key)?.[1]) {
-							resultMap.delete(cache_key);
+						if (response === result_map.get(cache_key)?.[1]) {
+							result_map.delete(cache_key);
 							pending = false;
-							current = undefined;
+							current = original_current = undefined;
 							error = e;
 						}
 
 						throw e;
 					});
+
+				overrides_map.set(cache_key, overrides_map.get(cache_key) ?? []);
+				result_map.set(cache_key, [
+					tracking ? 1 : 0,
+					response,
+					update_query,
+					user_visible_response
+				]);
+
+				return user_visible_response;
 			} else {
-				return entry[1];
+				return entry[3];
 			}
 		}
 
@@ -145,15 +168,16 @@ function remote_request(id, prerender) {
 				tracking = true;
 				// We have to increase the listener count here since not every get is necessarily a new call,
 				// (e.g. `typeof x.then === 'function'`), so we would count down more than up otherwise.
-				const entry = resultMap.get(cache_key);
+				const entry = result_map.get(cache_key);
 				if (entry) entry[0]++;
 				$effect.pre(() => () => {
-					const entry = resultMap.get(cache_key);
+					const entry = result_map.get(cache_key);
 					if (entry) {
 						entry[0]--;
 						queueMicrotask(() => {
 							if (entry[0] === 0) {
-								resultMap.delete(cache_key);
+								result_map.delete(cache_key);
+								overrides_map.delete(cache_key);
 							}
 						});
 					}
@@ -163,40 +187,33 @@ function remote_request(id, prerender) {
 			return tracking;
 		}
 
-		/**
-		 * @param {unknown | ((u: unknown) => unknown)} update
-		 * @param {[number, Promise<unknown>, any]} entry
-		 */
-		async function update_query(update, entry) {
-			if (typeof update === 'function') {
-				const result = update(initialized ? current : await entry[1]);
-				entry[1] = Promise.resolve(result);
-			} else {
-				entry[1] = Promise.resolve(update);
-			}
+		/** @param {unknown} value */
+		function update_query(value) {
+			const entry = result_map.get(cache_key);
+			if (!entry) return;
 
-			entry[1].then((result) => {
+			entry[1] = Promise.resolve(value);
+			entry[3] = Promise.resolve(apply_overrides(value));
+			entry[3].then((result) => {
 				pending = false;
 				error = undefined;
+				original_current = value;
 				current = result;
 			});
 
 			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
 		}
 
-		/** @type {ReturnType<RemoteQuery<any, any>>['override']} */
-		async function override(update) {
-			const entry = resultMap.get(cache_key);
-			if (!entry) return () => {}; // TODO warn in dev mode if not available?
+		/** @param {unknown} value */
+		function apply_overrides(value) {
+			const entry = overrides_map.get(cache_key);
+			if (!entry) return value;
 
-			const prev = entry[1];
-			await update_query(update, entry);
-			return () => {
-				// If the value has been updated in the meantime, we don't revert
-				if (resultMap.get(cache_key)?.[1] === prev) {
-					update_query(prev, entry);
-				}
-			};
+			for (const update of entry) {
+				value = update(value);
+			}
+
+			return value;
 		}
 
 		return {
@@ -264,17 +281,31 @@ function remote_request(id, prerender) {
 					});
 				});
 
-				resultMap.delete(cache_key);
+				result_map.delete(cache_key);
 				version++;
 			},
-			override
+			override: async (update) => {
+				const overrides = overrides_map.get(cache_key);
+				const entry = result_map.get(cache_key);
+				if (!entry || !overrides) return () => {}; // TODO warn in dev mode if not available?
+
+				overrides.push(update);
+				update_query(initialized ? original_current : await entry[1]);
+				return () => {
+					const idx = overrides.findIndex((fn) => fn === update);
+					if (idx !== -1) {
+						overrides.splice(idx, 1);
+						update_query(original_current); // no need to check for initialized here because we can only call this after the first fetch
+					}
+				};
+			}
 		};
 	};
 
-	refreshMap.set(id, () => {
-		for (const key of resultMap.keys()) {
+	refresh_map.set(id, () => {
+		for (const key of result_map.keys()) {
 			if (key.startsWith(id + '|')) {
-				resultMap.delete(key);
+				result_map.delete(key);
 			}
 		}
 		version++;
@@ -397,8 +428,8 @@ export function form(id) {
 					? Object.entries(devalue.parse(form_result.refreshes, app.decoders))
 					: [];
 				for (const [key, value] of refreshes) {
-					// Call the override function to update the query with the new value
-					const entry = resultMap.get(key);
+					// Update the query with the new value
+					const entry = result_map.get(key);
 					entry?.[2](value);
 				}
 				goto(form_result.location, { invalidateAll: refreshes.length === 0 });
@@ -610,8 +641,8 @@ function refresh_queries(result) {
 	const refreshes = Object.entries(devalue.parse(result.refreshes, app.decoders));
 	if (refreshes.length > 0) {
 		for (const [key, value] of refreshes) {
-			// Call the override function to update the query with the new value
-			const entry = resultMap.get(key);
+			// Update the query with the new value
+			const entry = result_map.get(key);
 			entry?.[2](value);
 		}
 	} else {
