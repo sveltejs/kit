@@ -2183,6 +2183,8 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
+
+	export function validate<Schema extends import("@standard-schema/spec").StandardSchemaV1, Result>(schema: Schema, fn: (input: import("@standard-schema/spec").StandardSchemaV1.InferOutput<Schema>) => Promise<Result>): (input: import("@standard-schema/spec").StandardSchemaV1.InferOutput<Schema>) => Promise<Result>;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
@@ -2747,14 +2749,6 @@ declare module '$app/state' {
 		get current(): boolean;
 		check(): Promise<boolean>;
 	};
-	export const optimistic: typeof optimistic_1 | typeof optimistic_1_2;
-	/**
-	 * Runs all provided query overrides, then executes the provided command(s). If the operation fails, it will revert the query overrides.
-	 * This is useful for optimistic updates, where you want to immediately reflect a change in the UI while waiting for a server response.
-	 *
-	 * */
-	function optimistic_1<T>(overrides: () => Promise<void>, commands: () => Promise<T>): Promise<T>;
-	function optimistic_1_2(): void;
 
 	export {};
 }

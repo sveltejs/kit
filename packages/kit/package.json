@@ -18,6 +18,7 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@standard-schema/spec": "^1.0.0",
 		"@sveltejs/acorn-typescript": "^1.0.5",
 		"@types/cookie": "^0.6.0",
 		"acorn": "^8.14.1",

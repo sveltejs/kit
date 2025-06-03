@@ -262,3 +262,25 @@ export function normalizeUrl(url) {
 		}
 	};
 }
+
+// TODO simplify types using a Fn generic and `NoInfer` on the return type once we bump TS
+/**
+ * @template {import('@standard-schema/spec').StandardSchemaV1} Schema
+ * @template Result
+ * @param {Schema} schema
+ * @param {(input: import('@standard-schema/spec').StandardSchemaV1.InferOutput<Schema>) => Promise<Result>} fn
+ * @returns {(input: import('@standard-schema/spec').StandardSchemaV1.InferOutput<Schema>) => Promise<Result>}
+ */
+export function validate(schema, fn) {
+	return async (input) => {
+		let result = schema['~standard'].validate(input);
+		if (result instanceof Promise) result = await result;
+
+		// if the `issues` field exists, the validation failed
+		if (result.issues) {
+			throw new Error(JSON.stringify(result.issues, null, 2));
+		}
+
+		return fn(result.value);
+	};
+}
