@@ -35,15 +35,123 @@ function remote_request(id, prerender) {
 		const stringified_args = stringify_remote_args(args, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 
+		let always_tracking = true;
+
+		try {
+			const entry = resultMap.get(cache_key);
+			$effect.pre(() => {
+				if (entry) entry[0]++;
+				return () => {
+					const entry = resultMap.get(cache_key);
+					if (entry) {
+						entry[0]--;
+						queueMicrotask(() => {
+							if (entry[0] === 0) {
+								resultMap.delete(cache_key);
+							}
+						});
+					}
+				};
+			});
+		} catch {
+			always_tracking = false;
+		}
+
+		/** @param {boolean} tracking */
+		function retrieve(tracking) {
+			const entry = resultMap.get(cache_key);
+
+			if (!entry) {
+				const response = (async () => {
+					if (!started) {
+						const result = remote_responses[cache_key];
+						if (result) {
+							return result;
+						}
+					}
+
+					const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
+					const response = await fetch(url);
+					if (!response.ok) {
+						throw new Error('Failed to execute remote function');
+					}
+
+					const result = /** @type { RemoteFunctionResponse} */ (await response.json());
+					if (result.type === 'redirect') {
+						await goto(result.location);
+						resultMap.delete(cache_key);
+						version++;
+						// We throw because we don't know the desired shape. We do so after a timeout so that
+						// the refresh just above will cause the query to rerun in case it's still around, which means Svelte's
+						// async will ignore this async batch.
+						await new Promise((r) => setTimeout(r, 0));
+						throw new Error('Redirected');
+					} else if (result.type === 'error') {
+						throw new HttpError(result.status ?? 500, result.error);
+					} else {
+						return devalue.parse(result.result, app.decoders);
+					}
+				})();
+
+				resultMap.set(cache_key, [tracking ? 1 : 0, response]);
+
+				return (
+					response
+						.then((result) => {
+							// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+							const entry = resultMap.get(cache_key);
+							if (entry && entry[0] === 0) {
+								resultMap.delete(cache_key);
+							}
+							return result;
+						})
+						// Exceptions delete the cache right away
+						.catch((e) => {
+							resultMap.delete(cache_key);
+							throw e;
+						})
+				);
+			} else {
+				return entry[1];
+			}
+		}
+
+		function track() {
+			let tracking = always_tracking;
+
+			if (!tracking && $effect.tracking()) {
+				tracking = true;
+				// We have to increase the listener count here since not every get is necessarily a new call,
+				// (e.g. `typeof x.then === 'function'`), so we would count down more than up otherwise.
+				const entry = resultMap.get(cache_key);
+				if (entry) entry[0]++;
+				$effect.pre(() => () => {
+					const entry = resultMap.get(cache_key);
+					if (entry) {
+						entry[0]--;
+						queueMicrotask(() => {
+							if (entry[0] === 0) {
+								resultMap.delete(cache_key);
+							}
+						});
+					}
+				});
+			}
+
+			return tracking;
+		}
+
 		return {
-			// TODO catch, finally, [Symbol.toStringTag] to really make it extend a promise
-			// TODO potentially do the work earlier already, i.e. the result is just returned in `then`; needs a new API though, i.e. $effect.tracking() doesn't work (we could try-catch an effect though to see if we're in an effect)
 			get then() {
 				// Reading the version ensures that the function reruns in reactive contexts if the version changes
 				// We gotta do it here in the getter and then in return a function because `await promise` would call
 				// the function asynchronously, which would mean "$effect.tracking" is always false. The getter on the other hand
 				// is called synchronously, so we can check if we're in an effect there.
 				version;
+
+				// Similarly we need to see if we're in a tracking context inside the getter, not upon function invocation
+				let tracking = track();
+
 				// TODO this is how we could get granular with the cache invalidation
 				// const id = `${fn.key}|${stringified_args}`;
 				// if (!queryMap.has(id)) {
@@ -52,86 +160,32 @@ function remote_request(id, prerender) {
 				// }
 				// version[id]; // yes this will mean it reruns once for the first call but that is ok because of our caching
 
-				let tracking = false;
-
-				if ($effect.tracking()) {
-					tracking = true;
-					// We have to increase the listener count here since not every get is necessarily a new call,
-					// (e.g. `typeof x.then === 'function'`), so we would count down more than up otherwise.
-					const entry = resultMap.get(cache_key);
-					if (entry) entry[0]++;
-					$effect.pre(() => () => {
-						tracking = false;
-						const entry = resultMap.get(cache_key);
-						if (entry) {
-							entry[0]--;
-							queueMicrotask(() => {
-								if (entry[0] === 0) {
-									resultMap.delete(cache_key);
-								}
-							});
-						}
-					});
-				}
-
-				return async (fulfill, reject) => {
-					const entry = resultMap.get(cache_key);
-
-					if (!entry) {
-						const response = (async () => {
-							if (!started) {
-								const result = remote_responses[cache_key];
-								if (result) {
-									return result;
-								}
-							}
-
-							const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
-							const response = await fetch(url);
-							if (!response.ok) {
-								throw new Error('Failed to execute remote function');
-							}
-
-							const result = /** @type { RemoteFunctionResponse} */ (await response.json());
-							if (result.type === 'redirect') {
-								await goto(result.location);
-								resultMap.delete(cache_key);
-								version++;
-								// We never resolve so the current query does not error (we don't know the desired shape),
-								// and the refresh just above should cause the query to rerun in case it's still around.
-								return new Promise(() => {});
-							} else if (result.type === 'error') {
-								throw new HttpError(result.status ?? 500, result.error);
-							} else {
-								return devalue.parse(result.result, app.decoders);
-							}
-						})();
-
-						resultMap.set(cache_key, [tracking ? 1 : 0, response]);
-
-						return (
-							response
-								.then((result) => {
-									// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
-									const entry = resultMap.get(cache_key);
-									if (entry && entry[0] === 0) {
-										resultMap.delete(cache_key);
-									}
-									return result;
-								})
-								// Exceptions delete the cache right away
-								.catch((e) => {
-									resultMap.delete(cache_key);
-									throw e;
-								})
-								.then(fulfill, reject)
-						);
-					} else {
-						// See comment above why we don't increase count here
-						return entry[1].then(fulfill, reject);
-					}
+				/** @type {Promise<any>['then']} */
+				return (resolve, reject) => {
+					return retrieve(tracking).then(resolve, reject);
 				};
 			},
+			get catch() {
+				version;
+
+				let tracking = track();
+
+				/** @type {Promise<any>['catch']} */
+				return (reject) => {
+					return retrieve(tracking).catch(reject);
+				};
+			},
+			get finally() {
+				version;
+
+				let tracking = track();
+
+				/** @type {Promise<any>['finally']} */
+				return (callback) => {
+					return retrieve(tracking).finally(callback);
+				};
+			},
+			[Symbol.toStringTag]: '[object RemoteQuery]',
 			refresh: async () => {
 				pending_refresh = true;
 				// two because it's three in the corresponding "possibly invalidate all logic" in the command function
