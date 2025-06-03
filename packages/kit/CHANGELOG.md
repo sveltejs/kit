@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.21.2
+### Patch Changes
+
+
+- fix: omit stack when logging 404 errors ([#13848](https://github.com/sveltejs/kit/pull/13848))
+
 ## 2.21.1
 ### Patch Changes
 
