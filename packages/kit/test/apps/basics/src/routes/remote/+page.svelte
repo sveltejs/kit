@@ -13,7 +13,9 @@
 <p id="echo-result">{data.echo_result}</p>
 <!-- TODO use await here once async lands -->
 {#if browser}
-	<p id="sum-result">{#await data_add then sum_result}{sum_result}{/await}</p>
+	<p id="sum-result">
+		{#await data_add then sum_result}{sum_result}{/await} / {data_add.current} ({data_add.pending})
+	</p>
 	<!-- this is just here to check that it is re-requested after the command -->
 	{#await add2(2, 2) then sum_result}{sum_result}{/await}
 {/if}

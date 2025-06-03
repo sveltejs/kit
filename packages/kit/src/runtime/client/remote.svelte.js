@@ -36,6 +36,8 @@ function remote_request(id, prerender) {
 		const cache_key = create_remote_cache_key(id, stringified_args);
 
 		let always_tracking = true;
+		/** True once a real fetch (not override) has resolved (_not_ rejected) for the first time */
+		let initialized = false;
 		let current = $state.raw();
 		let error = $state.raw();
 		let pending = $state.raw(true);
@@ -104,15 +106,19 @@ function remote_request(id, prerender) {
 
 				return response
 					.then((result) => {
-						// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
 						const entry = resultMap.get(cache_key);
-						if (entry && entry[0] === 0) {
-							resultMap.delete(cache_key);
-						}
+						// Only update if response wasn't superseeded by a new call
+						if (entry && entry[1] === response) {
+							// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+							if (entry[0] === 0) {
+								resultMap.delete(cache_key);
+							}
 
-						pending = false;
-						current = result;
-						error = undefined;
+							initialized = true;
+							pending = false;
+							current = result;
+							error = undefined;
+						}
 
 						return result;
 					})
@@ -163,13 +169,17 @@ function remote_request(id, prerender) {
 		 */
 		async function update_query(update, entry) {
 			if (typeof update === 'function') {
-				const result = update(await entry[1]);
+				const result = update(initialized ? current : await entry[1]);
 				entry[1] = Promise.resolve(result);
 			} else {
 				entry[1] = Promise.resolve(update);
 			}
 
-			entry[1].then((result) => (current = result));
+			entry[1].then((result) => {
+				pending = false;
+				error = undefined;
+				current = result;
+			});
 
 			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
 		}
@@ -177,9 +187,16 @@ function remote_request(id, prerender) {
 		/** @type {ReturnType<RemoteQuery<any, any>>['override']} */
 		async function override(update) {
 			const entry = resultMap.get(cache_key);
-			if (!entry) return; // TODO warn in dev mode if not available?
+			if (!entry) return () => {}; // TODO warn in dev mode if not available?
 
+			const prev = entry[1];
 			await update_query(update, entry);
+			return () => {
+				// If the value has been updated in the meantime, we don't revert
+				if (resultMap.get(cache_key)?.[1] === prev) {
+					update_query(prev, entry);
+				}
+			};
 		}
 
 		return {
@@ -250,27 +267,7 @@ function remote_request(id, prerender) {
 				resultMap.delete(cache_key);
 				version++;
 			},
-			override,
-			optimistic: async (update, command) => {
-				const entry = resultMap.get(cache_key);
-				let prev = entry?.[1];
-				// TODO warn in dev mode if not available?
-				if (entry) {
-					await update_query(update, entry);
-				}
-
-				try {
-					return await command();
-				} catch (e) {
-					// If the command fails, we revert the optimistic update
-					if (entry) {
-						entry[1] = /** @type {Promise<any>} */ (prev);
-						current = await prev;
-					}
-					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
-					throw e; // rethrow the error so it can be handled by the caller
-				}
-			}
+			override
 		};
 	};
 

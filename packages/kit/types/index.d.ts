@@ -1622,20 +1622,13 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
 		 * `override` expects either the new value directly, or a function that takes the current value and returns the new value.
+		 * Returns a function that, when called, will revert the override and restore the previous value, unless something else updated the value in the meantime.
 		 *
 		 * Can only be called on the client.
 		 */
-		override: (update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)) => void;
-		/**
-		 * Like `override`, but with a command that will be executed after the override. If that command fails, the override will be reverted.
-		 * This is useful for optimistic UI updates that are closely tied to a command.
-		 *
-		 * Can only be called on the client.
-		 */
-		optimistic: <T>(
-			update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>),
-			command: () => Promise<T>
-		) => Promise<T>;
+		override: (
+			update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)
+		) => () => void;
 	};
 	interface AdapterEntry {
 		/**
@@ -2754,6 +2747,14 @@ declare module '$app/state' {
 		get current(): boolean;
 		check(): Promise<boolean>;
 	};
+	export const optimistic: typeof optimistic_1 | typeof optimistic_1_2;
+	/**
+	 * Runs all provided query overrides, then executes the provided command(s). If the operation fails, it will revert the query overrides.
+	 * This is useful for optimistic updates, where you want to immediately reflect a change in the UI while waiting for a server response.
+	 *
+	 * */
+	function optimistic_1<T>(overrides: () => Promise<void>, commands: () => Promise<T>): Promise<T>;
+	function optimistic_1_2(): void;
 
 	export {};
 }

@@ -1640,20 +1640,13 @@ export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promi
 	/**
 	 * Temporarily override the value of a query. Useful for optimistic UI updates.
 	 * `override` expects either the new value directly, or a function that takes the current value and returns the new value.
+	 * Returns a function that, when called, will revert the override and restore the previous value, unless something else updated the value in the meantime.
 	 *
 	 * Can only be called on the client.
 	 */
-	override: (update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)) => void;
-	/**
-	 * Like `override`, but with a command that will be executed after the override. If that command fails, the override will be reverted.
-	 * This is useful for optimistic UI updates that are closely tied to a command.
-	 *
-	 * Can only be called on the client.
-	 */
-	optimistic: <T>(
-		update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>),
-		command: () => Promise<T>
-	) => Promise<T>;
+	override: (
+		update: Awaited<Output> | ((current: Awaited<Output>) => Awaited<Output>)
+	) => () => void;
 };
 
 export * from './index.js';
