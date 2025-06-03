@@ -390,7 +390,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-Note that if you return a callback, the default behavior mentioned above is not triggered. The simplest way to get it back is to call `update`. You can customize it by passing `reset: false` and/or `invalidateAll: false` to `update`, or customize it even more by manually reproducing parts of the `use:enhance` behavior with `applyAction`:
+If you return a callback, you override the default post-submission behavior. To get it back, call `update`, which accepts `invalidateAll` and `reset` parameters, or use `applyAction` on the result:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
