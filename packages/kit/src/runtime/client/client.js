@@ -312,12 +312,16 @@ export async function start(_app, _target, hydrate) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = scroll_positions[current_history_index];
-	if (scroll) {
-		history.scrollRestoration = 'manual';
-		scrollTo(scroll.x, scroll.y);
+	function restore_scroll() {
+		if (scroll) {
+			history.scrollRestoration = 'manual';
+			scrollTo(scroll.x, scroll.y);
+		}
 	}
 
 	if (hydrate) {
+		restore_scroll();
+
 		await _hydrate(target, hydrate);
 	} else {
 		await navigate({
@@ -325,6 +329,8 @@ export async function start(_app, _target, hydrate) {
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true
 		});
+
+		restore_scroll();
 	}
 
 	_start_router();
