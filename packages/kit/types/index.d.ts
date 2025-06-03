@@ -1596,7 +1596,7 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
-	 * The return value of a remote `query`, `cache`, or `prerender` function.
+	 * The return value of a remote `query` or `prerender` function.
 	 * Call it with the input arguments to retrieve the value.
 	 * On the server, this will directly call through to the underlying function.
 	 * On the client, this will do a fetch to the server to retrieve the value.
@@ -1605,6 +1605,12 @@ declare module '@sveltejs/kit' {
 	export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promise<
 		Awaited<Output>
 	> & {
+		/** The current value of the query. Undefined as long as there's no value yet */
+		get current(): Awaited<Output> | undefined;
+		/** The error in case the query fails */
+		get error(): App.Error | undefined;
+		/** `true` before the first result is available and during refreshes */
+		get pending(): boolean;
 		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
@@ -2559,7 +2565,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, ActionFailure as IActionFailure, RemoteFormAction, RemoteQuery } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQuery, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2581,32 +2587,6 @@ declare module '$app/server' {
 	 */
 	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
 	/**
-	 * Creates a form action. The passed function will be called when the form is submitted.
-	 * Returns an object that can be spread onto a form element to connect it to the function.
-	 * ```ts
-	 * import { createPost } from '$lib/server/db';
-	 *
-	 * export const createPost = form((formData) => {
-	 * 	const title = formData.get('title');
-	 * 	const content = formData.get('content');
-	 * 	return createPost({ title, content });
-	 * });
-	 * ```
-	 * ```svelte
-	 * <script>
-	 * 	import { createPost } from './blog.remote.js';
-	 * </script>
-	 *
-	 * <form {...createPost}>
-	 * 	<input type="text" name="title" />
-	 * 	<textarea name="content" />
-	 * 	<button type="submit">Create</button>
-	 * </form>
-	 * ```
-	 *
-	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
-	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
 	 * ```ts
@@ -2626,6 +2606,29 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function query<Input extends any[], Output>(fn: (...args: Input) => Output): RemoteQuery<Input, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 * 	(id: string) => blogPosts.get(id),
+	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, options?: {
+		entries?: RemotePrerenderEntryGenerator<Input>;
+		dynamic?: boolean;
+	} | undefined): RemoteQuery<Input, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2658,28 +2661,31 @@ declare module '$app/server' {
 	 * */
 	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>>;
 	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * Creates a form action. The passed function will be called when the form is submitted.
+	 * Returns an object that can be spread onto a form element to connect it to the function.
 	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * import { createPost } from '$lib/server/db';
 	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * export const createPost = form((formData) => {
+	 * 	const title = formData.get('title');
+	 * 	const content = formData.get('content');
+	 * 	return createPost({ title, content });
+	 * });
 	 * ```
+	 * ```svelte
+	 * <script>
+	 * 	import { createPost } from './blog.remote.js';
+	 * </script>
 	 *
-	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
-	 * );
+	 * <form {...createPost}>
+	 * 	<input type="text" name="title" />
+	 * 	<textarea name="content" />
+	 * 	<button type="submit">Create</button>
+	 * </form>
 	 * ```
 	 *
 	 * */
-	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<Input>;
-		dynamic?: boolean;
-	} | undefined): RemoteQuery<Input, Output>;
+	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
 	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
 		// the spread ensures things are widened from [id: number, x: string] to [number, string],
 		// which is important because else people are required to write entries using type casts

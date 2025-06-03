@@ -1614,7 +1614,7 @@ export type RemoteFormAction<Success, Failure> = ((
 };
 
 /**
- * The return value of a remote `query`, `cache`, or `prerender` function.
+ * The return value of a remote `query` or `prerender` function.
  * Call it with the input arguments to retrieve the value.
  * On the server, this will directly call through to the underlying function.
  * On the client, this will do a fetch to the server to retrieve the value.
@@ -1623,6 +1623,12 @@ export type RemoteFormAction<Success, Failure> = ((
 export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promise<
 	Awaited<Output>
 > & {
+	/** The current value of the query. Undefined as long as there's no value yet */
+	get current(): Awaited<Output> | undefined;
+	/** The error in case the query fails */
+	get error(): App.Error | undefined;
+	/** `true` before the first result is available and during refreshes */
+	get pending(): boolean;
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.

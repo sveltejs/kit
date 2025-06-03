@@ -1555,7 +1555,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');
 		if (javaScriptEnabled) {
-			await expect(page.locator('#sum-result')).toHaveText('5');
+			await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		}
 	});
 

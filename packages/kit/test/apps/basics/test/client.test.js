@@ -1594,24 +1594,24 @@ test.describe('remote functions', () => {
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		// only the calls in the template are done, not the one in the load function
 		expect(request_count).toBe(2);
 
 		// override the value
 		await page.click('#override-btn');
-		await expect(page.locator('#sum-result')).toHaveText('99');
+		await expect(page.locator('#sum-result')).toHaveText('99 / 99 (false)');
 		expect(request_count).toBe(2);
 
 		// refresh should reset to original value
 		await page.click('#refresh-btn');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		expect(request_count).toBe(3);
 	});
 
 	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		let request_count = 0;
@@ -1627,7 +1627,7 @@ test.describe('remote functions', () => {
 		page
 	}) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		let request_count = 0;
@@ -1641,19 +1641,19 @@ test.describe('remote functions', () => {
 
 	test('command does single flight mutation', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		// override the value
 		await page.click('#override-btn');
-		await expect(page.locator('#sum-result')).toHaveText('99');
+		await expect(page.locator('#sum-result')).toHaveText('99 / 99 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.click('#multiply-server-refresh-btn');
 		await expect(page.locator('#command-result')).toHaveText('works');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
@@ -1708,7 +1708,7 @@ test.describe('remote functions', () => {
 
 	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1722,7 +1722,7 @@ test.describe('remote functions', () => {
 		page
 	}) => {
 		await page.goto('/remote');
-		await expect(page.locator('#sum-result')).toHaveText('5');
+		await expect(page.locator('#sum-result')).toHaveText('5 / 5 (false)');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

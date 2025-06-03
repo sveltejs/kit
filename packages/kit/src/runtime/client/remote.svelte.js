@@ -16,7 +16,7 @@ import {
 	refreshMap
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
-import { HttpError } from '../control.js';
+import { HttpError, Redirect } from '../control.js';
 
 let pending_refresh = false;
 
@@ -36,6 +36,9 @@ function remote_request(id, prerender) {
 		const cache_key = create_remote_cache_key(id, stringified_args);
 
 		let always_tracking = true;
+		let current = $state.raw();
+		let error = $state.raw();
+		let pending = $state.raw(true);
 
 		try {
 			const entry = resultMap.get(cache_key);
@@ -57,6 +60,10 @@ function remote_request(id, prerender) {
 			always_tracking = false;
 		}
 
+		if (always_tracking) {
+			retrieve(true).catch(() => {}); // Avoid unhandled promise rejection warnings
+		}
+
 		/** @param {boolean} tracking */
 		function retrieve(tracking) {
 			const entry = resultMap.get(cache_key);
@@ -73,19 +80,19 @@ function remote_request(id, prerender) {
 					const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
 					const response = await fetch(url);
 					if (!response.ok) {
-						throw new Error('Failed to execute remote function');
+						throw new HttpError(500, 'Failed to execute remote function');
 					}
 
 					const result = /** @type { RemoteFunctionResponse} */ (await response.json());
 					if (result.type === 'redirect') {
-						await goto(result.location);
 						resultMap.delete(cache_key);
 						version++;
+						await goto(result.location);
 						// We throw because we don't know the desired shape. We do so after a timeout so that
 						// the refresh just above will cause the query to rerun in case it's still around, which means Svelte's
 						// async will ignore this async batch.
 						await new Promise((r) => setTimeout(r, 0));
-						throw new Error('Redirected');
+						throw new Redirect(307, result.location);
 					} else if (result.type === 'error') {
 						throw new HttpError(result.status ?? 500, result.error);
 					} else {
@@ -93,24 +100,33 @@ function remote_request(id, prerender) {
 					}
 				})();
 
-				resultMap.set(cache_key, [tracking ? 1 : 0, response]);
+				resultMap.set(cache_key, [tracking ? 1 : 0, response, override]);
 
-				return (
-					response
-						.then((result) => {
-							// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
-							const entry = resultMap.get(cache_key);
-							if (entry && entry[0] === 0) {
-								resultMap.delete(cache_key);
-							}
-							return result;
-						})
-						// Exceptions delete the cache right away
-						.catch((e) => {
+				return response
+					.then((result) => {
+						// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
+						const entry = resultMap.get(cache_key);
+						if (entry && entry[0] === 0) {
 							resultMap.delete(cache_key);
-							throw e;
-						})
-				);
+						}
+
+						pending = false;
+						current = result;
+						error = undefined;
+
+						return result;
+					})
+					.catch((e) => {
+						// Exceptions delete the cache right away unless they're already superseeded by a new call
+						if (response === resultMap.get(cache_key)?.[1]) {
+							resultMap.delete(cache_key);
+							pending = false;
+							current = undefined;
+							error = e;
+						}
+
+						throw e;
+					});
 			} else {
 				return entry[1];
 			}
@@ -139,6 +155,31 @@ function remote_request(id, prerender) {
 			}
 
 			return tracking;
+		}
+
+		/**
+		 * @param {unknown | ((u: unknown) => unknown)} update
+		 * @param {[number, Promise<unknown>, any]} entry
+		 */
+		async function update_query(update, entry) {
+			if (typeof update === 'function') {
+				const result = update(await entry[1]);
+				entry[1] = Promise.resolve(result);
+			} else {
+				entry[1] = Promise.resolve(update);
+			}
+
+			entry[1].then((result) => (current = result));
+
+			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+		}
+
+		/** @type {ReturnType<RemoteQuery<any, any>>['override']} */
+		async function override(update) {
+			const entry = resultMap.get(cache_key);
+			if (!entry) return; // TODO warn in dev mode if not available?
+
+			await update_query(update, entry);
 		}
 
 		return {
@@ -186,8 +227,19 @@ function remote_request(id, prerender) {
 				};
 			},
 			[Symbol.toStringTag]: '[object RemoteQuery]',
+			get current() {
+				return current;
+			},
+			get error() {
+				return error;
+			},
+			get pending() {
+				return pending;
+			},
 			refresh: async () => {
+				pending = true;
 				pending_refresh = true;
+
 				// two because it's three in the corresponding "possibly invalidate all logic" in the command function
 				queueMicrotask(() => {
 					queueMicrotask(() => {
@@ -198,33 +250,13 @@ function remote_request(id, prerender) {
 				resultMap.delete(cache_key);
 				version++;
 			},
-			override: async (update) => {
-				const entry = resultMap.get(cache_key);
-				if (!entry) return; // TODO warn in dev mode?
-
-				if (typeof update === 'function') {
-					const result = update(await entry[1]);
-					entry[1] = Promise.resolve(result);
-				} else {
-					entry[1] = Promise.resolve(update);
-				}
-
-				version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
-			},
+			override,
 			optimistic: async (update, command) => {
-				// TODO deduplicate with override
 				const entry = resultMap.get(cache_key);
 				let prev = entry?.[1];
-				// TODO warn in dev mode?
+				// TODO warn in dev mode if not available?
 				if (entry) {
-					if (typeof update === 'function') {
-						const result = update(await prev);
-						entry[1] = prev = Promise.resolve(result);
-					} else {
-						entry[1] = prev = Promise.resolve(update);
-					}
-
-					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+					await update_query(update, entry);
 				}
 
 				try {
@@ -233,6 +265,7 @@ function remote_request(id, prerender) {
 					// If the command fails, we revert the optimistic update
 					if (entry) {
 						entry[1] = /** @type {Promise<any>} */ (prev);
+						current = await prev;
 					}
 					version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
 					throw e; // rethrow the error so it can be handled by the caller
@@ -241,12 +274,10 @@ function remote_request(id, prerender) {
 		};
 	};
 
-	refreshMap.set(id, (remove = true) => {
-		if (remove) {
-			for (const key of resultMap.keys()) {
-				if (key.startsWith(id + '|')) {
-					resultMap.delete(key);
-				}
+	refreshMap.set(id, () => {
+		for (const key of resultMap.keys()) {
+			if (key.startsWith(id + '|')) {
+				resultMap.delete(key);
 			}
 		}
 		version++;
@@ -305,15 +336,9 @@ export function command(id) {
 			const refreshes = devalue.parse(/** @type {any} */ (result.refreshes), app.decoders);
 			if (Object.keys(refreshes).length > 0) {
 				for (const [key, value] of Object.entries(refreshes)) {
+					// Call the override function to update the query with the new value
 					const entry = resultMap.get(key);
-					if (entry) {
-						entry[1] = Promise.resolve(value);
-						for (const [k, refresh] of refreshMap) {
-							if (key.startsWith(`${k}|`)) {
-								refresh(false);
-							}
-						}
-					}
+					entry?.[2](value);
 				}
 			} else {
 				// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
@@ -388,15 +413,9 @@ export function form(id) {
 						for (const [key, value] of Object.entries(
 							devalue.parse(form_result.refreshes, app.decoders)
 						)) {
+							// Call the override function to update the query with the new value
 							const entry = resultMap.get(key);
-							if (entry) {
-								entry[1] = Promise.resolve(value);
-								for (const [k, refresh] of refreshMap) {
-									if (key.startsWith(k)) {
-										refresh(false);
-									}
-								}
-							}
+							entry?.[2](value);
 						}
 					} else {
 						await invalidateAll();
