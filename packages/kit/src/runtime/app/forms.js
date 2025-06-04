@@ -6,7 +6,7 @@ import { app as server_app } from '../server/index.js';
 
 export { applyAction };
 
-const { decoders } = BROWSER ? client_app : server_app;
+const decoders = BROWSER ? client_app.decoders : server_app?.decoders;
 
 /**
  * Use this function to deserialize the response from a form submission.
