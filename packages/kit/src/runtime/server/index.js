@@ -74,7 +74,10 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError: module.handleError || (({ error }) => console.error(error)),
+					handleError:
+						module.handleError ||
+						(({ status, error }) =>
+							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}

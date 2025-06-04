@@ -7,7 +7,7 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { public_env, safe_public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
@@ -646,9 +646,11 @@ function get_data(event, options, nodes, csp, global) {
 		const strings = nodes.map((node) => {
 			if (!node) return 'null';
 
-			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
-				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-			}}`;
+			/** @type {any} */
+			const payload = { type: 'data', data: node.data, uses: serialize_uses(node) };
+			if (node.slash) payload.slash = node.slash;
+
+			return devalue.uneval(payload, replacer);
 		});
 
 		return {
@@ -656,6 +658,8 @@ function get_data(event, options, nodes, csp, global) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = e.path.slice(1);
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }
