@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
+import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -93,10 +94,13 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
+		const ssr = nodes.ssr();
+		const csr = nodes.csr();
+
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (nodes.ssr() === false && !(state.prerendering && should_prerender_data)) {
+		if (ssr === false && !(state.prerendering && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -117,7 +121,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				fetched,
 				page_config: {
 					ssr: false,
-					csr: nodes.csr()
+					csr
 				},
 				status,
 				error: null,
@@ -170,8 +174,6 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				}
 			});
 		});
-
-		const csr = nodes.csr();
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.data.map((node, i) => {
@@ -244,16 +246,22 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							let j = i;
 							while (!branch[j]) j -= 1;
 
+							const layouts = compact(branch.slice(0, j + 1));
+							const nodes = new PageNodes(layouts.map((layout) => layout.node));
+
 							return await render_response({
 								event,
 								options,
 								manifest,
 								state,
 								resolve_opts,
-								page_config: { ssr: true, csr: true },
+								page_config: {
+									ssr: nodes.ssr(),
+									csr: nodes.csr()
+								},
 								status,
 								error,
-								branch: compact(branch.slice(0, j + 1)).concat({
+								branch: layouts.concat({
 									node,
 									data: null,
 									server_data: null
@@ -294,8 +302,6 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			});
 		}
 
-		const ssr = nodes.ssr();
-
 		return await render_response({
 			event,
 			options,
@@ -303,7 +309,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			state,
 			resolve_opts,
 			page_config: {
-				csr: nodes.csr(),
+				csr,
 				ssr
 			},
 			status,

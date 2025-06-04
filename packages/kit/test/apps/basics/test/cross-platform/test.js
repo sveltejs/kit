@@ -34,7 +34,8 @@ test.describe('CSS', () => {
 
 	test('applies styles correctly', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
-
+		// without this assertion, the WebKit browser seems to close before we can compute the styles
+		await expect(page.locator('.styled')).toBeVisible();
 		check_styles(get_computed_style);
 	});
 
@@ -1048,6 +1049,14 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+
+	test('no xss via tracked search parameters', async ({ page }) => {
+		// https://github.com/sveltejs/kit/security/advisories/GHSA-6q87-84jw-cjhp
+		await page.goto('/xss/query-tracking?</script/><script>window.pwned%3D1</script/>');
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 });
 

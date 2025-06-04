@@ -10,3 +10,6 @@ packages:
   - 'packages/create-svelte/templates/*'
   - '!.test-tmp/**'
   - 'playgrounds/*'
+
+catalog:
+  "@playwright/test": "^1.51.1"

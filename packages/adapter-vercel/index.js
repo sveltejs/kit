@@ -123,9 +123,19 @@ const plugin = function (defaults = {}) {
 				try {
 					const result = await esbuild.build({
 						outfile: `${dirs.functions}/${name}.func/index.js`,
-						target: 'es2020', // TODO verify what the edge runtime supports. Might be es2019? See https://github.com/vercel/edge-runtime/blob/dd44c3f4e14a45d0f5ddfaf63c00fe19670cb0a6/tsconfig.json#L13
+						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
+						// https://edge-runtime.vercel.app/features/polyfills
+						// TODO verify the latest ES version the edge runtime supports
+						target: 'es2020',
 						bundle: true,
 						platform: 'browser',
+						conditions: [
+							// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
+							'edge-light',
+							// re-include these since they are included by default when no conditions are specified
+							// https://esbuild.github.io/api/#conditions
+							'module'
+						],
 						format: 'esm',
 						external: [
 							...compatible_node_modules,
