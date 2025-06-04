@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
 import { app as client_app, applyAction } from '../client/client.js';
-import { app as server_app } from '../server/index.js';
+import { app as server_app } from '../server/app.js';
 
 export { applyAction };
 

@@ -5,6 +5,7 @@ import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_app } from './app.js';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -17,9 +18,6 @@ const prerender_env_handler = {
 
 /** @type {Promise<any>} */
 let init_promise;
-
-/** @type {{ decoders: Record<string, (data: any) => any> }} */
-export let app;
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -86,11 +84,11 @@ export class Server {
 					transport: module.transport || {}
 				};
 
-				app = {
+				set_app({
 					decoders: module.transport
 						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
 						: {}
-				};
+				});
 
 				if (module.init) {
 					await module.init();
@@ -107,9 +105,9 @@ export class Server {
 						transport: {}
 					};
 
-					app = {
+					set_app({
 						decoders: {}
-					};
+					});
 				} else {
 					throw error;
 				}
