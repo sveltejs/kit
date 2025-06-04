@@ -20,7 +20,7 @@ export default [
 	{
 		languageOptions: {
 			parserOptions: {
-				project: true
+				projectService: true
 			}
 		},
 		rules: {
@@ -30,6 +30,7 @@ export default [
 			'@typescript-eslint/no-floating-promises': 'error'
 		},
 		ignores: [
+			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',

@@ -13,7 +13,7 @@ export const adapters = [
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
-		version: '6'
+		version: '7'
 	},
 	{
 		name: 'Netlify',

@@ -55,7 +55,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
 
-(Whether the project contains `.js` or `.ts` files depends on whether you opt to use TypeScript when you create your project. You can switch between JavaScript and TypeScript in the documentation using the toggle at the bottom of this page.)
+(Whether the project contains `.js` or `.ts` files depends on whether you opt to use TypeScript when you create your project.)
 
 If you added [Vitest](https://vitest.dev) when you set up your project, your unit tests will live in the `src` directory with a `.test.js` extension.
 

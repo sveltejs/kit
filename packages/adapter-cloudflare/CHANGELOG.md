@@ -1,5 +1,47 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.0.3
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250507.0 ([#13773](https://github.com/sveltejs/kit/pull/13773))
+
+## 7.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250415.0 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 7.0.1
+### Patch Changes
+
+
+- fix: correctly write the worker to the `pages_build_output_dir` path if set in the Wrangler configuration path ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+
+- fix: correctly resolve paths provided by the Wrangler config on Windows ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
+## 7.0.0
+### Major Changes
+
+
+- feat: support specifically building for Cloudflare Workers Static Assets ([#13634](https://github.com/sveltejs/kit/pull/13634))
+
+
+### Patch Changes
+
+
+- chore: remove `esbuild` as dependency ([#13633](https://github.com/sveltejs/kit/pull/13633))
+
+- Updated dependencies [[`370e9f95c1d6efd5393f73d2dbef68143b27f681`](https://github.com/sveltejs/kit/commit/370e9f95c1d6efd5393f73d2dbef68143b27f681)]:
+  - @sveltejs/kit@2.20.3
+
 ## 6.0.1
 ### Patch Changes
 

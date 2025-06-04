@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.11
+### Patch Changes
+
+
+- fix: handle missing package.json gracefully ([#13691](https://github.com/sveltejs/kit/pull/13691))
+
 ## 2.3.10
 ### Patch Changes
 

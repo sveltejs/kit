@@ -19,6 +19,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -101,6 +102,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
+	/** @type {(file: string) => void} */
+	let invalidate_page_options;
+
 	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
@@ -123,6 +127,14 @@ export async function dev(vite, vite_config, svelte_config) {
 
 			return;
 		}
+
+		const node_analyser = create_node_analyser({
+			resolve: async (server_node) => {
+				const { module } = await resolve(server_node);
+				return module;
+			}
+		});
+		invalidate_page_options = node_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -202,9 +214,15 @@ export async function dev(vite, vite_config, svelte_config) {
 						}
 
 						if (node.universal) {
-							const { module, module_node } = await resolve(node.universal);
-							module_nodes.push(module_node);
-							result.universal = module;
+							const page_options = await node_analyser.get_page_options(node);
+							if (page_options?.ssr === false) {
+								result.universal = page_options;
+							} else {
+								// TODO: explain why the file was loaded on the server if we fail to load it
+								const { module, module_node } = await resolve(node.universal);
+								module_nodes.push(module_node);
+								result.universal = module;
+							}
 						}
 
 						if (node.server) {
@@ -344,6 +362,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
+		invalidate_page_options(path.relative(cwd, file));
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -391,32 +410,6 @@ export async function dev(vite, vite_config, svelte_config) {
 			res.setHeader('access-control-allow-origin', '*');
 		}
 	});
-
-	async function align_exports() {
-		// This shameful hack allows us to load runtime server code via Vite
-		// while apps load `HttpError` and `Redirect` in Node, without
-		// causing `instanceof` checks to fail
-		const control_module_node = await import('../../../runtime/control.js');
-		const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
-
-		control_module_node.replace_implementations({
-			ActionFailure: control_module_vite.ActionFailure,
-			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect,
-			SvelteKitError: control_module_vite.SvelteKitError
-		});
-	}
-	await align_exports();
-	const ws_send = vite.ws.send;
-	/** @param {any} args */
-	vite.ws.send = function (...args) {
-		// We need to reapply the patch after Vite did dependency optimizations
-		// because that clears the module resolutions
-		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
-			void align_exports();
-		}
-		return ws_send.apply(vite.ws, args);
-	};
 
 	vite.middlewares.use((req, res, next) => {
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${

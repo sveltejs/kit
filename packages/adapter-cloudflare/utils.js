@@ -33,18 +33,19 @@ export function parse_redirects(file_contents) {
  * @param {import('./index.js').AdapterOptions['routes']} routes
  * @returns {import('./index.js').RoutesJSONSpec}
  */
-export function get_routes_json(builder, client_assets, redirects, routes = {}) {
-	let { include = ['/*'], exclude = ['<all>'] } = routes;
+export function get_routes_json(builder, client_assets, redirects, routes) {
+	const include = routes?.include ?? ['/*'];
+	let exclude = routes?.exclude ?? ['<all>'];
 
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
 		throw new Error('routes.include and routes.exclude must be arrays');
 	}
 
-	if (include.length === 0) {
+	if (include?.length === 0) {
 		throw new Error('routes.include must contain at least one route');
 	}
 
-	if (include.length > 100) {
+	if (include?.length > 100) {
 		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
@@ -96,7 +97,7 @@ export function get_routes_json(builder, client_assets, redirects, routes = {}) 
 	const excess = include.length + exclude.length - 100;
 	if (excess > 0) {
 		builder.log.warn(
-			`Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`
+			`Cloudflare Pages Functions' includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`
 		);
 		exclude.length -= excess;
 	}
