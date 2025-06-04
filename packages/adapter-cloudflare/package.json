@@ -52,7 +52,7 @@
 		"@types/node": "^18.19.48",
 		"esbuild": "^0.25.4",
 		"typescript": "^5.3.3",
-		"vitest": "^3.2.1"
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",

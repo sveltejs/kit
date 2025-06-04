@@ -12,3 +12,4 @@ packages:
 
 catalog:
   "@playwright/test": "^1.51.1"
+  "vitest": "^3.2.1"
