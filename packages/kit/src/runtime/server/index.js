@@ -18,6 +18,9 @@ const prerender_env_handler = {
 /** @type {Promise<any>} */
 let init_promise;
 
+/** @type {{ decoders: Record<string, (data: any) => any> }} */
+export let app;
+
 export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
@@ -83,6 +86,12 @@ export class Server {
 					transport: module.transport || {}
 				};
 
+				app = {
+					decoders: module.transport
+						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
+						: {}
+				};
+
 				if (module.init) {
 					await module.init();
 				}
@@ -96,6 +105,10 @@ export class Server {
 						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: () => {},
 						transport: {}
+					};
+
+					app = {
+						decoders: {}
 					};
 				} else {
 					throw error;

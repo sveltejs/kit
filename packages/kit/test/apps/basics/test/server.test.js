@@ -639,7 +639,7 @@ test.describe('Static files', () => {
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response.allHeaders())['set-cookie'];
+		const cookies = response ? (await response.allHeaders())['set-cookie'] : '';
 
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
@@ -649,7 +649,7 @@ test.describe('setHeaders', () => {
 test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
-		const cookies = await response.headerValue('set-cookie');
+		const cookies = response ? await response.headerValue('set-cookie') : '';
 
 		expect(cookies).toMatch('before=before');
 		expect(cookies).toMatch('after=after');
@@ -732,7 +732,7 @@ test.describe('getRequestEvent', () => {
 
 test.describe('$app/forms', () => {
 	test('deserialize works on the server', async ({ request }) => {
-		const response = await request.get('/deserialize');
-		expect(await response.json()).toEqual({ type: 'success', status: 200, data: { a: 1 } });
+		const response = await request.get('/serialization-form/server-deserialize');
+		expect(await response.json()).toEqual({ data: 'It works!' });
 	});
 });
