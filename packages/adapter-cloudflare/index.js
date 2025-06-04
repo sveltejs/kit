@@ -1,7 +1,7 @@
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { is_building_for_cloudflare_pages } from 'utils.js';
+import { is_building_for_cloudflare_pages } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
 /** @type {import('./index.js').default} */
