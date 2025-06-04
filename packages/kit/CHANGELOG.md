@@ -1,5 +1,664 @@
 # @sveltejs/kit
 
+## 2.21.2
+### Patch Changes
+
+
+- fix: omit stack when logging 404 errors ([#13848](https://github.com/sveltejs/kit/pull/13848))
+
+## 2.21.1
+### Patch Changes
+
+
+- chore: clarify which functions `handleFetch` affects ([#13788](https://github.com/sveltejs/kit/pull/13788))
+
+
+- fix: ensure `$env` and `$app/environment` are correctly set while analysing server nodes ([#13790](https://github.com/sveltejs/kit/pull/13790))
+
+## 2.21.0
+### Minor Changes
+
+
+- feat: allow running client-side code at the top-level of universal pages/layouts when SSR is disabled and page options are only boolean or string literals ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+
+- fix: remove component code from server nodes that are never used for SSR ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+## 2.20.8
+### Patch Changes
+
+
+- fix: ensure that `ssr` and `csr` page options apply to error pages rendered as a result of a load function error on the server ([#13695](https://github.com/sveltejs/kit/pull/13695))
+
+## 2.20.7
+### Patch Changes
+
+
+- fix: regression when serializing server data ([#13709](https://github.com/sveltejs/kit/pull/13709))
+
+## 2.20.6
+### Patch Changes
+
+
+- fix: escape names of tracked search parameters ([`d3300c6a67908590266c363dba7b0835d9a194cf`](https://github.com/sveltejs/kit/commit/d3300c6a67908590266c363dba7b0835d9a194cf))
+
+## 2.20.5
+### Patch Changes
+
+
+- allow `HandleServerError` hook to access `getRequestEvent` ([#13666](https://github.com/sveltejs/kit/pull/13666))
+
+
+- fix: prevent Rollup warnings for undefined hooks ([#13687](https://github.com/sveltejs/kit/pull/13687))
+
+## 2.20.4
+### Patch Changes
+
+
+- chore: remove internal class-replacement hack that isn't needed anymore ([#13664](https://github.com/sveltejs/kit/pull/13664))
+
+## 2.20.3
+### Patch Changes
+
+
+- fix: only call `afterNavigate` once on app start when SSR is disabled ([#13593](https://github.com/sveltejs/kit/pull/13593))
+
+## 2.20.2
+### Patch Changes
+
+
+- fix: allow non-prerendered API endpoint calls during reroute when prerendering ([#13616](https://github.com/sveltejs/kit/pull/13616))
+
+## 2.20.1
+### Patch Changes
+
+
+- fix: avoid using top-level await ([#13607](https://github.com/sveltejs/kit/pull/13607))
+
+## 2.20.0
+### Minor Changes
+
+
+- feat: add `getRequestEvent` to `$app/server` ([#13582](https://github.com/sveltejs/kit/pull/13582))
+
+## 2.19.2
+### Patch Changes
+
+
+- fix: lazily load CSS for dynamically imported components ([#13564](https://github.com/sveltejs/kit/pull/13564))
+
+## 2.19.1
+### Patch Changes
+
+
+- fix: allow reroute to point to prerendered route ([#13575](https://github.com/sveltejs/kit/pull/13575))
+
+## 2.19.0
+### Minor Changes
+
+
+- feat: provide `fetch` to `reroute` ([#13549](https://github.com/sveltejs/kit/pull/13549))
+
+
+### Patch Changes
+
+
+- chore: cache reroute results ([#13548](https://github.com/sveltejs/kit/pull/13548))
+
+## 2.18.0
+### Minor Changes
+
+
+- feat: allow async `reroute` ([#13520](https://github.com/sveltejs/kit/pull/13520))
+
+
+- feat: provide `normalizeUrl` helper ([#13539](https://github.com/sveltejs/kit/pull/13539))
+
+
+### Patch Changes
+
+
+- fix: correct navigation history with hash router and ensure load functions are rerun on user changes to URL hash ([#13492](https://github.com/sveltejs/kit/pull/13492))
+
+
+- fix: include universal load assets as server assets ([#13531](https://github.com/sveltejs/kit/pull/13531))
+
+
+- fix: Include root layout and error nodes even when apps have only prerendered pages ([#13522](https://github.com/sveltejs/kit/pull/13522))
+
+
+- fix: correctly preload data on `mousedown`/`touchstart` if code was preloaded on hover ([#13530](https://github.com/sveltejs/kit/pull/13530))
+
+## 2.17.3
+### Patch Changes
+
+
+- fix: avoid simulated CORS errors with non-HTTP URLs ([#13493](https://github.com/sveltejs/kit/pull/13493))
+
+
+- fix: correctly preload links on `mousedown`/`touchstart` ([#13486](https://github.com/sveltejs/kit/pull/13486))
+
+
+- fix: load CSS when using server-side route resolution ([#13498](https://github.com/sveltejs/kit/pull/13498))
+
+
+- fix: correctly find shared entry-point CSS files during inlining ([#13431](https://github.com/sveltejs/kit/pull/13431))
+
+## 2.17.2
+### Patch Changes
+
+
+- fix: add promise return type to the `enhance` action callback ([#13420](https://github.com/sveltejs/kit/pull/13420))
+
+
+- fix: change server-side route resolution endpoint ([#13461](https://github.com/sveltejs/kit/pull/13461))
+
+## 2.17.1
+### Patch Changes
+
+
+- fix: make route resolution imports root-relative if `paths.relative` option is `false` ([#13412](https://github.com/sveltejs/kit/pull/13412))
+
+## 2.17.0
+### Minor Changes
+
+
+- feat: validate values for `cache-control` and `content-type` headers in dev mode ([#13114](https://github.com/sveltejs/kit/pull/13114))
+
+
+- feat: support server-side route resolution ([#13379](https://github.com/sveltejs/kit/pull/13379))
+
+
+### Patch Changes
+
+
+- chore: don't error during development when using `use:enhance` with `+server` as some third party libraries make it possible to POST forms to it ([#13397](https://github.com/sveltejs/kit/pull/13397))
+
+
+- fix: skip hooks for server fetch to prerendered routes ([#13377](https://github.com/sveltejs/kit/pull/13377))
+
+
+- fix: ignore non-entry-point CSS files during inlining ([#13395](https://github.com/sveltejs/kit/pull/13395))
+
+
+- fix: default server fetch to use prerendered paths ([#13377](https://github.com/sveltejs/kit/pull/13377))
+
+## 2.16.1
+### Patch Changes
+
+
+- fix: avoid overwriting headers for sub-requests made while loading the error page ([#13341](https://github.com/sveltejs/kit/pull/13341))
+
+
+- fix: correctly resolve index file entrypoints such as `src/service-worker/index.js` ([#13354](https://github.com/sveltejs/kit/pull/13354))
+
+
+- fix: correctly handle relative anchors when using the hash router ([#13356](https://github.com/sveltejs/kit/pull/13356))
+
+## 2.16.0
+### Minor Changes
+
+
+- feat: add ability to invalidate a custom identifier on `goto()` ([#13256](https://github.com/sveltejs/kit/pull/13256))
+
+
+- feat: remove the `postinstall` script to support pnpm 10 ([#13304](https://github.com/sveltejs/kit/pull/13304))
+  
+  NOTE: users should add `"prepare": "svelte-kit sync`" to their `package.json` in order to avoid the following warning upon first running Vite:
+  ```
+  ▲ [WARNING] Cannot find base config file "./.svelte-kit/tsconfig.json" [tsconfig.json]
+  
+      tsconfig.json:2:12:
+        2 │   "extends": "./.svelte-kit/tsconfig.json",
+          ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ```
+
+- feat: provide `PageProps` and `LayoutProps` types ([#13308](https://github.com/sveltejs/kit/pull/13308))
+
+
+### Patch Changes
+
+
+- perf: shorten chunk file names ([#13003](https://github.com/sveltejs/kit/pull/13003))
+
+
+- fix: strip internal data before passing URL to `reroute` ([#13092](https://github.com/sveltejs/kit/pull/13092))
+
+
+- fix: support absolute URLs and reroutes with `data-sveltekit-preload-code="viewport"` ([#12217](https://github.com/sveltejs/kit/pull/12217))
+
+
+- fix: use current `window.fetch` for server load fetch requests ([#13315](https://github.com/sveltejs/kit/pull/13315))
+
+
+- fix: resolve symlinks when handling routes ([#12740](https://github.com/sveltejs/kit/pull/12740))
+
+
+- fix: prevent infinite reload when using the hash router and previewing `/index.html` ([#13296](https://github.com/sveltejs/kit/pull/13296))
+
+
+- fix: service worker base path in dev mode ([#12577](https://github.com/sveltejs/kit/pull/12577))
+
+
+- chore: error during development when using `use:enhance` with `+server` ([#13197](https://github.com/sveltejs/kit/pull/13197))
+
+
+- chore: add most common status codes to `redirect()` JS documentation ([#13301](https://github.com/sveltejs/kit/pull/13301))
+
+
+- fix: correctly link to assets inlined by the `inlineStyleThreshold` option ([#13068](https://github.com/sveltejs/kit/pull/13068))
+
+
+- fix: fall back to importing dynamic dependencies relative to SvelteKit package ([#12532](https://github.com/sveltejs/kit/pull/12532))
+
+
+- fix: use arrow function types over bound funcs ([#12955](https://github.com/sveltejs/kit/pull/12955))
+
+
+- fix: correctly navigate when hash router is enabled and the browser encodes extra hashes ([#13321](https://github.com/sveltejs/kit/pull/13321))
+
+## 2.15.3
+### Patch Changes
+
+
+- fix: fix race-condition when not using SSR when pressing back before initial load ([#12925](https://github.com/sveltejs/kit/pull/12925))
+
+
+- fix: remove ":$" from virtual module ids to allow dev server to work with proxies ([#12157](https://github.com/sveltejs/kit/pull/12157))
+
+
+- fix: upgrade esm-env to remove warning when NODE_ENV is not set ([#13291](https://github.com/sveltejs/kit/pull/13291))
+
+
+- fix: handle `Redirect` thrown from root layout load function when client-side navigating to a non-existent page ([#12005](https://github.com/sveltejs/kit/pull/12005))
+
+
+- fix: make param matchers generated type import end with `.js` ([#13286](https://github.com/sveltejs/kit/pull/13286))
+
+## 2.15.2
+### Patch Changes
+
+
+- fix: correctly notify page store subscribers ([#13205](https://github.com/sveltejs/kit/pull/13205))
+
+
+- fix: prerender data when there is no server load but the `trailingSlash` option is set from the server ([#13262](https://github.com/sveltejs/kit/pull/13262))
+
+
+- fix: correctly remove navigation callbacks when returning function in onNavigate ([#13241](https://github.com/sveltejs/kit/pull/13241))
+
+## 2.15.1
+### Patch Changes
+
+
+- fix: add CSP hashes/nonces to inline styles when using `bundleStrategy: 'inline'` ([#13232](https://github.com/sveltejs/kit/pull/13232))
+
+
+- fix: silence dev/prod warning during sync ([#13244](https://github.com/sveltejs/kit/pull/13244))
+
+## 2.15.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'inline'` option ([#13193](https://github.com/sveltejs/kit/pull/13193))
+
+## 2.14.1
+### Patch Changes
+
+
+- fix: do not mutate URL during reroute logic ([#13222](https://github.com/sveltejs/kit/pull/13222))
+
+## 2.14.0
+### Minor Changes
+
+
+- feat: add hash-based routing option ([#13191](https://github.com/sveltejs/kit/pull/13191))
+
+
+### Patch Changes
+
+
+- fix: create new URL when calling `goto(...)`, to handle case where URL is mutated ([#13196](https://github.com/sveltejs/kit/pull/13196))
+
+## 2.13.0
+### Minor Changes
+
+
+- feat: add `bundleStrategy: 'split' | 'single'` option ([#13173](https://github.com/sveltejs/kit/pull/13173))
+
+## 2.12.2
+### Patch Changes
+
+
+- fix: correctly resolve no hooks file when a similarly named directory exists ([#13188](https://github.com/sveltejs/kit/pull/13188))
+
+
+- fix: correctly resolve `$app/state` on the server with Vite 5 ([#13192](https://github.com/sveltejs/kit/pull/13192))
+
+## 2.12.1
+### Patch Changes
+
+
+- fix: replace `navigating.current.<x>` with `navigating.<x>` ([#13174](https://github.com/sveltejs/kit/pull/13174))
+
+## 2.12.0
+### Minor Changes
+
+
+- feat: add `$app/state` module ([#13140](https://github.com/sveltejs/kit/pull/13140))
+
+
+### Patch Changes
+
+
+- chore: specify the route ID in the error message during development when making a form action request to a route without form actions ([#13167](https://github.com/sveltejs/kit/pull/13167))
+
+## 2.11.1
+### Patch Changes
+
+
+- fix: adhere to Vite `build.minify` setting when building the service worker ([#13143](https://github.com/sveltejs/kit/pull/13143))
+
+## 2.11.0
+### Minor Changes
+
+
+- feat: transport custom types across the server/client boundary ([#13149](https://github.com/sveltejs/kit/pull/13149))
+
+
+### Patch Changes
+
+
+- fix: correctly resolve hooks file when a similarly named directory exists ([#13144](https://github.com/sveltejs/kit/pull/13144))
+
+## 2.10.1
+### Patch Changes
+
+
+- fix: export `init` hook from `get_hooks` ([#13136](https://github.com/sveltejs/kit/pull/13136))
+
+## 2.10.0
+### Minor Changes
+
+
+- feat: server and client `init` hook ([#13103](https://github.com/sveltejs/kit/pull/13103))
+
+
+### Patch Changes
+
+
+- fix: prevent hooks exported from `hooks.js` from overwriting hooks from `hooks.server.js` ([#13104](https://github.com/sveltejs/kit/pull/13104))
+
+## 2.9.1
+### Patch Changes
+
+
+- fix: correctly match route groups preceding optional parameters ([#13099](https://github.com/sveltejs/kit/pull/13099))
+
+## 2.9.0
+### Minor Changes
+
+
+- feat: Vite 6 support ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+
+- fix: transform link[rel='shortcut icon'] and link[rel='apple-touch-icon'] to be absolute to avoid console error when navigating ([#13077](https://github.com/sveltejs/kit/pull/13077))
+
+## 2.8.5
+### Patch Changes
+
+
+- fix: don't hydrate when falling back to error page ([#13056](https://github.com/sveltejs/kit/pull/13056))
+
+## 2.8.4
+### Patch Changes
+
+
+- fix: update inline css url generation for FOUC prevention in dev ([#13007](https://github.com/sveltejs/kit/pull/13007))
+
+## 2.8.3
+### Patch Changes
+
+
+- fix: ensure error messages are escaped ([#13050](https://github.com/sveltejs/kit/pull/13050))
+
+
+- fix: escape values included in dev 404 page ([#13039](https://github.com/sveltejs/kit/pull/13039))
+
+## 2.8.2
+### Patch Changes
+
+
+- fix: prevent duplicate fetch request when using Request with load function's fetch ([#13023](https://github.com/sveltejs/kit/pull/13023))
+
+
+- fix: do not override default cookie decoder to allow users to override the `cookie` library version ([#13037](https://github.com/sveltejs/kit/pull/13037))
+
+## 2.8.1
+### Patch Changes
+
+
+- fix: only add nonce to `script-src-elem`, `style-src-attr` and `style-src-elem` CSP directives when `unsafe-inline` is not present ([#11613](https://github.com/sveltejs/kit/pull/11613))
+
+
+- fix: support HTTP/2 in dev and production. Revert the changes from [#12907](https://github.com/sveltejs/kit/pull/12907) to downgrade HTTP/2 to TLS as now being unnecessary ([#12989](https://github.com/sveltejs/kit/pull/12989))
+
+## 2.8.0
+### Minor Changes
+
+
+- feat: add helper to identify `ActionFailure` objects ([#12878](https://github.com/sveltejs/kit/pull/12878))
+
+## 2.7.7
+### Patch Changes
+
+
+- fix: update link in JSDoc ([#12963](https://github.com/sveltejs/kit/pull/12963))
+
+## 2.7.6
+### Patch Changes
+
+
+- fix: update broken links in JSDoc ([#12960](https://github.com/sveltejs/kit/pull/12960))
+
+## 2.7.5
+### Patch Changes
+
+
+- fix: warn on invalid cookie name characters ([#12806](https://github.com/sveltejs/kit/pull/12806))
+
+
+- fix: when using `@vitejs/plugin-basic-ssl`, set a no-op proxy config to downgrade from HTTP/2 to TLS since `undici` does not yet enable HTTP/2 by default ([#12907](https://github.com/sveltejs/kit/pull/12907))
+
+## 2.7.4
+### Patch Changes
+
+
+- fix: ensure element is focused after subsequent clicks of the same hash link ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
+
+- fix: avoid preload if event default was prevented for `touchstart` and `mousedown` events ([#12887](https://github.com/sveltejs/kit/pull/12887))
+
+
+- fix: avoid reloading behaviour for hash links with data-sveltekit-reload if the hash is on the same page ([#12866](https://github.com/sveltejs/kit/pull/12866))
+
+## 2.7.3
+### Patch Changes
+
+
+- fix: include importer in illegal import error message ([#12820](https://github.com/sveltejs/kit/pull/12820))
+
+
+- fix: don't try reading assets directly that aren't present ([#12876](https://github.com/sveltejs/kit/pull/12876))
+
+
+- fix: decode non-latin characters when previewing prerendered pages ([#12874](https://github.com/sveltejs/kit/pull/12874))
+
+
+- fix: better error message when a `Result` is returned from a form action ([#12829](https://github.com/sveltejs/kit/pull/12829))
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 2.7.2
+### Patch Changes
+
+
+- fix: use absolute links in JSDoc comments ([#12718](https://github.com/sveltejs/kit/pull/12718))
+
+## 2.7.1
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+
+- fix: warn when form action responses are lost because SSR is off ([#12063](https://github.com/sveltejs/kit/pull/12063))
+
+## 2.7.0
+### Minor Changes
+
+
+- feat: update service worker when new version is detected ([#12448](https://github.com/sveltejs/kit/pull/12448))
+
+
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+
+- fix: decode non ASCII anchor hashes when scrolling into view ([#12699](https://github.com/sveltejs/kit/pull/12699))
+
+
+- fix: page response missing CSP and Link headers when return promise in `load` ([#12418](https://github.com/sveltejs/kit/pull/12418))
+
+## 2.6.4
+### Patch Changes
+
+
+- fix: only preload links that have a different URL than the current page ([#12773](https://github.com/sveltejs/kit/pull/12773))
+
+
+- fix: revert change to replace version in generateBundle ([#12779](https://github.com/sveltejs/kit/pull/12779))
+
+
+- fix: catch stack trace fixing errors thrown in web containers ([#12775](https://github.com/sveltejs/kit/pull/12775))
+
+
+- fix: use absolute links in JSDoc comments ([#12772](https://github.com/sveltejs/kit/pull/12772))
+
+## 2.6.3
+### Patch Changes
+
+
+- fix: ensure a changing `version` doesn't affect the hashes for chunks without any actual code changes ([#12700](https://github.com/sveltejs/kit/pull/12700))
+
+
+- fix: prevent crash when logging URL search params in a server load function ([#12763](https://github.com/sveltejs/kit/pull/12763))
+
+
+- chore: revert update dependency cookie to ^0.7.0 ([#12767](https://github.com/sveltejs/kit/pull/12767))
+
+## 2.6.2
+### Patch Changes
+
+
+- chore(deps): update dependency cookie to ^0.7.0 ([#12746](https://github.com/sveltejs/kit/pull/12746))
+
+## 2.6.1
+### Patch Changes
+
+
+- fix: better error message when calling push/replaceState before router is initialized ([#11968](https://github.com/sveltejs/kit/pull/11968))
+
+## 2.6.0
+### Minor Changes
+
+
+- feat: support typed arrays in `load` functions ([#12716](https://github.com/sveltejs/kit/pull/12716))
+
+
+### Patch Changes
+
+
+- fix: open a new tab for `<form target="_blank">` and `<button formtarget="_blank"> submissions ([#11936](https://github.com/sveltejs/kit/pull/11936))
+
+## 2.5.28
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 2.5.27
+### Patch Changes
+
+
+- fix: asynchronously instantiate components when using Svelte 5 ([#12613](https://github.com/sveltejs/kit/pull/12613))
+
+
+- fix: use `{@render ...}` tag when generating default fallback page for svelte 5 apps ([#12653](https://github.com/sveltejs/kit/pull/12653))
+
+
+- fix: emulate `event.platform` even when the route does not exist ([#12513](https://github.com/sveltejs/kit/pull/12513))
+
+## 2.5.26
+### Patch Changes
+
+
+- fix: exclude service worker directory from tsconfig ([#12196](https://github.com/sveltejs/kit/pull/12196))
+
+## 2.5.25
+### Patch Changes
+
+
+- chore: upgrade dts-buddy to 0.5.3 ([`6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f`](https://github.com/sveltejs/kit/commit/6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f))
+
+## 2.5.24
+### Patch Changes
+
+
+- extend peer dependency range for @sveltejs/vite-plugin-svelte to include 4.0.0-next for improved svelte5 support ([#12593](https://github.com/sveltejs/kit/pull/12593))
+
+## 2.5.23
+### Patch Changes
+
+
+- fix: use dynamic components in `root.svelte` instead of `svelte:component` for svelte 5 ([#12584](https://github.com/sveltejs/kit/pull/12584))
+
+## 2.5.22
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.5.21
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 2.5.20
+### Patch Changes
+
+
+- fix: set revalidate cache header on 404'd static assets ([#12530](https://github.com/sveltejs/kit/pull/12530))
+
+## 2.5.19
+### Patch Changes
+
+
+- fix: Svelte 5 - ignore `binding_non_reactive` warning in generated root component (you also need to update to `svelte@5.0.0-next.204`) ([#12524](https://github.com/sveltejs/kit/pull/12524))
+
 ## 2.5.18
 ### Patch Changes
 
@@ -4056,8 +4715,8 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
-- breaking: Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://svelte.dev/docs/kit/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- breaking: Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://svelte.dev/docs/kit/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 - breaking: change `app.render` signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
 - breaking: move protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
@@ -4192,7 +4851,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- breaking: Add `disableScrollHandling` function (see https://kit.svelte.dev/docs/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+- breaking: Add `disableScrollHandling` function (see https://svelte.dev/docs/kit/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
 
 ## 1.0.0-next.213
 

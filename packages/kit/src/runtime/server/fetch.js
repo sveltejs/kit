@@ -1,6 +1,8 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
+import { read_implementation } from '__sveltekit/server';
+import { has_prerendered_path } from './utils.js';
 
 /**
  * @param {{
@@ -81,8 +83,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename);
-				const is_asset_html = manifest.assets.has(filename_html);
+				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset_html =
+					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
@@ -95,8 +98,27 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
+					} else if (read_implementation && file in manifest._.server_assets) {
+						const length = manifest._.server_assets[file];
+						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+
+						return new Response(read_implementation(file), {
+							headers: {
+								'Content-Length': '' + length,
+								'Content-Type': type
+							}
+						});
 					}
 
+					return await fetch(request);
+				}
+
+				if (has_prerendered_path(manifest, paths.base + decoded)) {
+					// The path of something prerendered could match a different route
+					// that is still in the manifest, leading to the wrong route being loaded.
+					// We therefore bail early here. The prerendered logic is different for
+					// each adapter, (except maybe for prerendered redirects)
+					// so we need to make an actual HTTP request.
 					return await fetch(request);
 				}
 

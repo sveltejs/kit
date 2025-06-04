@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { createEventDispatcher } from 'svelte';
 export const astring = 'potato';
 const dispatch = createEventDispatcher();

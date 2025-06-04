@@ -1,5 +1,188 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.0.3
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250507.0 ([#13773](https://github.com/sveltejs/kit/pull/13773))
+
+## 7.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250415.0 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 7.0.1
+### Patch Changes
+
+
+- fix: correctly write the worker to the `pages_build_output_dir` path if set in the Wrangler configuration path ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+
+- fix: correctly resolve paths provided by the Wrangler config on Windows ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
+## 7.0.0
+### Major Changes
+
+
+- feat: support specifically building for Cloudflare Workers Static Assets ([#13634](https://github.com/sveltejs/kit/pull/13634))
+
+
+### Patch Changes
+
+
+- chore: remove `esbuild` as dependency ([#13633](https://github.com/sveltejs/kit/pull/13633))
+
+- Updated dependencies [[`370e9f95c1d6efd5393f73d2dbef68143b27f681`](https://github.com/sveltejs/kit/commit/370e9f95c1d6efd5393f73d2dbef68143b27f681)]:
+  - @sveltejs/kit@2.20.3
+
+## 6.0.1
+### Patch Changes
+
+
+- fix: revert writing server files to the cloudflare build directory ([#13622](https://github.com/sveltejs/kit/pull/13622))
+
+## 6.0.0
+### Major Changes
+
+
+- fix: copy the `_headers` and `_redirects` files from the project root instead of the `/static` directory ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+
+### Patch Changes
+
+
+- fix: write server files to the cloudflare build directory ([#13610](https://github.com/sveltejs/kit/pull/13610))
+
+## 5.1.0
+### Minor Changes
+
+
+- feat: support wrangler 4 ([#13580](https://github.com/sveltejs/kit/pull/13580))
+
+
+### Patch Changes
+
+- Updated dependencies [[`001bc04dece9b0983efc2187225772c19d135345`](https://github.com/sveltejs/kit/commit/001bc04dece9b0983efc2187225772c19d135345)]:
+  - @sveltejs/kit@2.19.2
+
+## 5.0.3
+### Patch Changes
+
+
+- fix: exclude the dynamic route `/_app/env.js` from the adapter config `routes.exclude` special value `<build>` ([#13411](https://github.com/sveltejs/kit/pull/13411))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
+## 5.0.2
+### Patch Changes
+
+
+- fix: prevent Vitest from hanging, which was not fully addressed in [#12830](https://github.com/sveltejs/kit/pull/12830) ([#13373](https://github.com/sveltejs/kit/pull/13373))
+
+- Updated dependencies [[`09296d0f19c8d1ff57d699e637bd1beabb69d438`](https://github.com/sveltejs/kit/commit/09296d0f19c8d1ff57d699e637bd1beabb69d438), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79), [`f30352f874790b9de0bd0eba985a21aef23e158e`](https://github.com/sveltejs/kit/commit/f30352f874790b9de0bd0eba985a21aef23e158e), [`180fa3467e195065c0a25206c6328a908e6952d7`](https://github.com/sveltejs/kit/commit/180fa3467e195065c0a25206c6328a908e6952d7), [`5906e9708965b848b468d0014999c36272dc8d50`](https://github.com/sveltejs/kit/commit/5906e9708965b848b468d0014999c36272dc8d50), [`d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79`](https://github.com/sveltejs/kit/commit/d62ed39a431f0db3db4dd90bf6b17ed2a2a2de79)]:
+  - @sveltejs/kit@2.17.0
+
+## 5.0.1
+### Patch Changes
+
+
+- fix: prevent vitest from hanging ([#12830](https://github.com/sveltejs/kit/pull/12830))
+
+- Updated dependencies [[`1bedcc1cfc1f2d85946c1423f60faa8a2a56148b`](https://github.com/sveltejs/kit/commit/1bedcc1cfc1f2d85946c1423f60faa8a2a56148b), [`e201fa9380a00e072a80a2dcab56de3d77e5b67c`](https://github.com/sveltejs/kit/commit/e201fa9380a00e072a80a2dcab56de3d77e5b67c), [`f3f08582d41b08c3fd1daf742e5703d9cdca7823`](https://github.com/sveltejs/kit/commit/f3f08582d41b08c3fd1daf742e5703d9cdca7823), [`d4bcfccb4503b12fe76140dbb6cfddc81f9419fc`](https://github.com/sveltejs/kit/commit/d4bcfccb4503b12fe76140dbb6cfddc81f9419fc), [`d09bc033123903f359c1ad6fd3a6d8d7fc19298a`](https://github.com/sveltejs/kit/commit/d09bc033123903f359c1ad6fd3a6d8d7fc19298a)]:
+  - @sveltejs/kit@2.15.3
+
+## 5.0.0
+### Major Changes
+
+
+- feat: remove esbuild step ([#13132](https://github.com/sveltejs/kit/pull/13132))
+
+
+### Patch Changes
+
+- Updated dependencies [[`12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f`](https://github.com/sveltejs/kit/commit/12ce7eb19fb57907e3db29ef981a8c7a0afc4b6f), [`528af75f846f971ef64e4d109ac5e22fca046b90`](https://github.com/sveltejs/kit/commit/528af75f846f971ef64e4d109ac5e22fca046b90)]:
+  - @sveltejs/kit@2.15.1
+
+## 4.9.0
+### Minor Changes
+
+
+- feat: generate `.assetsignore` file for use with Cloudflare Workers Static Assets ([#13109](https://github.com/sveltejs/kit/pull/13109))
+
+
+### Patch Changes
+
+- Updated dependencies [[`20f2720aa3455f38fa2630a33d52f7532da27fce`](https://github.com/sveltejs/kit/commit/20f2720aa3455f38fa2630a33d52f7532da27fce)]:
+  - @sveltejs/kit@2.13.0
+
+## 4.8.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 4.7.4
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 4.7.3
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+- Updated dependencies [[`df48fc6ede3859beabaae9fd7c6f722215bb8a42`](https://github.com/sveltejs/kit/commit/df48fc6ede3859beabaae9fd7c6f722215bb8a42), [`5780deba8e3ebd0e2b0abea029068ad0c6daf6ad`](https://github.com/sveltejs/kit/commit/5780deba8e3ebd0e2b0abea029068ad0c6daf6ad), [`6f9aefdb8699fc126d76a88471602cb9a80822eb`](https://github.com/sveltejs/kit/commit/6f9aefdb8699fc126d76a88471602cb9a80822eb), [`8aa95b4b3431e79f62f580abdcdcb157b4de86cd`](https://github.com/sveltejs/kit/commit/8aa95b4b3431e79f62f580abdcdcb157b4de86cd)]:
+  - @sveltejs/kit@2.7.0
+
+## 4.7.2
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 4.7.1
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 4.7.0
+### Minor Changes
+
+
+- feat: generate static `_redirects` for Cloudflare Pages ([#12199](https://github.com/sveltejs/kit/pull/12199))
+
+
+### Patch Changes
+
+
+- fix: correctly return static assets if base path is set ([#12075](https://github.com/sveltejs/kit/pull/12075))
+
 ## 4.6.1
 ### Patch Changes
 

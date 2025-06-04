@@ -6,7 +6,7 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
 
-You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {
@@ -18,7 +18,7 @@ if ('serviceWorker' in navigator) {
 
 ## Inside the service worker
 
-Inside the service worker you have access to the [`$service-worker` module](modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
@@ -106,7 +106,7 @@ self.addEventListener('fetch', (event) => {
 });
 ```
 
-> Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
+> [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
 ## During development
 
@@ -120,7 +120,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 });
 ```
 
-> `build` and `prerendered` are empty arrays during development
+> [!NOTE] `build` and `prerendered` are empty arrays during development
 
 ## Type safety
 
@@ -147,4 +147,8 @@ This disables access to DOM typings like `HTMLElement` which are not available i
 
 ## Other solutions
 
-SvelteKit's service worker implementation is deliberately low-level. If you need a more full-fledged but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+SvelteKit's service worker implementation is designed to be easy to work with and is probably a good solution for most users. However, outside of SvelteKit, many PWA applications leverage the [Workbox](https://web.dev/learn/pwa/workbox) library. If you're used to using Workbox you may prefer [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html).
+
+## References
+
+For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).

@@ -30,5 +30,4 @@
 <a href="https://google.de">external</a>
 <a download href="/">explicit download</a>
 <a href={implicit_download_url}>implicit download</a>
-
-<pre>{times_triggered} {unload} {navigation_type}</pre>
+<pre>{times_triggered} {unload} {`${navigation_type}`}</pre>

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
@@ -34,13 +35,13 @@ import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
-	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
+	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
@@ -63,9 +64,23 @@ export const options = {
 };
 
 export async function get_hooks() {
+	let handle;
+	let handleFetch;
+	let handleError;
+	let init;
+	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+
+	let reroute;
+	let transport;
+	${universal_hooks ? `({ reroute, transport } = await import(${s(universal_hooks)}));` : ''}
+
 	return {
-		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
-		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
+		handle,
+		handleFetch,
+		handleError,
+		init,
+		reroute,
+		transport
 	};
 }
 
@@ -102,6 +117,8 @@ export function write_server(config, output) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	// Contains the stringified version of
+	/** @type {import('types').SSROptions} */
 	write_if_changed(
 		`${output}/server/internal.js`,
 		server_template({

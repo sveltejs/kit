@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -6,9 +7,10 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies styles correctly', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
+	/**
+	 * @param {(selector: string, prop: string) => Promise<string>} get_computed_style
+	 */
+	function check_styles(get_computed_style) {
 		test.step('applies imported styles', async () => {
 			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
 		});
@@ -28,6 +30,27 @@ test.describe('CSS', () => {
 		test.step('does not apply raw and url', async () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
+	}
+
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
+		await page.goto('/css');
+		// without this assertion, the WebKit browser seems to close before we can compute the styles
+		await expect(page.locator('.styled')).toBeVisible();
+		check_styles(get_computed_style);
+	});
+
+	test('applies styles correctly after client-side navigation', async ({
+		page,
+		app,
+		get_computed_style,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/css');
+
+		check_styles(get_computed_style);
 	});
 
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
@@ -1026,6 +1049,14 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+
+	test('no xss via tracked search parameters', async ({ page }) => {
+		// https://github.com/sveltejs/kit/security/advisories/GHSA-6q87-84jw-cjhp
+		await page.goto('/xss/query-tracking?</script/><script>window.pwned%3D1</script/>');
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 });
 

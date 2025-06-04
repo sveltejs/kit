@@ -26,7 +26,7 @@ function get_raw_body(req, body_size_limit) {
 
 	if (req.destroyed) {
 		const readable = new ReadableStream();
-		readable.cancel();
+		void readable.cancel();
 		return readable;
 	}
 
@@ -106,11 +106,25 @@ function get_raw_body(req, body_size_limit) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
+	let headers = /** @type {Record<string, string>} */ (request.headers);
+	if (request.httpVersionMajor >= 2) {
+		// the Request constructor rejects headers with ':' in the name
+		headers = Object.assign({}, headers);
+		// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
+		if (headers[':authority']) {
+			headers.host = headers[':authority'];
+		}
+		delete headers[':authority'];
+		delete headers[':method'];
+		delete headers[':path'];
+		delete headers[':scheme'];
+	}
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers: /** @type {Record<string, string>} */ (request.headers),
+		headers: Object.entries(headers),
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
@@ -162,7 +176,7 @@ export async function setResponse(res, response) {
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {
-		reader.cancel();
+		void reader.cancel();
 		return;
 	}
 
@@ -179,7 +193,7 @@ export async function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	next();
+	void next();
 	async function next() {
 		try {
 			for (;;) {

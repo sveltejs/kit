@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
@@ -38,7 +39,7 @@ if (socket_activation) {
 	});
 } else {
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path ? path : host + ':' + port}`);
+		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
 

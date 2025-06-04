@@ -1,21 +1,14 @@
 import { BROWSER, DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	add_data_suffix,
 	decode_params,
 	decode_pathname,
 	strip_hash,
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
-import {
-	initial_fetch,
-	lock_fetch,
-	native_fetch,
-	subsequent_fetch,
-	unlock_fetch
-} from './fetcher.js';
-import { parse } from './parse.js';
+import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -26,7 +19,8 @@ import {
 	origin,
 	scroll_state,
 	notifiable_store,
-	create_updated_store
+	create_updated_store,
+	load_css
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -45,6 +39,12 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
+import { page, update, navigating } from './state.svelte.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+
+export { load_css };
+
+const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
 
@@ -145,16 +145,29 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 function native_navigation(url) {
 	location.href = url.href;
 	return new Promise((resolve) => {
-		// if we're still on the same page, it was probably a download
+		// if we're still on the same page after setting location.href, it was probably a download
 		if (location.href !== url.href) {
 			resolve(undefined);
 		}
 	});
 }
 
+/**
+ * Checks whether a service worker is registered, and if it is,
+ * tries to update it.
+ */
+async function update_service_worker() {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration(base || '/');
+		if (registration) {
+			await registration.update();
+		}
+	}
+}
+
 function noop() {}
 
-/** @type {import('types').CSRRoute[]} */
+/** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
@@ -165,7 +178,7 @@ let container;
 /** @type {HTMLElement} */
 let target;
 /** @type {import('./types.js').SvelteKitApp} */
-let app;
+export let app;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -181,14 +194,29 @@ const components = [];
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
 let load_cache = null;
 
-/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
-const before_navigate_callbacks = [];
+/**
+ * @type {Map<string, Promise<URL>>}
+ * Cache for client-side rerouting, since it could contain async calls which we want to
+ * avoid running multiple times which would slow down navigations (e.g. else preloading
+ * wouldn't help because on navigation it would be called again). Since `reroute` should be
+ * a pure function (i.e. always return the same) value it's safe to cache across navigations.
+ * The server reroute calls don't need to be cached because they are called using `import(...)`
+ * which is cached per the JS spec.
+ */
+const reroute_cache = new Map();
 
-/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
-const on_navigate_callbacks = [];
+/**
+ * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
+ * do not re-assign as some closures keep references to these Sets
+ */
+/** @type {Set<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
+const before_navigate_callbacks = new Set();
 
-/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
-let after_navigate_callbacks = [];
+/** @type {Set<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+const on_navigate_callbacks = new Set();
+
+/** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
+const after_navigate_callbacks = new Set();
 
 /** @type {import('./types.js').NavigationState} */
 let current = {
@@ -203,7 +231,7 @@ let hydrated = false;
 let started = false;
 let autoscroll = true;
 let updating = false;
-let navigating = false;
+let is_navigating = false;
 let hash_navigating = false;
 /** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
 let has_navigated = false;
@@ -218,9 +246,6 @@ let current_history_index;
 
 /** @type {number} */
 let current_navigation_index;
-
-/** @type {import('@sveltejs/kit').Page} */
-let page;
 
 /** @type {{}} */
 let token;
@@ -257,7 +282,10 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
-	routes = parse(_app);
+
+	await _app.hooks.init?.();
+
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -265,8 +293,8 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	default_layout_loader();
-	default_error_loader();
+	void default_layout_loader();
+	void default_error_loader();
 
 	current_history_index = history.state?.[HISTORY_INDEX];
 	current_navigation_index = history.state?.[NAVIGATION_INDEX];
@@ -290,15 +318,25 @@ export async function start(_app, _target, hydrate) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = scroll_positions[current_history_index];
-	if (scroll) {
-		history.scrollRestoration = 'manual';
-		scrollTo(scroll.x, scroll.y);
+	function restore_scroll() {
+		if (scroll) {
+			history.scrollRestoration = 'manual';
+			scrollTo(scroll.x, scroll.y);
+		}
 	}
 
 	if (hydrate) {
+		restore_scroll();
+
 		await _hydrate(target, hydrate);
 	} else {
-		goto(location.href, { replaceState: true });
+		await navigate({
+			type: 'enter',
+			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
+			replace_state: true
+		});
+
+		restore_scroll();
 	}
 
 	_start_router();
@@ -312,7 +350,8 @@ async function _invalidate() {
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const intent = get_navigation_intent(current.url, true);
+	const nav_token = (token = {});
+	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
 	// Also solves an edge case where a preload is triggered, the navigation for it
@@ -320,7 +359,6 @@ async function _invalidate() {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || nav_token !== token) return;
 
@@ -329,11 +367,12 @@ async function _invalidate() {
 	}
 
 	if (navigation_result.props.page) {
-		page = navigation_result.props.page;
+		Object.assign(page, navigation_result.props.page);
 	}
 	current = navigation_result.state;
 	reset_invalidation();
 	root.$set(navigation_result.props);
+	update(navigation_result.props.page);
 }
 
 function reset_invalidation() {
@@ -365,7 +404,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -382,6 +421,10 @@ async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
+			}
+
+			if (options.invalidate) {
+				options.invalidate.forEach(push_invalidated);
 			}
 		}
 	});
@@ -413,9 +456,12 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {string} pathname */
-async function _preload_code(pathname) {
-	const route = routes.find((route) => route.exec(get_url_path(pathname)));
+/**
+ * @param {URL} url
+ * @returns {Promise<void>}
+ */
+async function _preload_code(url) {
+	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -435,30 +481,34 @@ function initialize(result, target, hydrate) {
 	const style = document.querySelector('style[data-sveltekit]');
 	if (style) style.remove();
 
-	page = /** @type {import('@sveltejs/kit').Page} */ (result.props.page);
+	Object.assign(page, /** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate
+		hydrate,
+		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
+		sync: false
 	});
 
 	restore_snapshot(current_navigation_index);
 
-	/** @type {import('@sveltejs/kit').AfterNavigate} */
-	const navigation = {
-		from: null,
-		to: {
-			params: current.params,
-			route: { id: current.route?.id ?? null },
-			url: new URL(location.href)
-		},
-		willUnload: false,
-		type: 'enter',
-		complete: Promise.resolve()
-	};
+	if (hydrate) {
+		/** @type {import('@sveltejs/kit').AfterNavigate} */
+		const navigation = {
+			from: null,
+			to: {
+				params: current.params,
+				route: { id: current.route?.id ?? null },
+				url: new URL(location.href)
+			},
+			willUnload: false,
+			type: 'enter',
+			complete: Promise.resolve()
+		};
 
-	after_navigate_callbacks.forEach((fn) => fn(navigation));
+		after_navigate_callbacks.forEach((fn) => fn(navigation));
+	}
 
 	started = true;
 }
@@ -507,7 +557,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 		props: {
 			// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 			constructors: compact(branch).map((branch_node) => branch_node.node.component),
-			page
+			page: clone_page(page)
 		}
 	};
 
@@ -564,8 +614,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 }
 
 /**
- * Call the load function of the given node, if it exists.
- * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+ * Call the universal load function of the given node, if it exists.
  *
  * @param {{
  *   loader: import('types').CSRPageNodeLoader;
@@ -597,6 +646,19 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 	if (DEV) {
 		validate_page_exports(node.universal);
+
+		if (node.universal && app.hash) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${route.id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
 	}
 
 	if (node.universal?.load) {
@@ -640,15 +702,11 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					if (is_tracking) {
 						uses.search_params.add(param);
 					}
-				}
+				},
+				app.hash
 			),
 			async fetch(resource, init) {
-				/** @type {URL | string} */
-				let requested;
-
 				if (resource instanceof Request) {
-					requested = resource.url;
-
 					// we're not allowed to modify the received `Request` object, so in order
 					// to fixup relative urls we create a new equivalent `init` object instead
 					init = {
@@ -660,7 +718,9 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 								: await resource.blob(),
 						cache: resource.cache,
 						credentials: resource.credentials,
-						headers: resource.headers,
+						// the headers are undefined on the server if the Headers object is empty
+						// so we need to make sure they are also undefined here if there are no headers
+						headers: [...resource.headers].length ? resource.headers : undefined,
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,
@@ -671,25 +731,15 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						signal: resource.signal,
 						...init
 					};
-				} else {
-					requested = resource;
 				}
 
-				// we must fixup relative urls so they are resolved from the target page
-				const resolved = new URL(requested, url);
+				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+
 				if (is_tracking) {
 					depends(resolved.href);
 				}
 
-				// match ssr serialized data url, which is important to find cached responses
-				if (resolved.origin === url.origin) {
-					requested = resolved.href.slice(url.origin.length);
-				}
-
-				// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
-				return started
-					? subsequent_fetch(requested, resolved.href, init)
-					: initial_fetch(requested, init);
+				return promise;
 			},
 			setHeaders: () => {}, // noop
 			depends,
@@ -745,6 +795,30 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 }
 
 /**
+ * @param {Request | string | URL} input
+ * @param {RequestInit | undefined} init
+ * @param {URL} url
+ */
+function resolve_fetch_url(input, init, url) {
+	let requested = input instanceof Request ? input.url : input;
+
+	// we must fixup relative urls so they are resolved from the target page
+	const resolved = new URL(requested, url);
+
+	// match ssr serialized data url, which is important to find cached responses
+	if (resolved.origin === url.origin) {
+		requested = resolved.href.slice(url.origin.length);
+	}
+
+	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+	const promise = started
+		? subsequent_fetch(requested, resolved.href, init)
+		: initial_fetch(requested, init);
+
+	return { resolved, promise };
+}
+
+/**
  * @param {boolean} parent_changed
  * @param {boolean} route_changed
  * @param {boolean} url_changed
@@ -795,7 +869,6 @@ function create_data_node(node, previous) {
 }
 
 /**
- *
  * @param {URL | null} old_url
  * @param {URL} new_url
  */
@@ -833,7 +906,10 @@ function preload_error({ error, url, route, params }) {
 			params,
 			branch: []
 		},
-		props: { page, constructors: [] }
+		props: {
+			page: clone_page(page),
+			constructors: []
+		}
 	};
 }
 
@@ -860,7 +936,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
-	const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+	const url_changed = current.url ? id !== get_page_key(current.url) : false;
 	const route_changed = current.route ? route.id !== current.route.id : false;
 	const search_params_changed = diff_search_params(current.url, url);
 
@@ -959,7 +1035,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			server_data_node: create_data_node(
 				// server_data_node is undefined if it wasn't reloaded from the server;
 				// and if current loader uses server data, we want to reuse previous data.
-				server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+				server_data_node === undefined && loader[0] ? { type: 'skip' } : (server_data_node ?? null),
 				loader[0] ? previous?.server : undefined
 			)
 		});
@@ -1007,6 +1083,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
 					if (updated) {
+						// Before reloading, try to update the service worker if it exists
+						await update_service_worker();
 						return await native_navigation(url);
 					}
 
@@ -1116,50 +1194,87 @@ async function load_root_error_page({ status, error, url, route }) {
 		}
 	}
 
-	const root_layout = await load_node({
-		loader: default_layout_loader,
-		url,
-		params,
-		route,
-		parent: () => Promise.resolve({}),
-		server_data_node: create_data_node(server_data_node)
-	});
+	try {
+		const root_layout = await load_node({
+			loader: default_layout_loader,
+			url,
+			params,
+			route,
+			parent: () => Promise.resolve({}),
+			server_data_node: create_data_node(server_data_node)
+		});
 
-	/** @type {import('./types.js').BranchNode} */
-	const root_error = {
-		node: await default_error_loader(),
-		loader: default_error_loader,
-		universal: null,
-		server: null,
-		data: null
-	};
+		/** @type {import('./types.js').BranchNode} */
+		const root_error = {
+			node: await default_error_loader(),
+			loader: default_error_loader,
+			universal: null,
+			server: null,
+			data: null
+		};
 
-	return get_navigation_result_from_branch({
-		url,
-		params,
-		branch: [root_layout, root_error],
-		status,
-		error,
-		route: null
-	});
+		return get_navigation_result_from_branch({
+			url,
+			params,
+			branch: [root_layout, root_error],
+			status,
+			error,
+			route: null
+		});
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return _goto(new URL(error.location, location.href), {}, 0);
+		}
+
+		// TODO: this falls back to the server when a server exists, but what about SPA mode?
+		throw error;
+	}
 }
 
 /**
- * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
- * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
- * returns undefined.
- * @param {URL | undefined} url
- * @param {boolean} invalidating
+ * Resolve the relative rerouted URL for a client-side navigation
+ * @param {URL} url
+ * @returns {Promise<URL | undefined>}
  */
-function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
-	if (is_external_url(url, base)) return;
+async function get_rerouted_url(url) {
+	const href = url.href;
 
-	// reroute could alter the given URL, so we pass a copy
+	if (reroute_cache.has(href)) {
+		return reroute_cache.get(href);
+	}
+
 	let rerouted;
+
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		const promise = (async () => {
+			// reroute could alter the given URL, so we pass a copy
+			let rerouted =
+				(await app.hooks.reroute({
+					url: new URL(url),
+					fetch: async (input, init) => {
+						return resolve_fetch_url(input, init, url).promise;
+					}
+				})) ?? url;
+
+			if (typeof rerouted === 'string') {
+				const tmp = new URL(url); // do not mutate the incoming URL
+
+				if (app.hash) {
+					tmp.hash = rerouted;
+				} else {
+					tmp.pathname = rerouted;
+				}
+
+				rerouted = tmp;
+			}
+
+			return rerouted;
+		})();
+
+		reroute_cache.set(href, promise);
+		rerouted = await promise;
 	} catch (e) {
+		reroute_cache.delete(href);
 		if (DEV) {
 			// in development, print the error...
 			console.error(e);
@@ -1169,32 +1284,74 @@ function get_navigation_intent(url, invalidating) {
 		}
 
 		// fall back to native navigation
-		return undefined;
+		return;
 	}
 
-	const path = get_url_path(rerouted);
+	return rerouted;
+}
 
-	for (const route of routes) {
-		const params = route.exec(path);
+/**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
+ * @param {URL | undefined} url
+ * @param {boolean} invalidating
+ * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
+ */
+async function get_navigation_intent(url, invalidating) {
+	if (!url) return;
+	if (is_external_url(url, base, app.hash)) return;
 
-		if (params) {
-			const id = url.pathname + url.search;
-			/** @type {import('./types.js').NavigationIntent} */
-			const intent = {
-				id,
-				invalidating,
-				route,
-				params: decode_params(params),
-				url
-			};
-			return intent;
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		const rerouted = await get_rerouted_url(url);
+		if (!rerouted) return;
+
+		const path = get_url_path(rerouted);
+
+		for (const route of routes) {
+			const params = route.exec(path);
+
+			if (params) {
+				return {
+					id: get_page_key(url),
+					invalidating,
+					route,
+					params: decode_params(params),
+					url
+				};
+			}
 		}
+	} else {
+		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
+		const { route, params } = await import(
+			/* @vite-ignore */
+			add_resolution_suffix(url.pathname)
+		);
+
+		if (!route) return;
+
+		return {
+			id: get_page_key(url),
+			invalidating,
+			route: parse_server_route(route, app.nodes),
+			params,
+			url
+		};
 	}
 }
 
-/** @param {string} pathname */
-function get_url_path(pathname) {
-	return decode_pathname(pathname.slice(base.length) || '/');
+/** @param {URL} url */
+function get_url_path(url) {
+	return (
+		decode_pathname(
+			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
+		) || '/'
+	);
+}
+
+/** @param {URL} url */
+function get_page_key(url) {
+	return (app.hash ? url.hash.replace(/^#/, '') : url.pathname) + url.search;
 }
 
 /**
@@ -1222,7 +1379,7 @@ function _before_navigate({ url, type, intent, delta }) {
 		}
 	};
 
-	if (!navigating) {
+	if (!is_navigating) {
 		// Don't run the event during redirects
 		before_navigate_callbacks.forEach((fn) => fn(cancellable));
 	}
@@ -1232,7 +1389,7 @@ function _before_navigate({ url, type, intent, delta }) {
 
 /**
  * @param {{
- *   type: import('@sveltejs/kit').Navigation["type"];
+ *   type: import('@sveltejs/kit').NavigationType;
  *   url: URL;
  *   popped?: {
  *     state: Record<string, any>;
@@ -1262,45 +1419,75 @@ async function navigate({
 	accept = noop,
 	block = noop
 }) {
-	const intent = get_navigation_intent(url, false);
-	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
+	const prev_token = token;
+	token = nav_token;
+
+	const intent = await get_navigation_intent(url, false);
+	const nav =
+		type === 'enter'
+			? create_navigation(current, intent, url, type)
+			: _before_navigate({ url, type, delta: popped?.delta, intent });
 
 	if (!nav) {
 		block();
+		if (token === nav_token) token = prev_token;
 		return;
 	}
 
 	// store this before calling `accept()`, which may change the index
+	// @ts-ignore ts doesn't know that we're calling `start()` which sets the current_history_index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
 
 	accept();
 
-	navigating = true;
+	is_navigating = true;
 
-	if (started) {
-		stores.navigating.set(nav.navigation);
+	if (started && nav.navigation.type !== 'enter') {
+		stores.navigating.set((navigating.current = nav.navigation));
 	}
 
-	token = nav_token;
 	let navigation_result = intent && (await load_route(intent));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base)) {
-			return await native_navigation(url);
-		}
-		navigation_result = await server_fallback(
-			url,
-			{ id: null },
-			await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+		if (is_external_url(url, base, app.hash)) {
+			if (DEV && app.hash) {
+				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+				// they would end up here in an endless loop. Fall back to error page in that case
+				navigation_result = await server_fallback(
+					url,
+					{ id: null },
+					await handle_error(
+						new SvelteKitError(
+							404,
+							'Not Found',
+							`Not found: ${url.pathname} (did you forget the hash?)`
+						),
+						{
+							url,
+							params: {},
+							route: { id: null }
+						}
+					),
+					404
+				);
+			} else {
+				return await native_navigation(url);
+			}
+		} else {
+			navigation_result = await server_fallback(
 				url,
-				params: {},
-				route: { id: null }
-			}),
-			404
-		);
+				{ id: null },
+				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
+				404
+			);
+		}
 
-		// do nothing if we downloaded a file and are still on the same page
+		// if we're still on the same page, it's likely it was a download link
 		if (!navigation_result) {
 			stores.navigating.set(null);
 			nav.fulfil(undefined);
@@ -1332,12 +1519,14 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
+			// Before reloading, try to update the service worker if it exists
+			await update_service_worker();
 			await native_navigation(url);
 		}
 	}
@@ -1391,7 +1580,7 @@ async function navigate({
 
 		const after_navigate = (
 			await Promise.all(
-				on_navigate_callbacks.map((fn) =>
+				Array.from(on_navigate_callbacks, (fn) =>
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
 			)
@@ -1399,17 +1588,20 @@ async function navigate({
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
-				after_navigate_callbacks = after_navigate_callbacks.filter(
-					// @ts-ignore
-					(fn) => !after_navigate.includes(fn)
-				);
+				after_navigate.forEach((fn) => {
+					after_navigate_callbacks.delete(fn);
+				});
 			}
 
 			after_navigate.push(cleanup);
-			after_navigate_callbacks.push(...after_navigate);
+
+			after_navigate.forEach((fn) => {
+				after_navigate_callbacks.add(fn);
+			});
 		}
 
 		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
 		initialize(navigation_result, target, false);
@@ -1424,7 +1616,11 @@ async function navigate({
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
-		const deep_linked = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+		const deep_linked =
+			url.hash &&
+			document.getElementById(
+				decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1))
+			);
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
@@ -1451,10 +1647,10 @@ async function navigate({
 	autoscroll = true;
 
 	if (navigation_result.props.page) {
-		page = navigation_result.props.page;
+		Object.assign(page, navigation_result.props.page);
 	}
 
-	navigating = false;
+	is_navigating = false;
 
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
@@ -1466,7 +1662,7 @@ async function navigate({
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
 
-	stores.navigating.set(null);
+	stores.navigating.set((navigating.current = null));
 
 	updating = false;
 }
@@ -1508,22 +1704,29 @@ if (import.meta.hot) {
 	});
 }
 
+/** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
+
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {Element} */
+	let current_a;
+	/** @type {PreloadDataPriority} */
+	let current_priority;
 
 	container.addEventListener('mousemove', (event) => {
 		const target = /** @type {Element} */ (event.target);
 
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			preload(target, 2);
+			void preload(target, PRELOAD_PRIORITIES.hover);
 		}, 20);
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
-		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		if (event.defaultPrevented) return;
+		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1533,7 +1736,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					void _preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1543,39 +1746,50 @@ function setup_preload() {
 
 	/**
 	 * @param {Element} element
-	 * @param {number} priority
+	 * @param {PreloadDataPriority} priority
 	 */
-	function preload(element, priority) {
+	async function preload(element, priority) {
 		const a = find_anchor(element, container);
-		if (!a) return;
 
-		const { url, external, download } = get_link_info(a, base);
+		// we don't want to preload data again if the user has already hovered/tapped
+		const interacted = a === current_a && priority >= current_priority;
+		if (!a || interacted) return;
+
+		const { url, external, download } = get_link_info(a, base, app.hash);
 		if (external || download) return;
 
 		const options = get_router_options(a);
 
-		if (!options.reload) {
-			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(url, false);
-				if (intent) {
-					if (DEV) {
-						_preload_data(intent).then((result) => {
-							if (result.type === 'loaded' && result.state.error) {
-								console.warn(
-									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://kit.svelte.dev/docs/link-options for more info'
-								);
-							}
-						});
-					} else {
-						_preload_data(intent);
+		// we don't want to preload data for a page we're already on
+		const same_url = url && get_page_key(current.url) === get_page_key(url);
+		if (options.reload || same_url) return;
+
+		if (priority <= options.preload_data) {
+			current_a = a;
+			// we don't want to preload data again on tap if we've already preloaded it on hover
+			current_priority = PRELOAD_PRIORITIES.tap;
+
+			const intent = await get_navigation_intent(url, false);
+			if (!intent) return;
+
+			if (DEV) {
+				void _preload_data(intent).then((result) => {
+					if (result.type === 'loaded' && result.state.error) {
+						console.warn(
+							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+								'See https://svelte.dev/docs/kit/link-options for more info'
+						);
 					}
-				}
-			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				});
+			} else {
+				void _preload_data(intent);
 			}
+		} else if (priority <= options.preload_code) {
+			current_a = a;
+			current_priority = priority;
+			void _preload_code(/** @type {URL} */ (url));
 		}
 	}
 
@@ -1583,7 +1797,7 @@ function setup_preload() {
 		observer.disconnect();
 
 		for (const a of container.querySelectorAll('a')) {
-			const { url, external, download } = get_link_info(a, base);
+			const { url, external, download } = get_link_info(a, base, app.hash);
 			if (external || download) continue;
 
 			const options = get_router_options(a);
@@ -1594,12 +1808,12 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				void _preload_code(/** @type {URL} */ (url));
 			}
 		}
 	}
 
-	after_navigate_callbacks.push(after_navigate);
+	after_navigate_callbacks.add(after_navigate);
 	after_navigate();
 }
 
@@ -1628,22 +1842,21 @@ function handle_error(error, event) {
 
 /**
  * @template {Function} T
- * @param {T[]} callbacks
+ * @param {Set<T>} callbacks
  * @param {T} callback
  */
 function add_navigation_callback(callbacks, callback) {
 	onMount(() => {
-		callbacks.push(callback);
+		callbacks.add(callback);
 
 		return () => {
-			const i = callbacks.indexOf(callback);
-			callbacks.splice(i, 1);
+			callbacks.delete(callback);
 		};
 	});
 }
 
 /**
- * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+ * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
  * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
@@ -1654,7 +1867,7 @@ export function afterNavigate(callback) {
 }
 
 /**
- * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+ * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
  *
  * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
  *
@@ -1705,16 +1918,19 @@ export function disableScrollHandling() {
 }
 
 /**
+ * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+ *
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
- * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
+ * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
+ * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
 export function goto(url, opts = {}) {
@@ -1722,7 +1938,7 @@ export function goto(url, opts = {}) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
 
-	url = resolve_url(url);
+	url = new URL(resolve_url(url));
 
 	if (url.origin !== origin) {
 		return Promise.reject(
@@ -1760,14 +1976,21 @@ export function invalidate(resource) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
+	push_invalidated(resource);
+
+	return _invalidate();
+}
+
+/**
+ * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ */
+function push_invalidated(resource) {
 	if (typeof resource === 'function') {
 		invalidated.push(resource);
 	} else {
 		const { href } = new URL(resource, location.href);
 		invalidated.push((url) => url.href === href);
 	}
-
-	return _invalidate();
 }
 
 /**
@@ -1801,7 +2024,7 @@ export async function preloadData(href) {
 	}
 
 	const url = resolve_url(href);
-	const intent = get_navigation_intent(url, false);
+	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
@@ -1831,28 +2054,39 @@ export async function preloadData(href) {
  * @param {string} pathname
  * @returns {Promise<void>}
  */
-export function preloadCode(pathname) {
+export async function preloadCode(pathname) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
+	const url = new URL(pathname, current.url);
+
 	if (DEV) {
-		if (!pathname.startsWith(base)) {
+		if (!pathname.startsWith('/')) {
 			throw new Error(
-				`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
 			);
 		}
 
-		if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
-			throw new Error(`'${pathname}' did not match any routes`);
+		if (!pathname.startsWith(base)) {
+			throw new Error(
+				`pathname passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+			);
+		}
+
+		if (__SVELTEKIT_CLIENT_ROUTING__) {
+			const rerouted = await get_rerouted_url(url);
+			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
+				throw new Error(`'${pathname}' did not match any routes`);
+			}
 		}
 	}
 
-	return _preload_code(pathname);
+	return _preload_code(url);
 }
 
 /**
- * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1864,6 +2098,10 @@ export function pushState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call pushState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1885,14 +2123,17 @@ export function pushState(url, state) {
 	history.pushState(opts, '', resolve_url(url));
 	has_navigated = true;
 
-	page = { ...page, state };
-	root.$set({ page });
+	page.state = state;
+	root.$set({
+		// we need to assign a new page object so that subscribers are correctly notified
+		page: clone_page(page)
+	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
 }
 
 /**
- * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
  * @param {App.PageState} state
@@ -1904,6 +2145,10 @@ export function replaceState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call replaceState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1922,12 +2167,14 @@ export function replaceState(url, state) {
 
 	history.replaceState(opts, '', resolve_url(url));
 
-	page = { ...page, state };
-	root.$set({ page });
+	page.state = state;
+	root.$set({
+		page: clone_page(page)
+	});
 }
 
 /**
- * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+ * This action updates the `form` property of the current page with the given data and updates `page.status`.
  * In case of an error, it redirects to the nearest error page.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
@@ -1959,18 +2206,22 @@ export async function applyAction(result) {
 			current = navigation_result.state;
 
 			root.$set(navigation_result.props);
+			update(navigation_result.props.page);
 
-			tick().then(reset_focus);
+			void tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
-		_goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
+		page.form = result.data;
+		page.status = result.status;
+
 		/** @type {Record<string, any>} */
 		root.$set({
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page: { ...page, form: result.data, status: result.status }
+			page: clone_page(page)
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
@@ -1995,7 +2246,7 @@ function _start_router() {
 
 		persist_state();
 
-		if (!navigating) {
+		if (!is_navigating) {
 			const nav = create_navigation(current, undefined, null, 'leave');
 
 			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
@@ -2013,7 +2264,7 @@ function _start_router() {
 		}
 		// We need to reset the flag manually here because clicking on an
 		// implicit download link does not reset it for the next navigation.
-		navigating = false;
+		is_navigating = false;
 
 		if (should_block) {
 			e.preventDefault();
@@ -2045,7 +2296,7 @@ function _start_router() {
 		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 		if (!a) return;
 
-		const { url, external, target, download } = get_link_info(a, base);
+		const { url, external, target, download } = get_link_info(a, base, app.hash);
 		if (!url) return;
 
 		// bail out before `beforeNavigate` if link opens in a different tab
@@ -2075,12 +2326,15 @@ function _start_router() {
 
 		if (download) return;
 
+		const [nonhash, hash] = (app.hash ? url.hash.replace(/^#/, '') : url.href).split('#');
+		const same_pathname = nonhash === strip_hash(location);
+
 		// Ignore the following but fire beforeNavigate
-		if (external || options.reload) {
+		if (external || (options.reload && (!same_pathname || !hash))) {
 			if (_before_navigate({ url, type: 'link' })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
-				navigating = true;
+				is_navigating = true;
 			} else {
 				event.preventDefault();
 			}
@@ -2091,8 +2345,7 @@ function _start_router() {
 		// Check if new url only differs by hash and use the browser default behavior in that case
 		// This will ensure the `hashchange` event is fired
 		// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-		const [nonhash, hash] = url.href.split('#');
-		if (hash !== undefined && nonhash === strip_hash(location)) {
+		if (hash !== undefined && same_pathname) {
 			// If we are trying to navigate to the same hash, we should only
 			// attempt to scroll to that element and avoid any history changes.
 			// Otherwise, this can cause Firefox to incorrectly assign a null
@@ -2107,7 +2360,11 @@ function _start_router() {
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
 					window.scrollTo({ top: 0 });
 				} else {
-					a.ownerDocument.getElementById(hash)?.scrollIntoView();
+					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
+					if (element) {
+						element.scrollIntoView();
+						element.focus();
+					}
 				}
 
 				return;
@@ -2138,7 +2395,7 @@ function _start_router() {
 			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
 		});
 
-		navigate({
+		await navigate({
 			type: 'link',
 			url,
 			keepfocus: options.keepfocus,
@@ -2156,15 +2413,20 @@ function _start_router() {
 
 		const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
 
+		const target = submitter?.formTarget || form.target;
+
+		if (target === '_blank') return;
+
 		const method = submitter?.formMethod || form.method;
 
 		if (method !== 'get') return;
 
+		// It is impossible to use form actions with hash router, so we just ignore handling them here
 		const url = new URL(
 			(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 		);
 
-		if (is_external_url(url, base)) return;
+		if (is_external_url(url, base, false)) return;
 
 		const event_form = /** @type {HTMLFormElement} */ (event.target);
 
@@ -2184,7 +2446,7 @@ function _start_router() {
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
 
-		navigate({
+		void navigate({
 			type: 'form',
 			url,
 			keepfocus: options.keepfocus,
@@ -2206,7 +2468,7 @@ function _start_router() {
 			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
-			const is_hash_change = strip_hash(location) === strip_hash(current.url);
+			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
@@ -2215,15 +2477,14 @@ function _start_router() {
 				// This happens with hash links and `pushState`/`replaceState`. The
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
+				if (state !== page.state) {
+					page.state = state;
+				}
+
 				update_url(url);
 
 				scroll_positions[current_history_index] = scroll_state();
 				if (scroll) scrollTo(scroll.x, scroll.y);
-
-				if (state !== page.state) {
-					page = { ...page, state };
-					root.$set({ page });
-				}
 
 				current_history_index = history_index;
 				return;
@@ -2255,6 +2516,12 @@ function _start_router() {
 			if (!hash_navigating) {
 				const url = new URL(location.href);
 				update_url(url);
+
+				// if the user edits the hash via the browser URL bar, trigger a full-page
+				// reload to align with pathname router behavior
+				if (app.hash) {
+					location.reload();
+				}
 			}
 		}
 	});
@@ -2280,7 +2547,9 @@ function _start_router() {
 	// URLs after a pushState/replaceState, resulting in a 404 — see
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	for (const link of document.querySelectorAll('link')) {
-		if (link.rel === 'icon') link.href = link.href; // eslint-disable-line
+		if (ICON_REL_ATTRIBUTES.has(link.rel)) {
+			link.href = link.href; // eslint-disable-line
+		}
 	}
 
 	addEventListener('pageshow', (event) => {
@@ -2289,7 +2558,7 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			stores.navigating.set(null);
+			stores.navigating.set((navigating.current = null));
 		}
 	});
 
@@ -2297,40 +2566,48 @@ function _start_router() {
 	 * @param {URL} url
 	 */
 	function update_url(url) {
-		current.url = url;
-		stores.page.set({ ...page, url });
+		current.url = page.url = url;
+		stores.page.set(clone_page(page));
 		stores.page.notify();
 	}
 }
 
 /**
  * @param {HTMLElement} target
- * @param {{
- *   status: number;
- *   error: App.Error | null;
- *   node_ids: number[];
- *   params: Record<string, string>;
- *   route: { id: string | null };
- *   data: Array<import('types').ServerDataNode | null>;
- *   form: Record<string, any> | null;
- * }} opts
+ * @param {import('./types.js').HydrateOptions} opts
  */
 async function _hydrate(
 	target,
-	{ status = 200, error, node_ids, params, route, data: server_data_nodes, form }
+	{ status = 200, error, node_ids, params, route, server_route, data: server_data_nodes, form }
 ) {
 	hydrated = true;
 
 	const url = new URL(location.href);
 
-	if (!__SVELTEKIT_EMBEDDED__) {
-		// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
-		// of determining the params on the client side.
-		({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+	/** @type {import('types').CSRRoute | undefined} */
+	let parsed_route;
+
+	if (__SVELTEKIT_CLIENT_ROUTING__) {
+		if (!__SVELTEKIT_EMBEDDED__) {
+			// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+			// of determining the params on the client side.
+			({ params = {}, route = { id: null } } = (await get_navigation_intent(url, false)) || {});
+		}
+
+		parsed_route = routes.find(({ id }) => id === route.id);
+	} else {
+		// undefined in case of 404
+		if (server_route) {
+			parsed_route = route = parse_server_route(server_route, app.nodes);
+		} else {
+			route = { id: null };
+			params = {};
+		}
 	}
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
 	let result;
+	let hydrate = true;
 
 	try {
 		const branch_promises = node_ids.map(async (n, i) => {
@@ -2358,8 +2635,6 @@ async function _hydrate(
 
 		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
-
-		const parsed_route = routes.find(({ id }) => id === route.id);
 
 		// server-side will have compacted the branch, reinstate empty slots
 		// so that error boundaries can be lined up correctly
@@ -2395,13 +2670,16 @@ async function _hydrate(
 			url,
 			route
 		});
+
+		target.textContent = '';
+		hydrate = false;
 	}
 
 	if (result.props.page) {
 		result.props.page.state = {};
 	}
 
-	initialize(result, target, true);
+	initialize(result, target, hydrate);
 }
 
 /**
@@ -2420,7 +2698,9 @@ async function load_data(url, invalid) {
 	}
 	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
-	const res = await native_fetch(data_url.href);
+	// use window.fetch directly to allow using a 3rd party-patched fetch implementation
+	const fetcher = DEV ? dev_fetch : window.fetch;
+	const res = await fetcher(data_url.href, {});
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
@@ -2455,6 +2735,7 @@ async function load_data(url, invalid) {
 		 */
 		function deserialize(data) {
 			return devalue.unflatten(data, {
+				...app.decoders,
 				Promise: (id) => {
 					return new Promise((fulfil, reject) => {
 						deferreds.set(id, { fulfil, reject });
@@ -2596,10 +2877,11 @@ function reset_focus() {
 }
 
 /**
+ * @template {import('@sveltejs/kit').NavigationType} T
  * @param {import('./types.js').NavigationState} current
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
- * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
+ * @param {T} type
  */
 function create_navigation(current, intent, url, type) {
 	/** @type {(value: any) => void} */
@@ -2616,7 +2898,7 @@ function create_navigation(current, intent, url, type) {
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(() => {});
 
-	/** @type {import('@sveltejs/kit').Navigation} */
+	/** @type {Omit<import('@sveltejs/kit').Navigation, 'type'> & { type: T }} */
 	const navigation = {
 		from: {
 			params: current.params,
@@ -2640,6 +2922,39 @@ function create_navigation(current, intent, url, type) {
 		// @ts-expect-error
 		reject
 	};
+}
+
+/**
+ * TODO: remove this in 3.0 when the page store is also removed
+ *
+ * We need to assign a new page object so that subscribers are correctly notified.
+ * However, spreading `{ ...page }` returns an empty object so we manually
+ * assign to each property instead.
+ *
+ * @param {import('@sveltejs/kit').Page} page
+ */
+function clone_page(page) {
+	return {
+		data: page.data,
+		error: page.error,
+		form: page.form,
+		params: page.params,
+		route: page.route,
+		state: page.state,
+		status: page.status,
+		url: page.url
+	};
+}
+
+/**
+ * @param {URL} url
+ * @returns {URL}
+ */
+function decode_hash(url) {
+	const new_url = new URL(url);
+	// Safari, for some reason, does change # to %23, when entered through the address bar
+	new_url.hash = decodeURIComponent(url.hash);
+	return new_url;
 }
 
 if (DEV) {
