@@ -1,9 +1,12 @@
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-import { app, applyAction } from '../client/client.js';
+import { app as client_app, applyAction } from '../client/client.js';
+import { app as server_app } from '../server/app.js';
 
 export { applyAction };
+
+const decoders = BROWSER ? client_app.decoders : server_app?.decoders;
 
 /**
  * Use this function to deserialize the response from a form submission.
@@ -31,7 +34,7 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data, app.decoders);
+		parsed.data = devalue.parse(parsed.data, decoders);
 	}
 
 	return parsed;
