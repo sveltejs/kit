@@ -46,9 +46,8 @@ function remote_request(id, prerender) {
 		let always_tracking = true;
 		/** True once a real fetch (not override) has resolved (_not_ rejected) for the first time */
 		let initialized = false;
-		/** @type {any} */
-		let original_current;
-		let current = $state.raw();
+		let original_current = $state.raw();
+		let current = $derived(apply_overrides(original_current));
 		let error = $state.raw();
 		let pending = $state.raw(true);
 
@@ -100,7 +99,7 @@ function remote_request(id, prerender) {
 					if (result.type === 'redirect') {
 						result_map.delete(cache_key);
 						version++;
-						await goto(result.location);
+						await goto(result.location); // TODO this could be old at this point, check query cache
 						// We throw because we don't know the desired shape. We do so after a timeout so that
 						// the refresh just above will cause the query to rerun in case it's still around, which means Svelte's
 						// async will ignore this async batch.
@@ -113,7 +112,11 @@ function remote_request(id, prerender) {
 					}
 				})();
 
-				const user_visible_response = response
+				const overrides = $state(overrides_map.get(cache_key) ?? []);
+				overrides_map.set(cache_key, overrides);
+				result_map.set(cache_key, [tracking ? 1 : 0, response, update_query]);
+
+				return response
 					.then((result) => {
 						const entry = result_map.get(cache_key);
 						// Only update if response wasn't superseeded by a new call
@@ -124,14 +127,20 @@ function remote_request(id, prerender) {
 								overrides_map.delete(cache_key);
 							}
 
-							initialized = true;
-							pending = false;
-							original_current = result;
-							current = apply_overrides(result);
-							error = undefined;
+							if (overrides_map.get(cache_key)?.length) {
+								update_query(result);
 
-							return current;
+								return current;
+							} else {
+								initialized = true;
+								pending = false;
+								original_current = result;
+								error = undefined;
+
+								return current;
+							}
 						} else {
+							// Some old call that was superseeded by a new call; still return accurate data from that point in time
 							return apply_overrides(result);
 						}
 					})
@@ -140,24 +149,39 @@ function remote_request(id, prerender) {
 						if (response === result_map.get(cache_key)?.[1]) {
 							result_map.delete(cache_key);
 							pending = false;
-							current = original_current = undefined;
+							original_current = undefined;
 							error = e;
 						}
 
 						throw e;
 					});
-
-				overrides_map.set(cache_key, overrides_map.get(cache_key) ?? []);
-				result_map.set(cache_key, [
-					tracking ? 1 : 0,
-					response,
-					update_query,
-					user_visible_response
-				]);
-
-				return user_visible_response;
 			} else {
-				return entry[3];
+				if (!initialized) {
+					// fill in the current state
+					// TODO maybe entry needs to save current etc instead?
+					entry[1]
+						.then((result) => {
+							const e = result_map.get(cache_key);
+							// Only update if response wasn't superseeded by a new call
+							if (e && e[1] === entry[1]) {
+								original_current = result;
+								initialized = true;
+								pending = false;
+								error = undefined;
+							}
+						})
+						.catch((e) => {
+							if (entry[1] === result_map.get(cache_key)?.[1]) {
+								pending = false;
+								current = original_current = undefined;
+								error = e;
+							}
+						});
+				}
+
+				return entry[1].then(() => {
+					return current;
+				});
 			}
 		}
 
@@ -187,21 +211,41 @@ function remote_request(id, prerender) {
 			return tracking;
 		}
 
-		/** @param {unknown} value */
-		function update_query(value) {
-			const entry = result_map.get(cache_key);
-			if (!entry) return;
+		/** @type {Array<() => void>} */
+		const pending_updates = [];
 
-			entry[1] = Promise.resolve(value);
-			entry[3] = Promise.resolve(apply_overrides(value));
-			entry[3].then((result) => {
+		function apply_updates() {
+			if (pending_updates.length === 0) return;
+			pending_updates.forEach((update) => update());
+			pending_updates.length = 0;
+			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+		}
+
+		/**
+		 * @param {unknown} value
+		 */
+		function update_query(value) {
+			pending_updates.push(() => {
+				const entry = result_map.get(cache_key);
+				if (!entry) return;
+
 				pending = false;
 				error = undefined;
 				original_current = value;
-				current = result;
+				entry[1] = Promise.resolve(value);
 			});
 
-			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
+			// Two microtasks because Svelte wraps awaits which causes another microtask,
+			// and we want to ensure we wait for the next synchronous release that is potentially happening
+			if (overrides_map.get(cache_key)?.length) {
+				queueMicrotask(() => {
+					queueMicrotask(() => {
+						apply_updates();
+					});
+				});
+			} else {
+				apply_updates();
+			}
 		}
 
 		/** @param {unknown} value */
@@ -283,6 +327,8 @@ function remote_request(id, prerender) {
 
 				result_map.delete(cache_key);
 				version++;
+				await new Promise((r) => setTimeout(r, 0)); // wait for the next macrotask to ensure that the query is rerun
+				await result_map.get(cache_key)?.[1];
 			},
 			override: async (update) => {
 				const overrides = overrides_map.get(cache_key);
@@ -290,12 +336,14 @@ function remote_request(id, prerender) {
 				if (!entry || !overrides) return () => {}; // TODO warn in dev mode if not available?
 
 				overrides.push(update);
-				update_query(initialized ? original_current : await entry[1]);
+				apply_updates();
+				version++;
 				return () => {
-					const idx = overrides.findIndex((fn) => fn === update);
+					apply_updates();
+					const idx = overrides.indexOf(update);
 					if (idx !== -1) {
 						overrides.splice(idx, 1);
-						update_query(original_current); // no need to check for initialized here because we can only call this after the first fetch
+						version++;
 					}
 				};
 			}

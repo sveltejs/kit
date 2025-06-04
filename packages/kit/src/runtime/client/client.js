@@ -263,7 +263,7 @@ export let pending_invalidate;
  */
 export const refresh_map = new Map();
 /**
- * @type {Map<string, [count: number, result: Promise<any>, update: (v: any) => void, override_result: Promise<any>]>}
+ * @type {Map<string, [count: number, result: Promise<any>, update: (v: any) => void]>}
  * A map of results of queries that currently exist in the app.
  */
 export const result_map = new Map();
