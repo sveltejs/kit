@@ -18,9 +18,16 @@ import { uneval } from 'devalue';
  *   prerendered: string[];
  *   relative_path: string;
  *   routes: import('types').RouteData[];
+ *   reroute_middleware?: boolean;
  * }} opts
  */
-export function generate_manifest({ build_data, prerendered, relative_path, routes }) {
+export function generate_manifest({
+	build_data,
+	prerendered,
+	relative_path,
+	routes,
+	reroute_middleware
+}) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -127,7 +134,8 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };
 				},
-				server_assets: ${s(files)}
+				server_assets: ${s(files)},
+				reroute_middleware: ${reroute_middleware ?? false}
 			}
 		}
 	`;

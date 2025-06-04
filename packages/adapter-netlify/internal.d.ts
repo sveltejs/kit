@@ -7,3 +7,10 @@ declare module 'MANIFEST' {
 
 	export const manifest: SSRManifest;
 }
+
+declare module '__HOOKS__' {
+	// eslint-disable-next-line no-duplicate-imports
+	import { Reroute } from '@sveltejs/kit';
+
+	export const reroute: Reroute;
+}
