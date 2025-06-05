@@ -19,7 +19,33 @@ export default {
 	async fetch(req, env, context) {
 		await server.init({
 			// @ts-expect-error env contains environment variables and bindings
-			env
+			env,
+			read: (file) =>
+				new ReadableStream({
+					async start(controller) {
+						try {
+							const response = await env.ASSETS.fetch(new URL('/' + file, req.url));
+							if (!response.ok) {
+								throw new Error(`Failed to fetch (${response.status} - ${response.statusText})`);
+							}
+							const reader = response.body.getReader();
+							/** @returns {Promise<void>} */
+							async function pump() {
+								const { done, value } = await reader.read();
+								if (done) {
+									controller.close();
+									return;
+								}
+								controller.enqueue(value);
+								return pump();
+							}
+							return pump();
+						} catch (error) {
+							console.error(`Error reading file ${file}:`, error);
+							controller.error(error);
+						}
+					}
+				})
 		});
 
 		// skip cache if "cache-control: no-cache" in request
