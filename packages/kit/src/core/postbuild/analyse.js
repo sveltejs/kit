@@ -74,6 +74,7 @@ async function analyse({
 		server_manifest,
 		null,
 		null,
+		null,
 		output_config,
 		static_exports
 	);

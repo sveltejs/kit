@@ -13,66 +13,49 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
- * @param {import('vite').Rollup.OutputAsset[] | null} css
+ * @param {import('vite').Rollup.OutputBundle | null} server_bundle
+ * @param {import('vite').Rollup.RollupOutput['output'] | null} client_bundle
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css, output_config, static_exports) {
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_bundle, output_config, static_exports) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
 	/** @type {Map<string, string>} */
-	const stylesheet_lookup = new Map();
+	const stylesheets_to_inline = new Map();
 
-	if (css) {
-		/** @type {Set<string>} */
-		const client_stylesheets = new Set();
-		for (const key in client_manifest) {
-			client_manifest[key].css?.forEach((filename) => {
-				client_stylesheets.add(filename);
-			});
-		}
+	if (server_bundle && client_bundle && kit.inlineStyleThreshold > 0) {
+		const client = get_stylesheets(client_bundle);
 
-		/** @type {Map<number, string[]>} */
-		const server_stylesheets = new Map();
-		manifest_data.nodes.forEach((node, i) => {
-			if (!node.component || !server_manifest[node.component]) return;
+		const server_chunks = Object.values(server_bundle);
+		const server = get_stylesheets(server_chunks);
 
-			const { stylesheets } = find_deps(server_manifest, node.component, false);
-
-			if (stylesheets.length) {
-				server_stylesheets.set(i, stylesheets);
-			}
-		});
-
-		for (const asset of css) {
-			// ignore dynamically imported stylesheets since we don't need to inline those
-			if (!client_stylesheets.has(asset.fileName) || asset.source.length >= kit.inlineStyleThreshold) {
+		// map server stylesheet name to the client stylesheet name
+		for (const [id, client_stylesheet] of client.stylesheets_used) {
+			const server_stylesheet = server.stylesheets_used.get(id);
+			if (!server_stylesheet) {
 				continue;
 			}
+			client_stylesheet.forEach((file, i) => {
+				stylesheets_to_inline.set(file, server_stylesheet[i]);
+			}) 
+		}
 
-			// We know that the names for entry points are numbers.
-			const [index] = basename(asset.fileName).split('.');
-			// There can also be other CSS files from shared components
-			// for example, which we need to ignore here.
-			if (isNaN(+index)) continue;
-
-			const file = `${out}/server/stylesheets/${index}.js`;
-
-			// we need to inline the server stylesheet instead of the client one
-			// so that asset paths are correct on document load
-			const filenames = server_stylesheets.get(+index);
-
-			if (!filenames) {
-				throw new Error('This should never happen, but if it does, it means we failed to find the server stylesheet for a node.');
+		// filter out stylesheets that should not be inlined
+		for (const [fileName, content] of client.stylesheet_content) {
+			if (content.length >= kit.inlineStyleThreshold) {
+				stylesheets_to_inline.delete(fileName);
 			}
+		}
 
-			const sources = filenames.map((filename) => {
-				return fs.readFileSync(`${out}/server/${filename}`, 'utf-8');
-			});
-			fs.writeFileSync(file, `// ${filenames.join(', ')}\nexport default ${s(sources.join('\n'))};`);
-
-			stylesheet_lookup.set(asset.fileName, index);
+		// map server stylesheet source to the client stylesheet name
+		for (const [client_file, server_file] of stylesheets_to_inline) {
+			const source = server.stylesheet_content.get(server_file);
+			if (!source) {
+				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
+			}
+			stylesheets_to_inline.set(client_file, source);
 		}
 	}
 
@@ -139,8 +122,9 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
 			const entry = find_deps(client_manifest, entry_path, true);
 
-			// eagerly load stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
-			// If it is not used during SSR, it can be lazily loaded in the browser.
+			// eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
+			// However, if it is not used during SSR (not present in the server manifest),
+			// then it can be lazily loaded in the browser.
 	
 			/** @type {import('types').AssetDependencies | undefined} */
 			let component;
@@ -155,26 +139,26 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			}
 
 			/** @type {Set<string>} */
-			const css_used_by_server = new Set();
+			const eager_css = new Set();
 			/** @type {Set<string>} */
-			const assets_used_by_server = new Set();
+			const eager_assets = new Set();
 
-			entry.stylesheet_map.forEach((value, key) => {
-				// pages and layouts are named as node indexes in the client manifest
-				// so we need to use the original filename when checking against the server manifest
-				if (key === entry_path) {
-					key = node.component ?? key;
+			entry.stylesheet_map.forEach((value, filepath) => {
+				// pages and layouts are renamed to node indexes when optimised for the client
+				// so we use the original filename instead to check against the server manifest
+				if (filepath === entry_path) {
+					filepath = node.component ?? filepath;
 				}
 
-				if (component?.stylesheet_map.has(key) || universal?.stylesheet_map.has(key)) {
-					value.css.forEach(file => css_used_by_server.add(file));
-					value.assets.forEach(file => assets_used_by_server.add(file));
+				if (component?.stylesheet_map.has(filepath) || universal?.stylesheet_map.has(filepath)) {
+					value.css.forEach(file => eager_css.add(file));
+					value.assets.forEach(file => eager_assets.add(file));
 				}
 			});
 
 			imported = entry.imports;
-			stylesheets = Array.from(css_used_by_server);
-			fonts = filter_fonts(Array.from(assets_used_by_server));
+			stylesheets = Array.from(eager_css);
+			fonts = filter_fonts(Array.from(eager_assets));
 		}
 
 		exports.push(
@@ -184,19 +168,26 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		);
 
 		/** @type {string[]} */
-		const styles = [];
+		const inline_styles = [];
 
-		stylesheets.forEach((file) => {
-			if (stylesheet_lookup.has(file)) {
-				const index = stylesheet_lookup.get(file);
-				const name = `stylesheet_${index}`;
-				imports.push(`import ${name} from '../stylesheets/${index}.js';`);
-				styles.push(`\t${s(file)}: ${name}`);
+		stylesheets.forEach((file, i) => {
+			if (stylesheets_to_inline.has(file)) {
+				const filename = basename(file);
+				const dest = `${out}/server/stylesheets/${filename}.js`;
+				const source = stylesheets_to_inline.get(file);
+				if (!source) {
+					throw new Error(`Server stylesheet source not found for client stylesheet ${file}`);
+				}
+				fs.writeFileSync(dest, `// ${filename}\nexport default ${s(source)};`);
+
+				const name = `stylesheet_${i}`;
+				imports.push(`import ${name} from '../stylesheets/${filename}.js';`);
+				inline_styles.push(`\t${s(file)}: ${name}`);
 			}
 		});
 
-		if (styles.length > 0) {
-			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
+		if (inline_styles.length > 0) {
+			exports.push(`export const inline_styles = () => ({\n${inline_styles.join(',\n')}\n});`);
 		}
 
 		fs.writeFileSync(
@@ -204,4 +195,38 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
 	}
+}
+
+/**
+ * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks 
+ */
+function get_stylesheets(chunks) {
+	/**
+	 * A map of module IDs and the stylesheets they use.
+	 * @type {Map<string, string[]>}
+	 */
+	const stylesheets_used = new Map();
+
+	/**
+	 * A map of stylesheet names and their content.
+	 * @type {Map<string, string>}
+	 */
+	const stylesheet_content = new Map();
+
+	for (const chunk of chunks) {
+		if (chunk.type === 'asset') {
+			if (chunk.fileName.endsWith('.css')) {
+				stylesheet_content.set(chunk.fileName, chunk.source.toString());
+			}
+			continue;
+		}
+
+		if (chunk.viteMetadata?.importedCss.size) {
+			const css = Array.from(chunk.viteMetadata.importedCss);
+			for (const id of chunk.moduleIds) {
+				stylesheets_used.set(id, css );
+			}
+		}
+	}
+	return { stylesheets_used, stylesheet_content };
 }
