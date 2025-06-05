@@ -51,6 +51,8 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+let warned_on_devtools_json_request = false;
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -577,6 +579,14 @@ export async function respond(request, options, manifest, state) {
 				// causing console spam. If users want to serve this file they can install
 				// https://github.com/ChromeDevTools/vite-plugin-devtools-json
 				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+					if (!warned_on_devtools_json_request) {
+						console.warn(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To serve this file, add this plugin to your Vite config:\n\nhttps://github.com/ChromeDevTools/vite-plugin-devtools-json\n`
+						);
+
+						warned_on_devtools_json_request = true;
+					}
+
 					return new Response(undefined, { status: 404 });
 				}
 
