@@ -77,6 +77,29 @@ Only for Cloudflare Pages. Allows you to customise the [`_routes.json`](https://
 
 You can have up to 100 `include` and `exclude` rules combined. Generally you can omit the `routes` options, but if (for example) your `<prerendered>` paths exceed that limit, you may find it helpful to manually create an `exclude` list that includes `'/articles/*'` instead of the auto-generated `['/articles/foo', '/articles/bar', '/articles/baz', ...]`.
 
+### worker
+
+Path to a file with additional [handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/) export alongside the SvelteKit-generated `fetch()` handler. Enables integration of, for example, `scheduled()` or `queue()` handlers with your SvelteKit app.
+
+Default: `undefined`- no additional handlers are exported. 
+
+The worker file should export a default object with any additional handlers. Example below:
+
+```js
+// @errors: 2307 2377 7006
+/// file: src/worker.js
+export default {
+  async scheduled(event, env, ctx) {
+    console.log("Scheduled trigger!");
+  },
+  // additional handlers go here
+}
+```
+
+> [!NOTE] The adapter expects the `handlers` file to have a default export.
+
+> [!NOTE] The adapter will overwrite any [fetch handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/) exported from the `worker` file in the generated worker. Most uses for a fetch handler are covered by endpoints or server hooks, so you should use those instead.
+
 ## Cloudflare Workers
 
 ### Basic configuration
