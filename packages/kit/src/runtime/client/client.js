@@ -140,10 +140,16 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
+ * @returns {Promise<any>}
  */
 function native_navigation(url) {
 	location.href = url.href;
-	return new Promise(() => {});
+	return new Promise((resolve) => {
+		// if we're still on the same page after setting location.href, it was probably a download
+		if (location.href !== url.href) {
+			resolve(undefined);
+		}
+	});
 }
 
 /**
@@ -1429,6 +1435,7 @@ async function navigate({
 	}
 
 	// store this before calling `accept()`, which may change the index
+	// @ts-ignore ts doesn't know that we're calling `start()` which sets the current_history_index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
 
@@ -1478,6 +1485,13 @@ async function navigate({
 				}),
 				404
 			);
+		}
+
+		// if we're still on the same page, it's likely it was a download link
+		if (!navigation_result) {
+			stores.navigating.set(null);
+			nav.fulfil(undefined);
+			return;
 		}
 	}
 
@@ -2248,6 +2262,9 @@ function _start_router() {
 
 			before_navigate_callbacks.forEach((fn) => fn(navigation));
 		}
+		// We need to reset the flag manually here because clicking on an
+		// implicit download link does not reset it for the next navigation.
+		is_navigating = false;
 
 		if (should_block) {
 			e.preventDefault();
