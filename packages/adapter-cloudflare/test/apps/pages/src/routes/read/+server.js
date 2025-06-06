@@ -1,6 +1,6 @@
 import { read } from '$app/server';
-import goose from '../../../../goose.jpg';
+import file from '../../../../../file.txt?url';
 
 export function GET() {
-	return read(goose);
+	return read(file);
 }

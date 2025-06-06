@@ -1,4 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import fs from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test('worker works', async ({ page }) => {
 	await page.goto('/');
@@ -6,7 +11,7 @@ test('worker works', async ({ page }) => {
 });
 
 test("('$app/server').read works", async ({ page }) => {
+	const filecontent = await fs.readFile(path.resolve(__dirname, '../../../file.txt'), 'utf-8');
 	const response = await page.goto('/read');
-	expect(response.status()).toBe(200);
-	expect(response.headers()['content-type']).toBe('image/jpeg');
+	expect(await response.text()).toBe(filecontent);
 });
