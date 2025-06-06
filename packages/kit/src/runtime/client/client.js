@@ -1602,11 +1602,7 @@ async function navigate({
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
-		const deep_linked =
-			url.hash &&
-			document.getElementById(
-				decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1))
-			);
+		const deep_linked = url.hash && document.getElementById(get_id(url));
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
@@ -1627,7 +1623,7 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus();
+		reset_focus(url);
 	}
 
 	autoscroll = true;
@@ -2194,7 +2190,7 @@ export async function applyAction(result) {
 			root.$set(navigation_result.props);
 			update(navigation_result.props.page);
 
-			void tick().then(reset_focus);
+			void tick().then(() => reset_focus(url));
 		}
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
@@ -2215,7 +2211,7 @@ export async function applyAction(result) {
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
-			reset_focus();
+			reset_focus(page.url);
 		}
 	}
 }
@@ -2793,50 +2789,48 @@ function deserialize_uses(uses) {
 	};
 }
 
-function reset_focus() {
+/**
+ * @param {URL} url
+ */
+function reset_focus(url) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		if (location.hash && document.querySelector(location.hash)) {
-			const { x, y } = scroll_state();
+		const id = get_id(url);
 
-			setTimeout(() => {
-				const history_state = history.state;
-				// Mimic the browsers' behaviour and set the sequential focus navigation
-				// starting point to the fragment identifier
-				location.replace(location.hash);
-				// but Firefox has a bug that sets the history state as null so we
-				// need to restore the history state
-				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				history.replaceState(history_state, '', location.hash);
+		// We try to mimic browsers' behaviour as closely as possible by targeting the
+		// first scrollable region, but unfortunately it's not a perfect match — e.g.
+		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+		// If there's a fragment identifier, we mimic the browsers' behaviour and set the
+		// sequential focus navigation starting point to it
+		const element = document.getElementById(id) ?? document.body;
 
+		const { x, y } = scroll_state();
+
+		// doing this in a `setTimeout` makes `.focus()` work on Firefox
+		setTimeout(() => {
+			const tabindex = element.getAttribute('tabindex');
+			element.tabIndex = -1;
+			// @ts-expect-error options.focusVisible is only supported in Firefox
+			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
+			element.focus({ preventScroll: true, focusVisible: false });
+
+			if (tabindex !== null) {
+				element.setAttribute('tabindex', tabindex);
+			} else {
+				element.removeAttribute('tabindex');
+			}
+
+			if (id) {
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
 				scrollTo(x, y);
-			});
-		} else {
-			// We try to mimic browsers' behaviour as closely as possible by targeting the
-			// first scrollable region, but unfortunately it's not a perfect match — e.g.
-			// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			const root = document.body;
-			const tabindex = root.getAttribute('tabindex');
-
-			root.tabIndex = -1;
-			// @ts-expect-error options.focusVisible is only supported in Firefox
-			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
-			root.focus({ preventScroll: true, focusVisible: false });
-
-			// restore `tabindex` as to prevent `root` from stealing input from elements
-			if (tabindex !== null) {
-				root.setAttribute('tabindex', tabindex);
-			} else {
-				root.removeAttribute('tabindex');
 			}
-		}
+		});
 
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run
@@ -2958,6 +2952,14 @@ function decode_hash(url) {
 	// Safari, for some reason, does change # to %23, when entered through the address bar
 	new_url.hash = decodeURIComponent(url.hash);
 	return new_url;
+}
+
+/**
+ * @param {URL} url
+ * @returns {string}
+ */
+function get_id(url) {
+	return decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1));
 }
 
 if (DEV) {
