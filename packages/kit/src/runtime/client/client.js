@@ -2800,7 +2800,8 @@ function reset_focus() {
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		if (location.hash && document.querySelector(location.hash)) {
+		// TODO: find a fix that works with hash routing too
+		if (!app.hash && location.hash && document.querySelector(location.hash)) {
 			const { x, y } = scroll_state();
 
 			setTimeout(() => {
