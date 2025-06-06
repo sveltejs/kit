@@ -1,6 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
+import { streamFileContent } from '@sveltejs/kit/adapter';
 
 const server = new Server(manifest);
 
@@ -21,31 +22,7 @@ export default {
 			// @ts-expect-error env contains environment variables and bindings
 			env,
 			read: (file) =>
-				new ReadableStream({
-					async start(controller) {
-						try {
-							const response = await env.ASSETS.fetch(new URL('/' + file, req.url));
-							if (!response.ok) {
-								throw new Error(`Failed to fetch (${response.status} - ${response.statusText})`);
-							}
-							const reader = response.body.getReader();
-							/** @returns {Promise<void>} */
-							async function pump() {
-								const { done, value } = await reader.read();
-								if (done) {
-									controller.close();
-									return;
-								}
-								controller.enqueue(value);
-								return pump();
-							}
-							return pump();
-						} catch (error) {
-							console.error(`Error reading file ${file}:`, error);
-							controller.error(error);
-						}
-					}
-				})
+				streamFileContent({ fetch: env.ASSETS.fetch, url: new URL('/' + file, req.url) })
 		});
 
 		// skip cache if "cache-control: no-cache" in request
