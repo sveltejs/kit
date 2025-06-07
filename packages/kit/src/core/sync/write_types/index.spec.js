@@ -51,7 +51,7 @@ test('Creates correct $types', { timeout: 30000 }, () => {
 					`${cwd}/${dir}/.svelte-kit/types/index.d.ts`
 				];
 
-				tsconfig.include = [`./${dir}/**/*.js`];
+				tsconfig.include = [`./${dir}/**/*.js`, `./${dir}/**/*.ts`];
 
 				fs.writeFileSync(tsconfig_file, JSON.stringify(tsconfig));
 
