@@ -65,7 +65,7 @@ export function write_all_types(config, manifest_data) {
 		[
 			`type Routes = {\n\t${routes.join(';\n\t')}\n};`,
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
-			'export type RouteParams<T extends RouteId> = Routes[T];'
+			'export type RouteParams<T extends RouteId> = Routes[T] | Record<string, never>;'
 		].join('\n\n')
 	);
 

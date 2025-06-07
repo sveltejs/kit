@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { RouteId as AppRouteId, RouteParams as AppRouteParams } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -840,11 +841,11 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -852,10 +853,10 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends NavigationEvent<Params, RouteId> {
 		/**
 		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -960,8 +961,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1100,8 +1101,8 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends Record<string, string> = Record<string, string>,
-		RouteId extends string | null = string | null
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The URL of the current page.
@@ -1148,8 +1149,8 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * Get or set cookies related to the current request
@@ -1240,8 +1241,8 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 	export interface ResolveOptions {
@@ -1319,16 +1320,16 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		ParentData extends Record<string, any> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
 		/**
 		 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1395,9 +1396,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -1405,9 +1406,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
 
 	/**
@@ -2426,7 +2427,7 @@ declare module '$app/server' {
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
 	 */
-	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
+	export function getRequestEvent(): RequestEvent<AppRouteParams<AppRouteId>, any>;
 
 	export {};
 }
