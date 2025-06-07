@@ -1241,7 +1241,7 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
@@ -1396,7 +1396,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
@@ -1406,7 +1406,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
