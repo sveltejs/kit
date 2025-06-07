@@ -60,6 +60,10 @@ export function write_all_types(config, manifest_data) {
 		routes.push(type);
 	}
 
+	try {
+		fs.mkdirSync(types_dir, { recursive: true });
+	} catch {}
+
 	fs.writeFileSync(
 		`${types_dir}/index.d.ts`,
 		[
