@@ -19,7 +19,11 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-import { RouteId as AppRouteId, RouteParams as AppRouteParams } from '$app/types';
+import {
+	RouteId as AppRouteId,
+	RouteParams as AppRouteParams,
+	LayoutParams as AppLayoutParams
+} from '$app/types';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -859,7 +863,7 @@ export interface Transporter<
  * rather than using `Load` directly.
  */
 export type Load<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
@@ -871,7 +875,7 @@ export type Load<
  * rather than using `LoadEvent` directly.
  */
 export interface LoadEvent<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -979,7 +983,7 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
@@ -1167,7 +1171,7 @@ export interface Page<
 export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
@@ -1259,7 +1263,7 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
  */
 export type RequestHandler<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
@@ -1338,14 +1342,14 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export type ServerLoad<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > extends RequestEvent<Params, RouteId> {
@@ -1414,7 +1418,7 @@ export interface ServerLoadEvent<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Action<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
@@ -1424,7 +1428,7 @@ export type Action<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Actions<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > = Record<string, Action<Params, OutputData, RouteId>>;

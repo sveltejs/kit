@@ -53,11 +53,34 @@ export function write_all_types(config, manifest_data) {
 	/** @type {string[]} */
 	const routes = [];
 
-	for (const route of manifest_data.routes) {
-		const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`).join('; ');
-		const type = `${s(route.id)}: ${params.length > 0 ? `{ ${params} }` : 'undefined'}`;
+	/** @type {string[]} */
+	const layouts = [];
 
-		routes.push(type);
+	for (const route of manifest_data.routes) {
+		const route_params = route.params
+			.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`)
+			.join('; ');
+
+		const route_type = `${s(route.id)}: ${route_params.length > 0 ? `{ ${route_params} }` : 'undefined'}`;
+		routes.push(route_type);
+
+		/** @type {Map<string, boolean>} */
+		const child_params = new Map(route.params.map((p) => [p.name, p.optional]));
+
+		for (const child of manifest_data.routes.filter((r) => r.id.startsWith(route.id))) {
+			for (const p of child.params) {
+				if (!child_params.has(p.name)) {
+					child_params.set(p.name, true); // always optional
+				}
+			}
+		}
+
+		const layout_params = Array.from(child_params)
+			.map(([name, optional]) => `${name}${optional ? '?:' : ':'} string`)
+			.join('; ');
+
+		const layout_type = `${s(route.id)}: ${layout_params.length > 0 ? `{ ${layout_params} }` : 'undefined'}`;
+		layouts.push(layout_type);
 	}
 
 	try {
@@ -68,8 +91,11 @@ export function write_all_types(config, manifest_data) {
 		`${types_dir}/index.d.ts`,
 		[
 			`type Routes = {\n\t${routes.join(';\n\t')}\n};`,
+			`type Layouts = {\n\t${layouts.join(';\n\t')}\n};`,
+			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
-			'export type RouteParams<T extends RouteId> = Routes[T] | Record<string, never>;'
+			'export type RouteParams<T extends RouteId> = Routes[T] | Record<string, never>;',
+			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;'
 		].join('\n\n')
 	);
 

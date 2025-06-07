@@ -30,7 +30,7 @@ function run_test(dir) {
 	write_all_types(initial, manifest);
 }
 
-test('Creates correct $types', { timeout: 6000 }, () => {
+test('Creates correct $types', { timeout: 30000 }, () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
@@ -47,9 +47,11 @@ test('Creates correct $types', { timeout: 6000 }, () => {
 			run_test(dir);
 
 			try {
-				tsconfig.compilerOptions.paths = {
-					'$app/types': [`${cwd}/${dir}/.svelte-kit/types/index.d.ts`]
-				};
+				tsconfig.compilerOptions.paths['$app/types'] = [
+					`${cwd}/${dir}/.svelte-kit/types/index.d.ts`
+				];
+
+				tsconfig.include = [`./${dir}/**/*.js`];
 
 				fs.writeFileSync(tsconfig_file, JSON.stringify(tsconfig));
 
