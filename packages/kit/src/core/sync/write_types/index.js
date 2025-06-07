@@ -5,6 +5,7 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
+import { s } from '../../../utils/misc.js';
 
 /**
  *  @typedef {{
@@ -48,6 +49,25 @@ export function write_all_types(config, manifest_data) {
 			}
 		}
 	}
+
+	/** @type {string[]} */
+	const routes = [];
+
+	for (const route of manifest_data.routes) {
+		const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`).join('; ');
+		const type = `${s(route.id)}: ${params.length > 0 ? `{ ${params} }` : 'undefined'}`;
+
+		routes.push(type);
+	}
+
+	fs.writeFileSync(
+		`${types_dir}/index.d.ts`,
+		[
+			`type Routes = {\n\t${routes.join(';\n\t')}\n};`,
+			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
+			'export type RouteParams<T extends RouteId> = Routes[T];'
+		].join('\n\n')
+	);
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.

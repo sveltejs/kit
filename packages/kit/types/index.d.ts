@@ -2367,6 +2367,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
+	import type { RouteId, RouteParams } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -2380,6 +2381,9 @@ declare module '$app/paths' {
 	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+
+	type ResolveRouteArgs<T extends RouteId> =
+		RouteParams<T> extends undefined ? [route: T] : [route: T, params: RouteParams<T>];
 
 	/**
 	 * Populate a route ID with params to resolve a pathname.
@@ -2396,7 +2400,7 @@ declare module '$app/paths' {
 	 * ); // `/blog/hello-world/something/else`
 	 * ```
 	 */
-	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+	export function resolveRoute<T extends RouteId>(...args: ResolveRouteArgs<T>): string;
 
 	export {};
 }
