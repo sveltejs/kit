@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
@@ -33,20 +34,33 @@ test('Creates correct $types', { timeout: 6000 }, () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
-	run_test('actions');
-	run_test('simple-page-shared-only');
-	run_test('simple-page-server-only');
-	run_test('simple-page-server-and-shared');
-	run_test('layout');
-	run_test('layout-advanced');
-	run_test('slugs');
-	run_test('slugs-layout-not-all-pages-have-load');
-	run_test('param-type-inference');
+	const directories = fs
+		.readdirSync(cwd)
+		.filter((dir) => fs.statSync(`${cwd}/${dir}`).isDirectory());
+
+	const tsconfig_file = `${cwd}/tsconfig.json`;
+	const tsconfig_json = fs.readFileSync(tsconfig_file, 'utf-8');
+	const tsconfig = JSON.parse(tsconfig_json);
+
 	try {
-		execSync('pnpm testtypes', { cwd });
-	} catch (e) {
-		console.error(/** @type {any} */ (e).stdout.toString());
-		throw new Error('Type tests failed');
+		for (const dir of directories) {
+			run_test(dir);
+
+			try {
+				tsconfig.compilerOptions.paths = {
+					'$app/types': [`${cwd}/${dir}/.svelte-kit/types/index.d.ts`]
+				};
+
+				fs.writeFileSync(tsconfig_file, JSON.stringify(tsconfig));
+
+				execSync('pnpm testtypes', { cwd });
+			} catch (e) {
+				console.error(/** @type {any} */ (e).stdout.toString());
+				throw new Error('Type tests failed');
+			}
+		}
+	} finally {
+		fs.writeFileSync(tsconfig_file, tsconfig_json);
 	}
 });
 
