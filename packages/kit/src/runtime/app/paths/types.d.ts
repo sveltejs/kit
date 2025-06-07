@@ -1,3 +1,4 @@
+// @ts-ignore
 import { RouteId, RouteParams } from '$app/types';
 
 /**

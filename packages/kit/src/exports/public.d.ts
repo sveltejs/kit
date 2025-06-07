@@ -23,6 +23,7 @@ import {
 	RouteId as AppRouteId,
 	RouteParams as AppRouteParams,
 	LayoutParams as AppLayoutParams
+	// @ts-ignore
 } from '$app/types';
 
 export { PrerenderOption } from '../types/private.js';
