@@ -841,7 +841,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
@@ -853,7 +853,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
@@ -961,7 +961,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1149,7 +1149,7 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1241,7 +1241,7 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
@@ -1320,14 +1320,14 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
@@ -1396,7 +1396,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
@@ -1406,7 +1406,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends AppLayoutParams<AppRouteId> = AppLayoutParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
@@ -2429,7 +2429,7 @@ declare module '$app/server' {
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
 	 */
-	export function getRequestEvent(): RequestEvent<AppLayoutParams<AppRouteId>, any>;
+	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
 
 	export {};
 }
