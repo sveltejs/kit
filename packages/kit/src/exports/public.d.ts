@@ -1124,7 +1124,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
  */
 export interface Page<
-	Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**

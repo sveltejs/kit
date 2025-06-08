@@ -4,7 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-	import type { RouteId as AppRouteId, RouteParams as AppRouteParams, LayoutParams as AppLayoutParams } from '$app/types';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1101,7 +1101,7 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends AppRouteParams<AppRouteId> = AppRouteParams<AppRouteId>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
