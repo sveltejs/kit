@@ -1,4 +1,4 @@
-import type { RouteId, RouteParams } from '$app/types';
+import type { RouteId, RouteParams } from './.svelte-kit/types/index.d.ts';
 
 declare let id: RouteId;
 
