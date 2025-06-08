@@ -2407,6 +2407,8 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
+	// @ts-ignore
+	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
 	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
