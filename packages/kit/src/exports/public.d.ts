@@ -19,12 +19,8 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-import {
-	RouteId as AppRouteId,
-	RouteParams as AppRouteParams,
-	LayoutParams as AppLayoutParams
-	// @ts-ignore
-} from '$app/types';
+// @ts-ignore
+import { RouteId as AppRouteId, LayoutParams as AppLayoutParams, Pathname } from '$app/types';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -1130,7 +1126,7 @@ export interface Page<
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL;
+	url: URL & { pathname: Pathname };
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */

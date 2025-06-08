@@ -11,12 +11,24 @@ import type { RouteId, RouteParams, LayoutParams } from '$app/types';
 
 ## RouteId
 
-A union of all the route IDs in your app.
+A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
 
 <div class="ts-block">
 
 ```dts
 type RouteId = '/' | '/my-route' | '/my-other-route/[param]';
+```
+
+</div>
+
+## Pathname
+
+A union of all valid pathnames in your app. Used for `page.url.pathname`.
+
+<div class="ts-block">
+
+```dts
+type Pathname = '/' | '/my-route' | `/my-other-route/${string}`;
 ```
 
 </div>

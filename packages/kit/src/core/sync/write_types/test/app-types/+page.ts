@@ -1,4 +1,4 @@
-import type { RouteId, RouteParams } from './.svelte-kit/types/index.d.ts';
+import type { RouteId, RouteParams, Pathname } from './.svelte-kit/types/index.d.ts';
 
 declare let id: RouteId;
 
@@ -17,3 +17,12 @@ declare let params: RouteParams<'/foo/[bar]/[baz]'>;
 params.foo; // not okay
 params.bar; // okay
 params.baz; // okay
+
+declare let pathname: Pathname;
+
+// @ts-expect-error
+pathname = '/nope';
+pathname = '/foo';
+pathname = '/foo/1/2';
+
+pathname;

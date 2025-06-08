@@ -7,6 +7,8 @@
 	setup();
 </script>
 
+{#if page.url.}
+
 <slot />
 
 <footer>{data.foo.bar}</footer>

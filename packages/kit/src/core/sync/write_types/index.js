@@ -51,12 +51,19 @@ export function write_all_types(config, manifest_data) {
 	}
 
 	/** @type {string[]} */
+	const pathnames = [];
+
+	/** @type {string[]} */
 	const routes = [];
 
 	/** @type {string[]} */
 	const layouts = [];
 
 	for (const route of manifest_data.routes) {
+		pathnames.push(
+			`\`${route.id.replace(/\/\[\[[^\]]+\]\]/g, '${string}').replace(/\/\[[^\]]+\]/g, '/${string}')}\``
+		);
+
 		const route_params = route.params
 			.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`)
 			.join('; ');
@@ -95,7 +102,8 @@ export function write_all_types(config, manifest_data) {
 			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 			'export type RouteParams<T extends RouteId> = Routes[T] | Record<string, never>;',
-			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;'
+			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
+			`export type Pathname = ${pathnames.join(' | ')};`
 		].join('\n\n')
 	);
 
