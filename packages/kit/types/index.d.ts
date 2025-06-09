@@ -2368,7 +2368,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteId, RouteParams } from '$app/types';
+	import type { RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -2383,25 +2383,37 @@ declare module '$app/paths' {
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
-	type ResolveRouteArgs<T extends RouteId> =
-		RouteParams<T> extends Record<string, never> ? [route: T] : [route: T, params: RouteParams<T>];
+	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
+		? RouteParams<T> extends Record<string, never>
+			? [route: T]
+			: [route: T, params: RouteParams<T>]
+		: [route: T];
 
 	/**
-	 * Populate a route ID with params to resolve a pathname.
+	 * Resolve a pathname by prefixing it with the base path, if any,
+	 * or resolve a route ID by populating dynamic segments with parameters.
 	 * @example
 	 * ```js
-	 * import { resolveRoute } from '$app/paths';
+	 * import { resolve } from '$app/paths';
 	 *
-	 * resolveRoute(
-	 *   `/blog/[slug]/[...somethingElse]`,
-	 *   {
-	 *     slug: 'hello-world',
-	 *     somethingElse: 'something/else'
-	 *   }
-	 * ); // `/blog/hello-world/something/else`
+	 * // using a pathname
+	 * const resolved = resolve(`/blog/hello-world`);
+	 *
+	 * // using a route ID plus parameters
+	 * const resolved = resolve('/blog/[slug]', {
+	 * 	slug: 'hello-world'
+	 * });
 	 * ```
+	 * @since 2.22
 	 */
-	export function resolveRoute<T extends RouteId>(...args: ResolveRouteArgs<T>): string;
+	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+
+	/**
+	 * @deprecated Use `resolve(...)` instead
+	 */
+	export function resolveRoute<T extends RouteId | Pathname>(
+		...args: ResolveArgs<T>
+	): ResolvedPathname;
 
 	export {};
 }

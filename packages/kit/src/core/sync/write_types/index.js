@@ -60,15 +60,17 @@ export function write_all_types(config, manifest_data) {
 	const layouts = [];
 
 	for (const route of manifest_data.routes) {
-		pathnames.push(
-			`\`${route.id.replace(/\/\[\[[^\]]+\]\]/g, '${string}').replace(/\/\[[^\]]+\]/g, '/${string}')}\``
-		);
-
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
 			dynamic_routes.push(route_type);
+
+			pathnames.push(
+				`\`${route.id.replace(/\/\[\[[^\]]+\]\]/g, '${string}').replace(/\/\[[^\]]+\]/g, '/${string}')}\` & {}`
+			);
+		} else {
+			pathnames.push(s(route.id));
 		}
 
 		/** @type {Map<string, boolean>} */
