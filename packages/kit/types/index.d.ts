@@ -2384,7 +2384,7 @@ declare module '$app/paths' {
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
 	type ResolveRouteArgs<T extends RouteId> =
-		RouteParams<T> extends undefined ? [route: T] : [route: T, params: RouteParams<T>];
+		RouteParams<T> extends Record<string, never> ? [route: T] : [route: T, params: RouteParams<T>];
 
 	/**
 	 * Populate a route ID with params to resolve a pathname.
