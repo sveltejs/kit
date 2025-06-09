@@ -23,7 +23,19 @@ type RouteId = '/' | '/my-route' | '/my-other-route/[param]';
 
 ## Pathname
 
-A union of all valid pathnames in your app. Used for `page.url.pathname`.
+A union of all valid pathnames in your app.
+
+<div class="ts-block">
+
+```dts
+type Pathname = '/' | '/my-route' | `/my-other-route/${string}`;
+```
+
+</div>
+
+## ResolvedPathname
+
+`Pathname`, but possibly prefixed with a [base path](https://svelte.dev/docs/kit/configuration#paths). Used for `page.url.pathname`.
 
 <div class="ts-block">
 

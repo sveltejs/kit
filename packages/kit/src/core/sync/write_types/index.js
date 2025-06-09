@@ -103,7 +103,8 @@ export function write_all_types(config, manifest_data) {
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
 			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
-			`export type Pathname = ${pathnames.join(' | ')};`
+			`export type Pathname = ${pathnames.join(' | ')};`,
+			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;'
 		].join('\n\n')
 	);
 

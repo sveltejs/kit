@@ -4,7 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
-	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, Pathname } from '$app/types';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1107,7 +1107,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The URL of the current page.
 		 */
-		url: URL & { pathname: Pathname };
+		url: URL & { pathname: ResolvedPathname };
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
