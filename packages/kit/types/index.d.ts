@@ -2373,6 +2373,8 @@ declare module '$app/paths' {
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
+	 *
+	 * @deprecated Use `resolve(...)` instead
 	 */
 	export let base: '' | `/${string}`;
 
@@ -2380,6 +2382,8 @@ declare module '$app/paths' {
 	 * An absolute path that matches [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 *
+	 * @deprecated Use `asset(...)` instead
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
