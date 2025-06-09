@@ -107,7 +107,7 @@ export function write_all_types(config, manifest_data) {
 			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
 			`export type Pathname = ${pathnames.join(' | ')};`,
 			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
-			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ')};`
+			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
 		].join('\n\n')
 	);
 
