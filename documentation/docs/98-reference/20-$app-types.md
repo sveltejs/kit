@@ -9,6 +9,18 @@ This module contains generated types for the routes in your app.
 import type { RouteId, RouteParams, LayoutParams } from '$app/types';
 ```
 
+## Asset
+
+A union of all the filenames of assets contained in your `static` directory.
+
+<div class="ts-block">
+
+```dts
+type Asset = '/favicon.png' | '/robots.txt';
+```
+
+</div>
+
 ## RouteId
 
 A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.

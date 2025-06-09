@@ -2368,7 +2368,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
+	import type { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -2390,8 +2390,10 @@ declare module '$app/paths' {
 		: [route: T];
 
 	/**
-	 * Resolve a pathname by prefixing it with the base path, if any,
-	 * or resolve a route ID by populating dynamic segments with parameters.
+	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
 	 * @example
 	 * ```js
 	 * import { resolve } from '$app/paths';
@@ -2407,6 +2409,22 @@ declare module '$app/paths' {
 	 * @since 2.22
 	 */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+
+	/**
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { asset } from '$app/paths';
+	 * </script>
+	 *
+	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * ```
+	 */
+	export function asset(file: Asset): string;
 
 	/**
 	 * @deprecated Use `resolve(...)` instead
