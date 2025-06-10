@@ -13,4 +13,4 @@ packages:
 
 catalog:
   '@playwright/test': '^1.51.1'
-  'vitest': '^3.2.2'
+  'vitest': '^3.2.3'
