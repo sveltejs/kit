@@ -108,7 +108,7 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
+		expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
 		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 
@@ -120,6 +120,7 @@ test.describe('Service worker', () => {
 
 test.describe("bundleStrategy: 'single'", () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
+
 	test('loads a single js file and a single css file', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -134,5 +135,10 @@ test.describe("bundleStrategy: 'single'", () => {
 
 		expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
 		expect(requests.filter((req) => req.endsWith('.css')).length).toBe(1);
+	});
+
+	test('app.decoders is accessed only after app has been initialised', async ({ page }) => {
+		await page.goto('/basepath/deserialize');
+		await expect(page.locator('p')).toHaveText('Hello world!');
 	});
 });
