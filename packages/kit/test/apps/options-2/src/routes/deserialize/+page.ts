@@ -11,5 +11,5 @@ export function load() {
 		})
 	);
 
-  return result;
+	return result;
 }
