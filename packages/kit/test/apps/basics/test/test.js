@@ -570,7 +570,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('404');
 	});
 
-	test.only('AbortSignal works with internal fetch optimization', async ({ page }) => {
+	test('AbortSignal works with internal fetch optimization', async ({ page }) => {
 		await page.goto('/load/fetch-abort-signal');
 
 		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
