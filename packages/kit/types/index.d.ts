@@ -209,6 +209,16 @@ declare module '@sveltejs/kit' {
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 		 *
 		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	   * 
+	   * The `httpOnly` and `secure` flags are <b>independent but complementary security</b> features for cookies. They protect against different types of vulnerabilities.
+	   * `httpOnly` vs `secure`:
+	   * `httpOnly` - Controls WHO can access the cookie:
+	   * - `true`: Only server can access (blocks client-side JavaScript)
+	   * - `false`: Both server and client-side JavaScript can access
+	   *
+	   *`secure` - Controls HOW the cookie is transmitted:
+	   * - `true`: Only sent over HTTPS connections
+	   * - `false`: Sent over both HTTP and HTTPS
 		 *
 		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 * @param name the name of the cookie
@@ -234,6 +244,16 @@ declare module '@sveltejs/kit' {
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 		 *
 		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	   * 
+	   * The `httpOnly` and `secure` flags are <b>independent but complementary security</b> features for cookies. They protect against different types of vulnerabilities.
+	   * `httpOnly` vs `secure`:
+	   * `httpOnly` - Controls WHO can access the cookie:
+	   * - `true`: Only server can access (blocks client-side JavaScript)
+	   * - `false`: Both server and client-side JavaScript can access
+	   *
+	   *`secure` - Controls HOW the cookie is transmitted:
+	   * - `true`: Only sent over HTTPS connections
+	   * - `false`: Sent over both HTTP and HTTPS
 		 *
 		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 *
