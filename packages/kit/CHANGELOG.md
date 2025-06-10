@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.21.4
+### Patch Changes
+
+
+- fix: correctly access transport decoders on the client when building for a single or inline output app ([#13871](https://github.com/sveltejs/kit/pull/13871))
+
 ## 2.21.3
 ### Patch Changes
 
