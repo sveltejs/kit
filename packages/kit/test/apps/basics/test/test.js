@@ -569,6 +569,14 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('404');
 	});
+
+	test.only('AbortSignal works with internal fetch optimization', async ({ page }) => {
+		await page.goto('/load/fetch-abort-signal');
+
+		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
+		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
+		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
+	});
 });
 
 test.describe('Nested layouts', () => {

@@ -5,6 +5,42 @@ import { read_implementation } from '__sveltekit/server';
 import { has_prerendered_path } from './utils.js';
 
 /**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+async function internal_fetch(request, options, manifest, state) {
+	if (request.signal) {
+		if (request.signal.aborted) {
+			throw new DOMException('The operation was aborted.', 'AbortError');
+		}
+
+		/** @type {Promise<never>} */
+		const abortPromise = new Promise((_, reject) => {
+			const onAbort = () => {
+				reject(new DOMException('The operation was aborted.', 'AbortError'));
+			};
+			request.signal.addEventListener('abort', onAbort, { once: true });
+		});
+
+		return await Promise.race([
+			respond(request, options, manifest, {
+				...state,
+				depth: state.depth + 1
+			}),
+			abortPromise
+		]);
+	} else {
+		return await respond(request, options, manifest, {
+			...state,
+			depth: state.depth + 1
+		});
+	}
+}
+
+/**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
@@ -145,10 +181,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				const response = await respond(request, options, manifest, {
-					...state,
-					depth: state.depth + 1
-				});
+				const response = await internal_fetch(request, options, manifest, state);
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
