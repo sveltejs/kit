@@ -206,21 +206,25 @@ async function internal_fetch(request, options, manifest, state) {
 			throw new DOMException('The operation was aborted.', 'AbortError');
 		}
 
+		let remove_abort_listener = () => {};
 		/** @type {Promise<never>} */
 		const abort_promise = new Promise((_, reject) => {
 			const on_abort = () => {
 				reject(new DOMException('The operation was aborted.', 'AbortError'));
 			};
 			request.signal.addEventListener('abort', on_abort, { once: true });
+			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
 		});
 
-		return await Promise.race([
+		const result = await Promise.race([
 			respond(request, options, manifest, {
 				...state,
 				depth: state.depth + 1
 			}),
 			abort_promise
 		]);
+		remove_abort_listener();
+		return result;
 	} else {
 		return await respond(request, options, manifest, {
 			...state,
