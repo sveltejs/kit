@@ -1,31 +1,31 @@
 export async function load({ fetch }) {
-	const abortedController = new AbortController();
-	abortedController.abort();
+	const aborted_controller = new AbortController();
+	aborted_controller.abort();
 
-	let abortedImmediately = false;
+	let aborted_immediately = false;
 	try {
-		await fetch('/load/fetch-abort-signal/data', { signal: abortedController.signal });
+		await fetch('/load/fetch-abort-signal/data', { signal: aborted_controller.signal });
 	} catch (error) {
 		if (error.name === 'AbortError') {
-			abortedImmediately = true;
+			aborted_immediately = true;
 		}
 	}
 
-	let abortedDuringRequest = false;
+	let aborted_during_request = false;
 	try {
 		await fetch('/load/fetch-abort-signal/slow', { signal: AbortSignal.timeout(100) });
 	} catch (error) {
 		if (error.name === 'AbortError') {
-			abortedDuringRequest = true;
+			aborted_during_request = true;
 		}
 	}
 
-	const successfulResponse = await fetch('/load/fetch-abort-signal/data');
-	const successfulData = await successfulResponse.json();
+	const successful_response = await fetch('/load/fetch-abort-signal/data');
+	const successful_data = await successful_response.json();
 
 	return {
-		abortedImmediately,
-		abortedDuringRequest,
-		successfulData
+		aborted_immediately,
+		aborted_during_request,
+		successful_data
 	};
 }
