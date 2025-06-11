@@ -12,6 +12,7 @@ const config = {
 			}
 		},
 		files: {
+			params: 'source/params',
 			assets: 'public',
 			lib: 'source/components',
 			routes: 'source/pages',
