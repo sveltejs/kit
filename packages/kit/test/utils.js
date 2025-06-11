@@ -8,7 +8,7 @@ import { test as base, devices } from '@playwright/test';
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
-		use({
+		void use({
 			/**
 			 * @param {string} url
 			 * @param {{ replaceState?: boolean }} opts
@@ -40,10 +40,10 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
-			 * @param {string[]} urls
+			 * @param {string} pathname
 			 * @returns {Promise<void>}
 			 */
-			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
 
 			/**
 			 * @param {string} url
@@ -68,6 +68,36 @@ export const test = base.extend({
 		}
 
 		await use(clicknav);
+	},
+
+	scroll_to: async ({ page }, use) => {
+		/**
+		 * @param {number} x
+		 * @param {number} y
+		 */
+		async function scroll_to(x, y) {
+			// The browser will do this for us, but we need to do it pre-emptively
+			// so that we can check the scroll location.
+			// Otherwise, we'd be checking a decimal number against an integer.
+			x = Math.trunc(x);
+			y = Math.trunc(y);
+			const watcher = page.waitForFunction(
+				/** @param {{ x: number, y: number }} opt */ (opt) =>
+					// check if the scroll position reached the desired or maximum position
+					window.scrollX ===
+						Math.min(opt.x, document.documentElement.offsetWidth - window.innerWidth) &&
+					window.scrollY ===
+						Math.min(opt.y, document.documentElement.offsetHeight - window.innerHeight),
+				{ x, y }
+			);
+			await page.evaluate(
+				/** @param {{ x: number, y: number }} opt */ (opt) => window.scrollTo(opt.x, opt.y),
+				{ x, y }
+			);
+			await watcher;
+		}
+
+		await use(scroll_to);
 	},
 
 	in_view: async ({ page }, use) => {

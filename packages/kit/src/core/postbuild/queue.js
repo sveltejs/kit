@@ -13,6 +13,7 @@ export function queue(concurrency) {
 
 	let current = 0;
 
+	// TODO: Whenever Node >21 is minimum supported version, we can use `Promise.withResolvers` to avoid this ceremony
 	/** @type {(value?: any) => void} */
 	let fulfil;
 
@@ -39,7 +40,7 @@ export function queue(concurrency) {
 				current += 1;
 				const promise = Promise.resolve(task.fn());
 
-				promise
+				void promise
 					.then(task.fulfil, (err) => {
 						task.reject(err);
 						reject(err);

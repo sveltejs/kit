@@ -70,6 +70,10 @@ export default {
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
 
+### `_headers` and `_redirects`
+
+The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-headers-file) and [`_redirects`](https://docs.netlify.com/routing/redirects/redirect-options/) files specific to Netlify can be used for static asset responses (like images) by putting them into the project root folder.
+
 ### Redirect rules
 
 During compilation, redirect rules are automatically appended to your `_redirects` file. (If it doesn't exist yet, it will be created.) That means:
@@ -113,6 +117,6 @@ Additionally, you can add your own Netlify functions by creating a directory for
 
 You can't use `fs` in edge deployments.
 
-You _can_ use it in serverless deployments, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the `read` function from `$app/server` to access your files. `read` does not work inside edge deployments (this may change in future).
+You _can_ use it in serverless deployments, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. `read` does not work inside edge deployments (this may change in future).
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.

@@ -2,11 +2,11 @@
 title: Page options
 ---
 
-By default, SvelteKit will render (or [prerender](glossary#Prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](glossary#Hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](glossary#Prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [_hydration_](glossary#Hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [_router_](routing) that takes over subsequent navigations.
 
 You can control each of these on a page-by-page basis by exporting options from [`+page.js`](routing#page-page.js) or [`+page.server.js`](routing#page-page.server.js), or for groups of pages using a shared [`+layout.js`](routing#layout-layout.js) or [`+layout.server.js`](routing#layout-layout.server.js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
-You can mix and match these options in different areas of your app. For example you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
+You can mix and match these options in different areas of your app. For example, you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
 
 ## prerender
 
@@ -31,7 +31,7 @@ Routes with `prerender = true` will be excluded from manifests used for dynamic 
 export const prerender = 'auto';
 ```
 
-> [!NOTE] If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/main/packages/adapter-static), which will output files suitable for use with any static webserver.
+> [!NOTE] If your entire app is suitable for prerendering, you can use [`adapter-static`](adapter-static), which will output files suitable for use with any static webserver.
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
@@ -126,6 +126,8 @@ export const ssr = false;
 ```
 
 If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
+
+> [!NOTE] If all your page options are boolean or string literal values, SvelteKit will evaluate them statically. If not, it will import your `+page.js` or `+layout.js` file on the server (both at build time, and at runtime if your app isn't fully static) so it can evaluate the options. In the second case, browser-only code must not run when the module is loaded. In practice, this means you should import browser-only code in your `+page.svelte` or `+layout.svelte` file instead.
 
 ## csr
 
