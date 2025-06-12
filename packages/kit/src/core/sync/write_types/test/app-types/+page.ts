@@ -9,6 +9,7 @@ id = '/foo/[bar]/[baz]';
 // @ts-expect-error
 id = '/nope';
 
+// read `id` otherwise it is treated as unused
 id;
 
 declare let params: RouteParams<'/foo/[bar]/[baz]'>;
