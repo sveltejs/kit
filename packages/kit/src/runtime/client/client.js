@@ -1602,11 +1602,7 @@ async function navigate({
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
-		const deep_linked =
-			url.hash &&
-			document.getElementById(
-				decodeURIComponent(app.hash ? (url.hash.split('#')[2] ?? '') : url.hash.slice(1))
-			);
+		const deep_linked = url.hash && document.getElementById(get_id(url));
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
@@ -1627,7 +1623,7 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus();
+		reset_focus(url);
 	}
 
 	autoscroll = true;
@@ -2194,7 +2190,7 @@ export async function applyAction(result) {
 			root.$set(navigation_result.props);
 			update(navigation_result.props.page);
 
-			void tick().then(reset_focus);
+			void tick().then(() => reset_focus(current.url));
 		}
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
@@ -2215,7 +2211,7 @@ export async function applyAction(result) {
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
-			reset_focus();
+			reset_focus(page.url);
 		}
 	}
 }
@@ -2439,6 +2435,8 @@ function _start_router() {
 	});
 
 	addEventListener('popstate', async (event) => {
+		if (resetting_focus) return;
+
 		if (event.state?.[HISTORY_INDEX]) {
 			const history_index = event.state[HISTORY_INDEX];
 			token = {};
@@ -2793,35 +2791,61 @@ function deserialize_uses(uses) {
 	};
 }
 
-function reset_focus() {
+/**
+ * This flag is used to avoid client-side navigation when we're only using
+ * `location.replace()` to set focus.
+ */
+let resetting_focus = false;
+
+/**
+ *
+ * @param {URL} url
+ */
+function reset_focus(url) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		// TODO: find a fix that works with hash routing too
-		if (!app.hash && location.hash && document.querySelector(location.hash)) {
+
+		// Mimic the browsers' behaviour and set the sequential focus navigation
+		// starting point to the fragment identifier.
+		const id = get_id(url);
+		if (id && document.getElementById(id)) {
 			const { x, y } = scroll_state();
 
+			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
+			// to use this hack with `location.replace()` instead.
 			setTimeout(() => {
 				const history_state = history.state;
-				// Mimic the browsers' behaviour and set the sequential focus navigation
-				// starting point to the fragment identifier
-				location.replace(location.hash);
-				// but Firefox has a bug that sets the history state as null so we
-				// need to restore the history state
+
+				resetting_focus = true;
+				location.replace(`#${id}`);
+
+				// if we're using hash routing, we need to restore the original hash after
+				// setting the focus with `location.replace()`. Although we're calling
+				// `location.replace()` again, the focus won't shift to the new hash
+				// unless there's an element with the ID `/pathname#hash`, etc.
+				if (app.hash) {
+					location.replace(url.hash);
+				}
+
+				// but Firefox has a bug that sets the history state to `null` so we
+				// need to restore it after.
 				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				history.replaceState(history_state, '', location.hash);
+				history.replaceState(history_state, '', url.hash);
 
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
 				scrollTo(x, y);
+				resetting_focus = false;
 			});
 		} else {
-			// We try to mimic browsers' behaviour as closely as possible by targeting the
-			// first scrollable region, but unfortunately it's not a perfect match — e.g.
-			// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
+			// as possible by targeting the first scrollable region. Unfortunately, it's
+			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
+			// the end of the page on Chromium
 			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
 			const root = document.body;
 			const tabindex = root.getAttribute('tabindex');
@@ -2959,6 +2983,15 @@ function decode_hash(url) {
 	// Safari, for some reason, does change # to %23, when entered through the address bar
 	new_url.hash = decodeURIComponent(url.hash);
 	return new_url;
+}
+
+/**
+ * @param {URL} url
+ * @returns {string}
+ */
+function get_id(url) {
+	const hash = app.hash ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);
+	return decodeURIComponent(hash);
 }
 
 if (DEV) {
