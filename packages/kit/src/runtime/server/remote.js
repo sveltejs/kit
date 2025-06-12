@@ -185,7 +185,8 @@ export function get_remote_action(url) {
 
 /**
  * @typedef {{
- * 	results: Record<string, string>;
+ * 	results: Record<string, Promise<any>>;
+ * 	unevaled_results: Record<string, Promise<string>>;
  *  form_result?: [key: any, value: any];
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
@@ -206,6 +207,7 @@ export function add_remote_info(event, state, options) {
 	Object.defineProperty(event, remote_info, {
 		value: /** @type {RemoteEventInfo} */ ({
 			results: {},
+			unevaled_results: {},
 			form_result: undefined,
 			prerendering: state.prerendering,
 			transport: options.hooks.transport,

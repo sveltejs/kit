@@ -1,5 +1,5 @@
 /** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
-/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks } from 'types' */
+/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent } from './event.js';
@@ -50,12 +50,11 @@ export function query(fn) {
 
 			// TODO don't do the additional work when we're being called from the client?
 			const event = getRequestEvent();
-			const result = await fn(...args);
-			uneval_remote_response(
+			const result = await get_response(
 				/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
 				args,
-				result,
-				event
+				event,
+				() => fn(...args)
 			);
 			return resolve(result);
 		});
@@ -135,12 +134,15 @@ export function prerender(fn, options) {
 
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					const response = await fetch(event.url.origin + url);
-					if (response.ok) {
+					return await get_response(id, args, event, async () => {
+						const response = await fetch(event.url.origin + url);
+						if (!response.ok) {
+							throw new Error('Prerendered response not found');
+						}
 						const prerendered = await response.json();
 						info.results[create_remote_cache_key(id, stringified_args)] = prerendered.result;
 						return resolve(parse_remote_response(prerendered.result, info.transport));
-					}
+					});
 				} catch (e) {
 					// not available prerendered, fallback to normal function
 				}
@@ -150,7 +152,7 @@ export function prerender(fn, options) {
 				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
 			}
 
-			const maybe_promise = fn(...args);
+			const maybe_promise = get_response(id, args, event, () => fn(...args));
 
 			if (info.prerendering) {
 				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
@@ -158,8 +160,6 @@ export function prerender(fn, options) {
 			}
 
 			const result = await maybe_promise;
-
-			uneval_remote_response(id, args, result, event);
 
 			if (info.prerendering) {
 				const body = { type: 'result', result: stringify(result, info.transport) };
@@ -449,16 +449,12 @@ export function form(fn) {
 
 			const result = await fn(form_data);
 
-			// We don't need to care about args, because uneval results are only relevant in full page reloads
+			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 			// where only one form submission is active at the same time
 			if (!event.isRemoteRequest) {
-				uneval_remote_response(
-					wrapper.action,
-					[],
-					result instanceof ActionFailure ? result.data : result,
-					event
-				);
-				info.form_result = [key, result instanceof ActionFailure ? result.data : result];
+				const normalized = result instanceof ActionFailure ? result.data : result;
+				uneval_result(wrapper.action, [], event, normalized);
+				info.form_result = [key, normalized];
 			}
 
 			return result;
@@ -516,7 +512,6 @@ export function form(fn) {
 			get() {
 				try {
 					const info = get_remote_info(getRequestEvent());
-					console.log('checking', info.form_result, key);
 					return info.form_result && info.form_result[0] === key ? info.form_result[1] : undefined;
 				} catch (e) {
 					return undefined;
@@ -565,30 +560,71 @@ export function form(fn) {
 }
 
 /**
+ * In case of a single remote function call, just returns the result.
+ *
+ * In case of a full page reload, returns the response for a remote function call,
+ * either from the cache or by invoking the function.
+ * Also saves an uneval'ed version of the result for later HTML inlining for hydration.
+ *
+ * @template {MaybePromise<any>} T
  * @param {string} id
  * @param {any[]} args
- * @param {any} result
  * @param {RequestEvent} event
+ * @param {() => T} get_result
+ * @returns {T}
  */
-function uneval_remote_response(id, args, result, event) {
+function get_response(id, args, event, get_result) {
 	const info = get_remote_info(event);
 
-	// We only need to do this for full page visits where we stringify the result into the HTML
-	if (event.isRemoteRequest) return;
+	// We only want to do this for full page visits where we can safely deduplicate calls (for remote calls we would have
+	// to ensure they come from the same user) and have to stringify the result into the HTML
+	if (event.isRemoteRequest) return get_result();
 
 	const cache_key = create_remote_cache_key(id, stringify_remote_args(args, info.transport));
 
-	const replacer = (/** @type {any} */ thing) => {
-		for (const key in info.transport) {
-			const encoded = info.transport[key].encode(thing);
-			if (encoded) {
-				return `app.decode('${key}', ${uneval(encoded, replacer)})`;
-			}
-		}
-	};
+	if (!(cache_key in info.results)) {
+		// TODO better error handling when promise rejects?
+		info.results[cache_key] = Promise.resolve(get_result()).catch(() => {
+			delete info.results[cache_key];
+			return /** @type {any} */ (undefined);
+		});
 
-	// TODO better error when this fails?
-	info.results[cache_key] = uneval(result, replacer);
+		uneval_result(id, args, event, info.results[cache_key], cache_key);
+	}
+
+	return /** @type {T} */ (info.results[cache_key]);
+}
+
+/**
+ * @param {string} id
+ * @param {any[]} args
+ * @param {RequestEvent} event
+ * @param {MaybePromise<any>} result
+ * @param {string} [cache_key]
+ */
+function uneval_result(id, args, event, result, cache_key) {
+	const info = get_remote_info(event);
+
+	cache_key ||= create_remote_cache_key(id, stringify_remote_args(args, info.transport));
+
+	if (!(cache_key in info.unevaled_results)) {
+		const replacer = (/** @type {any} */ thing) => {
+			for (const key in info.transport) {
+				const encoded = info.transport[key].encode(thing);
+				if (encoded) {
+					return `app.decode('${key}', ${uneval(encoded, replacer)})`;
+				}
+			}
+		};
+
+		// TODO better error handling when promise rejects?
+		info.unevaled_results[cache_key] = Promise.resolve(result)
+			.then((result) => uneval(result, replacer))
+			.catch(() => {
+				delete info.unevaled_results[cache_key];
+				return /** @type {any} */ (undefined);
+			});
+	}
 }
 
 /** @param {string} feature */

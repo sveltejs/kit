@@ -407,9 +407,13 @@ export async function render_response({
 				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`,
-				`remote: {${Object.entries(get_remote_info(event, true)?.results || {})
-					.map(([key, value]) => `"${key}": ${value}`)
-					.join(', ')}}`
+				`remote: {${(
+					await Promise.all(
+						Object.entries(get_remote_info(event, true)?.unevaled_results || {}).map(
+							async ([key, value]) => `"${key}": ${await value}`
+						)
+					)
+				).join(', ')}}`
 			];
 
 			if (status !== 200) {
