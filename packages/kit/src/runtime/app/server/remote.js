@@ -530,7 +530,7 @@ export function form(fn) {
 			configurable: false
 		});
 
-		if (!key) {
+		if (key == undefined) {
 			Object.defineProperty(wrapper, 'for', {
 				/** @type {RemoteFormAction<any, any>['for']} */
 				value: (key) => {

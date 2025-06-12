@@ -18,15 +18,148 @@ import {
 import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 import { HttpError, Redirect } from '../control.js';
 
-let pending_refresh = false;
+/**
+ * Waits for three microtasks which is the necessary amount of ticks to ensure that
+ * it runs after Svelte's reacticity system has processed changes.
+ * In prod two would be enough but in dev we need three because of the wrapping "check reactivity loss" function.
+ */
+function wait() {
+	return Promise.resolve().then(() => Promise.resolve().then(() => Promise.resolve()));
+}
 
 /**
- * @type {Map<string, Array<(value: any) => any>>}
- * A map of remote function ids to their overrides.
- * Separate from `result_map` because we want to be able to refresh queries (which deletes the `result_map` entry)
- * but keep the overrides until they are released or no query is in a reactive context anymore.
+ * @template T
+ * @implements {Promise<T>}
  */
-const overrides_map = new Map();
+class Resource {
+	/** @type {() => Promise<void>} */
+	#fn;
+	/** @type {null | { value: T }} */
+	#pending = null;
+	#loading = $state(false);
+	#latest = [];
+
+	/** @type {boolean} */
+	#inited = $state(false);
+	/** @type {T | undefined} */
+	#raw = $state.raw();
+	/** @type {Promise<void>} */
+	#promise;
+	/** @type {Array<(old: T) => T>} */
+	#overrides = $state([]);
+
+	/** @type {T | undefined} */
+	#current = $derived.by(() => {
+		// don't reduce undefined value
+		if (!this.#inited) return undefined;
+
+		return this.#overrides.reduce((v, r) => r(v), this.#raw);
+	});
+
+	/** @type {Promise<T>['then']} */
+	#then = $derived.by(() => {
+		// TODO this should somehow stop earlier if later promise resolves before this one
+		const p = this.#promise;
+		this.#overrides.length;
+
+		return async (resolve, reject) => {
+			try {
+				await p;
+				// we need this to avoid await_reactivity_loss warning and be in sync with other async reactivity
+				await wait();
+				resolve(this.#current);
+			} catch (error) {
+				reject(error);
+			}
+		};
+	});
+
+	/**
+	 * @param {() => Promise<T>} fn
+	 */
+	constructor(fn) {
+		this.#fn = () => {
+			this.#loading = true;
+			const timing = [];
+			this.#latest.push(timing);
+			return Promise.resolve(fn()).then((value) => {
+				// Skip the response if resource was refreshed while we were waiting for the promise to resolve,
+				const now = Date.now();
+				timing[0] = now;
+				this.#latest.splice(0, this.#latest.indexOf(timing) + 1);
+				if (this.#latest.slice(1).some((t) => t[0] && t[0] <= now)) {
+					return;
+				}
+
+				if (this.#overrides.length === 0) {
+					this.#inited = true;
+					this.#loading = false;
+					this.#raw = value;
+				} else {
+					this.#pending = { value };
+
+					wait().then(() => {
+						this.#loading = false;
+						this.#pending = null;
+						this.#inited = true;
+						this.#raw = value;
+					});
+				}
+			});
+		};
+
+		this.#promise = $state.raw(this.#fn());
+	}
+
+	get then() {
+		return this.#then;
+	}
+
+	get current() {
+		return this.#current;
+	}
+
+	get pending() {
+		return this.#loading;
+	}
+
+	/**
+	 * @param {(old: T) => T} fn
+	 * @returns {() => void}
+	 */
+	override(fn) {
+		this.#overrides.push(fn);
+
+		return () => {
+			const i = this.#overrides.indexOf(fn);
+
+			if (i !== -1) {
+				if (this.#pending) {
+					this.#inited = true;
+					this.#raw = this.#pending.value;
+					this.#pending = null;
+				}
+
+				this.#overrides.splice(i, 1);
+			}
+		};
+	}
+
+	/**
+	 * @returns {Promise<void>}
+	 */
+	refresh() {
+		pending_refresh = true;
+		return wait().then(() => {
+			pending_refresh = false;
+			this.#promise = this.#fn();
+			// TODO this should somehow stop earlier if later promise resolves before this one
+			return this.#promise;
+		});
+	}
+}
+
+let pending_refresh = false;
 
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
@@ -35,328 +168,112 @@ const overrides_map = new Map();
  * @returns {RemoteQuery<any, any>}
  */
 function remote_request(id, prerender) {
-	let version = $state(0);
+	/** @type {unknown} */
+	let cached_value = undefined;
 
-	// TODO disable "use event.fetch method instead" warning which can show up when you use remote functions in load functions
 	/** @type {RemoteQuery<any, any>} */
 	const fn = (/** @type {any} */ ...args) => {
 		const stringified_args = stringify_remote_args(args, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
+		let entry = result_map.get(cache_key);
 
-		let always_tracking = true;
-		/** True once a real fetch (not override) has resolved (_not_ rejected) for the first time */
-		let initialized = false;
-		let original_current = $state.raw();
-		let current = $derived(apply_overrides(original_current));
-		let error = $state.raw();
-		let pending = $state.raw(true);
-
+		let tracking = true;
 		try {
-			const entry = result_map.get(cache_key);
 			$effect.pre(() => {
 				if (entry) entry[0]++;
 				return () => {
 					const entry = result_map.get(cache_key);
 					if (entry) {
 						entry[0]--;
-						queueMicrotask(() => {
-							if (entry[0] === 0) {
+						wait().then(() => {
+							if (!entry[0] && entry === result_map.get(cache_key)) {
 								result_map.delete(cache_key);
-								overrides_map.delete(cache_key);
 							}
 						});
 					}
 				};
 			});
 		} catch {
-			always_tracking = false;
+			tracking = false;
 		}
 
-		if (always_tracking) {
-			retrieve(true).catch(() => {}); // Avoid unhandled promise rejection warnings
-		}
-
-		/** @param {boolean} tracking */
-		function retrieve(tracking) {
-			const entry = result_map.get(cache_key);
-
-			if (!entry) {
-				const response = (async () => {
-					if (!started) {
-						const result = remote_responses[cache_key];
-						if (result) {
-							return result;
-						}
+		let resource = entry?.[1];
+		if (!resource) {
+			resource = new Resource(async () => {
+				if (!started) {
+					const result = remote_responses[cache_key];
+					if (result) {
+						return result;
 					}
-
-					const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
-					const response = await fetch(url);
-					if (!response.ok) {
-						throw new HttpError(500, 'Failed to execute remote function');
-					}
-
-					const result = /** @type { RemoteFunctionResponse} */ (await response.json());
-					if (result.type === 'redirect') {
-						result_map.delete(cache_key);
-						version++;
-						await goto(result.location); // TODO this could be old at this point, check query cache
-						// We throw because we don't know the desired shape. We do so after a timeout so that
-						// the refresh just above will cause the query to rerun in case it's still around, which means Svelte's
-						// async will ignore this async batch.
-						await new Promise((r) => setTimeout(r, 0));
-						throw new Redirect(307, result.location);
-					} else if (result.type === 'error') {
-						throw new HttpError(result.status ?? 500, result.error);
-					} else {
-						return devalue.parse(result.result, app.decoders);
-					}
-				})();
-
-				const overrides = $state(overrides_map.get(cache_key) ?? []);
-				overrides_map.set(cache_key, overrides);
-				result_map.set(cache_key, [tracking ? 1 : 0, response, update_query]);
-
-				return response
-					.then((result) => {
-						const entry = result_map.get(cache_key);
-						// Only update if response wasn't superseeded by a new call
-						if (entry && entry[1] === response) {
-							// We need this to delete the cache entry if the query was never tracked anywhere else in the meantime
-							if (entry[0] === 0) {
-								result_map.delete(cache_key);
-								overrides_map.delete(cache_key);
-							}
-
-							if (overrides_map.get(cache_key)?.length) {
-								update_query(result);
-
-								return current;
-							} else {
-								initialized = true;
-								pending = false;
-								original_current = result;
-								error = undefined;
-
-								return current;
-							}
-						} else {
-							// Some old call that was superseeded by a new call; still return accurate data from that point in time
-							return apply_overrides(result);
-						}
-					})
-					.catch((e) => {
-						// Exceptions delete the cache right away unless they're already superseeded by a new call
-						if (response === result_map.get(cache_key)?.[1]) {
-							result_map.delete(cache_key);
-							pending = false;
-							original_current = undefined;
-							error = e;
-						}
-
-						throw e;
-					});
-			} else {
-				if (!initialized) {
-					// fill in the current state
-					// TODO maybe entry needs to save current etc instead?
-					entry[1]
-						.then((result) => {
-							const e = result_map.get(cache_key);
-							// Only update if response wasn't superseeded by a new call
-							if (e && e[1] === entry[1]) {
-								original_current = result;
-								initialized = true;
-								pending = false;
-								error = undefined;
-							}
-						})
-						.catch((e) => {
-							if (entry[1] === result_map.get(cache_key)?.[1]) {
-								pending = false;
-								current = original_current = undefined;
-								error = e;
-							}
-						});
 				}
 
-				return entry[1].then(() => {
-					return current;
-				});
-			}
-		}
+				if (cached_value !== undefined) {
+					const v = cached_value;
+					cached_value = undefined;
+					return Promise.resolve(v);
+				}
 
-		function track() {
-			let tracking = always_tracking;
+				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
+				const response = await fetch(url);
+				if (!response.ok) {
+					throw new HttpError(500, 'Failed to execute remote function');
+				}
 
-			if (!tracking && $effect.tracking()) {
-				tracking = true;
-				// We have to increase the listener count here since not every get is necessarily a new call,
-				// (e.g. `typeof x.then === 'function'`), so we would count down more than up otherwise.
-				const entry = result_map.get(cache_key);
-				if (entry) entry[0]++;
-				$effect.pre(() => () => {
-					const entry = result_map.get(cache_key);
-					if (entry) {
-						entry[0]--;
-						queueMicrotask(() => {
-							if (entry[0] === 0) {
-								result_map.delete(cache_key);
-								overrides_map.delete(cache_key);
-							}
-						});
-					}
-				});
-			}
-
-			return tracking;
-		}
-
-		/** @type {Array<() => void>} */
-		const pending_updates = [];
-
-		function apply_updates() {
-			if (pending_updates.length === 0) return;
-			pending_updates.forEach((update) => update());
-			pending_updates.length = 0;
-			version++; // this will cause queries with other parameters to rerun aswell but it's fine since they are cached
-		}
-
-		/**
-		 * @param {unknown} value
-		 */
-		function update_query(value) {
-			pending_updates.push(() => {
-				const entry = result_map.get(cache_key);
-				if (!entry) return;
-
-				pending = false;
-				error = undefined;
-				original_current = value;
-				entry[1] = Promise.resolve(value);
+				const result = /** @type { RemoteFunctionResponse } */ (await response.json());
+				if (result.type === 'redirect') {
+					// resource_cache.delete(cache_key);
+					// version++;
+					// await goto(result.location);
+					// /** @type {Resource<any>} */ (resource).refresh();
+					// TODO double-check this
+					goto(result.location);
+					await new Promise((r) => setTimeout(r, 0));
+					throw new Redirect(307, result.location);
+				} else if (result.type === 'error') {
+					throw new HttpError(result.status ?? 500, result.error);
+				} else {
+					return devalue.parse(result.result, app.decoders);
+				}
 			});
 
-			// Two microtasks because Svelte wraps awaits which causes another microtask,
-			// and we want to ensure we wait for the next synchronous release that is potentially happening
-			if (overrides_map.get(cache_key)?.length) {
-				queueMicrotask(() => {
-					queueMicrotask(() => {
-						apply_updates();
-					});
-				});
-			} else {
-				apply_updates();
-			}
-		}
-
-		/** @param {unknown} value */
-		function apply_overrides(value) {
-			const entry = overrides_map.get(cache_key);
-			if (!entry) return value;
-
-			for (const update of entry) {
-				value = update(value);
-			}
-
-			return value;
-		}
-
-		return {
-			get then() {
-				// Reading the version ensures that the function reruns in reactive contexts if the version changes
-				// We gotta do it here in the getter and then in return a function because `await promise` would call
-				// the function asynchronously, which would mean "$effect.tracking" is always false. The getter on the other hand
-				// is called synchronously, so we can check if we're in an effect there.
-				version;
-
-				// Similarly we need to see if we're in a tracking context inside the getter, not upon function invocation
-				let tracking = track();
-
-				// TODO this is how we could get granular with the cache invalidation
-				// const id = `${fn.key}|${stringified_args}`;
-				// if (!queryMap.has(id)) {
-				// 	version[id] = 0;
-				// 	queryMap.set(id, () => version[id]++);
-				// }
-				// version[id]; // yes this will mean it reruns once for the first call but that is ok because of our caching
-
-				/** @type {Promise<any>['then']} */
-				return (resolve, reject) => {
-					return retrieve(tracking).then(resolve, reject);
-				};
-			},
-			get catch() {
-				version;
-
-				let tracking = track();
-
-				/** @type {Promise<any>['catch']} */
-				return (reject) => {
-					return retrieve(tracking).catch(reject);
-				};
-			},
-			get finally() {
-				version;
-
-				let tracking = track();
-
-				/** @type {Promise<any>['finally']} */
-				return (callback) => {
-					return retrieve(tracking).finally(callback);
-				};
-			},
-			[Symbol.toStringTag]: '[object RemoteQuery]',
-			get current() {
-				return current;
-			},
-			get error() {
-				return error;
-			},
-			get pending() {
-				return pending;
-			},
-			refresh: async () => {
-				pending = true;
-				pending_refresh = true;
-
-				// two because it's three in the corresponding "possibly invalidate all logic" in the command function
-				queueMicrotask(() => {
-					queueMicrotask(() => {
-						pending_refresh = false;
-					});
-				});
-
-				result_map.delete(cache_key);
-				version++;
-				await new Promise((r) => setTimeout(r, 0)); // wait for the next macrotask to ensure that the query is rerun
-				await result_map.get(cache_key)?.[1];
-			},
-			override: async (update) => {
-				const overrides = overrides_map.get(cache_key);
-				const entry = result_map.get(cache_key);
-				if (!entry || !overrides) return () => {}; // TODO warn in dev mode if not available?
-
-				overrides.push(update);
-				apply_updates();
-				version++;
-				return () => {
-					apply_updates();
-					const idx = overrides.indexOf(update);
-					if (idx !== -1) {
-						overrides.splice(idx, 1);
-						version++;
+			result_map.set(
+				cache_key,
+				(entry = [
+					tracking ? 1 : 0,
+					resource,
+					(v) => {
+						cached_value = v;
+						resource.refresh();
 					}
-				};
-			}
-		};
+				])
+			);
+
+			resource
+				.then(() => {
+					wait().then(() => {
+						if (!(/** @type {any} */ (entry)[0]) && entry === result_map.get(cache_key)) {
+							// If no one is tracking this resource anymore, we can delete it from the cache
+							result_map.delete(cache_key);
+						}
+					});
+				})
+				.catch(() => {
+					// error delete the resource from the cache
+					// TODO is that correct?
+					result_map.delete(cache_key);
+				});
+		}
+
+		// TODO error, pending, catch, finally
+		return resource;
 	};
 
 	refresh_map.set(id, () => {
 		for (const key of result_map.keys()) {
 			if (key.startsWith(id + '|')) {
-				result_map.delete(key);
+				result_map.get(key)?.[1].refresh();
 			}
 		}
-		version++;
 	});
 
 	return fn;
@@ -439,7 +356,7 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
-		const action_id = id + (key ? `/${JSON.stringify(key)}` : '');
+		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
@@ -451,40 +368,61 @@ export function form(id) {
 
 		/** @param {FormData} data */
 		async function submit(data) {
-			const response = await fetch(`/${app_dir}/remote/${action_id}`, {
-				method: 'POST',
-				body: data
-			});
-
-			if (!response.ok) {
-				// We only end up here in case of a network error or if the server has an internal error
-				// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-				error = { message: 'Failed to execute remote function' };
-				result = undefined;
-				throw new Error(error.message);
+			// Store a reference to the current instance and increment the usage count for the duration
+			// of the request. This ensures that the instance is not deleted in case of an optimistic update
+			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
+			// If the instance would be deleted in the meantime, the error property would be assigned to the old,
+			// no-longer-visible instance, so it would never be shown to the user.
+			const entry = instance_cache.get(key);
+			if (entry) {
+				entry[0]++;
 			}
 
-			const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+			try {
+				const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+					method: 'POST',
+					body: data
+				});
 
-			if (form_result.type === 'result') {
-				error = undefined;
-				result = devalue.parse(form_result.result, app.decoders);
-
-				refresh_queries(form_result);
-			} else if (form_result.type === 'redirect') {
-				const refreshes = form_result.refreshes
-					? Object.entries(devalue.parse(form_result.refreshes, app.decoders))
-					: [];
-				for (const [key, value] of refreshes) {
-					// Update the query with the new value
-					const entry = result_map.get(key);
-					entry?.[2](value);
+				if (!response.ok) {
+					// We only end up here in case of a network error or if the server has an internal error
+					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+					error = { message: 'Failed to execute remote function' };
+					result = undefined;
+					throw new Error(error.message);
 				}
-				goto(form_result.location, { invalidateAll: refreshes.length === 0 });
-			} else {
-				result = undefined;
-				error = form_result.error;
-				throw new HttpError(500, error);
+
+				const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+
+				if (form_result.type === 'result') {
+					error = undefined;
+					result = devalue.parse(form_result.result, app.decoders);
+
+					refresh_queries(form_result);
+				} else if (form_result.type === 'redirect') {
+					const refreshes = form_result.refreshes
+						? Object.entries(devalue.parse(form_result.refreshes, app.decoders))
+						: [];
+					for (const [key, value] of refreshes) {
+						// Update the query with the new value
+						const entry = result_map.get(key);
+						entry?.[2](value);
+					}
+					goto(form_result.location, { invalidateAll: refreshes.length === 0 });
+				} else {
+					result = undefined;
+					error = form_result.error;
+					throw new HttpError(500, error);
+				}
+			} finally {
+				wait().then(() => {
+					if (entry) {
+						entry[0]--;
+						if (entry[0] === 0) {
+							instance_cache.delete(key);
+						}
+					}
+				});
 			}
 		}
 
@@ -637,7 +575,7 @@ export function form(id) {
 			}
 		});
 
-		if (!key) {
+		if (key == undefined) {
 			Object.defineProperty(submit, 'for', {
 				/** @type {RemoteFormAction<any, any>['for']} */
 				value: (key) => {
@@ -648,7 +586,7 @@ export function form(id) {
 						$effect.pre(() => {
 							return () => {
 								entry[0]--;
-								queueMicrotask(() => {
+								wait().then(() => {
 									if (entry[0] === 0) {
 										instance_cache.delete(key);
 									}
@@ -694,17 +632,11 @@ function refresh_queries(result) {
 			entry?.[2](value);
 		}
 	} else {
-		// We gotta do three microtasks here because the first two will resolve before the promise is awaited by the caller so it will run too soon
-		// TODO it's three because we do `await safe` in dev mode in async Svelte; should we use setTimeout instead?
-		queueMicrotask(() => {
-			queueMicrotask(() => {
-				queueMicrotask(() => {
-					// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-					// If that doesn't happen within a microtask we assume they want to invalidate everything.
-					if (pending_invalidate || pending_refresh) return;
-					invalidateAll();
-				});
-			});
+		wait().then(() => {
+			// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
+			// If that doesn't happen within a microtask we assume they want to invalidate everything.
+			if (pending_invalidate || pending_refresh) return;
+			invalidateAll();
 		});
 	}
 }
