@@ -25,4 +25,5 @@ pathname = '/nope';
 pathname = '/foo';
 pathname = '/foo/1/2';
 
+// read `pathname` otherwise it is treated as unused
 pathname;
