@@ -2798,7 +2798,6 @@ function deserialize_uses(uses) {
 let resetting_focus = false;
 
 /**
- *
  * @param {URL} url
  */
 function reset_focus(url) {
