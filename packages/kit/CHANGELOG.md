@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.21.5
+### Patch Changes
+
+
+- fix: correctly set the sequential focus navigation point when using hash routing ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
+
+- fix: regression when resetting focus and the URL hash contains selector combinators or separators ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
 ## 2.21.4
 ### Patch Changes
 
