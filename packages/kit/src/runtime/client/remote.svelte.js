@@ -36,7 +36,8 @@ class Resource {
 	#fn;
 	/** @type {null | { value: T }} */
 	#pending = null;
-	#loading = $state(false);
+	#loading = $state(true);
+	/** @type {Array<() => void>} */
 	#latest = [];
 
 	/** @type {boolean} */
@@ -58,7 +59,6 @@ class Resource {
 
 	/** @type {Promise<T>['then']} */
 	#then = $derived.by(() => {
-		// TODO this should somehow stop earlier if later promise resolves before this one
 		const p = this.#promise;
 		this.#overrides.length;
 
@@ -80,32 +80,51 @@ class Resource {
 	constructor(fn) {
 		this.#fn = () => {
 			this.#loading = true;
-			const timing = [];
-			this.#latest.push(timing);
-			return Promise.resolve(fn()).then((value) => {
-				// Skip the response if resource was refreshed while we were waiting for the promise to resolve,
-				const now = Date.now();
-				timing[0] = now;
-				this.#latest.splice(0, this.#latest.indexOf(timing) + 1);
-				if (this.#latest.slice(1).some((t) => t[0] && t[0] <= now)) {
-					return;
-				}
 
-				if (this.#overrides.length === 0) {
-					this.#inited = true;
-					this.#loading = false;
-					this.#raw = value;
-				} else {
-					this.#pending = { value };
-
-					wait().then(() => {
-						this.#loading = false;
-						this.#pending = null;
-						this.#inited = true;
-						this.#raw = value;
-					});
-				}
+			// Don't use Promise.withResolvers, it's too new still
+			/** @type {() => void} */
+			let resolve;
+			/** @type {(e?: any) => void} */
+			let reject;
+			/** @type {Promise<void>} */
+			const promise = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			this.#latest.push(
+				// @ts-expect-error it's defined at this point
+				resolve
+			);
+
+			Promise.resolve(fn())
+				.then((value) => {
+					// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
+					const idx = this.#latest.indexOf(resolve);
+					if (idx === -1) return;
+
+					this.#latest.splice(0, idx).forEach((r) => r());
+
+					if (this.#overrides.length === 0) {
+						this.#inited = true;
+						this.#loading = false;
+						this.#raw = value;
+					} else {
+						this.#pending = { value };
+
+						wait().then(() => {
+							this.#loading = false;
+							this.#pending = null;
+							this.#inited = true;
+							this.#raw = value;
+						});
+					}
+
+					resolve();
+				})
+				.catch((e) => reject(e));
+
+			return promise;
 		};
 
 		this.#promise = $state.raw(this.#fn());
@@ -153,7 +172,6 @@ class Resource {
 		return wait().then(() => {
 			pending_refresh = false;
 			this.#promise = this.#fn();
-			// TODO this should somehow stop earlier if later promise resolves before this one
 			return this.#promise;
 		});
 	}
