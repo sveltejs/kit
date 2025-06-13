@@ -2989,8 +2989,16 @@ function decode_hash(url) {
  * @returns {string}
  */
 function get_id(url) {
-	const [, first, second] = url.hash.split('#', 3);
-	return decodeURIComponent(second ?? first);
+	let id;
+
+	if (app.hash) {
+		const [, , second] = url.hash.split('#', 3);
+		id = second ?? '';
+	} else {
+		id = url.hash.slice(1);
+	}
+
+	return decodeURIComponent(id);
 }
 
 if (DEV) {
