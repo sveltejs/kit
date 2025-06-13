@@ -2989,8 +2989,8 @@ function decode_hash(url) {
  * @returns {string}
  */
 function get_id(url) {
-  const [_, first, second] = url.hash.split('#', 3);
-  return decodeURIComponent(second ?? first);
+	const [_, first, second] = url.hash.split('#', 3);
+	return decodeURIComponent(second ?? first);
 }
 
 if (DEV) {
