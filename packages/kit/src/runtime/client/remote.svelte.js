@@ -19,12 +19,13 @@ import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
 import { HttpError, Redirect } from '../control.js';
 
 /**
- * Waits for three microtasks which is the necessary amount of ticks to ensure that
+ * Waits for three microtasks by default which is the necessary amount of ticks to ensure that
  * it runs after Svelte's reacticity system has processed changes.
  * In prod two would be enough but in dev we need three because of the wrapping "check reactivity loss" function.
+ * @returns {Promise<void>}
  */
-function wait() {
-	return Promise.resolve().then(() => Promise.resolve().then(() => Promise.resolve()));
+function wait(times = 3) {
+	return Promise.resolve().then(() => (times > 0 ? wait(times - 1) : undefined));
 }
 
 /**
@@ -433,7 +434,8 @@ export function form(id) {
 					throw new HttpError(500, error);
 				}
 			} finally {
-				wait().then(() => {
+				// TODO find out why we need 9 and not just 3
+				wait(9).then(() => {
 					if (entry) {
 						entry[0]--;
 						if (entry[0] === 0) {
