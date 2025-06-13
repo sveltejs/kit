@@ -7,7 +7,6 @@ import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { ActionFailure, HttpError, Redirect, SvelteKitError } from '../control.js';
 import { parse_remote_args, stringify } from '../shared.js';
-import { redirect_json_response } from './data/index.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';

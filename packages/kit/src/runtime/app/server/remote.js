@@ -2,7 +2,7 @@
 /** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 
 import { uneval, parse } from 'devalue';
-import { getRequestEvent } from './event.js';
+import { getRequestEvent, with_event } from './event.js';
 import { get_remote_info } from '../../server/remote.js';
 import { json } from '../../../exports/index.js';
 import { DEV } from 'esm-env';
@@ -55,7 +55,7 @@ export function query(fn) {
 					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
 					args,
 					event,
-					() => fn(...args)
+					() => with_cleansed_event(event, false, () => fn(...args))
 				);
 				return resolve(result);
 			} catch (e) {
@@ -156,7 +156,9 @@ export function prerender(fn, options) {
 				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
 			}
 
-			const maybe_promise = get_response(id, args, event, () => fn(...args));
+			const maybe_promise = get_response(id, args, event, () =>
+				with_cleansed_event(event, false, () => fn(...args))
+			);
 
 			if (info.prerendering) {
 				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
@@ -388,7 +390,7 @@ export function command(fn) {
 		if (!get_remote_info(event).refreshes) {
 			get_remote_info(event).refreshes = {};
 		}
-		return /** @type {Awaited<Output>} */ (fn(...args));
+		return /** @type {Awaited<Output>} */ (with_cleansed_event(event, true, () => fn(...args)));
 	};
 
 	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({
@@ -451,7 +453,7 @@ export function form(fn) {
 				info.refreshes = {};
 			}
 
-			const result = await fn(form_data);
+			const result = await with_cleansed_event(event, true, () => fn(form_data));
 
 			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 			// where only one form submission is active at the same time
@@ -652,4 +654,58 @@ function parse_remote_response(data, transport) {
 	}
 
 	return parse(data, revivers);
+}
+
+/**
+ * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
+ * @template T
+ * @param {RequestEvent} event
+ * @param {boolean} allow_cookies
+ * @param {() => T} fn
+ */
+function with_cleansed_event(event, allow_cookies, fn) {
+	/** @type {RequestEvent} */
+	const cleansed = {
+		...event,
+		setHeaders: () => {
+			throw new Error('setHeaders is not allowed in remote functions');
+		},
+		cookies: {
+			get: event.cookies.get,
+			getAll: event.cookies.getAll,
+			serialize: event.cookies.serialize,
+			set: (name, value, opts) => {
+				if (allow_cookies) {
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies set in remote functions must have an absolute path');
+					}
+					return event.cookies.set(name, value, opts);
+				}
+				throw new Error(
+					'cookies.set is not allowed in remote functions other than command and form'
+				);
+			},
+			delete: (name, opts) => {
+				if (allow_cookies) {
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies deleted in remote functions must have an absolute path');
+					}
+					return event.cookies.delete(name, opts);
+				}
+				throw new Error(
+					'cookies.delete is not allowed in remote functions other than command and form'
+				);
+			}
+		},
+		route: { id: null },
+		url: new URL(event.url.origin)
+	};
+
+	const symbols = Object.getOwnPropertySymbols(event);
+	for (const symbol of symbols) {
+		// @ts-expect-error there's remote info in the event object
+		cleansed[symbol] = event[symbol];
+	}
+
+	return with_event(cleansed, fn);
 }
