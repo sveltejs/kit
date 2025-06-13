@@ -41,7 +41,7 @@ export function query(fn) {
 	/** @type {RemoteQuery<Input, Output>} */
 	const wrapper = (...args) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
-		const promise = new Promise(async (resolve) => {
+		const promise = new Promise(async (resolve, reject) => {
 			if (prerendering) {
 				throw new Error(
 					'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
@@ -50,13 +50,17 @@ export function query(fn) {
 
 			// TODO don't do the additional work when we're being called from the client?
 			const event = getRequestEvent();
-			const result = await get_response(
-				/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-				args,
-				event,
-				() => fn(...args)
-			);
-			return resolve(result);
+			try {
+				const result = await get_response(
+					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+					args,
+					event,
+					() => fn(...args)
+				);
+				return resolve(result);
+			} catch (e) {
+				reject(e);
+			}
 		});
 
 		promise.refresh = async () => {
