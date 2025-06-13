@@ -14,6 +14,6 @@
 			"types": ["../../../../types/internal"]
 		}
 	},
-	"include": ["./**/*.js"],
+	"include": ["./**/*.js", "./**/*.ts"],
 	"exclude": ["./**/.svelte-kit/**"]
 }

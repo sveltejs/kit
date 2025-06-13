@@ -5,6 +5,7 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
+import { s } from '../../../utils/misc.js';
 
 /**
  *  @typedef {{
@@ -48,6 +49,67 @@ export function write_all_types(config, manifest_data) {
 			}
 		}
 	}
+
+	/** @type {string[]} */
+	const pathnames = [];
+
+	/** @type {string[]} */
+	const dynamic_routes = [];
+
+	/** @type {string[]} */
+	const layouts = [];
+
+	for (const route of manifest_data.routes) {
+		if (route.params.length > 0) {
+			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
+			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
+
+			dynamic_routes.push(route_type);
+
+			pathnames.push(
+				`\`${route.id.replace(/\/\[\[[^\]]+\]\]/g, '${string}').replace(/\/\[[^\]]+\]/g, '/${string}')}\` & {}`
+			);
+		} else {
+			pathnames.push(s(route.id));
+		}
+
+		/** @type {Map<string, boolean>} */
+		const child_params = new Map(route.params.map((p) => [p.name, p.optional]));
+
+		for (const child of manifest_data.routes.filter((r) => r.id.startsWith(route.id))) {
+			for (const p of child.params) {
+				if (!child_params.has(p.name)) {
+					child_params.set(p.name, true); // always optional
+				}
+			}
+		}
+
+		const layout_params = Array.from(child_params)
+			.map(([name, optional]) => `${name}${optional ? '?:' : ':'} string`)
+			.join('; ');
+
+		const layout_type = `${s(route.id)}: ${layout_params.length > 0 ? `{ ${layout_params} }` : 'undefined'}`;
+		layouts.push(layout_type);
+	}
+
+	try {
+		fs.mkdirSync(types_dir, { recursive: true });
+	} catch {}
+
+	fs.writeFileSync(
+		`${types_dir}/index.d.ts`,
+		[
+			`type DynamicRoutes = {\n\t${dynamic_routes.join(';\n\t')}\n};`,
+			`type Layouts = {\n\t${layouts.join(';\n\t')}\n};`,
+			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
+			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
+			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
+			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
+			`export type Pathname = ${pathnames.join(' | ')};`,
+			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
+			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
+		].join('\n\n')
+	);
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
