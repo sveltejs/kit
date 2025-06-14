@@ -1,6 +1,4 @@
 ---
-'create-svelte': major
-'svelte-migrate': major
 '@sveltejs/package': major
 '@sveltejs/kit': major
 ---
