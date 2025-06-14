@@ -711,7 +711,7 @@ Tips:
 							}
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node20.13' : undefined
+						target: ssr ? 'node20.12' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
