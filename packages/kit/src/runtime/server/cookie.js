@@ -1,5 +1,9 @@
 import { parse, serialize } from 'cookie';
-import { add_data_suffix, normalize_path, resolve } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { add_data_suffix } from '../pathname.js';
+
+// eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
+const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -25,13 +29,13 @@ function validate_options(options) {
 /**
  * @param {Request} request
  * @param {URL} url
- * @param {import('types').TrailingSlash} trailing_slash
  */
-export function get_cookies(request, url, trailing_slash) {
+export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = parse(header, { decode: (value) => value });
 
-	const normalized_url = normalize_path(url.pathname, trailing_slash);
+	/** @type {string | undefined} */
+	let normalized_url;
 
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
@@ -52,7 +56,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
 			const c = new_cookies[name];
@@ -64,8 +68,7 @@ export function get_cookies(request, url, trailing_slash) {
 				return c.value;
 			}
 
-			const decoder = opts?.decode || decodeURIComponent;
-			const req_cookies = parse(header, { decode: decoder });
+			const req_cookies = parse(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -89,11 +92,10 @@ export function get_cookies(request, url, trailing_slash) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} opts
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		getAll(opts) {
-			const decoder = opts?.decode || decodeURIComponent;
-			const cookies = parse(header, { decode: decoder });
+			const cookies = parse(header, { decode: opts?.decode });
 
 			for (const c of Object.values(new_cookies)) {
 				if (
@@ -113,6 +115,16 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
+			// TODO: remove this check in 3.0
+			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
+			if (illegal_characters) {
+				console.warn(
+					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(
+						' and '
+					)}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
+				);
+			}
+
 			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
@@ -137,6 +149,9 @@ export function get_cookies(request, url, trailing_slash) {
 			let path = options.path;
 
 			if (!options.domain || options.domain === url.hostname) {
+				if (!normalized_url) {
+					throw new Error('Cannot serialize cookies until after the route is determined');
+				}
 				path = resolve(normalized_url, path);
 			}
 
@@ -178,12 +193,20 @@ export function get_cookies(request, url, trailing_slash) {
 			.join('; ');
 	}
 
+	/** @type {Array<() => void>} */
+	const internal_queue = [];
+
 	/**
 	 * @param {string} name
 	 * @param {string} value
 	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
+		if (!normalized_url) {
+			internal_queue.push(() => set_internal(name, value, options));
+			return;
+		}
+
 		let path = options.path;
 
 		if (!options.domain || options.domain === url.hostname) {
@@ -208,7 +231,15 @@ export function get_cookies(request, url, trailing_slash) {
 		}
 	}
 
-	return { cookies, new_cookies, get_cookie_header, set_internal };
+	/**
+	 * @param {import('types').TrailingSlash} trailing_slash
+	 */
+	function set_trailing_slash(trailing_slash) {
+		normalized_url = normalize_path(url.pathname, trailing_slash);
+		internal_queue.forEach((fn) => fn());
+	}
+
+	return { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash };
 }
 
 /**

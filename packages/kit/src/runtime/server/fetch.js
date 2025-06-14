@@ -1,6 +1,8 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
 import * as paths from '__sveltekit/paths';
+import { read_implementation } from '__sveltekit/server';
+import { has_prerendered_path } from './utils.js';
 
 /**
  * @param {{
@@ -81,8 +83,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename);
-				const is_asset_html = manifest.assets.has(filename_html);
+				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset_html =
+					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
@@ -95,8 +98,27 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
+					} else if (read_implementation && file in manifest._.server_assets) {
+						const length = manifest._.server_assets[file];
+						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+
+						return new Response(read_implementation(file), {
+							headers: {
+								'Content-Length': '' + length,
+								'Content-Type': type
+							}
+						});
 					}
 
+					return await fetch(request);
+				}
+
+				if (has_prerendered_path(manifest, paths.base + decoded)) {
+					// The path of something prerendered could match a different route
+					// that is still in the manifest, leading to the wrong route being loaded.
+					// We therefore bail early here. The prerendered logic is different for
+					// each adapter, (except maybe for prerendered redirects)
+					// so we need to make an actual HTTP request.
 					return await fetch(request);
 				}
 
@@ -123,10 +145,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				const response = await respond(request, options, manifest, {
-					...state,
-					depth: state.depth + 1
-				});
+				const response = await internal_fetch(request, options, manifest, state);
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
@@ -172,4 +191,44 @@ function normalize_fetch_input(info, init, url) {
 	}
 
 	return new Request(typeof info === 'string' ? new URL(info, url) : info, init);
+}
+
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+async function internal_fetch(request, options, manifest, state) {
+	if (request.signal) {
+		if (request.signal.aborted) {
+			throw new DOMException('The operation was aborted.', 'AbortError');
+		}
+
+		let remove_abort_listener = () => {};
+		/** @type {Promise<never>} */
+		const abort_promise = new Promise((_, reject) => {
+			const on_abort = () => {
+				reject(new DOMException('The operation was aborted.', 'AbortError'));
+			};
+			request.signal.addEventListener('abort', on_abort, { once: true });
+			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+		});
+
+		const result = await Promise.race([
+			respond(request, options, manifest, {
+				...state,
+				depth: state.depth + 1
+			}),
+			abort_promise
+		]);
+		remove_abort_listener();
+		return result;
+	} else {
+		return await respond(request, options, manifest, {
+			...state,
+			depth: state.depth + 1
+		});
+	}
 }

@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { styleText } from 'node:util';
+import { load_pkg_json } from './config.js';
 
 /**
  * @param {import("./types.js").Options} options
@@ -19,8 +18,14 @@ export function create_validator(options) {
 		},
 		validate() {
 			/** @type {Record<string, any>} */
-			const pkg = JSON.parse(readFileSync(join(options.cwd, 'package.json'), 'utf-8'));
+			const pkg = load_pkg_json(options.cwd);
 			const warnings = validate(pkg);
+			if (Object.keys(pkg).length === 0) {
+				warnings.push(
+					'No package.json found in the current directory. Please create one or run this command in a directory containing one.'
+				);
+			}
+
 			// Just warnings, not errors, because
 			// - would be annoying in watch mode (would have to restart the server)
 			// - maybe there's a custom post-build script that fixes some of these
@@ -81,7 +86,7 @@ export function _create_validator(options) {
 			[...imports].filter((i) => i.startsWith('$app/')).length === 1
 		) {
 			warnings.push(
-				'Avoid usage of `$app/environment` in your code, if you want to library to work for people not using SvelteKit (only regular Svelte, for example). ' +
+				'Avoid usage of `$app/environment` in your code, if you want the library to work for people not using SvelteKit (only regular Svelte, for example). ' +
 					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
 			);
 		}
@@ -120,7 +125,7 @@ export function _create_validator(options) {
 				warnings.push(
 					'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
 						'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
-						'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+						'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 				);
 			}
 
@@ -143,7 +148,7 @@ export function _create_validator(options) {
 		} else {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
-					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
 			);
 		}
 

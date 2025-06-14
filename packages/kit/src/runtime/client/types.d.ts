@@ -1,16 +1,30 @@
 import { SvelteComponent } from 'svelte';
-import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
+import {
+	ClientHooks,
+	CSRPageNode,
+	CSRPageNodeLoader,
+	CSRRoute,
+	CSRRouteServer,
+	ServerDataNode,
+	TrailingSlash,
+	Uses
+} from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
 
 export interface SvelteKitApp {
 	/**
-	 * A list of all the error/layout/page nodes used in the app
+	 * A list of all the error/layout/page nodes used in the app.
+	 * - In case of router.resolution=client, this is filled completely upfront.
+	 * - In case of router.resolution=server, this is filled with the root layout and root error page
+	 *   at the beginning and then filled up as the user navigates around the app, loading new nodes
 	 */
 	nodes: CSRPageNodeLoader[];
 
 	/**
 	 * A list of all layout node ids that have a server load function.
 	 * Pages are not present because it's shorter to encode it on the leaf itself.
+	 *
+	 * In case of router.resolution=server, this only contains one entry for the root layout.
 	 */
 	server_loads: number[];
 
@@ -19,12 +33,28 @@ export interface SvelteKitApp {
 	 * is parsed into an array of routes on startup. The numbers refer to the indices in `nodes`.
 	 * If the leaf number is negative, it means it does use a server load function and the complement is the node index.
 	 * The route layout and error nodes are not referenced, they are always number 0 and 1 and always apply.
+	 *
+	 * In case of router.resolution=server, this object is empty, as resolution happens on the server.
 	 */
 	dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
+	/**
+	 * A map of `[matcherName: string]: (..) => boolean`, which is used to match route parameters.
+	 *
+	 * In case of router.resolution=server, this object is empty, as resolution happens on the server.
+	 */
 	matchers: Record<string, ParamMatcher>;
 
 	hooks: ClientHooks;
+
+	decode: (type: string, value: any) => any;
+
+	decoders: Record<string, (data: any) => any>;
+
+	/**
+	 * Whether or not we're using hash-based routing
+	 */
+	hash: boolean;
 
 	root: typeof SvelteComponent;
 }
@@ -54,7 +84,7 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		constructors: Array<typeof SvelteComponent>;
-		components?: Array<SvelteComponent>;
+		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
@@ -83,4 +113,16 @@ export interface NavigationState {
 	params: Record<string, string>;
 	route: CSRRoute | null;
 	url: URL;
+}
+
+export interface HydrateOptions {
+	status: number;
+	error: App.Error | null;
+	node_ids: number[];
+	params: Record<string, string>;
+	route: { id: string | null };
+	/** Only used when `router.resolution=server`; can then still be undefined in case of 404 */
+	server_route?: CSRRouteServer;
+	data: Array<ServerDataNode | null>;
+	form: Record<string, any> | null;
 }

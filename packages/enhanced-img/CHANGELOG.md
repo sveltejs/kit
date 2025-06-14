@@ -1,5 +1,113 @@
 # @sveltejs/enhanced-img
 
+## 0.6.0
+### Minor Changes
+
+
+- feat: add validation to ensure plugin occurs in correct order ([`1c3f36dc10265fb79c64643c3d7a91469d34e697`](https://github.com/sveltejs/kit/commit/1c3f36dc10265fb79c64643c3d7a91469d34e697))
+
+## 0.5.1
+### Patch Changes
+
+
+- chore(deps): upgrade sharp to 0.34.1 ([#13611](https://github.com/sveltejs/kit/pull/13611))
+
+## 0.5.0
+### Minor Changes
+
+
+- feat: add support for targeting `enhanced\:img` in CSS ([#13617](https://github.com/sveltejs/kit/pull/13617))
+
+## 0.4.4
+### Patch Changes
+
+
+- fix: handle duplicate SVG images ([`8073d7c7dcc391d406c658729221a18ac6f18102`](https://github.com/sveltejs/kit/commit/8073d7c7dcc391d406c658729221a18ac6f18102))
+
+## 0.4.3
+### Patch Changes
+
+
+- fix: properly handle multiple SVGs ([#13127](https://github.com/sveltejs/kit/pull/13127))
+
+## 0.4.2
+### Patch Changes
+
+
+- feat: set intrinsic width and height for SVGs ([#13126](https://github.com/sveltejs/kit/pull/13126))
+
+
+- perf: directly inline values since Svelte no longer inlines variables into template ([#13035](https://github.com/sveltejs/kit/pull/13035))
+
+## 0.4.1
+### Patch Changes
+
+
+- fix: correctly handle `<enhanced:img />` elements nested in other DOM elements ([#12945](https://github.com/sveltejs/kit/pull/12945))
+
+## 0.4.0
+### Minor Changes
+
+
+- breaking: require Svelte 5 ([#12822](https://github.com/sveltejs/kit/pull/12822))
+
+## 0.3.10
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 0.3.9
+### Patch Changes
+
+
+- chore: upgrade svelte-parse-markup ([#12793](https://github.com/sveltejs/kit/pull/12793))
+
+## 0.3.8
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 0.3.7
+### Patch Changes
+
+
+- fix: avoid duplicating width/height attributes ([#12673](https://github.com/sveltejs/kit/pull/12673))
+
+## 0.3.6
+### Patch Changes
+
+
+- fix: address Svelte 5 warning ([`ec04dae73702c99652e4972d2b7363f2c11ccf5a`](https://github.com/sveltejs/kit/commit/ec04dae73702c99652e4972d2b7363f2c11ccf5a))
+
+## 0.3.5
+### Patch Changes
+
+
+- perf: hoist vite asset declarations to module block ([#12627](https://github.com/sveltejs/kit/pull/12627))
+
+## 0.3.4
+### Patch Changes
+
+
+- perf: apply performance optimization to dev srcset ([#12621](https://github.com/sveltejs/kit/pull/12621))
+
+## 0.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 0.3.2
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+
+- fix: ensure src attribute is properly formed ([`65931f276ac2102032e3032c864a472eee19b7bb`](https://github.com/sveltejs/kit/commit/65931f276ac2102032e3032c864a472eee19b7bb))
+
 ## 0.3.1
 ### Patch Changes
 

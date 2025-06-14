@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import fs from 'node:fs';
 import url from 'node:url';
 
@@ -28,7 +29,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 /**
  * @param {string} cwd
- * @returns Record<string, any>
+ * @returns {Record<string, any>}
  */
 export function load_pkg_json(cwd = process.cwd()) {
 	const pkg_json_file = path.join(cwd, 'package.json');

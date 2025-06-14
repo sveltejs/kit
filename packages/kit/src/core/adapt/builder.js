@@ -137,6 +137,7 @@ export function create_builder({
 						generateManifest: ({ relativePath }) =>
 							generate_manifest({
 								build_data,
+								prerendered: [],
 								relative_path: relativePath,
 								routes: Array.from(filtered)
 							})
@@ -183,6 +184,7 @@ export function create_builder({
 		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
+				prerendered: prerendered.paths,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))

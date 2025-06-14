@@ -1,5 +1,65 @@
 # @sveltejs/package
 
+## 2.3.11
+### Patch Changes
+
+
+- fix: handle missing package.json gracefully ([#13691](https://github.com/sveltejs/kit/pull/13691))
+
+## 2.3.10
+### Patch Changes
+
+
+- chore: update to chokidar 4.0.3 ([#13381](https://github.com/sveltejs/kit/pull/13381))
+
+## 2.3.9
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency for more up-to-date `d.ts` output ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+
+- fix: adjust declaration map paths ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+## 2.3.8
+### Patch Changes
+
+
+- fix: resolve aliases more robustly ([#13351](https://github.com/sveltejs/kit/pull/13351))
+
+## 2.3.7
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 2.3.6
+### Patch Changes
+
+
+- docs: demonstrate sv migrate over prior commands ([#12840](https://github.com/sveltejs/kit/pull/12840))
+
+## 2.3.5
+### Patch Changes
+
+
+- fix: use input tsconfig when calling emitDts ([#12612](https://github.com/sveltejs/kit/pull/12612))
+
+
+- chore(deps): update dependency chokidar to v4 ([#12671](https://github.com/sveltejs/kit/pull/12671))
+
+## 2.3.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.3.3
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 2.3.2
 
 ### Patch Changes

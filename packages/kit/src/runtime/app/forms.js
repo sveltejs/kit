@@ -1,7 +1,8 @@
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-import { applyAction } from '../client/client.js';
+import { app as client_app, applyAction } from '../client/client.js';
+import { app as server_app } from '../server/app.js';
 
 export { applyAction };
 
@@ -29,9 +30,13 @@ export { applyAction };
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
+
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data);
+		// the decoders should never be initialised at the top-level because `app`
+		// will not initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
+
 	return parsed;
 }
 
@@ -57,12 +62,15 @@ function clone(element) {
  *
  * If this function or its return value isn't set, it
  * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
- * - updates `$page.status`
+ * - updates `page.status`
  * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
  * - redirects in case of a redirect response
  * - redirects to the nearest error page in case of an unexpected error
  *
  * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+ * It accepts an options object
+ * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
+ * - `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
@@ -104,7 +112,7 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
-			applyAction(result);
+			await applyAction(result);
 		}
 	};
 
@@ -200,7 +208,7 @@ export function enhance(form_element, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
-		callback({
+		await callback({
 			action,
 			formData: form_data,
 			formElement: form_element,

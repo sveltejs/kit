@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
@@ -269,6 +270,12 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
 			);
 		}
+
+		if (route.leaf.server) {
+			exports.push('export type PageProps = { data: PageData; form: ActionData }');
+		} else {
+			exports.push('export type PageProps = { data: PageData }');
+		}
 	}
 
 	if (route.layout) {
@@ -332,6 +339,10 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
 		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+
+		exports.push(
+			'export type LayoutProps = { data: LayoutData; children: import("svelte").Snippet }'
+		);
 	}
 
 	if (route.endpoint) {
@@ -584,7 +595,7 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	/** @param {string} matcher */
 	const path_to_matcher = (matcher) =>
-		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher)));
+		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
 
 	return `{ ${params
 		.map(

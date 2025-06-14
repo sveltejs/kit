@@ -10,6 +10,7 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
 		const { pattern, params } = parse_route_id(id);
 
+		/** @type {import('types').CSRRoute} */
 		const route = {
 			id,
 			/** @param {string} path */
@@ -54,4 +55,23 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 		// encoded in the layouts array, to save space
 		return id === undefined ? id : [layouts_with_server_load.has(id), nodes[id]];
 	}
+}
+
+/**
+ * @param {import('types').CSRRouteServer} input
+ * @param {import('types').CSRPageNodeLoader[]} app_nodes Will be modified if a new node is loaded that's not already in the array
+ * @returns {import('types').CSRRoute}
+ */
+export function parse_server_route({ nodes, id, leaf, layouts, errors }, app_nodes) {
+	return {
+		id,
+		exec: () => ({}), // dummy function; exec already happened on the server
+		// By writing to app_nodes only when a loader at that index is not already defined,
+		// we ensure that loaders have referential equality when they load the same node.
+		// Code elsewhere in client.js relies on this referential equality to determine
+		// if a loader is different and should therefore (re-)run.
+		errors: errors.map((n) => (n ? (app_nodes[n] ||= nodes[n]) : undefined)),
+		layouts: layouts.map((n) => (n ? [n[0], (app_nodes[n[1]] ||= nodes[n[1]])] : undefined)),
+		leaf: [leaf[0], (app_nodes[leaf[1]] ||= nodes[leaf[1]])]
+	};
 }
