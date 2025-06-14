@@ -99,4 +99,31 @@ test.describe('hash based navigation', () => {
 		const url = new URL(page.url());
 		expect(url.hash).toBe('#/anchor#test');
 	});
+
+	test('navigation history works', async ({ page }) => {
+		await page.goto('/');
+
+		await page.locator('a[href="/#/a"]').click();
+		await page.waitForURL('/#/a');
+
+		await page.locator('a[href="/#/b"]').click();
+		await page.waitForURL('/#/b');
+
+		await page.goBack();
+		expect(page.locator('p')).toHaveText('a');
+
+		await page.goForward();
+		expect(page.locator('p')).toHaveText('b');
+	});
+
+	test('sequential focus navigation point is set correctly', async ({ page, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+		await page.goto('/#/focus');
+		await page.locator('a[href="#/focus/a#p"]').click();
+		await page.waitForURL('#/focus/a#p');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+		await expect(page.locator('button[id="button3"]')).toBeFocused();
+	});
 });

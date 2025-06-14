@@ -235,7 +235,7 @@ test.describe('Load', () => {
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
-		expect(requests.filter((r) => !r.includes('_app/route'))).toEqual([]);
+		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
@@ -335,8 +335,8 @@ test.describe('Load', () => {
 	}
 });
 
-test.describe('Page options', () => {
-	test('applies generated component styles with ssr=false (hides announcer)', async ({
+test.describe('SPA mode / no SSR', () => {
+	test('applies generated component styles (hides announcer)', async ({
 		page,
 		clicknav,
 		get_computed_style
@@ -346,9 +346,7 @@ test.describe('Page options', () => {
 
 		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
-});
 
-test.describe('SPA mode / no SSR', () => {
 	test('Can use browser-only global on client-only page through ssr config in handle', async ({
 		page,
 		read_errors
@@ -358,7 +356,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in +layout.js', async ({
+	test('can use browser-only global on client-only page through ssr config in +layout.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -367,7 +365,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in +page.js', async ({
+	test('can use browser-only global on client-only page through ssr config in +page.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -376,13 +374,18 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
 	});
 
-	test('Cannot use browser-only global on page because of ssr config in +page.js', async ({
+	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
+	});
+
+	test('afterNavigate is only called once during start', async ({ page }) => {
+		await page.goto('/no-ssr/after-navigate');
+		await expect(page.locator('p')).toHaveText('enter 1');
 	});
 });
 
@@ -827,32 +830,56 @@ test.describe('Invalidation', () => {
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-preload-code', async ({ page }) => {
 		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => {
-			requests.push(r.url());
+		const responses = [];
+
+		const nodes_location = process.env.DEV
+			? '.svelte-kit/generated/client/nodes/'
+			: '/_app/immutable/nodes/';
+
+		page.on('response', async (response) => {
+			const url = response.url();
+			if (url.includes(nodes_location)) {
+				responses.push(url);
+			}
 		});
 
 		// eager
 		await page.goto('/data-sveltekit/preload-code');
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		await page.locator('#eager').hover();
+		await page.locator('#eager').dispatchEvent('touchstart');
+		// expect 4 nodes on initial load: root layout, root error, current page, and eager preload
+		expect(responses.length).toEqual(4);
 
 		// viewport
-		requests.length = 0;
+		responses.length = 0;
 		page.locator('#viewport').scrollIntoViewIfNeeded();
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		await page.locator('#viewport').hover();
+		await page.locator('#viewport').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 
 		// hover
-		requests.length = 0;
-		await page.locator('#hover').dispatchEvent('mousemove');
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		responses.length = 0;
+		await page.locator('#hover').hover();
+		await page.locator('#hover').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 
 		// tap
-		requests.length = 0;
+		responses.length = 0;
+		await page.locator('#tap').hover();
 		await page.locator('#tap').dispatchEvent('touchstart');
-		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
-		expect(requests.length).toBeGreaterThanOrEqual(1);
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(responses.length).toEqual(1);
 	});
 
 	test('data-sveltekit-preload-data', async ({ page }) => {
@@ -863,42 +890,59 @@ test.describe('data-sveltekit attributes', () => {
 				req
 					.response()
 					.then(
-						(res) => res.text(),
+						(res) => res?.text(),
 						() => ''
 					)
-					.then((response) => {
-						if (response.includes('this string should only appear in this preloaded file')) {
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
 							requests.push(req.url());
 						}
 					});
 			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
 		});
 
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#one').dispatchEvent('mousemove');
+		await page.locator('#one').hover();
+		await page.locator('#one').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#two').dispatchEvent('mousemove');
+		await page.locator('#two').hover();
+		await page.locator('#two').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
-		await page.locator('#three').dispatchEvent('mousemove');
+		await page.locator('#three').hover();
+		await page.locator('#three').dispatchEvent('touchstart');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(0);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#tap').hover();
+		await page.locator('#tap').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
@@ -965,6 +1009,47 @@ test.describe('data-sveltekit attributes', () => {
 		]);
 
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+	});
+
+	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
+		page
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res?.text(),
+						() => ''
+					)
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
+							requests.push(req.url());
+						}
+					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#hover-then-tap').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
+
+		await page.locator('#hover-then-tap').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -1366,6 +1451,31 @@ test.describe('reroute', () => {
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
+	});
+
+	test('Apply async reroute during client side navigation', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/a']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
+		);
+	});
+
+	test('Apply async prerendered reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/async');
+		await page.click("a[href='/reroute/async/c']");
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/prerendered');
+		await page.click("a[href='/reroute/prerendered/to-destination']");
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
 	});
 
 	test('Apply reroute after client-only redirects', async ({ page }) => {

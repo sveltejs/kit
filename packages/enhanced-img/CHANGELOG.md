@@ -1,5 +1,23 @@
 # @sveltejs/enhanced-img
 
+## 0.6.0
+### Minor Changes
+
+
+- feat: add validation to ensure plugin occurs in correct order ([`1c3f36dc10265fb79c64643c3d7a91469d34e697`](https://github.com/sveltejs/kit/commit/1c3f36dc10265fb79c64643c3d7a91469d34e697))
+
+## 0.5.1
+### Patch Changes
+
+
+- chore(deps): upgrade sharp to 0.34.1 ([#13611](https://github.com/sveltejs/kit/pull/13611))
+
+## 0.5.0
+### Minor Changes
+
+
+- feat: add support for targeting `enhanced\:img` in CSS ([#13617](https://github.com/sveltejs/kit/pull/13617))
+
 ## 0.4.4
 ### Patch Changes
 

@@ -1,5 +1,50 @@
 # @sveltejs/adapter-vercel
 
+## 5.7.2
+### Patch Changes
+
+
+- chore(deps): upgrade to esbuild 0.25.4 ([#13770](https://github.com/sveltejs/kit/pull/13770))
+
+## 5.7.1
+### Patch Changes
+
+
+- chore(deps): upgrade esbuild to 0.25.2 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+
+- fix: include the `edge-light` bundling condition when building edge functions ([#13720](https://github.com/sveltejs/kit/pull/13720))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 5.7.0
+### Minor Changes
+
+
+- feat: create symlink functions for each route, for better observability ([#13679](https://github.com/sveltejs/kit/pull/13679))
+
+
+### Patch Changes
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
+## 5.6.3
+### Patch Changes
+
+
+- chore(deps): upgrade @vercel/nft to fix glob deprecation warnings ([`b1e9781a6dff41841d8e1509311d948421956746`](https://github.com/sveltejs/kit/commit/b1e9781a6dff41841d8e1509311d948421956746))
+
+## 5.6.2
+### Patch Changes
+
+
+- fix: change server-side route resolution endpoint ([#13461](https://github.com/sveltejs/kit/pull/13461))
+
+- Updated dependencies [[`9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95`](https://github.com/sveltejs/kit/commit/9612a60a0277aef0ab4723a0e7ed8dd03a7ffb95), [`3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd`](https://github.com/sveltejs/kit/commit/3d88ae33fc14b08a1d48c2cb7315739c8cfcd9fd)]:
+  - @sveltejs/kit@2.17.2
+
 ## 5.6.1
 ### Patch Changes
 

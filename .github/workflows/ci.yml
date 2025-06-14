@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -65,7 +65,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -95,7 +95,7 @@ jobs:
       matrix:
         include:
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
           - node-version: 18
@@ -107,7 +107,7 @@ jobs:
             e2e-browser: 'webkit'
             mode: 'dev'
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
           - node-version: 18
@@ -123,7 +123,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -157,7 +157,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -183,7 +183,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: 18

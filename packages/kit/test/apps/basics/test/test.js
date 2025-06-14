@@ -569,6 +569,14 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('404');
 	});
+
+	test('AbortSignal works with internal fetch optimization', async ({ page }) => {
+		await page.goto('/load/fetch-abort-signal');
+
+		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
+		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
+		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
+	});
 });
 
 test.describe('Nested layouts', () => {
@@ -1530,5 +1538,22 @@ test.describe('Serialization', () => {
 		await page.goto('/serialization-form2');
 		await page.click('button');
 		expect(await page.textContent('h1')).toBe('It works!');
+	});
+});
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in hooks, load functions and actions', async ({ page, clicknav }) => {
+		await page.goto('/get-request-event');
+		await clicknav('[href="/get-request-event/with-message"]');
+
+		expect(await page.textContent('h1')).toBe('hello from hooks.server.js');
+
+		await page.locator('input[name="message"]').fill('hello');
+		await page.click('button');
+
+		expect(await page.textContent('h1')).toBe('from form: hello');
+
+		await page.goto('/get-request-event/with-error');
+		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
 	});
 });

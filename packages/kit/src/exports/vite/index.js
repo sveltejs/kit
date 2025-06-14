@@ -34,8 +34,9 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { resolve_peer_dependency } from '../../utils/import.js';
+import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { crawlFrameworkPkgs } from 'vitefu';
 
 const cwd = process.cwd();
 
@@ -155,7 +156,7 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+	const { svelte } = await import_peer('@sveltejs/vite-plugin-svelte');
 
 	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
@@ -181,7 +182,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	const vite = await resolve_peer_dependency('vite');
+	const vite = await import_peer('vite');
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -227,7 +228,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		config(config, config_env) {
+		async config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -249,6 +250,20 @@ async function kit({ svelte_config }) {
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			const generated = path.posix.join(kit.outDir, 'generated');
+
+			const packages_depending_on_svelte_kit = (
+				await crawlFrameworkPkgs({
+					root: cwd,
+					isBuild: is_build,
+					viteUserConfig: config,
+					isSemiFrameworkPkgByJson: (pkg_json) => {
+						return (
+							!!pkg_json.dependencies?.['@sveltejs/kit'] ||
+							!!pkg_json.peerDependencies?.['@sveltejs/kit']
+						);
+					}
+				})
+			).ssr.noExternal;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -306,7 +321,11 @@ async function kit({ svelte_config }) {
 						//    when it is detected to keep our virtual modules working.
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
-						'@sveltejs/kit'
+						'@sveltejs/kit',
+						// We need to bundle any packages depending on @sveltejs/kit so that
+						// everyone uses the same instances of classes such as `Redirect`
+						// which we use in `instanceof` checks
+						...packages_depending_on_svelte_kit
 					]
 				}
 			};
@@ -678,7 +697,19 @@ Tips:
 								manualChunks: split ? undefined : () => 'bundle',
 								inlineDynamicImports: false
 							},
-							preserveEntrySignatures: 'strict'
+							preserveEntrySignatures: 'strict',
+							onwarn(warning, handler) {
+								if (
+									warning.code === 'MISSING_EXPORT' &&
+									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
+								) {
+									// ignore e.g. undefined `handleError` hook when
+									// referencing `client_hooks.handleError`
+									return;
+								}
+
+								handler(warning);
+							}
 						},
 						ssrEmitAssets: true,
 						target: ssr ? 'node18.13' : undefined
@@ -775,7 +806,7 @@ Tips:
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -806,26 +837,17 @@ Tips:
 					})};\n`
 				);
 
-				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(
-					out,
-					kit,
-					manifest_data,
-					server_manifest,
-					null,
-					null,
-					svelte_config.output
-				);
-
-				const metadata = await analyse({
+				const { metadata, static_exports } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
 					server_manifest,
 					tracked_features,
-					env: { ...env.private, ...env.public }
+					env: { ...env.private, ...env.public },
+					out,
+					output_config: svelte_config.output
 				});
 
 				log.info('Building app');
@@ -840,7 +862,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
+				const { output: client_chunks } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -866,8 +888,12 @@ Tips:
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				const deps_of = /** @param {string} f */ (f) =>
-					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				/**
+				 * @param {string} entry
+				 * @param {boolean} [add_dynamic_css]
+				 */
+				const deps_of = (entry, add_dynamic_css = false) =>
+					find_deps(client_manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
 					const start = deps_of(`${runtime_directory}/client/entry.js`);
@@ -879,7 +905,7 @@ Tips:
 						imports: [...start.imports, ...app.imports],
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
@@ -888,14 +914,20 @@ Tips:
 					// similar to that on the client, with as much information computed upfront so that we
 					// don't need to include any code of the actual routes in the server bundle.
 					if (svelte_config.kit.router.resolution === 'server') {
-						build_data.client.nodes = manifest_data.nodes.map((node, i) => {
+						const nodes = manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
-								return resolve_symlinks(
+								const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+								const deps = deps_of(entry, true);
+								const file = resolve_symlinks(
 									client_manifest,
 									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`
 								).chunk.file;
+
+								return { file, css: deps.stylesheets };
 							}
 						});
+						build_data.client.nodes = nodes.map((node) => node?.file);
+						build_data.client.css = nodes.map((node) => node?.css);
 
 						build_data.client.routes = compact(
 							manifest_data.routes.map((route) => {
@@ -922,14 +954,14 @@ Tips:
 						imports: start.imports,
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
 						const style = /** @type {import('rollup').OutputAsset} */ (
-							output.find(
+							client_chunks.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
 									chunk.names.length === 1 &&
@@ -944,11 +976,6 @@ Tips:
 					}
 				}
 
-				const css = output.filter(
-					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
-					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
-				);
-
 				// regenerate manifest now that we have client entry...
 				fs.writeFileSync(
 					manifest_path,
@@ -961,14 +988,16 @@ Tips:
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(
+				await build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					css,
-					svelte_config.kit.output
+					bundle,
+					client_chunks,
+					svelte_config.kit.output,
+					static_exports
 				);
 
 				// ...and prerender

@@ -331,3 +331,40 @@ export function is_external_url(url, base, hash_routing) {
 
 	return false;
 }
+
+/** @type {Record<string, boolean>} */
+const seen = {};
+
+/**
+ * Used for server-side resolution, to replicate Vite's CSS loading behaviour in production.
+ *
+ * Closely modelled after https://github.com/vitejs/vite/blob/3dd12f4724130fdf8ba44c6d3252ebdff407fd47/packages/vite/src/node/plugins/importAnalysisBuild.ts#L214
+ * (which ideally we could just use directly, but it's not exported)
+ * @param {string[]} deps
+ */
+export function load_css(deps) {
+	if (__SVELTEKIT_CLIENT_ROUTING__) return;
+
+	const csp_nonce_meta = /** @type {HTMLMetaElement} */ (
+		document.querySelector('meta[property=csp-nonce]')
+	);
+	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
+
+	for (const dep of deps) {
+		if (dep in seen) continue;
+		seen[dep] = true;
+
+		if (document.querySelector(`link[href="${dep}"][rel="stylesheet"]`)) {
+			continue;
+		}
+
+		const link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.crossOrigin = '';
+		link.href = dep;
+		if (csp_nonce) {
+			link.setAttribute('nonce', csp_nonce);
+		}
+		document.head.appendChild(link);
+	}
+}

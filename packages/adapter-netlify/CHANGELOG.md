@@ -1,5 +1,35 @@
 # @sveltejs/adapter-netlify
 
+## 5.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade to esbuild 0.25.4 ([#13770](https://github.com/sveltejs/kit/pull/13770))
+
+## 5.0.1
+### Patch Changes
+
+
+- chore(deps): upgrade esbuild to 0.25.2 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 5.0.0
+### Major Changes
+
+
+- fix: error if the `_headers` and `_redirects` files are in the `/static` directory instead of the project root ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+## 4.4.2
+### Patch Changes
+
+
+- fix: correctly import manifest on Windows machines ([#13495](https://github.com/sveltejs/kit/pull/13495))
+
+- Updated dependencies [[`28cf64589a331ea4770c0883216c5e16d1de7496`](https://github.com/sveltejs/kit/commit/28cf64589a331ea4770c0883216c5e16d1de7496), [`ef1e8047225e7a79c6d121d8ed1a571e5ea44f08`](https://github.com/sveltejs/kit/commit/ef1e8047225e7a79c6d121d8ed1a571e5ea44f08), [`2e6527b92875976b79cc00e7b75ee0ad8b69a239`](https://github.com/sveltejs/kit/commit/2e6527b92875976b79cc00e7b75ee0ad8b69a239), [`0c0172e1463218fe63a67c587173bb3065a53c49`](https://github.com/sveltejs/kit/commit/0c0172e1463218fe63a67c587173bb3065a53c49)]:
+  - @sveltejs/kit@2.17.3
+
 ## 4.4.1
 ### Patch Changes
 

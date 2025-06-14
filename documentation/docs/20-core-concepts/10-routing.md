@@ -277,7 +277,7 @@ Like `+layout.js`, `+layout.server.js` can export [page options](page-options) â
 
 ## +server
 
-As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT`, `DELETE`, `OPTIONS`, and `HEAD` that take a `RequestEvent` argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
+As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT`, `DELETE`, `OPTIONS`, and `HEAD` that take a [`RequestEvent`](@sveltejs-kit#RequestEvent) argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
 
 For example we could create an `/api/random-number` route with a `GET` handler:
 
@@ -363,10 +363,10 @@ export async function POST({ request }) {
 Exporting the `fallback` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
 
 ```js
-// @errors: 7031
 /// file: src/routes/api/add/+server.js
 import { json, text } from '@sveltejs/kit';
 
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
 	const { a, b } = await request.json();
 	return json(a + b);

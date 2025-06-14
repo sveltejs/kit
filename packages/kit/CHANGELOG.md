@@ -1,5 +1,203 @@
 # @sveltejs/kit
 
+## 2.21.5
+### Patch Changes
+
+
+- fix: correctly set the sequential focus navigation point when using hash routing ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
+
+- fix: regression when resetting focus and the URL hash contains selector combinators or separators ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
+## 2.21.4
+### Patch Changes
+
+
+- fix: correctly access transport decoders on the client when building for a single or inline output app ([#13871](https://github.com/sveltejs/kit/pull/13871))
+
+## 2.21.3
+### Patch Changes
+
+
+- fix: correctly invalidate static analysis cache of child nodes when modifying a universal `+layout` file during dev ([#13793](https://github.com/sveltejs/kit/pull/13793))
+
+
+- fix: correctly set sequential focus navigation starting point after navigation ([#10856](https://github.com/sveltejs/kit/pull/10856))
+
+
+- fix: suppress console spam for chrome devtools requests ([#13830](https://github.com/sveltejs/kit/pull/13830))
+
+
+- fix: avoid externalising packages that depend on `@sveltejs/kit` so that libraries can also use `redirect` and `error` helpers ([#13843](https://github.com/sveltejs/kit/pull/13843))
+
+
+- fix: correctly run `deserialize` on the server ([#13686](https://github.com/sveltejs/kit/pull/13686))
+
+
+- fix: handle non-semver-style dependency versions ([#13850](https://github.com/sveltejs/kit/pull/13850))
+
+
+- fix: correctly inline stylesheets of components dynamically imported in a universal load function if they are below the configured inlineStyleThreshold ([#13723](https://github.com/sveltejs/kit/pull/13723))
+
+## 2.21.2
+### Patch Changes
+
+
+- fix: omit stack when logging 404 errors ([#13848](https://github.com/sveltejs/kit/pull/13848))
+
+## 2.21.1
+### Patch Changes
+
+
+- chore: clarify which functions `handleFetch` affects ([#13788](https://github.com/sveltejs/kit/pull/13788))
+
+
+- fix: ensure `$env` and `$app/environment` are correctly set while analysing server nodes ([#13790](https://github.com/sveltejs/kit/pull/13790))
+
+## 2.21.0
+### Minor Changes
+
+
+- feat: allow running client-side code at the top-level of universal pages/layouts when SSR is disabled and page options are only boolean or string literals ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+
+- fix: remove component code from server nodes that are never used for SSR ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+## 2.20.8
+### Patch Changes
+
+
+- fix: ensure that `ssr` and `csr` page options apply to error pages rendered as a result of a load function error on the server ([#13695](https://github.com/sveltejs/kit/pull/13695))
+
+## 2.20.7
+### Patch Changes
+
+
+- fix: regression when serializing server data ([#13709](https://github.com/sveltejs/kit/pull/13709))
+
+## 2.20.6
+### Patch Changes
+
+
+- fix: escape names of tracked search parameters ([`d3300c6a67908590266c363dba7b0835d9a194cf`](https://github.com/sveltejs/kit/commit/d3300c6a67908590266c363dba7b0835d9a194cf))
+
+## 2.20.5
+### Patch Changes
+
+
+- allow `HandleServerError` hook to access `getRequestEvent` ([#13666](https://github.com/sveltejs/kit/pull/13666))
+
+
+- fix: prevent Rollup warnings for undefined hooks ([#13687](https://github.com/sveltejs/kit/pull/13687))
+
+## 2.20.4
+### Patch Changes
+
+
+- chore: remove internal class-replacement hack that isn't needed anymore ([#13664](https://github.com/sveltejs/kit/pull/13664))
+
+## 2.20.3
+### Patch Changes
+
+
+- fix: only call `afterNavigate` once on app start when SSR is disabled ([#13593](https://github.com/sveltejs/kit/pull/13593))
+
+## 2.20.2
+### Patch Changes
+
+
+- fix: allow non-prerendered API endpoint calls during reroute when prerendering ([#13616](https://github.com/sveltejs/kit/pull/13616))
+
+## 2.20.1
+### Patch Changes
+
+
+- fix: avoid using top-level await ([#13607](https://github.com/sveltejs/kit/pull/13607))
+
+## 2.20.0
+### Minor Changes
+
+
+- feat: add `getRequestEvent` to `$app/server` ([#13582](https://github.com/sveltejs/kit/pull/13582))
+
+## 2.19.2
+### Patch Changes
+
+
+- fix: lazily load CSS for dynamically imported components ([#13564](https://github.com/sveltejs/kit/pull/13564))
+
+## 2.19.1
+### Patch Changes
+
+
+- fix: allow reroute to point to prerendered route ([#13575](https://github.com/sveltejs/kit/pull/13575))
+
+## 2.19.0
+### Minor Changes
+
+
+- feat: provide `fetch` to `reroute` ([#13549](https://github.com/sveltejs/kit/pull/13549))
+
+
+### Patch Changes
+
+
+- chore: cache reroute results ([#13548](https://github.com/sveltejs/kit/pull/13548))
+
+## 2.18.0
+### Minor Changes
+
+
+- feat: allow async `reroute` ([#13520](https://github.com/sveltejs/kit/pull/13520))
+
+
+- feat: provide `normalizeUrl` helper ([#13539](https://github.com/sveltejs/kit/pull/13539))
+
+
+### Patch Changes
+
+
+- fix: correct navigation history with hash router and ensure load functions are rerun on user changes to URL hash ([#13492](https://github.com/sveltejs/kit/pull/13492))
+
+
+- fix: include universal load assets as server assets ([#13531](https://github.com/sveltejs/kit/pull/13531))
+
+
+- fix: Include root layout and error nodes even when apps have only prerendered pages ([#13522](https://github.com/sveltejs/kit/pull/13522))
+
+
+- fix: correctly preload data on `mousedown`/`touchstart` if code was preloaded on hover ([#13530](https://github.com/sveltejs/kit/pull/13530))
+
+## 2.17.3
+### Patch Changes
+
+
+- fix: avoid simulated CORS errors with non-HTTP URLs ([#13493](https://github.com/sveltejs/kit/pull/13493))
+
+
+- fix: correctly preload links on `mousedown`/`touchstart` ([#13486](https://github.com/sveltejs/kit/pull/13486))
+
+
+- fix: load CSS when using server-side route resolution ([#13498](https://github.com/sveltejs/kit/pull/13498))
+
+
+- fix: correctly find shared entry-point CSS files during inlining ([#13431](https://github.com/sveltejs/kit/pull/13431))
+
+## 2.17.2
+### Patch Changes
+
+
+- fix: add promise return type to the `enhance` action callback ([#13420](https://github.com/sveltejs/kit/pull/13420))
+
+
+- fix: change server-side route resolution endpoint ([#13461](https://github.com/sveltejs/kit/pull/13461))
+
 ## 2.17.1
 ### Patch Changes
 

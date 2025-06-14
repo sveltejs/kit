@@ -24,10 +24,10 @@
 		"e2e-test-dep-page-svelte": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-page-universal": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-server": "file:./_test_dependencies/cjs-only",
-		"svelte": "^5.2.9",
+		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
-		"vite": "^6.0.11"
+		"vite": "^6.2.7"
 	},
 	"type": "module"
 }

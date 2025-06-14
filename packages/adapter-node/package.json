@@ -35,7 +35,7 @@
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
-		"test": "echo \"tests temporarily disabled\" # vitest run",
+		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
@@ -49,7 +49,7 @@
 		"polka": "^1.0.0-next.28",
 		"sirv": "^3.0.0",
 		"typescript": "^5.3.3",
-		"vitest": "^3.0.1"
+		"vitest": "catalog:"
 	},
 	"dependencies": {
 		"@rollup/plugin-commonjs": "^28.0.1",
