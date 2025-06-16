@@ -24,7 +24,7 @@
 		"svelte-check": "^4.1.1",
 		"redirect-pkg": "file:./_test_dependencies/redirect-pkg",
 		"typescript": "^5.5.4",
-		"vite": "^6.2.7"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

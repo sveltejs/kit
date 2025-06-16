@@ -46,7 +46,7 @@
 		"sirv": "^3.0.0",
 		"svelte": "^5.23.1",
 		"typescript": "^5.3.3",
-		"vite": "^6.2.7"
+		"vite": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"
