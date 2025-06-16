@@ -724,7 +724,7 @@ Tips:
 								hoistTransitiveImports: false
 							}
 						}
-					}
+					},
 					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
 					// see https://vite.dev/guide/rolldown#enabling-native-plugins
 					// experimental: {
@@ -754,7 +754,12 @@ Tips:
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},
-					publicDir: kit.files.assets
+					publicDir: kit.files.assets,
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://vite.dev/guide/rolldown#enabling-native-plugins
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
 			}
 
