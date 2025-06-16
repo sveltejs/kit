@@ -33,6 +33,7 @@
 		"vitefu": "^1.0.6"
 	},
 	"devDependencies": {
+		"@opentelemetry/api": "1.0.0",
 		"@playwright/test": "catalog:",
 		"@sveltejs/vite-plugin-svelte": "^5.0.1",
 		"@types/connect": "^3.4.38",
@@ -47,9 +48,15 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
+		"@opentelemetry/api": "1.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0",
 		"svelte": "^4.0.0 || ^5.0.0-next.0",
 		"vite": "^5.0.3 || ^6.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@opentelemetry/api": {
+			"optional": true
+		}
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
