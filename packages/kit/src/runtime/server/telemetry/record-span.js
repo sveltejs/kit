@@ -1,4 +1,4 @@
-/** @import { SpanAttributes, SpanAttributeValue, Span, Tracer } from '@opentelemetry/api' */
+/** @import { SpanAttributes, Span, Tracer } from '@opentelemetry/api' */
 import { SpanStatusCode } from '@opentelemetry/api';
 import { HttpError, Redirect } from '../../control.js';
 
