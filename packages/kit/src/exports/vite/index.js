@@ -1053,9 +1053,7 @@ Tips:
 							...vite_config,
 							build: {
 								...vite_config.build,
-								minify: initial_config.build?.minify ?? (
-									vite.rolldownVersion
-									? 'oxc' : 'esbuild')
+								minify: initial_config.build?.minify ?? (vite.rolldownVersion ? 'oxc' : 'esbuild')
 							}
 						},
 						manifest_data,
