@@ -6,6 +6,8 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { with_event } from '../../app/server/event.js';
+import { record_span } from '../telemetry/record-span.js';
+import { get_tracer } from '../telemetry/get-tracer.js';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
 export function is_action_json_request(event) {
@@ -247,7 +249,30 @@ async function call_action(event, actions) {
 		);
 	}
 
-	return with_event(event, () => action(event));
+	const tracer = get_tracer({ is_enabled: true }); // TODO: Make this configurable
+
+	return record_span({
+		name: 'sveltekit.action',
+		tracer,
+		attributes: {
+			'sveltekit.action.name': name,
+			'sveltekit.route.id': event.route.id || 'unknown'
+		},
+		fn: async (action_span) => {
+			const result = await with_event(event, () => action(event));
+			if (result instanceof ActionFailure) {
+				action_span.setAttributes({
+					'sveltekit.action.result.type': 'failure',
+					'sveltekit.action.result.status': result.status
+				});
+			} else {
+				action_span.setAttributes({
+					'sveltekit.action.result.type': 'success'
+				});
+			}
+			return result;
+		}
+	});
 }
 
 /** @param {any} data */

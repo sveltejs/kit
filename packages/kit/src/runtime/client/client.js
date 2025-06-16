@@ -41,6 +41,8 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { record_span } from '../server/telemetry/record-span.js';
+import { get_tracer } from '../server/telemetry/get-tracer.js';
 
 export { load_css };
 
@@ -753,10 +755,27 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			}
 		};
 
+		async function traced_load() {
+			const tracer = get_tracer({ is_enabled: true }); // TODO: Make this configurable
+
+			return record_span({
+				name: 'sveltekit.load.universal',
+				tracer,
+				attributes: {
+					'sveltekit.load.node_id': 'client-load', // TODO: can we actually get an id here?
+					'sveltekit.load.type': 'universal',
+					'sveltekit.load.environment': 'client',
+					'sveltekit.route.id': route.id || 'unknown'
+				},
+				fn: async () => (await node.universal?.load?.call(null, load_input)) ?? null
+			});
+		}
+
 		if (DEV) {
 			try {
 				lock_fetch();
-				data = (await node.universal.load.call(null, load_input)) ?? null;
+				data = await traced_load();
+
 				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 					throw new Error(
 						`a load function related to route '${route.id}' returned ${
@@ -774,7 +793,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				unlock_fetch();
 			}
 		} else {
-			data = (await node.universal.load.call(null, load_input)) ?? null;
+			data = await traced_load();
 		}
 	}
 
