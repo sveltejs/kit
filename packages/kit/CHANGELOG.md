@@ -1,5 +1,74 @@
 # @sveltejs/kit
 
+## 2.21.5
+### Patch Changes
+
+
+- fix: correctly set the sequential focus navigation point when using hash routing ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
+
+- fix: regression when resetting focus and the URL hash contains selector combinators or separators ([#13884](https://github.com/sveltejs/kit/pull/13884))
+
+## 2.21.4
+### Patch Changes
+
+
+- fix: correctly access transport decoders on the client when building for a single or inline output app ([#13871](https://github.com/sveltejs/kit/pull/13871))
+
+## 2.21.3
+### Patch Changes
+
+
+- fix: correctly invalidate static analysis cache of child nodes when modifying a universal `+layout` file during dev ([#13793](https://github.com/sveltejs/kit/pull/13793))
+
+
+- fix: correctly set sequential focus navigation starting point after navigation ([#10856](https://github.com/sveltejs/kit/pull/10856))
+
+
+- fix: suppress console spam for chrome devtools requests ([#13830](https://github.com/sveltejs/kit/pull/13830))
+
+
+- fix: avoid externalising packages that depend on `@sveltejs/kit` so that libraries can also use `redirect` and `error` helpers ([#13843](https://github.com/sveltejs/kit/pull/13843))
+
+
+- fix: correctly run `deserialize` on the server ([#13686](https://github.com/sveltejs/kit/pull/13686))
+
+
+- fix: handle non-semver-style dependency versions ([#13850](https://github.com/sveltejs/kit/pull/13850))
+
+
+- fix: correctly inline stylesheets of components dynamically imported in a universal load function if they are below the configured inlineStyleThreshold ([#13723](https://github.com/sveltejs/kit/pull/13723))
+
+## 2.21.2
+### Patch Changes
+
+
+- fix: omit stack when logging 404 errors ([#13848](https://github.com/sveltejs/kit/pull/13848))
+
+## 2.21.1
+### Patch Changes
+
+
+- chore: clarify which functions `handleFetch` affects ([#13788](https://github.com/sveltejs/kit/pull/13788))
+
+
+- fix: ensure `$env` and `$app/environment` are correctly set while analysing server nodes ([#13790](https://github.com/sveltejs/kit/pull/13790))
+
+## 2.21.0
+### Minor Changes
+
+
+- feat: allow running client-side code at the top-level of universal pages/layouts when SSR is disabled and page options are only boolean or string literals ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
+
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+
+- fix: remove component code from server nodes that are never used for SSR ([#13684](https://github.com/sveltejs/kit/pull/13684))
+
 ## 2.20.8
 ### Patch Changes
 

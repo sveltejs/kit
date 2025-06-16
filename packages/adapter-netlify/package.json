@@ -46,7 +46,7 @@
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
-		"@netlify/functions": "^3.0.0",
+		"@netlify/functions": "^4.0.0",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",
@@ -56,7 +56,7 @@
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^3.1.1"
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

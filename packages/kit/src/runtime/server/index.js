@@ -5,6 +5,7 @@ import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_app } from './app.js';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -74,11 +75,20 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError: module.handleError || (({ error }) => console.error(error)),
+					handleError:
+						module.handleError ||
+						(({ status, error }) =>
+							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
 				};
+
+				set_app({
+					decoders: module.transport
+						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
+						: {}
+				});
 
 				if (module.init) {
 					await module.init();
@@ -94,6 +104,10 @@ export class Server {
 						reroute: () => {},
 						transport: {}
 					};
+
+					set_app({
+						decoders: {}
+					});
 				} else {
 					throw error;
 				}

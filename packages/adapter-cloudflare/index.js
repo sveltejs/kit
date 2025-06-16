@@ -62,6 +62,7 @@ export default function (options = {}) {
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
+			builder.mkdirp(assets_dest);
 			if (
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'

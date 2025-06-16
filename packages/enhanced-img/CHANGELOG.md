@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.6.0
+### Minor Changes
+
+
+- feat: add validation to ensure plugin occurs in correct order ([`1c3f36dc10265fb79c64643c3d7a91469d34e697`](https://github.com/sveltejs/kit/commit/1c3f36dc10265fb79c64643c3d7a91469d34e697))
+
 ## 0.5.1
 ### Patch Changes
 
