@@ -25,7 +25,7 @@
 		"@sveltejs/enhanced-img": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/package": "workspace:*",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.3.0",

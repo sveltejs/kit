@@ -12,7 +12,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",

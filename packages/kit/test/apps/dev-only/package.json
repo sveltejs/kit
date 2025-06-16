@@ -12,7 +12,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"cross-env": "^7.0.3",
 		"e2e-test-dep-error": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks": "file:./_test_dependencies/cjs-only",

@@ -41,7 +41,7 @@
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "^18.19.48",
 		"sirv": "^3.0.0",
 		"svelte": "^5.23.1",
