@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 
@@ -16,8 +15,6 @@ export default forked(import.meta.url, generate_fallback);
 async function generate_fallback({ manifest_path, env }) {
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
-
-	installPolyfills();
 
 	const server_root = join(config.outDir, 'output');
 

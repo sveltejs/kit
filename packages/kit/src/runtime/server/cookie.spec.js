@@ -1,8 +1,5 @@
 import { assert, expect, test } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
-
-installPolyfills();
 
 // @ts-expect-error
 globalThis.__SVELTEKIT_DEV__ = false;

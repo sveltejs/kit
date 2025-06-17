@@ -1,8 +1,5 @@
 import { assert, expect, test } from 'vitest';
 import { sequence } from './sequence.js';
-import { installPolyfills } from '../node/polyfills.js';
-
-installPolyfills();
 
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */
