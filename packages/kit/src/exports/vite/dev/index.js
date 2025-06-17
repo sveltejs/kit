@@ -7,6 +7,7 @@ import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
@@ -31,6 +32,8 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
+	installPolyfills();
+
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {

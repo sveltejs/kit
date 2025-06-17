@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -120,6 +121,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
+
+	installPolyfills();
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();

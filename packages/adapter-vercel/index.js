@@ -9,7 +9,6 @@ import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-const MIN_NODE_VERSION = 20;
 
 const get_default_runtime = () => {
 	const major = Number(process.version.slice(1).split('.')[0]);
@@ -19,9 +18,9 @@ const get_default_runtime = () => {
 	// Also means we're not on the hook for updating the adapter every time a new Node
 	// version is added to Vercel.
 	if (!process.env.VERCEL) {
-		if (major < MIN_NODE_VERSION || major > 22) {
+		if (major < 18 || major > 22) {
 			throw new Error(
-				`Building locally with unsupported Node.js version: ${process.version}. Please use Node ${MIN_NODE_VERSION} or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
+				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 18, 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
 			);
 		}
 
@@ -252,9 +251,9 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < MIN_NODE_VERSION)) {
+				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 18)) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs${MIN_NODE_VERSION}.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
@@ -264,7 +263,7 @@ const plugin = function (defaults = {}) {
 
 					if (!runtime.startsWith('nodejs')) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs${MIN_NODE_VERSION}.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
 						);
 					}
 

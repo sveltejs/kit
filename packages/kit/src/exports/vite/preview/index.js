@@ -5,6 +5,7 @@ import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { not_found } from '../utils.js';
 
@@ -18,6 +19,8 @@ import { not_found } from '../utils.js';
  * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
+	installPolyfills();
+
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;

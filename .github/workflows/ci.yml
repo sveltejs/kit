@@ -51,6 +51,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - node-version: 18
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
           - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -91,27 +94,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 20
+          - node-version: 18
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 18
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 18
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
-          - node-version: 20
+          - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'build'
-          - node-version: 20
+          - node-version: 18
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'build'
@@ -183,7 +186,7 @@ jobs:
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium

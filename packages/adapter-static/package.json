@@ -42,7 +42,7 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "catalog:",
+		"@types/node": "^18.19.48",
 		"sirv": "^3.0.0",
 		"svelte": "^5.23.1",
 		"typescript": "^5.3.3",
