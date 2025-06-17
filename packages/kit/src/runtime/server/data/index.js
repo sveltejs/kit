@@ -63,6 +63,7 @@ export async function render_data(
 						event: new_event,
 						state,
 						node,
+						tracing: options.tracing,
 						parent: async () => {
 							/** @type {Record<string, any>} */
 							const data = {};

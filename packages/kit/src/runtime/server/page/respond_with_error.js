@@ -51,6 +51,7 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
+				tracing: options.tracing,
 				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({})
 			});
@@ -66,7 +67,8 @@ export async function respond_with_error({
 				resolve_opts,
 				server_data_promise,
 				state,
-				csr
+				csr,
+				tracing: options.tracing
 			});
 
 			branch.push(
