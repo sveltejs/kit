@@ -111,6 +111,7 @@ export interface CSRPageNode {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
+	universal_id?: string;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;

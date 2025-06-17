@@ -25,7 +25,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		if (node.universal) {
 			declarations.push(
 				`import * as universal from ${s(relative_path(`${output}/nodes`, node.universal))};`,
-				'export { universal };'
+				'export { universal };',
+				`export const universal_id = ${s(node.universal)};`
 			);
 		}
 
