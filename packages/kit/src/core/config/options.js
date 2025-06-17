@@ -270,6 +270,12 @@ const options = object(
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
+			tracing: validate(false, (input, keypath) => {
+				if (typeof input === 'boolean') return input;
+				if (input === 'server' || input === 'client') return input;
+				throw new Error(`${keypath} should be true, false, "server", or "client"`);
+			}),
+
 			typescript: object({
 				config: fun((config) => config)
 			}),

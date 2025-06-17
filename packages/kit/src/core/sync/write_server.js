@@ -60,6 +60,7 @@ export const options = {
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
 	},
+	tracing: ${config.kit.tracing === true || config.kit.tracing === 'server'},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 

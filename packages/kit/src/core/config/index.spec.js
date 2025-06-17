@@ -101,6 +101,7 @@ const get_defaults = (prefix = '') => ({
 		serviceWorker: {
 			register: true
 		},
+		tracing: false,
 		typescript: {},
 		paths: {
 			base: '',
@@ -403,4 +404,77 @@ test('errors on loading config with incorrect default export', async () => {
 		message,
 		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
+});
+
+test('accepts valid tracing values', () => {
+	// Test boolean values
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				tracing: true
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				tracing: false
+			}
+		});
+	});
+
+	// Test string values
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				tracing: 'server'
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				tracing: 'client'
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				tracing: undefined
+			}
+		});
+	});
+});
+
+test('errors on invalid tracing values', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: 'invalid'
+			}
+		});
+	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: 42
+			}
+		});
+	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: null
+			}
+		});
+	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
 });

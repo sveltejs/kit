@@ -686,6 +686,16 @@ export interface KitConfig {
 		 */
 		files?(filepath: string): boolean;
 	};
+	/**
+	 * Whether to enable OpenTelemetry tracing for SvelteKit operations including handle hooks, load functions, and form actions.
+	 * - `true` - Enable tracing for both server and client
+	 * - `false` - Disable tracing
+	 * - `'server'` - Enable tracing only on the server side
+	 * - `'client'` - Enable tracing only on the client side
+	 * @default false
+	 * @since 2.22.0
+	 */
+	tracing?: boolean | 'server' | 'client';
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.

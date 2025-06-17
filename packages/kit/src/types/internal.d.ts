@@ -435,6 +435,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	tracing: boolean;
 	version_hash: string;
 }
 

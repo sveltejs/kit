@@ -6,6 +6,8 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { with_event } from '../../app/server/event.js';
+import { record_span } from '../../telemetry/record_span.js';
+import { get_tracer } from '../../telemetry/get_tracer.js';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
 export function is_action_json_request(event) {
@@ -51,7 +53,7 @@ export async function handle_action_json_request(event, options, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, actions, options.tracing);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -139,9 +141,10 @@ export function is_action_request(event) {
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSRNode['server'] | undefined} server
+ * @param {boolean} tracing
  * @returns {Promise<import('@sveltejs/kit').ActionResult>}
  */
-export async function handle_action_request(event, server) {
+export async function handle_action_request(event, server, tracing) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -164,7 +167,7 @@ export async function handle_action_request(event, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, actions, tracing);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -216,9 +219,10 @@ function check_named_default_separate(actions) {
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {NonNullable<import('types').ServerNode['actions']>} actions
+ * @param {boolean} tracing
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, actions) {
+async function call_action(event, actions, tracing) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -247,7 +251,30 @@ async function call_action(event, actions) {
 		);
 	}
 
-	return with_event(event, () => action(event));
+	const tracer = await get_tracer({ is_enabled: tracing });
+
+	return record_span({
+		name: 'sveltekit.action',
+		tracer,
+		attributes: {
+			'sveltekit.action.name': name,
+			'sveltekit.route.id': event.route.id || 'unknown'
+		},
+		fn: async (action_span) => {
+			const result = await with_event(event, () => action(event));
+			if (result instanceof ActionFailure) {
+				action_span.setAttributes({
+					'sveltekit.action.result.type': 'failure',
+					'sveltekit.action.result.status': result.status
+				});
+			} else {
+				action_span.setAttributes({
+					'sveltekit.action.result.type': 'success'
+				});
+			}
+			return result;
+		}
+	});
 }
 
 /** @param {any} data */
