@@ -56,11 +56,6 @@ export interface SvelteKitApp {
 	 */
 	hash: boolean;
 
-	/**
-	 * Whether OpenTelemetry tracing is enabled (config.tracing === true || config.tracing === 'client')
-	 */
-	tracing: boolean;
-
 	root: typeof SvelteComponent;
 }
 

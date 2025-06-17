@@ -35,7 +35,6 @@ import {
 } from '../pathname.js';
 import { with_event } from '../app/server/event.js';
 import { record_span } from '../telemetry/record_span.js';
-import { get_tracer } from '../telemetry/get_tracer.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -364,7 +363,7 @@ export async function respond(request, options, manifest, state) {
 			disable_search(url);
 		}
 
-		const tracer = await get_tracer({ is_enabled: options.tracing });
+		const tracer = await options.tracer;
 
 		const response = await record_span({
 			name: 'sveltekit.handle',

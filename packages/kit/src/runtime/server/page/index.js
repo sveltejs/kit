@@ -56,7 +56,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		if (is_action_request(event)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
-			action_result = await handle_action_request(event, leaf_node.server, options.tracing);
+			action_result = await handle_action_request(event, leaf_node.server, await options.tracer);
 			if (action_result?.type === 'redirect') {
 				return redirect_response(action_result.status, action_result.location);
 			}
@@ -167,7 +167,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							}
 							return data;
 						},
-						tracing: options.tracing
+						tracer: await options.tracer
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
@@ -196,7 +196,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 						server_data_promise: server_promises[i],
 						state,
 						csr,
-						tracing: options.tracing
+						tracer: await options.tracer
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);

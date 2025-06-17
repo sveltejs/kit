@@ -1,10 +1,9 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
-import { validate_depends } from '../../shared.js';
+import { validate_depends, validate_load_response } from '../../shared.js';
 import { b64_encode } from '../../utils.js';
 import { with_event } from '../../app/server/event.js';
 import { record_span } from '../../telemetry/record_span.js';
-import { get_tracer } from '../../telemetry/get_tracer.js';
 
 /**
  * Calls the user's server `load` function.
@@ -13,11 +12,11 @@ import { get_tracer } from '../../telemetry/get_tracer.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   tracing: boolean;
+ *   tracer: import('@opentelemetry/api').Tracer;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent, tracing }) {
+export async function load_server_data({ event, state, node, parent, tracer }) {
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -71,14 +70,13 @@ export async function load_server_data({ event, state, node, parent, tracing }) 
 
 	let done = false;
 
-	const tracer = await get_tracer({ is_enabled: tracing });
-
 	const result = await record_span({
-		name: 'sveltekit.load.server',
+		name: 'sveltekit.load',
 		tracer,
 		attributes: {
 			'sveltekit.load.node_id': node.server_id || 'unknown',
 			'sveltekit.load.type': 'server',
+			'sveltekit.load.environment': 'server',
 			'sveltekit.route.id': event.route.id || 'unknown'
 		},
 		fn: async () => {
@@ -176,7 +174,7 @@ export async function load_server_data({ event, state, node, parent, tracing }) 
 	});
 
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(result, node.server_id);
+		validate_load_response(result, `in ${node.server_id}`);
 	}
 
 	done = true;
@@ -200,7 +198,7 @@ export async function load_server_data({ event, state, node, parent, tracing }) 
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
  *   csr: boolean;
- *   tracing: boolean;
+ *   tracer: import('@opentelemetry/api').Tracer;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
@@ -213,7 +211,7 @@ export async function load_data({
 	state,
 	resolve_opts,
 	csr,
-	tracing
+	tracer
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -223,10 +221,8 @@ export async function load_data({
 
 	const { load } = node.universal;
 
-	const tracer = await get_tracer({ is_enabled: tracing });
-
 	const result = await record_span({
-		name: 'sveltekit.load.universal',
+		name: 'sveltekit.load',
 		tracer,
 		attributes: {
 			'sveltekit.load.node_id': node.universal_id || 'unknown',
@@ -252,7 +248,7 @@ export async function load_data({
 	});
 
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(result, node.universal_id);
+		validate_load_response(result, `in ${node.universal_id}`);
 	}
 
 	return result ?? null;
@@ -435,24 +431,4 @@ async function stream_to_string(stream) {
 		result += decoder.decode(value);
 	}
 	return result;
-}
-
-/**
- * @param {any} data
- * @param {string} [id]
- */
-function validate_load_response(data, id) {
-	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-		throw new Error(
-			`a load function in ${id} returned ${
-				typeof data !== 'object'
-					? `a ${typeof data}`
-					: data instanceof Response
-						? 'a Response object'
-						: Array.isArray(data)
-							? 'an array'
-							: 'a non-plain object'
-			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-		);
-	}
 }
