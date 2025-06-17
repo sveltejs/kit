@@ -85,8 +85,14 @@ export function error(status, body) {
  * @return {e is (HttpError & { status: T extends undefined ? never : T })}
  */
 export function isHttpError(e, status) {
-	if (!(e instanceof HttpError)) return false;
-	return !status || e.status === status;
+	return (
+		typeof e === 'object' &&
+		e !== null &&
+		Object.hasOwn(e, '_tag') &&
+		Object.hasOwn(e, 'status') &&
+		/** @type {{ _tag: string; }} */ (e)._tag === 'SvelteKitHttpError' &&
+		(!status || /** @type {{ status: number }} */ (e).status === status)
+	);
 }
 
 /**
@@ -124,7 +130,12 @@ export function redirect(status, location) {
  * @return {e is Redirect}
  */
 export function isRedirect(e) {
-	return e instanceof Redirect;
+	return (
+		typeof e === 'object' &&
+		e !== null &&
+		Object.hasOwn(e, '_tag') &&
+		/** @type {{ _tag: string }} */ (e)._tag === 'SvelteKitRedirect'
+	);
 }
 
 /**
@@ -213,7 +224,12 @@ export function fail(status, data) {
  * @return {e is import('./public.js').ActionFailure}
  */
 export function isActionFailure(e) {
-	return e instanceof ActionFailure;
+	return (
+		typeof e === 'object' &&
+		e !== null &&
+		Object.hasOwn(e, '_tag') &&
+		/** @type {{ _tag: string }} */ (e)._tag === 'SvelteKitActionFailure'
+	);
 }
 
 /**
