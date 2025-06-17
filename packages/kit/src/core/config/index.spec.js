@@ -76,6 +76,9 @@ const get_defaults = (prefix = '') => ({
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},
+		experimental: {
+			tracing: undefined
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: {
@@ -101,7 +104,6 @@ const get_defaults = (prefix = '') => ({
 		serviceWorker: {
 			register: true
 		},
-		tracing: false,
 		typescript: {},
 		paths: {
 			base: '',
@@ -407,11 +409,12 @@ test('errors on loading config with incorrect default export', async () => {
 });
 
 test('accepts valid tracing values', () => {
-	// Test boolean values
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				tracing: true
+				experimental: {
+					tracing: 'server'
+				}
 			}
 		});
 	});
@@ -419,32 +422,9 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				tracing: false
-			}
-		});
-	});
-
-	// Test string values
-	assert.doesNotThrow(() => {
-		validate_config({
-			kit: {
-				tracing: 'server'
-			}
-		});
-	});
-
-	assert.doesNotThrow(() => {
-		validate_config({
-			kit: {
-				tracing: 'client'
-			}
-		});
-	});
-
-	assert.doesNotThrow(() => {
-		validate_config({
-			kit: {
-				tracing: undefined
+				experimental: {
+					tracing: undefined
+				}
 			}
 		});
 	});
@@ -454,27 +434,33 @@ test('errors on invalid tracing values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-expect-error - given value expected to throw
-				tracing: 'invalid'
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: true
+				}
 			}
 		});
-	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
 
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-expect-error - given value expected to throw
-				tracing: 42
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: false
+				}
 			}
 		});
-	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
 
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-expect-error - given value expected to throw
-				tracing: null
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: 'client'
+				}
 			}
 		});
-	}, /^config\.kit\.tracing should be true, false, "server", or "client"$/);
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
 });

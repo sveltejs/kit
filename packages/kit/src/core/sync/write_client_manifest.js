@@ -174,8 +174,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const hash = ${s(kit.router.type === 'hash')};
 
-			export const tracing = ${s(kit.tracing === true || kit.tracing === 'client')};
-
 			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';

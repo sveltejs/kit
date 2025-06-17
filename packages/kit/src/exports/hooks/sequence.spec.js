@@ -4,6 +4,10 @@ import { installPolyfills } from '../node/polyfills.js';
 
 installPolyfills();
 
+const dummy_event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({
+	tracing: { rootSpan: {} }
+});
+
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */
 	const order = [];
@@ -29,10 +33,9 @@ test('applies handlers in sequence', async () => {
 		}
 	);
 
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = new Response();
 
-	assert.equal(await handler({ event, resolve: () => response }), response);
+	assert.equal(await handler({ event: dummy_event, resolve: () => response }), response);
 	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
@@ -47,9 +50,8 @@ test('uses transformPageChunk option passed to non-terminal handle function', as
 		async ({ event, resolve }) => resolve(event)
 	);
 
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
-		event,
+		event: dummy_event,
 		resolve: async (_event, opts = {}) => {
 			let html = '';
 
@@ -84,9 +86,8 @@ test('merges transformPageChunk option', async () => {
 		}
 	);
 
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
-		event,
+		event: dummy_event,
 		resolve: async (_event, opts = {}) => {
 			let html = '';
 
@@ -117,9 +118,8 @@ test('uses first defined preload option', async () => {
 		}
 	);
 
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
-		event,
+		event: dummy_event,
 		resolve: (_event, opts = {}) => {
 			let html = '';
 
@@ -150,9 +150,8 @@ test('uses first defined filterSerializedResponseHeaders option', async () => {
 		}
 	);
 
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
-		event,
+		event: dummy_event,
 		resolve: (_event, opts = {}) => {
 			let html = '';
 

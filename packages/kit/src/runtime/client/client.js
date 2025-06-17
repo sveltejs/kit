@@ -39,13 +39,17 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
+import {
+	INVALIDATED_PARAM,
+	TRAILING_SLASH_PARAM,
+	validate_depends,
+	validate_load_response
+} from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
-import { record_span } from '../telemetry/record_span.js';
-import { get_tracer } from '../telemetry/get_tracer.js';
+import { noop_span } from '../telemetry/noop.js';
 
 export { load_css };
 
@@ -673,6 +677,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 		/** @type {import('@sveltejs/kit').LoadEvent} */
 		const load_input = {
+			tracing: { rootSpan: noop_span, currentSpan: noop_span },
 			route: new Proxy(route, {
 				get: (target, key) => {
 					if (is_tracking) {
@@ -761,45 +766,16 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			}
 		};
 
-		async function traced_load() {
-			const tracer = await get_tracer({ is_enabled: app.tracing });
-
-			return record_span({
-				name: 'sveltekit.load.universal',
-				tracer,
-				attributes: {
-					'sveltekit.load.node_id': node.universal_id || 'unknown',
-					'sveltekit.load.type': 'universal',
-					'sveltekit.load.environment': 'client',
-					'sveltekit.route.id': route.id || 'unknown'
-				},
-				fn: async () => (await node.universal?.load?.call(null, load_input)) ?? null
-			});
-		}
-
 		if (DEV) {
 			try {
 				lock_fetch();
-				data = await traced_load();
-
-				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-					throw new Error(
-						`the load function located in ${node.universal_id} returned ${
-							typeof data !== 'object'
-								? `a ${typeof data}`
-								: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-										? 'an array'
-										: 'a non-plain object'
-						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-					);
-				}
+				data = (await node.universal.load.call(null, load_input)) ?? null;
+				validate_load_response(data, `related to route '${route.id}'`);
 			} finally {
 				unlock_fetch();
 			}
 		} else {
-			data = await traced_load();
+			data = (await node.universal.load.call(null, load_input)) ?? null;
 		}
 	}
 

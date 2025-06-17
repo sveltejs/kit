@@ -120,6 +120,15 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			experimental: object({
+				tracing: validate(undefined, (input, keypath) => {
+					if (input !== 'server') {
+						throw new Error(`${keypath} should be undefined or "server"`);
+					}
+					return input;
+				})
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: object({
@@ -268,12 +277,6 @@ const options = object(
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
-			}),
-
-			tracing: validate(false, (input, keypath) => {
-				if (typeof input === 'boolean') return input;
-				if (input === 'server' || input === 'client') return input;
-				throw new Error(`${keypath} should be true, false, "server", or "client"`);
 			}),
 
 			typescript: object({

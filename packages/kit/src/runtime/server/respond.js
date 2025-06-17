@@ -35,7 +35,6 @@ import {
 } from '../pathname.js';
 import { with_event } from '../app/server/event.js';
 import { record_span } from '../telemetry/record_span.js';
-import { get_tracer } from '../telemetry/get_tracer.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -364,38 +363,39 @@ export async function respond(request, options, manifest, state) {
 			disable_search(url);
 		}
 
-		const tracer = await get_tracer({ is_enabled: options.tracing });
+		const tracer = await options.tracer;
 
 		const response = await record_span({
-			name: 'sveltekit.handle',
+			name: 'sveltekit.handle.root',
 			tracer,
 			attributes: {
-				'sveltekit.route.id': event.route.id || 'unknown',
+				'http.route': event.route.id || 'unknown',
 				'http.method': event.request.method,
 				'http.url': event.url.href,
 				'sveltekit.is_data_request': is_data_request,
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
-			fn: async () => {
-				return await with_event(event, () =>
+			fn: async (rootSpan) => {
+				const traced_event = { ...event, tracing: { rootSpan, currentSpan: rootSpan } };
+				return await with_event(traced_event, () =>
 					options.hooks.handle({
-						event,
+						event: traced_event,
 						resolve: (event, opts) => {
 							return record_span({
-								name: 'sveltekit.resolve',
+								name: 'sveltekit.resolve.root',
 								tracer,
 								attributes: {
-									'sveltekit.route.id': event.route.id || 'unknown',
-									'sveltekit.resolve.transform_page_chunk': !!opts?.transformPageChunk,
-									'sveltekit.resolve.filter_serialized_response_headers':
-										!!opts?.filterSerializedResponseHeaders,
-									'sveltekit.resolve.preload': !!opts?.preload
+									'http.route': event.route.id || 'unknown'
 								},
 								fn: async (resolveSpan) => {
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
 									return with_event(null, () =>
-										resolve(event, page_nodes, opts).then((response) => {
+										resolve(
+											{ ...event, tracing: { rootSpan, currentSpan: resolveSpan } },
+											page_nodes,
+											opts
+										).then((response) => {
 											// add headers/cookies here, rather than inside `resolve`, so that we
 											// can do it once for all responses instead of once per `return`
 											for (const key in headers) {
