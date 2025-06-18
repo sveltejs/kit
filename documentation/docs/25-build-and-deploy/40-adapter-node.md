@@ -289,7 +289,7 @@ Another example, this time using [Server-Sent Events](https://developer.mozilla.
 ```js
 /// file: src/routes/api/sse/+server.js
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ request }) {
+export function GET({ request }) {
     const stream = new ReadableStream({
         start(controller) {
             const interval = setInterval(() => {
