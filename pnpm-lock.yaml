@@ -17,7 +17,7 @@ catalogs:
       version: 3.2.3
 
 overrides:
-  vite: https://pkg.pr.new/vitejs/rolldown-vite@263
+  vite: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
 
 importers:
 
@@ -55,7 +55,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -101,7 +101,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
@@ -109,8 +109,8 @@ importers:
         specifier: ^5.23.1
         version: 5.23.1
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       wrangler:
         specifier: ^4.14.3
         version: 4.14.4(@cloudflare/workers-types@4.20250508.0)
@@ -122,7 +122,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
@@ -130,8 +130,8 @@ importers:
         specifier: ^5.23.1
         version: 5.23.1
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       wrangler:
         specifier: ^4.14.3
         version: 4.14.4(@cloudflare/workers-types@4.20250508.0)
@@ -232,7 +232,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -246,8 +246,8 @@ importers:
         specifier: ^5.3.3
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -256,7 +256,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       sirv-cli:
         specifier: ^3.0.0
         version: 3.0.0
@@ -264,8 +264,8 @@ importers:
         specifier: ^5.23.1
         version: 5.23.1
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -277,7 +277,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       sirv-cli:
         specifier: ^3.0.0
         version: 3.0.0
@@ -285,8 +285,8 @@ importers:
         specifier: ^5.23.1
         version: 5.23.1
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/adapter-vercel:
     dependencies:
@@ -337,8 +337,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.23.1)
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vite-imagetools:
         specifier: ^7.1.0
         version: 7.1.0(rollup@4.40.1)
@@ -348,7 +348,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.7
@@ -407,18 +407,18 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vitefu:
         specifier: ^1.0.6
-        version: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))
+        version: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.51.1
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       '@types/connect':
         specifier: ^3.4.38
         version: 3.4.38
@@ -439,7 +439,7 @@ importers:
         version: 5.23.1
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.23.1)(typescript@5.6.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6))(postcss@8.5.6)(svelte@5.23.1)(typescript@5.6.3)
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
@@ -457,7 +457,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -474,8 +474,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -484,7 +484,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -501,8 +501,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/basics/_test_dependencies/redirect-pkg:
     dependencies:
@@ -517,7 +517,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -561,8 +561,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -571,7 +571,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -585,8 +585,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/hash-based-routing:
     devDependencies:
@@ -595,7 +595,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -609,8 +609,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/no-ssr:
     devDependencies:
@@ -619,7 +619,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -633,8 +633,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -646,7 +646,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -660,8 +660,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -673,7 +673,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -687,8 +687,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/prerendered-app-error-pages:
     devDependencies:
@@ -697,7 +697,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -711,8 +711,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -721,7 +721,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -735,8 +735,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -754,7 +754,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -765,8 +765,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -778,7 +778,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -789,8 +789,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -802,7 +802,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -813,8 +813,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -823,7 +823,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -834,8 +834,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -844,7 +844,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -855,8 +855,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -865,7 +865,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -879,8 +879,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -889,7 +889,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -900,8 +900,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -910,7 +910,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -921,8 +921,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -931,7 +931,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -942,8 +942,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -952,7 +952,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -963,8 +963,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -973,7 +973,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -984,8 +984,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/service-worker-dynamic-public-env:
     devDependencies:
@@ -994,7 +994,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1005,8 +1005,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/service-worker-private-env:
     devDependencies:
@@ -1015,7 +1015,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1026,8 +1026,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -1036,7 +1036,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1047,8 +1047,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -1057,7 +1057,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1068,8 +1068,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vitest:
         specifier: 'catalog:'
         version: 3.2.3(esbuild@0.25.5)
@@ -1081,7 +1081,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1092,8 +1092,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vitest:
         specifier: 'catalog:'
         version: 3.2.3(esbuild@0.25.5)
@@ -1105,7 +1105,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
@@ -1116,8 +1116,8 @@ importers:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vitest:
         specifier: 'catalog:'
         version: 3.2.3(esbuild@0.25.5)
@@ -1157,7 +1157,7 @@ importers:
         version: 5.23.1
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.23.1)(typescript@5.6.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6))(postcss@8.5.6)(svelte@5.23.1)(typescript@5.6.3)
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
@@ -1199,7 +1199,7 @@ importers:
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+        version: 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       prettier:
         specifier: ^3.3.2
         version: 3.3.3
@@ -1219,8 +1219,8 @@ importers:
         specifier: ^5.5.0
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vitejs/rolldown-vite@263
-        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+        specifier: https://pkg.pr.new/vitejs/rolldown-vite@8638a59
+        version: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
 packages:
 
@@ -2240,68 +2240,68 @@ packages:
     resolution: {integrity: sha512-NvV5jPAQIMCoHvaJ0ZhfouBJ2woFYYf+o6B7dCHGh/tLKSPVoxhjffi35xPuMHgOv65aTOKUzML5XwQF9EkDAA==}
     engines: {node: '>=18'}
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.16':
-    resolution: {integrity: sha512-dzlvuodUFc/QX97jYSsPHtYysqeSeM5gBxiN+DpV93tXEYyFMWm3cECxNmShz4ZM+lrgm6eG2/txzLZ/z9qWLw==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.17':
+    resolution: {integrity: sha512-uYxIZ+QdYsjtLUNT3BWCJAww5YJMKL5ZreEO6uJKHCPUE4wbAU1t4JzQudnjrqpkviz4IQYL62Ry/uKuZxzmrw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.16':
-    resolution: {integrity: sha512-H5604ucjaYy5AxxuOP/CoE5RV3lKCJ+btclWL5rV+hVh0qNN9dVgve+onzAYmi8h2RBPET1Novj+2KB640PC9Q==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.17':
+    resolution: {integrity: sha512-uu1ovSv1BmYvpR8nJdhkPcnV90l5jmAE4YNmJHo1sSLXWPqlWfigTJ+4v1g8ww1hU4It6Rd7Odf4fqOFnRu74g==}
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-freebsd-x64@1.0.0-beta.16':
-    resolution: {integrity: sha512-DDzmSFFKfAcrUJfuwK4URKl28fIgK8fT5Kp374B1iJJ9KwcqIZzN1a3s/ubjTGIwiE+vUDEclVQ3z9R0VwkGAQ==}
+  '@rolldown/binding-freebsd-x64@1.0.0-beta.17':
+    resolution: {integrity: sha512-7PhPJ/V8RxvHtk4VDLYsSlDi43W766X2AXlMEqtUi9qpImVH55PsMUrDq74GvJsSKYAO9pAzncP6/sDB0i6F6g==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.16':
-    resolution: {integrity: sha512-xkCdzCXW6SSDlFYaHjzCFrsbqxxo60YKVW4B/G2ST8HYruv0Ql4qpoQw7WoGeXL+bc/3RpKWzsxIiooUKX6e9Q==}
+  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.17':
+    resolution: {integrity: sha512-VHmUdihRL3kFYgUjr6n3laeZPdmHEliFW+R1F4JhbkztpjdcZjztuOKGul6/x77JJf+LJuAgny45Gw2W5i/hsg==}
     cpu: [arm]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.16':
-    resolution: {integrity: sha512-Yrz782pZsFVfxlsqppDneV2dl7St7lGt1uCscXnLC0vXiesj59vl3sULQ45eMKKeEEqPKz7X8OAJI7ao6zLSyg==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.17':
+    resolution: {integrity: sha512-P/BDueuHUcw5fHNK1UBtItH/o1HNUb3n0o03/lFh3VkrP5yzC9Ov/bVj5wtat1Gb0JAm4ypVHcvlFtU/XOB57w==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.16':
-    resolution: {integrity: sha512-1M8jPk7BICBjKfqNZCMtcLvzpEFHBkySPHt+RsYGZhFuAbCb352C9ilWsjpi7WwhWBOvh6tHUNmO77NTKlLxkA==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.17':
+    resolution: {integrity: sha512-ZUYk2/j335hVqlhwpkbjgH4eENQIA6aCTwt5Lm8yv3Ny3Dp+NJWjW+a98OruAHel5dsqbKVQriP5av5Ga10rMQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.16':
-    resolution: {integrity: sha512-6xhZMDt4r3r3DeurJFakCqev0ct0FHU9hQPvoaHTE3EfC0yRhUp7aQmf2lsB7YVU7Zcel/KiOv/DjJQR9fntog==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.17':
+    resolution: {integrity: sha512-yM9lISQs+es9Mma1qadEj/0hOMJThEVu4azPw9vp1gVtG7fQg/k+AGqULzy175exaZS3IodVwaCC9qtk9QZiUw==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.16':
-    resolution: {integrity: sha512-zYnSz4Z39kEUUA1B03KbNFGgCNykZPhaDltJGY9C3bA3zU5+Ygtr+aeaRxEgXYP4PYBqE3rhPIGmDnlTzx18wA==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.17':
+    resolution: {integrity: sha512-3n+NDnMItllqo09RooFrNJpPjznId7TZcicnGObbnSMBtIfIknkUyjECQssoLajjZ2E4DK7N62yd7jbRkTNZ1g==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.16':
-    resolution: {integrity: sha512-gFWaCVJENQWYAWkk6yJbteyMmxdZAYE9VLB4S4YqfxOYbGvVxq0K1Dn89uPEzN4beEaLToe917YzXqLdv4tPvQ==}
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.17':
+    resolution: {integrity: sha512-CL7bKJg+GhZAM2R2I+mHQb3+8NJmQU1UkXqtR9tJCw60f9yOFi6cwC8lYtFHdM6CuFA+X7+8L3DcTupBNmUiRA==}
     engines: {node: '>=14.21.3'}
     cpu: [wasm32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.16':
-    resolution: {integrity: sha512-rbXNzlc3/aZSNaIWKAx6TGGUcgSnDmBYxyHLYthtAXz1uvg2o0YsAKYJszWHk0fTrjtKnDXLxwNjua1pf87cZA==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.17':
+    resolution: {integrity: sha512-35aU4xs7zbAsvirVHnpKjAS0Lblrf4PzJPj2cvII0olFyizfqYZ6yxdzgiUjbPFdF34SKc7obmiA4BG16URsvA==}
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.16':
-    resolution: {integrity: sha512-9o4nk+IEvyWkE5qsLjcN+Sic869hELVZ5FsEvDruCa9sX5qZV4A5pj5bR9Sc+x4L0Aa1kQkPdChgxRqV1tgOdw==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.17':
+    resolution: {integrity: sha512-cPQNXNf74epAShehFaudP4TG3+faHcg+SAB+3sTVu5oGfKHfocHwNo/Uhf6HnFr+6gXpRWcnOj3+k2+KDVisCQ==}
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.16':
-    resolution: {integrity: sha512-PJSdUi02LT2dRS5nRNmqWTAEvq11NSBfPK5DoCTUj4DaUHJd05jBBtVyLabTutjaACN53O/pLOXds73W4obZ/g==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.17':
+    resolution: {integrity: sha512-n/3qfwsk6VvDK3RE/mcsA3IIduVAAiAXIkDFGZopj0EZQVYSuFmZ3V3InAk/4cue1YGMARZNPOtTR4LozfzBUA==}
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/pluginutils@1.0.0-beta.16':
-    resolution: {integrity: sha512-w3f87JpF7lgIlK03I0R3XidspFgB4MsixE5o/VjBMJI+Ki4XW/Ffrykmj2AUCbVxhRD7Pi9W0Qu2XapJhB2mSA==}
+  '@rolldown/pluginutils@1.0.0-beta.17':
+    resolution: {integrity: sha512-i6p5fc1+lAmR3OHmNlv7/3PIY3EtuUu4kVARjkid38p7cmyIyqr0QFnA+k3xoB06wQUpBA91H1HFlRreZ2v5oA==}
 
   '@rollup/plugin-commonjs@28.0.1':
     resolution: {integrity: sha512-+tNWdlWKbpB3WgBN7ijjYkq9X5uhjmcvyjEght4NmH5fAU++zfQzAJ6wumLS+dNcvwEZhKx2Z+skY8m7v0wGSA==}
@@ -3336,6 +3336,14 @@ packages:
       picomatch:
         optional: true
 
+  fdir@6.4.6:
+    resolution: {integrity: sha512-hiFoqpyZcfNm1yc4u8oWCf9A2c4D3QjCrks3zmoVKVxpQRzmPNar1hUJcBG2RQHvEVGDN+Jm81ZheVLAQMK6+w==}
+    peerDependencies:
+      picomatch: ^3 || ^4
+    peerDependenciesMeta:
+      picomatch:
+        optional: true
+
   fecha@4.2.3:
     resolution: {integrity: sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==}
 
@@ -4129,6 +4137,10 @@ packages:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.6:
+    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
+    engines: {node: ^10 || ^12 || >=14}
+
   precinct@12.2.0:
     resolution: {integrity: sha512-NFBMuwIfaJ4SocE9YXPU/n4AcNSoFMVFjP72nvl3cx69j/ke61/hPOWFREVxLkFhhEGnA8ZuVfTqJBa+PK3b5w==}
     engines: {node: '>=18'}
@@ -4257,9 +4269,9 @@ packages:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
-  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263:
-    resolution: {tarball: https://pkg.pr.new/vitejs/rolldown-vite@263}
-    version: 6.3.21
+  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59:
+    resolution: {tarball: https://pkg.pr.new/vitejs/rolldown-vite@8638a59}
+    version: 7.0.0-alpha.0
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -4298,8 +4310,8 @@ packages:
       yaml:
         optional: true
 
-  rolldown@1.0.0-beta.16:
-    resolution: {integrity: sha512-ruNh01VbnTJsW0kgYywrQ80FUY0yJvXqavPVljGg0dRiwggYB7yXlypw1ptkFiomkEOnOGiwncjiviUakgPHxg==}
+  rolldown@1.0.0-beta.17:
+    resolution: {integrity: sha512-L45QWZF/7HYfIO1nZZL83O8xOMOxBlMiFsspMRUus68wkiag3PNn6PDqEFbzbQDYN32YHFEb2qzqkC2M0enZ2A==}
     hasBin: true
 
   rollup@4.40.1:
@@ -5831,45 +5843,45 @@ snapshots:
 
   '@publint/pack@0.1.0': {}
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.16':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.16':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-freebsd-x64@1.0.0-beta.16':
+  '@rolldown/binding-freebsd-x64@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.16':
+  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.16':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.16':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.16':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.16':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.16':
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.17':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.11
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.16':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.16':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.16':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.17':
     optional: true
 
-  '@rolldown/pluginutils@1.0.0-beta.16': {}
+  '@rolldown/pluginutils@1.0.0-beta.17': {}
 
   '@rollup/plugin-commonjs@28.0.1(rollup@4.40.1)':
     dependencies:
@@ -5990,21 +6002,21 @@ snapshots:
       typescript: 5.8.3
       typescript-eslint: 8.26.0(eslint@9.6.0)(typescript@5.8.3)
 
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)':
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+      '@sveltejs/vite-plugin-svelte': 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       debug: 4.4.1
       svelte: 5.23.1
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)':
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+      '@sveltejs/vite-plugin-svelte': 6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       debug: 4.4.1
       svelte: 5.23.1
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -6017,29 +6029,29 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)':
+  '@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))(svelte@5.23.1)
       debug: 4.4.1
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.17
       svelte: 5.23.1
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
-      vitefu: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
+      vitefu: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)':
+  '@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))(svelte@5.23.1)
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.0(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1))(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))(svelte@5.23.1)
       debug: 4.4.1
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.17
       svelte: 5.23.1
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
-      vitefu: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
+      vitefu: 1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))
     transitivePeerDependencies:
       - supports-color
 
@@ -6272,29 +6284,29 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4))':
+  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4))':
     dependencies:
       '@vitest/spy': 3.2.3
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4)
 
-  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))':
+  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))':
     dependencies:
       '@vitest/spy': 3.2.3
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
-  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))':
+  '@vitest/mocker@3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))':
     dependencies:
       '@vitest/spy': 3.2.3
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
 
   '@vitest/pretty-format@3.2.3':
     dependencies:
@@ -7099,6 +7111,10 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.2
 
+  fdir@6.4.6(picomatch@4.0.2):
+    optionalDependencies:
+      picomatch: 4.0.2
+
   fecha@4.2.3: {}
 
   file-entry-cache@8.0.0:
@@ -7755,6 +7771,14 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.3
 
+  postcss-load-config@3.1.4(postcss@8.5.6):
+    dependencies:
+      lilconfig: 2.1.0
+      yaml: 1.10.2
+    optionalDependencies:
+      postcss: 8.5.6
+    optional: true
+
   postcss-safe-parser@6.0.0(postcss@8.5.3):
     dependencies:
       postcss: 8.5.3
@@ -7776,6 +7800,12 @@ snapshots:
       quote-unquote: 1.0.0
 
   postcss@8.5.3:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
+  postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -7921,66 +7951,66 @@ snapshots:
 
   reusify@1.0.4: {}
 
-  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4):
+  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4):
     dependencies:
       '@oxc-project/runtime': 0.73.0
-      fdir: 6.4.5(picomatch@4.0.2)
+      fdir: 6.4.6(picomatch@4.0.2)
       lightningcss: 1.30.1
       picomatch: 4.0.2
-      postcss: 8.5.3
-      rolldown: 1.0.0-beta.16
+      postcss: 8.5.6
+      rolldown: 1.0.0-beta.17
       tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 18.19.50
       esbuild: 0.25.4
       fsevents: 2.3.3
 
-  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5):
+  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5):
     dependencies:
       '@oxc-project/runtime': 0.73.0
-      fdir: 6.4.5(picomatch@4.0.2)
+      fdir: 6.4.6(picomatch@4.0.2)
       lightningcss: 1.30.1
       picomatch: 4.0.2
-      postcss: 8.5.3
-      rolldown: 1.0.0-beta.16
+      postcss: 8.5.6
+      rolldown: 1.0.0-beta.17
       tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 18.19.50
       esbuild: 0.25.5
       fsevents: 2.3.3
 
-  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5):
+  rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5):
     dependencies:
       '@oxc-project/runtime': 0.73.0
-      fdir: 6.4.5(picomatch@4.0.2)
+      fdir: 6.4.6(picomatch@4.0.2)
       lightningcss: 1.30.1
       picomatch: 4.0.2
-      postcss: 8.5.3
-      rolldown: 1.0.0-beta.16
+      postcss: 8.5.6
+      rolldown: 1.0.0-beta.17
       tinyglobby: 0.2.14
     optionalDependencies:
       esbuild: 0.25.5
       fsevents: 2.3.3
 
-  rolldown@1.0.0-beta.16:
+  rolldown@1.0.0-beta.17:
     dependencies:
       '@oxc-project/runtime': 0.73.0
       '@oxc-project/types': 0.73.0
-      '@rolldown/pluginutils': 1.0.0-beta.16
+      '@rolldown/pluginutils': 1.0.0-beta.17
       ansis: 4.1.0
     optionalDependencies:
-      '@rolldown/binding-darwin-arm64': 1.0.0-beta.16
-      '@rolldown/binding-darwin-x64': 1.0.0-beta.16
-      '@rolldown/binding-freebsd-x64': 1.0.0-beta.16
-      '@rolldown/binding-linux-arm-gnueabihf': 1.0.0-beta.16
-      '@rolldown/binding-linux-arm64-gnu': 1.0.0-beta.16
-      '@rolldown/binding-linux-arm64-musl': 1.0.0-beta.16
-      '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.16
-      '@rolldown/binding-linux-x64-musl': 1.0.0-beta.16
-      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.16
-      '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.16
-      '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.16
-      '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.16
+      '@rolldown/binding-darwin-arm64': 1.0.0-beta.17
+      '@rolldown/binding-darwin-x64': 1.0.0-beta.17
+      '@rolldown/binding-freebsd-x64': 1.0.0-beta.17
+      '@rolldown/binding-linux-arm-gnueabihf': 1.0.0-beta.17
+      '@rolldown/binding-linux-arm64-gnu': 1.0.0-beta.17
+      '@rolldown/binding-linux-arm64-musl': 1.0.0-beta.17
+      '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.17
+      '@rolldown/binding-linux-x64-musl': 1.0.0-beta.17
+      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.17
+      '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.17
+      '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.17
+      '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.17
 
   rollup@4.40.1:
     dependencies:
@@ -8245,14 +8275,14 @@ snapshots:
     dependencies:
       svelte: 5.23.1
 
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.23.1)(typescript@5.6.3):
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.6))(postcss@8.5.6)(svelte@5.23.1)(typescript@5.6.3):
     dependencies:
       detect-indent: 6.1.0
       strip-indent: 3.0.0
       svelte: 5.23.1
     optionalDependencies:
-      postcss: 8.5.3
-      postcss-load-config: 3.1.4(postcss@8.5.3)
+      postcss: 8.5.6
+      postcss-load-config: 3.1.4(postcss@8.5.6)
       typescript: 5.6.3
 
   svelte2tsx@0.7.33(svelte@5.23.1)(typescript@5.6.3):
@@ -8453,7 +8483,7 @@ snapshots:
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4)
     transitivePeerDependencies:
       - '@types/node'
       - esbuild
@@ -8474,7 +8504,7 @@ snapshots:
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
     transitivePeerDependencies:
       - '@types/node'
       - esbuild
@@ -8495,7 +8525,7 @@ snapshots:
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
     transitivePeerDependencies:
       - '@types/node'
       - esbuild
@@ -8523,13 +8553,13 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.30.1
 
-  vitefu@1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)):
+  vitefu@1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)):
     optionalDependencies:
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
 
-  vitefu@1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)):
+  vitefu@1.0.6(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)):
     optionalDependencies:
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
 
   vitefu@1.0.6(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)):
     optionalDependencies:
@@ -8539,7 +8569,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.3
-      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4))
+      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4))
       '@vitest/pretty-format': 3.2.3
       '@vitest/runner': 3.2.3
       '@vitest/snapshot': 3.2.3
@@ -8557,7 +8587,7 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.0
       tinyrainbow: 2.0.0
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.4)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.4)
       vite-node: 3.2.3(@types/node@18.19.50)(esbuild@0.25.4)
       why-is-node-running: 2.3.0
     optionalDependencies:
@@ -8580,7 +8610,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.3
-      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5))
+      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5))
       '@vitest/pretty-format': 3.2.3
       '@vitest/runner': 3.2.3
       '@vitest/snapshot': 3.2.3
@@ -8598,7 +8628,7 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.0
       tinyrainbow: 2.0.0
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(@types/node@18.19.50)(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(@types/node@18.19.50)(esbuild@0.25.5)
       vite-node: 3.2.3(@types/node@18.19.50)(esbuild@0.25.5)
       why-is-node-running: 2.3.0
     optionalDependencies:
@@ -8621,7 +8651,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.3
-      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5))
+      '@vitest/mocker': 3.2.3(rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5))
       '@vitest/pretty-format': 3.2.3
       '@vitest/runner': 3.2.3
       '@vitest/snapshot': 3.2.3
@@ -8639,7 +8669,7 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.0
       tinyrainbow: 2.0.0
-      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@263(esbuild@0.25.5)
+      vite: rolldown-vite@https://pkg.pr.new/vitejs/rolldown-vite@8638a59(esbuild@0.25.5)
       vite-node: 3.2.3(esbuild@0.25.5)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:

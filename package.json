@@ -37,7 +37,7 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"vite": "https://pkg.pr.new/vitejs/rolldown-vite@263"
+			"vite": "https://pkg.pr.new/vitejs/rolldown-vite@8638a59"
 		},
 		"onlyBuiltDependencies": [
 			"esbuild",
