@@ -700,7 +700,9 @@ Tips:
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									warning.code === 'IMPORT_IS_UNDEFINED' &&
+									(vite.rolldownVersion
+										? warning.code === 'IMPORT_IS_UNDEFINED'
+										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
