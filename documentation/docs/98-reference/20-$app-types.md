@@ -40,7 +40,7 @@ A union of all valid pathnames in your app.
 <div class="ts-block">
 
 ```dts
-type Pathname = '/' | '/my-route' | `/my-other-route/${string}`;
+type Pathname = '/' | '/my-route' | `/my-other-route/${string}` & {};
 ```
 
 </div>
