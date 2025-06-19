@@ -700,6 +700,7 @@ Tips:
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
+									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
 									(vite.rolldownVersion
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
@@ -738,6 +739,7 @@ Tips:
 					const output_options = /** @type {import('vite').Rollup.OutputOptions} */ (
 						new_config.build.rollupOptions.output
 					);
+					// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
 					if (vite.rolldownVersion) {
 						output_options.inlineDynamicImports = true;
 					} else {
