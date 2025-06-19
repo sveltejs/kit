@@ -728,7 +728,7 @@ Tips:
 						}
 					}
 					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://vite.dev/guide/rolldown#enabling-native-plugins
+					// see https://github.com/vitejs/rolldown-vite/issues/213
 					// experimental: {
 					// 	enableNativePlugin: true
 					// }
@@ -758,7 +758,7 @@ Tips:
 					},
 					publicDir: kit.files.assets
 					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://vite.dev/guide/rolldown#enabling-native-plugins
+					// see https://github.com/vitejs/rolldown-vite/issues/213
 					// experimental: {
 					// 	enableNativePlugin: true
 					// }
