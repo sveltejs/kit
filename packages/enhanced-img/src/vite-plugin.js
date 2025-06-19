@@ -205,7 +205,7 @@ export function image_plugin(imagetools_plugin) {
 
 /**
  * @param {string} resolved_id
- * @param {import('vite').Rolldown.PluginContext} plugin_context
+ * @param {import('vite').Rollup.PluginContext} plugin_context
  * @param {import('vite').Plugin} imagetools_plugin
  * @returns {Promise<import('vite-imagetools').Picture>}
  */
