@@ -129,6 +129,7 @@ export async function build_service_worker(
 	});
 
 	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
+	// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
 	if (!vite.rolldownVersion) {
 		fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 	}
