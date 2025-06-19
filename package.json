@@ -36,9 +36,6 @@
 		"pnpm": ">=9.0.0"
 	},
 	"pnpm": {
-		"overrides": {
-			"vite": "https://pkg.pr.new/vitejs/rolldown-vite@8638a59"
-		},
 		"onlyBuiltDependencies": [
 			"esbuild",
 			"rolldown",
