@@ -12,6 +12,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		"skipLibCheck": true
 	}
 }
