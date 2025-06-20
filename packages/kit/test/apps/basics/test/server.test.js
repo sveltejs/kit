@@ -757,7 +757,10 @@ test.describe('$app/environment', () => {
 		test.skip(!!process.env.DEV, 'skip when in dev mode');
 
 		const code = fs.readFileSync(
-			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'),
+			path.join(
+				root,
+				'.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'
+			),
 			'utf-8'
 		);
 		expect(code).not.toContain('browser');
