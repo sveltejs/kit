@@ -14,22 +14,20 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('vite').Rollup.OutputBundle | null} server_bundle
- * @param {import('vite').Rollup.RollupOutput['output'] | null} client_bundle
+ * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_bundle, output_config, static_exports) {
+export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_chunks, output_config, static_exports) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
 	/** @type {Map<string, string>} */
 	const stylesheets_to_inline = new Map();
 
-	if (server_bundle && client_bundle && kit.inlineStyleThreshold > 0) {
-		const client = get_stylesheets(client_bundle);
-
-		const server_chunks = Object.values(server_bundle);
-		const server = get_stylesheets(server_chunks);
+	if (server_bundle && client_chunks && kit.inlineStyleThreshold > 0) {
+		const client = get_stylesheets(client_chunks);
+		const server = get_stylesheets(Object.values(server_bundle));
 
 		// map server stylesheet name to the client stylesheet name
 		for (const [id, client_stylesheet] of client.stylesheets_used) {

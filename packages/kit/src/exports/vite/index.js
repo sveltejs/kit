@@ -182,6 +182,7 @@ let manifest_data;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
+	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
 	const { kit } = svelte_config;
@@ -694,13 +695,15 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: split ? undefined : () => 'bundle',
 								inlineDynamicImports: false
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									warning.code === 'MISSING_EXPORT' &&
+									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									(vite.rolldownVersion
+										? warning.code === 'IMPORT_IS_UNDEFINED'
+										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -725,7 +728,25 @@ Tips:
 							}
 						}
 					}
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://github.com/vitejs/rolldown-vite/issues/213
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
+
+				if (!split && new_config.build?.rollupOptions?.output) {
+					const output_options = /** @type {import('vite').Rollup.OutputOptions} */ (
+						new_config.build.rollupOptions.output
+					);
+					// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+					if (vite.rolldownVersion) {
+						output_options.inlineDynamicImports = true;
+					} else {
+						/** @type {import('rollup').OutputOptions} */ (output_options).manualChunks = () =>
+							'bundle';
+					}
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
@@ -738,6 +759,11 @@ Tips:
 						}
 					},
 					publicDir: kit.files.assets
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://github.com/vitejs/rolldown-vite/issues/213
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
 			}
 
@@ -779,7 +805,8 @@ Tips:
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+					// Rolldown changes our single quotes to double quotes so we need it in the regex too
+					code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
@@ -960,7 +987,7 @@ Tips:
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {import('rollup').OutputAsset} */ (
+						const style = /** @type {import('vite').Rollup.OutputAsset} */ (
 							client_chunks.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
@@ -1035,7 +1062,7 @@ Tips:
 							...vite_config,
 							build: {
 								...vite_config.build,
-								minify: initial_config.build?.minify ?? 'esbuild'
+								minify: initial_config.build?.minify ?? true
 							}
 						},
 						manifest_data,

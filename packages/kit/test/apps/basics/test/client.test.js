@@ -1494,10 +1494,10 @@ test.describe('reroute', () => {
 		await page.goto('/reroute/external');
 		const current_url = new URL(page.url());
 
-		//click the link with the text External URL
+		// click the link with the text External URL
 		await page.click("a[data-test='external-url']");
 
-		//The URl should not have the same origin as the current URL
+		// The URL should not have the same origin as the current URL
 		const new_url = new URL(page.url());
 		expect(current_url.origin).not.toEqual(new_url.origin);
 	});
