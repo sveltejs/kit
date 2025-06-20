@@ -676,6 +676,12 @@ declare module '@sveltejs/kit' {
 			 */
 			files?(filepath: string): boolean;
 		};
+		/**
+		 * Whether to enable serverside OpenTelemetry tracing for SvelteKit operations including handle hooks, load functions, and form actions.
+		 * @default undefined
+		 * @since 2.22.0
+		 */
+		tracing?: 'server';
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.

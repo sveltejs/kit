@@ -270,6 +270,13 @@ const options = object(
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
+			tracing: validate(undefined, (input, keypath) => {
+				if (input !== 'server') {
+					throw new Error(`${keypath} should be undefined or "server"`);
+				}
+				return input;
+			}),
+
 			typescript: object({
 				config: fun((config) => config)
 			}),

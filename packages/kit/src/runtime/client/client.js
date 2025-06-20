@@ -36,7 +36,12 @@ import {
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
+import {
+	INVALIDATED_PARAM,
+	TRAILING_SLASH_PARAM,
+	validate_depends,
+	validate_load_response
+} from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
@@ -757,19 +762,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			try {
 				lock_fetch();
 				data = (await node.universal.load.call(null, load_input)) ?? null;
-				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-					throw new Error(
-						`a load function related to route '${route.id}' returned ${
-							typeof data !== 'object'
-								? `a ${typeof data}`
-								: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-										? 'an array'
-										: 'a non-plain object'
-						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-					);
-				}
+				validate_load_response(data, `related to route '${route.id}'`);
 			} finally {
 				unlock_fetch();
 			}

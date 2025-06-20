@@ -29,6 +29,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { Tracer } from '@opentelemetry/api';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -435,6 +436,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	tracer: Promise<Tracer>;
 	version_hash: string;
 }
 
