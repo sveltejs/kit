@@ -577,11 +577,11 @@ export async function respond(request, options, manifest, state) {
 			if (state.depth === 0) {
 				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
 				// causing console spam. If users want to serve this file they can install
-				// https://github.com/ChromeDevTools/vite-plugin-devtools-json
+				// https://svelte.dev/docs/cli/devtools-json
 				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
 					if (!warned_on_devtools_json_request) {
-						console.warn(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To serve this file, add this plugin to your Vite config:\n\nhttps://github.com/ChromeDevTools/vite-plugin-devtools-json\n`
+						console.log(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
 						);
 
 						warned_on_devtools_json_request = true;
