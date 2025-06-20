@@ -581,7 +581,7 @@ export async function respond(request, options, manifest, state) {
 				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
 					if (!warned_on_devtools_json_request) {
 						console.warn(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To serve this file, configure the devtools-json add-on via:\n\nnpx sv add devtools-json\n`
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. For more details see https://svelte.dev/docs/cli/devtools-json, or to add a plugin to generate and serve this file run:\n\nnpx sv add devtools-json\n`
 						);
 
 						warned_on_devtools_json_request = true;
