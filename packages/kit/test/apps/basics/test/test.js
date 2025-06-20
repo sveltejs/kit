@@ -683,7 +683,7 @@ test.describe('Page options', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
 		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
 		await page.goto('/prerendering/no-ssr');
 		await expect(page.getByText('Hello world!')).toBeVisible();
