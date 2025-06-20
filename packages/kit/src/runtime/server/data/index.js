@@ -1,10 +1,11 @@
-import { HttpError, SvelteKitError, Redirect } from '../../control.js';
+/** @import { Redirect } from '../../control.js'; */
+import { HttpError, SvelteKitError } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
-import { text } from '../../../exports/index.js';
+import { isRedirect, text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
 
@@ -99,7 +100,7 @@ export async function render_data(
 		const nodes = await Promise.all(
 			promises.map((p, i) =>
 				p.catch(async (error) => {
-					if (error instanceof Redirect) {
+					if (isRedirect(error)) {
 						throw error;
 					}
 
@@ -150,7 +151,7 @@ export async function render_data(
 	} catch (e) {
 		const error = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (isRedirect(error)) {
 			return redirect_json_response(error);
 		} else {
 			return json_response(await handle_error_and_jsonify(event, options, error), 500);

@@ -1,8 +1,7 @@
-import { text } from '../../../exports/index.js';
+import { isRedirect, text } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../pathname.js';
-import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -219,7 +218,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				} catch (e) {
 					const err = normalize_error(e);
 
-					if (err instanceof Redirect) {
+					if (isRedirect(err)) {
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',

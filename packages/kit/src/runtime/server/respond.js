@@ -19,7 +19,7 @@ import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
-import { json, text } from '../../exports/index.js';
+import { isRedirect, json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
@@ -434,7 +434,7 @@ export async function respond(request, options, manifest, state) {
 
 		return response;
 	} catch (e) {
-		if (e instanceof Redirect) {
+		if (isRedirect(e)) {
 			const response = is_data_request
 				? redirect_json_response(e)
 				: route?.page && is_action_json_request(event)

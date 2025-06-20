@@ -35,12 +35,13 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
+import { HttpError, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { isRedirect } from '../../exports/index.js';
 
 export { load_css };
 
@@ -1046,7 +1047,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			try {
 				branch.push(await branch_promises[i]);
 			} catch (err) {
-				if (err instanceof Redirect) {
+				if (isRedirect(err)) {
 					return {
 						type: 'redirect',
 						location: err.location
@@ -1216,7 +1217,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			route: null
 		});
 	} catch (error) {
-		if (error instanceof Redirect) {
+		if (isRedirect(error)) {
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
@@ -2638,7 +2639,7 @@ async function _hydrate(
 			route: parsed_route ?? null
 		});
 	} catch (error) {
-		if (error instanceof Redirect) {
+		if (isRedirect(error)) {
 			// this is a real edge case — `load` would need to return
 			// a redirect but only in the browser
 			await native_navigation(new URL(error.location, location.href));

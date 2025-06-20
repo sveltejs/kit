@@ -1,7 +1,7 @@
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
+import { isRedirect } from '../../exports/index.js';
 import { negotiate } from '../../utils/http.js';
 import { with_event } from '../app/server/event.js';
-import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
@@ -77,7 +77,7 @@ export async function render_endpoint(event, mod, state) {
 
 		return response;
 	} catch (e) {
-		if (e instanceof Redirect) {
+		if (isRedirect(e)) {
 			return new Response(undefined, {
 				status: e.status,
 				headers: { location: e.location }
