@@ -6,5 +6,5 @@
 	{browser ? 'client' : 'server'}
 </p>
 <p>
-	negated: {!browser ? 'not client' : 'not server'}
+	negated: {!browser ? 'server' : 'client'}
 </p>
