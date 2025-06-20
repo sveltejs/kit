@@ -1,9 +1,9 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
-import { Redirect } from '../../control.js';
 import { get_status } from '../../../utils/error.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
+import { isRedirect } from '../../../exports/index.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -101,7 +101,7 @@ export async function respond_with_error({
 	} catch (e) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
 		// we end up here.
-		if (e instanceof Redirect) {
+		if (isRedirect(e)) {
 			return redirect_response(e.status, e.location);
 		}
 

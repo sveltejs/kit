@@ -1,5 +1,6 @@
 import buffer from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
+import './multi-load-test.js';
 
 // `buffer.File` was added in Node 18.13.0 while the `File` global was added in Node 20.0.0
 const File = /** @type {import('node:buffer') & { File?: File}} */ (buffer).File;

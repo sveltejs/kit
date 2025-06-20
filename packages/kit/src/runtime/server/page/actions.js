@@ -1,9 +1,10 @@
+/** @import { HttpError } from '../../control.js'; */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { json } from '../../../exports/index.js';
+import { isActionFailure, isRedirect, json } from '../../../exports/index.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
+import { SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { with_event } from '../../app/server/event.js';
 
@@ -53,11 +54,7 @@ export async function handle_action_json_request(event, options, server) {
 	try {
 		const data = await call_action(event, actions);
 
-		if (__SVELTEKIT_DEV__) {
-			validate_action_return(data);
-		}
-
-		if (data instanceof ActionFailure) {
+		if (isActionFailure(data)) {
 			return action_json({
 				type: 'failure',
 				status: data.status,
@@ -85,7 +82,7 @@ export async function handle_action_json_request(event, options, server) {
 	} catch (e) {
 		const err = normalize_error(e);
 
-		if (err instanceof Redirect) {
+		if (isRedirect(err)) {
 			return action_json_redirect(err);
 		}
 
@@ -105,9 +102,7 @@ export async function handle_action_json_request(event, options, server) {
  * @param {HttpError | Error} error
  */
 function check_incorrect_fail_use(error) {
-	return error instanceof ActionFailure
-		? new Error('Cannot "throw fail()". Use "return fail()"')
-		: error;
+	return isActionFailure(error) ? new Error('Cannot "throw fail()". Use "return fail()"') : error;
 }
 
 /**
@@ -166,11 +161,7 @@ export async function handle_action_request(event, server) {
 	try {
 		const data = await call_action(event, actions);
 
-		if (__SVELTEKIT_DEV__) {
-			validate_action_return(data);
-		}
-
-		if (data instanceof ActionFailure) {
+		if (isActionFailure(data)) {
 			return {
 				type: 'failure',
 				status: data.status,
@@ -187,7 +178,7 @@ export async function handle_action_request(event, server) {
 	} catch (e) {
 		const err = normalize_error(e);
 
-		if (err instanceof Redirect) {
+		if (isRedirect(err)) {
 			return {
 				type: 'redirect',
 				status: err.status,
@@ -248,17 +239,6 @@ async function call_action(event, actions) {
 	}
 
 	return with_event(event, () => action(event));
-}
-
-/** @param {any} data */
-function validate_action_return(data) {
-	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
-	}
-
-	if (data instanceof HttpError) {
-		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
-	}
 }
 
 /**
