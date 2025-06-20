@@ -3,8 +3,8 @@
 </script>
 
 <p>
-	{browser ? 'browser' : 'server'}
+	{browser ? 'client' : 'server'}
 </p>
 <p>
-  negated: {!browser ? 'not browser' : 'not server'}
+	negated: {!browser ? 'not client' : 'not server'}
 </p>
