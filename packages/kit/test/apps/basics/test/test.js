@@ -1556,3 +1556,10 @@ test.describe('getRequestEvent', () => {
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
 	});
 });
+
+test.describe('svelte:html', () => {
+	test('server-renders correctly', async ({ page }) => {
+		await page.goto('/');
+		expect(page.locator('html')).toHaveAttribute('lang', 'en');
+	});
+});
