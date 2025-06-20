@@ -1,6 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
+import { streamFileContent } from '@sveltejs/kit/adapter';
 
 const server = new Server(manifest);
 
@@ -19,7 +20,9 @@ export default {
 	async fetch(req, env, context) {
 		await server.init({
 			// @ts-expect-error env contains environment variables and bindings
-			env
+			env,
+			read: (file) =>
+				streamFileContent({ fetch: env.ASSETS.fetch, url: new URL('/' + file, req.url) })
 		});
 
 		// skip cache if "cache-control: no-cache" in request
