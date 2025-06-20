@@ -576,11 +576,15 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.invalidateall');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
 		await page.click('button.invalidateall');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 
@@ -591,7 +595,9 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.goto');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
@@ -633,14 +639,18 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.server');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
@@ -665,14 +675,18 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.shared');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
@@ -689,7 +703,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.server');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -698,7 +714,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -714,7 +732,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.shared');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -723,7 +743,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -739,7 +761,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.specified');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -748,7 +772,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -812,14 +838,18 @@ test.describe('Invalidation', () => {
 		expect(_page).toBeDefined();
 
 		await page.click('button.invalidate');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout_1 = await page.textContent('p.layout');
 		const next_page_1 = await page.textContent('p.page');
 		expect(next_layout_1).not.toBe(layout);
 		expect(next_page_1).toBe(_page);
 
 		await page.click('button.goto');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout_2 = await page.textContent('p.layout');
 		const next_page_2 = await page.textContent('p.page');
 		expect(next_layout_2).toBe(next_layout_1);
@@ -1113,7 +1143,7 @@ test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
 		const response = await page.goto('/routing/content-negotiation');
 
-		expect(response.headers()['vary']).toBe('Accept');
+		expect(response?.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');
@@ -1143,9 +1173,13 @@ test.describe('env', () => {
 
 	test('can access public env in hooks.client.js', async ({ page }) => {
 		await page.goto('/');
-		expect(await page.evaluate(() => window.PUBLIC_DYNAMIC)).toBe(
-			'accessible anywhere/evaluated at run time'
-		);
+		expect(
+			await page.evaluate(
+				() =>
+					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (window)
+						.PUBLIC_DYNAMIC
+			)
+		).toBe('accessible anywhere/evaluated at run time');
 	});
 
 	test('uses correct dynamic env when navigating from prerendered page', async ({
@@ -1210,10 +1244,10 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(page.locator('p.success', { timeout: 15000 })).toHaveText('success');
-		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText(
-			'fail (500 Internal Error)'
-		);
+		await expect(page.locator('p.success')).toHaveText('success', { timeout: 15000 });
+		await expect(page.locator('p.fail')).toHaveText('fail (500 Internal Error)', {
+			timeout: 15000
+		});
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
@@ -1297,12 +1331,13 @@ test.describe('Assets', () => {
 
 		expect(
 			await page.evaluate(() => {
+				/** @type {HTMLLinkElement[]} */
 				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
 
 				for (let i = 0; i < links.length; ) {
 					const link = links.shift();
-					const asset_name = link.href.split('/').at(-1);
-					if (links.some((link) => link.href.includes(asset_name))) {
+					const asset_name = link?.href.split('/').at(-1);
+					if (asset_name && links.some((link) => link.href.includes(asset_name))) {
 						return false;
 					}
 				}
@@ -1388,7 +1423,7 @@ test.describe('Shallow routing', () => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
-		const now = await page.locator('span').textContent();
+		const now = /** @type {string} */ (await page.locator('span').textContent());
 
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
