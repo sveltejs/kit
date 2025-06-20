@@ -790,10 +790,18 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
+ * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;
+	request: Request;
+	fetch: typeof fetch;
+}) => MaybePromise<Response>;
+
+/**
+ * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the client
+ */
+export type HandleClientFetch = (input: {
 	request: Request;
 	fetch: typeof fetch;
 }) => MaybePromise<Response>;
