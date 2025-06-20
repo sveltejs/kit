@@ -11,7 +11,7 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('adapter', () => {
 	test('populates event.platform for dynamic SSR', async ({ page }) => {
 		await page.goto('/adapter/dynamic');
-		const json = JSON.parse(await page.textContent('pre'));
+		const json = JSON.parse((await page.textContent('pre')) ?? '');
 
 		expect(json).toEqual({
 			config: {
@@ -23,7 +23,7 @@ test.describe('adapter', () => {
 
 	test('populates event.platform for prerendered page', async ({ page }) => {
 		await page.goto('/adapter/prerendered');
-		const json = JSON.parse(await page.textContent('pre'));
+		const json = JSON.parse((await page.textContent('pre')) ?? '');
 
 		expect(json).toEqual({
 			config: {
@@ -384,7 +384,7 @@ test.describe('Load', () => {
 		const requested_urls = [];
 
 		const { port } = await start_server(async (req, res) => {
-			requested_urls.push(req.url);
+			requested_urls.push(/** @type {string} */ (req.url));
 
 			if (req.url === '/server-fetch-request-modified.json') {
 				res.writeHead(200, {
@@ -683,7 +683,7 @@ test.describe('Page options', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
 		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
 		await page.goto('/prerendering/no-ssr');
 		await expect(page.getByText('Hello world!')).toBeVisible();
@@ -782,16 +782,16 @@ test.describe('$app/stores', () => {
 		await page.goto('/store/data/www');
 
 		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff1);
+		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(
+		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(
 			javaScriptEnabled ? stuff2 : stuff1
 		);
 
 		await clicknav('a[href="/store/data/zzz"]');
 		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff3);
+		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff3);
 	});
 
 	test('navigating store contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
@@ -906,16 +906,16 @@ test.describe('$app/state', () => {
 		await page.goto('/state/data/www');
 
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff1);
+		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(
+		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(
 			javaScriptEnabled ? stuff2 : stuff1
 		);
 
 		await clicknav('a[href="/state/data/zzz"]');
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse(await page.textContent('#state-data'))).toEqual(stuff3);
+		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(stuff3);
 	});
 
 	test('navigating state contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
@@ -1403,9 +1403,8 @@ test.describe('Actions', () => {
 	}) => {
 		const response = await page.request.fetch(`${baseURL}/actions/form-errors`, {
 			method: 'POST',
-			body: JSON.stringify({ foo: 'bar' }),
+			data: { foo: 'bar' },
 			headers: {
-				'Content-Type': 'application/json',
 				Origin: `${baseURL}`
 			}
 		});
@@ -1423,7 +1422,7 @@ test.describe('Actions', () => {
 	}) => {
 		const response = await page.request.fetch(`${baseURL}/actions/enhance?/doesnt-exist`, {
 			method: 'POST',
-			body: 'irrelevant',
+			data: 'irrelevant',
 			headers: {
 				Origin: `${baseURL}`
 			}
@@ -1516,20 +1515,20 @@ test.describe.serial('Cookies API', () => {
 test.describe('Serialization', () => {
 	test('A custom data type can be serialized/deserialized', async ({ page, clicknav }) => {
 		await page.goto('/serialization-basic');
-		expect(await page.textContent('h1')).toBe('It works!');
+		await expect(page.locator('h1')).toHaveText('It works!');
 
 		await clicknav('[href="/serialization-basic/child"]');
-		expect(await page.textContent('h1')).toBe('Client-side navigation also works!');
+		await expect(page.locator('h1')).toHaveText('Client-side navigation also works!');
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form');
+		await page.goto('/serialization-form2');
 		await page.click('button');
-		expect(await page.textContent('h1')).toBe('It works!');
+		await expect(page.locator('h1')).toHaveText('It works!');
 
 		// Test navigating to the basic page works as intended
-		await page.locator('a').first();
-		expect(await page.textContent('h1')).toBe('It works!');
+		await page.locator('a').first().click();
+		await expect(page.locator('h1')).toHaveText('It works!');
 	});
 
 	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
@@ -1537,7 +1536,7 @@ test.describe('Serialization', () => {
 	}) => {
 		await page.goto('/serialization-form2');
 		await page.click('button');
-		expect(await page.textContent('h1')).toBe('It works!');
+		await expect(page.locator('h1')).toHaveText('It works!');
 	});
 });
 

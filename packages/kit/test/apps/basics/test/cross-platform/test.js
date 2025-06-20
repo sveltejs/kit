@@ -1076,10 +1076,10 @@ test.describe('$app/server', () => {
 		const svg = await page.innerHTML('[data-testid="svg"]');
 
 		// the emoji is there to check that base64 decoding works correctly
-		expect(auto.trim()).toBe('Imported without ?url 😎');
-		expect(url.trim()).toBe('Imported with ?url 😎');
-		expect(local_glob.trim()).toBe('Imported with ?url via glob 😎');
-		expect(external_glob.trim()).toBe(
+		expect(auto?.trim()).toBe('Imported without ?url 😎');
+		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob?.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
