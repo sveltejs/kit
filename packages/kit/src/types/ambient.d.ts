@@ -78,4 +78,8 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
+	/**
+	 * This function can be used to respond to a `FetchEvent` using SvelteKit.  
+	 */
+	export const respond: (event: Request) => Promise<Response>;
 }

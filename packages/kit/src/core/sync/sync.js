@@ -7,6 +7,7 @@ import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
+import { write_service_worker } from './write_service_worker.js';
 
 /**
  * Initialize SvelteKit's generated files.
@@ -30,6 +31,7 @@ export function create(config) {
 
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output);
+	write_service_worker(config, output);
 	write_root(manifest_data, output);
 	write_all_types(config, manifest_data);
 
