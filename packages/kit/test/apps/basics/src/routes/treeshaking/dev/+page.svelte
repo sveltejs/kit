@@ -3,3 +3,4 @@
 </script>
 
 <p>{dev ? 'dev' : 'prod'}</p>
+<p>negated: {!dev ? 'not dev' : 'not prod'}</p>
