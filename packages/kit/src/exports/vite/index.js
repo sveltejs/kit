@@ -37,6 +37,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { crawlFrameworkPkgs } from 'vitefu';
+import './multi-load-test.js';
 
 const cwd = process.cwd();
 

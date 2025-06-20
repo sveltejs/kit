@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../../runtime/control.js';
+import './multi-load-test.js';
 
 /**
  * @param {import('http').IncomingMessage} req

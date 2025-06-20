@@ -8,6 +8,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
+import './multi-load-test.js';
 
 export { VERSION } from '../version.js';
 
