@@ -712,9 +712,12 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 								: await resource.blob(),
 						cache: resource.cache,
 						credentials: resource.credentials,
-						// the headers are undefined on the server if the Headers object is empty
-						// so we need to make sure they are also undefined here if there are no headers
-						headers: [...resource.headers].length ? resource.headers : undefined,
+						// the server sets headers to `undefined` if there are no headers but
+						// the client defaults to an empty Headers object in the Request object.
+						// To keep the two values in sync, we explicitly set the headers to `undefined`.
+						// Also, not sure why, but sometimes 0 is evaluated as truthy so we need to
+						// explicitly compare the headers length to a number here
+						headers: [...resource.headers].length > 0 ? resource?.headers : undefined,
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,

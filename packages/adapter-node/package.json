@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"@polka/url": "^1.0.0-next.28",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "^20.12.0",
 		"polka": "^1.0.0-next.28",
 		"sirv": "^3.0.0",

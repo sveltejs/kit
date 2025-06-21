@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.22.0
+### Minor Changes
+
+
+- feat: add support for Vite 7 and Rolldown. See https://vite.dev/guide/rolldown.html#how-to-try-rolldown for details about how to try experimental Rolldown support. You will also need `vite-plugin-svelte@^6.0.0-next.0` and `vite@^7.0.0-beta.0`. Compilation should be faster using Rolldown, but with larger bundle sizes until additional tree-shaking is implemented in Rolldown. See [#13738](https://github.com/sveltejs/kit/issues/13738) for ongoing work. ([#13747](https://github.com/sveltejs/kit/pull/13747))
+
 ## 2.21.5
 ### Patch Changes
 
