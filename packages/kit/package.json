@@ -35,7 +35,7 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "^3.4.38",
-		"@types/node": "^20.12.0",
+		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "^2.4.7",
 		"dts-buddy": "^0.6.1",
 		"rollup": "^4.14.2",

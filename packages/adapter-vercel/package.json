@@ -46,7 +46,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^20.12.0",
+		"@types/node": "catalog:",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},
