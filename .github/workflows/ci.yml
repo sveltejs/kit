@@ -57,7 +57,7 @@ jobs:
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
-          - node-version: 22
+          - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
