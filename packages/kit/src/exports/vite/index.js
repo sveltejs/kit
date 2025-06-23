@@ -36,7 +36,7 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import './multi-load-test.js';
+import '../multi-load-test.js';
 
 const cwd = process.cwd();
 
