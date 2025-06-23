@@ -1477,6 +1477,21 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
+
+	// TODO: pushState/replaceState infinite loop in $effect
+	test('pushState does not loop infinitely in $effect', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/effect');
+		await expect(page.locator('p')).toHaveText('count: 0');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('count: 1');
+	});
+
+	test('replaceState does not loop infinitely in $effect', async ({ page }) => {
+		await page.goto('/shallow-routing/replace-state/effect');
+		await expect(page.locator('p')).toHaveText('count: 0');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('count: 1');
+	});
 });
 
 test.describe('reroute', () => {
