@@ -1478,7 +1478,6 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
-	// TODO: pushState/replaceState infinite loop in $effect
 	test('pushState does not loop infinitely in $effect', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state/effect');
 		await expect(page.locator('p')).toHaveText('count: 0');
