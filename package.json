@@ -38,6 +38,7 @@
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"esbuild",
+			"rolldown",
 			"sharp",
 			"svelte-preprocess",
 			"workerd"
