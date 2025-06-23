@@ -1,6 +1,6 @@
 import svelte_config from '@sveltejs/eslint-config';
 
-/** @type {import('eslint').Linter.Config[]} */
+/** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
 	...svelte_config,
 	{
