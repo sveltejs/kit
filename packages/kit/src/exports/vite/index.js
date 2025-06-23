@@ -36,7 +36,6 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { crawlFrameworkPkgs } from 'vitefu';
 import './multi-load-test.js';
 
 const cwd = process.cwd();
@@ -229,7 +228,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -251,20 +250,6 @@ async function kit({ svelte_config }) {
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			const generated = path.posix.join(kit.outDir, 'generated');
-
-			const packages_depending_on_svelte_kit = (
-				await crawlFrameworkPkgs({
-					root: cwd,
-					isBuild: is_build,
-					viteUserConfig: config,
-					isSemiFrameworkPkgByJson: (pkg_json) => {
-						return (
-							!!pkg_json.dependencies?.['@sveltejs/kit'] ||
-							!!pkg_json.peerDependencies?.['@sveltejs/kit']
-						);
-					}
-				})
-			).ssr.noExternal;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -323,10 +308,8 @@ async function kit({ svelte_config }) {
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
 						'@sveltejs/kit',
-						// We need to bundle any packages depending on @sveltejs/kit so that
-						// everyone uses the same instances of classes such as `Redirect`
-						// which we use in `instanceof` checks
-						...packages_depending_on_svelte_kit
+						// Don't bundle packages that depend on `@sveltejs/kit` because they
+						// may include CJS syntax/dependencies
 					]
 				}
 			};
