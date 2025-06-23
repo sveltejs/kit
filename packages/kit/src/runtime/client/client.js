@@ -39,6 +39,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
+import { untrack } from 'svelte';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
@@ -2111,7 +2112,7 @@ export function pushState(url, state) {
 	page.state = state;
 	root.$set({
 		// we need to assign a new page object so that subscribers are correctly notified
-		page: clone_page(page)
+		page: untrack(() => clone_page(page))
 	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
@@ -2154,7 +2155,7 @@ export function replaceState(url, state) {
 
 	page.state = state;
 	root.$set({
-		page: clone_page(page)
+		page: untrack(() => clone_page(page))
 	});
 }
 
