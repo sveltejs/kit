@@ -1,5 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
-import { onMount, tick } from 'svelte';
+import { onMount, tick, untrack } from 'svelte';
 import {
 	decode_params,
 	decode_pathname,
@@ -39,7 +39,6 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
-import { untrack } from 'svelte';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
