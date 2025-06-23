@@ -1,3 +1,3 @@
-import './multi-load-test.js';
+import '../multi-load-test.js';
 
 export { sequence } from './sequence.js';
