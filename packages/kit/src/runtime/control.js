@@ -1,5 +1,6 @@
 export class HttpError {
 	/** @private */
+	// @ts-ignore this property is checked by the `isHttpError` helper
 	_tag = 'SvelteKitHttpError';
 
 	/**
@@ -24,6 +25,7 @@ export class HttpError {
 
 export class Redirect {
 	/** @private */
+	// @ts-ignore this property is checked by the `isRedirect` helper
 	_tag = 'SvelteKitRedirect';
 
 	/**
@@ -59,6 +61,7 @@ export class SvelteKitError extends Error {
  */
 export class ActionFailure {
 	/** @private */
+	// @ts-ignore this property is checked by the `isActionFailure` helper
 	_tag = 'SvelteKitActionFailure';
 
 	/**
