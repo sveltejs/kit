@@ -308,7 +308,7 @@ async function kit({ svelte_config }) {
 						//    when it is detected to keep our virtual modules working.
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
-						'@sveltejs/kit',
+						'@sveltejs/kit'
 						// Don't bundle packages that depend on `@sveltejs/kit` because they
 						// may include CJS syntax/dependencies
 					]
