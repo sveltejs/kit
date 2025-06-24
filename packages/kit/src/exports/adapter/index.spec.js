@@ -1,5 +1,5 @@
 import { test, expect, vi } from 'vitest';
-import { streamFileContent } from './index.js';
+import { fetchFile } from './index.js';
 
 const mockedFetch = vi.fn(fetch);
 
@@ -10,9 +10,10 @@ test('stream successfully', async () => {
 			resolve(new Response(content, { status: 200, headers: { 'Content-Type': 'text/plain' } }))
 		)
 	);
-	const stream = streamFileContent({
+	const stream = fetchFile({
 		fetch: mockedFetch,
-		url: 'http://assets.local/file.txt'
+		origin: 'http://assets.local',
+		file: 'file.txt'
 	});
 	expect(await new Response(stream).text()).toBe(content);
 });
@@ -21,30 +22,33 @@ test('stream with 404', async () => {
 	mockedFetch.mockReturnValueOnce(
 		new Promise((resolve) => resolve(new Response(null, { status: 404, statusText: 'Not Found' })))
 	);
-	const stream = streamFileContent({
+	const stream = fetchFile({
 		fetch: mockedFetch,
-		url: 'http://assets.local/missing.txt'
+		origin: 'http://assets.local',
+		file: 'missing.txt'
 	});
-	await expect(new Response(stream).text()).rejects.toThrow('404 - Not Found');
+	await expect(new Response(stream).text()).rejects.toThrow('404 Not Found');
 });
 
 test('stream with null body', async () => {
 	mockedFetch.mockReturnValueOnce(
 		new Promise((resolve) => resolve(new Response(null, { status: 204, statusText: 'No Content' })))
 	);
-	const stream = streamFileContent({
+	const stream = fetchFile({
 		fetch: mockedFetch,
-		url: 'http://assets.local/empty.txt'
+		origin: 'http://assets.local',
+		file: 'empty.txt'
 	});
 	expect(await new Response(stream).text()).toBe('');
 });
 
 test('stream with invalid URL', async () => {
-	const stream = streamFileContent({
+	const stream = fetchFile({
 		fetch: mockedFetch,
-		url: '/assets.local/invalid.txt'
+		origin: 'assets.local',
+		file: 'invalid.txt'
 	});
-	await expect(new Response(stream).text()).rejects.toThrow('Invalid URL');
+	await expect(new Response(stream).text()).rejects.toThrow('Failed to parse URL');
 });
 
 test('stream with aborted fetch', async () => {
@@ -52,24 +56,26 @@ test('stream with aborted fetch', async () => {
 	// abort with DOMException otherwise will fail in CI
 	// see https://github.com/nodejs/node/issues/49557
 	controller.abort(new DOMException('Timeout'));
-	const stream = streamFileContent({
-		fetch: mockedFetch,
-		url: 'http://assets.local/abort.txt',
-		controller
+	const stream = fetchFile({
+		fetch: (input, init) => fetch(input, { ...init, signal: controller.signal }),
+		origin: 'http://assets.local',
+		file: 'abort.txt'
 	});
 	await expect(new Response(stream).text()).rejects.toThrow('Timeout');
 });
 
 test('cancelled stream should trigger abort signal', async () => {
-	const controller = new AbortController();
 	mockedFetch.mockReturnValueOnce(new Promise(() => {}));
-	const stream = streamFileContent({
-		fetch: mockedFetch,
-		url: 'http://assets.local/cancel.txt',
-		controller
+	/** @type {AbortSignal | null | undefined} */
+	let signal;
+	const stream = fetchFile({
+		fetch: (input, init) => {
+			signal = init?.signal;
+			return mockedFetch(input, init);
+		},
+		origin: 'http://assets.local',
+		file: 'cancel.txt'
 	});
-	const abortListener = vi.fn();
-	controller.signal.addEventListener('abort', abortListener);
 	await stream.cancel('User cancelled');
-	expect(abortListener).toHaveBeenCalled();
+	expect(signal?.aborted).toBe(true);
 });

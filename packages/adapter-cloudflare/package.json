@@ -33,12 +33,12 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
+		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
-		"prepublishOnly": "pnpm build",
-		"test": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
+		"test": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20250507.0",
@@ -52,7 +52,7 @@
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/kit": "^2.23.0",
 		"wrangler": "^4.0.0"
 	}
 }

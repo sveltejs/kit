@@ -464,18 +464,7 @@ const plugin = function (defaults = {}) {
 		},
 
 		supports: {
-			// reading from the filesystem only works in serverless functions
-			read: ({ config, route }) => {
-				const runtime = config.runtime ?? defaults.runtime;
-
-				if (runtime === 'edge') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\``
-					);
-				}
-
-				return true;
-			}
+			read: () => true
 		}
 	};
 };

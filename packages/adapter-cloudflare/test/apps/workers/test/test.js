@@ -10,7 +10,7 @@ test('worker works', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
-test("read from $app/server works", async ({ request }) => {
+test('read from $app/server works', async ({ request }) => {
 	const content = fs.readFileSync(path.resolve(__dirname, '../src/routes/read/file.txt'), 'utf-8');
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);

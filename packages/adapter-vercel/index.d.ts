@@ -152,8 +152,7 @@ export interface RequestContext {
 	 * ```
 	 */
 	waitUntil(
-		/**
-		 * A promise that will be kept alive until it resolves or rejects.
-		 */ promise: Promise<unknown>
-	): void;
+	/**
+	 * A promise that will be kept alive until it resolves or rejects.
+	 */ promise: Promise<unknown>): void;
 }

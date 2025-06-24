@@ -2058,24 +2058,15 @@ declare module '@sveltejs/kit' {
 
 declare module '@sveltejs/kit/adapter' {
 	/**
-	 * synchronously returns a ReadableStream containing the body of an asynchronously fetched asset
-	 * original use case: adapters' server read implementation
-	 * */
-	export function streamFileContent(options: StreamFileContentOptions): ReadableStream;
-	export type StreamFileContentOptions = {
-		/**
-		 * The fetch function to use for fetching the asset.
-		 */
-		fetch: typeof fetch;
-		/**
-		 * The URL of the asset to fetch.
-		 */
-		url: string | URL;
-		/**
-		 * An optional AbortController to cancel the fetch operation.
-		 */
-		controller?: AbortController | undefined;
-	};
+	 * Synchronously returns a `ReadableStream` containing the body of an
+	 * asynchronously fetched asset.
+	 * @since 2.23.0
+	 */
+	export function fetchFile({ origin, file, fetch }: {
+		origin: string;
+		file: string;
+		fetch?: typeof globalThis.fetch;
+	}): ReadableStream;
 
 	export {};
 }

@@ -1,31 +1,33 @@
 /**
- * @typedef StreamFileContentOptions
- * @property {typeof fetch} fetch The fetch function to use for fetching the asset.
- * @property {string | URL} url The URL of the asset to fetch.
- * @property {AbortController} [controller] An optional AbortController to cancel the fetch operation.
- */
-
-/**
- * synchronously returns a ReadableStream containing the body of an asynchronously fetched asset
- * original use case: adapters' server read implementation
- * @param {StreamFileContentOptions } options
+ * Synchronously returns a `ReadableStream` containing the body of an
+ * asynchronously fetched asset.
+ * @param {{
+ * 	origin: string;
+ * 	file: string;
+ * 	fetch?: typeof globalThis.fetch;
+ * }} options
  * @returns {ReadableStream}
+ * @since 2.23.0
  */
-export function streamFileContent(options) {
-	const { fetch, url, controller: abortController = new AbortController() } = options;
+export function fetchFile({ origin, file, fetch = globalThis.fetch }) {
+	const controller = new AbortController();
+	const signal = controller.signal;
 
 	return new ReadableStream({
 		async start(controller) {
 			try {
-				const response = await fetch(new URL(url), { signal: abortController.signal });
+				const response = await fetch(`${origin}/${file}`, { signal });
 				if (!response.ok) {
-					throw new Error(`Failed to fetch (${response.status} - ${response.statusText})`);
+					throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
 				}
+
 				if (!response.body) {
 					controller.close();
 					return;
 				}
+
 				const reader = response.body.getReader();
+
 				while (true) {
 					const { done, value } = await reader.read();
 					if (done) break;
@@ -38,7 +40,7 @@ export function streamFileContent(options) {
 			}
 		},
 		cancel(reason) {
-			abortController.abort(reason);
+			controller.abort(reason);
 		}
 	});
 }
