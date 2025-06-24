@@ -9,6 +9,12 @@ catalogs:
     '@playwright/test':
       specifier: ^1.51.1
       version: 1.51.1
+    '@rollup/plugin-commonjs':
+      specifier: ^28.0.1
+      version: 28.0.1
+    '@rollup/plugin-json':
+      specifier: ^6.1.0
+      version: 6.1.0
     '@rollup/plugin-node-resolve':
       specifier: ^16.0.1
       version: 16.0.1
@@ -161,10 +167,10 @@ importers:
         specifier: ^4.0.0
         version: 4.1.4(rollup@4.40.1)
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.1
+        specifier: 'catalog:'
         version: 28.0.1(rollup@4.40.1)
       '@rollup/plugin-json':
-        specifier: ^6.1.0
+        specifier: 'catalog:'
         version: 6.1.0(rollup@4.40.1)
       '@rollup/plugin-node-resolve':
         specifier: 'catalog:'
@@ -191,6 +197,24 @@ importers:
         specifier: 'catalog:'
         version: 3.2.3(@types/node@18.19.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
 
+  packages/adapter-netlify/test/apps/basic:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+      netlify-cli:
+        specifier: ^22.1.5
+        version: 22.1.5(@types/node@18.19.50)(picomatch@4.0.2)
+      svelte:
+        specifier: ^5.23.1
+        version: 5.23.1
+      vite:
+        specifier: 'catalog:'
+        version: 6.3.5(@types/node@18.19.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
+
   packages/adapter-netlify/test/apps/edge:
     devDependencies:
       '@sveltejs/kit':
@@ -212,10 +236,10 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.1
+        specifier: 'catalog:'
         version: 28.0.1(rollup@4.40.1)
       '@rollup/plugin-json':
-        specifier: ^6.1.0
+        specifier: 'catalog:'
         version: 6.1.0(rollup@4.40.1)
       '@rollup/plugin-node-resolve':
         specifier: 'catalog:'
