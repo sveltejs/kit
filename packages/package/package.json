@@ -43,7 +43,8 @@
 		"svelte-package": "svelte-package.js"
 	},
 	"files": [
-		"src"
+		"src",
+		"types"
 	],
 	"scripts": {
 		"lint": "prettier --check .",
@@ -53,8 +54,12 @@
 		"test": "uvu test \"^index.js$\""
 	},
 	"exports": {
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		".": {
+			"types": "./types/index.d.ts"
+		}
 	},
+	"types": "types/index.d.ts",
 	"engines": {
 		"node": "^16.14 || >=18"
 	}
