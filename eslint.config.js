@@ -1,6 +1,6 @@
 import svelte_config from '@sveltejs/eslint-config';
 
-/** @type {import('eslint').Linter.FlatConfig[]} */
+/** @type {import('eslint').Linter.Config[]} */
 export default [
 	...svelte_config,
 	{
@@ -20,7 +20,9 @@ export default [
 	{
 		languageOptions: {
 			parserOptions: {
-				projectService: true
+				projectService: {
+					allowDefaultProject: ['eslint.config.js']
+				}
 			}
 		},
 		rules: {
