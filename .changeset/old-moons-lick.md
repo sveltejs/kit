@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': minor
 ---
 
-feat: add support for `('$app/server').read`
+feat: add support for `read` imported from `$app/server`
