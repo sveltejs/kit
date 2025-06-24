@@ -103,7 +103,8 @@ export async function build_service_worker(
 				},
 				output: {
 					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
-					entryFileNames: 'service-worker.mjs',
+					// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+					entryFileNames: `service-worker.${vite.rolldownVersion ? 'js' : 'mjs'}`,
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
 				}
@@ -129,5 +130,8 @@ export async function build_service_worker(
 	});
 
 	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
-	fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
+	// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+	if (!vite.rolldownVersion) {
+		fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
+	}
 }
