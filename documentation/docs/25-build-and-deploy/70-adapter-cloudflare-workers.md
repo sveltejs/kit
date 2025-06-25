@@ -15,6 +15,7 @@ Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapt
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({
@@ -81,6 +82,8 @@ The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#p
 
 ```js
 // @errors: 7031
+/// file: +server.js
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
 	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }

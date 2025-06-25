@@ -24,8 +24,22 @@ The following example caches the built app and any files in `static` eagerly, an
 
 ```js
 // @errors: 2339
+/// file: src/service-worker.js
+// Disables access to DOM typings like `HTMLElement` which are not available
+// inside a service worker and instantiates the correct globals
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+// Ensures that the `$service-worker` import has proper type definitions
 /// <reference types="@sveltejs/kit" />
+// Only necessary if you have an import from `$env/static/public`
+/// <reference types="../.svelte-kit/ambient.d.ts" />
+
 import { build, files, version } from '$service-worker';
+
+// The reassignment of `self` to `sw` allows you to type cast it in the process
+// (this is the easiest way to do it without needing additional files)
+const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
@@ -35,7 +49,7 @@ const ASSETS = [
 	...files  // everything in `static`
 ];
 
-self.addEventListener('install', (event) => {
+sw.addEventListener('install', (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
@@ -45,7 +59,7 @@ self.addEventListener('install', (event) => {
 	event.waitUntil(addFilesToCache());
 });
 
-self.addEventListener('activate', (event) => {
+sw.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
 		for (const key of await caches.keys()) {
@@ -56,7 +70,7 @@ self.addEventListener('activate', (event) => {
 	event.waitUntil(deleteOldCaches());
 });
 
-self.addEventListener('fetch', (event) => {
+sw.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
 
@@ -121,29 +135,6 @@ navigator.serviceWorker.register('/service-worker.js', {
 ```
 
 > [!NOTE] `build` and `prerendered` are empty arrays during development
-
-## Type safety
-
-Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
-
-```original-js
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
-```
-```generated-ts
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-const sw = self as unknown as ServiceWorkerGlobalScope;
-```
-
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but this is the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions. If you import `$env/static/public` you either have to `// @ts-ignore` the import or add `/// <reference types="../.svelte-kit/ambient.d.ts" />` to the reference types.
 
 ## Other solutions
 

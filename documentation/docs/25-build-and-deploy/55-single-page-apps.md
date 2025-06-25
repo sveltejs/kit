@@ -22,6 +22,7 @@ Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({

@@ -15,6 +15,7 @@ Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({
@@ -72,6 +73,7 @@ You may set the `images` config to control how Vercel builds your images. See th
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({
@@ -98,6 +100,7 @@ To add ISR to a route, include the `isr` property in your `config` object:
 // @errors: 2664
 import { BYPASS_TOKEN } from '$env/static/private';
 
+/** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	isr: {
 		expiration: 60,

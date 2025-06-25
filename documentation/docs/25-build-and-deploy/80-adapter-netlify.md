@@ -15,6 +15,7 @@ Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your 
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		// default options are shown
@@ -55,6 +56,7 @@ SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-lab
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({
@@ -94,6 +96,7 @@ With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https:/
 ```js
 // @errors: 2705 7006
 /// file: +page.server.js
+/** @type {import('./$types').PageServerLoad} */
 export const load = async (event) => {
 	const context = event.platform.context;
 	console.log(context); // shows up in your functions log in the Netlify app

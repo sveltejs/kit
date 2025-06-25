@@ -20,6 +20,7 @@ Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to yo
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter({
@@ -126,6 +127,8 @@ The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#p
 
 ```js
 // @errors: 7031
+/// file: +server.js
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
 	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
@@ -197,6 +200,7 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 ---import adapter from '@sveltejs/adapter-cloudflare-workers';---
 +++import adapter from '@sveltejs/adapter-cloudflare';+++
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
 	kit: {
 		adapter: adapter()
