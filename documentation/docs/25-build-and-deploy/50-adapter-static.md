@@ -16,7 +16,7 @@ Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `
 import adapter from '@sveltejs/adapter-static';
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		adapter: adapter({
 			// default options are shown. On some platforms
@@ -29,6 +29,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 ...and add the [`prerender`](page-options#prerender) option to your root layout:
@@ -52,11 +54,13 @@ On these platforms, you should omit the adapter options so that `adapter-static`
 ```js
 // @errors: 2304
 /// file: svelte.config.js
-export default {
+const config = {
 	kit: {
 		adapter: adapter(---{...}---)
 	}
 };
+
+export default config;
 ```
 
 ## Options

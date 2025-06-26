@@ -16,7 +16,7 @@ Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your 
 import adapter from '@sveltejs/adapter-netlify';
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		// default options are shown
 		adapter: adapter({
@@ -31,6 +31,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets based on the `build.publish` settings, as per this sample configuration:
@@ -57,7 +59,7 @@ SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-lab
 import adapter from '@sveltejs/adapter-netlify';
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		adapter: adapter({
 			// will create a Netlify Edge Function using Deno-based
@@ -66,6 +68,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Netlify alternatives to SvelteKit functionality

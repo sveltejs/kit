@@ -21,7 +21,7 @@ Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to yo
 import adapter from '@sveltejs/adapter-cloudflare';
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		adapter: adapter({
 			// See below for an explanation of these options
@@ -39,6 +39,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Options
@@ -201,11 +203,13 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 +++import adapter from '@sveltejs/adapter-cloudflare';+++
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		adapter: adapter()
 	}
 };
+
+export default config;
 ```
 
 ### wrangler.toml

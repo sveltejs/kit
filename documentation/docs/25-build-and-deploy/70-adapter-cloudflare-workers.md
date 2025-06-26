@@ -16,13 +16,15 @@ Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapt
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 /** @type {import('@sveltejs/kit').Config} */
-export default {
+const config = {
 	kit: {
 		adapter: adapter({
 			// see below for options that can be set here
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Options
@@ -65,14 +67,14 @@ https://dash.cloudflare.com/<your-account-id>/home
 
 You will need to install [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-and-update/) and log in, if you haven't already:
 
-```sh
+```bash
 npm i -D wrangler
 wrangler login
 ```
 
 Then, you can build your app and deploy it:
 
-```sh
+```bash
 wrangler deploy
 ```
 
