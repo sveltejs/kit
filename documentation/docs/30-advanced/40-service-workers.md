@@ -23,7 +23,6 @@ Inside the service worker you have access to the [`$service-worker` module]($ser
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
-// @errors: 2339
 /// file: src/service-worker.js
 // Disables access to DOM typings like `HTMLElement` which are not available
 // inside a service worker and instantiates the correct globals

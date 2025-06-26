@@ -18,7 +18,6 @@ If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server
 Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js` with the following options:
 
 ```js
-// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 

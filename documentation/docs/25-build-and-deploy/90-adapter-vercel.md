@@ -11,7 +11,6 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307 2345
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
@@ -101,7 +100,6 @@ Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/increm
 To add ISR to a route, include the `isr` property in your `config` object:
 
 ```js
-// @errors: 2664
 import { BYPASS_TOKEN } from '$env/static/private';
 
 /** @type {import('@sveltejs/adapter-vercel').Config} */
@@ -153,7 +151,6 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
 ```js
-// @errors: 2305
 /// file: +layout.server.js
 import { VERCEL_COMMIT_REF } from '$env/static/private';
 

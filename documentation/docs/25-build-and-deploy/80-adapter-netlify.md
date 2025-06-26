@@ -11,7 +11,6 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
@@ -54,7 +53,6 @@ New projects will use the current Node LTS version by default. However, if you'r
 SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
 
 ```js
-// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
@@ -98,11 +96,14 @@ During compilation, redirect rules are automatically appended to your `_redirect
 With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) when the `edge` property is `false` in the adapter config or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when it is `true`.
 
 ```js
-// @errors: 2705 7006
+// @filename: ambient.d.ts
+/// <reference types="@sveltejs/adapter-netlify" />
+// @filename: +page.server.js
+// ---cut---
 /// file: +page.server.js
 /** @type {import('./$types').PageServerLoad} */
 export const load = async (event) => {
-	const context = event.platform.context;
+	const context = event.platform?.context;
 	console.log(context); // shows up in your functions log in the Netlify app
 };
 ```

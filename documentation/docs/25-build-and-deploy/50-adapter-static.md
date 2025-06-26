@@ -11,7 +11,6 @@ This will prerender your entire site as a collection of static files. If you'd l
 Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
@@ -52,8 +51,10 @@ Some platforms have zero-config support (more to come in future):
 On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
 
 ```js
-// @errors: 2304
 /// file: svelte.config.js
+import adapter from '@sveltejs/adapter-static';
+
+/** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		adapter: adapter(---{...}---)
@@ -94,7 +95,7 @@ You'll also want to generate a fallback `404.html` page to replace the default 4
 A config for GitHub Pages might look like the following:
 
 ```js
-// @errors: 2307 2322
+// @errors: 2322
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
