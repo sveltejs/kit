@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.22.2
+### Patch Changes
+
+
+- fix: use fallback if `untrack` doesn't exist in svelte package ([#13933](https://github.com/sveltejs/kit/pull/13933))
+
+
+- fix: warning for chrome devtools requests now suggests sv instead of vite plugin ([#13905](https://github.com/sveltejs/kit/pull/13905))
+
 ## 2.22.1
 ### Patch Changes
 
