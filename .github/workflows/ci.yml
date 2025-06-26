@@ -62,6 +62,7 @@ jobs:
             e2e-browser: 'chromium'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
+      NODE_OPTIONS: ${{matrix.node-version > 21 && '--experimental-strip-types' || ''}} #allows loading svelte.config.ts
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
