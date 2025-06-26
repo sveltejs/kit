@@ -136,6 +136,10 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
+test('create package with typescript using nodenext and svelte.config.ts', async () => {
+	await test_make_package('typescript-svelte-config');
+});
+
 test('create package and assets are not tampered', async () => {
 	await test_make_package('assets');
 });

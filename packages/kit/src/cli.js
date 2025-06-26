@@ -28,8 +28,11 @@ prog
 	.describe('Synchronise generated type definitions')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
-		if (!fs.existsSync('svelte.config.js')) {
-			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
+		const config_files = ['js', 'ts', 'mjs', 'mts']
+			.map((ext) => `svelte.config.${ext}`)
+			.filter((f) => fs.existsSync(f));
+		if (config_files.length === 0) {
+			console.warn(`Missing Svelte config file in ${process.cwd()} — skipping`);
 			return;
 		}
 
