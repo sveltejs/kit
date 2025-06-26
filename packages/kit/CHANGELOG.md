@@ -40,9 +40,6 @@
 - fix: correctly run `deserialize` on the server ([#13686](https://github.com/sveltejs/kit/pull/13686))
 
 
-- fix: handle non-semver-style dependency versions ([#13850](https://github.com/sveltejs/kit/pull/13850))
-
-
 - fix: correctly inline stylesheets of components dynamically imported in a universal load function if they are below the configured inlineStyleThreshold ([#13723](https://github.com/sveltejs/kit/pull/13723))
 
 ## 2.21.2
