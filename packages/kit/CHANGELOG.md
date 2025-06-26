@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.22.1
+### Patch Changes
+
+
+- fix: prevent infinite loop when calling `pushState`/`replaceState` in `$effect` ([#13914](https://github.com/sveltejs/kit/pull/13914))
+
+
+- chore: use `manualChunks` to bundle single and inline apps with Rolldown ([#13915](https://github.com/sveltejs/kit/pull/13915))
+
 ## 2.22.0
 ### Minor Changes
 
