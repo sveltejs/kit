@@ -735,6 +735,18 @@ Tips:
 					// 	enableNativePlugin: true
 					// }
 				};
+
+				// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+				if (!split && vite.rolldownVersion) {
+					const output_options = /** @type {import('vite').Rollup.OutputOptions} */ (
+						new_config.build?.rollupOptions?.output
+					);
+					// Currently, Rolldown's `manualChunks` doesn't produce a single JS
+					// bundle like Rollup does, but setting `inlineDynamicImports` works,
+					// only if `manualChunks` isn't set
+					output_options.inlineDynamicImports = true;
+					output_options.manualChunks = undefined;
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
