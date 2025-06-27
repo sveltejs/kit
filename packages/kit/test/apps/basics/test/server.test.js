@@ -750,6 +750,7 @@ test.describe('$app/environment', () => {
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
 		);
+		// check that import { dev } from '$app/environment' is treeshaken
 		expect(code).not.toContain('dev');
 	});
 
@@ -763,6 +764,7 @@ test.describe('$app/environment', () => {
 			),
 			'utf-8'
 		);
+		// check that import { browser } from '$app/environment' is treeshaken
 		expect(code).not.toContain('browser');
 	});
 });
