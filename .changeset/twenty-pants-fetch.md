@@ -1,9 +1,9 @@
 ---
-'@sveltejs/package': patch
-'@sveltejs/kit': patch
+'@sveltejs/package': minor
+'@sveltejs/kit': minor
 ---
 
-Support Svelte config files with .ts, .mjs and .mts extension.
+feat: support Svelte config files with .ts, .mjs and .mts extension.
 
 > **NOTE**
 >
