@@ -9,7 +9,7 @@ import url from 'node:url';
  * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_files = ['js', 'ts', 'mjs', 'mts']
+	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
 
