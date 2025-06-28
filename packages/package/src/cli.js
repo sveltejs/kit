@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import process from 'node:process';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import sade from 'sade';
 import { load_config } from './config.js';
 
@@ -8,9 +8,9 @@ import { load_config } from './config.js';
 function handle_error(error) {
 	if (error.name === 'SyntaxError') throw error;
 
-	console.error(colors.bold().red(`> ${error.message}`));
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
 	if (error.stack) {
-		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
+		console.error(styleText('grey', error.stack.split('\n').slice(1).join('\n')));
 	}
 
 	process.exit(1);
