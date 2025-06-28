@@ -1,4 +1,8 @@
 export class HttpError {
+	/** @private */
+	// @ts-ignore this property is checked by the `isHttpError` helper
+	_tag = 'SvelteKitHttpError';
+
 	/**
 	 * @param {number} status
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
@@ -20,6 +24,10 @@ export class HttpError {
 }
 
 export class Redirect {
+	/** @private */
+	// @ts-ignore this property is checked by the `isRedirect` helper
+	_tag = 'SvelteKitRedirect';
+
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
@@ -52,6 +60,10 @@ export class SvelteKitError extends Error {
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
 export class ActionFailure {
+	/** @private */
+	// @ts-ignore this property is checked by the `isActionFailure` helper
+	_tag = 'SvelteKitActionFailure';
+
 	/**
 	 * @param {number} status
 	 * @param {T} data
