@@ -27,7 +27,7 @@ prog
 	.describe('Synchronise generated type definitions')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
-		const config_files = ['js', 'ts', 'mjs', 'mts']
+		const config_files = ['js', 'ts']
 			.map((ext) => `svelte.config.${ext}`)
 			.filter((f) => fs.existsSync(f));
 		if (config_files.length === 0) {

@@ -3,7 +3,7 @@
 '@sveltejs/kit': minor
 ---
 
-feat: support Svelte config files with .ts, .mjs and .mts extension.
+feat: support svelte.config.ts
 
 > **NOTE**
 >

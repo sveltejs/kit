@@ -62,7 +62,7 @@ export function load_error_page(config) {
  * @returns {Promise<import('types').ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_files = ['js', 'ts', 'mjs', 'mts']
+	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
 
