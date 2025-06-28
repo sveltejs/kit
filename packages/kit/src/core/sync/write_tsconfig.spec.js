@@ -20,6 +20,7 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
 	expect(compilerOptions.paths).toEqual({
+		'$app/types': ['./types/index.d.ts'],
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
