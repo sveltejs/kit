@@ -1,5 +1,8 @@
 import { BROWSER, DEV } from 'esm-env';
-import { onMount, tick, untrack } from 'svelte';
+import * as svelte from 'svelte';
+const { onMount, tick } = svelte;
+// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
+const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
 	decode_pathname,
