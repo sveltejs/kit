@@ -4,23 +4,22 @@ import { read } from '../../../utils/filesystem.js';
 
 const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
 
-const page_options = new Set([...inheritable_page_options, 'entries']);
+const valid_page_options = new Set([...inheritable_page_options, 'entries']);
 
 const skip_parsing_regex = new RegExp(
-	`${Array.from(page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
+	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
 );
 
 const parser = Parser.extend(tsPlugin());
 
 /**
- * Collects exported page options from a +page.js/+layout.js file.
- * We ignore reassignments and use the declared value.
- * Returns `null` if any export is too difficult to analyse.
- * @param {string} filename
+ * Collects page options from a +page.js/+layout.js file, ignoring reassignments
+ * and using the declared value. Returns `null` if any export is too difficult to analyse.
+ * @param {string} filename The name of the file to report when an error occurs
  * @param {string} input
  * @returns {Record<string, any> | null}
  */
-export function statically_analyse_exports(filename, input) {
+export function statically_analyse_page_options(filename, input) {
 	// if there's a chance there are no page exports or export all declaration,
 	// then we can skip the AST parsing which is expensive
 	if (!skip_parsing_regex.test(input)) {
@@ -34,14 +33,14 @@ export function statically_analyse_exports(filename, input) {
 		});
 
 		/** @type {Map<string, import('acorn').Literal['value']>} */
-		const static_exports = new Map();
+		const page_options = new Map();
 
 		for (const statement of source.body) {
 			// ignore export all declarations with aliases that are not page options
 			if (
 				statement.type === 'ExportAllDeclaration' &&
 				statement.exported &&
-				!page_options.has(get_name(statement.exported))
+				!valid_page_options.has(get_name(statement.exported))
 			) {
 				continue;
 			}
@@ -60,7 +59,7 @@ export function statically_analyse_exports(filename, input) {
 				const export_specifiers = new Map();
 				for (const specifier of statement.specifiers) {
 					const exported_name = get_name(specifier.exported);
-					if (!page_options.has(exported_name)) {
+					if (!valid_page_options.has(exported_name)) {
 						continue;
 					}
 
@@ -109,7 +108,7 @@ export function statically_analyse_exports(filename, input) {
 								}
 
 								if (variable_declarator.init?.type === 'Literal') {
-									static_exports.set(
+									page_options.set(
 										/** @type {string} */ (export_specifiers.get(variable_declarator.id.name)),
 										variable_declarator.init.value
 									);
@@ -138,7 +137,7 @@ export function statically_analyse_exports(filename, input) {
 
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
-				if (page_options.has(statement.declaration.id.name)) {
+				if (valid_page_options.has(statement.declaration.id.name)) {
 					return null;
 				}
 				continue;
@@ -149,12 +148,12 @@ export function statically_analyse_exports(filename, input) {
 					return null;
 				}
 
-				if (!page_options.has(declaration.id.name)) {
+				if (!valid_page_options.has(declaration.id.name)) {
 					continue;
 				}
 
 				if (declaration.init?.type === 'Literal') {
-					static_exports.set(declaration.id.name, declaration.init.value);
+					page_options.set(declaration.id.name, declaration.init.value);
 					continue;
 				}
 
@@ -163,10 +162,10 @@ export function statically_analyse_exports(filename, input) {
 			}
 		}
 
-		return Object.fromEntries(static_exports);
+		return Object.fromEntries(page_options);
 	} catch (error) {
 		if (error instanceof Error) {
-			error.message = `Failed to statically analyse ${filename}. ${error.message}`;
+			error.message = `Failed to statically analyse page options for ${filename}. ${error.message}`;
 		}
 		throw error;
 	}
@@ -183,65 +182,67 @@ export function get_name(node) {
 /**
  * @param {{
  *   resolve: (file: string) => Promise<Record<string, any>>;
- *   static_exports?: Map<string, Record<string, any> | null>;
+ *   static_exports?: Map<string, { page_options: Record<string, any> | null, children: string[] }>;
  * }} opts
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	/**
 	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
-	 * @returns {Promise<import('types').UniversalNode | null>}
+	 * @returns {Promise<Record<string, any> | null>}
 	 */
 	const get_page_options = async (node) => {
-		if (node.universal && static_exports.has(node.universal)) {
-			return /** @type {import('types').UniversalNode | null} */ (
-				static_exports.get(node.universal)
-			);
+		const key = node.universal || node.server;
+		if (key && static_exports.has(key)) {
+			return { ...static_exports.get(key)?.page_options };
 		}
 
-		/** @type {Record<string, any> | null} */
+		/** @type {Record<string, any>} */
 		let page_options = {};
-
-		if (node.server) {
-			const module = await resolve(node.server);
-			for (const key in inheritable_page_options) {
-				if (key in module) {
-					page_options[key] = module[key];
-				}
-			}
-		}
-
-		if (node.universal) {
-			let universal_exports = static_exports.get(node.universal);
-			if (universal_exports === undefined) {
-				const input = read(node.universal);
-				universal_exports = statically_analyse_exports(node.universal, input);
-			}
-
-			if (universal_exports === null) {
-				static_exports.set(node.universal, null);
-				return null;
-			}
-
-			page_options = { ...page_options, ...universal_exports };
-		}
 
 		if (node.parent) {
 			const parent_options = await get_page_options(node.parent);
+
+			const parent_key = node.parent.universal || node.parent.server;
+			if (key && parent_key) {
+				static_exports.get(parent_key)?.children.push(key);
+			}
+
 			if (parent_options === null) {
-				// if the parent cannot be statically analysed, we can't know what
-				// page options the current node inherits, so we invalidate it too
-				if (node.universal) {
-					static_exports.set(node.universal, null);
+				// if the parent cannot be analysed, we can't know what page options
+				// the child node inherits, so we also mark it as unanalysable
+				if (key) {
+					static_exports.set(key, { page_options: null, children: [] });
 				}
 				return null;
 			}
 
-			page_options = { ...parent_options, ...page_options };
+			page_options = { ...parent_options };
+		}
+
+		if (node.server) {
+			const module = await resolve(node.server);
+			for (const page_option in inheritable_page_options) {
+				if (page_option in module) {
+					page_options[page_option] = module[page_option];
+				}
+			}
 		}
 
 		if (node.universal) {
-			static_exports.set(node.universal, page_options);
+			const input = read(node.universal);
+			const universal_page_options = statically_analyse_page_options(node.universal, input);
+
+			if (universal_page_options === null) {
+				static_exports.set(node.universal, { page_options: null, children: [] });
+				return null;
+			}
+
+			page_options = { ...page_options, ...universal_page_options };
+		}
+
+		if (key) {
+			static_exports.set(key, { page_options, children: [] });
 		}
 
 		return page_options;
@@ -249,11 +250,14 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 
 	/**
 	 * @param {string} file
-	 * @returns {void}
 	 */
 	const invalidate_page_options = (file) => {
+		static_exports.get(file)?.children.forEach((child) => static_exports.delete(child));
 		static_exports.delete(file);
 	};
 
-	return { get_page_options, invalidate_page_options };
+	return {
+		get_page_options,
+		invalidate_page_options
+	};
 }

@@ -8,7 +8,8 @@ import {
 	Page
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { Plugin } from 'vite';
+import '../types/index';
+import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
 
 export const test: TestType<
 	PlaywrightTestArgs &
@@ -16,8 +17,8 @@ export const test: TestType<
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
-				beforeNavigate(url: URL): void | boolean;
-				afterNavigate(url: URL): void;
+				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
+				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
 				preloadCode(pathname: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
@@ -38,10 +39,9 @@ export const test: TestType<
 					opts?: Parameters<Page['goto']>[1] & { wait_for_started?: boolean }
 				) => ReturnType<Page['goto']>;
 			};
+			baseURL: string;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
 
 export const config: PlaywrightTestConfig;
-
-export const plugin: () => Plugin;
