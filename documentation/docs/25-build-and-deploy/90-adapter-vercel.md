@@ -131,7 +131,7 @@ Set this string as an environment variable on Vercel by logging in and going to 
 
 To get this key known about for local development, you can use the [Vercel CLI](https://vercel.com/docs/cli/env) by running the `vercel env pull` command locally like so:
 
-```sh
+```bash
 vercel env pull .env.development.local
 ```
 
