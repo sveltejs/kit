@@ -7,8 +7,8 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: 'pnpm build && pnpm preview',
-		port: 8787
+		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
+		port: process.env.DEV ? 5173 : 8787
 	},
 	retries: process.env.CI ? 2 : 0,
 	projects: [
