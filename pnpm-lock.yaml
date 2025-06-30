@@ -12,6 +12,9 @@ catalogs:
     '@sveltejs/vite-plugin-svelte':
       specifier: ^6.0.0-next.0
       version: 6.0.0-next.0
+    cross-env:
+      specifier: ^7.0.3
+      version: 7.0.3
     vite:
       specifier: ^6.3.5
       version: 6.3.5
@@ -123,6 +126,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
+      cross-env:
+        specifier: 'catalog:'
+        version: 7.0.3
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
@@ -459,7 +465,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       dropcss:
         specifier: ^1.0.16
@@ -486,7 +492,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       redirect-pkg:
         specifier: file:./_test_dependencies/redirect-pkg
@@ -519,7 +525,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       e2e-test-dep-error:
         specifier: file:./_test_dependencies/cjs-only
@@ -573,7 +579,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -597,7 +603,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -621,7 +627,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -648,7 +654,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -675,7 +681,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -699,7 +705,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -723,7 +729,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
@@ -867,7 +873,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.0(svelte@5.23.1)(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
       cross-env:
-        specifier: ^7.0.3
+        specifier: 'catalog:'
         version: 7.0.3
       svelte:
         specifier: ^5.23.1
