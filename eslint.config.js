@@ -20,9 +20,7 @@ export default [
 	{
 		languageOptions: {
 			parserOptions: {
-				projectService: {
-					allowDefaultProject: ['eslint.config.js']
-				}
+				projectService: true
 			}
 		},
 		rules: {
