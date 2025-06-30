@@ -1,5 +1,8 @@
 import { BROWSER, DEV } from 'esm-env';
-import { onMount, tick } from 'svelte';
+import * as svelte from 'svelte';
+const { onMount, tick } = svelte;
+// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
+const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
 	decode_pathname,
@@ -2111,7 +2114,7 @@ export function pushState(url, state) {
 	page.state = state;
 	root.$set({
 		// we need to assign a new page object so that subscribers are correctly notified
-		page: clone_page(page)
+		page: untrack(() => clone_page(page))
 	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
@@ -2154,7 +2157,7 @@ export function replaceState(url, state) {
 
 	page.state = state;
 	root.$set({
-		page: clone_page(page)
+		page: untrack(() => clone_page(page))
 	});
 }
 

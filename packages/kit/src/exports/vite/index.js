@@ -695,6 +695,7 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
+								manualChunks: split ? undefined : () => 'bundle',
 								inlineDynamicImports: false
 							},
 							preserveEntrySignatures: 'strict',
@@ -734,19 +735,6 @@ Tips:
 					// 	enableNativePlugin: true
 					// }
 				};
-
-				if (!split && new_config.build?.rollupOptions?.output) {
-					const output_options = /** @type {import('vite').Rollup.OutputOptions} */ (
-						new_config.build.rollupOptions.output
-					);
-					// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
-					if (vite.rolldownVersion) {
-						output_options.inlineDynamicImports = true;
-					} else {
-						/** @type {import('rollup').OutputOptions} */ (output_options).manualChunks = () =>
-							'bundle';
-					}
-				}
 			} else {
 				new_config = {
 					appType: 'custom',

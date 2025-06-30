@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.3.11",
+	"version": "2.3.12",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -43,8 +43,7 @@
 		"svelte-package": "svelte-package.js"
 	},
 	"files": [
-		"src",
-		"types"
+		"src"
 	],
 	"scripts": {
 		"lint": "prettier --check .",
@@ -54,12 +53,8 @@
 		"test": "uvu test \"^index.js$\""
 	},
 	"exports": {
-		"./package.json": "./package.json",
-		".": {
-			"types": "./types/index.d.ts"
-		}
+		"./package.json": "./package.json"
 	},
-	"types": "types/index.d.ts",
 	"engines": {
 		"node": "^16.14 || >=18"
 	}
