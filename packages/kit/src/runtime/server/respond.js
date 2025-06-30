@@ -377,7 +377,9 @@ export async function respond(request, options, manifest, state) {
 								response.headers.set(key, /** @type {string} */ (value));
 							}
 
-							add_cookies_to_headers(response.headers, Object.values(new_cookies));
+							if (!event.isSubRequest) {
+								add_cookies_to_headers(response.headers, Object.values(new_cookies));
+							}
 
 							if (state.prerendering && event.route.id !== null) {
 								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
