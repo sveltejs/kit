@@ -18,17 +18,19 @@ If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server
 Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js` with the following options:
 
 ```js
-// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter({
 			fallback: '200.html' // may differ from host to host
 		})
 	}
 };
+
+export default config;
 ```
 
 The `fallback` page is an HTML page created by SvelteKit from your page template (e.g. `app.html`) that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages.
