@@ -397,7 +397,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		// changing the svelte config requires restarting the dev server
 		// the config is only read on start and passed on to vite-plugin-svelte
 		// which needs up-to-date values to operate correctly
-		if (path.basename(file) === 'svelte.config.js') {
+		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;
 			await vite.restart();
