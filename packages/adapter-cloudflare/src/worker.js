@@ -1,6 +1,8 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
+import { fetchFile } from '@sveltejs/kit/adapter';
 
 const server = new Server(manifest);
 
@@ -8,6 +10,24 @@ const app_path = `/${manifest.appPath}`;
 
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
+
+/**
+ * We don't know the origin until we receive a request, but
+ * that's guaranteed to happen before we call `read`
+ * @type {string}
+ */
+let origin;
+
+const initialized = server.init({
+	// @ts-expect-error env contains environment variables and bindings
+	env,
+	read: (file) =>
+		fetchFile({
+			origin,
+			file,
+			fetch: /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch
+		})
+});
 
 export default {
 	/**
@@ -17,10 +37,10 @@ export default {
 	 * @returns {Promise<Response>}
 	 */
 	async fetch(req, env, ctx) {
-		await server.init({
-			// @ts-expect-error env contains environment variables and bindings
-			env
-		});
+		if (!origin) {
+			origin = new URL(req.url).origin;
+			await initialized;
+		}
 
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';

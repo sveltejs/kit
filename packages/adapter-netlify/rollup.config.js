@@ -6,15 +6,16 @@ import json from '@rollup/plugin-json';
 const config = {
 	input: {
 		serverless: 'src/serverless.js',
-		shims: 'src/shims.js'
+		shims: 'src/shims.js',
+		edge: 'src/edge.js'
 	},
 	output: {
-		dir: 'files/esm',
+		dir: 'files',
 		format: 'esm'
 	},
 	// @ts-ignore https://github.com/rollup/plugins/issues/1329
 	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
-	external: (id) => id === '0SERVER' || id.startsWith('node:'),
+	external: (id) => id === '0SERVER' || id === 'MANIFEST' || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only'
 };
 
