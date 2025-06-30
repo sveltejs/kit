@@ -1,8 +1,7 @@
 {
 	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
 		"checkJs": true,
 		"noEmit": true
-	}
+	},
+	"include": ["eslint.config.js"]
 }

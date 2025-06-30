@@ -16,7 +16,7 @@
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"cross-env": "^7.0.3",
+		"cross-env": "catalog:",
 		"dropcss": "^1.0.16",
 		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
