@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Ignores errors for cookies being added to headers that may be immutable do to the cookies being added prior.
+fix: continue if error encountered when cookie is being added to immutable headers due to the cookies already being added
