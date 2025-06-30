@@ -695,8 +695,7 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: split ? undefined : () => 'bundle',
-								inlineDynamicImports: false
+								inlineDynamicImports: !split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
