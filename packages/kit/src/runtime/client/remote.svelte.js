@@ -77,8 +77,14 @@ class Resource {
 	 * @param {() => Promise<T>} fn
 	 */
 	constructor(fn) {
+		let init = false;
 		this.#fn = () => {
-			this.#loading = true;
+			// Prevent state_unsafe_mutation error on first run when the resource is created within the template
+			if (init) {
+				this.#loading = true;
+			} else {
+				init = true;
+			}
 
 			// Don't use Promise.withResolvers, it's too new still
 			/** @type {() => void} */
