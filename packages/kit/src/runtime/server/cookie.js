@@ -274,15 +274,19 @@ export function path_matches(path, constraint) {
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
-		const { name, value, options } = new_cookie;
-		headers.append('set-cookie', serialize(name, value, options));
+		try {
+			const { name, value, options } = new_cookie;
+			headers.append('set-cookie', serialize(name, value, options));
 
-		// special case — for routes ending with .html, the route data lives in a sibling
-		// `.html__data.json` file rather than a child `/__data.json` file, which means
-		// we need to duplicate the cookie
-		if (options.path.endsWith('.html')) {
-			const path = add_data_suffix(options.path);
-			headers.append('set-cookie', serialize(name, value, { ...options, path }));
+			// special case — for routes ending with .html, the route data lives in a sibling
+			// `.html__data.json` file rather than a child `/__data.json` file, which means
+			// we need to duplicate the cookie
+			if (options.path.endsWith('.html')) {
+				const path = add_data_suffix(options.path);
+				headers.append('set-cookie', serialize(name, value, { ...options, path }));
+			}
+		} catch (error) {
+			console.error(`Failed to add cookie "${new_cookie.name}":`, error);
 		}
 	}
 }
