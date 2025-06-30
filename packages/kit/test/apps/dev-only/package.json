@@ -12,8 +12,8 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
-		"cross-env": "^7.0.3",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"cross-env": "catalog:",
 		"e2e-test-dep-error": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks-client": "file:./_test_dependencies/cjs-only",
@@ -27,7 +27,7 @@
 		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
-		"vite": "^6.2.7"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

@@ -13,9 +13,10 @@ test('$lib/*.server.* is not statically importable from the client', { timeout }
 			timeout
 		});
 	} catch (err) {
+		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			err.message.includes('Cannot import $lib/test.server.js into client-side code'),
-			`received unexpected exception message ${err.message}`
+			message.includes('Cannot import $lib/test.server.js into client-side code'),
+			`received unexpected exception message ${message}`
 		);
 		return;
 	}
@@ -30,9 +31,10 @@ test('$lib/*.server.* is not dynamically importable from the client', { timeout 
 			timeout
 		});
 	} catch (err) {
+		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			err.message.includes('Cannot import $lib/test.server.js into client-side code'),
-			`received unexpected exception message ${err.message}`
+			message.includes('Cannot import $lib/test.server.js into client-side code'),
+			`received unexpected exception message ${message}`
 		);
 		return;
 	}
@@ -47,9 +49,10 @@ test('$lib/server/* is not statically importable from the client', { timeout }, 
 			timeout
 		});
 	} catch (err) {
+		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
-			`received unexpected exception message ${err.message}`
+			message.includes('Cannot import $lib/server/something/private.js into client-side code'),
+			`received unexpected exception message ${message}`
 		);
 		return;
 	}
@@ -64,9 +67,10 @@ test('$lib/server/* is not dynamically importable from the client', { timeout },
 			timeout
 		});
 	} catch (err) {
+		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
-			`received unexpected exception message ${err.message}`
+			message.includes('Cannot import $lib/server/something/private.js into client-side code'),
+			`received unexpected exception message ${message}`
 		);
 		return;
 	}

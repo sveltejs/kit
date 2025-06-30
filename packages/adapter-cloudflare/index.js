@@ -156,7 +156,8 @@ export default function (options = {}) {
 				const proxy = await getPlatformProxy(options.platformProxy);
 				const platform = /** @type {App.Platform} */ ({
 					env: proxy.env,
-					context: proxy.ctx,
+					ctx: proxy.ctx,
+					context: proxy.ctx, // deprecated in favor of ctx
 					caches: proxy.caches,
 					cf: proxy.cf
 				});
