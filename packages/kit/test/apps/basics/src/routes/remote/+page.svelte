@@ -27,8 +27,8 @@
 <button onclick={() => count.refresh()} id="refresh-btn">Refresh</button>
 
 <button
-	onclick={async () => {
-		release = await count.override((count) => count + 10);
+	onclick={() => {
+		release = count.override((count) => count + 10);
 	}}
 	id="override-btn">Override</button
 >
@@ -45,8 +45,7 @@
 </button>
 <button
 	onclick={async () => {
-		command_result = await set_count(3);
-		count.refresh();
+		command_result = await set_count(3).updates(count);
 	}}
 	id="multiply-refresh-btn"
 >
@@ -59,6 +58,16 @@
 	id="multiply-server-refresh-btn"
 >
 	command (query server refresh)
+</button>
+<button
+	onclick={async () => {
+		// slow, else test will not be able to see the override
+		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
+		command_result = await set_count(5, true).updates(count.withOverride(() => 6));
+	}}
+	id="multiply-override-refresh-btn"
+>
+	command (override + refresh)
 </button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>

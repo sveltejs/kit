@@ -8,7 +8,6 @@ import {
 	app,
 	invalidateAll,
 	remote_responses,
-	pending_invalidate,
 	started,
 	goto,
 	set_nearest_error_page,
@@ -36,7 +35,7 @@ class Resource {
 	/** @type {() => Promise<void>} */
 	#fn;
 	/** @type {null | { value: T }} */
-	#pending = null;
+	#pending = null; // TODO now that we have `updates`, do we still want to keep this (somewhat brittle) behavior?
 	#loading = $state(true);
 	/** @type {Array<() => void>} */
 	#latest = [];
@@ -169,16 +168,40 @@ class Resource {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		pending_refresh = true;
 		return wait().then(() => {
-			pending_refresh = false;
 			this.#promise = this.#fn();
 			return this.#promise;
 		});
 	}
 }
 
-let pending_refresh = false;
+/**
+ * @template T
+ * @extends {Resource<T>}
+ */
+class Query extends Resource {
+	/** @type {string} */
+	_key;
+
+	/**
+	 * @param {string} key
+	 * @param {() => Promise<T>} fn
+	 */
+	constructor(key, fn) {
+		super(fn);
+		this._key = key;
+	}
+
+	/**
+	 * @param {(old: T) => T} fn
+	 */
+	withOverride(fn) {
+		return {
+			_key: this._key,
+			release: this.override(fn)
+		};
+	}
+}
 
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
@@ -218,7 +241,7 @@ function remote_request(id, prerender) {
 
 		let resource = entry?.[1];
 		if (!resource) {
-			resource = new Resource(async () => {
+			resource = new Query(cache_key, async () => {
 				if (!started) {
 					const result = remote_responses[cache_key];
 					if (result) {
@@ -245,14 +268,19 @@ function remote_request(id, prerender) {
 					// await goto(result.location);
 					// /** @type {Resource<any>} */ (resource).refresh();
 					// TODO double-check this
-					goto(result.location);
-					await new Promise((r) => setTimeout(r, 0));
+					await goto(result.location);
+					await new Promise((r) => setTimeout(r, 100));
 					throw new Redirect(307, result.location);
 				} else if (result.type === 'error') {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
 					return devalue.parse(result.result, app.decoders);
 				}
+			});
+
+			Object.defineProperty(resource, '_key', {
+				value: cache_key,
+				enumerable: false
 			});
 
 			result_map.set(
@@ -324,33 +352,53 @@ export function prerender(id) {
  * @param {string} id
  */
 export function command(id) {
-	return async (/** @type {any} */ ...args) => {
-		const response = await fetch(`/${app_dir}/remote/${id}`, {
-			method: 'POST',
-			body: stringify_remote_args(args, app.hooks.transport),
-			headers: {
-				'Content-Type': 'application/json'
+	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
+	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
+	return (/** @type {any} */ ...args) => {
+		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
+		let updates = [];
+
+		const result = (async () => {
+			await Promise.resolve();
+
+			const response = await fetch(`/${app_dir}/remote/${id}`, {
+				method: 'POST',
+				body: JSON.stringify({
+					args: stringify_remote_args(args, app.hooks.transport),
+					refreshes: updates.map((u) => u._key)
+				}),
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (!response.ok) {
+				// We only end up here in case of a network error or if the server has an internal error
+				// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+				throw new Error('Failed to execute remote function');
 			}
-		});
 
-		if (!response.ok) {
-			// We only end up here in case of a network error or if the server has an internal error
-			// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-			throw new Error('Failed to execute remote function');
-		}
+			const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+			if (result.type === 'redirect') {
+				throw new Error(
+					'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+				);
+			} else if (result.type === 'error') {
+				throw new HttpError(result.status ?? 500, result.error);
+			} else {
+				refresh_queries(result, updates);
 
-		const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-		if (result.type === 'redirect') {
-			throw new Error(
-				'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-			);
-		} else if (result.type === 'error') {
-			throw new HttpError(result.status ?? 500, result.error);
-		} else {
-			refresh_queries(result);
+				return devalue.parse(result.result, app.decoders);
+			}
+		})();
 
-			return devalue.parse(result.result, app.decoders);
-		}
+		// @ts-expect-error
+		result.updates = (/** @type {any} */ ...args) => {
+			updates = args;
+			return result;
+		};
+
+		return result;
 	};
 }
 
@@ -642,21 +690,22 @@ export function form(id) {
 
 /**
  * @param {RemoteFunctionResponse & { type: 'result'}} result
+ * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
  */
-function refresh_queries(result) {
+function refresh_queries(result, updates = []) {
 	const refreshes = Object.entries(devalue.parse(result.refreshes, app.decoders));
 	if (refreshes.length > 0) {
 		for (const [key, value] of refreshes) {
+			// If there was an optimistic update, release it right before we update the query
+			const update = updates.find((u) => u._key === key);
+			if (update && 'release' in update) {
+				update.release();
+			}
 			// Update the query with the new value
 			const entry = result_map.get(key);
 			entry?.[2](value);
 		}
 	} else {
-		wait().then(() => {
-			// Users can granularily invalidate by calling query.refresh() or invalidate('foo:bar') themselves.
-			// If that doesn't happen within a microtask we assume they want to invalidate everything.
-			if (pending_invalidate || pending_refresh) return;
-			invalidateAll();
-		});
+		invalidateAll();
 	}
 }

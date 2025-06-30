@@ -55,6 +55,44 @@ export async function handle_remote_call(event, options, manifest, id) {
 					refreshes: stringify(get_remote_info(event).refreshes, transport)
 				})
 			);
+		} else if (info.type === 'command') {
+			/** @type {{ args: string, refreshes: string[] }} */
+			const { args: stringified_args, refreshes } = await event.request.json();
+			const args = parse_remote_args(stringified_args, transport);
+			const data = await with_event(event, () => func.apply(null, args));
+			const refreshed = await Promise.all(
+				refreshes.map(async (key) => {
+					const [id, stringified_args] = key.split('|');
+					const [hash, func_name] = id.split('/');
+					const remotes = manifest._.remotes;
+
+					// TODO what do we do in this case? erroring after the mutation has happened is not great
+					if (!remotes[hash]) error(400, 'Bad request');
+
+					const module = await remotes[hash]();
+					const func = module[func_name];
+
+					if (!func) error(400, 'Bad request');
+
+					return [
+						key,
+						await with_event(event, () =>
+							func.apply(null, parse_remote_args(stringified_args, transport))
+						)
+					];
+				})
+			);
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(data, transport),
+					refreshes: stringify(
+						{ ...get_remote_info(event).refreshes, ...Object.fromEntries(refreshed) },
+						transport
+					)
+				})
+			);
 		} else {
 			const stringified_args =
 				info.type === 'prerender'
@@ -72,8 +110,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, transport),
-					refreshes: stringify(get_remote_info(event).refreshes, transport)
+					result: stringify(data, transport)
 				})
 			);
 		}

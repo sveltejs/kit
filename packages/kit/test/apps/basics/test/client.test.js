@@ -1587,7 +1587,8 @@ test.describe('binding_property_non_reactive warn', () => {
 });
 
 // have to run in serial because commands mutate in-memory data on the server
-test.describe.serial('remote functions', () => {
+test.describe('remote functions', () => {
+	test.describe.configure({ mode: 'default' });
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
 			await page.click('#reset-btn');
@@ -1618,12 +1619,11 @@ test.describe.serial('remote functions', () => {
 		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
 	});
 
-	test('command returns correct sum and refreshes only specific data if refresh called afterwards', async ({
+	test('command returns correct sum and does client-initiated single flight mutation', async ({
 		page
 	}) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1632,13 +1632,12 @@ test.describe.serial('remote functions', () => {
 		await expect(page.locator('#command-result')).toHaveText('3');
 		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(2); // 1 for the command, 1 for the refresh
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('command does single flight mutation', async ({ page }) => {
+	test('command does server-initiated single flight mutation', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1650,10 +1649,24 @@ test.describe.serial('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
+	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		page.click('#multiply-override-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await expect(page.locator('#command-result')).toHaveText('5');
+		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
 	test('override works and persists across updates or refreshes', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-		await page.waitForTimeout(300); // there's some query caching which could mess with the test
 
 		// override the value
 		await page.click('#override-btn');

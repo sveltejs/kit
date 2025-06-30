@@ -362,7 +362,7 @@ export function prerender(fn, options) {
  * @template {any[]} Input
  * @template Output
  * @param {(...args: Input) => Output} fn
- * @returns {(...args: Input) => Promise<Awaited<Output>>}
+ * @returns {(...args: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(fn) {
@@ -370,9 +370,8 @@ export function command(fn) {
 
 	/**
 	 * @param {Input} args
-	 * @returns {Promise<Awaited<Output>>}
 	 */
-	const wrapper = async (...args) => {
+	const wrapper = (...args) => {
 		if (prerendering) {
 			throw new Error(
 				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
@@ -390,7 +389,13 @@ export function command(fn) {
 		if (!get_remote_info(event).refreshes) {
 			get_remote_info(event).refreshes = {};
 		}
-		return /** @type {Awaited<Output>} */ (with_cleansed_event(event, true, () => fn(...args)));
+
+		const promise = Promise.resolve(with_cleansed_event(event, true, () => fn(...args)));
+		// @ts-expect-error
+		promise.updates = () => {
+			throw new Error('Cannot call `command(...).updates(...)` on the server');
+		};
+		return /** @type {Promise<Awaited<Output>> & { updates: (...arsg: any[]) => any}} */ (promise);
 	};
 
 	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({

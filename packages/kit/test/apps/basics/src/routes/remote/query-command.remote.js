@@ -7,7 +7,12 @@ let count = 0;
 
 export const get_count = query(() => count);
 
-export const set_count = command((c) => (count = c));
+export const set_count = command(async (c, slow = false) => {
+	if (slow) {
+		await new Promise((resolve) => setTimeout(resolve, 500));
+	}
+	return (count = c);
+});
 
 export const set_count_server = command(async (c) => {
 	count = c;

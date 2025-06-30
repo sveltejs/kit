@@ -1640,7 +1640,31 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Can only be called on the client.
 		 */
-		override: (update: (current: Awaited<Output>) => Awaited<Output>) => Promise<() => void>;
+		override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
+		/**
+		 * Temporarily override the value of a query. Useful for optimistic UI updates.
+		 * `withOverride` expects a function that takes the current value and returns the new value.
+		 * In other words this works like `override`, but is specifically for use as part of the `updates` method of a remote `command` or `form` submit
+		 * in order to coordinate query refreshes and override releases at once, without causing e.g. flickering in the UI.
+		 *
+		 * ```svelte
+		 * <script>
+		 *   import { getTodos, addTodo } from './todos.remote.js';
+		 *   const todos = getTodos();
+		 * </script>
+		 *
+		 * <form {...addTodo.enhance(async ({ data, submit }) => {
+		 *   await submit().updates(todos.withOverride((todos) => [...todos, { text: data.get('text') }]));
+		 * }}>
+		 *   <input type="text" name="text" />
+		 *   <button type="submit">Add Todo</button>
+		 * </form>
+		 * ```
+		 */
+		withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+			_key: string;
+			release: () => void;
+		};
 	};
 	interface AdapterEntry {
 		/**
@@ -2666,7 +2690,9 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>>;
+	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>> & {
+		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
+	};
 	/**
 	 * Creates a form action. The passed function will be called when the form is submitted.
 	 * Returns an object that can be spread onto a form element to connect it to the function.
