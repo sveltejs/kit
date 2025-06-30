@@ -34,8 +34,6 @@ function wait(times = 3) {
 class Resource {
 	/** @type {() => Promise<void>} */
 	#fn;
-	/** @type {null | { value: T }} */
-	#pending = null; // TODO now that we have `updates`, do we still want to keep this (somewhat brittle) behavior?
 	#loading = $state(true);
 	/** @type {Array<() => void>} */
 	#latest = [];
@@ -54,10 +52,11 @@ class Resource {
 		// don't reduce undefined value
 		if (!this.#inited) return undefined;
 
-		return this.#overrides.reduce((v, r) => r(v), this.#raw);
+		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
 	/** @type {Promise<T>['then']} */
+	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
 		const p = this.#promise;
 		this.#overrides.length;
@@ -67,9 +66,9 @@ class Resource {
 				await p;
 				// we need this to avoid await_reactivity_loss warning and be in sync with other async reactivity
 				await wait();
-				resolve(this.#current);
+				resolve?.(/** @type {T} */ (this.#current));
 			} catch (error) {
-				reject(error);
+				reject?.(error);
 			}
 		};
 	});
@@ -104,21 +103,9 @@ class Resource {
 					if (idx === -1) return;
 
 					this.#latest.splice(0, idx).forEach((r) => r());
-
-					if (this.#overrides.length === 0) {
-						this.#inited = true;
-						this.#loading = false;
-						this.#raw = value;
-					} else {
-						this.#pending = { value };
-
-						wait().then(() => {
-							this.#loading = false;
-							this.#pending = null;
-							this.#inited = true;
-							this.#raw = value;
-						});
-					}
+					this.#inited = true;
+					this.#loading = false;
+					this.#raw = value;
 
 					resolve();
 				})
@@ -153,12 +140,6 @@ class Resource {
 			const i = this.#overrides.indexOf(fn);
 
 			if (i !== -1) {
-				if (this.#pending) {
-					this.#inited = true;
-					this.#raw = this.#pending.value;
-					this.#pending = null;
-				}
-
 				this.#overrides.splice(i, 1);
 			}
 		};
@@ -450,6 +431,7 @@ export function form(id) {
 			/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
 			let updates = [];
 
+			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
@@ -503,8 +485,7 @@ export function form(id) {
 				}
 			})();
 
-			// @ts-expect-error
-			promise.updates = (/** @type {any} */ ...args) => {
+			promise.updates = (...args) => {
 				updates = args;
 				return promise;
 			};
