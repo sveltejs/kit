@@ -31,13 +31,14 @@
 		"prettier-plugin-svelte": "^3.1.2",
 		"typescript-eslint": "^8.24.0"
 	},
-	"packageManager": "pnpm@10.11.0",
+	"packageManager": "pnpm@10.12.4",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"esbuild",
+			"rolldown",
 			"sharp",
 			"svelte-preprocess",
 			"workerd"

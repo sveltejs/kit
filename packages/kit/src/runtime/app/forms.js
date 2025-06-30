@@ -6,8 +6,6 @@ import { app as server_app } from '../server/app.js';
 
 export { applyAction };
 
-const decoders = BROWSER ? client_app.decoders : server_app?.decoders;
-
 /**
  * Use this function to deserialize the response from a form submission.
  * Usage:
@@ -34,7 +32,9 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data, decoders);
+		// the decoders should never be initialised at the top-level because `app`
+		// will not initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
 
 	return parsed;
