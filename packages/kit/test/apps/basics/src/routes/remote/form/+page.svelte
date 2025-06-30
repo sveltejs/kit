@@ -1,6 +1,10 @@
 <script>
-	import { task_one, task_two } from './form.remote.js';
+	import { get_task, task_one, task_two } from './form.remote.js';
+	const current_task = get_task();
 </script>
+
+<!-- TODO use await here once async lands -->
+<p id="get-task">{#await current_task then task}{task}{/await}</p>
 
 <form {...task_one}>
 	<input id="input-task" name="task" />
@@ -27,7 +31,24 @@
 			try {
 				await submit();
 			} catch {}
-		})}>Task Two</button
+		})}>Task Two (enhanced)</button
+	>
+</form>
+
+<form
+	{...task_one.enhance(async ({ data, submit }) => {
+		const task = data.get('task');
+		await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
+	})}
+>
+	<input id="input-task-override" name="task" />
+	<button id="submit-btn-override-one">Task One (with override)</button>
+	<button
+		id="submit-btn-override-two"
+		{...task_two.formAction.enhance(async ({ data, submit }) => {
+			const task = data.get('task');
+			await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
+		})}>Task Two (with override)</button
 	>
 </form>
 

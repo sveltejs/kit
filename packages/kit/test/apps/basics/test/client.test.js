@@ -1727,6 +1727,24 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#form-error-2')).toHaveText('Unexpected error (500 Internal Error)');
 	});
 
+	test('form.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.formAction.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
 	test('prerendered entries not called in prod', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

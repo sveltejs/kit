@@ -1563,7 +1563,18 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 	onsubmit: (event: SubmitEvent) => void;
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
 	enhance: (
-		callback: (opts: { form: HTMLFormElement; data: FormData; submit: () => Promise<void> }) => void
+		callback: (opts: {
+			form: HTMLFormElement;
+			data: FormData;
+			submit: () => Promise<void> & {
+				updates: (
+					...queries: Array<
+						| ReturnType<RemoteQuery<any, any>>
+						| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+					>
+				) => Promise<void>;
+			};
+		}) => void
 	) => {
 		method: 'POST';
 		action: string;
@@ -1598,7 +1609,14 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 			callback: (opts: {
 				form: HTMLFormElement;
 				data: FormData;
-				submit: () => Promise<void>;
+				submit: () => Promise<void> & {
+					updates: (
+						...queries: Array<
+							| ReturnType<RemoteQuery<any, any>>
+							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+						>
+					) => Promise<void>;
+				};
 			}) => void
 		) => {
 			type: 'submit';

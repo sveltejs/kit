@@ -33,6 +33,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 	const info = func.__;
 	const transport = options.hooks.transport;
 
+	/** @type {string[] | undefined} */
+	let form_client_refreshes;
+
 	try {
 		if (info.type === 'form') {
 			if (!is_form_content_type(event.request)) {
@@ -46,13 +49,22 @@ export async function handle_remote_call(event, options, manifest, id) {
 			}
 
 			const form_data = await event.request.formData();
+			form_client_refreshes = JSON.parse(
+				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
+			);
 			const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data instanceof ActionFailure ? data.data : data, transport),
-					refreshes: stringify(get_remote_info(event).refreshes, transport)
+					refreshes: stringify(
+						{
+							...get_remote_info(event).refreshes,
+							...(await apply_client_refreshes(/** @type {string[]} */ (form_client_refreshes)))
+						},
+						transport
+					)
 				})
 			);
 		} else if (info.type === 'command') {
@@ -60,37 +72,13 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const { args: stringified_args, refreshes } = await event.request.json();
 			const args = parse_remote_args(stringified_args, transport);
 			const data = await with_event(event, () => func.apply(null, args));
-			const refreshed = await Promise.all(
-				refreshes.map(async (key) => {
-					const [id, stringified_args] = key.split('|');
-					const [hash, func_name] = id.split('/');
-					const remotes = manifest._.remotes;
-
-					// TODO what do we do in this case? erroring after the mutation has happened is not great
-					if (!remotes[hash]) error(400, 'Bad request');
-
-					const module = await remotes[hash]();
-					const func = module[func_name];
-
-					if (!func) error(400, 'Bad request');
-
-					return [
-						key,
-						await with_event(event, () =>
-							func.apply(null, parse_remote_args(stringified_args, transport))
-						)
-					];
-				})
-			);
+			const refreshed = await apply_client_refreshes(refreshes);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: stringify(
-						{ ...get_remote_info(event).refreshes, ...Object.fromEntries(refreshed) },
-						transport
-					)
+					refreshes: stringify({ ...get_remote_info(event).refreshes, ...refreshed }, transport)
 				})
 			);
 		} else {
@@ -120,7 +108,15 @@ export async function handle_remote_call(event, options, manifest, id) {
 			return json({
 				type: 'redirect',
 				location: error.location,
-				refreshes: refreshes && stringify(refreshes, transport)
+				refreshes:
+					(refreshes || form_client_refreshes?.length) &&
+					stringify(
+						{
+							...(refreshes || {}),
+							...(await apply_client_refreshes(form_client_refreshes ?? []))
+						},
+						transport
+					)
 			});
 		}
 
@@ -131,6 +127,34 @@ export async function handle_remote_call(event, options, manifest, id) {
 				status:
 					error instanceof HttpError || error instanceof SvelteKitError ? error.status : undefined
 			})
+		);
+	}
+
+	/** @param {string[]} refreshes */
+	async function apply_client_refreshes(refreshes) {
+		return Object.fromEntries(
+			await Promise.all(
+				refreshes.map(async (key) => {
+					const [id, stringified_args] = key.split('|');
+					const [hash, func_name] = id.split('/');
+					const remotes = manifest._.remotes;
+
+					// TODO what do we do in this case? erroring after the mutation has happened is not great
+					if (!remotes[hash]) error(400, 'Bad request');
+
+					const module = await remotes[hash]();
+					const func = module[func_name];
+
+					if (!func) error(400, 'Bad request');
+
+					return [
+						key,
+						await with_event(event, () =>
+							func.apply(null, parse_remote_args(stringified_args, transport))
+						)
+					];
+				})
+			)
 		);
 	}
 }

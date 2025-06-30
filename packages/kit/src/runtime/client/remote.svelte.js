@@ -358,7 +358,7 @@ export function command(id) {
 		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
 		let updates = [];
 
-		const result = (async () => {
+		const promise = (async () => {
 			await Promise.resolve();
 
 			const response = await fetch(`/${app_dir}/remote/${id}`, {
@@ -386,19 +386,19 @@ export function command(id) {
 			} else if (result.type === 'error') {
 				throw new HttpError(result.status ?? 500, result.error);
 			} else {
-				refresh_queries(result, updates);
+				refresh_queries(result.refreshes, updates);
 
 				return devalue.parse(result.result, app.decoders);
 			}
 		})();
 
 		// @ts-expect-error
-		result.updates = (/** @type {any} */ ...args) => {
+		promise.updates = (/** @type {any} */ ...args) => {
 			updates = args;
-			return result;
+			return promise;
 		};
 
-		return result;
+		return promise;
 	};
 }
 
@@ -433,8 +433,10 @@ export function form(id) {
 		/** @type {any} */
 		let error = $state(undefined);
 
+		// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
+		// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
 		/** @param {FormData} data */
-		async function submit(data) {
+		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
@@ -445,53 +447,69 @@ export function form(id) {
 				entry[0]++;
 			}
 
-			try {
-				const response = await fetch(`/${app_dir}/remote/${action_id}`, {
-					method: 'POST',
-					body: data
-				});
+			/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
+			let updates = [];
 
-				if (!response.ok) {
-					// We only end up here in case of a network error or if the server has an internal error
-					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-					error = { message: 'Failed to execute remote function' };
-					result = undefined;
-					throw new Error(error.message);
-				}
+			const promise = (async () => {
+				try {
+					await Promise.resolve();
 
-				const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
-
-				if (form_result.type === 'result') {
-					error = undefined;
-					result = devalue.parse(form_result.result, app.decoders);
-
-					refresh_queries(form_result);
-				} else if (form_result.type === 'redirect') {
-					const refreshes = form_result.refreshes
-						? Object.entries(devalue.parse(form_result.refreshes, app.decoders))
-						: [];
-					for (const [key, value] of refreshes) {
-						// Update the query with the new value
-						const entry = result_map.get(key);
-						entry?.[2](value);
+					if (updates.length > 0) {
+						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
-					goto(form_result.location, { invalidateAll: refreshes.length === 0 });
-				} else {
-					result = undefined;
-					error = form_result.error;
-					throw new HttpError(500, error);
-				}
-			} finally {
-				// TODO find out why we need 9 and not just 3
-				wait(9).then(() => {
-					if (entry) {
-						entry[0]--;
-						if (entry[0] === 0) {
-							instance_cache.delete(key);
+
+					const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+						method: 'POST',
+						body: data
+					});
+
+					if (!response.ok) {
+						// We only end up here in case of a network error or if the server has an internal error
+						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+						error = { message: 'Failed to execute remote function' };
+						result = undefined;
+						throw new Error(error.message);
+					}
+
+					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+
+					if (form_result.type === 'result') {
+						error = undefined;
+						result = devalue.parse(form_result.result, app.decoders);
+
+						refresh_queries(form_result.refreshes, updates);
+					} else if (form_result.type === 'redirect') {
+						const refreshes = form_result.refreshes ?? '';
+						const invalidateAll = !!refreshes;
+						if (!invalidateAll) {
+							refresh_queries(refreshes, updates);
 						}
+						goto(form_result.location, { invalidateAll });
+					} else {
+						result = undefined;
+						error = form_result.error;
+						throw new HttpError(500, error);
 					}
-				});
-			}
+				} finally {
+					// TODO find out why we need 9 and not just 3
+					wait(9).then(() => {
+						if (entry) {
+							entry[0]--;
+							if (entry[0] === 0) {
+								instance_cache.delete(key);
+							}
+						}
+					});
+				}
+			})();
+
+			// @ts-expect-error
+			promise.updates = (/** @type {any} */ ...args) => {
+				updates = args;
+				return promise;
+			};
+
+			return promise;
 		}
 
 		/** @param {() => Promise<void>} submit */
@@ -689,11 +707,11 @@ export function form(id) {
 }
 
 /**
- * @param {RemoteFunctionResponse & { type: 'result'}} result
+ * @param {string} stringified_refreshes
  * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
  */
-function refresh_queries(result, updates = []) {
-	const refreshes = Object.entries(devalue.parse(result.refreshes, app.decoders));
+function refresh_queries(stringified_refreshes, updates = []) {
+	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
 	if (refreshes.length > 0) {
 		for (const [key, value] of refreshes) {
 			// If there was an optimistic update, release it right before we update the query
