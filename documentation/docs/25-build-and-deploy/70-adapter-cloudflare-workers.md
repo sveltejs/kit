@@ -67,14 +67,14 @@ https://dash.cloudflare.com/<your-account-id>/home
 
 You will need to install [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-and-update/) and log in, if you haven't already:
 
-```bash
+```sh
 npm i -D wrangler
 wrangler login
 ```
 
 Then, you can build your app and deploy it:
 
-```bash
+```sh
 wrangler deploy
 ```
 

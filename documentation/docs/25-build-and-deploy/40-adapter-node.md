@@ -67,13 +67,13 @@ node +++--env-file=.env+++ build
 
 By default, the server will accept connections on `0.0.0.0` using port 3000. These can be customised with the `PORT` and `HOST` environment variables:
 
-```bash
+```
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
 Alternatively, the server can be configured to accept connections on a specified socket path. When this is done using the `SOCKET_PATH` environment variable, the `HOST` and `PORT` environment variables will be disregarded.
 
-```bash
+```
 SOCKET_PATH=/tmp/socket node build
 ```
 
@@ -81,7 +81,7 @@ SOCKET_PATH=/tmp/socket node build
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
 
-```bash
+```
 ORIGIN=https://my.site node build
 
 # or e.g. for local previewing and testing
@@ -90,7 +90,7 @@ ORIGIN=http://localhost:3000 node build
 
 With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
-```bash
+```
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 ```
 
@@ -106,7 +106,7 @@ If `adapter-node` can't correctly determine the URL of your deployment, you may 
 
 The [`RequestEvent`](@sveltejs-kit#RequestEvent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
-```bash
+```
 ADDRESS_HEADER=True-Client-IP node build
 ```
 
@@ -180,7 +180,7 @@ If you need to change the name of the environment variables used to configure th
 envPrefix: 'MY_CUSTOM_';
 ```
 
-```bash
+```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
