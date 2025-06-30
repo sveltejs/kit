@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.6.1
+### Patch Changes
+
+
+- feat: allow `vite-plugin-svelte` 6 peer dependency ([#13921](https://github.com/sveltejs/kit/pull/13921))
+
 ## 0.6.0
 ### Minor Changes
 

@@ -5,51 +5,22 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
+/** @type {import('./utils.js')['test']} */
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		void use({
-			/**
-			 * @param {string} url
-			 * @param {{ replaceState?: boolean }} opts
-			 * @returns {Promise<void>}
-			 */
-			goto: (url, opts) =>
-				page.evaluate(
-					(/** @type {{ url: string, opts: { replaceState?: boolean } }} */ { url, opts }) =>
-						goto(url, opts),
-					{ url, opts }
-				),
+			goto: (url, opts) => page.evaluate(({ url, opts }) => goto(url, opts), { url, opts }),
 
-			/**
-			 * @param {string} url
-			 * @returns {Promise<void>}
-			 */
-			invalidate: (url) => page.evaluate((/** @type {string} */ url) => invalidate(url), url),
+			invalidate: (url) => page.evaluate((url) => invalidate(url), url),
 
-			/**
-			 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
-			 * @returns {Promise<void>}
-			 */
-			beforeNavigate: (fn) =>
-				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
+			beforeNavigate: (fn) => page.evaluate((fn) => beforeNavigate(fn), fn),
 
-			/**
-			 * @returns {Promise<void>}
-			 */
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
-			/**
-			 * @param {string} pathname
-			 * @returns {Promise<void>}
-			 */
 			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
 
-			/**
-			 * @param {string} url
-			 * @returns {Promise<void>}
-			 */
-			preloadData: (url) => page.evaluate((/** @type {string} */ url) => preloadData(url), url)
+			preloadData: (url) => page.evaluate((url) => preloadData(url), url)
 		});
 	},
 
@@ -105,7 +76,7 @@ export const test = base.extend({
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
 			const view = page.viewportSize();
-			return box && view && box.y < view.height && box.y + box.height > 0;
+			return !!box && !!view && box.y < view.height && box.y + box.height > 0;
 		}
 
 		await use(in_view);
@@ -129,9 +100,8 @@ export const test = base.extend({
 
 	page: async ({ page, javaScriptEnabled }, use) => {
 		// automatically wait for kit started event after navigation functions if js is enabled
-		const page_navigation_functions = ['goto', 'goBack', 'reload'];
+		const page_navigation_functions = /** @type {const} */ (['goto', 'goBack', 'reload']);
 		page_navigation_functions.forEach((fn) => {
-			// @ts-expect-error
 			const original_page_fn = page[fn];
 			if (!original_page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
@@ -140,6 +110,7 @@ export const test = base.extend({
 			// @ts-expect-error
 			async function modified_fn(...args) {
 				try {
+					// @ts-ignore
 					const res = await original_page_fn.apply(page, args);
 					if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 						await page.waitForSelector('body.started', { timeout: 15000 });
@@ -154,14 +125,13 @@ export const test = base.extend({
 				}
 			}
 
-			// @ts-expect-error
 			page[fn] = modified_fn;
 		});
 
 		await use(page);
 	},
 
-	// eslint-disable-next-line no-empty-pattern
+	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
@@ -174,7 +144,7 @@ export const test = base.extend({
 		await use(read_errors);
 	},
 
-	// eslint-disable-next-line no-empty-pattern
+	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	start_server: async ({}, use) => {
 		/**
 		 * @type {http.Server}
@@ -279,7 +249,7 @@ if (!test_browser_device) {
 	);
 }
 
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
+/** @type {import('./utils.js')['config']} */
 export const config = {
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
