@@ -379,7 +379,7 @@ export async function respond(request, options, manifest, state) {
 							});
 
 							responseHeaders.forEach((value, key) => {
-								if (!response.headers.has(key)){
+								if (!response.headers.has(key)) {
 									response.headers.set(key, value);
 								}
 							});
