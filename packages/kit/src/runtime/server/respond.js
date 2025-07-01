@@ -370,16 +370,21 @@ export async function respond(request, options, manifest, state) {
 					// e.g. accessible when loading modules needed to handle the request
 					with_event(null, () =>
 						resolve(event, page_nodes, opts).then((response) => {
-							// add headers/cookies here, rather than inside `resolve`, so that we
-							// can do it once for all responses instead of once per `return`
-							for (const key in headers) {
-								const value = headers[key];
-								response.headers.set(key, /** @type {string} */ (value));
-							}
+							const responseHeaders = response.headers;
 
-							if (!event.isSubRequest) {
-								add_cookies_to_headers(response.headers, Object.values(new_cookies));
-							}
+							response = new Response(response.body, {
+								headers,
+								status: response.status,
+								statusText: response.statusText
+							});
+
+							responseHeaders.forEach((value, key) => {
+								if (!response.headers.has(key)){
+									response.headers.set(key, value);
+								}
+							});
+
+							add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 							if (state.prerendering && event.route.id !== null) {
 								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));

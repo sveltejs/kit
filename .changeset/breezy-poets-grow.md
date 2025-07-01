@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: add a check to prevent adding new cookies to sub requests
+fix: prevent immutable headers by using a new response object
