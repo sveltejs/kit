@@ -10,6 +10,12 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
 import { parse_as_bytes } from '../utils.js';
+import { serveStaticWithAbsolutePath } from 'hono-absolute-serve-static';
+
+/**
+ * @typedef {import('hono').MiddlewareHandler<{ Bindings: import('@hono/node-server').HttpBindings }>} HonoMiddleware
+ * @typedef {Array<HonoMiddleware>} HonoMiddlewares
+ */
 
 /* global ENV_PREFIX */
 
@@ -40,6 +46,78 @@ await server.init({
 });
 
 /**
+ *
+ * @param {Request} request
+ * @param {import('http').IncomingMessage} req
+ */
+async function create_server_responsed(request, req) {
+	return await server.respond(request, {
+		platform: { req },
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${
+							ENV_PREFIX + 'ADDRESS_HEADER'
+						}=${address_header} but is absent from request`
+					);
+				}
+
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								addresses.length
+							} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
+			}
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+}
+
+/**
+ * @param {string} path
+ * @param {boolean} client
+ */
+function serve_hono(path, client = false) {
+	return (
+		fs.existsSync(path) &&
+		serveStaticWithAbsolutePath({
+			root: path,
+			onFound: client
+				? (path, c) => {
+						if (path.startsWith(`/${manifest.appPath}/immutable/`)) {
+							c.res.headers.append('cache-control', 'public,max-age=31536000,immutable');
+						}
+					}
+				: undefined
+		})
+	);
+}
+
+/**
  * @param {string} path
  * @param {boolean} client
  */
@@ -60,6 +138,34 @@ function serve(path, client = false) {
 				})
 		})
 	);
+}
+
+/**@returns {HonoMiddleware} */
+function serve_prerendered_hono() {
+	return async (c, next) => {
+		const req = c.env.incoming;
+		let { pathname, search, query } = polka_url_parser(req);
+
+		try {
+			pathname = decodeURIComponent(pathname);
+		} catch {
+			// ignore invalid URI
+		}
+
+		if (prerendered.has(pathname)) {
+			return await serveStaticWithAbsolutePath({
+				root: path.join(dir, 'prerendered')
+			})(c, next);
+		}
+
+		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(location)) {
+			if (query) location += search;
+			return c.redirect(location, 308);
+		} else {
+			await next();
+		}
+	};
 }
 
 // required because the static file server ignores trailing slashes
@@ -91,6 +197,16 @@ function serve_prerendered() {
 	};
 }
 
+/**@returns {HonoMiddleware} */
+function ssr_hono() {
+	return async (c) => {
+		const request = c.req.raw;
+		const req = c.env.incoming;
+
+		return await create_server_responsed(request, req);
+	};
+}
+
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
@@ -108,53 +224,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
-				}
-
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
-			}
-		})
-	);
+	await setResponse(res, await create_server_responsed(request, req));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -200,3 +270,20 @@ export const handler = sequence(
 		ssr
 	].filter(Boolean)
 );
+
+/**@type {HonoMiddlewares} */
+export const honoHandler = [
+	fs.existsSync(path.join(dir, 'client')) &&
+		serveStaticWithAbsolutePath({
+			root: path.join(dir, 'client'),
+			onFound(path, c) {
+				if (path.startsWith(`/${manifest.appPath}/immutable/`)) {
+					c.res.headers.append('cache-control', 'public,max-age=31536000,immutable');
+				}
+			}
+		}),
+	serve_hono(path.join(dir, 'client'), true),
+	serve_hono(path.join(dir, 'static')),
+	serve_prerendered_hono(),
+	ssr_hono()
+].filter(Boolean);
