@@ -52,9 +52,12 @@
 		"vitest": "catalog:"
 	},
 	"dependencies": {
+		"@hono/node-server": "^1.15.0",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",
+		"hono": "^4.8.3",
+		"hono-absolute-serve-static": "^1.0.0",
 		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {
