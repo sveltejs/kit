@@ -14,7 +14,7 @@ import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
-import { stringify_remote_args } from '../../runtime/shared.js';
+import { stringify_remote_arg } from '../../runtime/shared.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -534,7 +534,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 						'/remote/' +
 						remote_function.__.id +
 						'/' +
-						stringify_remote_args(entry, transport)
+						stringify_remote_arg(entry, transport)
 				);
 			}
 		} else {

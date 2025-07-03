@@ -33,38 +33,38 @@ export function stringify(data, transport) {
 }
 
 /**
- * Stringifies the arguments for a remote function in such a way that
- * they are both a valid URL and a valid file name (necessary for prerendering).
- * @param {any[]} args
+ * Stringifies the argument (if any) for a remote function in such a way that
+ * it is both a valid URL and a valid file name (necessary for prerendering).
+ * @param {any} arg
  * @param {Transport} transport
  */
-export function stringify_remote_args(args, transport) {
-	if (args.length === 0) return '';
+export function stringify_remote_arg(arg, transport) {
+	if (arg === undefined) return '';
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	return btoa(stringify(args, transport)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+	return btoa(stringify(arg, transport)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 /**
- * Parses the arguments for a remote function
- * @param {string} stringified_args
+ * Parses the argument (if any) for a remote function
+ * @param {string} stringified_arg
  * @param {Transport} transport
  */
-export function parse_remote_args(stringified_args, transport) {
+export function parse_remote_args(stringified_arg, transport) {
 	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
 
-	return stringified_args
+	return stringified_arg
 		? parse(
 				// We don't need to add back the `=`-padding because atob can handle it
-				atob(stringified_args.replace(/-/g, '+').replace(/_/g, '/')),
+				atob(stringified_arg.replace(/-/g, '+').replace(/_/g, '/')),
 				decoders
 			)
-		: [];
+		: undefined;
 }
 
 /**
  * @param {string} id
- * @param {string} stringified_args
+ * @param {string} stringified_arg
  */
-export function create_remote_cache_key(id, stringified_args) {
-	return id + '|' + stringified_args;
+export function create_remote_cache_key(id, stringified_arg) {
+	return id + '|' + stringified_arg;
 }

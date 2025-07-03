@@ -6,7 +6,7 @@ import { app_dir, base } from '__sveltekit/paths';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { ActionFailure, HttpError, Redirect, SvelteKitError } from '../control.js';
-import { parse_remote_args, stringify } from '../shared.js';
+import { parse_remote_args as parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -52,7 +52,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			form_client_refreshes = JSON.parse(
 				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
 			);
-			const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
+			const data = await with_event(event, () => func.call(null, form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -69,9 +69,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 			);
 		} else if (info.type === 'command') {
 			/** @type {{ args: string, refreshes: string[] }} */
-			const { args: stringified_args, refreshes } = await event.request.json();
-			const args = parse_remote_args(stringified_args, transport);
-			const data = await with_event(event, () => func.apply(null, args));
+			const { args: stringified_arg, refreshes } = await event.request.json();
+			const arg = parse_remote_arg(stringified_arg, transport);
+			const data = await with_event(event, () => func.call(null, arg));
 			const refreshed = await apply_client_refreshes(refreshes);
 
 			return json(
@@ -82,7 +82,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 				})
 			);
 		} else {
-			const stringified_args =
+			const stringified_arg =
 				info.type === 'prerender'
 					? prerender_args
 					: info.type === 'query' || info.type === 'cache'
@@ -92,7 +92,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 							)
 						: await event.request.text();
 			const data = await with_event(event, () =>
-				func.apply(null, parse_remote_args(stringified_args, transport))
+				func.call(null, parse_remote_arg(stringified_arg, transport))
 			);
 
 			return json(
@@ -150,7 +150,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 					return [
 						key,
 						await with_event(event, () =>
-							func.apply(null, parse_remote_args(stringified_args, transport))
+							func.apply(null, parse_remote_arg(stringified_args, transport))
 						)
 					];
 				})

@@ -10,6 +10,7 @@ export const prerendered = prerender(() => {
 });
 
 export const prerendered_entries = prerender(
+	'unchecked',
 	(x) => {
 		// a,b directly through entries below, c indirectly through prerendering a page
 		if (!building && !dev && ['a', 'b', 'c'].includes(x)) {
@@ -20,5 +21,5 @@ export const prerendered_entries = prerender(
 
 		return x;
 	},
-	{ entries: () => [['a'], ['b']], dynamic: true }
+	{ entries: () => ['a', 'b'], dynamic: true }
 );

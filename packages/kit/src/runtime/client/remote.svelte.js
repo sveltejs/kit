@@ -14,7 +14,7 @@ import {
 	result_map,
 	refresh_map
 } from './client.js';
-import { create_remote_cache_key, stringify_remote_args } from '../shared.js';
+import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
 import { HttpError, Redirect } from '../control.js';
 
 /**
@@ -29,7 +29,7 @@ function wait(times = 3) {
 
 /**
  * @template T
- * @implements {Promise<T>}
+ * @implements {Partial<Promise<T>>}
  */
 class Resource {
 	/** @type {() => Promise<void>} */
@@ -127,6 +127,23 @@ class Resource {
 		return this.#then;
 	}
 
+	get catch() {
+		this.#then;
+		return (/** @type {any} */ reject) => {
+			return this.#then(undefined, reject);
+		};
+	}
+
+	get finally() {
+		this.#then;
+		return (/** @type {any} */ fn) => {
+			return this.#then(
+				() => fn(),
+				() => fn()
+			);
+		};
+	}
+
 	get current() {
 		return this.#current;
 	}
@@ -201,8 +218,8 @@ function remote_request(id, prerender) {
 	let cached_value = undefined;
 
 	/** @type {RemoteQuery<any, any>} */
-	const fn = (/** @type {any} */ ...args) => {
-		const stringified_args = stringify_remote_args(args, app.hooks.transport);
+	const fn = (/** @type {any} */ arg) => {
+		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 		let entry = result_map.get(cache_key);
 
@@ -341,7 +358,7 @@ export function prerender(id) {
 export function command(id) {
 	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
 	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
-	return (/** @type {any} */ ...args) => {
+	return (/** @type {any} */ arg) => {
 		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
 		let updates = [];
 
@@ -351,7 +368,7 @@ export function command(id) {
 			const response = await fetch(`/${app_dir}/remote/${id}`, {
 				method: 'POST',
 				body: JSON.stringify({
-					args: stringify_remote_args(args, app.hooks.transport),
+					args: stringify_remote_arg(arg, app.hooks.transport),
 					refreshes: updates.map((u) => u._key)
 				}),
 				headers: {

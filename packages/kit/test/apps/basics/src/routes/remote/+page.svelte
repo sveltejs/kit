@@ -18,7 +18,7 @@
 		{#await count then result}{result}{/await} / {count.current} ({count.pending})
 	</p>
 	<!-- this is just here to check that it is re-requested after the command -->
-	{#await add(2, 2) then result}{result}{/await}
+	{#await add({ a: 2, b: 2 }) then result}{result}{/await}
 {/if}
 <p id="command-result">{command_result}</p>
 
@@ -37,7 +37,7 @@
 
 <button
 	onclick={async () => {
-		command_result = await set_count(2);
+		command_result = await set_count({ c: 2 });
 	}}
 	id="multiply-btn"
 >
@@ -45,7 +45,7 @@
 </button>
 <button
 	onclick={async () => {
-		command_result = await set_count(3).updates(count);
+		command_result = await set_count({ c: 3 }).updates(count);
 	}}
 	id="multiply-refresh-btn"
 >
@@ -63,7 +63,7 @@
 	onclick={async () => {
 		// slow, else test will not be able to see the override
 		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
-		command_result = await set_count(5, true).updates(count.withOverride(() => 6));
+		command_result = await set_count({ c: 5, slow: true }).updates(count.withOverride(() => 6));
 	}}
 	id="multiply-override-refresh-btn"
 >

@@ -465,12 +465,7 @@ export interface PageNodeIndexes {
 }
 
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
-export type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
-	// the spread ensures things are widened from [id: number, x: string] to [number, string],
-	// which is important because else people are required to write entries using type casts
-	// like `{ entries: () => [[1]] as Array<[number]>}`
-	Array<[...Input]>
->;
+export type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;

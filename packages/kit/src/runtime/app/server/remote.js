@@ -1,12 +1,13 @@
 /** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
 /** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { uneval, parse } from 'devalue';
 import { getRequestEvent, with_event } from './event.js';
 import { get_remote_info } from '../../server/remote.js';
-import { json } from '../../../exports/index.js';
+import { error, json } from '../../../exports/index.js';
 import { DEV } from 'esm-env';
-import { create_remote_cache_key, stringify, stringify_remote_args } from '../../shared.js';
+import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { app_dir, base } from '__sveltekit/paths';
 import { ActionFailure } from '../../control.js';
@@ -29,17 +30,79 @@ import { ActionFailure } from '../../control.js';
  * {/await}
  * ```
  *
- * @template {any[]} Input
  * @template Output
- * @param {(...args: Input) => Output} fn
+ * @overload
+ * @param {() => Output} fn
+ * @returns {RemoteQuery<void, Output>}
+ */
+/**
+ * Creates a remote function that can be invoked like a regular function within components.
+ * The given function is invoked directly on the backend and via a fetch call on the client.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = query(() => blogPosts.getAll());
+ * ```
+ * ```svelte
+ * <script>
+ *   import { blogPosts } from './blog.remote.js';
+ * </script>
+ *
+ * {#await blogPosts() then posts}
+ *   <!-- ... -->
+ * {/await}
+ * ```
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => Output} fn
+ * @returns {RemoteQuery<Input, Output>}
+ */
+/**
+ * Creates a remote function that can be invoked like a regular function within components.
+ * The given function is invoked directly on the backend and via a fetch call on the client.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = query(() => blogPosts.getAll());
+ * ```
+ * ```svelte
+ * <script>
+ *   import { blogPosts } from './blog.remote.js';
+ * </script>
+ *
+ * {#await blogPosts() then posts}
+ *   <!-- ... -->
+ * {/await}
+ * ```
+ *
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} schema
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(args?: Input) => Output} [maybe_fn]
  * @returns {RemoteQuery<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function query(fn) {
+export function query(validate_or_fn, maybe_fn) {
 	check_experimental('query');
 
+	/** @type {(arg?: Input) => Output} */
+	const fn = maybe_fn ?? validate_or_fn;
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
 	/** @type {RemoteQuery<Input, Output>} */
-	const wrapper = (...args) => {
+	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
 		const promise = new Promise(async (resolve, reject) => {
 			if (prerendering) {
@@ -53,9 +116,9 @@ export function query(fn) {
 			try {
 				const result = await get_response(
 					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-					args,
+					arg,
 					event,
-					() => with_cleansed_event(event, false, () => fn(...args))
+					() => run_remote_function(event, false, arg, validate, fn)
 				);
 				return resolve(result);
 			} catch (e) {
@@ -76,7 +139,7 @@ export function query(fn) {
 			refreshes[
 				create_remote_cache_key(
 					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-					stringify_remote_args(args, info.transport)
+					stringify_remote_arg(arg, info.transport)
 				)
 			] = await /** @type {Promise<any>} */ (promise);
 		};
@@ -116,35 +179,103 @@ export function query(fn) {
  * );
  * ```
  *
- * @template {any[]} Input
  * @template Output
- * @param {(...args: Input) => Output} fn
+ * @overload
+ * @param {() => Output} fn
+ * @param {{ entries?: RemotePrerenderEntryGenerator<void>, dynamic?: boolean }} [options]
+ * @returns {RemoteQuery<void, Output>}
+ */
+/**
+ * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = prerender(() => blogPosts.getAll());
+ * ```
+ *
+ * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPost = prerender(
+ * 	(id: string) => blogPosts.get(id),
+ * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ * );
+ * ```
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => Output} fn
  * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<Input, Output>}
  */
+/**
+ * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPosts = prerender(() => blogPosts.getAll());
+ * ```
+ *
+ * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export const blogPost = prerender(
+ * 	(id: string) => blogPosts.get(id),
+ * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ * );
+ * ```
+ *
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} schema
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {{ entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
+ * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {any} [fn_or_options]
+ * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [maybe_options]
+ * @returns {RemoteQuery<Input, Output>}
+ */
 /*@__NO_SIDE_EFFECTS__*/
-export function prerender(fn, options) {
+export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	check_experimental('prerender');
 
+	const maybe_fn = typeof fn_or_options === 'function' ? fn_or_options : undefined;
+	/** @type {typeof maybe_options} */
+	const options = maybe_options ?? (maybe_fn ? undefined : fn_or_options);
+	/** @type {(arg?: Input) => Output} */
+	const fn = maybe_fn ?? validate_or_fn;
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
 	/** @type {RemoteQuery<Input, Output>} */
-	const wrapper = (...args) => {
+	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
 		const promise = new Promise(async (resolve) => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
-			const stringified_args = stringify_remote_args(args, info.transport);
+			const stringified_arg = stringify_remote_arg(arg, info.transport);
 			const id = /** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id;
-			const url = `${base}/${app_dir}/remote/${id}/${stringified_args}`;
+			const url = `${base}/${app_dir}/remote/${id}/${stringified_arg}`;
 
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(id, args, event, async () => {
+					return await get_response(id, arg, event, async () => {
 						const response = await fetch(event.url.origin + url);
 						if (!response.ok) {
 							throw new Error('Prerendered response not found');
 						}
 						const prerendered = await response.json();
-						info.results[create_remote_cache_key(id, stringified_args)] = prerendered.result;
+						info.results[create_remote_cache_key(id, stringified_arg)] = prerendered.result;
 						return resolve(parse_remote_response(prerendered.result, info.transport));
 					});
 				} catch (e) {
@@ -156,8 +287,8 @@ export function prerender(fn, options) {
 				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
 			}
 
-			const maybe_promise = get_response(id, args, event, () =>
-				with_cleansed_event(event, false, () => fn(...args))
+			const maybe_promise = get_response(id, arg, event, () =>
+				run_remote_function(event, false, arg, validate, fn)
 			);
 
 			if (info.prerendering) {
@@ -197,7 +328,7 @@ export function prerender(fn, options) {
 			refreshes[
 				create_remote_cache_key(
 					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-					stringify_remote_args(args, info.transport)
+					stringify_remote_arg(arg, info.transport)
 				)
 			] = await /** @type {Promise<any>} */ (promise);
 		};
@@ -359,19 +490,103 @@ export function prerender(fn, options) {
  * <button onclick={() => like(post.id)}>♡</button>
  * ```
  *
- * @template {any[]} Input
  * @template Output
- * @param {(...args: Input) => Output} fn
- * @returns {(...args: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ * @overload
+ * @param {() => Output} fn
+ * @returns {() => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ */
+/**
+ * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ *
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export interface BlogPost {
+ * 	id: string;
+ * 	title: string;
+ * 	content: string;
+ * }
+ *
+ * export const like = command((postId: string) => {
+ * 	blogPosts.get(postId).like();
+ * });
+ * ```
+ *
+ * ```svelte
+ * <script lang="ts">
+ * 	import { like } from './blog.remote.js';
+ *
+ * 	let post: BlogPost = $props();
+ * </script>
+ *
+ * <h1>{post.title}</h1>
+ * <p>{post.content}</p>
+ * <button onclick={() => like(post.id)}>♡</button>
+ * ```
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => Output} fn
+ * @returns {(arg: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ */
+/**
+ * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ *
+ * ```ts
+ * import { blogPosts } from '$lib/server/db';
+ *
+ * export interface BlogPost {
+ * 	id: string;
+ * 	title: string;
+ * 	content: string;
+ * }
+ *
+ * export const like = command((postId: string) => {
+ * 	blogPosts.get(postId).like();
+ * });
+ * ```
+ *
+ * ```svelte
+ * <script lang="ts">
+ * 	import { like } from './blog.remote.js';
+ *
+ * 	let post: BlogPost = $props();
+ * </script>
+ *
+ * <h1>{post.title}</h1>
+ * <p>{post.content}</p>
+ * <button onclick={() => like(post.id)}>♡</button>
+ * ```
+ *
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} validate
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @returns {(arg: StandardSchemaV1.InferOutput<Schema>) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(arg?: Input) => Output} [maybe_fn]
+ * @returns {(arg?: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function command(fn) {
+export function command(validate_or_fn, maybe_fn) {
 	check_experimental('command');
 
+	/** @type {(arg?: Input) => Output} */
+	const fn = maybe_fn ?? validate_or_fn;
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
 	/**
-	 * @param {Input} args
+	 * @param {Input} [arg]
 	 */
-	const wrapper = (...args) => {
+	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
 				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
@@ -390,7 +605,7 @@ export function command(fn) {
 			get_remote_info(event).refreshes = {};
 		}
 
-		const promise = Promise.resolve(with_cleansed_event(event, true, () => fn(...args)));
+		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
 		// @ts-expect-error
 		promise.updates = () => {
 			throw new Error('Cannot call `command(...).updates(...)` on the server');
@@ -458,7 +673,7 @@ export function form(fn) {
 				info.refreshes = {};
 			}
 
-			const result = await with_cleansed_event(event, true, () => fn(form_data));
+			const result = await run_remote_function(event, true, form_data, (d) => d, fn);
 
 			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 			// where only one form submission is active at the same time
@@ -571,6 +786,36 @@ export function form(fn) {
 }
 
 /**
+ * @param {any} validate_or_fn
+ * @param {(arg?: any) => any} [maybe_fn]
+ * @returns {(arg?: any) => MaybePromise<any>}
+ */
+function create_validator(validate_or_fn, maybe_fn) {
+	return !maybe_fn
+		? (arg) => {
+				if (arg !== undefined) {
+					error(400, 'Bad request. Expected no arguments');
+				}
+			}
+		: validate_or_fn === 'unchecked'
+			? (arg) => arg // no validation
+			: '~standard' in validate_or_fn
+				? async (arg) => {
+						const result = await validate_or_fn['~standard'].validate(arg);
+						// if the `issues` field exists, the validation failed
+						if (result.issues) {
+							error(400, result.issues);
+						}
+						return result.value;
+					}
+				: () => {
+						throw new Error(
+							'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
+						);
+					};
+}
+
+/**
  * In case of a single remote function call, just returns the result.
  *
  * In case of a full page reload, returns the response for a remote function call,
@@ -579,19 +824,19 @@ export function form(fn) {
  *
  * @template {MaybePromise<any>} T
  * @param {string} id
- * @param {any[]} args
+ * @param {any} arg
  * @param {RequestEvent} event
  * @param {() => T} get_result
  * @returns {T}
  */
-function get_response(id, args, event, get_result) {
+function get_response(id, arg, event, get_result) {
 	const info = get_remote_info(event);
 
 	// We only want to do this for full page visits where we can safely deduplicate calls (for remote calls we would have
 	// to ensure they come from the same user) and have to stringify the result into the HTML
 	if (event.isRemoteRequest) return get_result();
 
-	const cache_key = create_remote_cache_key(id, stringify_remote_args(args, info.transport));
+	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
 	if (!(cache_key in info.results)) {
 		// TODO better error handling when promise rejects?
@@ -600,7 +845,7 @@ function get_response(id, args, event, get_result) {
 			return /** @type {any} */ (undefined);
 		});
 
-		uneval_result(id, args, event, info.results[cache_key], cache_key);
+		uneval_result(id, arg, event, info.results[cache_key], cache_key);
 	}
 
 	return /** @type {T} */ (info.results[cache_key]);
@@ -608,15 +853,15 @@ function get_response(id, args, event, get_result) {
 
 /**
  * @param {string} id
- * @param {any[]} args
+ * @param {any} arg
  * @param {RequestEvent} event
  * @param {MaybePromise<any>} result
  * @param {string} [cache_key]
  */
-function uneval_result(id, args, event, result, cache_key) {
+function uneval_result(id, arg, event, result, cache_key) {
 	const info = get_remote_info(event);
 
-	cache_key ||= create_remote_cache_key(id, stringify_remote_args(args, info.transport));
+	cache_key ||= create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
 	if (!(cache_key in info.unevaled_results)) {
 		const replacer = (/** @type {any} */ thing) => {
@@ -666,9 +911,11 @@ function parse_remote_response(data, transport) {
  * @template T
  * @param {RequestEvent} event
  * @param {boolean} allow_cookies
- * @param {() => T} fn
+ * @param {any} arg
+ * @param {(arg: any) => any} validate
+ * @param {(arg?: any) => T} fn
  */
-function with_cleansed_event(event, allow_cookies, fn) {
+async function run_remote_function(event, allow_cookies, arg, validate, fn) {
 	/** @type {RequestEvent} */
 	const cleansed = {
 		...event,
@@ -712,5 +959,7 @@ function with_cleansed_event(event, allow_cookies, fn) {
 		cleansed[symbol] = event[symbol];
 	}
 
-	return with_event(cleansed, fn);
+	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
+	const validated = await with_event(cleansed, () => validate(arg));
+	return with_event(cleansed, () => fn(validated));
 }

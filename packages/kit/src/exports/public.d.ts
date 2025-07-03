@@ -1633,9 +1633,7 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
  * On the client, this will do a fetch to the server to retrieve the value.
  * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
  */
-export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promise<
-	Awaited<Output>
-> & {
+export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 	/** The current value of the query. Undefined as long as there's no value yet */
 	get current(): Awaited<Output> | undefined;
 	/** The error in case the query fails */

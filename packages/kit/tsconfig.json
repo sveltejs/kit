@@ -11,6 +11,7 @@
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
+			"$app/server": ["./src/runtime/app/server/index.js"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]
 		},

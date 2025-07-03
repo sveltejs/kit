@@ -1615,9 +1615,7 @@ declare module '@sveltejs/kit' {
 	 * On the client, this will do a fetch to the server to retrieve the value.
 	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
 	 */
-	export type RemoteQuery<Input extends any[], Output> = (...args: Input) => Promise<
-		Awaited<Output>
-	> & {
+	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 		/** The current value of the query. Undefined as long as there's no value yet */
 		get current(): Awaited<Output> | undefined;
 		/** The error in case the query fails */
@@ -2615,6 +2613,7 @@ declare module '$app/paths' {
 
 declare module '$app/server' {
 	import type { RequestEvent, RemoteQuery, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	import type { StandardSchemaV1 as StandardSchemaV1_1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2654,7 +2653,47 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Input extends any[], Output>(fn: (...args: Input) => Output): RemoteQuery<Input, Output>;
+	export function query<Output>(fn: () => Output): RemoteQuery<void, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQuery<Input, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Schema extends StandardSchemaV1_1, Output>(schema: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1_1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2674,10 +2713,56 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Input extends any[], Output>(fn: (...args: Input) => Output, options?: {
+	export function prerender<Output>(fn: () => Output, options?: {
+		entries?: RemotePrerenderEntryGenerator<void>;
+		dynamic?: boolean;
+	} | undefined): RemoteQuery<void, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 * 	(id: string) => blogPosts.get(id),
+	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
 		entries?: RemotePrerenderEntryGenerator<Input>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<Input, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 * 	(id: string) => blogPosts.get(id),
+	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Schema extends StandardSchemaV1_1, Output>(schema: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output, options?: {
+		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1_1.InferOutput<Schema>>;
+		dynamic?: boolean;
+	} | undefined): RemoteQuery<StandardSchemaV1_1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2708,7 +2793,73 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Input extends any[], Output>(fn: (...args: Input) => Output): (...args: Input) => Promise<Awaited<Output>> & {
+	export function command<Output>(fn: () => Output): () => Promise<Awaited<Output>> & {
+		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
+	};
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): (arg: Input) => Promise<Awaited<Output>> & {
+		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
+	};
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<Schema extends StandardSchemaV1_1, Output>(validate: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output): (arg: StandardSchemaV1_1.InferOutput<Schema>) => Promise<Awaited<Output>> & {
 		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
 	};
 	/**
@@ -2737,12 +2888,7 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
-	type RemotePrerenderEntryGenerator<Input extends any[] = any[]> = () => MaybePromise<
-		// the spread ensures things are widened from [id: number, x: string] to [number, string],
-		// which is important because else people are required to write entries using type casts
-		// like `{ entries: () => [[1]] as Array<[number]>}`
-		Array<[...Input]>
-	>;
+	type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
