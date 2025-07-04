@@ -2235,8 +2235,6 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
-
-	export function validate<Schema extends import("@standard-schema/spec").StandardSchemaV1, Result>(schema: Schema, fn: (input: import("@standard-schema/spec").StandardSchemaV1.InferOutput<Schema>) => Promise<Result>): (input: import("@standard-schema/spec").StandardSchemaV1.InferOutput<Schema>) => Promise<Result>;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
@@ -2613,7 +2611,7 @@ declare module '$app/paths' {
 
 declare module '$app/server' {
 	import type { RequestEvent, RemoteQuery, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
-	import type { StandardSchemaV1 as StandardSchemaV1_1 } from '@standard-schema/spec';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2693,7 +2691,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Schema extends StandardSchemaV1_1, Output>(schema: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1_1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2759,10 +2757,10 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Schema extends StandardSchemaV1_1, Output>(schema: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1_1.InferOutput<Schema>>;
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
+		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<StandardSchemaV1_1.InferOutput<Schema>, Output>;
+	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2859,7 +2857,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Schema extends StandardSchemaV1_1, Output>(validate: Schema, fn: (arg: StandardSchemaV1_1.InferOutput<Schema>) => Output): (arg: StandardSchemaV1_1.InferOutput<Schema>) => Promise<Awaited<Output>> & {
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): (arg: StandardSchemaV1.InferOutput<Schema>) => Promise<Awaited<Output>> & {
 		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
 	};
 	/**
