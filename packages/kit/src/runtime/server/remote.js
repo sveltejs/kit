@@ -124,8 +124,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: await handle_error_and_jsonify(event, options, error),
-				status:
-					error instanceof HttpError || error instanceof SvelteKitError ? error.status : undefined
+				status: error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
 			})
 		);
 	}

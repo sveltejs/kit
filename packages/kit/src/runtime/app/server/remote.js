@@ -260,7 +260,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {RemoteQuery<Input, Output>} */
 	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
-		const promise = new Promise(async (resolve) => {
+		const promise = new Promise(async (resolve, reject) => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
 			const stringified_arg = stringify_remote_arg(arg, info.transport);
@@ -287,26 +287,32 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
 			}
 
-			const maybe_promise = get_response(id, arg, event, () =>
-				run_remote_function(event, false, arg, validate, fn)
-			);
+			try {
+				const maybe_promise = get_response(id, arg, event, () =>
+					run_remote_function(event, false, arg, validate, fn)
+				);
 
-			if (info.prerendering) {
-				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
-				Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
+				if (info.prerendering) {
+					info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
+					Promise.resolve(maybe_promise).catch(() =>
+						info.prerendering?.remote_responses.delete(url)
+					);
+				}
+
+				const result = await maybe_promise;
+
+				if (info.prerendering) {
+					const body = { type: 'result', result: stringify(result, info.transport) };
+					info.prerendering.dependencies.set(url, {
+						body: JSON.stringify(body),
+						response: json(body)
+					});
+				}
+
+				return resolve(result);
+			} catch (e) {
+				reject(e);
 			}
-
-			const result = await maybe_promise;
-
-			if (info.prerendering) {
-				const body = { type: 'result', result: stringify(result, info.transport) };
-				info.prerendering.dependencies.set(url, {
-					body: JSON.stringify(body),
-					response: json(body)
-				});
-			}
-
-			return resolve(result);
 		});
 
 		promise.refresh = async () => {

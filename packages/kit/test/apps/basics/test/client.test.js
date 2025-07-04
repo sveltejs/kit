@@ -1782,4 +1782,24 @@ test.describe('remote functions', () => {
 		await page.waitForTimeout(100); // allow things to rerun
 		expect(request_count).toBe(2);
 	});
+
+	test('validation works', async ({ page }) => {
+		await page.goto('/remote/validation');
+		await expect(page.locator('p')).toHaveText('pending');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button:nth-of-type(1)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(2)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(3)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(4)');
+		await expect(page.locator('p')).toHaveText('success');
+	});
 });
