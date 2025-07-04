@@ -263,7 +263,7 @@ function get_attr_value(node, attr) {
 
 /**
  * @param {string} content
- * @param {import('../types/internal.js').Attribute[]} attributes
+ * @param {import('svelte/compiler').AST.RegularElement['attributes']} attributes
  * @param {{
  *   src: string,
  *   width: string | number,
@@ -324,7 +324,7 @@ function stringToNumber(param) {
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(content, node, image) {
-	/** @type {import('../types/internal.js').Attribute[]} attributes */
+	/** @type {import('svelte/compiler').AST.RegularElement['attributes']} */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
 		(attribute) => 'name' in attribute && attribute.name === 'sizes'
