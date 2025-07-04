@@ -2270,8 +2270,8 @@ export async function set_nearest_error_page(error, status = 500) {
 			url,
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
-			status: status,
-			error: error,
+			status,
+			error,
 			route
 		});
 

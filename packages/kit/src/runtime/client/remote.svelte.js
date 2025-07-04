@@ -229,7 +229,7 @@ function remote_request(id, prerender) {
 					const entry = result_map.get(cache_key);
 					if (entry) {
 						entry[0]--;
-						wait().then(() => {
+						void wait().then(() => {
 							if (!entry[0] && entry === result_map.get(cache_key)) {
 								result_map.delete(cache_key);
 							}
@@ -299,7 +299,7 @@ function remote_request(id, prerender) {
 
 			resource
 				.then(() => {
-					wait().then(() => {
+					void wait().then(() => {
 						if (!(/** @type {any} */ (entry)[0]) && entry === result_map.get(cache_key)) {
 							// If no one is tracking this resource anymore, we can delete it from the cache
 							result_map.delete(cache_key);
@@ -487,7 +487,7 @@ export function form(id) {
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
-						goto(form_result.location, { invalidateAll });
+						void goto(form_result.location, { invalidateAll });
 					} else {
 						result = undefined;
 						error = form_result.error;
@@ -495,7 +495,7 @@ export function form(id) {
 					}
 				} finally {
 					// TODO find out why we need 9 and not just 3
-					wait(9).then(() => {
+					void wait(9).then(() => {
 						if (entry) {
 							entry[0]--;
 							if (entry[0] === 0) {
@@ -519,7 +519,7 @@ export function form(id) {
 			submit().catch((e) => {
 				const error = e instanceof HttpError ? e.body : { message: e.message };
 				const status = e instanceof HttpError ? e.status : 500;
-				set_nearest_error_page(error, status);
+				void set_nearest_error_page(error, status);
 			});
 		}
 
@@ -556,7 +556,7 @@ export function form(id) {
 		/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
-			return async (event) => {
+			return (event) => {
 				const form = /** @type {HTMLFormElement} */ (event.target);
 				const method = event.submitter?.hasAttribute('formmethod')
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
@@ -594,7 +594,7 @@ export function form(id) {
 		/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
-			return async (event) => {
+			return (event) => {
 				const target = /** @type {HTMLButtonElement} */ (event.target);
 				const form = target.form;
 				if (!form) return;
@@ -674,7 +674,7 @@ export function form(id) {
 						$effect.pre(() => {
 							return () => {
 								entry[0]--;
-								wait().then(() => {
+								void wait().then(() => {
 									if (entry[0] === 0) {
 										instance_cache.delete(key);
 									}
@@ -726,6 +726,6 @@ function refresh_queries(stringified_refreshes, updates = []) {
 			entry?.[2](value);
 		}
 	} else {
-		invalidateAll();
+		void invalidateAll();
 	}
 }

@@ -103,8 +103,8 @@ export function query(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteQuery<Input, Output>} */
 	const wrapper = (arg) => {
-		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
-		const promise = new Promise(async (resolve, reject) => {
+		/** @type {Partial<ReturnType<RemoteQuery<any, any>>>} */
+		const promise = (async () => {
 			if (prerendering) {
 				throw new Error(
 					'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
@@ -113,18 +113,14 @@ export function query(validate_or_fn, maybe_fn) {
 
 			// TODO don't do the additional work when we're being called from the client?
 			const event = getRequestEvent();
-			try {
-				const result = await get_response(
-					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-					arg,
-					event,
-					() => run_remote_function(event, false, arg, validate, fn)
-				);
-				return resolve(result);
-			} catch (e) {
-				reject(e);
-			}
-		});
+			const result = await get_response(
+				/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+				arg,
+				event,
+				() => run_remote_function(event, false, arg, validate, fn)
+			);
+			return result;
+		})();
 
 		promise.refresh = async () => {
 			const event = getRequestEvent();
@@ -260,7 +256,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {RemoteQuery<Input, Output>} */
 	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
-		const promise = new Promise(async (resolve, reject) => {
+		const promise = (async () => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
 			const stringified_arg = stringify_remote_arg(arg, info.transport);
@@ -276,44 +272,38 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 						}
 						const prerendered = await response.json();
 						info.results[create_remote_cache_key(id, stringified_arg)] = prerendered.result;
-						return resolve(parse_remote_response(prerendered.result, info.transport));
+						return parse_remote_response(prerendered.result, info.transport);
 					});
-				} catch (e) {
+				} catch {
 					// not available prerendered, fallback to normal function
 				}
 			}
 
 			if (info.prerendering?.remote_responses.has(url)) {
-				return resolve(/** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url)));
+				return /** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url));
 			}
 
-			try {
-				const maybe_promise = get_response(id, arg, event, () =>
-					run_remote_function(event, false, arg, validate, fn)
-				);
+			const maybe_promise = get_response(id, arg, event, () =>
+				run_remote_function(event, false, arg, validate, fn)
+			);
 
-				if (info.prerendering) {
-					info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
-					Promise.resolve(maybe_promise).catch(() =>
-						info.prerendering?.remote_responses.delete(url)
-					);
-				}
-
-				const result = await maybe_promise;
-
-				if (info.prerendering) {
-					const body = { type: 'result', result: stringify(result, info.transport) };
-					info.prerendering.dependencies.set(url, {
-						body: JSON.stringify(body),
-						response: json(body)
-					});
-				}
-
-				return resolve(result);
-			} catch (e) {
-				reject(e);
+			if (info.prerendering) {
+				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
+				Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
 			}
-		});
+
+			const result = await maybe_promise;
+
+			if (info.prerendering) {
+				const body = { type: 'result', result: stringify(result, info.transport) };
+				info.prerendering.dependencies.set(url, {
+					body: JSON.stringify(body),
+					response: json(body)
+				});
+			}
+
+			return result;
+		})();
 
 		promise.refresh = async () => {
 			if (!options?.dynamic) {
@@ -745,7 +735,7 @@ export function form(fn) {
 				try {
 					const info = get_remote_info(getRequestEvent());
 					return info.form_result && info.form_result[0] === key ? info.form_result[1] : undefined;
-				} catch (e) {
+				} catch {
 					return undefined;
 				}
 			},
