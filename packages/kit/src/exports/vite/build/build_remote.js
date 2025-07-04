@@ -14,6 +14,8 @@ import { import_peer } from '../../../utils/import.js';
  * @param {string} out
  */
 export async function treeshake_prerendered_remotes(out) {
+	if (!exists(out)) return;
+
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
 
@@ -87,6 +89,8 @@ export async function treeshake_prerendered_remotes(out) {
  * @param {string} out
  */
 export function build_remotes(out) {
+	if (!exists(out)) return
+
 	const remote_dir = path.join(out, 'server', 'remote');
 
 	for (const remote_file_name of fs.readdirSync(remote_dir)) {
@@ -115,4 +119,11 @@ export function build_remotes(out) {
 			`
 		);
 	}
+}
+
+/**
+ * @param {string} out
+ */
+function exists(out) {
+	return fs.existsSync(path.join(out, 'server', 'remote'))
 }
