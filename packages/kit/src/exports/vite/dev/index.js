@@ -363,14 +363,18 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
+	// These watchers only run for routes, param matchers, and client hooks.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		if (timeout || restarting) return;
 
+		if (/\+(page|layout).*$/.test(file)) {
+			invalidate_page_options(path.relative(cwd, file));
+		}
+
 		sync.update(svelte_config, manifest_data, file);
-		invalidate_page_options(path.relative(cwd, file));
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -397,10 +401,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// changing the svelte config requires restarting the dev server
-	// the config is only read on start and passed on to vite-plugin-svelte
-	// which needs up-to-date values to operate correctly
 	vite.watcher.on('change', async (file) => {
+		// changing the svelte config requires restarting the dev server
+		// the config is only read on start and passed on to vite-plugin-svelte
+		// which needs up-to-date values to operate correctly
 		if (path.basename(file) === 'svelte.config.js') {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;

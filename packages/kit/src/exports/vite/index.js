@@ -37,6 +37,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
+import { crawlFrameworkPkgs } from 'vitefu';
 
 const cwd = process.cwd();
 
@@ -185,7 +186,8 @@ let remote_exports = undefined;
  * @return {Promise<import('vite').Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
+	/** @type {import('vite')} */
+	const vite = await import_peer('vite');
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -231,7 +233,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		config(config, config_env) {
+		async config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -253,6 +255,20 @@ async function kit({ svelte_config }) {
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			const generated = path.posix.join(kit.outDir, 'generated');
+
+			const packages_depending_on_svelte_kit = (
+				await crawlFrameworkPkgs({
+					root: cwd,
+					isBuild: is_build,
+					viteUserConfig: config,
+					isSemiFrameworkPkgByJson: (pkg_json) => {
+						return (
+							!!pkg_json.dependencies?.['@sveltejs/kit'] ||
+							!!pkg_json.peerDependencies?.['@sveltejs/kit']
+						);
+					}
+				})
+			).ssr.noExternal;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -310,7 +326,11 @@ async function kit({ svelte_config }) {
 						//    when it is detected to keep our virtual modules working.
 						//    See https://github.com/sveltejs/kit/pull/9172
 						//    and https://vitest.dev/config/#deps-registernodeloader
-						'@sveltejs/kit'
+						'@sveltejs/kit',
+						// We need to bundle any packages depending on @sveltejs/kit so that
+						// everyone uses the same instances of classes such as `Redirect`
+						// which we use in `instanceof` checks
+						...packages_depending_on_svelte_kit
 					]
 				}
 			};
@@ -799,7 +819,10 @@ Tips:
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									warning.code === 'MISSING_EXPORT' &&
+									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									(vite.rolldownVersion
+										? warning.code === 'IMPORT_IS_UNDEFINED'
+										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -824,6 +847,11 @@ Tips:
 							}
 						}
 					}
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://github.com/vitejs/rolldown-vite/issues/213
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
 			} else {
 				new_config = {
@@ -837,6 +865,11 @@ Tips:
 						}
 					},
 					publicDir: kit.files.assets
+					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
+					// see https://github.com/vitejs/rolldown-vite/issues/213
+					// experimental: {
+					// 	enableNativePlugin: true
+					// }
 				};
 			}
 
@@ -878,7 +911,8 @@ Tips:
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+					// Rolldown changes our single quotes to double quotes so we need it in the regex too
+					code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
@@ -905,7 +939,7 @@ Tips:
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -963,7 +997,7 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
+				const { output: client_chunks } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -1006,7 +1040,7 @@ Tips:
 						imports: [...start.imports, ...app.imports],
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
@@ -1055,14 +1089,14 @@ Tips:
 						imports: start.imports,
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
-						uses_env_dynamic_public: output.some(
+						uses_env_dynamic_public: client_chunks.some(
 							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {import('rollup').OutputAsset} */ (
-							output.find(
+						const style = /** @type {import('vite').Rollup.OutputAsset} */ (
+							client_chunks.find(
 								(chunk) =>
 									chunk.type === 'asset' &&
 									chunk.names.length === 1 &&
@@ -1076,11 +1110,6 @@ Tips:
 						};
 					}
 				}
-
-				const css = output.filter(
-					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
-					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
-				);
 
 				// regenerate manifest now that we have client entry...
 				fs.writeFileSync(
@@ -1100,7 +1129,8 @@ Tips:
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					css,
+					bundle,
+					client_chunks,
 					svelte_config.kit.output,
 					static_exports
 				);
@@ -1146,7 +1176,7 @@ Tips:
 							...vite_config,
 							build: {
 								...vite_config.build,
-								minify: initial_config.build?.minify ?? 'esbuild'
+								minify: initial_config.build?.minify ?? true
 							}
 						},
 						manifest_data,

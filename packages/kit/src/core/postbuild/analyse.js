@@ -63,6 +63,7 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
+	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
 	const static_exports = new Map();
 
 	// first, build server nodes without the client manifest so we can analyse it
@@ -71,6 +72,7 @@ async function analyse({
 		config,
 		manifest_data,
 		server_manifest,
+		null,
 		null,
 		null,
 		output_config,

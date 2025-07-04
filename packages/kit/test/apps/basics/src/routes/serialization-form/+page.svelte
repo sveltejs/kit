@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { form } = $props();
+	const { form } = $props();
 </script>
 
 <form method="POST">

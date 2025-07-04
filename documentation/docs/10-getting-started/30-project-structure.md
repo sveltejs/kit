@@ -4,7 +4,7 @@ title: Project structure
 
 A typical SvelteKit project looks like this:
 
-```bash
+```tree
 my-project/
 ├ src/
 │ ├ lib/

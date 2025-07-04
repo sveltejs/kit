@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.12
+### Patch Changes
+
+
+- fix: handle non-semver-style dependency versions ([#13925](https://github.com/sveltejs/kit/pull/13925))
+
 ## 2.3.11
 ### Patch Changes
 

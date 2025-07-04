@@ -52,6 +52,8 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+let warned_on_devtools_json_request = false;
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -598,6 +600,21 @@ export async function respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
+				// causing console spam. If users want to serve this file they can install
+				// https://svelte.dev/docs/cli/devtools-json
+				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+					if (!warned_on_devtools_json_request) {
+						console.log(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
+						);
+
+						warned_on_devtools_json_request = true;
+					}
+
+					return new Response(undefined, { status: 404 });
+				}
+
 				return await respond_with_error({
 					event,
 					options,

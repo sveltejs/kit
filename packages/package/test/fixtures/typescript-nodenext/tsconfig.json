@@ -3,6 +3,8 @@
 		"target": "ESNext",
 		"module": "NodeNext",
 		"verbatimModuleSyntax": true,
-		"moduleResolution": "NodeNext"
+		"moduleResolution": "NodeNext",
+		"checkJs": true,
+		"noEmit": true
 	}
 }

@@ -62,6 +62,7 @@ export default function (options = {}) {
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
+			builder.mkdirp(assets_dest);
 			if (
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'
@@ -134,7 +135,8 @@ export default function (options = {}) {
 				const proxy = await getPlatformProxy(options.platformProxy);
 				const platform = /** @type {App.Platform} */ ({
 					env: proxy.env,
-					context: proxy.ctx,
+					ctx: proxy.ctx,
+					context: proxy.ctx, // deprecated in favor of ctx
 					caches: proxy.caches,
 					cf: proxy.cf
 				});
