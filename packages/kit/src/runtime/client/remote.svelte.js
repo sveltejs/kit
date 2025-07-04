@@ -65,6 +65,7 @@ class Resource {
 			try {
 				await p;
 				// we need this to avoid await_reactivity_loss warning and be in sync with other async reactivity
+				// TODO still true?
 				await wait();
 				resolve?.(/** @type {T} */ (this.#current));
 			} catch (error) {
@@ -172,10 +173,7 @@ class Resource {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		return wait().then(() => {
-			this.#promise = this.#fn();
-			return this.#promise;
-		});
+		return (this.#promise = this.#fn());
 	}
 }
 
@@ -256,7 +254,7 @@ function remote_request(id, prerender) {
 				if (cached_value !== undefined) {
 					const v = cached_value;
 					cached_value = undefined;
-					return Promise.resolve(v);
+					return v;
 				}
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
