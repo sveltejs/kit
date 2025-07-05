@@ -224,12 +224,18 @@ importers:
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
+      '@types/supertest':
+        specifier: ^6.0.3
+        version: 6.0.3
       polka:
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
+      supertest:
+        specifier: ^7.1.1
+        version: 7.1.1
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
@@ -3204,6 +3210,7 @@ packages:
 
   bun@1.2.18:
     resolution: {integrity: sha512-OR+EpNckoJN4tHMVZPaTPxDj2RgpJgJwLruTIFYbO3bQMguLd0YrmkWKYqsiihcLgm2ehIjF/H1RLfZiRa7+qQ==}
+    cpu: [arm64, x64, aarch64]
     os: [darwin, linux, win32]
     hasBin: true
 
