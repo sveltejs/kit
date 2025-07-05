@@ -140,7 +140,7 @@ function serve(path, client = false) {
 	);
 }
 
-/**@returns {HonoMiddleware} */
+/** @returns {HonoMiddleware} */
 function serve_prerendered_hono() {
 	return async (c, next) => {
 		const req = c.env.incoming;
@@ -197,10 +197,20 @@ function serve_prerendered() {
 	};
 }
 
-/**@type {HonoMiddleware} */
+/** @type {HonoMiddleware} */
 const ssr_hono = async (c) => {
-	const request = c.req.raw;
+	let request = c.req.raw;
 	const req = c.env.incoming;
+
+	try {
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
+	} catch {
+		return c.text('Bad Request', 400);
+	}
 
 	return await create_server_responsed(request, req);
 };
@@ -269,7 +279,7 @@ export const handler = sequence(
 	].filter(Boolean)
 );
 
-/**@type {HonoMiddlewares} */
+/** @type {HonoMiddlewares} */
 export const honoHandler = [
 	serve_hono(path.join(dir, 'client'), true),
 	serve_hono(path.join(dir, 'static')),

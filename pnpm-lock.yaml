@@ -212,9 +212,6 @@ importers:
         specifier: ^4.9.5
         version: 4.40.1
     devDependencies:
-      '@playwright/test':
-        specifier: 'catalog:'
-        version: 1.51.1
       '@polka/url':
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -9022,7 +9019,7 @@ snapshots:
       jest: 30.0.4(@types/node@24.0.10)
       prettier: 3.6.0
       supertest: 7.1.1
-      ts-jest: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.4)(@jest/types@30.0.1)(babel-jest@30.0.4(@babel/core@7.28.0))(esbuild@0.25.5)(jest-util@30.0.2)(jest@30.0.4(@types/node@18.19.50))(typescript@5.6.3)
+      ts-jest: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.4)(@jest/types@30.0.1)(babel-jest@30.0.4(@babel/core@7.28.0))(esbuild@0.25.5)(jest-util@30.0.2)(jest@30.0.4(@types/node@24.0.10))(typescript@5.6.3)
       tsup: 8.5.0(postcss@8.5.6)(typescript@5.6.3)
       typescript: 5.6.3
       typescript-eslint: 8.35.0(eslint@9.29.0)(typescript@5.6.3)
@@ -10761,7 +10758,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-jest@29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.4)(@jest/types@30.0.1)(babel-jest@30.0.4(@babel/core@7.28.0))(esbuild@0.25.5)(jest-util@30.0.2)(jest@30.0.4(@types/node@18.19.50))(typescript@5.6.3):
+  ts-jest@29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.4)(@jest/types@30.0.1)(babel-jest@30.0.4(@babel/core@7.28.0))(esbuild@0.25.5)(jest-util@30.0.2)(jest@30.0.4(@types/node@24.0.10))(typescript@5.6.3):
     dependencies:
       bs-logger: 0.2.6
       ejs: 3.1.10
