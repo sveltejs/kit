@@ -42,6 +42,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
+		"@playwright/test": "catalog:",
 		"@polka/url": "^1.0.0-next.28",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",

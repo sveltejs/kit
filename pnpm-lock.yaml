@@ -212,6 +212,9 @@ importers:
         specifier: ^4.9.5
         version: 4.40.1
     devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.51.1
       '@polka/url':
         specifier: ^1.0.0-next.28
         version: 1.0.0-next.28
@@ -3210,7 +3213,6 @@ packages:
 
   bun@1.2.18:
     resolution: {integrity: sha512-OR+EpNckoJN4tHMVZPaTPxDj2RgpJgJwLruTIFYbO3bQMguLd0YrmkWKYqsiihcLgm2ehIjF/H1RLfZiRa7+qQ==}
-    cpu: [arm64, x64, aarch64]
     os: [darwin, linux, win32]
     hasBin: true
 
