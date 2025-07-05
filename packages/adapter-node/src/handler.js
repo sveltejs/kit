@@ -197,15 +197,13 @@ function serve_prerendered() {
 	};
 }
 
-/**@returns {HonoMiddleware} */
-function ssr_hono() {
-	return async (c) => {
-		const request = c.req.raw;
-		const req = c.env.incoming;
+/**@type {HonoMiddleware} */
+const ssr_hono = async (c) => {
+	const request = c.req.raw;
+	const req = c.env.incoming;
 
-		return await create_server_responsed(request, req);
-	};
-}
+	return await create_server_responsed(request, req);
+};
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
@@ -273,17 +271,8 @@ export const handler = sequence(
 
 /**@type {HonoMiddlewares} */
 export const honoHandler = [
-	fs.existsSync(path.join(dir, 'client')) &&
-		serveStaticWithAbsolutePath({
-			root: path.join(dir, 'client'),
-			onFound(path, c) {
-				if (path.startsWith(`/${manifest.appPath}/immutable/`)) {
-					c.res.headers.append('cache-control', 'public,max-age=31536000,immutable');
-				}
-			}
-		}),
 	serve_hono(path.join(dir, 'client'), true),
 	serve_hono(path.join(dir, 'static')),
 	serve_prerendered_hono(),
-	ssr_hono()
+	ssr_hono
 ].filter((value) => value !== undefined && value !== null);
