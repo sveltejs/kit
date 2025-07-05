@@ -286,4 +286,4 @@ export const honoHandler = [
 	serve_hono(path.join(dir, 'static')),
 	serve_prerendered_hono(),
 	ssr_hono()
-].filter(Boolean);
+].filter((value) => value !== undefined && value !== null);
