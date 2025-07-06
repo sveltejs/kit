@@ -75,7 +75,7 @@ jobs:
       - run: pnpm run sync-all
       - run: pnpm test:kit
         env:
-          NODE_OPTIONS: ${{matrix.node-version > 21 && '--experimental-strip-types' || ''}} #allows loading svelte.config.ts
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -198,4 +198,4 @@ jobs:
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
         env:
-          NODE_OPTIONS: ${{matrix.node-version > 21 && '--experimental-strip-types' || ''}} #allows loading svelte.config.ts
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
