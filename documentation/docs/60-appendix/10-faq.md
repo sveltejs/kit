@@ -183,6 +183,12 @@ export default config;
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
+## Why is SvelteKit being loaded twice?
+
+Sometimes, due to incorrect configuration, SvelteKit and other libraries can end up being loaded twice. The most common cause for this is package misconfiguration -- either when a package depends on a specific version of `@sveltejs/kit` rather than listing it as a `peerDependency` or when a package is using an incorrect combination of `main`/`module`/`exports` configuration that's causing your code to load both an ESM and CJS copy of SvelteKit.
+
+SvelteKit will try to figure out when this is happening and warn you by logging to the console during build. If you see one of these logs, try using `pnpm why` or `npm ls` to determine which package is loading SvelteKit, then file an issue with that package.
+
 ## How do I use Yarn?
 
 ### Does it work with Yarn 2?
