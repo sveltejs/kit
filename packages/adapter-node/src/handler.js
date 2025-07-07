@@ -163,7 +163,7 @@ function serve_prerendered_hono() {
 			if (query) location += search;
 			return c.redirect(location, 308);
 		} else {
-			await next();
+			return await next();
 		}
 	};
 }
@@ -285,4 +285,4 @@ export const honoHandler = [
 	serve_hono(path.join(dir, 'static')),
 	serve_prerendered_hono(),
 	ssr_hono
-].filter((value) => value !== undefined && value !== null);
+].filter(Boolean);
