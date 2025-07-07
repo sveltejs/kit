@@ -261,7 +261,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const info = get_remote_info(event);
 			const stringified_arg = stringify_remote_arg(arg, info.transport);
 			const id = /** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id;
-			const url = `${base}/${app_dir}/remote/${id}/${stringified_arg}`;
+			const url = `${base}/${app_dir}/remote/${id}${stringified_arg ? `/${stringified_arg}` : ''}`;
 
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
