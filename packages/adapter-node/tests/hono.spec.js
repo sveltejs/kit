@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { Hono } from 'hono';
-import { createAdaptorServer } from '@hono/node-server';
+import { createServer } from 'node:http2';
+import { serve } from '@hono/node-server';
 import { describe, expect, test } from 'vitest';
 
 import { honoHandler } from './apps/hono/build/handler.js';
@@ -8,12 +9,47 @@ import { honoHandler } from './apps/hono/build/handler.js';
 describe("Hono handler's tests", () => {
 	const app = new Hono();
 
+	app.get('/api/test', (c) => {
+		return c.text('this is get request');
+	});
+
+	app.post('/api/test', (c) => {
+		return c.text('this is post request');
+	});
+
 	app.use(...honoHandler);
 
-	const server = createAdaptorServer(app);
+	const server = serve({
+		fetch: app.fetch,
+		createServer
+	});
+
+	const client = request(server, { http2: true });
 
 	test('static file check', async () => {
-		const res = await request(server).get('/favicon.svg');
+		const res = await client.get('/favicon.svg');
 		expect(res.status).toBe(200);
+	});
+
+	test('page check (/example)', async () => {
+		const res = await client.get('/example');
+		expect(res.status).toBe(200);
+	});
+
+	test('404 page check', async () => {
+		const res = await client.get('/failed');
+		expect(res.status).toBe(404);
+	});
+
+	test('api check (get)', async () => {
+		const res = await client.get('/api/test');
+		expect(res.status).toBe(200);
+		expect(res.text).toBe('this is get request');
+	});
+
+	test('api check (post)', async () => {
+		const res = await client.post('/api/test');
+		expect(res.status).toBe(200);
+		expect(res.text).toBe('this is post request');
 	});
 });
