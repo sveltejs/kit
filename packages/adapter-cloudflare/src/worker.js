@@ -13,10 +13,10 @@ export default {
 	/**
 	 * @param {Request} req
 	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
-	 * @param {ExecutionContext} context
+	 * @param {ExecutionContext} ctx
 	 * @returns {Promise<Response>}
 	 */
-	async fetch(req, env, context) {
+	async fetch(req, env, ctx) {
 		await server.init({
 			// @ts-expect-error env contains environment variables and bindings
 			env
@@ -70,7 +70,8 @@ export default {
 			res = await server.respond(req, {
 				platform: {
 					env,
-					context,
+					ctx,
+					context: ctx, // deprecated in favor of ctx
 					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
 					caches,
 					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
@@ -85,6 +86,6 @@ export default {
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers
 		pragma = res.headers.get('cache-control') || '';
-		return pragma && res.status < 400 ? Cache.save(req, res, context) : res;
+		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
 	}
 };
