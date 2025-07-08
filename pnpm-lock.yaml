@@ -413,8 +413,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       vitefu:
-        specifier: ^1.0.6
-        version: 1.0.6(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
+        specifier: ^1.1.1
+        version: 1.1.1(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -4488,16 +4488,16 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.0.6:
-    resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
+  vitefu@1.0.7:
+    resolution: {integrity: sha512-eRWXLBbJjW3X5z5P5IHcSm2yYbYRPb2kQuc+oqsbAl99WB5kVsPbiiox+cymo8twTzifA6itvhr2CmjnaZZp0Q==}
     peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
     peerDependenciesMeta:
       vite:
         optional: true
 
-  vitefu@1.0.7:
-    resolution: {integrity: sha512-eRWXLBbJjW3X5z5P5IHcSm2yYbYRPb2kQuc+oqsbAl99WB5kVsPbiiox+cymo8twTzifA6itvhr2CmjnaZZp0Q==}
+  vitefu@1.1.1:
+    resolution: {integrity: sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ==}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
     peerDependenciesMeta:
@@ -7840,11 +7840,11 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.30.1
 
-  vitefu@1.0.6(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)):
+  vitefu@1.0.7(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)):
     optionalDependencies:
       vite: 6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)
 
-  vitefu@1.0.7(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)):
+  vitefu@1.1.1(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)):
     optionalDependencies:
       vite: 6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)
 

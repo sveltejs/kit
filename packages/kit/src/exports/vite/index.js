@@ -701,7 +701,7 @@ Tips:
 								inlineDynamicImports:
 									split &&
 									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
-									vite.rolldownVersion
+									!!vite.rolldownVersion
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
