@@ -695,7 +695,13 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								manualChunks:
+									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									vite.rolldownVersion || split ? undefined : () => 'bundle',
+								inlineDynamicImports:
+									split &&
+									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									vite.rolldownVersion
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
@@ -728,11 +734,6 @@ Tips:
 							}
 						}
 					}
-					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://github.com/vitejs/rolldown-vite/issues/213
-					// experimental: {
-					// 	enableNativePlugin: true
-					// }
 				};
 			} else {
 				new_config = {
@@ -746,11 +747,14 @@ Tips:
 						}
 					},
 					publicDir: kit.files.assets
-					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://github.com/vitejs/rolldown-vite/issues/213
-					// experimental: {
-					// 	enableNativePlugin: true
-					// }
+				};
+			}
+
+			// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+			if (vite.rolldownVersion) {
+				new_config.experimental = {
+					// @ts-expect-error `enableNativePlugin` only exists in `rolldown-vite`
+					enableNativePlugin: true
 				};
 			}
 
