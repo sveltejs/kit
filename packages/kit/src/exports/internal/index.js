@@ -1,3 +1,5 @@
+console.log(`in @sveltejs/kit/internal`, import.meta.url, import.meta.env);
+
 export class HttpError {
 	/**
 	 * @param {number} status

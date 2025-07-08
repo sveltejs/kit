@@ -299,7 +299,7 @@ async function kit({ svelte_config }) {
 						`!${kit.files.routes}/**/+*server.*`
 					],
 					exclude: [
-						'@sveltejs/kit',
+						// '@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',

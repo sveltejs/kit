@@ -1221,9 +1221,6 @@ importers:
       svelte-check:
         specifier: ^4.1.1
         version: 4.1.1(picomatch@4.0.2)(svelte@5.23.1)(typescript@5.6.3)
-      test-redirect-importer:
-        specifier: workspace:*
-        version: link:../../packages/test-redirect-importer
       typescript:
         specifier: ^5.5.0
         version: 5.6.3
