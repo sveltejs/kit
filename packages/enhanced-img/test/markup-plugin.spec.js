@@ -27,7 +27,8 @@ it('Image preprocess snapshot test', async () => {
 		})
 	);
 	const transform =
-		/** @type {(this: import('vite').Rollup.TransformPluginContext, code: string, id: string, options?: {ssr?: boolean;}) => Promise<import('rollup').TransformResult>} */ (
+		/** @type {(this: import('vite').Rollup.TransformPluginContext, code: string, id: string, options?: {ssr?: boolean;}) => Promise<import('vite').Rollup.TransformResult>} */ (
+		// @ts-expect-error fails until vite is updated
 			vite_plugin.transform.handler
 		);
 	const transformed = await transform.call(

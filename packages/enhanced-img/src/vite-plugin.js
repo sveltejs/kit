@@ -36,6 +36,7 @@ export function image_plugin(imagetools_plugin) {
 			if (!svelteConfigPlugin) {
 				throw new Error('@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher');
 			}
+			// @ts-expect-error plugin.transform is defined below before configResolved is called
 			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter;
 		},
 		transform: {
