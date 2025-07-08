@@ -1,4 +1,4 @@
-import { HttpError, SvelteKitError } from '../exports/internal/index.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * @param {unknown} err
