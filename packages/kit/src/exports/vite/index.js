@@ -313,21 +313,25 @@ async function kit({ svelte_config }) {
 						// that bundle later on from resolving the export conditions incorrectly
 						// and for example include browser-only code in the server output
 						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env',
-						// We need this for two reasons:
-						// 1. Without this, `@sveltejs/kit` imports are kept as-is in the server output,
-						//    and that causes modules and therefore classes like `Redirect` to be imported twice
-						//    under different IDs, which breaks a bunch of stuff because of failing instanceof checks.
-						// 2. Vitest bypasses Vite when loading external modules, so we bundle
-						//    when it is detected to keep our virtual modules working.
-						//    See https://github.com/sveltejs/kit/pull/9172
-						//    and https://vitest.dev/config/#deps-registernodeloader
-						'@sveltejs/kit',
-						// We need to bundle any packages depending on @sveltejs/kit so that
-						// everyone uses the same instances of classes such as `Redirect`
-						// which we use in `instanceof` checks
-						...packages_depending_on_svelte_kit
-					]
+						'esm-env'
+						// // We need this for two reasons:
+						// // 1. Without this, `@sveltejs/kit` imports are kept as-is in the server output,
+						// //    and that causes modules and therefore classes like `Redirect` to be imported twice
+						// //    under different IDs, which breaks a bunch of stuff because of failing instanceof checks.
+						// // 2. Vitest bypasses Vite when loading external modules, so we bundle
+						// //    when it is detected to keep our virtual modules working.
+						// //    See https://github.com/sveltejs/kit/pull/9172
+						// //    and https://vitest.dev/config/#deps-registernodeloader
+						// '@sveltejs/kit',
+						// // We need to bundle any packages depending on @sveltejs/kit so that
+						// // everyone uses the same instances of classes such as `Redirect`
+						// // which we use in `instanceof` checks
+						// ...packages_depending_on_svelte_kit
+					],
+					// `pnpm -F test-basics test` to run the peer dependency tests
+					// `pnpm -F prerendering-test-basics test` to run the prerendering tests
+					// both currently failing
+					external: ['@sveltejs/kit']
 				}
 			};
 
