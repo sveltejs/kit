@@ -3,7 +3,6 @@ packages:
   - 'packages/adapter-cloudflare/test/apps/*'
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
-  - 'packages/kit/test/apps/basics/_test_dependencies/redirect-pkg'
   - 'packages/kit/test/prerendering/*'
   - 'packages/kit/test/build-errors/**'
   - 'packages/kit/test/build-errors/apps/*'

@@ -22,7 +22,7 @@
 		"cross-env": "catalog:",
 		"svelte": "^5.23.1",
 		"svelte-check": "^4.1.1",
-		"redirect-pkg": "file:./_test_dependencies/redirect-pkg",
+		"test-redirect-importer": "workspace:*",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
 	},
