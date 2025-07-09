@@ -301,7 +301,7 @@ async function kit({ svelte_config }) {
 						// This forces `$app/*` modules to be bundled, since they depend on
 						// virtual modules like `__sveltekit/paths` (this isn't a valid bare
 						// import, but it works with vite-node's externalization logic, which
-						// uses basic concatenation
+						// uses basic concatenation)
 						'@sveltejs/kit/src/runtime'
 					]
 				}
