@@ -745,14 +745,6 @@ Tips:
 				};
 			}
 
-			// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-			if (vite.rolldownVersion) {
-				new_config.experimental = {
-					// @ts-ignore `enableNativePlugin` only exists in `rolldown-vite`
-					enableNativePlugin: true
-				};
-			}
-
 			warn_overridden_config(config, new_config);
 
 			return new_config;
