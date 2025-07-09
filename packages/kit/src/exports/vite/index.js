@@ -696,11 +696,11 @@ Tips:
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
 								manualChunks:
-									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
 									vite.rolldownVersion || split ? undefined : () => 'bundle',
 								inlineDynamicImports:
 									split &&
-									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
 									!!vite.rolldownVersion
 							},
 							preserveEntrySignatures: 'strict',
