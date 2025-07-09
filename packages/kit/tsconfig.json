@@ -11,6 +11,7 @@
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
+			"@sveltejs/kit/node/polyfills": ["./src/exports/node/polyfills.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]
