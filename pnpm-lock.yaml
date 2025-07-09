@@ -412,9 +412,6 @@ importers:
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
-      vitefu:
-        specifier: ^1.0.6
-        version: 1.0.6(vite@6.3.5(@types/node@18.19.50)(lightningcss@1.30.1))
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -494,27 +491,21 @@ importers:
       cross-env:
         specifier: 'catalog:'
         version: 7.0.3
-      redirect-pkg:
-        specifier: file:./_test_dependencies/redirect-pkg
-        version: file:packages/kit/test/apps/basics/_test_dependencies/redirect-pkg(@sveltejs/kit@packages+kit)
       svelte:
         specifier: ^5.23.1
         version: 5.23.1
       svelte-check:
         specifier: ^4.1.1
         version: 4.1.1(picomatch@4.0.2)(svelte@5.23.1)(typescript@5.6.3)
+      test-redirect-importer:
+        specifier: workspace:*
+        version: link:../../../../test-redirect-importer
       typescript:
         specifier: ^5.5.4
         version: 5.6.3
       vite:
         specifier: 'catalog:'
         version: 6.3.5(@types/node@18.19.50)(lightningcss@1.30.1)
-
-  packages/kit/test/apps/basics/_test_dependencies/redirect-pkg:
-    dependencies:
-      '@sveltejs/kit':
-        specifier: workspace:*
-        version: link:../../../../..
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -1170,6 +1161,12 @@ importers:
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
+
+  packages/test-redirect-importer:
+    dependencies:
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../kit
 
   playgrounds/basic:
     devDependencies:
@@ -3971,11 +3968,6 @@ packages:
   readdirp@4.0.1:
     resolution: {integrity: sha512-GkMg9uOTpIWWKbSsgwb5fA4EavTR+SG/PMPoAY8hkhHfEEY0/vqljY+XHqtDf2cr2IJtoNRDbrrEpZUiZCkYRw==}
     engines: {node: '>= 14.16.0'}
-
-  redirect-pkg@file:packages/kit/test/apps/basics/_test_dependencies/redirect-pkg:
-    resolution: {directory: packages/kit/test/apps/basics/_test_dependencies/redirect-pkg, type: directory}
-    peerDependencies:
-      '@sveltejs/kit': workspace:*
 
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
@@ -7306,10 +7298,6 @@ snapshots:
       minimatch: 5.1.6
 
   readdirp@4.0.1: {}
-
-  redirect-pkg@file:packages/kit/test/apps/basics/_test_dependencies/redirect-pkg(@sveltejs/kit@packages+kit):
-    dependencies:
-      '@sveltejs/kit': link:packages/kit
 
   regenerator-runtime@0.14.1: {}
 
