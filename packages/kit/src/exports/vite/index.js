@@ -701,7 +701,7 @@ Tips:
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
 									(vite.rolldownVersion
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
@@ -745,10 +745,10 @@ Tips:
 				};
 			}
 
-			// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+			// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
 			if (vite.rolldownVersion) {
 				new_config.experimental = {
-					// @ts-expect-error `enableNativePlugin` only exists in `rolldown-vite`
+					// @ts-ignore `enableNativePlugin` only exists in `rolldown-vite`
 					enableNativePlugin: true
 				};
 			}
