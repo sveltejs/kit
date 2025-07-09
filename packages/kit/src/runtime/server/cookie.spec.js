@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
+import { installPolyfills } from '../../exports/node/polyfills.js';
 
 installPolyfills();
 
