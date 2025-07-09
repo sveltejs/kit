@@ -701,7 +701,7 @@ Tips:
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									// @ts-expect-error `vite.rolldownVersion` only exists in `rolldown-vite`
+									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
 									(vite.rolldownVersion
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
@@ -729,11 +729,6 @@ Tips:
 							}
 						}
 					}
-					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://github.com/vitejs/rolldown-vite/issues/213
-					// experimental: {
-					// 	enableNativePlugin: true
-					// }
 				};
 			} else {
 				new_config = {
@@ -747,11 +742,6 @@ Tips:
 						}
 					},
 					publicDir: kit.files.assets
-					// TODO: enabling `experimental.enableNativePlugin` causes styles to not be applied
-					// see https://github.com/vitejs/rolldown-vite/issues/213
-					// experimental: {
-					// 	enableNativePlugin: true
-					// }
 				};
 			}
 
