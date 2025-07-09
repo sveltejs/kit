@@ -1,0 +1,1 @@
+export const NULL_BODY_STATUS = [204];
