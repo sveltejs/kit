@@ -36,7 +36,6 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { crawlFrameworkPkgs } from 'vitefu';
 
 const cwd = process.cwd();
 
