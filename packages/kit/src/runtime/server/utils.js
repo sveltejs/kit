@@ -1,8 +1,8 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
+import { HttpError } from '@sveltejs/kit/internal';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '@sveltejs/kit/internal';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
