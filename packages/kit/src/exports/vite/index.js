@@ -297,7 +297,11 @@ async function kit({ svelte_config }) {
 						// that bundle later on from resolving the export conditions incorrectly
 						// and for example include browser-only code in the server output
 						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
+						'esm-env',
+						// This forces `$app/*` modules to be bundled, since they depend on
+						// virtual modules like `__sveltekit/paths`
+						// TODO use RegExp.escape once we drop Node <22
+						new RegExp(runtime_directory.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'))
 					]
 				}
 			};
