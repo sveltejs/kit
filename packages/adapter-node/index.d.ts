@@ -9,6 +9,11 @@ interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
 	envPrefix?: string;
+	external?:
+		| (string | RegExp)[]
+		| RegExp
+		| string
+		| ((id: string, parentId: string, isResolved: boolean) => boolean);
 }
 
 export default function plugin(options?: AdapterOptions): Adapter;
