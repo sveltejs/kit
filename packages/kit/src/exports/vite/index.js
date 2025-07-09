@@ -299,9 +299,10 @@ async function kit({ svelte_config }) {
 						// because they for example use esbuild.build with `platform: 'browser'`
 						'esm-env',
 						// This forces `$app/*` modules to be bundled, since they depend on
-						// virtual modules like `__sveltekit/paths`
-						// TODO use RegExp.escape once we drop Node <22
-						new RegExp(runtime_directory.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'))
+						// virtual modules like `__sveltekit/paths` (this isn't a valid bare
+						// import, but it works with vite-node's externalization logic, which
+						// uses basic concatenation
+						'@sveltejs/kit/src/runtime'
 					]
 				}
 			};
