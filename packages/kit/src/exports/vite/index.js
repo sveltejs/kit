@@ -284,6 +284,9 @@ async function kit({ svelte_config }) {
 						`!${kit.files.routes}/**/+*server.*`
 					],
 					exclude: [
+						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
+						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
+						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
