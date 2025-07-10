@@ -2,7 +2,6 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -18,7 +17,7 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -188,23 +187,9 @@ export interface Builder {
 	compress: (directory: string) => Promise<void>;
 }
 
-export interface Config {
-	/**
-	 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
-	 * @default {}
-	 */
-	compilerOptions?: CompileOptions;
-	/**
-	 * List of file extensions that should be treated as Svelte files.
-	 * @default [".svelte"]
-	 */
-	extensions?: string[];
-	/** SvelteKit options */
+export interface Config extends SvelteConfig {
+	/** SvelteKit options. See https://svelte.dev/docs/kit/configuration */
 	kit?: KitConfig;
-	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
-	preprocess?: any;
-	/** `vite-plugin-svelte` plugin options. */
-	vitePlugin?: PluginOptions;
 	/** Any additional options required by tooling that integrates with Svelte. */
 	[key: string]: any;
 }
