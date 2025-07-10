@@ -3,14 +3,14 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { uneval, parse } from 'devalue';
+import { error, json } from '@sveltejs/kit';
+import { ActionFailure } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
 import { getRequestEvent, with_event } from './event.js';
 import { get_remote_info } from '../../server/remote.js';
-import { error, json } from '../../../exports/index.js';
-import { DEV } from 'esm-env';
 import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { app_dir, base } from '__sveltekit/paths';
-import { ActionFailure } from '../../control.js';
 
 /**
  * Creates a remote function that can be invoked like a regular function within components.

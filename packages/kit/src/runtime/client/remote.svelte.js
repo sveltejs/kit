@@ -4,6 +4,7 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
+import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import {
 	app,
 	invalidateAll,
@@ -15,7 +16,6 @@ import {
 	refresh_map
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
-import { HttpError, Redirect } from '../control.js';
 
 /**
  * Waits for three microtasks by default which is the necessary amount of ticks to ensure that

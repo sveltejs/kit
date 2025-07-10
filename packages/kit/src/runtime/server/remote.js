@@ -1,11 +1,11 @@
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
-import { json, error } from '../../exports/index.js';
+import { json, error } from '@sveltejs/kit';
+import { ActionFailure, HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { app_dir, base } from '__sveltekit/paths';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { ActionFailure, HttpError, Redirect, SvelteKitError } from '../control.js';
 import { parse_remote_args as parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
