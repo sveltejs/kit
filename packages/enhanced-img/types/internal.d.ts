@@ -31,4 +31,4 @@ type Block = AST.EachBlock | AST.IfBlock | AST.AwaitBlock | AST.KeyBlock | AST.S
 
 export type TemplateNode = AST.Text | Tag | ElementLike | AST.Comment | Block;
 
-export type Attribute = AST.Attribute | AST.SpreadAttribute | Directive;
+export type Attribute = AST.RegularElement['attributes'][number];
