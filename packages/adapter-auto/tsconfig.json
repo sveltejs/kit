@@ -7,7 +7,8 @@
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		"baseUrl": "."
+		"baseUrl": ".",
+		"skipLibCheck": true
 	},
 	"include": ["**/*.js"]
 }
