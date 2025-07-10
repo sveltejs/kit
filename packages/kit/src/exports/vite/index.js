@@ -661,8 +661,7 @@ Tips:
 						copyPublicDir: !ssr,
 						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
-						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: '.vite/manifest.json', // TODO: set this to `true` after bumping peer dep to vite 5
+						manifest: true,
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input: inline ? input['bundle'] : input,
@@ -796,7 +795,7 @@ Tips:
 				const log = logger({ verbose });
 
 				/** @type {import('vite').Manifest} */
-				const server_manifest = JSON.parse(read(`${out}/server/${vite_config.build.manifest}`));
+				const server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
 
 				/** @type {import('types').BuildData} */
 				const build_data = {
@@ -869,7 +868,7 @@ Tips:
 				);
 
 				/** @type {import('vite').Manifest} */
-				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
+				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
 
 				/**
 				 * @param {string} entry
