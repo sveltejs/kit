@@ -190,7 +190,7 @@ export interface Builder {
 export interface Config extends SvelteConfig {
 	/**
 	 * SvelteKit options.
-	 * 
+	 *
 	 * @see https://svelte.dev/docs/kit/configuration
 	 */
 	kit?: KitConfig;
