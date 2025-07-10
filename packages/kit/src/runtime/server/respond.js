@@ -1,6 +1,6 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -33,6 +33,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { add_remote_info, get_remote_id, handle_remote_call } from './remote.js';
 import { with_event } from '../app/server/event.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -64,24 +65,39 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	if (options.csrf_check_origin) {
+	const is_route_resolution_request = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const remote_id = get_remote_id(url);
+
+	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
+		const opts = { status: 403 };
+
+		if (
+			remote_id &&
+			// TODO get doesn't have an origin header - any way we can still forbid other origins?
+			request.method !== 'GET'
+		) {
+			return json(
+				{
+					message: 'Cross-site remote requests are forbidden'
+				},
+				opts
+			);
+		}
+
 		const forbidden =
 			is_form_content_type(request) &&
 			(request.method === 'POST' ||
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
-				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+				request.method === 'DELETE');
 
 		if (forbidden) {
-			const csrf_error = new HttpError(
-				403,
-				`Cross-site ${request.method} form submissions are forbidden`
-			);
+			const message = `Cross-site ${request.method} form submissions are forbidden`;
 			if (request.headers.get('accept') === 'application/json') {
-				return json(csrf_error.body, { status: csrf_error.status });
+				return json({ message }, opts);
 			}
-			return text(csrf_error.body.message, { status: csrf_error.status });
+			return text(message, opts);
 		}
 	}
 
@@ -92,14 +108,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
-	/**
-	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for path resolution, then return the route object as a JS file.
-	 */
-	const is_route_resolution_request = has_resolution_suffix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-
 	if (is_route_resolution_request) {
+		/**
+		 * If the request is for a route resolution, first modify the URL, then continue as normal
+		 * for path resolution, then return the route object as a JS file.
+		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
@@ -111,6 +124,9 @@ export async function respond(request, options, manifest, state) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
+	} else if (remote_id) {
+		url.pathname = base;
+		url.search = '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -164,8 +180,11 @@ export async function respond(request, options, manifest, state) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
+		isSubRequest: state.depth > 0,
+		isRemoteRequest: !!remote_id
 	};
+
+	add_remote_info(event, state, options);
 
 	event.fetch = create_fetch({
 		event,
@@ -183,23 +202,25 @@ export async function respond(request, options, manifest, state) {
 		});
 	}
 
-	let resolved_path;
+	let resolved_path = url.pathname;
 
-	const prerendering_reroute_state = state.prerendering?.inside_reroute;
-	try {
-		// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
-		// which would end up in the wrong logic path if not disabled.
-		if (state.prerendering) state.prerendering.inside_reroute = true;
+	if (!remote_id) {
+		const prerendering_reroute_state = state.prerendering?.inside_reroute;
+		try {
+			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
+			// which would end up in the wrong logic path if not disabled.
+			if (state.prerendering) state.prerendering.inside_reroute = true;
 
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path =
-			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
-	} finally {
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path =
+				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		} finally {
+			if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+		}
 	}
 
 	try {
@@ -254,14 +275,14 @@ export async function respond(request, options, manifest, state) {
 		return get_public_env(request);
 	}
 
-	if (resolved_path.startsWith(`/${app_dir}`)) {
+	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !remote_id) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
@@ -474,6 +495,10 @@ export async function respond(request, options, manifest, state) {
 					fetched: [],
 					resolve_opts
 				});
+			}
+
+			if (remote_id) {
+				return handle_remote_call(event, options, manifest, remote_id);
 			}
 
 			if (route) {

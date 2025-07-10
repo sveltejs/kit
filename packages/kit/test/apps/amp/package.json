@@ -18,7 +18,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"cross-env": "catalog:",
 		"dropcss": "^1.0.16",
-		"svelte": "^5.23.1",
+		"svelte": "^5.35.2",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"

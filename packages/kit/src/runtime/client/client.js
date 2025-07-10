@@ -46,7 +46,6 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 
 export { load_css };
-
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
@@ -176,6 +175,8 @@ let container;
 let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
+/** @type {Record<string, any>} */
+export let remote_responses;
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -225,7 +226,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-let started = false;
+export let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -256,7 +257,19 @@ let token;
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
-let pending_invalidate;
+export let pending_invalidate;
+
+/**
+ * @type {Map<string, (remove?: boolean) => void>}
+ * A map of query functions that currently exist in the app.
+ * Each value is a query's refresh function which will rerun the query.
+ */
+export const refresh_map = new Map();
+/**
+ * @type {Map<string, [count: number, resource: any, update: (v: any) => void]>}
+ * A map of results of queries that currently exist in the app.
+ */
+export const result_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -279,6 +292,7 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
+	remote_responses = hydrate?.remote ?? {};
 
 	await _app.hooks.init?.();
 
@@ -339,7 +353,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate() {
+async function _invalidate(includeLoadFunctions = true, reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -356,20 +370,45 @@ async function _invalidate() {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const navigation_result = intent && (await load_route(intent));
-	if (!navigation_result || nav_token !== token) return;
+	// Rerun component load functions
+	// load_fns.forEach((dependencies, load) => {
+	// 	for (const href of dependencies) {
+	// 		if (force_invalidation || invalidated.some((fn) => fn(new URL(href)))) {
+	// 			load();
+	// 		}
+	// 	}
+	// });
+	// Rerun queries
+	refresh_map.forEach((rerun, key) => {
+		// TODO allow invalidation of non-exact queries? i.e. you do foo.queryFor(1) when foo has two parameters, i.e. the second is optional?
+		if (force_invalidation || invalidated.some((fn) => fn(new URL(key)))) {
+			rerun();
+		}
+	});
 
-	if (navigation_result.type === 'redirect') {
-		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+	if (includeLoadFunctions) {
+		const prev_state = page.state;
+		const navigation_result = intent && (await load_route(intent));
+		if (!navigation_result || nav_token !== token) return;
+
+		if (navigation_result.type === 'redirect') {
+			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		}
+
+		// This is a bit hacky but allows us having to pass that boolean around, making things harder to reason about
+		if (!reset_page_state) {
+			navigation_result.props.page.state = prev_state;
+		}
+		update(navigation_result.props.page);
+		current = navigation_result.state;
+		reset_invalidation();
+		root.$set(navigation_result.props);
+	} else {
+		reset_invalidation();
 	}
 
-	if (navigation_result.props.page) {
-		Object.assign(page, navigation_result.props.page);
-	}
-	current = navigation_result.state;
-	reset_invalidation();
-	root.$set(navigation_result.props);
-	update(navigation_result.props.page);
+	// Don't use allSettled yet because it's too new
+	await Promise.all([...result_map.values()].map(([_, p]) => p)).catch(noop);
 }
 
 function reset_invalidation() {
@@ -1995,6 +2034,21 @@ export function invalidateAll() {
 }
 
 /**
+ * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+ * Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {{ includeLoadFunctions?: boolean }} [options]
+ * @returns {Promise<void>}
+ */
+export function refreshAll({ includeLoadFunctions = true } = {}) {
+	if (!BROWSER) {
+		throw new Error('Cannot call refreshAll() on the server');
+	}
+
+	force_invalidation = true;
+	return _invalidate(includeLoadFunctions, false);
+}
+
+/**
  * Programmatically preloads the given page, which means
  *  1. ensuring that the code for the page is loaded, and
  *  2. calling the page's load function with the appropriate options.
@@ -2175,29 +2229,7 @@ export async function applyAction(result) {
 	}
 
 	if (result.type === 'error') {
-		const url = new URL(location.href);
-
-		const { branch, route } = current;
-		if (!route) return;
-
-		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
-		if (error_load) {
-			const navigation_result = get_navigation_result_from_branch({
-				url,
-				params: current.params,
-				branch: branch.slice(0, error_load.idx).concat(error_load.node),
-				status: result.status ?? 500,
-				error: result.error,
-				route
-			});
-
-			current = navigation_result.state;
-
-			root.$set(navigation_result.props);
-			update(navigation_result.props.page);
-
-			void tick().then(() => reset_focus(current.url));
-		}
+		await set_nearest_error_page(result.error, result.status);
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
@@ -2219,6 +2251,36 @@ export async function applyAction(result) {
 		if (result.type === 'success') {
 			reset_focus(page.url);
 		}
+	}
+}
+
+/**
+ * @param {App.Error} error
+ * @param {number} status
+ */
+export async function set_nearest_error_page(error, status = 500) {
+	const url = new URL(location.href);
+
+	const { branch, route } = current;
+	if (!route) return;
+
+	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
+	if (error_load) {
+		const navigation_result = get_navigation_result_from_branch({
+			url,
+			params: current.params,
+			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			status,
+			error,
+			route
+		});
+
+		current = navigation_result.state;
+
+		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
+
+		void tick().then(() => reset_focus(current.url));
 	}
 }
 

@@ -73,7 +73,7 @@ type OptionalUnion<
 
 declare const uniqueSymbol: unique symbol;
 
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+export interface ActionFailure<T = undefined> {
 	status: number;
 	data: T;
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -408,6 +408,16 @@ export interface KitConfig {
 		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
+	};
+	/**
+	 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+	 */
+	experimental?: {
+		/**
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+		 * @default false
+		 */
+		remoteFunctions?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -1250,6 +1260,11 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+	/**
+	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+	 * related to the data request in this case. Use this property instead if the distinction is important to you.
+	 */
+	isRemoteRequest: boolean;
 }
 
 /**
@@ -1324,6 +1339,8 @@ export interface SSRManifest {
 	_: {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
+		remotes: Record<string, () => Promise<any>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1500,5 +1517,188 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+/**
+ * The return value of a remote `form` function.
+ * Spread it onto a `<form>` element to connect the form with the remote form action.
+ * ```svelte
+ * <script>
+ *   import { createTodo } from './todos.remote.js';
+ * </script>
+ *
+ * <form {...createTodo}>
+ *   <input type="text" name="name" />
+ *   <!-- ... -->
+ * </form>
+ * ```
+ * Use the `enhance` method to influence what happens when the form is submitted.
+ * ```svelte
+ * <script>
+ *   import { getTodos, createTodo } from './todos.remote.js';
+ * </script>
+ *
+ * <form {...myFormAction.enhance(async ({ formData, submit }) => {
+ *   // do something with the form data, e.g. optimistic UI update
+ *   getTodos.override([], (todos) => [...todos, { text: formData.get('text') }]);
+ *   // submit the form
+ *   const result = await submit();
+ *   // do something with the result
+ * })}>
+ *   <input type="text" name="name" />
+ *   <!-- ... -->
+ * </form>
+ *
+ * <ul>
+ * 	{#each await getTodos() as todo}
+ * 		<li>{todo.text}</li>
+ * 	{/each}
+ * </ul>
+ * ```
+ */
+export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+	method: 'POST';
+	/** The URL to send the form to. */
+	action: string;
+	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+	onsubmit: (event: SubmitEvent) => void;
+	/** Use the `enhance` method to influence what happens when the form is submitted. */
+	enhance: (
+		callback: (opts: {
+			form: HTMLFormElement;
+			data: FormData;
+			submit: () => Promise<void> & {
+				updates: (
+					...queries: Array<
+						| ReturnType<RemoteQuery<any, any>>
+						| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+					>
+				) => Promise<void>;
+			};
+		}) => void
+	) => {
+		method: 'POST';
+		action: string;
+		onsubmit: (event: SubmitEvent) => void;
+	};
+	/**
+	 * Create an instance of the form for the given key.
+	 * The key is stringified and used for deduplication to potentially reuse existing instances.
+	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+	 * ```svelte
+	 * {#each todos as todo}
+	 *	{@const todoForm = updateTodo.for(todo.id)}
+	 *	<form {...todoForm}>
+	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+	 *		...
+	 *	</form>
+	 *	{/each}
+	 * ```
+	 */
+	for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+	/** The result of the form submission */
+	get result(): Success | Failure | undefined;
+	/** When there's an error during form submission, it appears on this property */
+	get error(): App.Error | undefined;
+	/** Spread this onto a button or input of type submit */
+	formAction: {
+		type: 'submit';
+		formaction: string;
+		onclick: (event: Event) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance: (
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<void> & {
+					updates: (
+						...queries: Array<
+							| ReturnType<RemoteQuery<any, any>>
+							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+						>
+					) => Promise<void>;
+				};
+			}) => void
+		) => {
+			type: 'submit';
+			formaction: string;
+			onclick: (event: Event) => void;
+		};
+	};
+};
+
+/**
+ * The return value of a remote `query` or `prerender` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call through to the underlying function.
+ * On the client, this will do a fetch to the server to retrieve the value.
+ * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+ */
+export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+	/** The current value of the query. Undefined as long as there's no value yet */
+	get current(): Awaited<Output> | undefined;
+	/** The error in case the query fails */
+	get error(): App.Error | undefined;
+	/** `true` before the first result is available and during refreshes */
+	get pending(): boolean;
+	/**
+	 * On the client, this function will re-fetch the query from the server.
+	 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
+	 *
+	 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
+	 * transport the updated data to the client along with the response, if the action was successful.
+	 */
+	refresh: () => Promise<void>;
+	/**
+	 * Temporarily override the value of a query. Useful for optimistic UI updates.
+	 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
+	 * Overrides are applied on new values, too, until they are released.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, addTodo } from './todos.remote.js';
+	 *   const todos = getTodos();
+	 * </script>
+	 *
+	 * <form {...addTodo.enhance(async ({ data, submit }) => {
+	 *   const release = await getTodos.override((todos) => [...todos, { text: data.get('text') }]);
+	 *   try {
+	 *     await submit();
+	 *   } finally {
+	 *     release();
+	 *   }
+	 * }}>
+	 *   <input type="text" name="text" />
+	 *   <button type="submit">Add Todo</button>
+	 * </form>
+	 * ```
+	 *
+	 * Can only be called on the client.
+	 */
+	override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
+	/**
+	 * Temporarily override the value of a query. Useful for optimistic UI updates.
+	 * `withOverride` expects a function that takes the current value and returns the new value.
+	 * In other words this works like `override`, but is specifically for use as part of the `updates` method of a remote `command` or `form` submit
+	 * in order to coordinate query refreshes and override releases at once, without causing e.g. flickering in the UI.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, addTodo } from './todos.remote.js';
+	 *   const todos = getTodos();
+	 * </script>
+	 *
+	 * <form {...addTodo.enhance(async ({ data, submit }) => {
+	 *   await submit().updates(todos.withOverride((todos) => [...todos, { text: data.get('text') }]));
+	 * }}>
+	 *   <input type="text" name="text" />
+	 *   <button type="submit">Add Todo</button>
+	 * </form>
+	 * ```
+	 */
+	withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+		_key: string;
+		release: () => void;
+	};
+};
 
 export * from './index.js';

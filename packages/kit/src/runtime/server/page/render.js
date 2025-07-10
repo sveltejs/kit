@@ -15,6 +15,8 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
+import { with_event } from '../../app/server/event.js';
+import { get_remote_info } from '../remote.js';
 
 // TODO rename this function/module
 
@@ -189,14 +191,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				paths.reset();
 			}
@@ -404,7 +406,14 @@ export async function render_response({
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
-				`error: ${serialized.error}`
+				`error: ${serialized.error}`,
+				`remote: {${(
+					await Promise.all(
+						Object.entries(get_remote_info(event, true)?.unevaled_results || {}).map(
+							async ([key, value]) => `"${key}": ${await value}`
+						)
+					)
+				).join(', ')}}`
 			];
 
 			if (status !== 200) {

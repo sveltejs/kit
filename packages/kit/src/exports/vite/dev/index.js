@@ -19,6 +19,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { hash } from '../../../runtime/hash.js';
 import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
@@ -266,6 +267,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					};
 				}),
 				prerendered_routes: new Set(),
+				remotes: Object.fromEntries(
+					manifest_data.remotes.map((filename) => [
+						hash(filename),
+						() => vite.ssrLoadModule(filename)
+					])
+				),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
@@ -331,6 +338,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
