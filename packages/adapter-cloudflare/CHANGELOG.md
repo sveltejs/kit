@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.0.5
+### Patch Changes
+
+
+- fix: deprecate `platform.context` in favor of `platform.ctx` to align with Cloudflare's naming convention ([#13856](https://github.com/sveltejs/kit/pull/13856))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
 ## 7.0.4
 ### Patch Changes
 

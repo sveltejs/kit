@@ -1,5 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 const { onMount, tick } = svelte;
 // Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
 const untrack = svelte.untrack ?? ((value) => value());
@@ -38,7 +39,6 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
