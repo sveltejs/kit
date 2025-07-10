@@ -13,21 +13,22 @@ export const get_todos_prerendered = prerender(() => {
 });
 
 export const get_todo_prerendered = prerender(
+	'unchecked',
 	(id: number) => {
 		console.log('get_todo prerendered', id);
 		return id;
 	},
-	{ entries: () => [[1]] as Array<[number]> } // TODO can we beat TS into infering that this is an array of tuples?
+	{ entries: () => [1] }
 );
 
-export const add_todo = command(async (text: string) => {
-	const asd = getRequestEvent();
+export const add_todo = command('unchecked', async (text: string) => {
+	const event = getRequestEvent();
+	console.log('got event', event.isRemoteRequest);
 	_todos.push({ text, done: false, id: Math.random() });
-	// invalidate(get_todos.key);
 });
 
 export const add_todo_form = form(async (form) => {
 	const text = form.get('text');
 	_todos.push({ text, done: false, id: Math.random() });
-	return 'returned something from ddaathe a';
+	return 'returned something from server';
 });
