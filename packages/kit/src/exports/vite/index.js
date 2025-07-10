@@ -36,7 +36,6 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { crawlFrameworkPkgs } from 'vitefu';
 
 const cwd = process.cwd();
 
@@ -229,7 +228,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -251,20 +250,6 @@ async function kit({ svelte_config }) {
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			const generated = path.posix.join(kit.outDir, 'generated');
-
-			const packages_depending_on_svelte_kit = (
-				await crawlFrameworkPkgs({
-					root: cwd,
-					isBuild: is_build,
-					viteUserConfig: config,
-					isSemiFrameworkPkgByJson: (pkg_json) => {
-						return (
-							!!pkg_json.dependencies?.['@sveltejs/kit'] ||
-							!!pkg_json.peerDependencies?.['@sveltejs/kit']
-						);
-					}
-				})
-			).ssr.noExternal;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -299,7 +284,6 @@ async function kit({ svelte_config }) {
 						`!${kit.files.routes}/**/+*server.*`
 					],
 					exclude: [
-						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
@@ -314,19 +298,11 @@ async function kit({ svelte_config }) {
 						// and for example include browser-only code in the server output
 						// because they for example use esbuild.build with `platform: 'browser'`
 						'esm-env',
-						// We need this for two reasons:
-						// 1. Without this, `@sveltejs/kit` imports are kept as-is in the server output,
-						//    and that causes modules and therefore classes like `Redirect` to be imported twice
-						//    under different IDs, which breaks a bunch of stuff because of failing instanceof checks.
-						// 2. Vitest bypasses Vite when loading external modules, so we bundle
-						//    when it is detected to keep our virtual modules working.
-						//    See https://github.com/sveltejs/kit/pull/9172
-						//    and https://vitest.dev/config/#deps-registernodeloader
-						'@sveltejs/kit',
-						// We need to bundle any packages depending on @sveltejs/kit so that
-						// everyone uses the same instances of classes such as `Redirect`
-						// which we use in `instanceof` checks
-						...packages_depending_on_svelte_kit
+						// This forces `$app/*` modules to be bundled, since they depend on
+						// virtual modules like `__sveltekit/paths` (this isn't a valid bare
+						// import, but it works with vite-node's externalization logic, which
+						// uses basic concatenation)
+						'@sveltejs/kit/src/runtime'
 					]
 				}
 			};

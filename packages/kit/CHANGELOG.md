@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.22.4
+### Patch Changes
+
+
+- fix: force `$app/*` modules to be bundled ([#13977](https://github.com/sveltejs/kit/pull/13977))
+
+## 2.22.3
+### Patch Changes
+
+
+- fix: don't bundle `@sveltejs/kit` ([#13971](https://github.com/sveltejs/kit/pull/13971))
+
 ## 2.22.2
 ### Patch Changes
 
