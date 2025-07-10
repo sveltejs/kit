@@ -184,6 +184,9 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
+	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
+	const isRolldown = !!vite.rolldownVersion;
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -659,7 +662,7 @@ Tips:
 						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
+						manifest: '.vite/manifest.json', // TODO: set this to `true` after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input: inline ? input['bundle'] : input,
@@ -671,19 +674,13 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks:
-									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-									vite.rolldownVersion || split ? undefined : () => 'bundle',
-								inlineDynamicImports:
-									split &&
-									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-									!!vite.rolldownVersion
+								manualChunks: isRolldown || split ? undefined : () => 'bundle',
+								inlineDynamicImports: split && isRolldown
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-									(vite.rolldownVersion
+									(isRolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
