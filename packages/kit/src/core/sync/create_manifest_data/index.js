@@ -4,7 +4,7 @@ import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
@@ -27,6 +27,7 @@ export default function create_manifest_data({
 	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+	const remotes = create_remotes(config);
 
 	for (const route of routes) {
 		for (const param of route.params) {
@@ -41,6 +42,7 @@ export default function create_manifest_data({
 		hooks,
 		matchers,
 		nodes,
+		remotes,
 		routes
 	};
 }
@@ -463,6 +465,24 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		nodes,
 		routes: sort_routes(routes)
 	};
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+function create_remotes(config) {
+	if (!config.kit.experimental.remoteFunctions) return [];
+
+	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
+
+	// TODO could files live in other directories, including node_modules?
+	return [config.kit.files.lib, config.kit.files.routes].flatMap((dir) =>
+		fs.existsSync(dir)
+			? walk(dir)
+					.filter((file) => extensions.some((ext) => file.endsWith(ext)))
+					.map((file) => posixify(`${dir}/${file}`))
+			: []
+	);
 }
 
 /**

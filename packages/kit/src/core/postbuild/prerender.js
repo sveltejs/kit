@@ -14,6 +14,7 @@ import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
+import { stringify_remote_arg } from '../../runtime/shared.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -186,6 +187,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 	const seen = new Set();
 	const written = new Set();
+	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
@@ -229,7 +231,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
-				dependencies
+				dependencies,
+				remote_responses
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -460,8 +463,25 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	/** @type {Array<Function & { __: import('types').RemoteInfo & { type: 'prerender'}}>} */
+	const remote_functions = [];
+
+	for (const remote of Object.values(manifest._.remotes)) {
+		const functions = Object.values(await remote()).filter(
+			(value) =>
+				typeof value === 'function' &&
+				/** @type {import('types').RemoteInfo} */ (value.__)?.type === 'prerender'
+		);
+		if (functions.length > 0) {
+			has_prerenderable_routes = true;
+			remote_functions.push(...functions);
+		}
+	}
+
 	if (
-		(config.prerender.entries.length === 0 && route_level_entries.length === 0) ||
+		(config.prerender.entries.length === 0 &&
+			route_level_entries.length === 0 &&
+			remote_functions.length === 0) ||
 		!has_prerenderable_routes
 	) {
 		return { prerendered, prerender_map };
@@ -496,6 +516,32 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
 			void enqueue(null, config.paths.base + entry, undefined, id);
+		}
+	}
+
+	const transport = (await internal.get_hooks()).transport ?? {};
+	for (const remote_function of remote_functions) {
+		// TODO this writes to /prerender/pages/... eventually, should it go into
+		// /prerender/dependencies like indirect calls due to page prerenders?
+		// Does it really matter?
+		if (remote_function.__.entries) {
+			for (const entry of await remote_function.__.entries()) {
+				void enqueue(
+					null,
+					config.paths.base +
+						'/' +
+						config.appDir +
+						'/remote/' +
+						remote_function.__.id +
+						'/' +
+						stringify_remote_arg(entry, transport)
+				);
+			}
+		} else {
+			void enqueue(
+				null,
+				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__.id
+			);
 		}
 	}
 
