@@ -162,6 +162,9 @@ export default function (options = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			read: () => true
 		}
 	};
 }

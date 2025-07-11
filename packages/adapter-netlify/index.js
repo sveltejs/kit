@@ -13,26 +13,6 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-/**
- * TODO(serhalp) Replace this custom type with an import from `@netlify/edge-functions`,
- * once that type is fixed to include `excludedPath` and `function`.
- * @typedef {{
- *	 functions: Array<
- *		 | {
- *				 function: string;
- *				 path: string;
- *				 excludedPath?: string | string[];
- *		   }
- *		 | {
- *				 function: string;
- *				 pattern: string;
- *				 excludedPattern?: string | string[];
- *		   }
- *	 >;
- *	 version: 1;
- *	 }} HandlerManifest
- */
-
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -114,16 +94,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		},
 
 		supports: {
-			// reading from the filesystem only works in serverless functions
-			read: ({ route }) => {
-				if (edge) {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
-					);
-				}
-
-				return true;
-			}
+			read: () => true
 		}
 	};
 }
@@ -161,7 +132,7 @@ async function generate_edge_functions({ builder }) {
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
+	const excluded = [
 		// Contains static files
 		`/${builder.getAppPath()}/*`,
 		...builder.prerendered.paths,
@@ -179,13 +150,13 @@ async function generate_edge_functions({ builder }) {
 		'/.netlify/*'
 	];
 
-	/** @type {HandlerManifest} */
+	/** @type {import('@netlify/edge-functions').Manifest} */
 	const edge_manifest = {
 		functions: [
 			{
 				function: 'render',
 				path,
-				excludedPath
+				excludedPath: /** @type {`/${string}`[]} */ (excluded)
 			}
 		],
 		version: 1
@@ -232,7 +203,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
 
-	builder.copy(`${files}/esm`, '.netlify', { replace });
+	builder.copy(files, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
 	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });

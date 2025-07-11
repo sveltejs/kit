@@ -2048,6 +2048,21 @@ declare module '@sveltejs/kit' {
 	export {};
 }
 
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * Synchronously returns a `ReadableStream` containing the body of an
+	 * asynchronously fetched asset.
+	 * @since 2.23.0
+	 */
+	export function fetchFile({ origin, file, fetch }: {
+		origin: string;
+		file: string;
+		fetch?: typeof globalThis.fetch;
+	}): ReadableStream;
+
+	export {};
+}
+
 declare module '@sveltejs/kit/hooks' {
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
