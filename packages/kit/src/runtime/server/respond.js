@@ -607,7 +607,14 @@ export async function respond(request, options, manifest, state) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			return await fetch(request);
+			const fetchResponse = await fetch(request);
+
+			// the header for the response needs to be mutable, so we need to clone it
+			return new Response(fetchResponse.body, {
+				status: fetchResponse.status,
+				statusText: fetchResponse.statusText,
+				headers: new Headers(fetchResponse.headers)
+			});
 		} catch (e) {
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
