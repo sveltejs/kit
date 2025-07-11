@@ -370,17 +370,8 @@ async function _invalidate(includeLoadFunctions = true, reset_page_state = true)
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	// Rerun component load functions
-	// load_fns.forEach((dependencies, load) => {
-	// 	for (const href of dependencies) {
-	// 		if (force_invalidation || invalidated.some((fn) => fn(new URL(href)))) {
-	// 			load();
-	// 		}
-	// 	}
-	// });
 	// Rerun queries
 	refresh_map.forEach((rerun, key) => {
-		// TODO allow invalidation of non-exact queries? i.e. you do foo.queryFor(1) when foo has two parameters, i.e. the second is optional?
 		if (force_invalidation || invalidated.some((fn) => fn(new URL(key)))) {
 			rerun();
 		}
@@ -395,7 +386,7 @@ async function _invalidate(includeLoadFunctions = true, reset_page_state = true)
 			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 		}
 
-		// This is a bit hacky but allows us having to pass that boolean around, making things harder to reason about
+		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
 		if (!reset_page_state) {
 			navigation_result.props.page.state = prev_state;
 		}

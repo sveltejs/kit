@@ -166,8 +166,8 @@ async function analyse({
 	}
 
 	// analyse remotes
-	for (const remote of Object.keys(manifest._.remotes)) {
-		const modules = await manifest._.remotes[remote]();
+	for (const [remote, modules_fn] of Object.entries(manifest._.remotes)) {
+		const modules = await modules_fn();
 		const exports = new Map();
 		for (const [name, value] of Object.entries(modules)) {
 			const type = /** @type {import('types').RemoteInfo} */ (value.__)?.type;

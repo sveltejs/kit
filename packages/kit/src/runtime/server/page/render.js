@@ -3,7 +3,7 @@ import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import * as paths from '__sveltekit/paths';
-import { hash } from '../../hash.js';
+import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';

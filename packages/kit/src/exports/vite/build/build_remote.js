@@ -23,23 +23,23 @@ export async function treeshake_prerendered_remotes(out) {
 		if (remote.startsWith('__sibling__.')) continue; // skip sibling files
 		const remote_file = posixify(path.join(`${out}/server/remote`, remote));
 		const remote_module = await import(pathToFileURL(remote_file).href);
-		const filtered_exports = Object.entries(remote_module)
+		const prerendered_exports = Object.entries(remote_module)
 			.filter(([, _export]) => !(_export?.__?.type === 'prerender' && !_export.__.dynamic))
 			.map(([name]) => name);
-		const left_out_exports = Object.keys(remote_module).filter(
-			(name) => !filtered_exports.includes(name)
+		const dynamic_exports = Object.keys(remote_module).filter(
+			(name) => !prerendered_exports.includes(name)
 		);
 
-		if (left_out_exports.length > 0) {
+		if (dynamic_exports.length > 0) {
 			const temp_out_dir = path.join(out, 'server', 'remote-temp');
 			const tmp_file = posixify(path.join(out, 'server/remote/tmp.js'));
 			mkdirp(temp_out_dir);
 			fs.writeFileSync(
 				remote_file,
 				dedent`
-					import {${filtered_exports.join(',')}} from './__sibling__.${remote}';
+					import {${prerendered_exports.join(',')}} from './__sibling__.${remote}';
 					import { prerender } from '../${path.basename(remote_entry)}';
-					${left_out_exports.map((name) => `const ${name} = prerender(() => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
+					${dynamic_exports.map((name) => `const ${name} = prerender(() => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
 					for (const [key, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
 						if (fn.__?.type === 'form') {
 							fn.__.set_action('${remote.slice(0, -3)}/' + key);
@@ -105,20 +105,36 @@ export function build_remotes(out) {
 			remote_file_path,
 			dedent`
 				import * as $$_self_$$ from './${sibling_file_name}';
-				for (const key in $$_self_$$) {
-					const fn = $$_self_$$[key];
-					if (fn.__?.type === 'form') {
-						fn.__.set_action('${hashed_id}/' + key);
-					} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
-						fn.__.id = '${hashed_id}/' + key;
-					} else if (fn.__?.type !== 'command') {
-						throw new Error('Invalid export from remote file ${posixify(remote_file_path)}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
-					}
-				}
+				${enhance_remotes(hashed_id, remote_file_path)}
 				export * from './${sibling_file_name}';
 			`
 		);
 	}
+}
+
+/**
+ * Generate the code that enhances the remote functions with their hashed ID.
+ * @param {string} hashed_id 
+ * @param {string} remote_file_path 
+ */
+export function enhance_remotes(hashed_id, remote_file_path) {
+	return dedent`
+		for (const key in $$_self_$$) {
+			if (key === 'default') {
+				throw new Error(
+					'Cannot use a default export in a remote file. Please use named exports instead. (in ${posixify(remote_file_path)})'
+				);
+			}
+			const fn = $$_self_$$[key];
+			if (fn.__?.type === 'form') {
+				fn.__.set_action('${hashed_id}/' + key);
+			} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
+				fn.__.id = '${hashed_id}/' + key;
+			} else if (fn.__?.type !== 'command') {
+				throw new Error('Invalid export from remote file ${posixify(remote_file_path)}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
+			}
+		}
+	`
 }
 
 /**

@@ -22,7 +22,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
-import { hash } from '../../runtime/hash.js';
+import { hash } from '../../utils/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
@@ -36,7 +36,11 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
+import {
+	build_remotes,
+	enhance_remotes,
+	treeshake_prerendered_remotes
+} from './build/build_remote.js';
 
 const cwd = process.cwd();
 
@@ -618,16 +622,7 @@ Tips:
 							dedent`
 						// Auto-generated part, do not edit
 						import * as $$_self_$$ from './${path.basename(id)}';
-						for (const key in $$_self_$$) {
-							const fn = $$_self_$$[key];
-							if (fn.__?.type === 'form') {
-								fn.__.set_action('${hashed_id}/' + key);
-							} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
-								fn.__.id = '${hashed_id}/' + key;
-							} else if (fn.__?.type !== 'command') {
-								throw new Error('Invalid export from remote file ${id}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
-							}
-						}
+						${enhance_remotes(hashed_id, id)}
 					`;
 			}
 
@@ -661,7 +656,6 @@ Tips:
 			const specifiers = [];
 
 			for (const [type, _exports] of remotes) {
-				// TODO handle default export
 				const result = exports_and_fn(type, _exports);
 				exports.push(...result.exports);
 				specifiers.push(result.specifier);

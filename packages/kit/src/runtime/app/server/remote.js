@@ -661,7 +661,7 @@ export function form(fn) {
 					'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
 				);
 			}
-			// TODO don't do the additional work when we're being called from the client?
+
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
 

@@ -203,9 +203,8 @@ export async function load_data({
 		return server_data_node?.data ?? null;
 	}
 
-	// TODO it's not great that we're adding getRequestEvent context to the universal load function,
-	// but it's needed in order to be able to use remote calls that are hydrated within it.
-	// Do we need another, hidden getRequestEvent-like function for this?
+	// We're adding getRequestEvent context to the universal load function
+	// in order to be able to use remote calls within it.
 	const result = await with_event(event, () =>
 		load.call(null, {
 			url: event.url,

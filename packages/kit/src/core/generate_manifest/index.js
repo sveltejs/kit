@@ -8,7 +8,7 @@ import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
 import { find_server_assets } from './find_server_assets.js';
-import { hash } from '../../runtime/hash.js'; // TODO move this function
+import { hash } from '../../utils/hash.js';
 import { uneval } from 'devalue';
 
 /**

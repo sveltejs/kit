@@ -72,11 +72,7 @@ export async function respond(request, options, manifest, state) {
 	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
 		const opts = { status: 403 };
 
-		if (
-			remote_id &&
-			// TODO get doesn't have an origin header - any way we can still forbid other origins?
-			request.method !== 'GET'
-		) {
+		if (remote_id && request.method !== 'GET') {
 			return json(
 				{
 					message: 'Cross-site remote requests are forbidden'

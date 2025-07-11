@@ -193,7 +193,7 @@ export async function handle_remote_form_post(event, manifest, id) {
 	try {
 		const form_data = await event.request.formData();
 		get_remote_info(event);
-		const data = await with_event(event, () => func(form_data)); // TODO func.apply(null, form_data) doesn't work for unknown reasons
+		const data = await with_event(event, () => func.call(null, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
 		if (data instanceof ActionFailure) {

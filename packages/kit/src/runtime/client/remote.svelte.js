@@ -313,7 +313,6 @@ function remote_request(id, prerender) {
 				});
 		}
 
-		// TODO error, pending, catch, finally
 		return resource;
 	};
 

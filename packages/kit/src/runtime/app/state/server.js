@@ -61,31 +61,3 @@ export const updated = {
 		throw new Error('Can only call updated.check() in the browser');
 	}
 };
-
-// /**
-//  * @param {(context: { depends: Function }) => Promise<any>} data_fn
-//  */
-// export function load(data_fn) {
-// 	// TODO decide how to handle this on the server. For now there's no way to get the
-// 	// resolved data, but with async await we could wait on it.
-// 	let data = null;
-// 	let pending = true;
-// 	let error = null;
-
-// 	return {
-// 		get data() {
-// 			return data;
-// 		},
-// 		get pending() {
-// 			return pending;
-// 		},
-// 		get error() {
-// 			return error;
-// 		},
-// 		refetch: () => {},
-// 		/** @param {Function} fn */
-// 		then: (fn) => {
-// 			// TODO
-// 		}
-// 	};
-// }
