@@ -187,6 +187,9 @@ export interface Builder {
 	compress: (directory: string) => Promise<void>;
 }
 
+/**
+ * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
+ */
 export interface Config extends SvelteConfig {
 	/**
 	 * SvelteKit options.
