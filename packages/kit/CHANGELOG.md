@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.22.5
+### Patch Changes
+
+
+- fix: re-add `@sveltejs/kit` to `optimizeDeps.exclude` ([#13983](https://github.com/sveltejs/kit/pull/13983))
+
 ## 2.22.4
 ### Patch Changes
 
