@@ -674,7 +674,7 @@ Tips:
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
 								manualChunks: isRolldown || split ? undefined : () => 'bundle',
-								inlineDynamicImports: split && isRolldown
+								inlineDynamicImports: !split && isRolldown
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
