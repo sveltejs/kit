@@ -1,10 +1,10 @@
-import { HttpError, SvelteKitError, Redirect } from '../../control.js';
+import { text } from '@sveltejs/kit';
+import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
-import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
 
