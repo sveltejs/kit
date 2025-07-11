@@ -42,7 +42,8 @@ export default [
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
 			'packages/package/test/errors/**/*',
-			'packages/package/test/fixtures/**/*'
+			'packages/package/test/fixtures/**/*',
+			'packages/test-redirect-importer/index.js'
 		]
 	}
 ];

@@ -1,4 +1,4 @@
-import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
+import { HttpError, Redirect, ActionFailure } from './internal/index.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,

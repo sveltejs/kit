@@ -1,7 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
-import { SvelteKitError } from '../../runtime/control.js';
+import { SvelteKitError } from '../internal/index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
