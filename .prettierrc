@@ -25,14 +25,15 @@
 				"**/.svelte-kit/**",
 				"**/.custom-out-dir/**",
 				"**/build/**",
-				"**/test-results/**",
+				"**/dist/**",
+				"**/.netlify/**",
 				"**/.wrangler/**",
+				"**/test-results/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
-				"packages/kit/src/core/postbuild/fixtures/**/*",
-				"packages/adapter-cloudflare/test/apps/workers/dist/**/*"
+				"packages/kit/src/core/postbuild/fixtures/**/*"
 			],
 			"options": {
 				"rangeEnd": 0

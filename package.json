@@ -37,9 +37,12 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@parcel/watcher",
 			"esbuild",
+			"netlify-cli",
 			"rolldown",
 			"sharp",
+			"unix-dgram",
 			"svelte-preprocess",
 			"workerd"
 		]
