@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.22.6
+### Patch Changes
+
+
+- fix: extend `vite-plugin-svelte`'s `Config` type instead of duplicating it ([#13982](https://github.com/sveltejs/kit/pull/13982))
+
 ## 2.22.5
 ### Patch Changes
 
