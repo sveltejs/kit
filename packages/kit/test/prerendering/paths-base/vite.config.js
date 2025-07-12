@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
+import csvasset from './custom_asset_plugin.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -13,7 +14,7 @@ const config = {
 
 	logLevel: 'silent',
 
-	plugins: [sveltekit()],
+	plugins: [csvasset(), sveltekit()],
 
 	server: {
 		fs: {
