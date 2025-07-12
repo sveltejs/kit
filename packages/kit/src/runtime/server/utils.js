@@ -180,3 +180,52 @@ export function has_prerendered_path(manifest, pathname) {
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
 }
+
+/**
+ * Formats the error into a nice message with sanitized stack trace
+ * @param {number} status
+ * @param {Error} error
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ */
+export function format_server_error(status, error, event) {
+	const formatted_text = `\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m\n`;
+
+	if (status === 404) {
+		return formatted_text + error.message;
+	}
+
+	return formatted_text + clean_up_stack_trace(error);
+}
+
+/**
+ * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
+ * @param {Error} error
+ */
+export function clean_up_stack_trace(error) {
+	const stack_trace = error.stack?.split('\n') ?? [];
+	const last_line_from_src_code = find_last_index(
+		stack_trace,
+		(line) =>
+			['+page.', '+layout.', '+server.'].find((snippet) => line.includes(snippet)) !== undefined
+	);
+
+	if (last_line_from_src_code === -1) {
+		// default to the whole stack trace
+		return error.stack;
+	}
+
+	return stack_trace.slice(0, last_line_from_src_code + 1).join('\n');
+}
+
+/**
+ * @param {any[]} array
+ * @param {(item: any, index: number, array: any[]) => boolean} predicate
+ */
+export function find_last_index(array, predicate) {
+	for (let i = array.length - 1; i >= 0; i--) {
+		if (predicate(array[i], i, array)) {
+			return i;
+		}
+	}
+	return -1;
+}

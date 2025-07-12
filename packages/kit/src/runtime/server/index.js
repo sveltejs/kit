@@ -3,6 +3,7 @@ import { set_private_env, set_public_env, set_safe_public_env } from '../shared-
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { format_server_error } from './utils.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
@@ -77,8 +78,14 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ status, error }) =>
-							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
+						(({ status, error, event }) => {
+							const error_message = format_server_error(
+								status,
+								/** @type {Error} */ (error),
+								event
+							);
+							console.error(error_message);
+						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
