@@ -1,6 +1,4 @@
-<br>
+<br />
 <form method="post">
-    <button type="submit">
-        Trigger server error
-    </button>
+	<button type="submit"> Trigger server error </button>
 </form>
