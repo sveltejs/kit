@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.2.13
+### Patch Changes
+
+
+- fix: remove unnecessary static directory serving middleware ([#13953](https://github.com/sveltejs/kit/pull/13953))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
 ## 5.2.12
 ### Patch Changes
 

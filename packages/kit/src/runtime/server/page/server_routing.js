@@ -1,5 +1,5 @@
 import { base, assets, relative } from '__sveltekit/paths';
-import { text } from '../../../exports/index.js';
+import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';
 import { decode_params } from '../../../utils/url.js';

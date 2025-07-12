@@ -1,7 +1,7 @@
+import { Redirect } from '@sveltejs/kit/internal';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { with_event } from '../app/server/event.js';
-import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
