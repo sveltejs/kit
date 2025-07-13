@@ -184,6 +184,9 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
+	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
+	const isRolldown = !!vite.rolldownVersion;
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -661,8 +664,7 @@ Tips:
 						copyPublicDir: !ssr,
 						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
-						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
+						manifest: true,
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input: inline ? input['bundle'] : input,
@@ -674,14 +676,12 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: split ? undefined : () => 'bundle',
-								inlineDynamicImports: false
+								inlineDynamicImports: !split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-									(vite.rolldownVersion
+									(isRolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
@@ -797,7 +797,7 @@ Tips:
 				const log = logger({ verbose });
 
 				/** @type {import('vite').Manifest} */
-				const server_manifest = JSON.parse(read(`${out}/server/${vite_config.build.manifest}`));
+				const server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
 
 				/** @type {import('types').BuildData} */
 				const build_data = {
@@ -870,7 +870,7 @@ Tips:
 				);
 
 				/** @type {import('vite').Manifest} */
-				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
+				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
 
 				/**
 				 * @param {string} entry
