@@ -676,8 +676,7 @@ Tips:
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								manualChunks: isRolldown || split ? undefined : () => 'bundle',
-								inlineDynamicImports: !split && isRolldown
+								inlineDynamicImports: !split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
