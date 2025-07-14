@@ -185,7 +185,7 @@ export function image_plugin(imagetools_plugin) {
 
 				return {
 					code: s.toString(),
-					map: s.generateMap({ hires: 'boundary', includeContent: false })
+					map: s.generateMap({ hires: 'boundary' })
 				};
 			}
 		}
