@@ -1,4 +1,5 @@
 <script>
+	import { isHttpError } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
@@ -74,17 +75,29 @@
 			// @ts-expect-error
 			await validated_query_with_arg(1);
 			status = 'error';
-		} catch {
+		} catch (e) {
+			if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+				status = 'wrong error message';
+				return;
+			}
 			try {
 				// @ts-expect-error
 				await validated_prerendered_query_with_arg(1);
 				status = 'error';
-			} catch {
+			} catch (e) {
+				if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+					status = 'wrong error message';
+					return;
+				}
 				try {
 					// @ts-expect-error
 					await validated_command_with_arg(1);
 					status = 'error';
-				} catch {
+				} catch (e) {
+					if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+						status = 'wrong error message';
+						return;
+					}
 					status = 'success';
 				}
 			}

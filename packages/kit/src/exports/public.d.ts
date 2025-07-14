@@ -19,6 +19,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -785,6 +786,16 @@ export type HandleServerError = (input: {
 	status: number;
 	message: string;
 }) => MaybePromise<void | App.Error>;
+
+/**
+ * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+ *
+ * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
+ * This function is expected to throw an error to replace the default 400 error.
+ */
+export type HandleValidationError<
+	Result extends { issues: StandardSchemaV1.Issue[] } = { issues: StandardSchemaV1.Issue[] }
+> = (input: { result: Result; event: RequestEvent }) => MaybePromise<App.Error>;
 
 /**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.

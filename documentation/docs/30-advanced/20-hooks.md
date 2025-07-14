@@ -143,6 +143,34 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
+### handleValidationError
+
+This hook is called when a remote function schema validation fails. It is expected to return an object shape matching that of `App.Error`.
+
+Say you have a remote function that expects a string as its argument ...
+
+```js
+/// file: todos.remote.js
+import z from 'zod';
+import { query } from '$app/server';
+
+export getTodo = query(z.string(), id => {
+	// implementation...
+})
+```
+
+... but it is called with a number instead (e.g `getTodos(1)`), then the schema validation will fail. By default, a response with status `400` and just the string `Bad Request` will be returned. Implement `handleValidationError` to return a more informative error object instead. If you use `Zod` this could be a simple as using one its built-in formatters:
+
+```js
+/// file: src/hooks.server.js
+import z from 'zod';
+
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export const handleValidationError = ({ result }) => {
+  return { message: 'Schema Error', validationErrors: z.treeifyError(result.error)};
+}
+```
+
 ## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:

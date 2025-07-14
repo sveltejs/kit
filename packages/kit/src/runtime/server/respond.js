@@ -494,7 +494,7 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (remote_id) {
-				return handle_remote_call(event, options, manifest, remote_id);
+				return await handle_remote_call(event, options, manifest, remote_id);
 			}
 
 			if (route) {

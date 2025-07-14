@@ -67,8 +67,9 @@ export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let handleValidationError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	${server_hooks ? `({ handle, handleFetch, handleError, handleValidationError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
@@ -78,6 +79,7 @@ export async function get_hooks() {
 		handle,
 		handleFetch,
 		handleError,
+		handleValidationError,
 		init,
 		reroute,
 		transport

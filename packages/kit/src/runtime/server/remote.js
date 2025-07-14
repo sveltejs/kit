@@ -125,7 +125,12 @@ export async function handle_remote_call(event, options, manifest, id) {
 				type: 'error',
 				error: await handle_error_and_jsonify(event, options, error),
 				status: error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
-			})
+			}),
+			{
+				headers: {
+					'cache-control': 'private, no-store'
+				}
+			}
 		);
 	}
 
@@ -249,6 +254,7 @@ export function get_remote_action(url) {
  *  form_result?: [key: any, value: any];
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
+ *  handleValidationError: ServerHooks['handleValidationError'];
  *  form_instances: Map<any, any>;
  *  refreshes?: Record<string, any>;
  * }} RemoteEventInfo
@@ -270,6 +276,7 @@ export function add_remote_info(event, state, options) {
 			form_result: undefined,
 			prerendering: state.prerendering,
 			transport: options.hooks.transport,
+			handleValidationError: options.hooks.handleValidationError,
 			form_instances: new Map()
 		}),
 		configurable: false,

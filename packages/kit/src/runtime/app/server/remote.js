@@ -790,17 +790,26 @@ function create_validator(validate_or_fn, maybe_fn) {
 	return !maybe_fn
 		? (arg) => {
 				if (arg !== undefined) {
-					error(400, 'Bad request. Expected no arguments');
+					error(400, 'Bad request');
 				}
 			}
 		: validate_or_fn === 'unchecked'
 			? (arg) => arg // no validation
 			: '~standard' in validate_or_fn
 				? async (arg) => {
+						// Get event before asyn validation to ensure it's available in server environments without async local storage, too
+						const event = getRequestEvent();
+						const remoteInfo = get_remote_info(event);
 						const result = await validate_or_fn['~standard'].validate(arg);
 						// if the `issues` field exists, the validation failed
 						if (result.issues) {
-							error(400, result.issues);
+							error(
+								400,
+								await remoteInfo.handleValidationError({
+									result,
+									event
+								})
+							);
 						}
 						return result.value;
 					}
