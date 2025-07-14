@@ -143,15 +143,9 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
- * @param {Object} [opts] Options related to the navigation
- * @param {boolean} [opts.replace_state] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  */
-function native_navigation(url, opts = {}) {
-	if (opts.replace_state) {
-		location.replace(url.href);
-	} else {
-		location.href = url.href;
-	}
+function native_navigation(url) {
+	location.href = url.href;
 	return new Promise(() => {});
 }
 
@@ -366,12 +360,7 @@ async function _invalidate() {
 	if (!navigation_result || nav_token !== token) return;
 
 	if (navigation_result.type === 'redirect') {
-		return _goto(
-			new URL(navigation_result.location, current.url).href,
-			{ replaceState: true },
-			1,
-			nav_token
-		);
+		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 	}
 
 	if (navigation_result.props.page) {
@@ -1113,7 +1102,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status, false);
+					return await server_fallback(url, { id: route.id }, error, status);
 				}
 			}
 		} else {
@@ -1479,11 +1468,10 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404,
-					replace_state
+					404
 				);
 			} else {
-				return await native_navigation(url, { replace_state });
+				return await native_navigation(url);
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1494,8 +1482,7 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404,
-				replace_state
+				404
 			);
 		}
 	}
@@ -1524,12 +1511,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			await _goto(
-				new URL(navigation_result.location, url).href,
-				{ replaceState: replace_state },
-				redirect_count + 1,
-				nav_token
-			);
+			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1537,7 +1519,7 @@ async function navigate({
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url, { replace_state });
+			await native_navigation(url);
 		}
 	}
 
@@ -1679,10 +1661,9 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
- * @param {boolean | undefined} replace_state
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
-async function server_fallback(url, route, error, status, replace_state) {
+async function server_fallback(url, route, error, status) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
@@ -1702,7 +1683,7 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url, { replace_state });
+	return await native_navigation(url);
 }
 
 if (import.meta.hot) {
