@@ -1647,8 +1647,8 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 	/** The current value of the query. Undefined as long as there's no value yet */
 	get current(): Awaited<Output> | undefined;
-	/** The error in case the query fails */
-	get error(): App.Error | undefined;
+	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+	get error(): any;
 	/** `true` before the first result is available and during refreshes */
 	get pending(): boolean;
 	/**

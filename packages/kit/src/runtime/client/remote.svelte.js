@@ -55,6 +55,8 @@ class Resource {
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
+	#error = $state.raw(undefined);
+
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
@@ -113,10 +115,19 @@ class Resource {
 					this.#inited = true;
 					this.#loading = false;
 					this.#raw = value;
+					this.#error = undefined;
 
 					resolve();
 				})
-				.catch((e) => reject(e));
+				.catch((e) => {
+					const idx = this.#latest.indexOf(resolve);
+					if (idx === -1) return;
+
+					this.#latest.splice(0, idx).forEach((r) => r());
+					this.#error = e;
+					this.#loading = false;
+					reject(e);
+				});
 
 			return promise;
 		};
@@ -147,6 +158,10 @@ class Resource {
 
 	get current() {
 		return this.#current;
+	}
+
+	get error() {
+		return this.#error;
 	}
 
 	get pending() {
