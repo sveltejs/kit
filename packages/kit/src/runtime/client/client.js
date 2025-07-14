@@ -366,7 +366,7 @@ async function _invalidate() {
 	if (!navigation_result || nav_token !== token) return;
 
 	if (navigation_result.type === 'redirect') {
-		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		return _goto(new URL(navigation_result.location, current.url).href, { replaceState: true }, 1, nav_token);
 	}
 
 	if (navigation_result.props.page) {
@@ -1108,7 +1108,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status);
+					return await server_fallback(url, { id: route.id }, error, status, false);
 				}
 			}
 		} else {
@@ -1474,7 +1474,8 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404
+					404,
+					replace_state
 				);
 			} else {
 				return await native_navigation(url, { replace_state });
@@ -1488,7 +1489,8 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404
+				404,
+				replace_state
 			);
 		}
 	}
@@ -1517,7 +1519,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(new URL(navigation_result.location, url).href, { replaceState: replace_state }, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1667,9 +1669,10 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
+ * @param {boolean | undefined} replace_state
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
-async function server_fallback(url, route, error, status) {
+async function server_fallback(url, route, error, status, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
@@ -1689,7 +1692,7 @@ async function server_fallback(url, route, error, status) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url);
+	return await native_navigation(url, { replace_state });
 }
 
 if (import.meta.hot) {
