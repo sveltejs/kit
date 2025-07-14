@@ -1635,8 +1635,7 @@ test.describe('binding_property_non_reactive warn', () => {
 	});
 });
 
-test.describe
-	.only('navigation and redirects should be consistent between web native and sveltekit based', () => {
+test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
 	function expectPath(page) {
 		return expect(new URL(page.url()).pathname);
 	}
