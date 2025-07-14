@@ -34,7 +34,9 @@ export function image_plugin(imagetools_plugin) {
 			vite_config = config;
 			const svelteConfigPlugin = config.plugins.find((p) => p.name === 'vite-plugin-svelte:config');
 			if (!svelteConfigPlugin) {
-				throw new Error('@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed');
+				throw new Error(
+					'@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed'
+				);
 			}
 			// @ts-expect-error plugin.transform is defined below before configResolved is called
 			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter;
