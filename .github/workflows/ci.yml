@@ -74,6 +74,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -181,14 +183,19 @@ jobs:
           path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
   test-others:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{matrix.node-version}}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
