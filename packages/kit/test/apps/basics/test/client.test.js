@@ -1634,3 +1634,159 @@ test.describe('binding_property_non_reactive warn', () => {
 		expect(is_warning_thrown).toBeFalsy();
 	});
 });
+
+test.describe.only('navigation and redirects should be consistent between web native and sveltekit based', () => {
+	function expectPath(page) {
+		return expect(new URL(page.url()).pathname);
+	}
+
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/navigation/teststart')
+		expectPath(page).toBe('/navigation/teststart');
+	});
+
+	test.describe('navigating outside the app on sameorigin', () => {
+		[
+			[
+				'app.goto { replaceState: false }',
+				async ({ app }) => {
+					await app.goto('/navigation/nonexistent', { replaceState: false }).catch(() => {});
+				},
+			],
+			[
+				'location.assign',
+				async ({ page }) => {
+					await page.evaluate(() => {
+						location.assign('/navigation/nonexistent');
+					});
+				},
+			],
+		].forEach(([title, navigate]) => {
+			test(title, async ({ app, page }) => {
+				await navigate({ app, page });
+				await page.waitForLoadState('networkidle');
+				expectPath(page).toBe('/navigation/nonexistent');
+
+				await page.goBack();
+				expectPath(page).toBe('/navigation/teststart');
+			});
+		});
+
+		[
+			[
+				'app.goto { replaceState: true }',
+				async ({ app }) => {
+					await app.goto('/navigation/nonexistent', { replaceState: true }).catch(() => {});
+				},
+			],
+			[
+				'location.replace',
+				async ({ page }) => {
+					await page.evaluate(() => {
+						location.replace('/navigation/nonexistent');
+					});
+				},
+			],
+		].forEach(([title, navigate]) => {
+			test(title, async ({ app, page }) => {
+				await navigate({ app, page });
+				await page.waitForLoadState('networkidle');
+				expectPath(page).toBe('/navigation/nonexistent');
+
+				// when going back to about:blank - page.goBack hangs and eventually fails
+				await page.goBack({ timeout: 500, waitUntil: 'networkidle' }).catch(() => {});
+				expect(page.url()).toBe('about:blank');
+			});
+		});
+	});
+
+	test.describe('redirect after invalidation', () => {
+		test.beforeEach(async ({ app }) => {
+			await app.goto('/navigation/teststart?redirect', { replaceState: true });
+		});
+
+		([
+			[
+				'app.invalidate',
+				async ({ app }) => {
+					await app.invalidate('app:navigation');
+				},
+			],
+			[	'location.assign',
+				async ({ page }) => {
+					await page.evaluate(() => {
+						location.reload();
+					})
+				}
+			]
+		]).forEach(([title, navigation]) => {
+			test(title, async ({ app, page }) => {
+				await navigation({ app, page });
+				await page.waitForLoadState('networkidle');
+
+				expectPath(page).toBe('/navigation/testfinish');
+
+				await page.pause();
+
+				await page.goBack({ waitUntil: 'networkidle', timeout: 500 }).catch(() => {});
+				expect(page.url()).toBe('about:blank');
+			});
+		});
+	});
+
+	test.describe('navigating through redirect chain', () => {
+		([
+			[
+				'app.goto { replaceState: false }',
+				async ({ app }) => {
+					await app.goto('/navigation/loadreplace1', { replaceState: false });
+				},
+			],
+			[
+				'location.assign',
+				async ({ page }) => {
+					await page.evaluate(() => {
+						location.assign('/navigation/loadreplace1');
+					});
+				},
+			]
+		]).forEach(([title, navigation]) => {
+			test(title, async ({ page, app }) => {
+				await navigation({ page, app });
+				await page.waitForLoadState('networkidle');
+				expectPath(page).toBe('/navigation/testfinish');
+				
+				await page.goBack({ waitUntil: 'networkidle' });
+				expectPath(page).toBe('/navigation/teststart');
+			});
+		});
+
+		([
+
+			[
+				'app.goto { replaceState: true }',
+				async ({ app }) => {
+					await app.goto('/navigation/loadreplace1', { replaceState: true });
+				},
+			],
+			[
+				'location.replace',
+				async ({ page }) => {
+					await page.evaluate(() => {
+						location.replace('/navigation/loadreplace1');
+					});
+				},
+			]
+		]).forEach(([title, navigation]) => {
+			test(title, async ({ page, app }) => {
+				await navigation({ page, app });
+				await page.waitForLoadState('networkidle');
+				expectPath(page).toBe('/navigation/testfinish');
+				
+				// when going back to about:blank - page.goBack hangs and eventually fails
+				await page.goBack({ timeout: 500, waitUntil: 'networkidle' }).catch(() => {});
+				expect(page.url()).toBe('about:blank');
+			});
+		});
+	});
+});
