@@ -133,7 +133,10 @@ export function redirect_response(status, location) {
  */
 export function clarify_devalue_error(event, error) {
 	if (error.path) {
-		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path})`;
+		return (
+			`Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path}). ` +
+			`If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport.`
+		);
 	}
 
 	if (error.path === '') {
