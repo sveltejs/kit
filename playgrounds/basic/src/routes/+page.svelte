@@ -12,4 +12,5 @@
 
 <ul>
 	<li><a href="images">images</a></li>
+	<li><a href="force-error">force error</a></li>
 </ul>
