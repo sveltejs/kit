@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.24.0
+### Minor Changes
+
+
+- feat: typed `params` prop for page/layout components ([#13999](https://github.com/sveltejs/kit/pull/13999))
+
+
+### Patch Changes
+
+
+- fix: treeshake internal `storage.get` helper ([#13998](https://github.com/sveltejs/kit/pull/13998))
+
 ## 2.23.0
 ### Minor Changes
 
