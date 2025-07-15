@@ -36,7 +36,7 @@
 	],
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "rollup -c && node -e \"fs.cpSync('src/serverless.js', 'files/serverless.js');\"",
+		"build": "rollup -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",

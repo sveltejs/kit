@@ -1,5 +1,5 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
@@ -13,6 +13,8 @@ function clearOutput(filepath) {
 			sequential: true,
 			handler() {
 				rmSync(filepath, { recursive: true, force: true });
+				mkdirSync(filepath, { recursive: true });
+				copyFileSync('src/serverless.js', 'files/serverless.js');
 			}
 		}
 	};
