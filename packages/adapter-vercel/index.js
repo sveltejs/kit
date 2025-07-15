@@ -464,7 +464,18 @@ const plugin = function (defaults = {}) {
 		},
 
 		supports: {
-			read: () => true
+			read: ({ config, route }) => {
+				const runtime = config.runtime ?? defaults.runtime;
+
+				// TODO bump peer dep in next adapter major to simplify this
+				if (runtime === 'edge' && VERSION.split('.')[0] === '2' && VERSION.split('.')[1] < '25') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\` and SvelteKit < 2.25.0`
+					);
+				}
+
+				return true;
+			}
 		}
 	};
 };

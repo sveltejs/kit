@@ -2,7 +2,6 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
-import { fetchFile } from '@sveltejs/kit/adapter';
 
 const server = new Server(manifest);
 
@@ -21,12 +20,15 @@ let origin;
 const initialized = server.init({
 	// @ts-expect-error env contains environment variables and bindings
 	env,
-	read: (file) =>
-		fetchFile({
-			origin,
-			file,
-			fetch: /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch
-		})
+	read: async (file) => {
+		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
+			`${origin}/${file}`
+		);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+		}
+		return response.body;
+	}
 });
 
 export default {

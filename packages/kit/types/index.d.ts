@@ -1284,7 +1284,7 @@ declare module '@sveltejs/kit' {
 		/** A map of environment variables. */
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
-		read?: (file: string) => ReadableStream;
+		read?: (file: string) => MaybePromise<ReadableStream>;
 	}
 
 	export interface SSRManifest {
@@ -2044,21 +2044,6 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
-
-	export {};
-}
-
-declare module '@sveltejs/kit/adapter' {
-	/**
-	 * Synchronously returns a `ReadableStream` containing the body of an
-	 * asynchronously fetched asset.
-	 * @since 2.23.0
-	 */
-	export function fetchFile({ origin, file, fetch }: {
-		origin: string;
-		file: string;
-		fetch?: typeof globalThis.fetch;
-	}): ReadableStream;
 
 	export {};
 }

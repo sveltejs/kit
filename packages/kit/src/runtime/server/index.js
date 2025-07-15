@@ -64,7 +64,42 @@ export class Server {
 		set_safe_public_env(public_env);
 
 		if (read) {
-			set_read_implementation(read);
+			// Wrap the read function to handle MaybePromise<ReadableStream>
+			// and ensure the public API stays synchronous
+			/** @param {string} file */
+			const wrapped_read = (file) => {
+				const result = read(file);
+				if (result instanceof ReadableStream) {
+					return result;
+				} else {
+					return new ReadableStream({
+						async start(controller) {
+							try {
+								/** @type {ReadableStream} */
+								const stream = await Promise.resolve(result);
+								if (!stream) {
+									controller.close();
+									return;
+								}
+
+								const reader = stream.getReader();
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									controller.enqueue(value);
+								}
+
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						}
+					});
+				}
+			};
+
+			set_read_implementation(wrapped_read);
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,

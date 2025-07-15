@@ -2,7 +2,6 @@
  Vercel Edge Runtime does not support node:process */
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { fetchFile } from '@sveltejs/kit/adapter';
 
 const server = new Server(manifest);
 
@@ -15,7 +14,13 @@ let origin;
 
 const initialized = server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
-	read: (file) => fetchFile({ origin, file })
+	read: async (file) => {
+		const response = await fetch(`${origin}/${file}`);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+		}
+		return response.body;
+	}
 });
 
 /**

@@ -83,10 +83,6 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/index.js"
 		},
-		"./adapter": {
-			"types": "./types/index.d.ts",
-			"import": "./src/exports/adapter/index.js"
-		},
 		"./internal": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"

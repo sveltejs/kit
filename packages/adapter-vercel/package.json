@@ -28,35 +28,29 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
-		"!files/edge/tsconfig.json",
 		"index.js",
 		"utils.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run",
-		"prepublishOnly": "pnpm build"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.29.2",
 		"esbuild": "^0.25.4"
 	},
 	"devDependencies": {
-		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "^18.19.48",
-		"rollup": "^4.44.0",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.23.0"
+		"@sveltejs/kit": "^2.4.0"
 	}
 }

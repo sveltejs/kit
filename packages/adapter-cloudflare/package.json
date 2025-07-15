@@ -52,7 +52,7 @@
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.23.0",
+		"@sveltejs/kit": "^2.0.0",
 		"wrangler": "^4.0.0"
 	}
 }

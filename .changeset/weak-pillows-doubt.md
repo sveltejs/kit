@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: export `fetchFile` from `@sveltejs/kit/adapter` to read files in edge environments
+feat: support asynchronous `read` implementations from adapters
