@@ -1284,7 +1284,7 @@ declare module '@sveltejs/kit' {
 		/** A map of environment variables. */
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
-		read?: (file: string) => MaybePromise<ReadableStream>;
+		read?: (file: string) => MaybePromise<ReadableStream | null>;
 	}
 
 	export interface SSRManifest {

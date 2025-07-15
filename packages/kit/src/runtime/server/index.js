@@ -36,10 +36,7 @@ export class Server {
 	}
 
 	/**
-	 * @param {{
-	 *   env: Record<string, string>;
-	 *   read?: (file: string) => ReadableStream;
-	 * }} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
 	 */
 	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
@@ -75,7 +72,6 @@ export class Server {
 					return new ReadableStream({
 						async start(controller) {
 							try {
-								/** @type {ReadableStream} */
 								const stream = await Promise.resolve(result);
 								if (!stream) {
 									controller.close();
