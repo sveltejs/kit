@@ -12,8 +12,7 @@ import {
 	started,
 	goto,
 	set_nearest_error_page,
-	result_map,
-	refresh_map
+	query_map
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
 
@@ -234,19 +233,19 @@ function remote_request(id, prerender) {
 	const fn = (/** @type {any} */ arg) => {
 		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
-		let entry = result_map.get(cache_key);
+		let entry = query_map.get(cache_key);
 
 		let tracking = true;
 		try {
 			$effect.pre(() => {
-				if (entry) entry[0]++;
+				if (entry) entry.count++;
 				return () => {
-					const entry = result_map.get(cache_key);
+					const entry = query_map.get(cache_key);
 					if (entry) {
-						entry[0]--;
+						entry.count--;
 						void wait().then(() => {
-							if (!entry[0] && entry === result_map.get(cache_key)) {
-								result_map.delete(cache_key);
+							if (!entry.count && entry === query_map.get(cache_key)) {
+								query_map.delete(cache_key);
 							}
 						});
 					}
@@ -256,7 +255,7 @@ function remote_request(id, prerender) {
 			tracking = false;
 		}
 
-		let resource = entry?.[1];
+		let resource = entry?.resource;
 		if (!resource) {
 			resource = new Query(cache_key, async () => {
 				if (!started) {
@@ -300,44 +299,39 @@ function remote_request(id, prerender) {
 				enumerable: false
 			});
 
-			result_map.set(
+			query_map.set(
 				cache_key,
-				(entry = [
-					tracking ? 1 : 0,
+				(entry = {
+					count: tracking ? 1 : 0,
 					resource,
-					(v) => {
+					update: (v) => {
 						cached_value = v;
 						resource.refresh();
 					}
-				])
+				})
 			);
 
 			resource
 				.then(() => {
 					void wait().then(() => {
-						if (!(/** @type {any} */ (entry)[0]) && entry === result_map.get(cache_key)) {
+						if (
+							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
+							entry === query_map.get(cache_key)
+						) {
 							// If no one is tracking this resource anymore, we can delete it from the cache
-							result_map.delete(cache_key);
+							query_map.delete(cache_key);
 						}
 					});
 				})
 				.catch(() => {
 					// error delete the resource from the cache
 					// TODO is that correct?
-					result_map.delete(cache_key);
+					query_map.delete(cache_key);
 				});
 		}
 
 		return resource;
 	};
-
-	refresh_map.set(id, () => {
-		for (const key of result_map.keys()) {
-			if (key.startsWith(id + '|')) {
-				result_map.get(key)?.[1].refresh();
-			}
-		}
-	});
 
 	return fn;
 }
@@ -465,7 +459,7 @@ export function form(id) {
 			// no-longer-visible instance, so it would never be shown to the user.
 			const entry = instance_cache.get(key);
 			if (entry) {
-				entry[0]++;
+				entry.count++;
 			}
 
 			/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
@@ -523,8 +517,8 @@ export function form(id) {
 					// TODO find out why we need 9 and not just 3
 					void wait(9).then(() => {
 						if (entry) {
-							entry[0]--;
-							if (entry[0] === 0) {
+							entry.count--;
+							if (entry.count === 0) {
 								instance_cache.delete(key);
 							}
 						}
@@ -699,9 +693,9 @@ export function form(id) {
 					try {
 						$effect.pre(() => {
 							return () => {
-								entry[0]--;
+								entry.count--;
 								void wait().then(() => {
-									if (entry[0] === 0) {
+									if (entry.count === 0) {
 										instance_cache.delete(key);
 									}
 								});
@@ -715,7 +709,7 @@ export function form(id) {
 						if (!entry) {
 							instance_cache.set(key, (entry = [1, create_instance(key)]));
 						} else {
-							entry[0]++;
+							entry.count++;
 						}
 					} else if (!entry) {
 						entry = [0, create_instance(key)];
@@ -748,8 +742,8 @@ function refresh_queries(stringified_refreshes, updates = []) {
 				update.release();
 			}
 			// Update the query with the new value
-			const entry = result_map.get(key);
-			entry?.[2](value);
+			const entry = query_map.get(key);
+			entry?.update(value);
 		}
 	} else {
 		void invalidateAll();

@@ -173,8 +173,10 @@ let default_error_loader;
 let container;
 /** @type {HTMLElement} */
 let target;
+
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
+
 /** @type {Record<string, any>} */
 export let remote_responses;
 
@@ -260,17 +262,10 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, (remove?: boolean) => void>}
- * A map of query functions that currently exist in the app.
- * Each value is a query's refresh function which will rerun the query.
+ * @type {Map<string, {count: number, resource: any, update: (v: any) => void}>}
+ * A map of id -> query info with all queries that currently exist in the app.
  */
-export const refresh_map = new Map();
-
-/**
- * @type {Map<string, [count: number, resource: any, update: (v: any) => void]>}
- * A map of results of queries that currently exist in the app.
- */
-export const result_map = new Map();
+export const query_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -372,11 +367,11 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	load_cache = null;
 
 	// Rerun queries
-	refresh_map.forEach((rerun, key) => {
-		if (force_invalidation || invalidated.some((fn) => fn(new URL(key)))) {
-			rerun();
-		}
-	});
+	if (force_invalidation) {
+		query_map.forEach(({ resource }) => {
+			resource.refresh();
+		});
+	}
 
 	if (include_load_functions) {
 		const prev_state = page.state;
@@ -400,7 +395,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...result_map.values()].map(([_, p]) => p)).catch(noop);
+	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
 }
 
 function reset_invalidation() {
