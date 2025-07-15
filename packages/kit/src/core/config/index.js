@@ -67,7 +67,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		.filter((f) => fs.existsSync(f));
 
 	if (config_files.length === 0) {
-		console.log(`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`)
+		console.log(
+			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
+		);
 		return process_config({}, { cwd });
 	}
 	const config_file = config_files[0];
