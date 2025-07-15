@@ -1,5 +1,36 @@
 # @sveltejs/kit
 
+## 2.24.0
+### Minor Changes
+
+
+- feat: typed `params` prop for page/layout components ([#13999](https://github.com/sveltejs/kit/pull/13999))
+
+
+### Patch Changes
+
+
+- fix: treeshake internal `storage.get` helper ([#13998](https://github.com/sveltejs/kit/pull/13998))
+
+## 2.23.0
+### Minor Changes
+
+
+- feat: support svelte.config.ts ([#13935](https://github.com/sveltejs/kit/pull/13935))
+  
+  > **NOTE**
+  >
+  > Your runtime has to support importing TypeScript files for `svelte.config.ts` to work.
+  > In Node.js, the feature is supported with the `--experimental-strip-types` flag starting in Node 22.6.0 and supported without a flag starting in Node 23.6.0.
+
+### Patch Changes
+
+
+- fix: extend `vite-plugin-svelte`'s `Config` type instead of duplicating it ([#13982](https://github.com/sveltejs/kit/pull/13982))
+
+
+- fix: regression with `rolldown-vite` not bundling a single JS file for single and inline apps ([#13941](https://github.com/sveltejs/kit/pull/13941))
+
 ## 2.22.5
 ### Patch Changes
 

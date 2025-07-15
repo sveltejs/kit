@@ -2,8 +2,7 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
-	import type { CompileOptions } from 'svelte/compiler';
-	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -80,7 +79,7 @@ declare module '@sveltejs/kit' {
 		/** Create `dir` and any required parent directories. */
 		mkdirp: (dir: string) => void;
 
-		/** The fully resolved `svelte.config.js`. */
+		/** The fully resolved Svelte config. */
 		config: ValidatedConfig;
 		/** Information about prerendered pages and assets, if any. */
 		prerendered: Prerendered;
@@ -170,23 +169,16 @@ declare module '@sveltejs/kit' {
 		compress: (directory: string) => Promise<void>;
 	}
 
-	export interface Config {
+	/**
+	 * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
+	 */
+	export interface Config extends SvelteConfig {
 		/**
-		 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
-		 * @default {}
+		 * SvelteKit options.
+		 *
+		 * @see https://svelte.dev/docs/kit/configuration
 		 */
-		compilerOptions?: CompileOptions;
-		/**
-		 * List of file extensions that should be treated as Svelte files.
-		 * @default [".svelte"]
-		 */
-		extensions?: string[];
-		/** SvelteKit options */
 		kit?: KitConfig;
-		/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
-		preprocess?: any;
-		/** `vite-plugin-svelte` plugin options. */
-		vitePlugin?: PluginOptions;
 		/** Any additional options required by tooling that integrates with Svelte. */
 		[key: string]: any;
 	}
