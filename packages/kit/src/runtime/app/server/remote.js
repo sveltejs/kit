@@ -148,10 +148,7 @@ export function query(validate_or_fn, maybe_fn) {
 	};
 
 	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({ type: 'query', id: '' }),
-		writable: false,
-		enumerable: false,
-		configurable: false
+		value: /** @type {RemoteInfo} */ ({ type: 'query', id: '' })
 	});
 
 	return wrapper;
@@ -165,13 +162,15 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
+ * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
- * 	(id: string) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ *  z.string(),
+ * 	(id) => blogPosts.get(id),
+ * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -189,13 +188,14 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
+ *  'unchecked',
  * 	(id: string) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -215,13 +215,15 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
+ * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
- * 	(id: string) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+ *  z.string(),
+ * 	(id) => blogPosts.get(id),
+ * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -342,10 +344,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			id: '',
 			entries: options?.entries,
 			dynamic: options?.dynamic
-		}),
-		configurable: false,
-		writable: false,
-		enumerable: false
+		})
 	});
 
 	return wrapper;
@@ -449,9 +448,6 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 // 	Object.defineProperty(wrapper, '__', {
 // 		value: /** @type {RemoteInfo} */ ({ type: 'cache', id: '', config }),
-// 		writable: false,
-// 		enumerable: true,
-// 		configurable: false
 // 	});
 
 // 	return wrapper;
@@ -620,12 +616,12 @@ export function command(validate_or_fn, maybe_fn) {
  * Creates a form action. The passed function will be called when the form is submitted.
  * Returns an object that can be spread onto a form element to connect it to the function.
  * ```ts
- * import { createPost } from '$lib/server/db';
+ * import * as db from '$lib/server/db';
  *
  * export const createPost = form((formData) => {
  * 	const title = formData.get('title');
  * 	const content = formData.get('content');
- * 	return createPost({ title, content });
+ * 	return db.createPost({ title, content });
  * });
  * ```
  * ```svelte
@@ -689,10 +685,7 @@ export function form(fn) {
 		Object.defineProperty(wrapper, 'enhance', {
 			value: () => {
 				return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
-			},
-			writable: false,
-			enumerable: false,
-			configurable: false
+			}
 		});
 
 		const form_action = {
@@ -703,16 +696,10 @@ export function form(fn) {
 		Object.defineProperty(form_action, 'enhance', {
 			value: () => {
 				return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
-			},
-			writable: false,
-			enumerable: false,
-			configurable: false
+			}
 		});
 		Object.defineProperty(wrapper, 'formAction', {
-			value: form_action,
-			writable: false,
-			enumerable: false,
-			configurable: false
+			value: form_action
 		});
 
 		Object.defineProperty(wrapper, '__', {
@@ -724,10 +711,7 @@ export function form(fn) {
 					wrapper.action = `?/remote=${encodeURIComponent(action)}`;
 					wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
 				}
-			}),
-			writable: false,
-			enumerable: false,
-			configurable: false
+			})
 		});
 
 		Object.defineProperty(wrapper, 'result', {
@@ -738,18 +722,14 @@ export function form(fn) {
 				} catch {
 					return undefined;
 				}
-			},
-			enumerable: false,
-			configurable: false
+			}
 		});
 
 		Object.defineProperty(wrapper, 'error', {
 			get() {
 				// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
 				return /** @type {any} */ (null);
-			},
-			enumerable: false,
-			configurable: false
+			}
 		});
 
 		if (key == undefined) {
@@ -866,7 +846,7 @@ function get_response(id, arg, event, get_result) {
 function uneval_result(id, arg, event, result, cache_key) {
 	const info = get_remote_info(event);
 
-	cache_key ||= create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
+	cache_key ??= create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
 	if (!(cache_key in info.unevaled_results)) {
 		const replacer = (/** @type {any} */ thing) => {
@@ -928,9 +908,7 @@ async function run_remote_function(event, allow_cookies, arg, validate, fn) {
 			throw new Error('setHeaders is not allowed in remote functions');
 		},
 		cookies: {
-			get: event.cookies.get,
-			getAll: event.cookies.getAll,
-			serialize: event.cookies.serialize,
+			...event.cookies,
 			set: (name, value, opts) => {
 				if (allow_cookies) {
 					if (opts.path && !opts.path.startsWith('/')) {

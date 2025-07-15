@@ -773,7 +773,7 @@ declare module '@sveltejs/kit' {
 	 * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
 	 *
 	 * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
-	 * This function is expected to throw an error to replace the default 400 error.
+	 * This function is expected return an object shape that matches `App.Error`.
 	 */
 	export type HandleValidationError<
 		Result extends { issues: StandardSchemaV1.Issue[] } = { issues: StandardSchemaV1.Issue[] }
@@ -1531,11 +1531,8 @@ declare module '@sveltejs/kit' {
 	 * </script>
 	 *
 	 * <form {...myFormAction.enhance(async ({ formData, submit }) => {
-	 *   // do something with the form data, e.g. optimistic UI update
-	 *   getTodos.override([], (todos) => [...todos, { text: formData.get('text') }]);
-	 *   // submit the form
-	 *   const result = await submit();
-	 *   // do something with the result
+	 *   // updates and withOverride allow for optimistic UI updates
+	 *   await submit().updates(getTodos.withOverride((todos) => [...todos, { text: formData.get('text') }]));
 	 * })}>
 	 *   <input type="text" name="name" />
 	 *   <!-- ... -->
@@ -1629,40 +1626,50 @@ declare module '@sveltejs/kit' {
 	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 		/** The current value of the query. Undefined as long as there's no value yet */
 		get current(): Awaited<Output> | undefined;
-		/** The error in case the query fails */
-		get error(): App.Error | undefined;
+		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+		get error(): any;
 		/** `true` before the first result is available and during refreshes */
 		get pending(): boolean;
 		/**
 		 * On the client, this function will re-fetch the query from the server.
-		 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
 		 * transport the updated data to the client along with the response, if the action was successful.
 		 */
 		refresh: () => Promise<void>;
 		/**
-		 * Temporarily override the value of a query. Useful for optimistic UI updates.
+		 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
 		 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
 		 * Overrides are applied on new values, too, until they are released.
 		 *
 		 * ```svelte
 		 * <script>
-		 *   import { getTodos, addTodo } from './todos.remote.js';
-		 *   const todos = getTodos();
+		 *   import { getList, commit } from './todos.remote.js';
+		 *   const list = getList();
+		 *   let release = [];
 		 * </script>
 		 *
-		 * <form {...addTodo.enhance(async ({ data, submit }) => {
-		 *   const release = await getTodos.override((todos) => [...todos, { text: data.get('text') }]);
-		 *   try {
-		 *     await submit();
-		 *   } finally {
-		 *     release();
-		 *   }
-		 * }}>
-		 *   <input type="text" name="text" />
-		 *   <button type="submit">Add Todo</button>
-		 * </form>
+		 * <h2>Select items to remove</h2>
+		 *
+		 * <ul>
+		 *   {#each list as item}
+		 *     <li>{item.text}</li>
+		 *     <button onclick={() => {
+		 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
+		 *     }}>Remove</button>
+		 *   {/each}
+		 * </ul>
+		 *
+		 * <button onclick={() => {
+		 *   release.forEach((r) => r());
+		 *   release = [];
+		 * }}>Revert</button>
+		 *
+		 * <button onclick={async () => {
+		 *   await commit();
+		 *   release.forEach((r) => r());
+		 *   release = [];
+		 * }}>Confirm</button>
 		 * ```
 		 *
 		 * Can only be called on the client.
@@ -2711,13 +2718,15 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
+	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
-	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
@@ -2734,13 +2743,14 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
+	 *  'unchecked',
 	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
@@ -2757,13 +2767,15 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has arguments, you need to provide an `entries` function that returns a list of arrays representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
+	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
-	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => ([post.id])) }
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
@@ -2875,12 +2887,12 @@ declare module '$app/server' {
 	 * Creates a form action. The passed function will be called when the form is submitted.
 	 * Returns an object that can be spread onto a form element to connect it to the function.
 	 * ```ts
-	 * import { createPost } from '$lib/server/db';
+	 * import * as db from '$lib/server/db';
 	 *
 	 * export const createPost = form((formData) => {
 	 * 	const title = formData.get('title');
 	 * 	const content = formData.get('content');
-	 * 	return createPost({ title, content });
+	 * 	return db.createPost({ title, content });
 	 * });
 	 * ```
 	 * ```svelte

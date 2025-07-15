@@ -52,6 +52,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			form_client_refreshes = JSON.parse(
 				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
 			);
+			form_data.delete('sveltekit:remote_refreshes');
 			const data = await with_event(event, () => func.call(null, form_data));
 
 			return json(

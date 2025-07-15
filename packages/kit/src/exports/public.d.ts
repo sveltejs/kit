@@ -791,7 +791,7 @@ export type HandleServerError = (input: {
  * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
  *
  * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
- * This function is expected to throw an error to replace the default 400 error.
+ * This function is expected return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<
 	Result extends { issues: StandardSchemaV1.Issue[] } = { issues: StandardSchemaV1.Issue[] }
@@ -1549,11 +1549,8 @@ export interface Snapshot<T = any> {
  * </script>
  *
  * <form {...myFormAction.enhance(async ({ formData, submit }) => {
- *   // do something with the form data, e.g. optimistic UI update
- *   getTodos.override([], (todos) => [...todos, { text: formData.get('text') }]);
- *   // submit the form
- *   const result = await submit();
- *   // do something with the result
+ *   // updates and withOverride allow for optimistic UI updates
+ *   await submit().updates(getTodos.withOverride((todos) => [...todos, { text: formData.get('text') }]));
  * })}>
  *   <input type="text" name="name" />
  *   <!-- ... -->
@@ -1653,34 +1650,44 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 	get pending(): boolean;
 	/**
 	 * On the client, this function will re-fetch the query from the server.
-	 * For queries with input arguments, all queries currently active will be re-fetched regardless of the input arguments.
 	 *
 	 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
 	 * transport the updated data to the client along with the response, if the action was successful.
 	 */
 	refresh: () => Promise<void>;
 	/**
-	 * Temporarily override the value of a query. Useful for optimistic UI updates.
+	 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
 	 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
 	 * Overrides are applied on new values, too, until they are released.
 	 *
 	 * ```svelte
 	 * <script>
-	 *   import { getTodos, addTodo } from './todos.remote.js';
-	 *   const todos = getTodos();
+	 *   import { getList, commit } from './todos.remote.js';
+	 *   const list = getList();
+	 *   let release = [];
 	 * </script>
 	 *
-	 * <form {...addTodo.enhance(async ({ data, submit }) => {
-	 *   const release = await getTodos.override((todos) => [...todos, { text: data.get('text') }]);
-	 *   try {
-	 *     await submit();
-	 *   } finally {
-	 *     release();
-	 *   }
-	 * }}>
-	 *   <input type="text" name="text" />
-	 *   <button type="submit">Add Todo</button>
-	 * </form>
+	 * <h2>Select items to remove</h2>
+	 *
+	 * <ul>
+	 *   {#each list as item}
+	 *     <li>{item.text}</li>
+	 *     <button onclick={() => {
+	 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
+	 *     }}>Remove</button>
+	 *   {/each}
+	 * </ul>
+	 *
+	 * <button onclick={() => {
+	 *   release.forEach((r) => r());
+	 *   release = [];
+	 * }}>Revert</button>
+	 *
+	 * <button onclick={async () => {
+	 *   await commit();
+	 *   release.forEach((r) => r());
+	 *   release = [];
+	 * }}>Confirm</button>
 	 * ```
 	 *
 	 * Can only be called on the client.

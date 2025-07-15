@@ -166,15 +166,15 @@ async function analyse({
 	}
 
 	// analyse remotes
-	for (const [remote, modules_fn] of Object.entries(manifest._.remotes)) {
-		const modules = await modules_fn();
+	for (const [hash, load] of Object.entries(manifest._.remotes)) {
+		const modules = await load();
 		const exports = new Map();
 		for (const [name, value] of Object.entries(modules)) {
 			const type = /** @type {import('types').RemoteInfo} */ (value.__)?.type;
 			if (!type) continue;
 			exports.set(type, (exports.get(type) ?? []).concat(name));
 		}
-		metadata.remotes.set(remote, exports);
+		metadata.remotes.set(hash, exports);
 	}
 
 	return { metadata, static_exports };

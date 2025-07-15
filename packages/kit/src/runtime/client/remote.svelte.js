@@ -349,12 +349,12 @@ export function query(id) {
 	return remote_request(id, false);
 }
 
-/**
- * @param {string} id
- */
-export function cache(id) {
-	return remote_request(id, false);
-}
+// /**
+//  * @param {string} id
+//  */
+// export function cache(id) {
+// 	return remote_request(id, false);
+// }
 
 /**
  * @param {string} id
@@ -366,6 +366,7 @@ export function prerender(id) {
 /**
  * Client-version of the `command` function from `$app/server`.
  * @param {string} id
+ * @returns {(arg: any) => Promise<any> & { updates: (...args: any[]) => any }}
  */
 export function command(id) {
 	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
@@ -374,7 +375,9 @@ export function command(id) {
 		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
 		let updates = [];
 
+		/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
 		const promise = (async () => {
+			// Wait a tick to give room for the `updates` method to be called
 			await Promise.resolve();
 
 			const response = await fetch(`/${app_dir}/remote/${id}`, {
@@ -408,9 +411,10 @@ export function command(id) {
 			}
 		})();
 
-		// @ts-expect-error
 		promise.updates = (/** @type {any} */ ...args) => {
 			updates = args;
+			// @ts-expect-error Don't allow updates to be called multiple times
+			delete promise.updates;
 			return promise;
 		};
 
@@ -449,9 +453,10 @@ export function form(id) {
 		/** @type {any} */
 		let error = $state(undefined);
 
-		// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
-		// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
-		/** @param {FormData} data */
+		/**
+		 * @param {FormData} data
+		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 */
 		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
@@ -472,6 +477,13 @@ export function form(id) {
 					await Promise.resolve();
 
 					if (updates.length > 0) {
+						if (DEV) {
+							if (data.get('sveltekit:remote_refreshes')) {
+								throw new Error(
+									'The FormData key `sveltekit:remote_refreshes` is reserved for internal use and should not be set manually'
+								);
+							}
+						}
 						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
 

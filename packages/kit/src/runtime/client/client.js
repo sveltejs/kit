@@ -265,6 +265,7 @@ export let pending_invalidate;
  * Each value is a query's refresh function which will rerun the query.
  */
 export const refresh_map = new Map();
+
 /**
  * @type {Map<string, [count: number, resource: any, update: (v: any) => void]>}
  * A map of results of queries that currently exist in the app.
@@ -353,7 +354,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate(includeLoadFunctions = true, reset_page_state = true) {
+async function _invalidate(include_load_functions = true, reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -377,7 +378,7 @@ async function _invalidate(includeLoadFunctions = true, reset_page_state = true)
 		}
 	});
 
-	if (includeLoadFunctions) {
+	if (include_load_functions) {
 		const prev_state = page.state;
 		const navigation_result = intent && (await load_route(intent));
 		if (!navigation_result || nav_token !== token) return;
