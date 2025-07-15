@@ -1556,3 +1556,15 @@ test.describe('getRequestEvent', () => {
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
 	});
 });
+
+test.describe('params prop', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop');
+
+		await clicknav('[href="/params-prop/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
