@@ -169,7 +169,7 @@ export default function (options = {}) {
 				// TODO bump peer dep in next adapter major to simplify this
 				if (VERSION.split('.')[0] === '2' && VERSION.split('.')[1] < '25') {
 					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
+						`@sveltejs/adapter-cloudflare: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
 					);
 				}
 
