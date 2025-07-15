@@ -32,8 +32,8 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",

@@ -35,8 +35,8 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/serverless.js', 'files/serverless.js');\"",
+		"dev": "rollup -cw",
+		"build": "rollup -c && node -e \"fs.cpSync('src/serverless.js', 'files/serverless.js');\"",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
