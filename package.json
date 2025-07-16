@@ -24,7 +24,7 @@
 	"devDependencies": {
 		"@changesets/cli": "^2.29.5",
 		"@playwright/test": "catalog:",
-		"@sveltejs/eslint-config": "^8.2.0",
+		"@sveltejs/eslint-config": "^8.3.2",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"eslint": "^9.29.0",
 		"prettier": "^3.6.0",
