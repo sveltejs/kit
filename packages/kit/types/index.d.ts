@@ -2307,12 +2307,18 @@ declare module '$app/navigation' {
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
 	 * @param resource The invalidated URL
+	 * @param {Object} opts Options related to the invalidation
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean), opts?: {
+		replaceState?: boolean | undefined;
+	} | undefined): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * @param {Object} opts Options related to the invalidation
 	 * */
-	export function invalidateAll(): Promise<void>;
+	export function invalidateAll(opts?: {
+		replaceState?: boolean | undefined;
+	} | undefined): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
