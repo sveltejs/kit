@@ -5,10 +5,13 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
+const name = '@sveltejs/adapter-cloudflare';
+const [kit_major, kit_minor] = VERSION.split('.');
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name,
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -167,9 +170,9 @@ export default function (options = {}) {
 		supports: {
 			read: ({ route }) => {
 				// TODO bump peer dep in next adapter major to simplify this
-				if (VERSION.split('.')[0] === '2' && VERSION.split('.')[1] < '25') {
+				if (kit_major === '2' && kit_minor < '25') {
 					throw new Error(
-						`@sveltejs/adapter-cloudflare: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
 					);
 				}
 

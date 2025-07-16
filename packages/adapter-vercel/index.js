@@ -10,6 +10,8 @@ import { VERSION } from '@sveltejs/kit';
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
+const [kit_major, kit_minor] = VERSION.split('.');
+
 const get_default_runtime = () => {
 	const major = Number(process.version.slice(1).split('.')[0]);
 
@@ -468,7 +470,7 @@ const plugin = function (defaults = {}) {
 				const runtime = config.runtime ?? defaults.runtime;
 
 				// TODO bump peer dep in next adapter major to simplify this
-				if (runtime === 'edge' && VERSION.split('.')[0] === '2' && VERSION.split('.')[1] < '25') {
+				if (runtime === 'edge' && kit_major === '2' && kit_minor < '25') {
 					throw new Error(
 						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\` and SvelteKit < 2.25.0`
 					);
