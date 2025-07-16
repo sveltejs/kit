@@ -1359,7 +1359,7 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 
-	test.describe.only('navigation and redirects should be consistent between web native and sveltekit based', () => {
+	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
 		test.beforeEach(async ({ page }) => {
 			await page.goto('/goto/testentry');
 			await page.goto('/goto/teststart');
@@ -1372,6 +1372,8 @@ test.describe('goto', () => {
 				[
 					'app.goto { replaceState: false }',
 					async ({ app }) => {
+						// navigating to nonexistent page causes playwright's page context to be destroyed
+						// thus this call throws an error unless caught
 						await app.goto('/goto/nonexistent', { replaceState: false }).catch(() => {});
 					}
 				],
