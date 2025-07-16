@@ -3,4 +3,4 @@
 ---
 
 fix: respect `replaceState` when using `goto` results in a redirect or an external navigation
-fix: use `replaceState` when redirecting after invalidation
+minor: add `replaceState` option to `invalidate` and `invalidateAll` methods

@@ -345,7 +345,11 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate() {
+/**
+ * @param {Object} [opts] Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
+ */
+async function _invalidate(opts = {}) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -368,7 +372,7 @@ async function _invalidate() {
 	if (navigation_result.type === 'redirect') {
 		return _goto(
 			new URL(navigation_result.location, current.url).href,
-			{ replaceState: true },
+			{ replaceState: opts.replaceState },
 			1,
 			nav_token
 		);
@@ -1976,16 +1980,18 @@ export function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {Object} [opts] Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(opts);
 }
 
 /**
@@ -2002,15 +2008,17 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {Object} [opts] Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
  * @returns {Promise<void>}
  */
-export function invalidateAll() {
+export function invalidateAll(opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidateAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate();
+	return _invalidate(opts);
 }
 
 /**
