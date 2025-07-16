@@ -1720,9 +1720,9 @@ test.describe('navigation and redirects should be consistent between web native 
 					});
 				}
 			]
-		].forEach(([title, navigation]) => {
+		].forEach(([title, navigate]) => {
 			test(title, async ({ app, page }) => {
-				await navigation({ app, page });
+				await navigate({ app, page });
 				await page.waitForLoadState('networkidle');
 
 				expectPath(page).toBe('/navigation/testfinish');
@@ -1751,9 +1751,9 @@ test.describe('navigation and redirects should be consistent between web native 
 					});
 				}
 			]
-		].forEach(([title, navigation]) => {
+		].forEach(([title, navigate]) => {
 			test(title, async ({ page, app }) => {
-				await navigation({ page, app });
+				await navigate({ page, app });
 				await page.waitForLoadState('networkidle');
 				expectPath(page).toBe('/navigation/testfinish');
 
@@ -1777,9 +1777,9 @@ test.describe('navigation and redirects should be consistent between web native 
 					});
 				}
 			]
-		].forEach(([title, navigation]) => {
+		].forEach(([title, navigate]) => {
 			test(title, async ({ page, app }) => {
-				await navigation({ page, app });
+				await navigate({ page, app });
 				await page.waitForLoadState('networkidle');
 				expectPath(page).toBe('/navigation/testfinish');
 
