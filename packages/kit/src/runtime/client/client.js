@@ -1679,7 +1679,7 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
- * @param {boolean | undefined} replace_state
+ * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
 async function server_fallback(url, route, error, status, replace_state) {
