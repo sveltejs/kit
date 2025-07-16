@@ -1359,14 +1359,12 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 
-	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
-		function expectPath(page) {
-			return expect(new URL(page.url()).pathname);
-		}
-
+	test.describe.only('navigation and redirects should be consistent between web native and sveltekit based', () => {
 		test.beforeEach(async ({ page }) => {
-			await page.goto('/navigation/teststart');
-			expectPath(page).toBe('/navigation/teststart');
+			await page.goto('/goto/testentry');
+			await page.goto('/goto/teststart');
+
+			await expect(page).toHaveURL('/goto/teststart');
 		});
 
 		test.describe('navigating outside the app on sameorigin', () => {
@@ -1374,25 +1372,24 @@ test.describe('goto', () => {
 				[
 					'app.goto { replaceState: false }',
 					async ({ app }) => {
-						await app.goto('/navigation/nonexistent', { replaceState: false }).catch(() => {});
+						await app.goto('/goto/nonexistent', { replaceState: false }).catch(() => {});
 					}
 				],
 				[
 					'location.assign',
 					async ({ page }) => {
 						await page.evaluate(() => {
-							location.assign('/navigation/nonexistent');
+							location.assign('/goto/nonexistent');
 						});
 					}
 				]
 			].forEach(([title, navigate]) => {
 				test(title, async ({ app, page }) => {
 					await navigate({ app, page });
-					await page.waitForLoadState('networkidle');
-					expectPath(page).toBe('/navigation/nonexistent');
+					await expect(page).toHaveURL('/goto/nonexistent');
 
 					await page.goBack();
-					expectPath(page).toBe('/navigation/teststart');
+					await expect(page).toHaveURL('/goto/teststart');
 				});
 			});
 
@@ -1400,40 +1397,38 @@ test.describe('goto', () => {
 				[
 					'app.goto { replaceState: true }',
 					async ({ app }) => {
-						await app.goto('/navigation/nonexistent', { replaceState: true }).catch(() => {});
+						await app.goto('/goto/nonexistent', { replaceState: true }).catch(() => {});
 					}
 				],
 				[
 					'location.replace',
 					async ({ page }) => {
 						await page.evaluate(() => {
-							location.replace('/navigation/nonexistent');
+							location.replace('/goto/nonexistent');
 						});
 					}
 				]
 			].forEach(([title, navigate]) => {
 				test(title, async ({ app, page }) => {
 					await navigate({ app, page });
-					await page.waitForLoadState('networkidle');
-					expectPath(page).toBe('/navigation/nonexistent');
+					await expect(page).toHaveURL('/goto/nonexistent');
 
-					// when going back to about:blank - page.goBack hangs and eventually fails
-					await page.goBack({ timeout: 500, waitUntil: 'networkidle' }).catch(() => {});
-					expect(page.url()).toBe('about:blank');
+					await page.goBack();
+					await expect(page).toHaveURL('/goto/testentry');
 				});
 			});
 		});
 
-		test.describe.only('redirect after invalidation', () => {
+		test.describe('redirect after invalidation', () => {
 			test.beforeEach(async ({ app }) => {
-				await app.goto('/navigation/teststart?redirect', { replaceState: true });
+				await app.goto('/goto/teststart?redirect', { replaceState: true });
 			});
 
 			[
 				[
 					'app.invalidate',
 					async ({ app }) => {
-						await app.invalidate('app:navigation', { replaceState: true });
+						await app.invalidate('app:goto', { replaceState: true });
 					}
 				],
 				[
@@ -1447,12 +1442,10 @@ test.describe('goto', () => {
 			].forEach(([title, navigate]) => {
 				test(title, async ({ app, page }) => {
 					await navigate({ app, page });
-					await page.waitForLoadState('networkidle');
+					await expect(page).toHaveURL('/goto/testfinish');
 
-					expectPath(page).toBe('/navigation/testfinish');
-
-					await page.goBack({ waitUntil: 'networkidle', timeout: 500 }).catch(() => {});
-					expect(page.url()).toBe('about:blank');
+					await page.goBack();
+					await expect(page).toHaveURL('/goto/testentry');
 				});
 			});
 		});
@@ -1462,25 +1455,24 @@ test.describe('goto', () => {
 				[
 					'app.goto { replaceState: false }',
 					async ({ app }) => {
-						await app.goto('/navigation/loadreplace1', { replaceState: false });
+						await app.goto('/goto/loadreplace1', { replaceState: false });
 					}
 				],
 				[
 					'location.assign',
 					async ({ page }) => {
 						await page.evaluate(() => {
-							location.assign('/navigation/loadreplace1');
+							location.assign('/goto/loadreplace1');
 						});
 					}
 				]
 			].forEach(([title, navigate]) => {
 				test(title, async ({ page, app }) => {
 					await navigate({ page, app });
-					await page.waitForLoadState('networkidle');
-					expectPath(page).toBe('/navigation/testfinish');
+					await expect(page).toHaveURL('/goto/testfinish');
 
-					await page.goBack({ waitUntil: 'networkidle' });
-					expectPath(page).toBe('/navigation/teststart');
+					await page.goBack();
+					await expect(page).toHaveURL('/goto/teststart');
 				});
 			});
 
@@ -1488,26 +1480,24 @@ test.describe('goto', () => {
 				[
 					'app.goto { replaceState: true }',
 					async ({ app }) => {
-						await app.goto('/navigation/loadreplace1', { replaceState: true });
+						await app.goto('/goto/loadreplace1', { replaceState: true });
 					}
 				],
 				[
 					'location.replace',
 					async ({ page }) => {
 						await page.evaluate(() => {
-							location.replace('/navigation/loadreplace1');
+							location.replace('/goto/loadreplace1');
 						});
 					}
 				]
 			].forEach(([title, navigate]) => {
 				test(title, async ({ page, app }) => {
 					await navigate({ page, app });
-					await page.waitForLoadState('networkidle');
-					expectPath(page).toBe('/navigation/testfinish');
+					await expect(page).toHaveURL('/goto/testfinish');
 
-					// when going back to about:blank - page.goBack hangs and eventually fails
-					await page.goBack({ timeout: 500, waitUntil: 'networkidle' }).catch(() => {});
-					expect(page.url()).toBe('about:blank');
+					await page.goBack();
+					await expect(page).toHaveURL('/goto/testentry');
 				});
 			});
 		});
