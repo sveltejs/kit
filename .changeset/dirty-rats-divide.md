@@ -2,6 +2,5 @@
 '@sveltejs/kit': patch
 ---
 
-fix: respect `replaceState` when using `goto` results in an external navigation
-fix: respect `replaceState` when using `goto` in redirection chain
+fix: respect `replaceState` when using `goto` results in a redirect or an external navigation
 fix: use `replaceState` when redirecting after invalidation
