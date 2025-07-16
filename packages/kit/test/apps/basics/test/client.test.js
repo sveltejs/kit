@@ -1700,7 +1700,7 @@ test.describe('navigation and redirects should be consistent between web native 
 		});
 	});
 
-	test.describe('redirect after invalidation', () => {
+	test.describe.only('redirect after invalidation', () => {
 		test.beforeEach(async ({ app }) => {
 			await app.goto('/navigation/teststart?redirect', { replaceState: true });
 		});
@@ -1709,7 +1709,7 @@ test.describe('navigation and redirects should be consistent between web native 
 			[
 				'app.invalidate',
 				async ({ app }) => {
-					await app.invalidate('app:navigation');
+					await app.invalidate('app:navigation', { replaceState: true });
 				}
 			],
 			[
@@ -1726,8 +1726,6 @@ test.describe('navigation and redirects should be consistent between web native 
 				await page.waitForLoadState('networkidle');
 
 				expectPath(page).toBe('/navigation/testfinish');
-
-				await page.pause();
 
 				await page.goBack({ waitUntil: 'networkidle', timeout: 500 }).catch(() => {});
 				expect(page.url()).toBe('about:blank');

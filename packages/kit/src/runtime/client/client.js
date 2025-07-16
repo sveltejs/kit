@@ -1989,6 +1989,8 @@ export function invalidate(resource, opts = {}) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
+	console.log('invalidate opts', opts)
+
 	push_invalidated(resource);
 
 	return _invalidate(opts);
