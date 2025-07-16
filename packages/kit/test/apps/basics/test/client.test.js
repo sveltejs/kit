@@ -1504,7 +1504,6 @@ test.describe('goto', () => {
 			});
 		});
 	});
-
 });
 
 test.describe('untrack', () => {
