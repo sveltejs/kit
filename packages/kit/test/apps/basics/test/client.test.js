@@ -1634,3 +1634,13 @@ test.describe('binding_property_non_reactive warn', () => {
 		expect(is_warning_thrown).toBeFalsy();
 	});
 });
+
+test.describe('routing', () => {
+	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
+		await page.goto('/routing/long-navigation');
+		await page.click('a[href="/routing"]');
+		await page.click('a[href="/routing"]');
+		await expect(page.locator('h1')).toHaveText('Great success!');
+		expect(new URL(page.url()).pathname).toBe('/routing');
+	});
+});

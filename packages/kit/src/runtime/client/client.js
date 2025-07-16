@@ -536,16 +536,15 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 		}
 	}
 
-	url.pathname = normalize_path(url.pathname, slash);
-
-	// eslint-disable-next-line
-	url.search = url.search; // turn `/?` into `/`
+	const new_url = new URL(url);
+	new_url.pathname = normalize_path(url.pathname, slash);
+	new_url.search = url.search; // turn `/?` into `/`
 
 	/** @type {import('./types.js').NavigationFinished} */
 	const result = {
 		type: 'loaded',
 		state: {
-			url,
+			url: new_url,
 			params,
 			branch,
 			error,
@@ -585,8 +584,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 	}
 
 	const page_changed =
-		!current.url ||
-		url.href !== current.url.href ||
+		url.href !== page.url.href ||
 		current.error !== error ||
 		(form !== undefined && form !== page.form) ||
 		data_changed;
@@ -600,7 +598,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 			},
 			state: {},
 			status,
-			url: new URL(url),
+			url: new_url,
 			form: form ?? null,
 			// The whole page store is updated, but this way the object reference stays the same
 			data: data_changed ? data : page.data
