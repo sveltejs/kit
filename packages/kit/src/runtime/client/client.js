@@ -347,7 +347,7 @@ export async function start(_app, _target, hydrate) {
 
 /**
  * @param {Object} [opts] Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  */
 async function _invalidate(opts = {}) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
@@ -1981,7 +1981,7 @@ export function goto(url, opts = {}) {
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
  * @param {Object} [opts] Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
 export function invalidate(resource, opts = {}) {
@@ -2009,7 +2009,7 @@ function push_invalidated(resource) {
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
  * @param {Object} [opts] Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirecion
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
 export function invalidateAll(opts = {}) {

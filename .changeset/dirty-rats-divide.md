@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
 fix: respect `replaceState` when using `goto` results in a redirect or an external navigation
