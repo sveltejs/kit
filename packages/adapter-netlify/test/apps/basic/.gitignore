@@ -3,3 +3,4 @@ node_modules
 /.svelte-kit
 /.netlify
 /build
+deno.lock
