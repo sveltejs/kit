@@ -23,6 +23,9 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"import": "./worker.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",

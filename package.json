@@ -42,6 +42,9 @@
 			"sharp",
 			"svelte-preprocess",
 			"workerd"
-		]
+		],
+		"overrides": {
+			"esm-env": "github:benmccann/esm-env#bcbddbc&path:packages/esm-env"
+		}
 	}
 }
