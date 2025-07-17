@@ -69,7 +69,7 @@ Issues with the [**soon**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+i
 
 ## Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
+Run `pnpm test:kit` to run the tests from the `packages/kit` directory. You can also run `pnpm test:others` to run tests from all packages __except__ the `packages/kit` directory. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
 
 You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
 

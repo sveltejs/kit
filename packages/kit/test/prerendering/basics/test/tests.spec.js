@@ -1,11 +1,27 @@
-import * as fs from 'node:fs';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { replace_hydration_attrs } from '../../test-utils';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
-/** @param {string} file */
+/**
+ * @overload
+ * @param {string} file
+ * @param {BufferEncoding} [encoding]
+ * @returns {string}
+ */
+/**
+ * @overload
+ * @param {string} file
+ * @param {null} encoding
+ * @returns {Buffer<ArrayBufferLike>}
+ */
+/**
+ * @param {string} file
+ * @param {BufferEncoding | null} [encoding]
+ * @returns {string | Buffer<ArrayBufferLike>}
+ */
 const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {

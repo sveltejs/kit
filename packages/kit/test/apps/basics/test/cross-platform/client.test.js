@@ -41,6 +41,11 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
+	test('sets focus for valid hash but invalid selector', async ({ page }) => {
+		await page.goto('/reset-focus#an:invalid+selector');
+		await expect(page.locator('button')).toBeFocused();
+	});
+
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
 

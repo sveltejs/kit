@@ -1,5 +1,22 @@
 # @sveltejs/package
 
+## 2.4.0
+### Minor Changes
+
+
+- feat: support svelte.config.ts ([#13935](https://github.com/sveltejs/kit/pull/13935))
+  
+  > **NOTE**
+  >
+  > Your runtime has to support importing TypeScript files for `svelte.config.ts` to work.
+  > In Node.js, the feature is supported with the `--experimental-strip-types` flag starting in Node 22.6.0 and supported without a flag starting in Node 23.6.0.
+
+## 2.3.12
+### Patch Changes
+
+
+- fix: handle non-semver-style dependency versions ([#13925](https://github.com/sveltejs/kit/pull/13925))
+
 ## 2.3.11
 ### Patch Changes
 

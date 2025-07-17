@@ -1,5 +1,17 @@
 # @sveltejs/enhanced-img
 
+## 0.7.0
+### Minor Changes
+
+
+- breaking: use new filters and enhancements from `vite-plugin-svelte`. Requires `vite >= 6.3` and `vite-plugin-svelte >= 6.0`. ([#13967](https://github.com/sveltejs/kit/pull/13967))
+
+## 0.6.1
+### Patch Changes
+
+
+- feat: allow `vite-plugin-svelte` 6 peer dependency ([#13921](https://github.com/sveltejs/kit/pull/13921))
+
 ## 0.6.0
 ### Minor Changes
 

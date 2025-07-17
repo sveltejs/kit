@@ -2,8 +2,7 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
-	import type { CompileOptions } from 'svelte/compiler';
-	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -80,7 +79,7 @@ declare module '@sveltejs/kit' {
 		/** Create `dir` and any required parent directories. */
 		mkdirp: (dir: string) => void;
 
-		/** The fully resolved `svelte.config.js`. */
+		/** The fully resolved Svelte config. */
 		config: ValidatedConfig;
 		/** Information about prerendered pages and assets, if any. */
 		prerendered: Prerendered;
@@ -170,23 +169,16 @@ declare module '@sveltejs/kit' {
 		compress: (directory: string) => Promise<void>;
 	}
 
-	export interface Config {
+	/**
+	 * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
+	 */
+	export interface Config extends SvelteConfig {
 		/**
-		 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
-		 * @default {}
+		 * SvelteKit options.
+		 *
+		 * @see https://svelte.dev/docs/kit/configuration
 		 */
-		compilerOptions?: CompileOptions;
-		/**
-		 * List of file extensions that should be treated as Svelte files.
-		 * @default [".svelte"]
-		 */
-		extensions?: string[];
-		/** SvelteKit options */
 		kit?: KitConfig;
-		/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
-		preprocess?: any;
-		/** `vite-plugin-svelte` plugin options. */
-		vitePlugin?: PluginOptions;
 		/** Any additional options required by tooling that integrates with Svelte. */
 		[key: string]: any;
 	}
@@ -1963,7 +1955,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -1993,13 +1985,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit | undefined): Response;
+	export function json(data: any, init?: ResponseInit): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit | undefined): Response;
+	export function text(body: string, init?: ResponseInit): Response;
 	/**
 	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2298,7 +2290,7 @@ declare module '$app/navigation' {
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
-	} | undefined): Promise<void>;
+	}): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
