@@ -3,12 +3,23 @@ import { DEV } from 'esm-env';
 import { noop_tracer } from './noop.js';
 import { load_otel } from './load_otel.js';
 
+// this is controlled via a global flag because we need to access it in locations where we don't have access to the config
+// (specifically, in `sequence`-d handle functions)
+// since this is a global flag with a static value, it's safe to set it during server initialization
+let is_enabled = false;
+
+export function enable_tracing() {
+	is_enabled = true;
+}
+
+export function disable_tracing() {
+	is_enabled = false;
+}
+
 /**
- * @param {Object} [options={}] - Configuration options
- * @param {boolean} [options.is_enabled=false] - Whether tracing is enabled
  * @returns {Promise<Tracer>} The tracer instance
  */
-export async function get_tracer({ is_enabled = false } = {}) {
+export async function get_tracer() {
 	if (!is_enabled) {
 		return noop_tracer;
 	}

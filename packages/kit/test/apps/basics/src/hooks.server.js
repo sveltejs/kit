@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
+import '$lib/tracing-config';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -49,6 +50,13 @@ export const handleError = ({ event, error: e, status, message }) => {
 };
 
 export const handle = sequence(
+	({ event, resolve }) => {
+		const test_id = !building && event.url.searchParams.get('test_id');
+		if (test_id) {
+			event.tracing.rootSpan.setAttribute('test_id', test_id);
+		}
+		return resolve(event);
+	},
 	({ event, resolve }) => {
 		event.locals.key = event.route.id;
 		event.locals.params = event.params;

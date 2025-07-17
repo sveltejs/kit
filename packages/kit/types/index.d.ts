@@ -3,6 +3,7 @@
 
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { Span } from '@opentelemetry/api';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -382,6 +383,15 @@ declare module '@sveltejs/kit' {
 			 * @since 1.21.0
 			 */
 			privatePrefix?: string;
+		};
+		/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
+		experimental?: {
+			/**
+			 * Whether to enable serverside OpenTelemetry tracing for SvelteKit operations including handle hooks, load functions, and form actions.
+			 * @default undefined
+			 * @since 2.22.0 // TODO: update this before publishing
+			 */
+			tracing?: 'server';
 		};
 		/**
 		 * Where to find various files within your project.
@@ -949,6 +959,16 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current `load` function. */
+			currentSpan: Span;
+		};
 	}
 
 	export interface NavigationEvent<
@@ -1224,6 +1244,16 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current `handle` hook, `load` function, or server action. */
+			currentSpan: Span;
+		};
 	}
 
 	/**
@@ -1380,6 +1410,16 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current `load` function. */
+			currentSpan: Span;
+		};
 	}
 
 	/**
@@ -1955,7 +1995,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -1985,13 +2025,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit): Response;
+	export function json(data: any, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit): Response;
+	export function text(body: string, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2049,6 +2089,7 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/hooks' {
+	import type { Handle } from '@sveltejs/kit';
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
@@ -2119,7 +2160,7 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import("@sveltejs/kit").Handle[]): import("@sveltejs/kit").Handle;
+	export function sequence(...handlers: Handle[]): Handle;
 
 	export {};
 }
@@ -2290,7 +2331,7 @@ declare module '$app/navigation' {
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
-	}): Promise<void>;
+	} | undefined): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *

@@ -37,9 +37,12 @@ const config = {
 		version: {
 			name: 'TEST_VERSION'
 		},
+
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-		}
+		},
+
+		experimental: { tracing: 'server' }
 	}
 };
 

@@ -120,6 +120,15 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			experimental: object({
+				tracing: validate(undefined, (input, keypath) => {
+					if (input !== 'server') {
+						throw new Error(`${keypath} should be undefined or "server"`);
+					}
+					return input;
+				})
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: object({
