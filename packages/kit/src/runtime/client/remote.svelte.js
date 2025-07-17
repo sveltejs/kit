@@ -386,6 +386,7 @@ export function command(id) {
 			});
 
 			if (!response.ok) {
+				release_overrides(updates);
 				// We only end up here in case of a network error or if the server has an internal error
 				// (which shouldn't happen because we handle errors on the server and always send a 200 response)
 				throw new Error('Failed to execute remote function');
@@ -393,10 +394,12 @@ export function command(id) {
 
 			const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 			if (result.type === 'redirect') {
+				release_overrides(updates);
 				throw new Error(
 					'Redirects are not allowed in commands. Return a result instead and use goto on the client'
 				);
 			} else if (result.type === 'error') {
+				release_overrides(updates);
 				throw new HttpError(result.status ?? 500, result.error);
 			} else {
 				refresh_queries(result.refreshes, updates);
@@ -503,7 +506,7 @@ export function form(id) {
 						refresh_queries(form_result.refreshes, updates);
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
-						const invalidateAll = !refreshes;
+						const invalidateAll = !refreshes && updates.length === 0;
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
@@ -513,6 +516,9 @@ export function form(id) {
 						error = form_result.error;
 						throw new HttpError(500, error);
 					}
+				} catch (e) {
+					release_overrides(updates);
+					throw e;
 				} finally {
 					// TODO find out why we need 9 and not just 3
 					void wait(9).then(() => {
@@ -729,12 +735,24 @@ export function form(id) {
 }
 
 /**
+ * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
+ */
+function release_overrides(updates) {
+	for (const update of updates) {
+		if ('release' in update) {
+			update.release();
+		}
+	}
+}
+
+/**
  * @param {string} stringified_refreshes
  * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
  */
 function refresh_queries(stringified_refreshes, updates = []) {
 	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
 	if (refreshes.length > 0) {
+		// `refreshes` is a superset of `updates`
 		for (const [key, value] of refreshes) {
 			// If there was an optimistic update, release it right before we update the query
 			const update = updates.find((u) => u._key === key);
