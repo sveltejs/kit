@@ -455,12 +455,19 @@ async function _goto(url, options, redirect_count, nav_token) {
 		}
 	});
 	if (options.invalidateAll) {
-		query_map.forEach(({ resource }, key) => {
-			// Only refresh those that already existed on the old page
-			if (query_keys?.includes(key)) {
-				resource.refresh();
-			}
-		});
+		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
+		// when a query in a layout that still exists after page change is refreshed earlier than this
+		svelte
+			.tick()
+			.then(svelte.tick)
+			.then(() => {
+				query_map.forEach(({ resource }, key) => {
+					// Only refresh those that already existed on the old page
+					if (query_keys?.includes(key)) {
+						resource.refresh();
+					}
+				});
+			});
 	}
 	return result;
 }
