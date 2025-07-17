@@ -192,6 +192,9 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
+	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
+	const isRolldown = !!vite.rolldownVersion;
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -292,6 +295,9 @@ async function kit({ svelte_config }) {
 						`!${kit.files.routes}/**/+*server.*`
 					],
 					exclude: [
+						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
+						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
+						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
@@ -858,14 +864,12 @@ Tips:
 								name: `__sveltekit_${version_hash}.app`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
-								sourcemapIgnoreList,
-								inlineDynamicImports: false
+								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-									(vite.rolldownVersion
+									(isRolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
@@ -905,10 +909,7 @@ Tips:
 										format: inline ? 'iife' : 'esm',
 										entryFileNames: `${prefix}/[name].[hash].${ext}`,
 										chunkFileNames: `${prefix}/chunks/[hash].${ext}`,
-										manualChunks:
-											svelte_config.kit.output.bundleStrategy === 'split'
-												? undefined
-												: () => 'bundle'
+										inlineDynamicImports: svelte_config.kit.output.bundleStrategy !== 'split'
 									}
 								}
 							}
