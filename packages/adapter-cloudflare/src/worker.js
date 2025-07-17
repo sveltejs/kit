@@ -1,5 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
@@ -9,6 +10,27 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
+/**
+ * We don't know the origin until we receive a request, but
+ * that's guaranteed to happen before we call `read`
+ * @type {string}
+ */
+let origin;
+
+const initialized = server.init({
+	// @ts-expect-error env contains environment variables and bindings
+	env,
+	read: async (file) => {
+		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
+			`${origin}/${file}`
+		);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+		}
+		return response.body;
+	}
+});
+
 export default {
 	/**
 	 * @param {Request} req
@@ -17,10 +39,10 @@ export default {
 	 * @returns {Promise<Response>}
 	 */
 	async fetch(req, env, ctx) {
-		await server.init({
-			// @ts-expect-error env contains environment variables and bindings
-			env
-		});
+		if (!origin) {
+			origin = new URL(req.url).origin;
+			await initialized;
+		}
 
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';

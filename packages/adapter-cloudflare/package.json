@@ -33,14 +33,14 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
+		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
-		"prepublishOnly": "pnpm build",
 		"test:unit": "vitest run",
 		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test": "pnpm test:unit && pnpm test:e2e"
+		"test": "pnpm test:unit && pnpm test:e2e",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20250507.0",

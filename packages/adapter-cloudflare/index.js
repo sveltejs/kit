@@ -1,13 +1,17 @@
+import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { is_building_for_cloudflare_pages } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 
+const name = '@sveltejs/adapter-cloudflare';
+const [kit_major, kit_minor] = VERSION.split('.');
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name,
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -162,6 +166,18 @@ export default function (options = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			read: ({ route }) => {
+				// TODO bump peer dep in next adapter major to simplify this
+				if (kit_major === '2' && kit_minor < '25') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
+					);
+				}
+
+				return true;
+			}
 		}
 	};
 }
