@@ -432,7 +432,9 @@ function persist_state() {
  * @param {{}} [nav_token]
  */
 async function _goto(url, options, redirect_count, nav_token) {
-	return navigate({
+	/** @type {string[]} */
+	let query_keys;
+	const result = await navigate({
 		type: 'goto',
 		url: resolve_url(url),
 		keepfocus: options.keepFocus,
@@ -444,6 +446,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
+				query_keys = [...query_map.keys()];
 			}
 
 			if (options.invalidate) {
@@ -451,6 +454,15 @@ async function _goto(url, options, redirect_count, nav_token) {
 			}
 		}
 	});
+	if (options.invalidateAll) {
+		query_map.forEach(({ resource }, key) => {
+			// Only refresh those that already existed on the old page
+			if (query_keys?.includes(key)) {
+				resource.refresh();
+			}
+		});
+	}
+	return result;
 }
 
 /** @param {import('./types.js').NavigationIntent} intent */
