@@ -1540,11 +1540,15 @@ export interface Snapshot<T = any> {
  *   import { getTodos, createTodo } from './todos.remote.js';
  * </script>
  *
- * <form {...myFormAction.enhance(async ({ formData, submit }) => {
- *   // updates and withOverride allow for optimistic UI updates
- *   await submit().updates(getTodos.withOverride((todos) => [...todos, { text: formData.get('text') }]));
+ * <form {...myFormAction.enhance(async ({ data, submit }) => {
+ *   // `data` is an instance of FormData (https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+ *   const text = data.get('text');
+ *   const todo = { text, done: false };
+ *
+ *   // `updates` and `withOverride` enable optimistic UI updates
+ *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
  * })}>
- *   <input type="text" name="name" />
+ *   <input name="text" />
  *   <!-- ... -->
  * </form>
  *

@@ -145,7 +145,7 @@ export async function handleFetch({ event, request, fetch }) {
 
 ### handleValidationError
 
-This hook is called when a remote function schema validation fails. It is expected to return an object shape matching that of `App.Error`.
+This hook is called when a remote function is called with an argument that does not match its schema. It must return an object matching the shape of [`App.Error`](types#Error).
 
 Say you have a remote function that expects a string as its argument ...
 
@@ -154,12 +154,14 @@ Say you have a remote function that expects a string as its argument ...
 import z from 'zod';
 import { query } from '$app/server';
 
-export getTodo = query(z.string(), id => {
+export getTodo = query(z.string(), (id) => {
 	// implementation...
-})
+});
 ```
 
-... but it is called with a number instead (e.g `getTodos(1)`), then the schema validation will fail. By default, a response with status `400` and just the string `Bad Request` will be returned. Implement `handleValidationError` to return a more informative error object instead. If you use `Zod` this could be a simple as using one its built-in formatters:
+...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+
+To customise this message and add additional properties to the error object, implement `handleValidationError`:
 
 ```js
 /// file: src/hooks.server.js
