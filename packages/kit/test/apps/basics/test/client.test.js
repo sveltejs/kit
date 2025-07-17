@@ -1641,6 +1641,6 @@ test.describe('routing', () => {
 		await page.click('a[href="/routing"]');
 		await page.click('a[href="/routing"]');
 		await expect(page.locator('h1')).toHaveText('Great success!');
-		expect(new URL(page.url()).pathname).toBe('/routing');
+		await expect(page).toHaveURL((url) => url.pathname === '/routing');
 	});
 });
