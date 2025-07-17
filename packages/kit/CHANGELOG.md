@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.25.0
+### Minor Changes
+
+
+- feat: support asynchronous `read` implementations from adapters ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: log when no Svelte config file has been found to avoid confusion ([#14001](https://github.com/sveltejs/kit/pull/14001))
+
+## 2.24.0
+### Minor Changes
+
+
+- feat: typed `params` prop for page/layout components ([#13999](https://github.com/sveltejs/kit/pull/13999))
+
+
+### Patch Changes
+
+
+- fix: treeshake internal `storage.get` helper ([#13998](https://github.com/sveltejs/kit/pull/13998))
+
 ## 2.23.0
 ### Minor Changes
 

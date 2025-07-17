@@ -1637,3 +1637,15 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
 	});
 });
+
+test.describe('params prop', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop');
+
+		await clicknav('[href="/params-prop/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
