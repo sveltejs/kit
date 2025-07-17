@@ -105,19 +105,14 @@ export async function handle_remote_call(event, options, manifest, id) {
 		}
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const refreshes = get_remote_info(event).refreshes; // could be set by form actions
+			const refreshes = {
+				...(get_remote_info(event).refreshes || {}), // could be set by form actions
+				...(await apply_client_refreshes(form_client_refreshes ?? []))
+			};
 			return json({
 				type: 'redirect',
 				location: error.location,
-				refreshes:
-					(refreshes || form_client_refreshes?.length) &&
-					stringify(
-						{
-							...(refreshes || {}),
-							...(await apply_client_refreshes(form_client_refreshes ?? []))
-						},
-						transport
-					)
+				refreshes: Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined
 			});
 		}
 

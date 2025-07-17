@@ -503,7 +503,7 @@ export function form(id) {
 						refresh_queries(form_result.refreshes, updates);
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
-						const invalidateAll = !!refreshes;
+						const invalidateAll = !refreshes;
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
