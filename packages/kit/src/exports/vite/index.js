@@ -343,7 +343,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions)
+					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
 				};
 
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
