@@ -6,6 +6,38 @@ import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
 
+/**
+ * Calculate similarity between two CSS content strings
+ * @param {string} content1
+ * @param {string} content2
+ * @returns {number} Similarity score between 0 and 1
+ */
+function calculateCSSContentSimilarity(content1, content2) {
+	if (content1 === content2) return 1;
+
+	// Normalize CSS content for comparison
+	const normalize = (/** @type {string} */ css) => css.replace(/\s+/g, ' ').replace(/;\s*}/g, '}').trim();
+	const norm1 = normalize(content1);
+	const norm2 = normalize(content2);
+
+	if (norm1 === norm2) return 1;
+
+	// Simple length-based similarity
+	const lengthDiff = Math.abs(norm1.length - norm2.length);
+	const maxLength = Math.max(norm1.length, norm2.length);
+	return maxLength > 0 ? 1 - (lengthDiff / maxLength) : 0;
+}
+
+/**
+ * Extract base name from CSS filename
+ * @param {string} filename
+ * @returns {string}
+ */
+function extractCSSBaseName(filename) {
+	const basename = filename.split('/').pop() || '';
+	return basename.split('.')[0] || basename;
+}
+
 
 /**
  * @param {string} out
@@ -29,31 +61,110 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		const client = get_stylesheets(client_chunks);
 		const server = get_stylesheets(Object.values(server_bundle));
 
-		// map server stylesheet name to the client stylesheet name
+
+
+		// Create a separate map for client-to-server file mapping
+		/** @type {Map<string, string>} */
+		const client_to_server_files = new Map();
+
+		// Enhanced mapping strategy with multiple fallback mechanisms
 		for (const [id, client_stylesheet] of client.stylesheets_used) {
 			const server_stylesheet = server.stylesheets_used.get(id);
 			if (!server_stylesheet) {
+				// Try to find CSS files with the same content in server build
+				for (const client_file of client_stylesheet) {
+					const client_content = client.stylesheet_content.get(client_file);
+					if (client_content) {
+						// Find server file with matching content
+						for (const [server_file, server_content] of server.stylesheet_content) {
+							if (client_content === server_content) {
+								client_to_server_files.set(client_file, server_file);
+								break;
+							}
+						}
+					}
+				}
 				continue;
 			}
-			client_stylesheet.forEach((file, i) => {
-				stylesheets_to_inline.set(file, server_stylesheet[i]);
-			}) 
+
+			// Strategy 1: Direct index mapping (works when chunking is consistent)
+			if (client_stylesheet.length === server_stylesheet.length) {
+				client_stylesheet.forEach((client_file, i) => {
+					if (server_stylesheet[i]) {
+						client_to_server_files.set(client_file, server_stylesheet[i]);
+					}
+				});
+			} else {
+				// Strategy 2: Content-based matching (most reliable)
+				for (const client_file of client_stylesheet) {
+					const client_content = client.stylesheet_content.get(client_file);
+					if (!client_content) continue;
+
+					let best_match = null;
+					let best_similarity = 0;
+
+					for (const server_file of server_stylesheet) {
+						const server_content = server.stylesheet_content.get(server_file);
+						if (!server_content) continue;
+
+						// Calculate content similarity
+						const similarity = calculateCSSContentSimilarity(client_content, server_content);
+						if (similarity > best_similarity && similarity > 0.8) {
+							best_similarity = similarity;
+							best_match = server_file;
+						}
+					}
+
+					if (best_match) {
+						client_to_server_files.set(client_file, best_match);
+					} else {
+						// Strategy 3: Filename-based fallback
+						const client_base = extractCSSBaseName(client_file);
+						const matching_server_file = server_stylesheet.find(server_file => {
+							const server_base = extractCSSBaseName(server_file);
+							return client_base === server_base;
+						});
+
+						if (matching_server_file) {
+							client_to_server_files.set(client_file, matching_server_file);
+						} else {
+							console.warn(`[SvelteKit CSS] No matching server stylesheet found for client file: ${client_file} (module: ${id})`);
+						}
+					}
+				}
+			}
 		}
 
-		// filter out stylesheets that should not be inlined
+		// filter out stylesheets that should not be inlined based on size
 		for (const [fileName, content] of client.stylesheet_content) {
 			if (content.length >= kit.inlineStyleThreshold) {
-				stylesheets_to_inline.delete(fileName);
+				client_to_server_files.delete(fileName);
 			}
 		}
 
-		// map server stylesheet source to the client stylesheet name
-		for (const [client_file, server_file] of stylesheets_to_inline) {
-			const source = server.stylesheet_content.get(server_file);
-			if (!source) {
-				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
+		// map client stylesheet name to the server stylesheet source content
+		for (const [client_file, server_file] of client_to_server_files) {
+			const client_content = client.stylesheet_content.get(client_file);
+			const server_content = server.stylesheet_content.get(server_file);
+
+			if (!server_content) {
+				console.warn(`[SvelteKit CSS] Server stylesheet source not found for: ${server_file}, skipping ${client_file}`);
+				continue;
 			}
-			stylesheets_to_inline.set(client_file, source);
+
+			// Verify content similarity to catch mapping errors
+			if (client_content && server_content) {
+				// Simple similarity check: compare normalized lengths
+				const client_normalized = client_content.replace(/\s+/g, '').length;
+				const server_normalized = server_content.replace(/\s+/g, '').length;
+				const length_diff = Math.abs(client_normalized - server_normalized) / Math.max(client_normalized, server_normalized);
+
+				if (length_diff > 0.5) {
+					console.warn(`[SvelteKit CSS] Content mismatch detected: ${client_file} -> ${server_file} (${Math.round(length_diff * 100)}% difference), using server content`);
+				}
+			}
+
+			stylesheets_to_inline.set(client_file, server_content);
 		}
 	}
 
@@ -123,7 +234,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			// eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
-	
+
 			/** @type {import('types').AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
@@ -196,7 +307,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 }
 
 /**
- * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks 
+ * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks
  */
 function get_stylesheets(chunks) {
 	/**
