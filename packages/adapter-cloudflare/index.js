@@ -1,13 +1,17 @@
+import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unstable_readConfig } from 'wrangler';
 import { is_building_for_cloudflare_pages } from './utils.js';
 
+const name = '@sveltejs/adapter-cloudflare';
+const [kit_major, kit_minor] = VERSION.split('.');
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name,
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -128,6 +132,18 @@ export default function (options = {}) {
 				);
 			}
 		},
+		supports: {
+			read: ({ route }) => {
+				// TODO bump peer dep in next adapter major to simplify this
+				if (kit_major === '2' && kit_minor < '25') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
+					);
+				}
+
+				return true;
+			}
+		}
 		// emulate() {
 		// 	// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 		// 	// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
