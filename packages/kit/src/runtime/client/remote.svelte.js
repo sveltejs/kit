@@ -187,7 +187,10 @@ class Resource {
 		return this.#error;
 	}
 
-	get pending() {
+	/**
+	 * Returns true if the resource is loading or reloading.
+	 */
+	get loading() {
 		return this.#loading;
 	}
 
@@ -212,13 +215,6 @@ class Resource {
 		} else {
 			return 'loading';
 		}
-	}
-
-	/**
-	 * Returns true if the resource is loading or reloading.
-	 */
-	get isLoading() {
-		return this.status === 'loading' || this.status === 'reloading';
 	}
 
 	/**

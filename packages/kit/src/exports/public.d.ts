@@ -1638,12 +1638,10 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
  * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
  */
 export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-	/** The current value of the query. Undefined as long as there's no value yet */
-	get current(): Awaited<Output> | undefined;
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
-	get pending(): boolean;
+	get loading(): boolean;
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *
@@ -1713,6 +1711,22 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 		_key: string;
 		release: () => void;
 	};
-};
+} & (
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): undefined;
+				status: 'loading';
+		  }
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): Awaited<Output>;
+				status: 'success' | 'reloading';
+		  }
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): Awaited<Output> | undefined;
+				status: 'error';
+		  }
+	);
 
 export * from './index.js';

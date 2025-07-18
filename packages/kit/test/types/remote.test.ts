@@ -165,3 +165,33 @@ async function form_tests() {
 	});
 }
 form_tests();
+
+function status_tests() {
+	const q = query(() => 'Hello world');
+	const result = q();
+	if (result.status === 'loading') {
+		result.current === undefined;
+		// @ts-expect-error
+		result.current.length;
+		// @ts-expect-error
+		result.current?.length;
+	} else if (result.status === 'reloading') {
+		result.current === 'a';
+		result.current.length;
+		// @ts-expect-error
+		result.current === true;
+	} else if (result.status === 'error') {
+		result.current === 'a';
+		result.current?.length;
+		// @ts-expect-error
+		result.current.length;
+		// @ts-expect-error
+		result.current === true;
+	} else if (result.status === 'success') {
+		result.current === 'a';
+		result.current.length;
+		// @ts-expect-error
+		result.current === true;
+	}
+}
+status_tests();
