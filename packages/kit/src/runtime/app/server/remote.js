@@ -138,7 +138,7 @@ export function query(validate_or_fn, maybe_fn) {
 		};
 
 		promise.override = () => {
-			throw new Error('Cannot call override on the server');
+			throw new Error(`Cannot call '${wrapper.__.name}.override()' on the server`);
 		};
 
 		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
@@ -305,31 +305,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		})();
 
 		promise.refresh = async () => {
-			if (!options?.dynamic) {
-				console.warn(
-					'Calling refresh on a prerendered function that is not dynamic will not have any effect'
-				);
-			}
-
-			const event = getRequestEvent();
-			const info = get_remote_info(event);
-			const refreshes = info.refreshes;
-			if (!refreshes) {
-				throw new Error(
-					`Cannot call refresh on remote prerender function '${wrapper.__.name}' because it is not executed in the context of a command/form remote function`
-				);
-			}
-
-			refreshes[
-				create_remote_cache_key(
-					/** @type {RemoteInfo} */ (wrapper.__).id,
-					stringify_remote_arg(arg, info.transport)
-				)
-			] = await /** @type {Promise<any>} */ (promise);
+			throw new Error(
+				`Cannot call  '${wrapper.__.name}.refresh()'. Remote prerender functions are immutable and cannot be refreshed.`
+			);
 		};
 
 		promise.override = () => {
-			throw new Error('Cannot call override on the server');
+			throw new Error(`Cannot call '${wrapper.__.name}.override()' on the server`);
 		};
 
 		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
@@ -597,7 +579,7 @@ export function command(validate_or_fn, maybe_fn) {
 		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
 		// @ts-expect-error
 		promise.updates = () => {
-			throw new Error('Cannot call `command(...).updates(...)` on the server');
+			throw new Error(`Cannot call '${wrapper.__.name}(...).updates(...)' on the server`);
 		};
 		return /** @type {Promise<Awaited<Output>> & { updates: (...arsg: any[]) => any}} */ (promise);
 	};
