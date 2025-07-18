@@ -192,6 +192,36 @@ class Resource {
 	}
 
 	/**
+	 * Returns the status of the resource:
+	 * - 'loading': no value yet
+	 * - 'reloading': value, currently refetching
+	 * - 'success': got a value after a successful fetch
+	 * - 'error': got an error after a fetch failed
+	 */
+	get status() {
+		if (this.#loading) {
+			if (!this.#inited) {
+				return 'loading';
+			} else {
+				return 'reloading';
+			}
+		} else if (this.#error !== undefined) {
+			return 'error';
+		} else if (this.#inited) {
+			return 'success';
+		} else {
+			return 'loading';
+		}
+	}
+
+	/**
+	 * Returns true if the resource is loading or reloading.
+	 */
+	get isLoading() {
+		return this.status === 'loading' || this.status === 'reloading';
+	}
+
+	/**
 	 * @param {(old: T) => T} fn
 	 * @returns {() => void}
 	 */
