@@ -14,5 +14,5 @@
 		}
 	},
 	"include": ["index.js", "src/**/*.js", "tests/**/*.js", "internal.d.ts", "utils.js"],
-	"exclude": ["tests/smoke.spec_disabled.js"]
+	"exclude": ["tests/smoke.spec_disabled.js", "tests/hono.test.js", "tests/apps/**/*.js"]
 }
