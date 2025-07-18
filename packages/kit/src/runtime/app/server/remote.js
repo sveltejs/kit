@@ -101,23 +101,20 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteQuery<Input, Output>} */
+	/** @type {RemoteQuery<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<any, any>>>} */
 		const promise = (async () => {
 			if (prerendering) {
 				throw new Error(
-					'Cannot call query() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+					`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 				);
 			}
 
 			// TODO don't do the additional work when we're being called from the client?
 			const event = getRequestEvent();
-			const result = await get_response(
-				/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
-				arg,
-				event,
-				() => run_remote_function(event, false, arg, validate, fn)
+			const result = await get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
+				run_remote_function(event, false, arg, validate, fn)
 			);
 			return result;
 		})();
@@ -128,13 +125,13 @@ export function query(validate_or_fn, maybe_fn) {
 			const refreshes = info.refreshes;
 			if (!refreshes) {
 				throw new Error(
-					'Cannot call refresh on a query that is not executed in the context of a command/form remote function'
+					`Cannot call refresh on query '${wrapper.__.name}' because it is not executed in the context of a command/form remote function`
 				);
 			}
 
 			refreshes[
 				create_remote_cache_key(
-					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+					/** @type {RemoteInfo} */ (wrapper.__).id,
 					stringify_remote_arg(arg, info.transport)
 				)
 			] = await /** @type {Promise<any>} */ (promise);
@@ -255,14 +252,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteQuery<Input, Output>} */
+	/** @type {RemoteQuery<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
 		const promise = (async () => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
 			const stringified_arg = stringify_remote_arg(arg, info.transport);
-			const id = /** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id;
+			const id = wrapper.__.id;
 			const url = `${base}/${app_dir}/remote/${id}${stringified_arg ? `/${stringified_arg}` : ''}`;
 
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
@@ -319,13 +316,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const refreshes = info.refreshes;
 			if (!refreshes) {
 				throw new Error(
-					'Cannot call refresh on a prerender function that is not executed in the context of a command/form remote function'
+					`Cannot call refresh on remote prerender function '${wrapper.__.name}' because it is not executed in the context of a command/form remote function`
 				);
 			}
 
 			refreshes[
 				create_remote_cache_key(
-					/** @type {RemoteInfo} */ (/** @type {any} */ (wrapper).__).id,
+					/** @type {RemoteInfo} */ (wrapper.__).id,
 					stringify_remote_arg(arg, info.transport)
 				)
 			] = await /** @type {Promise<any>} */ (promise);
@@ -581,7 +578,7 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
-				'Cannot call command() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+				`Cannot call command '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 			);
 		}
 
@@ -589,7 +586,7 @@ export function command(validate_or_fn, maybe_fn) {
 
 		if (!event.isRemoteRequest) {
 			throw new Error(
-				'Cannot call command() from $app/server during server side rendering. The only callable remote functions are query() and prerender().'
+				`Cannot call command '${wrapper.__.name}' during server side rendering. The only callable remote function types during server side rendering are 'query' and 'prerender'.`
 			);
 		}
 
@@ -605,8 +602,10 @@ export function command(validate_or_fn, maybe_fn) {
 		return /** @type {Promise<Awaited<Output>> & { updates: (...arsg: any[]) => any}} */ (promise);
 	};
 
-	/** @type {any} */ (wrapper).__ = /** @type {RemoteInfo} */ ({
-		type: 'command'
+	Object.defineProperty(wrapper, '__', {
+		value: /** @type {RemoteInfo} */ ({
+			type: 'command'
+		})
 	});
 
 	return wrapper;
@@ -654,7 +653,7 @@ export function form(fn) {
 		const wrapper = async (form_data) => {
 			if (prerendering) {
 				throw new Error(
-					'Cannot call form() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
+					`Cannot call remote form function '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 				);
 			}
 

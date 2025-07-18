@@ -43,8 +43,12 @@ export async function treeshake_prerendered_remotes(out) {
 					for (const [key, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
 						if (fn.__?.type === 'form') {
 							fn.__.set_action('${remote.slice(0, -3)}/' + key);
+							fn.__.name = key;
 						} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
 							fn.__.id = '${remote.slice(0, -3)}/' + key;
+							fn.__.name = key;
+						} else if (fn.__?.type === 'command') {
+							fn.__.name = key;
 						}
 					}
 					export {${Object.keys(remote_module).join(',')}};
@@ -128,9 +132,13 @@ export function enhance_remotes(hashed_id, remote_file_path) {
 			const fn = $$_self_$$[key];
 			if (fn.__?.type === 'form') {
 				fn.__.set_action('${hashed_id}/' + key);
+				fn.__.name = key;
 			} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
 				fn.__.id = '${hashed_id}/' + key;
-			} else if (fn.__?.type !== 'command') {
+				fn.__.name = key;
+			} else if (fn.__?.type === 'command') {
+				fn.__.name = key;
+			} else {
 				throw new Error('Invalid export from remote file ${posixify(remote_file_path)}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
 			}
 		}

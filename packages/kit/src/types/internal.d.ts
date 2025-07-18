@@ -546,21 +546,25 @@ export type RemoteInfo =
 	| {
 			type: 'query' | 'command';
 			id: string;
+			name: string;
 	  }
 	| {
 			type: 'form';
 			id: string;
+			name: string;
 			set_action: (action: string) => void;
 	  }
 	| {
 			type: 'prerender';
 			id: string;
+			name: string;
 			dynamic?: boolean;
 			entries?: RemotePrerenderEntryGenerator;
 	  }
 	| {
 			type: 'cache';
 			id: string;
+			name: string;
 			config: { expiration: number | false; [adapterSpecific: string]: any };
 	  };
 
