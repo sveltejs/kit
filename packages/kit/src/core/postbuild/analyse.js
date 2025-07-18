@@ -170,7 +170,7 @@ async function analyse({
 		const modules = await load();
 		const exports = new Map();
 		for (const [name, value] of Object.entries(modules)) {
-			const type = /** @type {import('types').RemoteInfo} */ (value.__)?.type;
+			const type = /** @type {import('types').RemoteInfo} */ (value?.__)?.type;
 			if (!type) continue;
 			exports.set(type, (exports.get(type) ?? []).concat(name));
 		}

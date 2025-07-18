@@ -4,6 +4,8 @@ import { pathToFileURL } from 'node:url';
 import { mkdirp, posixify, rimraf } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
+import { s } from '../../../utils/misc.js';
+import { hash } from '../../../utils/hash.js';
 
 /**
  * Loads the remote modules, checks which of those have prerendered remote functions that should be treeshaken,
@@ -20,7 +22,7 @@ export async function treeshake_prerendered_remotes(out) {
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
 
 	for (const remote of fs.readdirSync(`${out}/server/remote`)) {
-		if (remote.startsWith('__sibling__.')) continue; // skip sibling files
+		if (remote.startsWith('__sibling__.') || remote === '__sveltekit__remote.js') continue; // skip sibling files
 		const remote_file = posixify(path.join(`${out}/server/remote`, remote));
 		const remote_module = await import(pathToFileURL(remote_file).href);
 		const prerendered_exports = Object.entries(remote_module)
@@ -66,6 +68,7 @@ export async function treeshake_prerendered_remotes(out) {
 								id !== remote_entry &&
 								id !== `../${path.basename(remote_entry)}` &&
 								!id.endsWith(`/__sibling__.${remote}`) &&
+								!id.endsWith(`/__sveltekit__remote.js`) &&
 								id !== remote_file
 							);
 						},
@@ -85,63 +88,89 @@ export async function treeshake_prerendered_remotes(out) {
 	}
 }
 
+export const remote_code = dedent`
+	export default function enhance_remote_functions(exports, hashed_id, original_filename) {
+		for (const key in exports) {
+			if (key === 'default') {
+				throw new Error(
+					'Cannot use a default export in a remote file. Please use named exports instead. (in ' + original_filename + ')'
+				);
+			}
+			const fn = exports[key];
+			if (fn?.__?.type === 'form') {
+				fn.__.set_action(hashed_id + '/' + key);
+				fn.__.name = key;
+			} else if (fn?.__?.type === 'query' || fn?.__?.type === 'prerender' || fn?.__?.type === 'cache') {
+				fn.__.id = hashed_id + '/' + key;
+				fn.__.name = key;
+			} else if (fn?.__?.type === 'command') {
+				fn.__.name = key;
+			} else {
+				throw new Error('Invalid export from remote file ' + original_filename + ': ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
+			}
+		}
+	}
+`;
+
 /**
  * Moves the remote files to a sibling file and rewrites the original remote file to import from that sibling file,
  * enhancing the remote functions with their hashed ID.
  * This is not done through a self-import like during DEV because we want to treeshake prerendered remote functions
  * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
  * @param {string} out
+ * @param {(path: string) => string} normalize_id
+ * @param {import('types').ManifestData} manifest_data
  */
-export function build_remotes(out) {
+export function build_remotes(out, normalize_id, manifest_data) {
 	if (!exists(out)) return
 
 	const remote_dir = path.join(out, 'server', 'remote');
+
+	// Create a mapping from hashed ID to original filename
+	const hash_to_original = new Map();
+	for (const filename of manifest_data.remotes) {
+		const hashed_id = hash(posixify(filename));
+		hash_to_original.set(hashed_id, filename);
+	}
 
 	for (const remote_file_name of fs.readdirSync(remote_dir)) {
 		const remote_file_path = path.join(remote_dir, remote_file_name);
 		const sibling_file_name = `__sibling__.${remote_file_name}`;
 		const sibling_file_path = path.join(remote_dir, sibling_file_name);
 		const hashed_id = remote_file_name.slice(0, -3); // remove .js extension
+		const original_filename = normalize_id(hash_to_original.get(hashed_id) || remote_file_name);
 		const file_content = fs.readFileSync(remote_file_path, 'utf-8');
 
 		fs.writeFileSync(sibling_file_path, file_content);
 		fs.writeFileSync(
 			remote_file_path,
+			// We can't use __sveltekit/remotes here because it runs after the build where aliases would be resolved
 			dedent`
 				import * as $$_self_$$ from './${sibling_file_name}';
-				${enhance_remotes(hashed_id, remote_file_path)}
+				${enhance_remotes(hashed_id, './__sveltekit__remote.js', original_filename)}
 				export * from './${sibling_file_name}';
 			`
 		);
 	}
+	
+	fs.writeFileSync(
+		path.join(remote_dir, '__sveltekit__remote.js'),
+		remote_code,
+		'utf-8'
+	);
 }
 
 /**
  * Generate the code that enhances the remote functions with their hashed ID.
  * @param {string} hashed_id 
- * @param {string} remote_file_path 
+ * @param {string} import_path - where to import the helper function from
+ * @param {string} original_filename - The original filename for better error messages
  */
-export function enhance_remotes(hashed_id, remote_file_path) {
+export function enhance_remotes(hashed_id, import_path, original_filename) {
 	return dedent`
-		for (const key in $$_self_$$) {
-			if (key === 'default') {
-				throw new Error(
-					'Cannot use a default export in a remote file. Please use named exports instead. (in ${posixify(remote_file_path)})'
-				);
-			}
-			const fn = $$_self_$$[key];
-			if (fn.__?.type === 'form') {
-				fn.__.set_action('${hashed_id}/' + key);
-				fn.__.name = key;
-			} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
-				fn.__.id = '${hashed_id}/' + key;
-				fn.__.name = key;
-			} else if (fn.__?.type === 'command') {
-				fn.__.name = key;
-			} else {
-				throw new Error('Invalid export from remote file ${posixify(remote_file_path)}: ' + key + ' is not a remote function. Can only export remote functions from a .remote file');
-			}
-		}
+		import $$_enhance_remote_functions_$$ from '${import_path}';
+		
+		$$_enhance_remote_functions_$$($$_self_$$, ${s(hashed_id)}, ${s(original_filename)});
 	`
 }
 

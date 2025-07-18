@@ -32,13 +32,15 @@ import {
 	service_worker,
 	sveltekit_environment,
 	sveltekit_paths,
-	sveltekit_server
+	sveltekit_server,
+	sveltekit_remotes
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import {
 	build_remotes,
 	enhance_remotes,
+	remote_code,
 	treeshake_prerendered_remotes
 } from './build/build_remote.js';
 
@@ -221,6 +223,9 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
+	const normalized_cwd = vite.normalizePath(cwd);
+	const normalized_lib = vite.normalizePath(kit.files.lib);
+
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
 	 * in which chunks, so that we can later determine which routes use which features
@@ -391,8 +396,6 @@ async function kit({ svelte_config }) {
 					parsed_importer.name === parsed_service_worker.name;
 
 				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
-					const normalized_cwd = vite.normalizePath(cwd);
-					const normalized_lib = vite.normalizePath(kit.files.lib);
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
@@ -426,8 +429,6 @@ async function kit({ svelte_config }) {
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
-				const normalized_cwd = vite.normalizePath(cwd);
-				const normalized_lib = vite.normalizePath(kit.files.lib);
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
@@ -560,6 +561,10 @@ Tips:
 						}
 					`;
 				}
+
+				case sveltekit_remotes: {
+					return remote_code;
+				}
 			}
 		}
 	};
@@ -621,7 +626,7 @@ Tips:
 							dedent`
 						// Auto-generated part, do not edit
 						import * as $$_self_$$ from './${path.basename(id)}';
-						${enhance_remotes(hashed_id, id)}
+						${enhance_remotes(hashed_id, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
 					`;
 			}
 
@@ -1095,7 +1100,7 @@ Tips:
 				);
 
 				// ...make sure remote exports have their IDs assigned...
-				build_remotes(out);
+				build_remotes(out, (id) => normalize_id(id, normalized_lib, normalized_cwd), manifest_data);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
