@@ -16,3 +16,6 @@ catalog:
   'cross-env': '^7.0.3'
   'vitest': '^3.2.3'
   'vite': '^6.3.5'
+
+overrides:
+  '@types/node': '18.x'

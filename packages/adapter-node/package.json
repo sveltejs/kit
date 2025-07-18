@@ -42,10 +42,13 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
+		"@hono/node-server": "^1.16.0",
 		"@polka/url": "^1.0.0-next.28",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "^18.19.119",
+		"hono": "^4.8.5",
+		"hono-absolute-serve-static": "^1.0.0",
 		"polka": "^1.0.0-next.28",
 		"sirv": "^3.0.0",
 		"typescript": "^5.3.3",
