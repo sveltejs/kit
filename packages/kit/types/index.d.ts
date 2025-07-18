@@ -1522,11 +1522,15 @@ declare module '@sveltejs/kit' {
 	 *   import { getTodos, createTodo } from './todos.remote.js';
 	 * </script>
 	 *
-	 * <form {...myFormAction.enhance(async ({ formData, submit }) => {
-	 *   // updates and withOverride allow for optimistic UI updates
-	 *   await submit().updates(getTodos.withOverride((todos) => [...todos, { text: formData.get('text') }]));
+	 * <form {...myFormAction.enhance(async ({ data, submit }) => {
+	 *   // `data` is an instance of FormData (https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+	 *   const text = data.get('text');
+	 *   const todo = { text, done: false };
+	 *
+	 *   // `updates` and `withOverride` enable optimistic UI updates
+	 *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
 	 * })}>
-	 *   <input type="text" name="name" />
+	 *   <input name="text" />
 	 *   <!-- ... -->
 	 * </form>
 	 *
@@ -1616,12 +1620,10 @@ declare module '@sveltejs/kit' {
 	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
 	 */
 	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-		/** The current value of the query. Undefined as long as there's no value yet */
-		get current(): Awaited<Output> | undefined;
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 		get error(): any;
 		/** `true` before the first result is available and during refreshes */
-		get pending(): boolean;
+		get loading(): boolean;
 		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
@@ -1691,7 +1693,23 @@ declare module '@sveltejs/kit' {
 			_key: string;
 			release: () => void;
 		};
-	};
+	} & (
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): undefined;
+					status: 'loading';
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<Output>;
+					status: 'success' | 'reloading';
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<Output> | undefined;
+					status: 'error';
+			  }
+		);
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
