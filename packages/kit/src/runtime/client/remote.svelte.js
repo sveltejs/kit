@@ -243,6 +243,17 @@ class Resource {
 	refresh() {
 		return (this.#promise = this.#fn());
 	}
+
+	/**
+	 * @param {T} value
+	 */
+	set(value) {
+		this.#inited = true;
+		this.#loading = false;
+		this.#error = undefined;
+		this.#raw = value;
+		this.#promise = Promise.resolve();
+	}
 }
 
 /**
@@ -280,9 +291,6 @@ class Query extends Resource {
  * @returns {RemoteQuery<any, any>}
  */
 function remote_request(id, prerender) {
-	/** @type {unknown} */
-	let cached_value = undefined;
-
 	/** @type {RemoteQuery<any, any>} */
 	const fn = (/** @type {any} */ arg) => {
 		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
@@ -317,12 +325,6 @@ function remote_request(id, prerender) {
 					if (result) {
 						return result;
 					}
-				}
-
-				if (cached_value !== undefined) {
-					const v = cached_value;
-					cached_value = undefined;
-					return v;
 				}
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
@@ -390,11 +392,7 @@ function remote_request(id, prerender) {
 				cache_key,
 				(entry = {
 					count: tracking ? 1 : 0,
-					resource,
-					update: (v) => {
-						cached_value = v;
-						resource.refresh();
-					}
+					resource
 				})
 			);
 
@@ -848,7 +846,7 @@ function refresh_queries(stringified_refreshes, updates = []) {
 			}
 			// Update the query with the new value
 			const entry = query_map.get(key);
-			entry?.update(value);
+			entry?.resource.set(value);
 		}
 	} else {
 		void invalidateAll();

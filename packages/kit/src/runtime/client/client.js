@@ -262,7 +262,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, {count: number, resource: any, update: (v: any) => void}>}
+ * @type {Map<string, {count: number, resource: any}>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
