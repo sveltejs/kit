@@ -97,7 +97,7 @@ export interface Builder {
 	/** Create `dir` and any required parent directories. */
 	mkdirp: (dir: string) => void;
 
-	/** The fully resolved `svelte.config.js`. */
+	/** The fully resolved Svelte config. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
@@ -1302,7 +1302,7 @@ export interface ServerInitOptions {
 	/** A map of environment variables. */
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
-	read?: (file: string) => ReadableStream;
+	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
 export interface SSRManifest {

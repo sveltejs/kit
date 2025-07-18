@@ -272,9 +272,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		}
 
 		if (route.leaf.server) {
-			exports.push('export type PageProps = { data: PageData; form: ActionData }');
+			exports.push(
+				'export type PageProps = { params: RouteParams; data: PageData; form: ActionData }'
+			);
 		} else {
-			exports.push('export type PageProps = { data: PageData }');
+			exports.push('export type PageProps = { params: RouteParams; data: PageData }');
 		}
 	}
 
@@ -341,7 +343,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
 
 		exports.push(
-			'export type LayoutProps = { data: LayoutData; children: import("svelte").Snippet }'
+			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
 		);
 	}
 
