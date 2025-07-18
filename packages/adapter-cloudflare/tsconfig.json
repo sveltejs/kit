@@ -17,6 +17,7 @@
 	},
 	"include": [
 		"index.js",
+		"worker.js",
 		"utils.js",
 		"utils.spec.js",
 		"test/utils.js",

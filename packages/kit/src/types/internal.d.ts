@@ -521,3 +521,9 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 
 export * from '../exports/index.js';
 export * from './private.js';
+
+export interface DevEnvironment {
+	manifest_data: ManifestData;
+	env: Record<string, string>;
+	remote_address: string | undefined;
+}

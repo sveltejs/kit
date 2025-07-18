@@ -23,6 +23,9 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"import": "./worker.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -30,6 +33,7 @@
 		"files",
 		"index.js",
 		"utils.js",
+		"worker.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
@@ -50,7 +54,7 @@
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@types/node": "^18.19.119",
+		"@types/node": "catalog:",
 		"esbuild": "^0.25.4",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
