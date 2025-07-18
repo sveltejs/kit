@@ -16,6 +16,7 @@ import {
 	query_map
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
+import { tick } from 'svelte';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = `sveltekit:${version}`;
@@ -39,16 +40,6 @@ void (async () => {
 		}
 	}
 })();
-
-/**
- * Waits for three microtasks by default which is the necessary amount of ticks to ensure that
- * it runs after Svelte's reacticity system has processed changes.
- * In prod two would be enough but in dev we need three because of the wrapping "check reactivity loss" function.
- * @returns {Promise<void>}
- */
-function wait(times = 3) {
-	return Promise.resolve().then(() => (times > 0 ? wait(times - 1) : undefined));
-}
 
 /**
  * @template T
@@ -91,7 +82,7 @@ class Resource {
 				await p;
 				// we need this to avoid await_reactivity_loss warning and be in sync with other async reactivity
 				// TODO still true?
-				await wait();
+				await tick();
 				resolve?.(/** @type {T} */ (this.#current));
 			} catch (error) {
 				reject?.(error);
@@ -301,7 +292,7 @@ function remote_request(id, prerender) {
 					const entry = query_map.get(cache_key);
 					if (entry) {
 						entry.count--;
-						void wait().then(() => {
+						void tick().then(() => {
 							if (!entry.count && entry === query_map.get(cache_key)) {
 								query_map.delete(cache_key);
 							}
@@ -394,7 +385,7 @@ function remote_request(id, prerender) {
 
 			resource
 				.then(() => {
-					void wait().then(() => {
+					void tick().then(() => {
 						if (
 							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
 							entry === query_map.get(cache_key)
@@ -601,8 +592,7 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
-					// TODO find out why we need 9 and not just 3
-					void wait(9).then(() => {
+					void tick().then(() => {
 						if (entry) {
 							entry.count--;
 							if (entry.count === 0) {
@@ -781,7 +771,7 @@ export function form(id) {
 						$effect.pre(() => {
 							return () => {
 								entry.count--;
-								void wait().then(() => {
+								void tick().then(() => {
 									if (entry.count === 0) {
 										instance_cache.delete(key);
 									}
