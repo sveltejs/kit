@@ -49,7 +49,7 @@ export const handleError = ({ event, error: e, status, message }) => {
 };
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ event, result }) => {
+export const handleValidationError = ({ result }) => {
 	return { message: result.issues[0].message };
 };
 

@@ -457,7 +457,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 	if (options.invalidateAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
-		svelte
+		void svelte
 			.tick()
 			.then(svelte.tick)
 			.then(() => {

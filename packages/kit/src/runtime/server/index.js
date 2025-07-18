@@ -6,7 +6,6 @@ import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
-import { error } from '@sveltejs/kit';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
