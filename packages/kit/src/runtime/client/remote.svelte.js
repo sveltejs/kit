@@ -2,6 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
+import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -15,6 +16,29 @@ import {
 	query_map
 } from './client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
+
+// Initialize Cache API for prerender functions
+const CACHE_NAME = `sveltekit:${version}`;
+/** @type {Cache | undefined} */
+let prerender_cache;
+
+void (async () => {
+	if (!DEV && typeof caches !== 'undefined') {
+		try {
+			prerender_cache = await caches.open(CACHE_NAME);
+
+			// Clean up old cache versions
+			const cache_names = await caches.keys();
+			for (const cache_name of cache_names) {
+				if (cache_name.startsWith('sveltekit:') && cache_name !== CACHE_NAME) {
+					await caches.delete(cache_name);
+				}
+			}
+		} catch (error) {
+			console.warn('Failed to initialize SvelteKit cache:', error);
+		}
+	}
+})();
 
 /**
  * Waits for three microtasks by default which is the necessary amount of ticks to ensure that
@@ -272,6 +296,22 @@ function remote_request(id, prerender) {
 				}
 
 				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
+
+				// For prerender requests, check the Cache API first
+				if (prerender && prerender_cache) {
+					try {
+						const cached_response = await prerender_cache.match(url);
+						if (cached_response) {
+							const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
+								await cached_response.json()
+							);
+							return devalue.parse(cached_result.result, app.decoders);
+						}
+					} catch {
+						// Nothing we can do here
+					}
+				}
+
 				const response = await fetch(url);
 				if (!response.ok) {
 					throw new HttpError(500, 'Failed to execute remote function');
@@ -290,6 +330,23 @@ function remote_request(id, prerender) {
 				} else if (result.type === 'error') {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
+					// For successful prerender requests, save to cache
+					if (prerender && prerender_cache) {
+						try {
+							await prerender_cache.put(
+								url,
+								// We need to create a new response because the original response is already consumed
+								new Response(JSON.stringify(result), {
+									headers: {
+										'Content-Type': 'application/json'
+									}
+								})
+							);
+						} catch {
+							// Nothing we can do here
+						}
+					}
+
 					return devalue.parse(result.result, app.decoders);
 				}
 			});
