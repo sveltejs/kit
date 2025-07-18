@@ -356,7 +356,9 @@ async function kit({ svelte_config }) {
 					undefined;
 
 				// vite-plugin-svelte is setting this but it doesn't work with vite-plugin-cloudflare
-				/** @type {NonNullable<import('vite').UserConfig['resolve']>} */ (new_config.resolve).external = undefined;
+				/** @type {NonNullable<import('vite').UserConfig['resolve']>} */ (
+					new_config.resolve
+				).external = undefined;
 			}
 
 			warn_overridden_config(config, new_config);
@@ -1209,9 +1211,19 @@ Tips:
 			}
 
 			// TODO: Cloudflare Vite plugin doesn't allow `ssr.external` but VPS and Kit are using it
-			/** @type {import('vite').SSROptions} */ (config.ssr).external = undefined;
+			/** @type {import('vite').SSROptions} */ (new_config.ssr).external = undefined;
 			// TODO: see https://github.com/cloudflare/workers-sdk/issues/9036#issuecomment-2825271144
-			/** @type {import('vite').SSROptions} */ (config.ssr).noExternal = undefined;
+			/** @type {import('vite').SSROptions} */ (new_config.ssr).noExternal = undefined;
+
+			// TODO: move this to Cloudflare adapter?
+			// Ensure vite-plugin-cloudflare ignores virtual modules when optimising dependencies
+			new_config.environments = {
+				ssr: {
+					optimizeDeps: {
+						exclude: [...(config.environments?.ssr.optimizeDeps?.exclude ?? []), '__sveltekit/*']
+					}
+				}
+			};
 
 			warn_overridden_config(config, new_config);
 
