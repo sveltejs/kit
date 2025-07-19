@@ -80,8 +80,7 @@ class Resource {
 		return async (resolve, reject) => {
 			try {
 				await p;
-				// we need this to avoid await_reactivity_loss warning and be in sync with other async reactivity
-				// TODO still true?
+				// svelte-ignore await_reactivity_loss
 				await tick();
 				resolve?.(/** @type {T} */ (this.#current));
 			} catch (error) {
