@@ -1630,6 +1630,15 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 	};
 };
 
+export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+	updates: (
+		...queries: Array<
+			| ReturnType<RemoteQuery<any, any>>
+			| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+		>
+	) => Promise<Awaited<Output>>;
+};
+
 /**
  * The return value of a remote `query` or `prerender` function.
  * Call it with the input arguments to retrieve the value.

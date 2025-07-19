@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
 /** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -464,7 +464,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
  * @template Output
  * @overload
  * @param {() => Output} fn
- * @returns {() => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ * @returns {RemoteCommand<void, Output>}
  */
 /**
  * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
@@ -500,7 +500,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
  * @overload
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
- * @returns {(arg: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ * @returns {RemoteCommand<Input, Output>}
  */
 /**
  * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
@@ -536,14 +536,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
  * @overload
  * @param {Schema} validate
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @returns {(arg: StandardSchemaV1.InferOutput<Schema>) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ * @returns {RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
  * @param {(arg?: Input) => Output} [maybe_fn]
- * @returns {(arg?: Input) => Promise<Awaited<Output>> & { updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>>) => Promise<Awaited<Output>> }}
+ * @returns {RemoteCommand<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {
@@ -554,9 +554,7 @@ export function command(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/**
-	 * @param {Input} [arg]
-	 */
+	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -581,7 +579,7 @@ export function command(validate_or_fn, maybe_fn) {
 		promise.updates = () => {
 			throw new Error(`Cannot call '${wrapper.__.name}(...).updates(...)' on the server`);
 		};
-		return /** @type {Promise<Awaited<Output>> & { updates: (...arsg: any[]) => any}} */ (promise);
+		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);
 	};
 
 	Object.defineProperty(wrapper, '__', {

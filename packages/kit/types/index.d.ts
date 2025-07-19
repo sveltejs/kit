@@ -1612,6 +1612,15 @@ declare module '@sveltejs/kit' {
 		};
 	};
 
+	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+		updates: (
+			...queries: Array<
+				| ReturnType<RemoteQuery<any, any>>
+				| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+			>
+		) => Promise<Awaited<Output>>;
+	};
+
 	/**
 	 * The return value of a remote `query` or `prerender` function.
 	 * Call it with the input arguments to retrieve the value.
@@ -2638,7 +2647,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteQuery, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQuery, RemoteCommand, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2824,9 +2833,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Output>(fn: () => Output): () => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2857,9 +2864,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): (arg: Input) => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2890,9 +2895,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): (arg: StandardSchemaV1.InferOutput<Schema>) => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a form action. The passed function will be called when the form is submitted.
 	 * Returns an object that can be spread onto a form element to connect it to the function.
