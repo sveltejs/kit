@@ -304,7 +304,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			return result;
 		})();
 
-		promise.refresh = async () => {
+		promise.refresh = () => {
 			throw new Error(
 				`Cannot call  '${wrapper.__.name}.refresh()'. Remote prerender functions are immutable and cannot be refreshed.`
 			);
