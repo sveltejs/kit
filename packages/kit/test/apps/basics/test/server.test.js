@@ -194,13 +194,12 @@ test.describe('CSRF', () => {
 		}
 	});
 
-	test('Handles null origin correctly', async ({ baseURL }) => {
+	test('Handles undefined origin correctly', async ({ baseURL }) => {
 		// Some requests may have null origin (e.g., from certain mobile apps)
 		const res = await fetch(`${baseURL}/csrf`, {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/x-www-form-urlencoded',
-				origin: 'null'
 			}
 		});
 		expect(res.status).toBe(403);
