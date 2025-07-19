@@ -308,9 +308,15 @@ function validate_config(config_file = undefined) {
 			);
 		}
 
-		if (!wrangler_config.assets?.binding) {
+		if (!wrangler_config.assets?.binding && wrangler_config.main) {
 			throw new Error(
 				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+			);
+		}
+
+		if (wrangler_config.assets?.binding && !wrangler_config.main) {
+			throw new Error(
+				`You must remove the \`assets.binding\` key in ${wrangler_config.configPath} for an assets-only Worker, which has no \`main\` key.`
 			);
 		}
 	}
