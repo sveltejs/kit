@@ -84,6 +84,128 @@ test.describe('CSRF', () => {
 			}
 		}
 	});
+
+	test('Allows requests from same origin', async ({ baseURL }) => {
+		const url = new URL(baseURL);
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: url.origin
+			}
+		});
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe('ok');
+	});
+
+	test('Allows requests from allowed origins', async ({ baseURL }) => {
+		// Test with trusted.example.com which is in allowedOrigins
+		const res1 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://trusted.example.com'
+			}
+		});
+		expect(res1.status).toBe(200);
+		expect(await res1.text()).toBe('ok');
+
+		// Test with payment-gateway.test which is also in allowedOrigins
+		const res2 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://payment-gateway.test'
+			}
+		});
+		expect(res2.status).toBe(200);
+		expect(await res2.text()).toBe('ok');
+	});
+
+	test('Blocks requests from non-allowed origins', async ({ baseURL }) => {
+		// Test with origin not in allowedOrigins list
+		const res1 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://malicious-site.com'
+			}
+		});
+		expect(res1.status).toBe(403);
+		expect(await res1.text()).toBe('Cross-site POST form submissions are forbidden');
+
+		// Test with similar but not exact origin
+		const res2 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://trusted.example.com.evil.com'
+			}
+		});
+		expect(res2.status).toBe(403);
+		expect(await res2.text()).toBe('Cross-site POST form submissions are forbidden');
+
+		// Test subdomain attack (should be blocked)
+		const res3 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://evil.trusted.example.com'
+			}
+		});
+		expect(res3.status).toBe(403);
+		expect(await res3.text()).toBe('Cross-site POST form submissions are forbidden');
+	});
+
+	test('Allows GET requests regardless of origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'GET',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://any-origin.com'
+			}
+		});
+		expect(res.status).toBe(200);
+	});
+
+	test('Allows non-form content types regardless of origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				origin: 'https://any-origin.com'
+			}
+		});
+		expect(res.status).toBe(200);
+	});
+
+	test('Allows all protected HTTP methods from allowed origins', async ({ baseURL }) => {
+		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+		for (const method of methods) {
+			const res = await fetch(`${baseURL}/csrf`, {
+				method,
+				headers: {
+					'content-type': 'application/x-www-form-urlencoded',
+					origin: 'https://trusted.example.com'
+				}
+			});
+			expect(res.status, `Method ${method} should be allowed from trusted origin`).toBe(200);
+			expect(await res.text(), `Method ${method} should return ok`).toBe('ok');
+		}
+	});
+
+	test('Handles null origin correctly', async ({ baseURL }) => {
+		// Some requests may have null origin (e.g., from certain mobile apps)
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'null'
+			}
+		});
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
+	});
 });
 
 test.describe('Endpoints', () => {
