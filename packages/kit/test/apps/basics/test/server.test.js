@@ -199,7 +199,7 @@ test.describe('CSRF', () => {
 		const res = await fetch(`${baseURL}/csrf`, {
 			method: 'POST',
 			headers: {
-				'content-type': 'application/x-www-form-urlencoded',
+				'content-type': 'application/x-www-form-urlencoded'
 			}
 		});
 		expect(res.status).toBe(403);
