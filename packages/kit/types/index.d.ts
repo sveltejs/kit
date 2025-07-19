@@ -1612,6 +1612,51 @@ declare module '@sveltejs/kit' {
 		};
 	};
 
+	/**
+	 * The return value of a remote `command` function.
+	 * Call it with the input arguments to execute the command.
+	 *
+	 * Note: Prefer remote `form` functions when possible, as they
+	 * work without JavaScript enabled.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text });
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 * ```
+	 * Use the `updates` method to specify which queries to update in response to the command.
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text }).updates(
+	 *     getTodos.withOverride((todos) => [...todos, { text, done: false }])
+	 *   );
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 *
+	 * <ul>
+	 * 	{#each await getTodos() as todo}
+	 * 		<li>{todo.text}</li>
+	 * 	{/each}
+	 * </ul>
+	 * ```
+	 */
 	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 		updates: (
 			...queries: Array<
