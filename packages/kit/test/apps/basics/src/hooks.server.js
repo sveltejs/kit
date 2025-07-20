@@ -49,8 +49,8 @@ export const handleError = ({ event, error: e, status, message }) => {
 };
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ result }) => {
-	return { message: result.issues[0].message };
+export const handleValidationError = ({ issues }) => {
+	return { message: issues[0].message };
 };
 
 export const handle = sequence(

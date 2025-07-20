@@ -168,8 +168,9 @@ To customise this message and add additional properties to the error object, imp
 import z from 'zod';
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ result }) => {
-  return { message: 'Schema Error', validationErrors: z.treeifyError(result.error)};
+export const handleValidationError = ({ issues }) => {
+  // @ts-expect-error The types are too strict and disallow this but it's perfectly valid
+  return { message: 'Schema Error', validationErrors: z.treeifyError({ issues })};
 }
 ```
 

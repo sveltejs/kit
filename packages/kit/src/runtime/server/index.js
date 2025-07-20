@@ -113,8 +113,8 @@ export class Server {
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					handleValidationError:
 						module.handleValidationError ||
-						(({ result }) => {
-							console.error('Remote function schema validation failed:', result.issues);
+						(({ issues }) => {
+							console.error('Remote function schema validation failed:', issues);
 							return { message: 'Bad Request' };
 						}),
 					reroute: module.reroute || (() => {}),

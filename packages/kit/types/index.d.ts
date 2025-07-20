@@ -767,9 +767,8 @@ declare module '@sveltejs/kit' {
 	 * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
 	 * This function is expected return an object shape that matches `App.Error`.
 	 */
-	export type HandleValidationError<
-		Result extends { issues: StandardSchemaV1.Issue[] } = { issues: StandardSchemaV1.Issue[] }
-	> = (input: { result: Result; event: RequestEvent }) => MaybePromise<App.Error>;
+	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
+		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
