@@ -524,8 +524,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// TODO this writes to /prerender/pages/... eventually, should it go into
 		// /prerender/dependencies like indirect calls due to page prerenders?
 		// Does it really matter?
-		if (remote_function.__.entries) {
-			for (const entry of await remote_function.__.entries()) {
+		if (remote_function.__.has_arg) {
+			for (const entry of (await remote_function.__.entries?.()) ?? []) {
 				void enqueue(
 					null,
 					config.paths.base +

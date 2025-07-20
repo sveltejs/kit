@@ -321,6 +321,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		value: /** @type {RemoteInfo} */ ({
 			type: 'prerender',
 			id: '',
+			has_arg: !!maybe_fn,
 			entries: options?.entries,
 			dynamic: options?.dynamic
 		})
@@ -748,37 +749,39 @@ export function form(fn) {
  * @returns {(arg?: any) => MaybePromise<any>}
  */
 function create_validator(validate_or_fn, maybe_fn) {
-	return !maybe_fn
-		? (arg) => {
-				if (arg !== undefined) {
-					error(400, 'Bad request');
-				}
+	if (!maybe_fn) {
+		return (arg) => {
+			if (arg !== undefined) {
+				error(400, 'Bad request');
 			}
-		: validate_or_fn === 'unchecked'
-			? (arg) => arg // no validation
-			: '~standard' in validate_or_fn
-				? async (arg) => {
-						// Get event before asyn validation to ensure it's available in server environments without async local storage, too
-						const event = getRequestEvent();
-						const remoteInfo = get_remote_info(event);
-						const result = await validate_or_fn['~standard'].validate(arg);
-						// if the `issues` field exists, the validation failed
-						if (result.issues) {
-							error(
-								400,
-								await remoteInfo.handleValidationError({
-									...result,
-									event
-								})
-							);
-						}
-						return result.value;
-					}
-				: () => {
-						throw new Error(
-							'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
-						);
-					};
+		};
+	} else if (validate_or_fn === 'unchecked') {
+		return (arg) => arg; // no validation
+	} else if ('~standard' in validate_or_fn) {
+		return async (arg) => {
+			// Get event before asyn validation to ensure it's available in server environments without async local storage, too
+			const event = getRequestEvent();
+			const remoteInfo = get_remote_info(event);
+			const result = await validate_or_fn['~standard'].validate(arg);
+			// if the `issues` field exists, the validation failed
+			if (result.issues) {
+				error(
+					400,
+					await remoteInfo.handleValidationError({
+						...result,
+						event
+					})
+				);
+			}
+			return result.value;
+		};
+	} else {
+		return () => {
+			throw new Error(
+				'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
+			);
+		};
+	}
 }
 
 /**

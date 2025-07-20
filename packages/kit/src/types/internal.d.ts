@@ -558,6 +558,7 @@ export type RemoteInfo =
 			type: 'prerender';
 			id: string;
 			name: string;
+			has_arg: boolean;
 			dynamic?: boolean;
 			entries?: RemotePrerenderEntryGenerator;
 	  }
