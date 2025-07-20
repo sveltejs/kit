@@ -13,7 +13,7 @@ export const prerendered_entries = prerender(
 	'unchecked',
 	(x) => {
 		// a,b directly through entries below, c indirectly through prerendering a page
-		if (!building && !dev && ['a', 'b', 'c'].includes(x)) {
+		if (!building && !dev && ['a', 'b', 'c', '中文'].includes(x)) {
 			throw new Error(
 				'prerender should not be called at runtime in production with parameter ' + x
 			);
@@ -21,5 +21,5 @@ export const prerendered_entries = prerender(
 
 		return x;
 	},
-	{ entries: () => ['a', 'b'], dynamic: true }
+	{ entries: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
 );

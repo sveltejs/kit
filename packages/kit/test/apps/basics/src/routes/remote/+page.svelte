@@ -15,7 +15,7 @@
 <!-- TODO use await here once async lands -->
 {#if browser}
 	<p id="count-result">
-		{#await count then result}{result}{/await} / {count.current} ({count.pending})
+		{#await count then result}{result}{/await} / {count.current} ({count.loading})
 	</p>
 	<!-- this is just here to check that it is re-requested after the command -->
 	{#await add({ a: 2, b: 2 }) then result}{result}{/await}

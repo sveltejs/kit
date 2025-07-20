@@ -1630,11 +1630,11 @@ test.describe('remote functions', () => {
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');
-		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
 
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/functions-only"]');
-		await expect(page.locator('#prerendered-data')).toHaveText('a c yes');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
 	});
 });
 
