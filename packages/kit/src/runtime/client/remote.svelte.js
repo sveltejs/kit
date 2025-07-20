@@ -46,7 +46,7 @@ void (async () => {
  * @implements {Partial<Promise<T>>}
  */
 class Resource {
-	#init = true;
+	#init = false;
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
