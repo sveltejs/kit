@@ -46,7 +46,8 @@ void (async () => {
  * @implements {Partial<Promise<T>>}
  */
 class Resource {
-	/** @type {() => Promise<void>} */
+	#init = true;
+	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
 	/** @type {Array<() => void>} */
@@ -93,59 +94,59 @@ class Resource {
 	 * @param {() => Promise<T>} fn
 	 */
 	constructor(fn) {
-		let init = false;
-		this.#fn = () => {
-			// Prevent state_unsafe_mutation error on first run when the resource is created within the template
-			if (init) {
-				this.#loading = true;
-			} else {
-				init = true;
-			}
+		this.#fn = fn;
+		this.#promise = $state.raw(this.#run());
+	}
 
-			// Don't use Promise.withResolvers, it's too new still
-			/** @type {() => void} */
-			let resolve;
-			/** @type {(e?: any) => void} */
-			let reject;
-			/** @type {Promise<void>} */
-			const promise = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
+	#run() {
+		// Prevent state_unsafe_mutation error on first run when the resource is created within the template
+		if (this.#init) {
+			this.#loading = true;
+		} else {
+			this.#init = true;
+		}
+
+		// Don't use Promise.withResolvers, it's too new still
+		/** @type {() => void} */
+		let resolve;
+		/** @type {(e?: any) => void} */
+		let reject;
+		/** @type {Promise<void>} */
+		const promise = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
+
+		this.#latest.push(
+			// @ts-expect-error it's defined at this point
+			resolve
+		);
+
+		Promise.resolve(this.#fn())
+			.then((value) => {
+				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
+				const idx = this.#latest.indexOf(resolve);
+				if (idx === -1) return;
+
+				this.#latest.splice(0, idx).forEach((r) => r());
+				this.#inited = true;
+				this.#loading = false;
+				this.#raw = value;
+				this.#error = undefined;
+
+				resolve();
+			})
+			.catch((e) => {
+				const idx = this.#latest.indexOf(resolve);
+				if (idx === -1) return;
+
+				this.#latest.splice(0, idx).forEach((r) => r());
+				this.#error = e;
+				this.#loading = false;
+				reject(e);
 			});
 
-			this.#latest.push(
-				// @ts-expect-error it's defined at this point
-				resolve
-			);
-
-			Promise.resolve(fn())
-				.then((value) => {
-					// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
-					const idx = this.#latest.indexOf(resolve);
-					if (idx === -1) return;
-
-					this.#latest.splice(0, idx).forEach((r) => r());
-					this.#inited = true;
-					this.#loading = false;
-					this.#raw = value;
-					this.#error = undefined;
-
-					resolve();
-				})
-				.catch((e) => {
-					const idx = this.#latest.indexOf(resolve);
-					if (idx === -1) return;
-
-					this.#latest.splice(0, idx).forEach((r) => r());
-					this.#error = e;
-					this.#loading = false;
-					reject(e);
-				});
-
-			return promise;
-		};
-
-		this.#promise = $state.raw(this.#fn());
+		return promise;
 	}
 
 	get then() {
@@ -227,7 +228,7 @@ class Resource {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		return (this.#promise = this.#fn());
+		return (this.#promise = this.#run());
 	}
 
 	/**
