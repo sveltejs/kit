@@ -669,7 +669,7 @@ Tips:
 				);
 				console.warn(
 					colors.yellow(
-						`To whitelist them, add "${path.dirname(relative_path)}" to \`kit.remoteFunctions.allowedPaths\` in \`svelte.config.js\`.`
+						`To whitelist ${has_multiple ? 'them' : 'it'}, add "${path.dirname(relative_path)}" to \`kit.remoteFunctions.allowedPaths\` in \`svelte.config.js\`.`
 					)
 				);
 			}
