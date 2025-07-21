@@ -1612,6 +1612,60 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
+	 * The return value of a remote `command` function.
+	 * Call it with the input arguments to execute the command.
+	 *
+	 * Note: Prefer remote `form` functions when possible, as they
+	 * work without JavaScript enabled.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text });
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 * ```
+	 * Use the `updates` method to specify which queries to update in response to the command.
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text }).updates(
+	 *     getTodos.withOverride((todos) => [...todos, { text, done: false }])
+	 *   );
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 *
+	 * <ul>
+	 * 	{#each await getTodos() as todo}
+	 * 		<li>{todo.text}</li>
+	 * 	{/each}
+	 * </ul>
+	 * ```
+	 */
+	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+		updates: (
+			...queries: Array<
+				| ReturnType<RemoteQuery<any, any>>
+				| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
+			>
+		) => Promise<Awaited<Output>>;
+	};
+
+	/**
 	 * The return value of a remote `query` or `prerender` function.
 	 * Call it with the input arguments to retrieve the value.
 	 * On the server, this will directly call through to the underlying function.
@@ -2637,7 +2691,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteQuery, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQuery, RemoteCommand, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2823,9 +2877,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Output>(fn: () => Output): () => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2856,9 +2908,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): (arg: Input) => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2889,9 +2939,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): (arg: StandardSchemaV1.InferOutput<Schema>) => Promise<Awaited<Output>> & {
-		updates: (...queries: Array<ReturnType<RemoteQuery<any, any>> | ReturnType<ReturnType<RemoteQuery<any, any>>["withOverride"]>>) => Promise<Awaited<Output>>;
-	};
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a form action. The passed function will be called when the form is submitted.
 	 * Returns an object that can be spread onto a form element to connect it to the function.

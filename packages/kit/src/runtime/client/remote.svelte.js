@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery } from '@sveltejs/kit' */
+/** @import { RemoteFormAction, RemoteQuery, RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
@@ -432,12 +432,12 @@ export function prerender(id) {
 /**
  * Client-version of the `command` function from `$app/server`.
  * @param {string} id
- * @returns {(arg: any) => Promise<any> & { updates: (...args: any[]) => any }}
+ * @returns {RemoteCommand<any, any>}
  */
 export function command(id) {
 	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
 	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
-	return (/** @type {any} */ arg) => {
+	return (arg) => {
 		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
 		let updates = [];
 
