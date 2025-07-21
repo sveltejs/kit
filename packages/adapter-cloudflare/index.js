@@ -44,7 +44,9 @@ export default function (options = {}) {
 					worker_dest = `${dest}/_worker.js`;
 				}
 			} else {
-				if (wrangler_config.main) {
+				if (options.workerScriptPath) {
+					worker_dest = options.workerScriptPath;
+				} else if (wrangler_config.main) {
 					worker_dest = wrangler_config.main;
 				}
 				if (wrangler_config.assets?.directory) {
