@@ -475,8 +475,9 @@ function create_remotes(config) {
 
 	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
 
-	// TODO could files live in other directories, including node_modules?
-	return [config.kit.files.lib, config.kit.files.routes].flatMap((dir) =>
+	const externals = config.kit.remoteFunctions.allowedPaths.map((dir) => path.resolve(dir));
+
+	return [config.kit.files.lib, config.kit.files.routes, ...externals].flatMap((dir) =>
 		fs.existsSync(dir)
 			? walk(dir)
 					.filter((file) => extensions.some((ext) => file.endsWith(ext)))

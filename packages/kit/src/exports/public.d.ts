@@ -651,6 +651,15 @@ export interface KitConfig {
 		 */
 		origin?: string;
 	};
+	remoteFunctions?: {
+		/**
+		 * A list of external paths that are allowed to provide remote functions.
+		 * By default, remote functions are only allowed inside the `routes` and `lib` folders.
+		 *
+		 * Accepts absolute paths or paths relative to the project root.
+		 */
+		allowedPaths?: string[];
+	};
 	router?: {
 		/**
 		 * What type of client-side router to use.

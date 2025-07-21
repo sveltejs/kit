@@ -1,4 +1,5 @@
 import { parse, serialize } from 'cookie';
+import { conjoin } from '../../utils/array.js';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 
@@ -285,12 +286,4 @@ export function add_cookies_to_headers(headers, cookies) {
 			headers.append('set-cookie', serialize(name, value, { ...options, path }));
 		}
 	}
-}
-
-/**
- * @param {string[]} array
- */
-function conjoin(array) {
-	if (array.length <= 2) return array.join(' and ');
-	return `${array.slice(0, -1).join(', ')} and ${array.at(-1)}`;
 }

@@ -1861,4 +1861,11 @@ test.describe('remote functions', () => {
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
 	});
+
+	test('external remotes work', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#external-success')).toHaveText('external success');
+		await expect(page.locator('#external-failure')).not.toHaveText('external failure');
+		await expect(page.locator('#external-failure')).toHaveText('Failed to execute remote function');
+	});
 });
