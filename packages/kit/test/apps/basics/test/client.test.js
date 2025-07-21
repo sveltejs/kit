@@ -1635,6 +1635,16 @@ test.describe('binding_property_non_reactive warn', () => {
 	});
 });
 
+test.describe('routing', () => {
+	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
+		await page.goto('/routing/long-navigation');
+		await page.click('a[href="/routing"]');
+		await page.click('a[href="/routing"]');
+		await expect(page.locator('h1')).toHaveText('Great success!');
+		await expect(page).toHaveURL((url) => url.pathname === '/routing');
+	});
+});
+
 // have to run in serial because commands mutate in-memory data on the server
 test.describe('remote functions', () => {
 	test.describe.configure({ mode: 'default' });

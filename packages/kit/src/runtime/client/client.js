@@ -582,8 +582,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 	}
 
 	url.pathname = normalize_path(url.pathname, slash);
-
-	// eslint-disable-next-line
+	// eslint-disable-next-line no-self-assign
 	url.search = url.search; // turn `/?` into `/`
 
 	/** @type {import('./types.js').NavigationFinished} */
@@ -1608,13 +1607,6 @@ async function navigate({
 	navigation_result.props.page.state = state;
 
 	if (started) {
-		current = navigation_result.state;
-
-		// reset url before updating page store
-		if (navigation_result.props.page) {
-			navigation_result.props.page.url = url;
-		}
-
 		const after_navigate = (
 			await Promise.all(
 				Array.from(on_navigate_callbacks, (fn) =>
@@ -1635,6 +1627,13 @@ async function navigate({
 			after_navigate.forEach((fn) => {
 				after_navigate_callbacks.add(fn);
 			});
+		}
+
+		current = navigation_result.state;
+
+		// reset url before updating page store
+		if (navigation_result.props.page) {
+			navigation_result.props.page.url = url;
 		}
 
 		root.$set(navigation_result.props);
