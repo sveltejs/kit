@@ -136,8 +136,8 @@ export default function (options = {}) {
 				// _routes.json
 
 				// we need to add the source paths found in the `_redirects` file to the
-				// `_routes.json` file so that Cloudflare knows not to invoke the Worker
-				// for these paths.
+				// `_routes.json` file so that Cloudflare knows it shouldn't invoke the
+				// Worker but instead let the rules in the `_redirects` file take over.
 				/** @type {string[]} */
 				let redirects = [];
 				if (existsSync(redirects_dest)) {
