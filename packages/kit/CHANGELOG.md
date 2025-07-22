@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.25.1
+### Patch Changes
+
+
+- fix: add missing params property ([#14012](https://github.com/sveltejs/kit/pull/14012))
+
+## 2.25.0
+### Minor Changes
+
+
+- feat: support asynchronous `read` implementations from adapters ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: log when no Svelte config file has been found to avoid confusion ([#14001](https://github.com/sveltejs/kit/pull/14001))
+
 ## 2.24.0
 ### Minor Changes
 

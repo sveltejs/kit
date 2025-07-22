@@ -13,5 +13,6 @@
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
-	}
+	},
+	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }
