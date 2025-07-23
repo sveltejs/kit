@@ -380,7 +380,7 @@ export async function respond(request, options, manifest, state) {
 						event: traced_event,
 						resolve: (event, opts) => {
 							return record_span({
-								name: 'sveltekit.resolve.root',
+								name: 'sveltekit.resolve',
 								attributes: {
 									'http.route': event.route.id || 'unknown'
 								},
