@@ -108,7 +108,7 @@ export const remote_code = dedent`
 			} else if (fn?.__?.type === 'command') {
 				fn.__.name = key;
 			} else {
-				throw new Error('\`' + key + '\` exported from src/lib/todos.remote.ts is invalid — all exports from this file must be remote functions');
+				throw new Error('\`' + key + '\` exported from ' + original_filename + ' is invalid — all exports from this file must be remote functions');
 			}
 		}
 	}
