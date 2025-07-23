@@ -1521,14 +1521,15 @@ export interface Snapshot<T = any> {
 
 /**
  * The return value of a remote `form` function.
- * Spread it onto a `<form>` element to connect the form with the remote form action.
+ * Spread it onto a `<form>` element to connect the element to the remote function.
+ *
  * ```svelte
  * <script>
  *   import { createTodo } from './todos.remote.js';
  * </script>
  *
  * <form {...createTodo}>
- *   <input type="text" name="name" />
+ *   <input name="text" />
  *   <!-- ... -->
  * </form>
  * ```
@@ -1544,7 +1545,9 @@ export interface Snapshot<T = any> {
  *   const todo = { text, done: false };
  *
  *   // `updates` and `withOverride` enable optimistic UI updates
- *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
+ *   await submit().updates(
+ *     getTodos().withOverride((todos) => [...todos, todo])
+ *   );
  * })}>
  *   <input name="text" />
  *   <!-- ... -->
