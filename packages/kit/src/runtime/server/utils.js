@@ -185,6 +185,7 @@ export function has_prerendered_path(manifest, pathname) {
 }
 
 /**
+ * Returns the filename without the extension. e.g., `+page.server`, `+page`, etc.
  * @param {string | undefined} node_id
  * @returns {string}
  */
