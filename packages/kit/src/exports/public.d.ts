@@ -1271,7 +1271,7 @@ export interface RequestEvent<
 	tracing: {
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
 		rootSpan: Span;
-		/** The span associated with the current `handle` hook, `load` function, or server action. */
+		/** The span associated with the current `handle` hook, `load` function, or form action. */
 		currentSpan: Span;
 	};
 }
