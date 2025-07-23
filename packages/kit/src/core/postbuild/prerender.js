@@ -289,8 +289,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 
+			const category = decoded_dependency_path.startsWith(remote_prefix) ? 'data' : 'dependencies';
+
 			save(
-				'dependencies',
+				category,
 				result.response,
 				body,
 				decoded_dependency_path,
