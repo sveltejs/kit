@@ -16,7 +16,9 @@ import { hash } from '../../../utils/hash.js';
  * @param {string} out
  */
 export async function treeshake_prerendered_remotes(out) {
-	if (!exists(out)) return;
+	const remote_dir = path.join(out, 'server', 'remote');
+
+	if (!fs.existsSync(remote_dir)) return;
 
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
@@ -122,9 +124,9 @@ export const remote_code = dedent`
  * @param {import('types').ManifestData} manifest_data
  */
 export function build_remotes(out, normalize_id, manifest_data) {
-	if (!exists(out)) return
-
 	const remote_dir = path.join(out, 'server', 'remote');
+
+	if (!fs.existsSync(remote_dir)) return
 
 	// Create a mapping from hashed ID to original filename
 	const hash_to_original = new Map();
@@ -172,11 +174,4 @@ export function enhance_remotes(hashed_id, import_path, original_filename) {
 
 		$$_enhance_remote_functions_$$($$_self_$$, ${s(hashed_id)}, ${s(original_filename)});
 	`
-}
-
-/**
- * @param {string} out
- */
-function exists(out) {
-	return fs.existsSync(path.join(out, 'server', 'remote'))
 }
