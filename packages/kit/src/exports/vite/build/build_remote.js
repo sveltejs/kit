@@ -95,7 +95,7 @@ export const remote_code = dedent`
 		for (const key in exports) {
 			if (key === 'default') {
 				throw new Error(
-					'Cannot use a default export in a remote file. Please use named exports instead. (in ' + original_filename + ')'
+					'Cannot export \`default\` from a remote module (' + original_filename + ') — please use named exports instead'
 				);
 			}
 			const fn = exports[key];
