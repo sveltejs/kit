@@ -52,7 +52,7 @@ type Pathname = '/' | '/my-route' | `/my-other-route/${string}` & {};
 <div class="ts-block">
 
 ```dts
-type Pathname = `${'' | `/${string}`}/` | `${'' | `/${string}`}/my-route` | `${'' | `/${string}`}/my-other-route/${string} | {}`;
+type Pathname = `${'' | `/${string}`}/` | `${'' | `/${string}`}/my-route` | `${'' | `/${string}`}/my-other-route/${string}` | {};
 ```
 
 </div>
