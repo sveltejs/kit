@@ -136,6 +136,16 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
+// only run this test in older Node versions
+// TODO: remove after dropping support for Node 20
+const is_node_without_ts_support =
+	process.versions.node && Number(process.versions.node.split('.', 1)[0]) < 22;
+if (!is_node_without_ts_support) {
+	test('create package with typescript using nodenext and svelte.config.ts', async () => {
+		await test_make_package('typescript-svelte-config');
+	});
+}
+
 test('create package and assets are not tampered', async () => {
 	await test_make_package('assets');
 });

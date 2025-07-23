@@ -1,8 +1,8 @@
-import { text } from '../../../exports/index.js';
+import { text } from '@sveltejs/kit';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../pathname.js';
-import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,

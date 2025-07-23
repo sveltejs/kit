@@ -2,6 +2,9 @@ import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -734,5 +737,34 @@ test.describe('$app/forms', () => {
 	test('deserialize works on the server', async ({ request }) => {
 		const response = await request.get('/serialization-form/server-deserialize');
 		expect(await response.json()).toEqual({ data: 'It works!' });
+	});
+});
+
+const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
+
+test.describe('$app/environment', () => {
+	test('treeshakes dev check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
+			'utf-8'
+		);
+		// check that import { dev } from '$app/environment' is treeshaken
+		expect(code).not.toContain('dev');
+	});
+
+	test('treeshakes browser check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(
+				root,
+				'.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'
+			),
+			'utf-8'
+		);
+		// check that import { browser } from '$app/environment' is treeshaken
+		expect(code).not.toContain('browser');
 	});
 });

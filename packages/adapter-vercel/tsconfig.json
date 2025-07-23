@@ -14,5 +14,6 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
 		"skipLibCheck": true
-	}
+	},
+	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }

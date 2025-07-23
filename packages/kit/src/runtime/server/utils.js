@@ -1,8 +1,8 @@
 import { DEV } from 'esm-env';
-import { json, text } from '../../exports/index.js';
+import { json, text } from '@sveltejs/kit';
+import { HttpError } from '@sveltejs/kit/internal';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
@@ -133,7 +133,10 @@ export function redirect_response(status, location) {
  */
 export function clarify_devalue_error(event, error) {
 	if (error.path) {
-		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path})`;
+		return (
+			`Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path}). ` +
+			`If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport.`
+		);
 	}
 
 	if (error.path === '') {

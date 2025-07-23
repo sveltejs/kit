@@ -1,4 +1,6 @@
 import { DEV } from 'esm-env';
+import { json, text } from '@sveltejs/kit';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -17,9 +19,7 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
-import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
@@ -577,11 +577,11 @@ export async function respond(request, options, manifest, state) {
 			if (state.depth === 0) {
 				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
 				// causing console spam. If users want to serve this file they can install
-				// https://github.com/ChromeDevTools/vite-plugin-devtools-json
+				// https://svelte.dev/docs/cli/devtools-json
 				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
 					if (!warned_on_devtools_json_request) {
-						console.warn(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To serve this file, add this plugin to your Vite config:\n\nhttps://github.com/ChromeDevTools/vite-plugin-devtools-json\n`
+						console.log(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
 						);
 
 						warned_on_devtools_json_request = true;

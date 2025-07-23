@@ -2,7 +2,6 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -18,7 +17,7 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { SvelteConfig, PluginOptions } from '@sveltejs/vite-plugin-svelte';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -104,7 +103,7 @@ export interface Builder {
 	/** Create `dir` and any required parent directories. */
 	mkdirp: (dir: string) => void;
 
-	/** The fully resolved `svelte.config.js`. */
+	/** The fully resolved Svelte config. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
@@ -194,23 +193,16 @@ export interface Builder {
 	compress: (directory: string) => Promise<void>;
 }
 
-export interface Config {
+/**
+ * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
+ */
+export interface Config extends SvelteConfig {
 	/**
-	 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
-	 * @default {}
+	 * SvelteKit options.
+	 *
+	 * @see https://svelte.dev/docs/kit/configuration
 	 */
-	compilerOptions?: CompileOptions;
-	/**
-	 * List of file extensions that should be treated as Svelte files.
-	 * @default [".svelte"]
-	 */
-	extensions?: string[];
-	/** SvelteKit options */
 	kit?: KitConfig;
-	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
-	preprocess?: any;
-	/** `vite-plugin-svelte` plugin options. */
-	vitePlugin?: PluginOptions;
 	/** Any additional options required by tooling that integrates with Svelte. */
 	[key: string]: any;
 }
@@ -1316,7 +1308,7 @@ export interface ServerInitOptions {
 	/** A map of environment variables. */
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
-	read?: (file: string) => ReadableStream;
+	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
 export interface SSRManifest {

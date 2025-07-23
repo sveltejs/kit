@@ -1,6 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
+import { text } from '@sveltejs/kit';
 import * as paths from '__sveltekit/paths';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
@@ -9,7 +10,6 @@ import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { public_env, safe_public_env } from '../../shared-server.js';
-import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';

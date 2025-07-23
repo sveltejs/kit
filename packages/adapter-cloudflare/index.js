@@ -1,13 +1,17 @@
+import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+
+const name = '@sveltejs/adapter-cloudflare';
+const [kit_major, kit_minor] = VERSION.split('.');
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name,
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -27,7 +31,7 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_config(options.config);
+			const wrangler_config = validate_wrangler_config(options.config);
 			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -135,7 +139,8 @@ export default function (options = {}) {
 				const proxy = await getPlatformProxy(options.platformProxy);
 				const platform = /** @type {App.Platform} */ ({
 					env: proxy.env,
-					context: proxy.ctx,
+					ctx: proxy.ctx,
+					context: proxy.ctx, // deprecated in favor of ctx
 					caches: proxy.caches,
 					cf: proxy.cf
 				});
@@ -161,6 +166,18 @@ export default function (options = {}) {
 					return prerender ? emulated.prerender_platform : emulated.platform;
 				}
 			};
+		},
+		supports: {
+			read: ({ route }) => {
+				// TODO bump peer dep in next adapter major to simplify this
+				if (kit_major === '2' && kit_minor < '25') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
+					);
+				}
+
+				return true;
+			}
 		}
 	};
 }
@@ -269,50 +286,15 @@ _redirects
  * @param {string} config_file
  * @returns {import('wrangler').Unstable_Config}
  */
-function validate_config(config_file = undefined) {
+function validate_wrangler_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	// we don't support workers sites
-	if (wrangler_config.site) {
-		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
-		);
-	}
-
-	if (is_building_for_cloudflare_pages(wrangler_config)) {
-		return wrangler_config;
-	}
-
-	// probably deploying to Cloudflare Workers
-	if (wrangler_config.main || wrangler_config.assets) {
-		if (!wrangler_config.assets?.directory) {
-			throw new Error(
-				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-			);
-		}
-
-		if (!wrangler_config.assets?.binding) {
-			throw new Error(
-				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-			);
-		}
+	if (!is_building_for_cloudflare_pages(wrangler_config)) {
+		// probably deploying to Cloudflare Workers
+		validate_worker_settings(wrangler_config);
 	}
 
 	return wrangler_config;
-}
-
-/**
- * @param {import('wrangler').Unstable_Config} wrangler_config
- * @returns {boolean}
- */
-function is_building_for_cloudflare_pages(wrangler_config) {
-	return (
-		!!process.env.CF_PAGES ||
-		!wrangler_config.configPath ||
-		!!wrangler_config.pages_build_output_dir ||
-		!wrangler_config.main ||
-		!wrangler_config.assets
-	);
 }
 
 /** @param {string} str */
