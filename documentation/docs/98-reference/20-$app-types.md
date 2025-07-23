@@ -61,6 +61,10 @@ type Pathname = `${'' | `/${string}`}/` | `${'' | `/${string}`}/my-route` | `${'
 
 A utility for getting the parameters associated with a given route.
 
+```ts
+type BlogParams = RouteParams<'/blog/[slug]'>; // { slug: string }
+```
+
 <div class="ts-block">
 
 ```dts
