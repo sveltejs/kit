@@ -1,6 +1,7 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
 import { with_event } from '../../runtime/app/server/event.js';
+import { merge_tracing } from '../../runtime/utils.js';
 import { record_span } from '../../runtime/telemetry/record_span.js';
 
 /**
@@ -82,7 +83,6 @@ export function sequence(...handlers) {
 		// there's an assumption here that people aren't doing something insane like sequence(() => {}, sequence(() => {}))
 		// worst case there is that future spans get a lower-down span as their root span -- the tracing would still work,
 		// it'd just look a little weird
-		const { rootSpan } = event.tracing;
 		return apply_handle(0, event, {});
 
 		/**
@@ -99,8 +99,8 @@ export function sequence(...handlers) {
 				attributes: {
 					'sveltekit.handle.child.index': i
 				},
-				fn: async (span) => {
-					const traced_event = { ...event, tracing: { rootSpan, currentSpan: span } };
+				fn: async (current) => {
+					const traced_event = merge_tracing(event, current);
 					return await with_event(traced_event, () =>
 						handle({
 							event: traced_event,

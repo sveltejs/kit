@@ -35,6 +35,7 @@ import {
 } from '../pathname.js';
 import { with_event } from '../app/server/event.js';
 import { record_span } from '../telemetry/record_span.js';
+import { merge_tracing } from '../utils.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -372,8 +373,8 @@ export async function respond(request, options, manifest, state) {
 				'sveltekit.is_data_request': is_data_request,
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
-			fn: async (rootSpan) => {
-				const traced_event = { ...event, tracing: { rootSpan, currentSpan: rootSpan } };
+			fn: async (root_span) => {
+				const traced_event = merge_tracing(event, root_span);
 				return await with_event(traced_event, () =>
 					options.hooks.handle({
 						event: traced_event,
@@ -383,36 +384,34 @@ export async function respond(request, options, manifest, state) {
 								attributes: {
 									'http.route': event.route.id || 'unknown'
 								},
-								fn: async (resolveSpan) => {
+								fn: async (resolve_span) => {
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
 									return with_event(null, () =>
-										resolve(
-											{ ...event, tracing: { rootSpan, currentSpan: resolveSpan } },
-											page_nodes,
-											opts
-										).then((response) => {
-											// add headers/cookies here, rather than inside `resolve`, so that we
-											// can do it once for all responses instead of once per `return`
-											for (const key in headers) {
-												const value = headers[key];
-												response.headers.set(key, /** @type {string} */ (value));
+										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
+											(response) => {
+												// add headers/cookies here, rather than inside `resolve`, so that we
+												// can do it once for all responses instead of once per `return`
+												for (const key in headers) {
+													const value = headers[key];
+													response.headers.set(key, /** @type {string} */ (value));
+												}
+
+												add_cookies_to_headers(response.headers, Object.values(new_cookies));
+
+												if (state.prerendering && event.route.id !== null) {
+													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+												}
+
+												resolve_span.setAttributes({
+													'http.response.status_code': response.status,
+													'http.response.body.size':
+														response.headers.get('content-length') || 'unknown'
+												});
+
+												return response;
 											}
-
-											add_cookies_to_headers(response.headers, Object.values(new_cookies));
-
-											if (state.prerendering && event.route.id !== null) {
-												response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-											}
-
-											resolveSpan.setAttributes({
-												'http.response.status_code': response.status,
-												'http.response.body.size':
-													response.headers.get('content-length') || 'unknown'
-											});
-
-											return response;
-										})
+										)
 									);
 								}
 							});

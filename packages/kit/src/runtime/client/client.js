@@ -676,7 +676,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 		/** @type {import('@sveltejs/kit').LoadEvent} */
 		const load_input = {
-			tracing: { rootSpan: noop_span, currentSpan: noop_span },
+			tracing: { enabled: false, root: noop_span, current: noop_span },
 			route: new Proxy(route, {
 				get: (target, key) => {
 					if (is_tracking) {

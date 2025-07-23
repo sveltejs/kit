@@ -9,6 +9,7 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { with_event } from '../../app/server/event.js';
 import { record_span } from '../../telemetry/record_span.js';
+import { merge_tracing } from '../../utils.js';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -256,17 +257,10 @@ async function call_action(event, actions) {
 			'sveltekit.action.name': name,
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (action_span) => {
-			const traced_event = {
-				...event,
-				tracing: {
-					rootSpan: event.tracing.rootSpan,
-					currentSpan: action_span
-				}
-			};
-			const result = await with_event(traced_event, () => action(traced_event));
+		fn: async (current) => {
+			const result = await with_event(merge_tracing(event, current), () => action(event));
 			if (result instanceof ActionFailure) {
-				action_span.setAttributes({
+				current.setAttributes({
 					'sveltekit.action.result.type': 'failure',
 					'sveltekit.action.result.status': result.status
 				});

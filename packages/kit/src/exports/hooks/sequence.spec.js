@@ -5,7 +5,7 @@ import { installPolyfills } from '../node/polyfills.js';
 installPolyfills();
 
 const dummy_event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({
-	tracing: { rootSpan: {} }
+	tracing: { root: {} }
 });
 
 test('applies handlers in sequence', async () => {

@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
-import { b64_encode } from '../../utils.js';
+import { b64_encode, merge_tracing } from '../../utils.js';
 import { with_event } from '../../app/server/event.js';
 import { record_span } from '../../telemetry/record_span.js';
 import { get_node_type } from '../utils.js';
@@ -78,9 +78,8 @@ export async function load_server_data({ event, state, node, parent }) {
 			'sveltekit.load.environment': 'server',
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (span) => {
-			const rootSpan = event.tracing.rootSpan;
-			const traced_event = { ...event, tracing: { rootSpan, currentSpan: span } };
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
 			const result = await with_event(traced_event, () =>
 				load.call(null, {
 					...traced_event,
@@ -228,11 +227,10 @@ export async function load_data({
 			'sveltekit.load.environment': 'server',
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (span) => {
-			const rootSpan = event.tracing.rootSpan;
-			const tracing = { rootSpan, currentSpan: span };
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
 			const result = await load.call(null, {
-				tracing,
+				...traced_event,
 				url: event.url,
 				params: event.params,
 				data: server_data_node?.data ?? null,

@@ -985,10 +985,12 @@ export interface LoadEvent<
 	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
-		rootSpan: Span;
+		root: Span;
 		/** The span associated with the current `load` function. */
-		currentSpan: Span;
+		current: Span;
 	};
 }
 
@@ -1271,10 +1273,12 @@ export interface RequestEvent<
 	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
-		rootSpan: Span;
+		root: Span;
 		/** The span associated with the current `handle` hook, `load` function, or form action. */
-		currentSpan: Span;
+		current: Span;
 	};
 }
 
@@ -1438,10 +1442,12 @@ export interface ServerLoadEvent<
 	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
-		rootSpan: Span;
+		root: Span;
 		/** The span associated with the current server `load` function. */
-		currentSpan: Span;
+		current: Span;
 	};
 }
 
