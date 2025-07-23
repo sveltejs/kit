@@ -387,7 +387,7 @@ declare module '@sveltejs/kit' {
 		/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
 		experimental?: {
 			/**
-			 * Whether to enable serverside OpenTelemetry tracing for SvelteKit operations including handle hooks, load functions, and form actions.
+			 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
 			 * @default undefined
 			 * @since 2.22.0 // TODO: update this before publishing
 			 */
