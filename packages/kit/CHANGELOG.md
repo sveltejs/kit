@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.25.2
+### Patch Changes
+
+
+- fix: correctly set URL when navigating during an ongoing navigation ([#14004](https://github.com/sveltejs/kit/pull/14004))
+
 ## 2.25.1
 ### Patch Changes
 
