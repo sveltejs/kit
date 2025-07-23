@@ -561,12 +561,6 @@ export type RemoteInfo =
 			has_arg: boolean;
 			dynamic?: boolean;
 			entries?: RemotePrerenderEntryGenerator;
-	  }
-	| {
-			type: 'cache';
-			id: string;
-			name: string;
-			config: { expiration: number | false; [adapterSpecific: string]: any };
 	  };
 
 export * from '../exports/index.js';

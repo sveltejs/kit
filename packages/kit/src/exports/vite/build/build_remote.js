@@ -46,7 +46,7 @@ export async function treeshake_prerendered_remotes(out) {
 						if (fn.__?.type === 'form') {
 							fn.__.set_action('${remote.slice(0, -3)}/' + key);
 							fn.__.name = key;
-						} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender' || fn.__?.type === 'cache') {
+						} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender') {
 							fn.__.id = '${remote.slice(0, -3)}/' + key;
 							fn.__.name = key;
 						} else if (fn.__?.type === 'command') {
@@ -100,7 +100,7 @@ export const remote_code = dedent`
 			if (fn?.__?.type === 'form') {
 				fn.__.set_action(hashed_id + '/' + key);
 				fn.__.name = key;
-			} else if (fn?.__?.type === 'query' || fn?.__?.type === 'prerender' || fn?.__?.type === 'cache') {
+			} else if (fn?.__?.type === 'query' || fn?.__?.type === 'prerender') {
 				fn.__.id = hashed_id + '/' + key;
 				fn.__.name = key;
 			} else if (fn?.__?.type === 'command') {
@@ -152,7 +152,7 @@ export function build_remotes(out, normalize_id, manifest_data) {
 			`
 		);
 	}
-	
+
 	fs.writeFileSync(
 		path.join(remote_dir, '__sveltekit__remote.js'),
 		remote_code,
@@ -162,14 +162,14 @@ export function build_remotes(out, normalize_id, manifest_data) {
 
 /**
  * Generate the code that enhances the remote functions with their hashed ID.
- * @param {string} hashed_id 
+ * @param {string} hashed_id
  * @param {string} import_path - where to import the helper function from
  * @param {string} original_filename - The original filename for better error messages
  */
 export function enhance_remotes(hashed_id, import_path, original_filename) {
 	return dedent`
 		import $$_enhance_remote_functions_$$ from '${import_path}';
-		
+
 		$$_enhance_remote_functions_$$($$_self_$$, ${s(hashed_id)}, ${s(original_filename)});
 	`
 }
