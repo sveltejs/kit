@@ -24,7 +24,7 @@ export const validated_prerendered_query_with_arg = prerender(
 	schema,
 	(...arg) => (typeof arg[0] === 'string' && arg.length === 1 ? 'success' : 'failure'),
 	{
-		entries: () => ['a'],
+		inputs: () => ['a'],
 		dynamic: true
 	}
 );
