@@ -77,7 +77,7 @@ const get_defaults = (prefix = '') => ({
 			privatePrefix: ''
 		},
 		experimental: {
-			tracing: undefined
+			tracing: { server: false }
 		},
 		files: {
 			assets: join(prefix, 'static'),
@@ -413,7 +413,17 @@ test('accepts valid tracing values', () => {
 		validate_config({
 			kit: {
 				experimental: {
-					tracing: 'server'
+					tracing: { server: true }
+				}
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: { server: false }
 				}
 			}
 		});
@@ -440,27 +450,27 @@ test('errors on invalid tracing values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
+	}, /^config\.kit\.experimental\.tracing should be an object$/);
 
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
 					// @ts-expect-error - given value expected to throw
-					tracing: false
+					tracing: 'server'
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
+	}, /^config\.kit\.experimental\.tracing should be an object$/);
 
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
 					// @ts-expect-error - given value expected to throw
-					tracing: 'client'
+					tracing: { server: 'invalid' }
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
+	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
 });

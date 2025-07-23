@@ -42,7 +42,7 @@ const config = {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
 		},
 
-		experimental: { tracing: 'server' }
+		experimental: { tracing: { server: true } }
 	}
 };
 

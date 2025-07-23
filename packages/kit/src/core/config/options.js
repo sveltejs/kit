@@ -121,11 +121,8 @@ const options = object(
 			}),
 
 			experimental: object({
-				tracing: validate(undefined, (input, keypath) => {
-					if (input !== 'server') {
-						throw new Error(`${keypath} should be undefined or "server"`);
-					}
-					return input;
+				tracing: object({
+					server: boolean(false)
 				})
 			}),
 

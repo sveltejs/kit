@@ -406,10 +406,12 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
-		 * @default undefined
+		 * @default { server: false }
 		 * @since 2.26.0 // TODO: update this before publishing
 		 */
-		tracing?: 'server';
+		tracing?: {
+			server?: boolean;
+		};
 	};
 	/**
 	 * Where to find various files within your project.
