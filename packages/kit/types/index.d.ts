@@ -1586,7 +1586,7 @@ declare module '@sveltejs/kit' {
 		get result(): Success | Failure | undefined;
 		/** When there's an error during form submission, it appears on this property */
 		get error(): App.Error | undefined;
-		/** Spread this onto a button or input of type submit */
+		/** Spread this onto a `<button>` or `<input type="submit">` */
 		formAction: {
 			type: 'submit';
 			formaction: string;
@@ -1670,8 +1670,8 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The return value of a remote `query` or `prerender` function.
 	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call through to the underlying function.
-	 * On the client, this will do a fetch to the server to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
 	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
 	 */
 	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
