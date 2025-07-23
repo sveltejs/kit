@@ -1,4 +1,6 @@
+/** @import { Tracer } from '@opentelemetry/api' */
 /** @import { RequestEvent, ActionResult, Actions } from '@sveltejs/kit' */
+/** @import { SSROptions, SSRNode, ServerNode, ServerHooks } from 'types' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
@@ -21,8 +23,8 @@ export function is_action_json_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server'] | undefined} server
+ * @param {SSROptions} options
+ * @param {SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
@@ -140,8 +142,8 @@ export function is_action_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').SSRNode['server'] | undefined} server
- * @param {import('@opentelemetry/api').Tracer} tracer
+ * @param {SSRNode['server'] | undefined} server
+ * @param {Tracer} tracer
  * @returns {Promise<ActionResult>}
  */
 export async function handle_action_request(event, server, tracer) {
@@ -218,8 +220,8 @@ function check_named_default_separate(actions) {
 
 /**
  * @param {RequestEvent} event
- * @param {NonNullable<import('types').ServerNode['actions']>} actions
- * @param {import('@opentelemetry/api').Tracer} tracer
+ * @param {NonNullable<ServerNode['actions']>} actions
+ * @param {Tracer} tracer
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
 async function call_action(event, actions, tracer) {
@@ -294,7 +296,7 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 export function uneval_action_response(data, route_id, transport) {
 	const replacer = (/** @type {any} */ thing) => {
@@ -313,7 +315,7 @@ export function uneval_action_response(data, route_id, transport) {
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 function stringify_action_response(data, route_id, transport) {
 	const encoders = Object.fromEntries(
