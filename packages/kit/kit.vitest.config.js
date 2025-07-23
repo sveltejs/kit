@@ -15,7 +15,6 @@ export default defineConfig({
 		alias: {
 			'__sveltekit/paths': fileURLToPath(new URL('./test/mocks/path.js', import.meta.url))
 		},
-		// shave a couple seconds off the tests
 		isolate: true,
 		poolOptions: {
 			threads: {
