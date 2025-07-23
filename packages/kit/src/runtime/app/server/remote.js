@@ -159,7 +159,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
@@ -167,14 +167,14 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPost = prerender(
  *  z.string(),
  * 	(id) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
  * @template Output
  * @overload
  * @param {() => Output} fn
- * @param {{ entries?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<void, Output>}
  */
 /**
@@ -185,14 +185,14 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
  *  'unchecked',
  * 	(id: string) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -201,7 +201,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
- * @param {{ entries?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<Input, Output>}
  */
 /**
@@ -212,7 +212,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
@@ -220,7 +220,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPost = prerender(
  *  z.string(),
  * 	(id) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -229,7 +229,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @param {{ entries?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**

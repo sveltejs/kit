@@ -2783,7 +2783,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2791,13 +2791,13 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Output>(fn: () => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<void>;
+		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<void, Output>;
 	/**
@@ -2808,20 +2808,20 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
 	 *  'unchecked',
 	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<Input>;
+		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<Input, Output>;
 	/**
@@ -2832,7 +2832,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2840,13 +2840,13 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>;
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
@@ -2968,7 +2968,7 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
-	type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
