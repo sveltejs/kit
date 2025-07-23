@@ -18,6 +18,7 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -400,6 +401,15 @@ export interface KitConfig {
 		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
+	};
+	/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
+	experimental?: {
+		/**
+		 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
+		 * @default undefined
+		 * @since 2.26.0 // TODO: update this before publishing
+		 */
+		tracing?: 'server';
 	};
 	/**
 	 * Where to find various files within your project.
@@ -967,6 +977,17 @@ export interface LoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.\
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		rootSpan: Span;
+		/** The span associated with the current `load` function. */
+		currentSpan: Span;
+	};
 }
 
 export interface NavigationEvent<
@@ -1242,6 +1263,17 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		rootSpan: Span;
+		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		currentSpan: Span;
+	};
 }
 
 /**
@@ -1398,6 +1430,17 @@ export interface ServerLoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		rootSpan: Span;
+		/** The span associated with the current server `load` function. */
+		currentSpan: Span;
+	};
 }
 
 /**

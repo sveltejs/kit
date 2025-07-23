@@ -3,6 +3,7 @@
 
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { Span } from '@opentelemetry/api';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -382,6 +383,15 @@ declare module '@sveltejs/kit' {
 			 * @since 1.21.0
 			 */
 			privatePrefix?: string;
+		};
+		/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
+		experimental?: {
+			/**
+			 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
+			 * @default undefined
+			 * @since 2.26.0 // TODO: update this before publishing
+			 */
+			tracing?: 'server';
 		};
 		/**
 		 * Where to find various files within your project.
@@ -949,6 +959,17 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.\
+		 * @since 2.26.0 // TODO: update this before publishing
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current `load` function. */
+			currentSpan: Span;
+		};
 	}
 
 	export interface NavigationEvent<
@@ -1224,6 +1245,17 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 * @since 2.26.0 // TODO: update this before publishing
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current `handle` hook, `load` function, or form action. */
+			currentSpan: Span;
+		};
 	}
 
 	/**
@@ -1380,6 +1412,17 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 * @since 2.26.0 // TODO: update this before publishing
+		 */
+		tracing: {
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			rootSpan: Span;
+			/** The span associated with the current server `load` function. */
+			currentSpan: Span;
+		};
 	}
 
 	/**
@@ -2049,6 +2092,7 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/hooks' {
+	import type { Handle } from '@sveltejs/kit';
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
@@ -2119,7 +2163,7 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import("@sveltejs/kit").Handle[]): import("@sveltejs/kit").Handle;
+	export function sequence(...handlers: Handle[]): Handle;
 
 	export {};
 }

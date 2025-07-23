@@ -1,3 +1,6 @@
+/** @import { Tracer } from '@opentelemetry/api' */
+/** @import { RequestEvent, ActionResult, Actions } from '@sveltejs/kit' */
+/** @import { SSROptions, SSRNode, ServerNode, ServerHooks } from 'types' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
@@ -6,8 +9,9 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { with_event } from '../../app/server/event.js';
+import { record_span } from '../../telemetry/record_span.js';
 
-/** @param {import('@sveltejs/kit').RequestEvent} event */
+/** @param {RequestEvent} event */
 export function is_action_json_request(event) {
 	const accept = negotiate(event.request.headers.get('accept') ?? '*/*', [
 		'application/json',
@@ -18,9 +22,9 @@ export function is_action_json_request(event) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server'] | undefined} server
+ * @param {RequestEvent} event
+ * @param {SSROptions} options
+ * @param {SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
@@ -51,7 +55,7 @@ export async function handle_action_json_request(event, options, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, actions, await options.tracer);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -111,7 +115,7 @@ function check_incorrect_fail_use(error) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Redirect} redirect
+ * @param {Redirect} redirect
  */
 export function action_json_redirect(redirect) {
 	return action_json({
@@ -122,7 +126,7 @@ export function action_json_redirect(redirect) {
 }
 
 /**
- * @param {import('@sveltejs/kit').ActionResult} data
+ * @param {ActionResult} data
  * @param {ResponseInit} [init]
  */
 function action_json(data, init) {
@@ -130,18 +134,19 @@ function action_json(data, init) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {RequestEvent} event
  */
 export function is_action_request(event) {
 	return event.request.method === 'POST';
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').SSRNode['server'] | undefined} server
- * @returns {Promise<import('@sveltejs/kit').ActionResult>}
+ * @param {RequestEvent} event
+ * @param {SSRNode['server'] | undefined} server
+ * @param {Tracer} tracer
+ * @returns {Promise<ActionResult>}
  */
-export async function handle_action_request(event, server) {
+export async function handle_action_request(event, server, tracer) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -164,7 +169,7 @@ export async function handle_action_request(event, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, actions, tracer);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -203,7 +208,7 @@ export async function handle_action_request(event, server) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Actions} actions
+ * @param {Actions} actions
  */
 function check_named_default_separate(actions) {
 	if (actions.default && Object.keys(actions).length > 1) {
@@ -214,11 +219,12 @@ function check_named_default_separate(actions) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {NonNullable<import('types').ServerNode['actions']>} actions
+ * @param {RequestEvent} event
+ * @param {NonNullable<ServerNode['actions']>} actions
+ * @param {Tracer} tracer
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, actions) {
+async function call_action(event, actions, tracer) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -247,7 +253,32 @@ async function call_action(event, actions) {
 		);
 	}
 
-	return with_event(event, () => action(event));
+	return record_span({
+		name: 'sveltekit.action',
+		tracer,
+		attributes: {
+			'sveltekit.action.name': name,
+			'http.route': event.route.id || 'unknown'
+		},
+		fn: async (action_span) => {
+			const traced_event = {
+				...event,
+				tracing: {
+					rootSpan: event.tracing.rootSpan,
+					currentSpan: action_span
+				}
+			};
+			const result = await with_event(traced_event, () => action(traced_event));
+			if (result instanceof ActionFailure) {
+				action_span.setAttributes({
+					'sveltekit.action.result.type': 'failure',
+					'sveltekit.action.result.status': result.status
+				});
+			}
+
+			return result;
+		}
+	});
 }
 
 /** @param {any} data */
@@ -265,7 +296,7 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 export function uneval_action_response(data, route_id, transport) {
 	const replacer = (/** @type {any} */ thing) => {
@@ -284,7 +315,7 @@ export function uneval_action_response(data, route_id, transport) {
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {import('types').ServerHooks['transport']} transport
+ * @param {ServerHooks['transport']} transport
  */
 function stringify_action_response(data, route_id, transport) {
 	const encoders = Object.fromEntries(

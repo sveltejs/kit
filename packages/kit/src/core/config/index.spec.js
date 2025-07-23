@@ -76,6 +76,9 @@ const get_defaults = (prefix = '') => ({
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},
+		experimental: {
+			tracing: undefined
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: {
@@ -403,4 +406,61 @@ test('errors on loading config with incorrect default export', async () => {
 		message,
 		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
+});
+
+test('accepts valid tracing values', () => {
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: 'server'
+				}
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: undefined
+				}
+			}
+		});
+	});
+});
+
+test('errors on invalid tracing values', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: true
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: false
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: 'client'
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing should be undefined or "server"$/);
 });
