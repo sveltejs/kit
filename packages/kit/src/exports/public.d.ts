@@ -403,11 +403,11 @@ export interface KitConfig {
 		privatePrefix?: string;
 	};
 	/**
-	 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
 	 */
 	experimental?: {
 		/**
-		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
@@ -780,10 +780,9 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
  *
- * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
- * This function is expected return an object shape that matches `App.Error`.
+ * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
