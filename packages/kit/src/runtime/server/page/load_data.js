@@ -13,11 +13,10 @@ import { get_node_type } from '../utils.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   tracer: import('@opentelemetry/api').Tracer;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent, tracer }) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -73,7 +72,6 @@ export async function load_server_data({ event, state, node, parent, tracer }) {
 
 	const result = await record_span({
 		name: 'sveltekit.load',
-		tracer,
 		attributes: {
 			'sveltekit.load.node_id': node.server_id || 'unknown',
 			'sveltekit.load.node_type': get_node_type(node.server_id),
@@ -201,7 +199,6 @@ export async function load_server_data({ event, state, node, parent, tracer }) {
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
  *   csr: boolean;
- *   tracer: import('@opentelemetry/api').Tracer;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
@@ -213,8 +210,7 @@ export async function load_data({
 	server_data_promise,
 	state,
 	resolve_opts,
-	csr,
-	tracer
+	csr
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -226,7 +222,6 @@ export async function load_data({
 
 	const result = await record_span({
 		name: 'sveltekit.load',
-		tracer,
 		attributes: {
 			'sveltekit.load.node_id': node.universal_id || 'unknown',
 			'sveltekit.load.node_type': get_node_type(node.universal_id),

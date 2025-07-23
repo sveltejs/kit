@@ -63,7 +63,6 @@ export async function render_data(
 						event: new_event,
 						state,
 						node,
-						tracer: await options.tracer,
 						parent: async () => {
 							/** @type {Record<string, any>} */
 							const data = {};

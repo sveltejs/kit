@@ -1,7 +1,6 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
 import { with_event } from '../../runtime/app/server/event.js';
-import { get_tracer } from '../../runtime/telemetry/get_tracer.js';
 import { record_span } from '../../runtime/telemetry/record_span.js';
 
 /**
@@ -79,12 +78,11 @@ export function sequence(...handlers) {
 	const length = handlers.length;
 	if (!length) return ({ event, resolve }) => resolve(event);
 
-	return async ({ event, resolve }) => {
+	return ({ event, resolve }) => {
 		// there's an assumption here that people aren't doing something insane like sequence(() => {}, sequence(() => {}))
 		// worst case there is that future spans get a lower-down span as their root span -- the tracing would still work,
 		// it'd just look a little weird
 		const { rootSpan } = event.tracing;
-		const tracer = await get_tracer();
 		return apply_handle(0, event, {});
 
 		/**
@@ -97,7 +95,6 @@ export function sequence(...handlers) {
 			const handle = handlers[i];
 
 			return record_span({
-				tracer,
 				name: 'sveltekit.handle.child',
 				attributes: {
 					'sveltekit.handle.child.index': i

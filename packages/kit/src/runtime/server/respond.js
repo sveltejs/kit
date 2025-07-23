@@ -363,11 +363,8 @@ export async function respond(request, options, manifest, state) {
 			disable_search(url);
 		}
 
-		const tracer = await options.tracer;
-
 		const response = await record_span({
 			name: 'sveltekit.handle.root',
-			tracer,
 			attributes: {
 				'http.route': event.route.id || 'unknown',
 				'http.method': event.request.method,
@@ -383,7 +380,6 @@ export async function respond(request, options, manifest, state) {
 						resolve: (event, opts) => {
 							return record_span({
 								name: 'sveltekit.resolve.root',
-								tracer,
 								attributes: {
 									'http.route': event.route.id || 'unknown'
 								},

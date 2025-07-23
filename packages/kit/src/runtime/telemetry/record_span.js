@@ -1,30 +1,26 @@
-/** @import { Attributes, Span, Tracer } from '@opentelemetry/api' */
+/** @import { Attributes, Span } from '@opentelemetry/api' */
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { load_otel } from './load_otel.js';
 import { noop_span } from './noop.js';
+import { otel } from './otel.js';
 
 /**
  * @template T
  * @param {Object} options
  * @param {string} options.name
- * @param {Tracer} options.tracer
  * @param {Attributes} options.attributes
  * @param {function(Span): Promise<T>} options.fn
  * @returns {Promise<T>}
  */
-export async function record_span({ name, tracer, attributes, fn }) {
-	const otel = await load_otel();
+export async function record_span({ name, attributes, fn }) {
 	if (otel === null) {
 		return fn(noop_span);
 	}
 
-	const { SpanStatusCode } = otel;
+	const { SpanStatusCode, tracer } = otel;
 
 	return tracer.startActiveSpan(name, { attributes }, async (span) => {
 		try {
-			const result = await fn(span);
-			span.end();
-			return result;
+			return await fn(span);
 		} catch (error) {
 			if (error instanceof HttpError) {
 				span.setAttributes({
@@ -67,9 +63,10 @@ export async function record_span({ name, tracer, attributes, fn }) {
 				});
 				span.setStatus({ code: SpanStatusCode.ERROR });
 			}
-			span.end();
 
 			throw error;
+		} finally {
+			span.end();
 		}
 	});
 }

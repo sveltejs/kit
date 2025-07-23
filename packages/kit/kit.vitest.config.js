@@ -3,6 +3,9 @@ import { defineConfig } from 'vitest/config';
 
 // this file needs a custom name so that the numerous test subprojects don't all pick it up
 export default defineConfig({
+	define: {
+		__SVELTEKIT_SERVER_TRACING_ENABLED__: false
+	},
 	server: {
 		watch: {
 			ignored: ['**/node_modules/**', '**/.svelte-kit/**']

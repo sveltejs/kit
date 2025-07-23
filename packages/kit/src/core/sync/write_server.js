@@ -33,11 +33,6 @@ import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
-import { get_tracer, enable_tracing } from '${runtime_directory}/telemetry/get_tracer.js';
-
-if (${s(config.kit.experimental.tracing.server)}) {
-	enable_tracing();
-}
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -65,7 +60,6 @@ export const options = {
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
 	},
-	tracer: get_tracer(),
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 

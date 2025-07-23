@@ -1,4 +1,3 @@
-/** @import { Tracer } from '@opentelemetry/api' */
 /** @import { RequestEvent, ActionResult, Actions } from '@sveltejs/kit' */
 /** @import { SSROptions, SSRNode, ServerNode, ServerHooks } from 'types' */
 import * as devalue from 'devalue';
@@ -55,7 +54,7 @@ export async function handle_action_json_request(event, options, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions, await options.tracer);
+		const data = await call_action(event, actions);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -143,10 +142,9 @@ export function is_action_request(event) {
 /**
  * @param {RequestEvent} event
  * @param {SSRNode['server'] | undefined} server
- * @param {Tracer} tracer
  * @returns {Promise<ActionResult>}
  */
-export async function handle_action_request(event, server, tracer) {
+export async function handle_action_request(event, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -169,7 +167,7 @@ export async function handle_action_request(event, server, tracer) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions, tracer);
+		const data = await call_action(event, actions);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -221,10 +219,9 @@ function check_named_default_separate(actions) {
 /**
  * @param {RequestEvent} event
  * @param {NonNullable<ServerNode['actions']>} actions
- * @param {Tracer} tracer
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, actions, tracer) {
+async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -255,7 +252,6 @@ async function call_action(event, actions, tracer) {
 
 	return record_span({
 		name: 'sveltekit.action',
-		tracer,
 		attributes: {
 			'sveltekit.action.name': name,
 			'http.route': event.route.id || 'unknown'

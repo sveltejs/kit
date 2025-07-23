@@ -1,11 +1,14 @@
-import { describe, test, expect, vi } from 'vitest';
+/** @import { Span, Tracer } from '@opentelemetry/api' */
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { record_span } from './record_span.js';
-import { noop_span, noop_tracer } from './noop.js';
-import * as load_otel from './load_otel.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 
-const create_mock_span = () =>
-	/** @type {import('@opentelemetry/api').Span} */ (
+vi.hoisted(() => {
+	vi.stubGlobal('__SVELTEKIT_SERVER_TRACING_ENABLED__', true);
+});
+
+const { tracer, span } = vi.hoisted(() => {
+	const mock_span = /** @type {Span} */ (
 		/** @type {unknown} */ ({
 			end: vi.fn(),
 			setAttributes: vi.fn(),
@@ -14,49 +17,42 @@ const create_mock_span = () =>
 		})
 	);
 
-/** @type {() => { tracer: import('@opentelemetry/api').Tracer, span: import('@opentelemetry/api').Span } } */
-const create_mock_tracer = () => {
-	const span = create_mock_span();
-	const tracer = {
-		startActiveSpan: vi.fn().mockImplementation((_name, _options, fn) => {
+	const mock_tracer = /** @type {Tracer} */ ({
+		startActiveSpan: vi.fn((_name, _options, fn) => {
 			return fn(span);
 		}),
-		startSpan: vi.fn().mockImplementation((_name, _options, fn) => {
+		startSpan: vi.fn((_name, _options, fn) => {
 			return fn(span);
 		})
-	};
-	return { tracer, span };
-};
-
-describe('record_span', () => {
-	test('runs function with noop span if @opentelemetry/api is not available', async () => {
-		const spy = vi.spyOn(load_otel, 'load_otel').mockResolvedValue(null);
-		const fn = vi.fn().mockResolvedValue('result');
-
-		const result = await record_span({ name: 'test', tracer: noop_tracer, attributes: {}, fn });
-		expect(result).toBe('result');
-		expect(fn).toHaveBeenCalledWith(noop_span);
-		spy.mockRestore();
 	});
 
-	test('runs function with span if @opentelemetry/api is available', async () => {
-		const fn = vi.fn().mockResolvedValue('result');
-		const result = await record_span({
-			name: 'test',
-			tracer: create_mock_tracer().tracer,
-			attributes: {},
-			fn
-		});
-		expect(result).toBe('result');
-		expect(fn).not.toHaveBeenCalledWith(noop_span);
+	return { tracer: mock_tracer, span: mock_span };
+});
+
+vi.mock(import('./otel.js'), async (original) => {
+	const { otel } = await original();
+
+	if (otel === null) {
+		throw new Error('Problem setting up tests; otel is null');
+	}
+
+	return {
+		otel: {
+			tracer,
+			SpanStatusCode: otel.SpanStatusCode
+		}
+	};
+});
+
+describe('record_span', () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
 	});
 
 	test('successful function returns result, attaching correct attributes', async () => {
-		const { tracer, span } = create_mock_tracer();
-		const fn = vi.fn().mockResolvedValue('result');
+		const fn = vi.fn(() => Promise.resolve('result'));
 		const result = await record_span({
 			name: 'test',
-			tracer,
 			attributes: { 'test-attribute': true },
 			fn
 		});
@@ -70,14 +66,12 @@ describe('record_span', () => {
 	});
 
 	test('HttpError sets correct attributes and re-throw, does set status for >=500', async () => {
-		const { tracer, span } = create_mock_tracer();
 		const error = new HttpError(500, 'Found but badly');
-		const error_fn = vi.fn().mockRejectedValue(error);
+		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
 			record_span({
 				name: 'test',
-				tracer,
 				attributes: {},
 				fn: error_fn
 			})
@@ -100,14 +94,12 @@ describe('record_span', () => {
 	});
 
 	test('HttpError sets correct attributes and re-throws, does not set status for <500', async () => {
-		const { tracer, span } = create_mock_tracer();
 		const error = new HttpError(404, 'Not found');
-		const error_fn = vi.fn().mockRejectedValue(error);
+		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
 			record_span({
 				name: 'test',
-				tracer,
 				attributes: {},
 				fn: error_fn
 			})
@@ -122,14 +114,12 @@ describe('record_span', () => {
 	});
 
 	test('Redirect sets correct attributes and re-throws', async () => {
-		const { tracer, span } = create_mock_tracer();
 		const error = new Redirect(302, '/redirect-location');
-		const error_fn = vi.fn().mockRejectedValue(error);
+		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
 			record_span({
 				name: 'test',
-				tracer,
 				attributes: {},
 				fn: error_fn
 			})
@@ -145,14 +135,12 @@ describe('record_span', () => {
 	});
 
 	test('Generic Error sets correct attributes and re-throws', async () => {
-		const { tracer, span } = create_mock_tracer();
 		const error = new Error('Something went wrong');
-		const error_fn = vi.fn().mockRejectedValue(error);
+		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
 			record_span({
 				name: 'test',
-				tracer,
 				attributes: {},
 				fn: error_fn
 			})
@@ -174,14 +162,12 @@ describe('record_span', () => {
 	});
 
 	test('Non-Error object sets correct attributes and re-throws', async () => {
-		const { tracer, span } = create_mock_tracer();
 		const error = 'string error';
-		const error_fn = vi.fn().mockRejectedValue(error);
+		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
 			record_span({
 				name: 'test',
-				tracer,
 				attributes: {},
 				fn: error_fn
 			})

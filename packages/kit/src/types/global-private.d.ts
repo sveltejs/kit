@@ -4,6 +4,8 @@ declare global {
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
 	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
+	/** True if `config.kit.experimental.tracing.server` is `true` */
+	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
 	/** True if `config.kit.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
 	/**
