@@ -467,7 +467,7 @@ export interface PageNodeIndexes {
 }
 
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
-export type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
+export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
@@ -560,7 +560,7 @@ export type RemoteInfo =
 			name: string;
 			has_arg: boolean;
 			dynamic?: boolean;
-			entries?: RemotePrerenderEntryGenerator;
+			inputs?: RemotePrerenderInputsGenerator;
 	  };
 
 export * from '../exports/index.js';

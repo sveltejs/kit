@@ -529,10 +529,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// /prerender/dependencies like indirect calls due to page prerenders?
 		// Does it really matter?
 		if (remote_function.__.has_arg) {
-			for (const entry of (await remote_function.__.entries?.()) ?? []) {
+			for (const arg of (await remote_function.__.inputs?.()) ?? []) {
 				void enqueue(
 					null,
-					remote_prefix + remote_function.__.id + '/' + stringify_remote_arg(entry, transport)
+					remote_prefix + remote_function.__.id + '/' + stringify_remote_arg(arg, transport)
 				);
 			}
 		} else {

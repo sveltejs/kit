@@ -1,5 +1,5 @@
 /** @import { RemoteFormAction, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
-/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
+/** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { uneval, parse } from 'devalue';
@@ -174,7 +174,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {() => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<void>, dynamic?: boolean }} [options]
+ * @param {{ entries?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<void, Output>}
  */
 /**
@@ -201,7 +201,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [options]
+ * @param {{ entries?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<Input, Output>}
  */
 /**
@@ -229,7 +229,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
+ * @param {{ entries?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
@@ -237,7 +237,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @param {any} validate_or_fn
  * @param {any} [fn_or_options]
- * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [maybe_options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [maybe_options]
  * @returns {RemoteQuery<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -322,7 +322,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			type: 'prerender',
 			id: '',
 			has_arg: !!maybe_fn,
-			entries: options?.entries,
+			inputs: options?.inputs,
 			dynamic: options?.dynamic
 		})
 	});
