@@ -979,7 +979,7 @@ export interface LoadEvent<
 	untrack: <T>(fn: () => T) => T;
 
 	/**
-	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.\
+	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
 	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
