@@ -151,16 +151,13 @@ export const test = base.extend({
 		function read_traces(test_id) {
 			const raw = fs.readFileSync('test/spans.jsonl', 'utf8').split('\n').filter(Boolean);
 			const traces = /** @type {SpanData[]} */ (raw.map((line) => JSON.parse(line)));
-			const root_traces = traces.filter(
-				(trace) => trace.parent_span_id === undefined && trace.attributes.test_id === test_id
-			);
-			if (root_traces.length === 0) {
-				return [];
-			}
-			return root_traces.map((root_trace) => {
-				const child_traces = traces.filter((span) => span.trace_id === root_trace.trace_id);
-				return build_span_tree(root_trace, child_traces);
-			});
+
+			return traces
+				.filter((t) => t.parent_span_id === undefined && t.attributes.test_id === test_id)
+				.map((root_trace) => {
+					const child_traces = traces.filter((span) => span.trace_id === root_trace.trace_id);
+					return build_span_tree(root_trace, child_traces);
+				});
 		}
 
 		await use(read_traces);
