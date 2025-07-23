@@ -339,8 +339,8 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^0.29.2
-        version: 0.29.4(rollup@4.44.0)
+        specifier: ^0.30.0
+        version: 0.30.0(rollup@4.44.0)
       esbuild:
         specifier: ^0.25.4
         version: 0.25.5
@@ -2942,6 +2942,11 @@ packages:
 
   '@vercel/nft@0.29.4':
     resolution: {integrity: sha512-6lLqMNX3TuycBPABycx7A9F1bHQR7kiQln6abjFbPrf5C/05qHM9M5E4PeTE59c7z8g6vHnx1Ioihb2AQl7BTA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  '@vercel/nft@0.30.0':
+    resolution: {integrity: sha512-xVye7Z0riD9czsMuEJYpFqm2FR33r3euYaFzuEPCoUtYuDwmus3rJfKtcFU7Df+pgj8p4zs78x5lOWYoLNr+7Q==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7777,7 +7782,7 @@ snapshots:
       https-proxy-agent: 7.0.6(supports-color@10.0.0)
       node-fetch: 2.7.0
       nopt: 8.0.0
-      semver: 7.7.1
+      semver: 7.7.2
       tar: 7.4.3
     transitivePeerDependencies:
       - encoding
@@ -8114,7 +8119,7 @@ snapshots:
       '@babel/types': 7.27.6
       '@netlify/binary-info': 1.0.0
       '@netlify/serverless-functions-api': 2.1.1
-      '@vercel/nft': 0.29.4(rollup@4.44.0)
+      '@vercel/nft': 0.29.4(supports-color@10.0.0)
       archiver: 7.0.1
       common-path-prefix: 3.0.0
       copy-file: 11.0.0
@@ -8782,7 +8787,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.1
+      semver: 7.7.2
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -8798,7 +8803,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.1
+      semver: 7.7.2
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -8829,27 +8834,8 @@ snapshots:
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0(supports-color@10.0.0)
       '@rollup/pluginutils': 5.1.3(rollup@4.40.1)
-      acorn: 8.14.1
-      acorn-import-attributes: 1.9.5(acorn@8.14.1)
-      async-sema: 3.1.1
-      bindings: 1.5.0
-      estree-walker: 2.0.2
-      glob: 10.4.5
-      graceful-fs: 4.2.11
-      node-gyp-build: 4.8.0
-      picomatch: 4.0.2
-      resolve-from: 5.0.0
-    transitivePeerDependencies:
-      - encoding
-      - rollup
-      - supports-color
-
-  '@vercel/nft@0.29.4(rollup@4.44.0)':
-    dependencies:
-      '@mapbox/node-pre-gyp': 2.0.0(supports-color@10.0.0)
-      '@rollup/pluginutils': 5.1.3(rollup@4.44.0)
-      acorn: 8.14.1
-      acorn-import-attributes: 1.9.5(acorn@8.14.1)
+      acorn: 8.15.0
+      acorn-import-attributes: 1.9.5(acorn@8.15.0)
       async-sema: 3.1.1
       bindings: 1.5.0
       estree-walker: 2.0.2
@@ -8867,8 +8853,27 @@ snapshots:
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0(supports-color@10.0.0)
       '@rollup/pluginutils': 5.1.3(rollup@4.44.0)
-      acorn: 8.14.1
-      acorn-import-attributes: 1.9.5(acorn@8.14.1)
+      acorn: 8.15.0
+      acorn-import-attributes: 1.9.5(acorn@8.15.0)
+      async-sema: 3.1.1
+      bindings: 1.5.0
+      estree-walker: 2.0.2
+      glob: 10.4.5
+      graceful-fs: 4.2.11
+      node-gyp-build: 4.8.0
+      picomatch: 4.0.2
+      resolve-from: 5.0.0
+    transitivePeerDependencies:
+      - encoding
+      - rollup
+      - supports-color
+
+  '@vercel/nft@0.30.0(rollup@4.44.0)':
+    dependencies:
+      '@mapbox/node-pre-gyp': 2.0.0(supports-color@10.0.0)
+      '@rollup/pluginutils': 5.1.3(rollup@4.44.0)
+      acorn: 8.15.0
+      acorn-import-attributes: 1.9.5(acorn@8.15.0)
       async-sema: 3.1.1
       bindings: 1.5.0
       estree-walker: 2.0.2
@@ -9051,9 +9056,9 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  acorn-import-attributes@1.9.5(acorn@8.14.1):
+  acorn-import-attributes@1.9.5(acorn@8.15.0):
     dependencies:
-      acorn: 8.14.1
+      acorn: 8.15.0
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
@@ -11142,7 +11147,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
 
   make-error@1.3.6: {}
 
@@ -11443,7 +11448,7 @@ snapshots:
 
   node-abi@3.75.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
 
   node-addon-api@6.1.0: {}
 
@@ -11666,7 +11671,7 @@ snapshots:
       ky: 1.8.1
       registry-auth-token: 5.1.0
       registry-url: 6.0.1
-      semver: 7.7.1
+      semver: 7.7.2
 
   package-manager-detector@0.2.8: {}
 
@@ -12248,7 +12253,7 @@ snapshots:
       detect-libc: 2.0.3
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
-      semver: 7.7.1
+      semver: 7.7.2
       simple-get: 4.0.1
       tar-fs: 3.0.10
       tunnel-agent: 0.6.0
