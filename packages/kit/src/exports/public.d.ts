@@ -407,7 +407,7 @@ export interface KitConfig {
 		/**
 		 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
 		 * @default undefined
-		 * @since 2.22.0 // TODO: update this before publishing
+		 * @since 2.26.0 // TODO: update this before publishing
 		 */
 		tracing?: 'server';
 	};
@@ -979,7 +979,8 @@ export interface LoadEvent<
 	untrack: <T>(fn: () => T) => T;
 
 	/**
-	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
+	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.\
+	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1265,6 +1266,7 @@ export interface RequestEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1431,6 +1433,7 @@ export interface ServerLoadEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
 	 */
 	tracing: {
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
