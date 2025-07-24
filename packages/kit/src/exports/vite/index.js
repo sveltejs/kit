@@ -382,7 +382,13 @@ async function kit({ svelte_config }) {
 			new_config.environments = {
 				ssr: {
 					optimizeDeps: {
-						include: config.optimizeDeps?.include ?? [],
+						include: [
+							...(config.optimizeDeps?.include ?? []),
+							// @sveltejs/kit is excluded from optimization but some of its
+							// dependencies are packaged as CommonJS so we need to include those
+							'@sveltejs/kit > cookie',
+							'@sveltejs/kit > set-cookie-parser'
+						],
 						exclude: [...(new_config.optimizeDeps?.exclude ?? []), '__sveltekit/*'],
 						extensions: config.optimizeDeps?.extensions ?? [],
 						entries: new_config.optimizeDeps?.entries ?? [],
