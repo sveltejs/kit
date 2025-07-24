@@ -32,7 +32,7 @@ import { app_dir, base } from '__sveltekit/paths';
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<void, Output>}
  */
 /**
@@ -57,7 +57,7 @@ import { app_dir, base } from '__sveltekit/paths';
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input) => Output} fn
+ * @param {(arg: Input) => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<Input, Output>}
  */
 /**
@@ -82,14 +82,14 @@ import { app_dir, base } from '__sveltekit/paths';
  * @template Output
  * @overload
  * @param {Schema} schema
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(args?: Input) => Output} [maybe_fn]
+ * @param {(args?: Input) => MaybePromise<Output>} [maybe_fn]
  * @returns {RemoteQueryFunction<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -173,7 +173,7 @@ export function query(validate_or_fn, maybe_fn) {
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<void, Output>}
  */
@@ -200,7 +200,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input) => Output} fn
+ * @param {(arg: Input) => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<Input, Output>}
  */
@@ -228,7 +228,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {Schema} schema
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
@@ -247,7 +247,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	const maybe_fn = typeof fn_or_options === 'function' ? fn_or_options : undefined;
 	/** @type {typeof maybe_options} */
 	const options = maybe_options ?? (maybe_fn ? undefined : fn_or_options);
-	/** @type {(arg?: Input) => Output} */
+	/** @type {(arg?: Input) => MaybePromise<Output>} */
 	const fn = maybe_fn ?? validate_or_fn;
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);

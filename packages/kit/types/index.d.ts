@@ -2742,7 +2742,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Output>(fn: () => Output): RemoteQueryFunction<void, Output>;
+	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2762,7 +2762,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQueryFunction<Input, Output>;
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2782,7 +2782,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2804,7 +2804,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Output>(fn: () => Output, options?: {
+	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<void, Output>;
@@ -2828,7 +2828,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<Input, Output>;
@@ -2853,7 +2853,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
