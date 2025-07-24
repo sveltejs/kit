@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { unstable_readConfig } from 'wrangler';
 import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
