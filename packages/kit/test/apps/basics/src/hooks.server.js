@@ -53,7 +53,7 @@ export const handle = sequence(
 	({ event, resolve }) => {
 		const test_id = !building && event.url.searchParams.get('test_id');
 		if (test_id) {
-			event.tracing.rootSpan.setAttribute('test_id', test_id);
+			event.tracing.root.setAttribute('test_id', test_id);
 		}
 		return resolve(event);
 	},

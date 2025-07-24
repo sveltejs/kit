@@ -374,7 +374,14 @@ export async function respond(request, options, manifest, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = merge_tracing(event, root_span);
+				const traced_event = {
+					...event,
+					tracing: {
+						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+						root: root_span,
+						current: root_span
+					}
+				};
 				return await with_event(traced_event, () =>
 					options.hooks.handle({
 						event: traced_event,
