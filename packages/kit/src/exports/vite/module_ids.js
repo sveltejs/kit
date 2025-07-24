@@ -10,6 +10,7 @@ export const service_worker = '\0virtual:service-worker';
 export const sveltekit_environment = '\0virtual:__sveltekit/environment';
 export const sveltekit_paths = '\0virtual:__sveltekit/paths';
 export const sveltekit_server = '\0virtual:__sveltekit/server';
+export const sveltekit_vite_environment = '\0virtual:__sveltekit/vite-environment';
 
 export const app_server = fileURLToPath(
 	new URL('../../runtime/app/server/index.js', import.meta.url)
