@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.1.1
+### Patch Changes
+
+
+- fix: support assets-only workers in wrangler validation ([#14019](https://github.com/sveltejs/kit/pull/14019))
+
+- Updated dependencies [[`fda0165`](https://github.com/sveltejs/kit/commit/fda0165804011d221bb196a26565eea3e08b9d42)]:
+  - @sveltejs/kit@2.25.2
+
 ## 7.1.0
 ### Minor Changes
 

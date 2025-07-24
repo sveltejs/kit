@@ -17,7 +17,13 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import type { SvelteConfig, PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import {
+	RouteId as AppRouteId,
+	LayoutParams as AppLayoutParams,
+	ResolvedPathname
+	// @ts-ignore
+} from '$app/types';
 import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
@@ -862,11 +868,11 @@ export interface Transporter<
  * rather than using `Load` directly.
  */
 export type Load<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
@@ -874,10 +880,10 @@ export type Load<
  * rather than using `LoadEvent` directly.
  */
 export interface LoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -995,8 +1001,8 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1135,13 +1141,13 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
  */
 export interface Page<
-	Params extends Record<string, string> = Record<string, string>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL;
+	url: URL & { pathname: ResolvedPathname };
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
@@ -1183,8 +1189,8 @@ export interface Page<
 export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -1288,8 +1294,8 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
  */
 export type RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 export interface ResolveOptions {
@@ -1367,16 +1373,16 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export type ServerLoad<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1456,9 +1462,9 @@ export interface ServerLoadEvent<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
@@ -1466,9 +1472,9 @@ export type Action<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
