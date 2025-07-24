@@ -4,7 +4,7 @@
 ### Minor Changes
 
 
-- feat: better type-safety for `page.route.id`, `page.params`, page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
+- feat: better type-safety for `page.route.id`, `page.params`, `page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
 
 
 - feat: `resolve(...)` and `asset(...)` helpers for resolving paths ([#13864](https://github.com/sveltejs/kit/pull/13864))
