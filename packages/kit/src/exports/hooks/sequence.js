@@ -80,9 +80,6 @@ export function sequence(...handlers) {
 	if (!length) return ({ event, resolve }) => resolve(event);
 
 	return ({ event, resolve }) => {
-		// there's an assumption here that people aren't doing something insane like sequence(() => {}, sequence(() => {}))
-		// worst case there is that future spans get a lower-down span as their root span -- the tracing would still work,
-		// it'd just look a little weird
 		return apply_handle(0, event, {});
 
 		/**
