@@ -9,7 +9,8 @@
 		"moduleResolution": "node16",
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
+			"@sveltejs/kit": ["../kit/types/index.d.ts"],
+			"@sveltejs/kit/internal": ["../kit/src/exports/internal/index.js"]
 		},
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"lib": ["es2021"],

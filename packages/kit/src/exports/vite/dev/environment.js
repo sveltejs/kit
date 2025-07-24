@@ -22,12 +22,8 @@ export function to_fs(str) {
 
 /** @param {string} id */
 export async function resolve(id) {
-	// TODO: doesn't work for files symlinked to kit package workspace. Try in new app with node_modules?
+	// TODO: doesn't work for files symlinked to kit package workspace
 	const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
-	console.log({
-		id,
-		url
-	})
 
 	const module = await loud_ssr_load_module(url);
 

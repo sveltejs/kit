@@ -1,4 +1,4 @@
-import { Server } from '../kit/src/runtime/server/index.js';
+import { Server } from '@sveltejs/kit/internal';
 // TODO: use prod variables when building
 // TODO: fix kit virtual module type issues when this file is consumed by an app
 import {

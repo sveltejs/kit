@@ -346,20 +346,50 @@ async function kit({ svelte_config }) {
 					'cookie',
 					'set-cookie-parser'
 				];
-
-				// TODO: vite-plugin-cloudflare doesn't allow `ssr.external` but VPS and Kit are using it
-				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external =
-					undefined;
-				// only needed because of vite-plugin-cloudflare
-				// TODO: remove when https://github.com/cloudflare/workers-sdk/issues/9036#issuecomment-2825271144 is fixed
-				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).noExternal =
-					undefined;
-
-				// vite-plugin-svelte is setting this but it doesn't work with vite-plugin-cloudflare
-				/** @type {NonNullable<import('vite').UserConfig['resolve']>} */ (
-					new_config.resolve
-				).external = undefined;
 			}
+
+			// TODO: move these to the Cloudflare adapter
+
+			// vite-plugin-cloudflare doesn't allow `ssr.external` but VPS and Kit set it
+			/** @type {import('vite').SSROptions} */ (config.ssr).external = undefined;
+			/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external =
+				undefined;
+
+			// TODO: remove these when https://github.com/cloudflare/workers-sdk/issues/9036#issuecomment-2825271144 is resolved
+			/** @type {import('vite').SSROptions} */ (config.ssr).noExternal = undefined;
+			/** @type {import('vite').SSROptions} */ (new_config.ssr).noExternal = undefined;
+
+			// we need to set this because server environments don't inherit the top-level optimizeDeps option
+			// see https://vite.dev/guide/api-environment.html#environments-configuration
+			// const optimize_deps = vite.mergeConfig(
+			// 	config?.optimizeDeps ?? {},
+			// 	new_config?.optimizeDeps ?? {},
+			// 	false
+			// );
+			// new_config.environments = {
+			// 	ssr: {
+			// 		optimizeDeps: vite.mergeConfig(
+			// 			optimize_deps,
+			// 			{
+			// 				// ensure vite-plugin-cloudflare ignores virtual modules when optimising dependencies
+			// 				exclude: ['__sveltekit/*']
+			// 			},
+			// 			false
+			// 		)
+			// 	}
+			// };
+			// TODO: find a better way to inherit top level optimizeDeps options
+			new_config.environments = {
+				ssr: {
+					optimizeDeps: {
+						include: config.optimizeDeps?.include ?? [],
+						exclude: [...(new_config.optimizeDeps?.exclude ?? []), '__sveltekit/*'],
+						extensions: config.optimizeDeps?.extensions ?? [],
+						entries: new_config.optimizeDeps?.entries ?? [],
+						esbuildOptions: config.optimizeDeps?.esbuildOptions
+					}
+				}
+			};
 
 			warn_overridden_config(config, new_config);
 
@@ -1209,21 +1239,6 @@ Tips:
 					publicDir: kit.files.assets
 				};
 			}
-
-			// TODO: Cloudflare Vite plugin doesn't allow `ssr.external` but VPS and Kit are using it
-			/** @type {import('vite').SSROptions} */ (new_config.ssr).external = undefined;
-			// TODO: see https://github.com/cloudflare/workers-sdk/issues/9036#issuecomment-2825271144
-			/** @type {import('vite').SSROptions} */ (new_config.ssr).noExternal = undefined;
-
-			// TODO: move this to Cloudflare adapter?
-			// Ensure vite-plugin-cloudflare ignores virtual modules when optimising dependencies
-			new_config.environments = {
-				ssr: {
-					optimizeDeps: {
-						exclude: [...(config.environments?.ssr.optimizeDeps?.exclude ?? []), '__sveltekit/*']
-					}
-				}
-			};
 
 			warn_overridden_config(config, new_config);
 
