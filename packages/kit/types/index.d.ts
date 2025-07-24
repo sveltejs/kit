@@ -1542,7 +1542,7 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+	export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) & {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1555,10 +1555,7 @@ declare module '@sveltejs/kit' {
 				data: FormData;
 				submit: () => Promise<void> & {
 					updates: (
-						...queries: Array<
-							| ReturnType<RemoteQuery<any, any>>
-							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-						>
+						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 					) => Promise<void>;
 				};
 			}) => void
@@ -1581,7 +1578,7 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+		for: (key: string | number | boolean) => Omit<RemoteForm<Success, Failure>, 'for'>;
 		/** The result of the form submission */
 		get result(): Success | Failure | undefined;
 		/** When there's an error during form submission, it appears on this property */
@@ -1598,10 +1595,7 @@ declare module '@sveltejs/kit' {
 					data: FormData;
 					submit: () => Promise<void> & {
 						updates: (
-							...queries: Array<
-								| ReturnType<RemoteQuery<any, any>>
-								| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-							>
+							...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 						) => Promise<void>;
 					};
 				}) => void
@@ -1660,25 +1654,34 @@ declare module '@sveltejs/kit' {
 	 */
 	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 		updates: (
-			...queries: Array<
-				| ReturnType<RemoteQuery<any, any>>
-				| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-			>
+			...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 		) => Promise<Awaited<Output>>;
 	};
 
-	/**
-	 * The return value of a remote `query` or `prerender` function.
-	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call the underlying function.
-	 * On the client, this will `fetch` data from the server.
-	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
-	 */
-	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+	export type RemoteResource<T> = Promise<Awaited<T>> & {
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 		get error(): any;
 		/** `true` before the first result is available and during refreshes */
 		get loading(): boolean;
+	} & (
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): undefined;
+					status: 'loading';
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<T>;
+					status: 'success' | 'reloading';
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<T> | undefined;
+					status: 'error';
+			  }
+		);
+
+	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
@@ -1686,44 +1689,6 @@ declare module '@sveltejs/kit' {
 		 * transport the updated data to the client along with the response, if the action was successful.
 		 */
 		refresh: () => Promise<void>;
-		/**
-		 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
-		 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
-		 * Overrides are applied on new values, too, until they are released.
-		 *
-		 * ```svelte
-		 * <script>
-		 *   import { getList, commit } from './todos.remote.js';
-		 *   const list = getList();
-		 *   let release = [];
-		 * </script>
-		 *
-		 * <h2>Select items to remove</h2>
-		 *
-		 * <ul>
-		 *   {#each list as item}
-		 *     <li>{item.text}</li>
-		 *     <button onclick={() => {
-		 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
-		 *     }}>Remove</button>
-		 *   {/each}
-		 * </ul>
-		 *
-		 * <button onclick={() => {
-		 *   release.forEach((r) => r());
-		 *   release = [];
-		 * }}>Revert</button>
-		 *
-		 * <button onclick={async () => {
-		 *   await commit();
-		 *   release.forEach((r) => r());
-		 *   release = [];
-		 * }}>Confirm</button>
-		 * ```
-		 *
-		 * Can only be called on the client.
-		 */
-		override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
 		 * `withOverride` expects a function that takes the current value and returns the new value.
@@ -1744,27 +1709,28 @@ declare module '@sveltejs/kit' {
 		 * </form>
 		 * ```
 		 */
-		withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+		withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
 			_key: string;
 			release: () => void;
 		};
-	} & (
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): undefined;
-					status: 'loading';
-			  }
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): Awaited<Output>;
-					status: 'success' | 'reloading';
-			  }
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): Awaited<Output> | undefined;
-					status: 'error';
-			  }
-		);
+	};
+
+	/**
+	 * The return value of a remote `prerender` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 */
+	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+	/**
+	 * The return value of a remote `query` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+	 */
+	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2693,7 +2659,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteQuery, RemoteCommand, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, ActionFailure as IActionFailure, RemoteForm } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2734,7 +2700,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Output>(fn: () => Output): RemoteQuery<void, Output>;
+	export function query<Output>(fn: () => Output): RemoteQueryFunction<void, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2754,7 +2720,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQuery<Input, Output>;
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQueryFunction<Input, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2774,7 +2740,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2799,7 +2765,7 @@ declare module '$app/server' {
 	export function prerender<Output>(fn: () => Output, options?: {
 		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<void, Output>;
+	} | undefined): RemotePrerenderFunction<void, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2823,7 +2789,7 @@ declare module '$app/server' {
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
 		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<Input, Output>;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2848,7 +2814,7 @@ declare module '$app/server' {
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
 		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2967,7 +2933,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
+	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteForm<T, U>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
