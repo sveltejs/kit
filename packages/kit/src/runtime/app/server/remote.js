@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -516,7 +516,7 @@ export function command(validate_or_fn, maybe_fn) {
  * @template T
  * @template [U=never]
  * @param {(formData: FormData) => T | IActionFailure<U>} fn
- * @returns {RemoteFormAction<T, U>}
+ * @returns {RemoteForm<T, U>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function form(fn) {
@@ -611,7 +611,7 @@ export function form(fn) {
 
 		if (key == undefined) {
 			Object.defineProperty(wrapper, 'for', {
-				/** @type {RemoteFormAction<any, any>['for']} */
+				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
 					const info = get_remote_info(getRequestEvent());
 					let entry = info.form_instances.get(key);

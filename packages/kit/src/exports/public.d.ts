@@ -1560,7 +1560,7 @@ export interface Snapshot<T = any> {
  * </ul>
  * ```
  */
-export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) & {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
@@ -1599,7 +1599,7 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 	 *	{/each}
 	 * ```
 	 */
-	for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+	for: (key: string | number | boolean) => Omit<RemoteForm<Success, Failure>, 'for'>;
 	/** The result of the form submission */
 	get result(): Success | Failure | undefined;
 	/** When there's an error during form submission, it appears on this property */

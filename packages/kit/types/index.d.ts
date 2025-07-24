@@ -221,7 +221,10 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (
+			name: string,
+			opts: import('cookie').CookieSerializeOptions & { path: string }
+		) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -1267,7 +1270,10 @@ declare module '@sveltejs/kit' {
 		 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 		 * @param input the html chunk and the info if this is the last chunk
 		 */
-		transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
+		transformPageChunk?: (input: {
+			html: string;
+			done: boolean;
+		}) => MaybePromise<string | undefined>;
 		/**
 		 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 		 * By default, none will be included.
@@ -1542,7 +1548,7 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+	export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) & {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1581,7 +1587,7 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+		for: (key: string | number | boolean) => Omit<RemoteForm<Success, Failure>, 'for'>;
 		/** The result of the form submission */
 		get result(): Success | Failure | undefined;
 		/** When there's an error during form submission, it appears on this property */
@@ -1787,7 +1793,9 @@ declare module '@sveltejs/kit' {
 		 * A function that is invoked once the entry has been created. This is where you
 		 * should write the function to the filesystem and generate redirect manifests.
 		 */
-		complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
+		complete(entry: {
+			generateManifest(opts: { relativePath: string }): string;
+		}): MaybePromise<void>;
 	}
 
 	// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -2240,16 +2248,24 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
-		message: string;
-	} extends App.Error ? App.Error | string | undefined : never): never;
+	export function error(
+		status: number,
+		body?: {
+			message: string;
+		} extends App.Error
+			? App.Error | string | undefined
+			: never
+	): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(
+		e: unknown,
+		status?: T | undefined
+	): e is HttpError_1 & {
 		status: T extends undefined ? never : T;
-	});
+	};
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
@@ -2266,7 +2282,10 @@ declare module '@sveltejs/kit' {
 	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
 	 * @throws {Error} If the provided status is invalid.
 	 * */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
+	export function redirect(
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number),
+		location: string | URL
+	): never;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
@@ -2318,20 +2337,31 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
-	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
-	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	export type LessThan<
+		TNumber extends number,
+		TArray extends any[] = []
+	> = TNumber extends TArray['length']
+		? TArray[number]
+		: LessThan<TNumber, [...TArray, TArray['length']]>;
+	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<
+		TEnd | LessThan<TEnd>,
+		LessThan<TStart>
+	>;
 	export const VERSION: string;
 	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		constructor(
+			status: number,
+			body: {
+				message: string;
+			} extends App.Error
+				? App.Error | string | undefined
+				: App.Error
+		);
 		status: number;
 		body: App.Error;
 		toString(): string;
 	}
 	class Redirect_1 {
-		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2411,19 +2441,28 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import("@sveltejs/kit").Handle[]): import("@sveltejs/kit").Handle;
+	export function sequence(
+		...handlers: import('@sveltejs/kit').Handle[]
+	): import('@sveltejs/kit').Handle;
 
 	export {};
 }
 
 declare module '@sveltejs/kit/node' {
-	export function getRequest({ request, base, bodySizeLimit }: {
-		request: import("http").IncomingMessage;
+	export function getRequest({
+		request,
+		base,
+		bodySizeLimit
+	}: {
+		request: import('http').IncomingMessage;
 		base: string;
 		bodySizeLimit?: number;
 	}): Promise<Request>;
 
-	export function setResponse(res: import("http").ServerResponse, response: Response): Promise<void>;
+	export function setResponse(
+		res: import('http').ServerResponse,
+		response: Response
+	): Promise<void>;
 	/**
 	 * Converts a file on disk to a readable stream
 	 * @since 2.4.0
@@ -2448,7 +2487,7 @@ declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import("vite").Plugin[]>;
+	export function sveltekit(): Promise<import('vite').Plugin[]>;
 
 	export {};
 }
@@ -2496,7 +2535,10 @@ declare module '$app/forms' {
 	 * }
 	 * ```
 	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("@sveltejs/kit").ActionResult<Success, Failure>;
+	export function deserialize<
+		Success extends Record<string, unknown> | undefined,
+		Failure extends Record<string, unknown> | undefined
+	>(result: string): import('@sveltejs/kit').ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -2520,14 +2562,23 @@ declare module '$app/forms' {
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
+	export function enhance<
+		Success extends Record<string, unknown> | undefined,
+		Failure extends Record<string, unknown> | undefined
+	>(
+		form_element: HTMLFormElement,
+		submit?: import('@sveltejs/kit').SubmitFunction<Success, Failure>
+	): {
 		destroy(): void;
 	};
 	/**
 	 * This action updates the `form` property of the current page with the given data and updates `page.status`.
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+	export function applyAction<
+		Success extends Record<string, unknown> | undefined,
+		Failure extends Record<string, unknown> | undefined
+	>(result: import('@sveltejs/kit').ActionResult<Success, Failure>): Promise<void>;
 
 	export {};
 }
@@ -2538,7 +2589,9 @@ declare module '$app/navigation' {
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function afterNavigate(callback: (navigation: import("@sveltejs/kit").AfterNavigate) => void): void;
+	export function afterNavigate(
+		callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void
+	): void;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
@@ -2550,7 +2603,9 @@ declare module '$app/navigation' {
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function beforeNavigate(callback: (navigation: import("@sveltejs/kit").BeforeNavigate) => void): void;
+	export function beforeNavigate(
+		callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void
+	): void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
 	 *
@@ -2560,7 +2615,9 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import("@sveltejs/kit").OnNavigate) => MaybePromise<(() => void) | void>): void;
+	export function onNavigate(
+		callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>
+	): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -2575,14 +2632,19 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: {
-		replaceState?: boolean | undefined;
-		noScroll?: boolean | undefined;
-		keepFocus?: boolean | undefined;
-		invalidateAll?: boolean | undefined;
-		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
-		state?: App.PageState | undefined;
-	} | undefined): Promise<void>;
+	export function goto(
+		url: string | URL,
+		opts?:
+			| {
+					replaceState?: boolean | undefined;
+					noScroll?: boolean | undefined;
+					keepFocus?: boolean | undefined;
+					invalidateAll?: boolean | undefined;
+					invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
+					state?: App.PageState | undefined;
+			  }
+			| undefined
+	): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -2609,9 +2671,13 @@ declare module '$app/navigation' {
 	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
 	 * Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export function refreshAll({ includeLoadFunctions }?: {
-		includeLoadFunctions?: boolean;
-	} | undefined): Promise<void>;
+	export function refreshAll({
+		includeLoadFunctions
+	}?:
+		| {
+				includeLoadFunctions?: boolean;
+		  }
+		| undefined): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -2623,14 +2689,17 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 * */
-	export function preloadData(href: string): Promise<{
-		type: "loaded";
-		status: number;
-		data: Record<string, any>;
-	} | {
-		type: "redirect";
-		location: string;
-	}>;
+	export function preloadData(href: string): Promise<
+		| {
+				type: 'loaded';
+				status: number;
+				data: Record<string, any>;
+		  }
+		| {
+				type: 'redirect';
+				location: string;
+		  }
+	>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -2693,7 +2762,13 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteQuery, RemoteCommand, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	import type {
+		RequestEvent,
+		RemoteQuery,
+		RemoteCommand,
+		ActionFailure as IActionFailure,
+		RemoteForm
+	} from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2754,7 +2829,10 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQuery<Input, Output>;
+	export function query<Input, Output>(
+		validate: 'unchecked',
+		fn: (arg: Input) => Output
+	): RemoteQuery<Input, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2774,7 +2852,10 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(
+		schema: Schema,
+		fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output
+	): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2796,10 +2877,15 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Output>(fn: () => Output, options?: {
-		inputs?: RemotePrerenderInputsGenerator<void>;
-		dynamic?: boolean;
-	} | undefined): RemoteQuery<void, Output>;
+	export function prerender<Output>(
+		fn: () => Output,
+		options?:
+			| {
+					inputs?: RemotePrerenderInputsGenerator<void>;
+					dynamic?: boolean;
+			  }
+			| undefined
+	): RemoteQuery<void, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2820,10 +2906,16 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
-		inputs?: RemotePrerenderInputsGenerator<Input>;
-		dynamic?: boolean;
-	} | undefined): RemoteQuery<Input, Output>;
+	export function prerender<Input, Output>(
+		validate: 'unchecked',
+		fn: (arg: Input) => Output,
+		options?:
+			| {
+					inputs?: RemotePrerenderInputsGenerator<Input>;
+					dynamic?: boolean;
+			  }
+			| undefined
+	): RemoteQuery<Input, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2845,10 +2937,16 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
-		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
-		dynamic?: boolean;
-	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function prerender<Schema extends StandardSchemaV1, Output>(
+		schema: Schema,
+		fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output,
+		options?:
+			| {
+					inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
+					dynamic?: boolean;
+			  }
+			| undefined
+	): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2910,7 +3008,10 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
+	export function command<Input, Output>(
+		validate: 'unchecked',
+		fn: (arg: Input) => Output
+	): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2941,7 +3042,10 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function command<Schema extends StandardSchemaV1, Output>(
+		validate: Schema,
+		fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output
+	): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a form action. The passed function will be called when the form is submitted.
 	 * Returns an object that can be spread onto a form element to connect it to the function.
@@ -2967,7 +3071,9 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
+	export function form<T, U = never>(
+		fn: (formData: FormData) => T | IActionFailure<U>
+	): RemoteForm<T, U>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
@@ -3011,19 +3117,21 @@ declare module '$app/state' {
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
 	 *
 	 * */
-	export const page: import("@sveltejs/kit").Page;
+	export const page: import('@sveltejs/kit').Page;
 	/**
 	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
-	export const navigating: import("@sveltejs/kit").Navigation | {
-		from: null;
-		to: null;
-		type: null;
-		willUnload: null;
-		delta: null;
-		complete: null;
-	};
+	export const navigating:
+		| import('@sveltejs/kit').Navigation
+		| {
+				from: null;
+				to: null;
+				type: null;
+				willUnload: null;
+				delta: null;
+				complete: null;
+		  };
 	/**
 	 * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 * */
@@ -3037,11 +3145,10 @@ declare module '$app/state' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-		
 		page: typeof page;
-		
+
 		navigating: typeof navigating;
-		
+
 		updated: typeof updated;
 	};
 	/**
@@ -3051,7 +3158,7 @@ declare module '$app/stores' {
 	 *
 	 * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
-	export const page: import("svelte/store").Readable<import("@sveltejs/kit").Page>;
+	export const page: import('svelte/store').Readable<import('@sveltejs/kit').Page>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
@@ -3061,7 +3168,9 @@ declare module '$app/stores' {
 	 *
 	 * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
-	export const navigating: import("svelte/store").Readable<import("@sveltejs/kit").Navigation | null>;
+	export const navigating: import('svelte/store').Readable<
+		import('@sveltejs/kit').Navigation | null
+	>;
 	/**
 	 * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 *
@@ -3069,12 +3178,12 @@ declare module '$app/stores' {
 	 *
 	 * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
 	 * */
-	export const updated: import("svelte/store").Readable<boolean> & {
+	export const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
 
 	export {};
-}/**
+} /**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts

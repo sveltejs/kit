@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQuery, RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
@@ -494,7 +494,7 @@ export function command(id) {
 /**
  * Client-version of the `form` function from `$app/server`.
  * @param {string} id
- * @returns {RemoteFormAction<any, any>}
+ * @returns {RemoteForm<any, any>}
  */
 export function form(id) {
 	/**
@@ -650,7 +650,7 @@ export function form(id) {
 			return form_data;
 		}
 
-		/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
 			return (event) => {
@@ -688,7 +688,7 @@ export function form(id) {
 		submit.action = action;
 		submit.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
 
-		/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any, any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return (event) => {
@@ -710,7 +710,7 @@ export function form(id) {
 			};
 		};
 
-		/** @type {RemoteFormAction<any, any>['formAction']} */
+		/** @type {RemoteForm<any, any>['formAction']} */
 		// @ts-expect-error we gotta set enhance as a non-enumerable property
 		const form_action = {
 			type: 'submit',
@@ -719,7 +719,7 @@ export function form(id) {
 		};
 
 		Object.defineProperty(form_action, 'enhance', {
-			/** @type {RemoteFormAction<any, any>['formAction']['enhance']} */
+			/** @type {RemoteForm<any, any>['formAction']['enhance']} */
 			value: (callback) => {
 				return {
 					type: 'submit',
@@ -748,7 +748,7 @@ export function form(id) {
 				enumerable: false
 			},
 			enhance: {
-				/** @type {RemoteFormAction<any, any>['enhance']} */
+				/** @type {RemoteForm<any, any>['enhance']} */
 				value: (callback) => {
 					return {
 						method: 'POST',
@@ -762,7 +762,7 @@ export function form(id) {
 
 		if (key == undefined) {
 			Object.defineProperty(submit, 'for', {
-				/** @type {RemoteFormAction<any, any>['for']} */
+				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
 					let entry = instance_cache.get(key);
 
