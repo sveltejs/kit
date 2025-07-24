@@ -2402,7 +2402,7 @@ declare module '$app/paths' {
 	 * 	slug: 'hello-world'
 	 * });
 	 * ```
-	 * @since 2.22
+	 * @since 2.26
 	 */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
 
@@ -2419,6 +2419,7 @@ declare module '$app/paths' {
 	 *
 	 * <img alt="a potato" src={asset('potato.jpg')} />
 	 * ```
+	 * @since 2.26
 	 */
 	export function asset(file: Asset): string;
 

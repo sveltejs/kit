@@ -4,6 +4,10 @@ title: $app/types
 
 This module contains generated types for the routes in your app.
 
+<blockquote class="since note">
+	<p>Available since 2.26</p>
+</blockquote>
+
 ```js
 // @noErrors
 import type { RouteId, RouteParams, LayoutParams } from '$app/types';

@@ -42,7 +42,7 @@ type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
  * 	slug: 'hello-world'
  * });
  * ```
- * @since 2.22
+ * @since 2.26
  */
 export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
 
@@ -59,6 +59,7 @@ export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): 
  *
  * <img alt="a potato" src={asset('potato.jpg')} />
  * ```
+ * @since 2.26
  */
 export function asset(file: Asset): string;
 
