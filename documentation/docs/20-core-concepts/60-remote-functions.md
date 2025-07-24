@@ -338,7 +338,7 @@ By default a failed schema validation will result in a generic `400` response wi
 import z from 'zod';
 
 export function handleValidationError({ issues }) {
-  return { validationErrors: z.treeifyError({ isses })}
+  return { validationErrors: z.prettifyError({ isses })}
 }
 ```
 
