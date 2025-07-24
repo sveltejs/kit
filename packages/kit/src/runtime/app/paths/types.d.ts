@@ -6,7 +6,7 @@ import { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/ty
  *
  * Example usage: `<a href="{base}/your-page">Link</a>`
  *
- * @deprecated Use `resolve(...)` instead
+ * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
 export let base: '' | `/${string}`;
 
@@ -15,7 +15,7 @@ export let base: '' | `/${string}`;
  *
  * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
  *
- * @deprecated Use `asset(...)` instead
+ * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
  */
 export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
@@ -63,7 +63,7 @@ export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): 
 export function asset(file: Asset): string;
 
 /**
- * @deprecated Use `resolve(...)` instead
+ * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
 export function resolveRoute<T extends RouteId | Pathname>(
 	...args: ResolveArgs<T>
