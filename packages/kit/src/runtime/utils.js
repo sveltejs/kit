@@ -1,5 +1,3 @@
-/** @import { Span } from '@opentelemetry/api'; */
-
 /**
  * @param {string} text
  * @returns {ArrayBufferLike}
@@ -57,9 +55,9 @@ export function get_relative_path(from, to) {
 }
 
 /**
- * @template {{ tracing: { enabled: boolean, root: Span, current: Span } }} T
+ * @template {{ tracing: { enabled: boolean, root: import('@opentelemetry/api').Span, current: import('@opentelemetry/api').Span } }} T
  * @param {T} event_like
- * @param {Span} current
+ * @param {import('@opentelemetry/api').Span} current
  * @returns {T}
  */
 export function merge_tracing(event_like, current) {
