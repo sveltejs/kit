@@ -506,7 +506,7 @@ export function command(validate_or_fn, maybe_fn) {
  *
  * @template T
  * @template [U=never]
- * @param {(formData: FormData) => T | IActionFailure<U>} fn
+ * @param {(formData: FormData) => MaybePromise<T | IActionFailure<U>>} fn
  * @returns {RemoteForm<T, U>}
  */
 /*@__NO_SIDE_EFFECTS__*/

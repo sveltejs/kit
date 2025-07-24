@@ -2933,7 +2933,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteForm<T, U>;
+	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T | IActionFailure<U>>): RemoteForm<T, U>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
