@@ -1,9 +1,9 @@
-import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unstable_readConfig } from 'wrangler';
-import { is_building_for_cloudflare_pages } from './utils.js';
+import { VERSION } from '@sveltejs/kit';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
@@ -31,7 +31,7 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_config(options.config);
+			const wrangler_config = validate_wrangler_config(options.config);
 			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -286,33 +286,12 @@ _redirects
  * @param {string} config_file
  * @returns {import('wrangler').Unstable_Config}
  */
-function validate_config(config_file = undefined) {
+function validate_wrangler_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	// we don't support workers sites
-	if (wrangler_config.site) {
-		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
-		);
-	}
-
-	if (is_building_for_cloudflare_pages(wrangler_config)) {
-		return wrangler_config;
-	}
-
-	// probably deploying to Cloudflare Workers
-	if (wrangler_config.main || wrangler_config.assets) {
-		if (!wrangler_config.assets?.directory) {
-			throw new Error(
-				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-			);
-		}
-
-		if (!wrangler_config.assets?.binding) {
-			throw new Error(
-				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-			);
-		}
+	if (!is_building_for_cloudflare_pages(wrangler_config)) {
+		// probably deploying to Cloudflare Workers
+		validate_worker_settings(wrangler_config);
 	}
 
 	return wrangler_config;
