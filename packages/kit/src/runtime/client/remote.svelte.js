@@ -1,4 +1,4 @@
-/** @import { RemoteForm, RemoteQuery, RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQueryFunction, RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
@@ -45,7 +45,99 @@ void (async () => {
  * @template T
  * @implements {Partial<Promise<T>>}
  */
-class Resource {
+class Prerender {
+	/** @type {Promise<T>} */
+	#promise;
+
+	#loading = $state(true);
+
+	/** @type {T | undefined} */
+	#current = $state.raw();
+
+	#error = $state.raw(undefined);
+
+	/**
+	 * @param {() => Promise<T>} fn
+	 */
+	constructor(fn) {
+		this.#promise = fn().then(
+			(value) => {
+				this.#loading = false;
+				this.#current = value;
+				return value;
+			},
+			(error) => {
+				this.#loading = false;
+				this.#error = error;
+				throw error;
+			}
+		);
+	}
+
+	/**
+	 *
+	 * @param {((value: any) => any) | null | undefined} onfulfilled
+	 * @param {((reason: any) => any) | null | undefined} [onrejected]
+	 * @returns
+	 */
+	then(onfulfilled, onrejected) {
+		return this.#promise.then(onfulfilled, onrejected);
+	}
+
+	/**
+	 * @param {((reason: any) => any) | null | undefined} onrejected
+	 */
+	catch(onrejected) {
+		return this.#promise.catch(onrejected);
+	}
+
+	/**
+	 * @param {(() => any) | null | undefined} onfinally
+	 */
+	finally(onfinally) {
+		return this.#promise.finally(onfinally);
+	}
+
+	get current() {
+		return this.#current;
+	}
+
+	get error() {
+		return this.#error;
+	}
+
+	/**
+	 * Returns true if the resource is loading or reloading.
+	 */
+	get loading() {
+		return this.#loading;
+	}
+
+	/**
+	 * Returns the status of the resource:
+	 * - 'loading': no value yet
+	 * - 'success': got a value after a successful fetch
+	 * - 'error': got an error after a fetch failed
+	 */
+	get status() {
+		if (this.#loading) {
+			return 'loading';
+		} else if (this.#error !== undefined) {
+			return 'error';
+		} else {
+			return 'success';
+		}
+	}
+}
+
+/**
+ * @template T
+ * @implements {Partial<Promise<T>>}
+ */
+class Query {
+	/** @type {string} */
+	_key;
+
 	#init = false;
 	/** @type {() => Promise<T>} */
 	#fn;
@@ -91,9 +183,11 @@ class Resource {
 	});
 
 	/**
+	 * @param {string} key
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(fn) {
+	constructor(key, fn) {
+		this._key = key;
 		this.#fn = fn;
 		this.#promise = $state.raw(this.#run());
 	}
@@ -241,24 +335,6 @@ class Resource {
 		this.#raw = value;
 		this.#promise = Promise.resolve();
 	}
-}
-
-/**
- * @template T
- * @extends {Resource<T>}
- */
-class Query extends Resource {
-	/** @type {string} */
-	_key;
-
-	/**
-	 * @param {string} key
-	 * @param {() => Promise<T>} fn
-	 */
-	constructor(key, fn) {
-		super(fn);
-		this._key = key;
-	}
 
 	/**
 	 * @param {(old: T) => T} fn
@@ -274,12 +350,10 @@ class Query extends Resource {
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @param {string} id
- * @param {boolean} prerender
- * @returns {RemoteQuery<any, any>}
+ * @param {(key: string, args: string) => any} create
  */
-function remote_request(id, prerender) {
-	/** @type {RemoteQuery<any, any>} */
-	const fn = (/** @type {any} */ arg) => {
+function create_remote_function(id, create) {
+	return (/** @type {any} */ arg) => {
 		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 		let entry = query_map.get(cache_key);
@@ -306,69 +380,7 @@ function remote_request(id, prerender) {
 
 		let resource = entry?.resource;
 		if (!resource) {
-			resource = new Query(cache_key, async () => {
-				if (!started) {
-					const result = remote_responses[cache_key];
-					if (result) {
-						return result;
-					}
-				}
-
-				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
-
-				// For prerender requests, check the Cache API first
-				if (prerender && prerender_cache) {
-					try {
-						const cached_response = await prerender_cache.match(url);
-						if (cached_response) {
-							const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
-								await cached_response.json()
-							);
-							return devalue.parse(cached_result.result, app.decoders);
-						}
-					} catch {
-						// Nothing we can do here
-					}
-				}
-
-				const response = await fetch(url);
-				if (!response.ok) {
-					throw new HttpError(500, 'Failed to execute remote function');
-				}
-
-				const result = /** @type { RemoteFunctionResponse } */ (await response.json());
-				if (result.type === 'redirect') {
-					// resource_cache.delete(cache_key);
-					// version++;
-					// await goto(result.location);
-					// /** @type {Resource<any>} */ (resource).refresh();
-					// TODO double-check this
-					await goto(result.location);
-					await new Promise((r) => setTimeout(r, 100));
-					throw new Redirect(307, result.location);
-				} else if (result.type === 'error') {
-					throw new HttpError(result.status ?? 500, result.error);
-				} else {
-					// For successful prerender requests, save to cache
-					if (prerender && prerender_cache) {
-						try {
-							await prerender_cache.put(
-								url,
-								// We need to create a new response because the original response is already consumed
-								new Response(JSON.stringify(result), {
-									headers: {
-										'Content-Type': 'application/json'
-									}
-								})
-							);
-						} catch {
-							// Nothing we can do here
-						}
-					}
-
-					return devalue.parse(result.result, app.decoders);
-				}
-			});
+			resource = create(cache_key, stringified_args);
 
 			Object.defineProperty(resource, '_key', {
 				value: cache_key,
@@ -404,29 +416,112 @@ function remote_request(id, prerender) {
 
 		return resource;
 	};
+}
 
-	return fn;
+/**
+ *
+ * @param {string} url
+ */
+async function remote_request(url) {
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new HttpError(500, 'Failed to execute remote function');
+	}
+
+	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+
+	if (result.type === 'redirect') {
+		// resource_cache.delete(cache_key);
+		// version++;
+		// await goto(result.location);
+		// /** @type {Query<any>} */ (resource).refresh();
+		// TODO double-check this
+		await goto(result.location);
+		await new Promise((r) => setTimeout(r, 100));
+		throw new Redirect(307, result.location);
+	}
+
+	if (result.type === 'error') {
+		throw new HttpError(result.status ?? 500, result.error);
+	}
+
+	return devalue.parse(result.result, app.decoders);
 }
 
 /**
  * @param {string} id
+ * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
-	return remote_request(id, false);
-}
+	return create_remote_function(id, (cache_key, stringified_args) => {
+		return new Query(cache_key, async () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
 
-// /**
-//  * @param {string} id
-//  */
-// export function cache(id) {
-// 	return remote_request(id, false);
-// }
+			const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${stringified_args}` : ''}`;
+
+			return await remote_request(url);
+		});
+	});
+}
 
 /**
  * @param {string} id
  */
 export function prerender(id) {
-	return remote_request(id, true);
+	return create_remote_function(id, (cache_key, stringified_args) => {
+		return new Prerender(async () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
+
+			const url = `/${app_dir}/remote/${id}${stringified_args ? `/${stringified_args}` : ''}`;
+
+			// Check the Cache API first
+			if (prerender_cache) {
+				try {
+					const cached_response = await prerender_cache.match(url);
+					if (cached_response) {
+						const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
+							await cached_response.json()
+						);
+						return devalue.parse(cached_result.result, app.decoders);
+					}
+				} catch {
+					// Nothing we can do here
+				}
+			}
+
+			const result = await remote_request(url);
+
+			// For successful prerender requests, save to cache
+			if (prerender_cache) {
+				try {
+					await prerender_cache.put(
+						url,
+						// We need to create a new response because the original response is already consumed
+						new Response(JSON.stringify(result), {
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						})
+					);
+				} catch {
+					// Nothing we can do here
+				}
+			}
+
+			return result;
+		});
+	});
 }
 
 /**

@@ -1,4 +1,4 @@
-/** @import { RemoteForm, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQuery, RemoteQueryFunction, RemoteResource, RemotePrerenderFunction, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -33,7 +33,7 @@ import { app_dir, base } from '__sveltekit/paths';
  * @template Output
  * @overload
  * @param {() => Output} fn
- * @returns {RemoteQuery<void, Output>}
+ * @returns {RemoteQueryFunction<void, Output>}
  */
 /**
  * Creates a remote function that can be invoked like a regular function within components.
@@ -58,7 +58,7 @@ import { app_dir, base } from '__sveltekit/paths';
  * @overload
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
- * @returns {RemoteQuery<Input, Output>}
+ * @returns {RemoteQueryFunction<Input, Output>}
  */
 /**
  * Creates a remote function that can be invoked like a regular function within components.
@@ -83,14 +83,14 @@ import { app_dir, base } from '__sveltekit/paths';
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
  * @param {(args?: Input) => Output} [maybe_fn]
- * @returns {RemoteQuery<Input, Output>}
+ * @returns {RemoteQueryFunction<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function query(validate_or_fn, maybe_fn) {
@@ -101,9 +101,9 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteQuery<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<ReturnType<RemoteQuery<any, any>>>} */
+		/** @type {Partial<RemoteQuery<any>>} */
 		const promise = (async () => {
 			if (prerendering) {
 				throw new Error(
@@ -137,11 +137,11 @@ export function query(validate_or_fn, maybe_fn) {
 			] = await /** @type {Promise<any>} */ (promise);
 		};
 
-		promise.override = () => {
-			throw new Error(`Cannot call '${wrapper.__.name}.override()' on the server`);
+		promise.withOverride = () => {
+			throw new Error(`Cannot call '${wrapper.__.name}.withOverride()' on the server`);
 		};
 
-		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
+		return /** @type {RemoteQuery<Output>} */ (promise);
 	};
 
 	Object.defineProperty(wrapper, '__', {
@@ -175,7 +175,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {() => Output} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
- * @returns {RemoteQuery<void, Output>}
+ * @returns {RemotePrerenderFunction<void, Output>}
  */
 /**
  * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
@@ -202,7 +202,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
- * @returns {RemoteQuery<Input, Output>}
+ * @returns {RemotePrerenderFunction<Input, Output>}
  */
 /**
  * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
@@ -230,7 +230,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
- * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @returns {RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
  * @template Input
@@ -238,7 +238,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {any} validate_or_fn
  * @param {any} [fn_or_options]
  * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [maybe_options]
- * @returns {RemoteQuery<Input, Output>}
+ * @returns {RemotePrerenderFunction<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function prerender(validate_or_fn, fn_or_options, maybe_options) {
@@ -252,9 +252,9 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteQuery<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<ReturnType<RemoteQuery<Input, Output>>>} */
+		/** @type {Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
@@ -301,20 +301,11 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				});
 			}
 
+			// TODO this is missing error/loading/current/status
 			return result;
 		})();
 
-		promise.refresh = () => {
-			throw new Error(
-				`Cannot call  '${wrapper.__.name}.refresh()'. Remote prerender functions are immutable and cannot be refreshed.`
-			);
-		};
-
-		promise.override = () => {
-			throw new Error(`Cannot call '${wrapper.__.name}.override()' on the server`);
-		};
-
-		return /** @type {ReturnType<RemoteQuery<Input, Output>>} */ (promise);
+		return /** @type {RemoteResource<Output>} */ (promise);
 	};
 
 	Object.defineProperty(wrapper, '__', {

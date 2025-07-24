@@ -1573,10 +1573,7 @@ export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) &
 			data: FormData;
 			submit: () => Promise<void> & {
 				updates: (
-					...queries: Array<
-						| ReturnType<RemoteQuery<any, any>>
-						| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-					>
+					...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 				) => Promise<void>;
 			};
 		}) => void
@@ -1616,10 +1613,7 @@ export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) &
 				data: FormData;
 				submit: () => Promise<void> & {
 					updates: (
-						...queries: Array<
-							| ReturnType<RemoteQuery<any, any>>
-							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-						>
+						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 					) => Promise<void>;
 				};
 			}) => void
@@ -1678,25 +1672,34 @@ export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) &
  */
 export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 	updates: (
-		...queries: Array<
-			| ReturnType<RemoteQuery<any, any>>
-			| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-		>
+		...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 	) => Promise<Awaited<Output>>;
 };
 
-/**
- * The return value of a remote `query` or `prerender` function.
- * Call it with the input arguments to retrieve the value.
- * On the server, this will directly call the underlying function.
- * On the client, this will `fetch` data from the server.
- * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
- */
-export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+export type RemoteResource<T> = Promise<Awaited<T>> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
 	get loading(): boolean;
+} & (
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): undefined;
+				status: 'loading';
+		  }
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): Awaited<T>;
+				status: 'success' | 'reloading';
+		  }
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): Awaited<T> | undefined;
+				status: 'error';
+		  }
+	);
+
+export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *
@@ -1704,44 +1707,6 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 	 * transport the updated data to the client along with the response, if the action was successful.
 	 */
 	refresh: () => Promise<void>;
-	/**
-	 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
-	 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
-	 * Overrides are applied on new values, too, until they are released.
-	 *
-	 * ```svelte
-	 * <script>
-	 *   import { getList, commit } from './todos.remote.js';
-	 *   const list = getList();
-	 *   let release = [];
-	 * </script>
-	 *
-	 * <h2>Select items to remove</h2>
-	 *
-	 * <ul>
-	 *   {#each list as item}
-	 *     <li>{item.text}</li>
-	 *     <button onclick={() => {
-	 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
-	 *     }}>Remove</button>
-	 *   {/each}
-	 * </ul>
-	 *
-	 * <button onclick={() => {
-	 *   release.forEach((r) => r());
-	 *   release = [];
-	 * }}>Revert</button>
-	 *
-	 * <button onclick={async () => {
-	 *   await commit();
-	 *   release.forEach((r) => r());
-	 *   release = [];
-	 * }}>Confirm</button>
-	 * ```
-	 *
-	 * Can only be called on the client.
-	 */
-	override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
 	/**
 	 * Temporarily override the value of a query. Useful for optimistic UI updates.
 	 * `withOverride` expects a function that takes the current value and returns the new value.
@@ -1762,26 +1727,27 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 	 * </form>
 	 * ```
 	 */
-	withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+	withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
 		_key: string;
 		release: () => void;
 	};
-} & (
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): undefined;
-				status: 'loading';
-		  }
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): Awaited<Output>;
-				status: 'success' | 'reloading';
-		  }
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): Awaited<Output> | undefined;
-				status: 'error';
-		  }
-	);
+};
+
+/**
+ * The return value of a remote `prerender` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call the underlying function.
+ * On the client, this will `fetch` data from the server.
+ */
+export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+/**
+ * The return value of a remote `query` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call the underlying function.
+ * On the client, this will `fetch` data from the server.
+ * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+ */
+export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 
 export * from './index.js';
