@@ -27,15 +27,6 @@
 <button onclick={() => count.refresh()} id="refresh-btn">Refresh</button>
 
 <button
-	onclick={() => {
-		release = count.override((count) => count + 10);
-	}}
-	id="override-btn">Override</button
->
-
-<button onclick={() => release?.()} id="release-btn">Release</button>
-
-<button
 	onclick={async () => {
 		command_result = await set_count({ c: 2 });
 	}}

@@ -303,22 +303,6 @@ class Query {
 	}
 
 	/**
-	 * @param {(old: T) => T} fn
-	 * @returns {() => void}
-	 */
-	override(fn) {
-		this.#overrides.push(fn);
-
-		return () => {
-			const i = this.#overrides.indexOf(fn);
-
-			if (i !== -1) {
-				this.#overrides.splice(i, 1);
-			}
-		};
-	}
-
-	/**
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
@@ -340,9 +324,17 @@ class Query {
 	 * @param {(old: T) => T} fn
 	 */
 	withOverride(fn) {
+		this.#overrides.push(fn);
+
 		return {
 			_key: this._key,
-			release: this.override(fn)
+			release: () => {
+				const i = this.#overrides.indexOf(fn);
+
+				if (i !== -1) {
+					this.#overrides.splice(i, 1);
+				}
+			}
 		};
 	}
 }

@@ -1723,33 +1723,6 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('override works and persists across updates or refreshes', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		// override the value
-		await page.click('#override-btn');
-		await expect(page.locator('#count-result')).toHaveText('10 / 10 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#refresh-btn');
-		await expect(page.locator('#count-result')).toHaveText('10 / 10 (false)');
-
-		await page.click('#multiply-btn');
-		await expect(page.locator('#count-result')).toHaveText('12 / 12 (false)');
-
-		await page.click('#multiply-refresh-btn');
-		await expect(page.locator('#count-result')).toHaveText('13 / 13 (false)');
-
-		await page.click('#multiply-server-refresh-btn');
-		await expect(page.locator('#count-result')).toHaveText('14 / 14 (false)');
-
-		await page.click('#release-btn');
-		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
-	});
-
 	test('form.enhance works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task-enhance', 'abort');
