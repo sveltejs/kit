@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -851,11 +852,11 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -863,10 +864,10 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends NavigationEvent<Params, RouteId> {
 		/**
 		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -971,8 +972,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1111,13 +1112,13 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends Record<string, string> = Record<string, string>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The URL of the current page.
 		 */
-		url: URL;
+		url: URL & { pathname: ResolvedPathname };
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
@@ -1159,8 +1160,8 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * Get or set cookies related to the current request
@@ -1256,8 +1257,8 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 	export interface ResolveOptions {
@@ -1337,16 +1338,16 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
 		/**
 		 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1413,9 +1414,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -1423,9 +1424,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
 
 	/**
@@ -2624,10 +2625,13 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
+	import type { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
+	 *
+	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
 	 */
 	export let base: '' | `/${string}`;
 
@@ -2635,30 +2639,68 @@ declare module '$app/paths' {
 	 * An absolute path that matches [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 *
+	 * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
+	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
+		? RouteParams<T> extends Record<string, never>
+			? [route: T]
+			: [route: T, params: RouteParams<T>]
+		: [route: T];
+
 	/**
-	 * Populate a route ID with params to resolve a pathname.
+	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
 	 * @example
 	 * ```js
-	 * import { resolveRoute } from '$app/paths';
+	 * import { resolve } from '$app/paths';
 	 *
-	 * resolveRoute(
-	 *   `/blog/[slug]/[...somethingElse]`,
-	 *   {
-	 *     slug: 'hello-world',
-	 *     somethingElse: 'something/else'
-	 *   }
-	 * ); // `/blog/hello-world/something/else`
+	 * // using a pathname
+	 * const resolved = resolve(`/blog/hello-world`);
+	 *
+	 * // using a route ID plus parameters
+	 * const resolved = resolve('/blog/[slug]', {
+	 * 	slug: 'hello-world'
+	 * });
 	 * ```
+	 * @since 2.26
 	 */
-	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+
+	/**
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { asset } from '$app/paths';
+	 * </script>
+	 *
+	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * ```
+	 * @since 2.26
+	 */
+	export function asset(file: Asset): string;
+
+	/**
+	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
+	 */
+	export function resolveRoute<T extends RouteId | Pathname>(
+		...args: ResolveArgs<T>
+	): ResolvedPathname;
 
 	export {};
 }
 
 declare module '$app/server' {
+	// @ts-ignore
+	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
 	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, ActionFailure as IActionFailure, RemoteForm } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
@@ -2680,7 +2722,7 @@ declare module '$app/server' {
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
 	 */
-	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
+	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
