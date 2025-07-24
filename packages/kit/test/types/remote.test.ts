@@ -96,10 +96,10 @@ function prerender_tests() {
 	prerender_schema();
 
 	async function prerender_schema_entries() {
-		const q = prerender(schema, (a) => a, { entries: () => ['1'] });
+		const q = prerender(schema, (a) => a, { inputs: () => ['1'] });
 		q;
 		// @ts-expect-error
-		const q2 = prerender(schema, (a) => a, { entries: () => [1] });
+		const q2 = prerender(schema, (a) => a, { inputs: () => [1] });
 		q2;
 	}
 	prerender_schema_entries();

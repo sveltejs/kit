@@ -1,5 +1,5 @@
 /** @import { RemoteFormAction, RemoteQuery, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
-/** @import { RemotePrerenderEntryGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
+/** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { uneval, parse } from 'devalue';
@@ -159,7 +159,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
@@ -167,14 +167,14 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPost = prerender(
  *  z.string(),
  * 	(id) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
  * @template Output
  * @overload
  * @param {() => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<void>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<void, Output>}
  */
 /**
@@ -185,14 +185,14 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import { blogPosts } from '$lib/server/db';
  *
  * export const blogPost = prerender(
  *  'unchecked',
  * 	(id: string) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -201,7 +201,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<Input, Output>}
  */
 /**
@@ -212,7 +212,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPosts = prerender(() => blogPosts.getAll());
  * ```
  *
- * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+ * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
  * ```ts
  * import z from 'zod';
  * import { blogPosts } from '$lib/server/db';
@@ -220,7 +220,7 @@ export function query(validate_or_fn, maybe_fn) {
  * export const blogPost = prerender(
  *  z.string(),
  * 	(id) => blogPosts.get(id),
- * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+ * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
  * );
  * ```
  *
@@ -229,7 +229,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @param {{ entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
  * @returns {RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>}
  */
 /**
@@ -237,7 +237,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @param {any} validate_or_fn
  * @param {any} [fn_or_options]
- * @param {{ entries?: RemotePrerenderEntryGenerator<Input>, dynamic?: boolean }} [maybe_options]
+ * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [maybe_options]
  * @returns {RemoteQuery<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -322,116 +322,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			type: 'prerender',
 			id: '',
 			has_arg: !!maybe_fn,
-			entries: options?.entries,
+			inputs: options?.inputs,
 			dynamic: options?.dynamic
 		})
 	});
 
 	return wrapper;
 }
-
-// TODO decide how we wanna shape this API, until then commented out
-// /**
-//  * Creates a cached remote function. The cache duration is set through the `expiration` property of the `config` object.
-//  * ```ts
-//  * import { blogPosts } from '$lib/server/db';
-//  *
-//  * export const blogPosts = cache(
-//  * 	() => blogPosts.getAll(),
-//  * 	// cache for 60 seconds
-//  * 	{ expiration: 60 }
-//  * );
-//  * ```
-//  * The cache is deployment provider-specific; some providers may not support it. Consult your adapter's documentation for details.
-//  *
-//  * @template {any[]} Input
-//  * @template Output
-//  * @param {(...args: Input) => Output} fn
-//  * @param {{expiration: number } & Record<string, any>} config
-//  * @returns {RemoteQuery<Input, Output>}
-//  */
-// export function cache(fn, config) {
-// 	/**
-// 	 * @param {Input} args
-// 	 * @returns {Promise<Awaited<Output>>}
-// 	 */
-// 	const wrapper = async (...args) => {
-// 		if (prerendering) {
-// 			throw new Error(
-// 				'Cannot call cache() from $app/server while prerendering, as prerendered pages need static data. Use prerender() instead'
-// 			);
-// 		}
-
-// 		const event = getRequestEvent();
-// 		const info = get_remote_info(event);
-// 		const stringified_args = stringify_remote_args(args, info.transport);
-// 		const cached = await wrapper.cache.get(stringified_args);
-
-// 		if (typeof cached === 'string') {
-// 			if (!event.isRemoteRequest) {
-// 				info.results[stringified_args] = cached;
-// 			}
-// 			// TODO in case of a remote request we will stringify the result again right aftewards - save the work somehow?
-// 			return parse_remote_response(cached, info.transport);
-// 		} else {
-// 			const result = await fn(...args);
-// 			uneval_remote_response(wrapper.__.id, args, result, event);
-// 			await wrapper.cache.set(stringified_args, stringify(result, info.transport));
-// 			return result;
-// 		}
-// 	};
-
-// 	/** @type {{ get(input: string): MaybePromise<any>; set(input:string, output: string): MaybePromise<void>; delete(input:string): MaybePromise<void> }} */
-// 	let cache = {
-// 		// TODO warn somehow when adapter does not support cache?
-// 		get() {},
-// 		set() {},
-// 		delete() {}
-// 	};
-
-// 	if (DEV) {
-// 		// In memory cache
-// 		/** @type {Record<string, string>} */
-// 		const cached = {};
-// 		cache = {
-// 			get(input) {
-// 				return cached[input];
-// 			},
-// 			set(input, output) {
-// 				const config = /** @type {RemoteInfo & { type: 'cache' }} */ (wrapper.__).config;
-// 				cached[input] = output;
-// 				if (typeof config.expiration === 'number') {
-// 					setTimeout(() => {
-// 						delete cached[input];
-// 					}, config.expiration * 1000);
-// 				}
-// 			},
-// 			delete(input) {
-// 				delete cached[input];
-// 			}
-// 		};
-// 	}
-
-// 	wrapper.cache = cache;
-
-// 	/** @type {RemoteQuery<any, any>['refresh']} */
-// 	wrapper.refresh = (...args) => {
-// 		// TODO is this agnostic enough / fine to require people calling this during a request event?
-// 		const info = get_remote_info(getRequestEvent());
-// 		// TODO what about the arguments? are they required? we would need to have a way to know all the variants of a cached function
-// 		wrapper.cache.delete(stringify_remote_args(args, info.transport));
-// 	};
-
-// 	wrapper.override = () => {
-// 		throw new Error('Cannot call override on the server');
-// 	};
-
-// 	Object.defineProperty(wrapper, '__', {
-// 		value: /** @type {RemoteInfo} */ ({ type: 'cache', id: '', config }),
-// 	});
-
-// 	return wrapper;
-// }
 
 /**
  * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.

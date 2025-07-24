@@ -185,6 +185,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			files.add(posixify(`${config.appDir}/immutable/${file}`));
 		}
 	}
+
+	const remote_prefix = `${config.paths.base}/${config.appDir}/remote/`;
+
 	const seen = new Set();
 	const written = new Set();
 	const remote_responses = new Map();
@@ -261,7 +264,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 		const body = Buffer.from(await response.arrayBuffer());
 
-		save('pages', response, body, decoded, encoded, referrer, 'linked');
+		const category = decoded.startsWith(remote_prefix) ? 'data' : 'pages';
+		save(category, response, body, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -285,8 +289,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 
+			const category = decoded_dependency_path.startsWith(remote_prefix) ? 'data' : 'dependencies';
+
 			save(
-				'dependencies',
+				category,
 				result.response,
 				body,
 				decoded_dependency_path,
@@ -339,7 +345,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	/**
-	 * @param {'pages' | 'dependencies'} category
+	 * @param {'pages' | 'dependencies' | 'data'} category
 	 * @param {Response} response
 	 * @param {string | Uint8Array} body
 	 * @param {string} decoded
@@ -525,23 +531,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// /prerender/dependencies like indirect calls due to page prerenders?
 		// Does it really matter?
 		if (remote_function.__.has_arg) {
-			for (const entry of (await remote_function.__.entries?.()) ?? []) {
+			for (const arg of (await remote_function.__.inputs?.()) ?? []) {
 				void enqueue(
 					null,
-					config.paths.base +
-						'/' +
-						config.appDir +
-						'/remote/' +
-						remote_function.__.id +
-						'/' +
-						stringify_remote_arg(entry, transport)
+					remote_prefix + remote_function.__.id + '/' + stringify_remote_arg(arg, transport)
 				);
 			}
 		} else {
-			void enqueue(
-				null,
-				config.paths.base + '/' + config.appDir + '/remote/' + remote_function.__.id
-			);
+			void enqueue(null, remote_prefix + remote_function.__.id);
 		}
 	}
 

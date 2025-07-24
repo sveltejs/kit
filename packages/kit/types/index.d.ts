@@ -385,11 +385,11 @@ declare module '@sveltejs/kit' {
 			privatePrefix?: string;
 		};
 		/**
-		 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+		 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
 		 */
 		experimental?: {
 			/**
-			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 			 * @default false
 			 */
 			remoteFunctions?: boolean;
@@ -762,10 +762,9 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
 	 *
-	 * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
-	 * This function is expected return an object shape that matches `App.Error`.
+	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
 	 */
 	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
@@ -1504,14 +1503,15 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * The return value of a remote `form` function.
-	 * Spread it onto a `<form>` element to connect the form with the remote form action.
+	 * Spread it onto a `<form>` element to connect the element to the remote function.
+	 *
 	 * ```svelte
 	 * <script>
 	 *   import { createTodo } from './todos.remote.js';
 	 * </script>
 	 *
 	 * <form {...createTodo}>
-	 *   <input type="text" name="name" />
+	 *   <input name="text" />
 	 *   <!-- ... -->
 	 * </form>
 	 * ```
@@ -1527,7 +1527,9 @@ declare module '@sveltejs/kit' {
 	 *   const todo = { text, done: false };
 	 *
 	 *   // `updates` and `withOverride` enable optimistic UI updates
-	 *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
+	 *   await submit().updates(
+	 *     getTodos().withOverride((todos) => [...todos, todo])
+	 *   );
 	 * })}>
 	 *   <input name="text" />
 	 *   <!-- ... -->
@@ -1584,7 +1586,7 @@ declare module '@sveltejs/kit' {
 		get result(): Success | Failure | undefined;
 		/** When there's an error during form submission, it appears on this property */
 		get error(): App.Error | undefined;
-		/** Spread this onto a button or input of type submit */
+		/** Spread this onto a `<button>` or `<input type="submit">` */
 		formAction: {
 			type: 'submit';
 			formaction: string;
@@ -1668,8 +1670,8 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The return value of a remote `query` or `prerender` function.
 	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call through to the underlying function.
-	 * On the client, this will do a fetch to the server to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
 	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
 	 */
 	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
@@ -2781,7 +2783,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2789,13 +2791,13 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Output>(fn: () => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<void>;
+		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<void, Output>;
 	/**
@@ -2806,20 +2808,20 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
 	 *  'unchecked',
 	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<Input>;
+		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<Input, Output>;
 	/**
@@ -2830,7 +2832,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2838,13 +2840,13 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>;
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
 	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
@@ -2966,7 +2968,7 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
-	type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};

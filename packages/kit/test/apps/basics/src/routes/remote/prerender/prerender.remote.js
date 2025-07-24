@@ -21,5 +21,5 @@ export const prerendered_entries = prerender(
 
 		return x;
 	},
-	{ entries: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
+	{ inputs: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
 );

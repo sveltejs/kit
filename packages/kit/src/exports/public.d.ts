@@ -403,11 +403,11 @@ export interface KitConfig {
 		privatePrefix?: string;
 	};
 	/**
-	 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
 	 */
 	experimental?: {
 		/**
-		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
@@ -780,10 +780,9 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
  *
- * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
- * This function is expected return an object shape that matches `App.Error`.
+ * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
@@ -1522,14 +1521,15 @@ export interface Snapshot<T = any> {
 
 /**
  * The return value of a remote `form` function.
- * Spread it onto a `<form>` element to connect the form with the remote form action.
+ * Spread it onto a `<form>` element to connect the element to the remote function.
+ *
  * ```svelte
  * <script>
  *   import { createTodo } from './todos.remote.js';
  * </script>
  *
  * <form {...createTodo}>
- *   <input type="text" name="name" />
+ *   <input name="text" />
  *   <!-- ... -->
  * </form>
  * ```
@@ -1545,7 +1545,9 @@ export interface Snapshot<T = any> {
  *   const todo = { text, done: false };
  *
  *   // `updates` and `withOverride` enable optimistic UI updates
- *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
+ *   await submit().updates(
+ *     getTodos().withOverride((todos) => [...todos, todo])
+ *   );
  * })}>
  *   <input name="text" />
  *   <!-- ... -->
@@ -1602,7 +1604,7 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 	get result(): Success | Failure | undefined;
 	/** When there's an error during form submission, it appears on this property */
 	get error(): App.Error | undefined;
-	/** Spread this onto a button or input of type submit */
+	/** Spread this onto a `<button>` or `<input type="submit">` */
 	formAction: {
 		type: 'submit';
 		formaction: string;
@@ -1686,8 +1688,8 @@ export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Outpu
 /**
  * The return value of a remote `query` or `prerender` function.
  * Call it with the input arguments to retrieve the value.
- * On the server, this will directly call through to the underlying function.
- * On the client, this will do a fetch to the server to retrieve the value.
+ * On the server, this will directly call the underlying function.
+ * On the client, this will `fetch` data from the server.
  * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
  */
 export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
