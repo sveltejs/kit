@@ -120,11 +120,19 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
+	const controller = new AbortController();
+	request.once('close', () => {
+		if (request.readableAborted) {
+			controller.abort();
+		}
+	});
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
 		headers: Object.entries(headers),
+		signal: controller.signal,
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
