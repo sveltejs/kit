@@ -117,7 +117,7 @@ export function remove_optional_params(id) {
  * @param {string} segment
  */
 function affects_path(segment) {
-	return !/^\([^)]+\)$/.test(segment);
+	return segment !== '' && !/^\([^)]+\)$/.test(segment);
 }
 
 /**
