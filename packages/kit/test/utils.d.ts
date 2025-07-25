@@ -10,6 +10,7 @@ import {
 import { IncomingMessage, ServerResponse } from 'node:http';
 import '../types/index';
 import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
+import { SpanTree } from './types';
 
 export const test: TestType<
 	PlaywrightTestArgs &
@@ -30,6 +31,7 @@ export const test: TestType<
 			 * `handleError` defines the shape
 			 */
 			read_errors(href: string): Record<string, any>;
+			read_traces(test_id: string): SpanTree[];
 			start_server(
 				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;

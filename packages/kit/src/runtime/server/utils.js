@@ -183,3 +183,16 @@ export function has_prerendered_path(manifest, pathname) {
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
 }
+
+/**
+ * Returns the filename without the extension. e.g., `+page.server`, `+page`, etc.
+ * @param {string | undefined} node_id
+ * @returns {string}
+ */
+export function get_node_type(node_id) {
+	const parts = node_id?.split('/');
+	const filename = parts?.at(-1);
+	if (!filename) return 'unknown';
+	const dot_parts = filename.split('.');
+	return dot_parts.slice(0, -1).join('.');
+}

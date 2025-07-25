@@ -323,7 +323,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: kit.experimental.tracing.server ? 'true' : 'false'
 				};
 
 				if (!secondary_build_started) {
@@ -334,7 +335,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: kit.experimental.tracing.server ? 'true' : 'false'
 				};
 
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.

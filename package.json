@@ -40,6 +40,7 @@
 			"@parcel/watcher",
 			"esbuild",
 			"netlify-cli",
+			"protobufjs",
 			"rolldown",
 			"sharp",
 			"svelte-preprocess",

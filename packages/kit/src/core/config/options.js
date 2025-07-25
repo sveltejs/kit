@@ -120,6 +120,12 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				})
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: object({
