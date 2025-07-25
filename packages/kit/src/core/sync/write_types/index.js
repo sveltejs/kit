@@ -15,9 +15,8 @@ const replace_optional_params = (/** @type {string} */ id) =>
 const replace_required_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[[^\]]+\]/g, '/${string}');
 /** Convert route ID to pathname by removing layout groups */
-const route_id_to_pathname = (/** @type {string} */ id) => {
-	const segments = get_route_segments(id);
-	return segments.length === 1 && segments[0] === '' ? '/' : '/' + segments.join('/');
+const remove_group_segments = (/** @type {string} */ id) => {
+	return '/' + get_route_segments(id).join('/');
 };
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
@@ -66,8 +65,8 @@ export function write_all_types(config, manifest_data) {
 		}
 	}
 
-	/** @type {string[]} */
-	const pathnames = [];
+	/** @type {Set<string>} */
+	const pathnames = new Set();
 
 	/** @type {string[]} */
 	const dynamic_routes = [];
@@ -82,11 +81,11 @@ export function write_all_types(config, manifest_data) {
 
 			dynamic_routes.push(route_type);
 
-			const pathname = route_id_to_pathname(route.id);
-			pathnames.push(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
+			const pathname = remove_group_segments(route.id);
+			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
 		} else {
-			const pathname = route_id_to_pathname(route.id);
-			pathnames.push(s(pathname));
+			const pathname = remove_group_segments(route.id);
+			pathnames.add(s(pathname));
 		}
 
 		/** @type {Map<string, boolean>} */
@@ -121,7 +120,7 @@ export function write_all_types(config, manifest_data) {
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
 			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
-			`export type Pathname = ${pathnames.join(' | ')};`,
+			`export type Pathname = ${Array.from(pathnames).join(' | ')};`,
 			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
 			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
 		].join('\n\n')
