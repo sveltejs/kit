@@ -6,6 +6,7 @@ import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
 import { s } from '../../../utils/misc.js';
+import { get_route_segments } from '../../../utils/routing.js';
 
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -13,6 +14,11 @@ const replace_optional_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
 const replace_required_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[[^\]]+\]/g, '/${string}');
+/** Convert route ID to pathname by removing layout groups */
+const route_id_to_pathname = (/** @type {string} */ id) => {
+	const segments = get_route_segments(id);
+	return segments.length === 1 && segments[0] === '' ? '/' : '/' + segments.join('/');
+};
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**
@@ -76,9 +82,11 @@ export function write_all_types(config, manifest_data) {
 
 			dynamic_routes.push(route_type);
 
-			pathnames.push(`\`${replace_required_params(replace_optional_params(route.id))}\` & {}`);
+			const pathname = route_id_to_pathname(route.id);
+			pathnames.push(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
 		} else {
-			pathnames.push(s(route.id));
+			const pathname = route_id_to_pathname(route.id);
+			pathnames.push(s(pathname));
 		}
 
 		/** @type {Map<string, boolean>} */
