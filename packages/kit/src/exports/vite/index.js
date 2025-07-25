@@ -678,6 +678,27 @@ Tips:
 								sourcemapIgnoreList,
 								inlineDynamicImports: !split
 							},
+							// Ensure consistent CSS chunking between client and server builds for CSS inlining
+							...(kit.inlineStyleThreshold > 0
+								? {
+										manualChunks: (/** @type {string} */ id) => {
+											// Group CSS files by their base name to ensure consistent chunking
+											if (id.endsWith('.css') || id.includes('?svelte&type=style')) {
+												// Extract component name from file path for consistent chunking
+												const matches = id.match(/([^/\\]+)\.svelte/);
+												if (matches) {
+													return `css-${matches[1]}`;
+												}
+												// For other CSS files, use filename
+												const filename = id.split('/').pop()?.split('.')[0];
+												if (filename) {
+													return `css-${filename}`;
+												}
+											}
+											return null;
+										}
+									}
+								: {}),
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
