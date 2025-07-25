@@ -1,4 +1,4 @@
-/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
@@ -53,7 +53,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
 			);
 			form_data.delete('sveltekit:remote_refreshes');
-			const data = await with_event(event, () => func.call(null, form_data));
+			const data = await with_event(event, () => info.fn.call(null, form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -169,9 +169,10 @@ export async function handle_remote_form_post(event, manifest, id) {
 	const [hash, func_name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
-	let func = module?.[func_name];
 
-	if (!func) {
+	let form = /** @type {RemoteForm<any, any>} */ (module?.[func_name]);
+
+	if (!form) {
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 			// "The server must generate an Allow header field in a 405 status code response"
@@ -188,13 +189,15 @@ export async function handle_remote_form_post(event, manifest, id) {
 	}
 
 	if (action_id) {
-		func = with_event(event, () => func.for(JSON.parse(action_id)));
+		// @ts-expect-error
+		form = with_event(event, () => form.for(JSON.parse(action_id)));
 	}
 
 	try {
 		const form_data = await event.request.formData();
 		get_remote_info(event);
-		const data = await with_event(event, () => func.call(null, form_data));
+		// @ts-expect-error
+		const data = await with_event(event, () => form.__.fn.call(null, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
 		if (data instanceof ActionFailure) {

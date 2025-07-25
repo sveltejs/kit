@@ -510,6 +510,7 @@ export function command(validate_or_fn, maybe_fn) {
  * @returns {RemoteForm<T, U>}
  */
 /*@__NO_SIDE_EFFECTS__*/
+// @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
 export function form(fn) {
 	check_experimental('form');
 
@@ -518,35 +519,10 @@ export function form(fn) {
 	 * @param {string} [action]
 	 */
 	function create_instance(key, action = '') {
-		/** @param {FormData} form_data */
-		const wrapper = async (form_data) => {
-			if (prerendering) {
-				throw new Error(
-					`Cannot call remote form function '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-				);
-			}
+		/** @type {RemoteForm<T, U>} */
+		const wrapper = {};
 
-			const event = getRequestEvent();
-			const info = get_remote_info(event);
-
-			if (!info.refreshes) {
-				info.refreshes = {};
-			}
-
-			const result = await run_remote_function(event, true, form_data, (d) => d, fn);
-
-			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
-			// where only one form submission is active at the same time
-			if (!event.isRemoteRequest) {
-				const normalized = result instanceof ActionFailure ? result.data : result;
-				uneval_result(wrapper.action, [], event, normalized);
-				info.form_result = [key, normalized];
-			}
-
-			return result;
-		};
-
-		wrapper.method = /** @type {'POST'} */ ('POST');
+		wrapper.method = 'POST';
 		wrapper.action = action; // This will be set by generated server code on startup, and for nested instances by the `for` method it is set by the calling parent
 		wrapper.onsubmit = () => {};
 
@@ -578,6 +554,27 @@ export function form(fn) {
 				set_action: (action) => {
 					wrapper.action = `?/remote=${encodeURIComponent(action)}`;
 					wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
+				},
+				/** @param {FormData} form_data */
+				fn: async (form_data) => {
+					const event = getRequestEvent();
+					const info = get_remote_info(event);
+
+					if (!info.refreshes) {
+						info.refreshes = {};
+					}
+
+					const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+
+					// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
+					// where only one form submission is active at the same time
+					if (!event.isRemoteRequest) {
+						const normalized = result instanceof ActionFailure ? result.data : result;
+						uneval_result(wrapper.action, [], event, normalized);
+						info.form_result = [key, normalized];
+					}
+
+					return result;
 				}
 			})
 		});
@@ -625,7 +622,6 @@ export function form(fn) {
 		return wrapper;
 	}
 
-	// @ts-expect-error TS doesn't get the types right
 	return create_instance();
 }
 

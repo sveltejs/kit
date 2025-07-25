@@ -580,8 +580,10 @@ export function command(id) {
 
 /**
  * Client-version of the `form` function from `$app/server`.
+ * @template T
+ * @template U
  * @param {string} id
- * @returns {RemoteForm<any, any>}
+ * @returns {RemoteForm<T, U>}
  */
 export function form(id) {
 	/**
@@ -698,6 +700,12 @@ export function form(id) {
 			return promise;
 		}
 
+		/** @type {RemoteForm<T, U>} */
+		const instance = {};
+
+		instance.method = 'POST';
+		instance.action = action;
+
 		/** @param {() => Promise<void>} submit */
 		function default_submit(submit) {
 			submit().catch((e) => {
@@ -771,9 +779,7 @@ export function form(id) {
 			};
 		};
 
-		submit.method = 'POST';
-		submit.action = action;
-		submit.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
+		instance.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
 
 		/** @param {Parameters<RemoteForm<any, any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -817,7 +823,7 @@ export function form(id) {
 			enumerable: false
 		});
 
-		Object.defineProperties(submit, {
+		Object.defineProperties(instance, {
 			formAction: {
 				value: form_action,
 				enumerable: false
@@ -848,7 +854,7 @@ export function form(id) {
 		});
 
 		if (key == undefined) {
-			Object.defineProperty(submit, 'for', {
+			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
 					let entry = instance_cache.get(key);
@@ -885,10 +891,9 @@ export function form(id) {
 			});
 		}
 
-		return submit;
+		return instance;
 	}
 
-	// @ts-expect-error we gotta set enhance etc as a non-enumerable properties
 	return create_instance();
 }
 

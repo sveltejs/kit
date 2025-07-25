@@ -553,6 +553,7 @@ export type RemoteInfo =
 			id: string;
 			name: string;
 			set_action: (action: string) => void;
+			fn: (data: FormData) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';
