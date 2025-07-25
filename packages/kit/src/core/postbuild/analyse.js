@@ -82,7 +82,8 @@ async function analyse({
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
@@ -162,6 +163,18 @@ async function analyse({
 			entries:
 				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
+	}
+
+	// analyse remotes
+	for (const [hash, load] of Object.entries(manifest._.remotes)) {
+		const modules = await load();
+		const exports = new Map();
+		for (const [name, value] of Object.entries(modules)) {
+			const type = /** @type {import('types').RemoteInfo} */ (value?.__)?.type;
+			if (!type) continue;
+			exports.set(type, (exports.get(type) ?? []).concat(name));
+		}
+		metadata.remotes.set(hash, exports);
 	}
 
 	return { metadata, static_exports };

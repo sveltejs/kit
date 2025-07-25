@@ -111,6 +111,12 @@ export class Server {
 						(({ status, error }) =>
 							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					handleValidationError:
+						module.handleValidationError ||
+						(({ issues }) => {
+							console.error('Remote function schema validation failed:', issues);
+							return { message: 'Bad Request' };
+						}),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
 				};
@@ -124,14 +130,17 @@ export class Server {
 				if (module.init) {
 					await module.init();
 				}
-			} catch (error) {
+			} catch (e) {
 				if (DEV) {
 					this.#options.hooks = {
 						handle: () => {
-							throw error;
+							throw e;
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
+						handleValidationError: () => {
+							return { message: 'Bad Request' };
+						},
 						reroute: () => {},
 						transport: {}
 					};
@@ -140,7 +149,7 @@ export class Server {
 						decoders: {}
 					});
 				} else {
-					throw error;
+					throw e;
 				}
 			}
 		})());

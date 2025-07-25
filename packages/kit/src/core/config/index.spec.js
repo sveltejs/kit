@@ -76,6 +76,9 @@ const get_defaults = (prefix = '') => ({
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},
+		experimental: {
+			remoteFunctions: false
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: {

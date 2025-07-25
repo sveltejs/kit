@@ -3,6 +3,7 @@
 
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -55,7 +56,7 @@ declare module '@sveltejs/kit' {
 
 	const uniqueSymbol: unique symbol;
 
-	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	export interface ActionFailure<T = undefined> {
 		status: number;
 		data: T;
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -383,6 +384,16 @@ declare module '@sveltejs/kit' {
 			 * @since 1.21.0
 			 */
 			privatePrefix?: string;
+		};
+		/**
+		 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
+		 */
+		experimental?: {
+			/**
+			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
+			 * @default false
+			 */
+			remoteFunctions?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -750,6 +761,14 @@ declare module '@sveltejs/kit' {
 		status: number;
 		message: string;
 	}) => MaybePromise<void | App.Error>;
+
+	/**
+	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
+	 *
+	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
+	 */
+	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
+		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
@@ -1225,6 +1244,11 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
+		/**
+		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+		 * related to the data request in this case. Use this property instead if the distinction is important to you.
+		 */
+		isRemoteRequest: boolean;
 	}
 
 	/**
@@ -1299,6 +1323,8 @@ declare module '@sveltejs/kit' {
 		_: {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
+			/** hashed filename -> import to that file */
+			remotes: Record<string, () => Promise<any>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1475,6 +1501,232 @@ declare module '@sveltejs/kit' {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
+
+	/**
+	 * The return value of a remote `form` function.
+	 * Spread it onto a `<form>` element to connect the element to the remote function.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { createTodo } from './todos.remote.js';
+	 * </script>
+	 *
+	 * <form {...createTodo}>
+	 *   <input name="text" />
+	 *   <!-- ... -->
+	 * </form>
+	 * ```
+	 * Use the `enhance` method to influence what happens when the form is submitted.
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, createTodo } from './todos.remote.js';
+	 * </script>
+	 *
+	 * <form {...myFormAction.enhance(async ({ data, submit }) => {
+	 *   // `data` is an instance of FormData (https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+	 *   const text = data.get('text');
+	 *   const todo = { text, done: false };
+	 *
+	 *   // `updates` and `withOverride` enable optimistic UI updates
+	 *   await submit().updates(
+	 *     getTodos().withOverride((todos) => [...todos, todo])
+	 *   );
+	 * })}>
+	 *   <input name="text" />
+	 *   <!-- ... -->
+	 * </form>
+	 *
+	 * <ul>
+	 * 	{#each await getTodos() as todo}
+	 * 		<li>{todo.text}</li>
+	 * 	{/each}
+	 * </ul>
+	 * ```
+	 */
+	export type RemoteForm<Result> = {
+		method: 'POST';
+		/** The URL to send the form to. */
+		action: string;
+		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+		onsubmit: (event: SubmitEvent) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance: (
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<void> & {
+					updates: (
+						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
+					) => Promise<void>;
+				};
+			}) => void
+		) => {
+			method: 'POST';
+			action: string;
+			onsubmit: (event: SubmitEvent) => void;
+		};
+		/**
+		 * Create an instance of the form for the given key.
+		 * The key is stringified and used for deduplication to potentially reuse existing instances.
+		 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+		 * ```svelte
+		 * {#each todos as todo}
+		 *	{@const todoForm = updateTodo.for(todo.id)}
+		 *	<form {...todoForm}>
+		 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+		 *		...
+		 *	</form>
+		 *	{/each}
+		 * ```
+		 */
+		for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
+		/** The result of the form submission */
+		get result(): Result | undefined;
+		/** When there's an error during form submission, it appears on this property */
+		get error(): App.Error | undefined;
+		/** Spread this onto a `<button>` or `<input type="submit">` */
+		formAction: {
+			type: 'submit';
+			formaction: string;
+			onclick: (event: Event) => void;
+			/** Use the `enhance` method to influence what happens when the form is submitted. */
+			enhance: (
+				callback: (opts: {
+					form: HTMLFormElement;
+					data: FormData;
+					submit: () => Promise<void> & {
+						updates: (
+							...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
+						) => Promise<void>;
+					};
+				}) => void
+			) => {
+				type: 'submit';
+				formaction: string;
+				onclick: (event: Event) => void;
+			};
+		};
+	};
+
+	/**
+	 * The return value of a remote `command` function.
+	 * Call it with the input arguments to execute the command.
+	 *
+	 * Note: Prefer remote `form` functions when possible, as they
+	 * work without JavaScript enabled.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text });
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 * ```
+	 * Use the `updates` method to specify which queries to update in response to the command.
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, createTodo } from './todos.remote.js';
+	 *
+	 *   let text = $state('');
+	 * </script>
+	 *
+	 * <input bind:value={text} />
+	 * <button onclick={async () => {
+	 *   await createTodo({ text }).updates(
+	 *     getTodos.withOverride((todos) => [...todos, { text, done: false }])
+	 *   );
+	 * }}>
+	 *   Create Todo
+	 * </button>
+	 *
+	 * <ul>
+	 * 	{#each await getTodos() as todo}
+	 * 		<li>{todo.text}</li>
+	 * 	{/each}
+	 * </ul>
+	 * ```
+	 */
+	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+		updates: (
+			...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
+		) => Promise<Awaited<Output>>;
+	};
+
+	export type RemoteResource<T> = Promise<Awaited<T>> & {
+		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+		get error(): any;
+		/** `true` before the first result is available and during refreshes */
+		get loading(): boolean;
+	} & (
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): undefined;
+					ready: false;
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<T>;
+					ready: true;
+			  }
+		);
+
+	export type RemoteQuery<T> = RemoteResource<T> & {
+		/**
+		 * On the client, this function will re-fetch the query from the server.
+		 *
+		 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
+		 * transport the updated data to the client along with the response, if the action was successful.
+		 */
+		refresh: () => Promise<void>;
+		/**
+		 * Temporarily override the value of a query. Useful for optimistic UI updates.
+		 * `withOverride` expects a function that takes the current value and returns the new value.
+		 * In other words this works like `override`, but is specifically for use as part of the `updates` method of a remote `command` or `form` submit
+		 * in order to coordinate query refreshes and override releases at once, without causing e.g. flickering in the UI.
+		 *
+		 * ```svelte
+		 * <script>
+		 *   import { getTodos, addTodo } from './todos.remote.js';
+		 *   const todos = getTodos();
+		 * </script>
+		 *
+		 * <form {...addTodo.enhance(async ({ data, submit }) => {
+		 *   await submit().updates(todos.withOverride((todos) => [...todos, { text: data.get('text') }]));
+		 * }}>
+		 *   <input type="text" name="text" />
+		 *   <button type="submit">Add Todo</button>
+		 * </form>
+		 * ```
+		 */
+		withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
+			_key: string;
+			release: () => void;
+		};
+	};
+
+	/**
+	 * The return value of a remote `prerender` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 */
+	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+	/**
+	 * The return value of a remote `query` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+	 */
+	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -1759,6 +2011,7 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
+		remotes: string[];
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}
@@ -2003,7 +2256,7 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
+	export function fail<T = undefined>(status: number, data: T): ActionFailure<T>;
 	/**
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
@@ -2315,6 +2568,13 @@ declare module '$app/navigation' {
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**
+	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+	 * Returns a `Promise` that resolves when the page is subsequently updated.
+	 * */
+	export function refreshAll({ includeLoadFunctions }?: {
+		includeLoadFunctions?: boolean;
+	} | undefined): Promise<void>;
+	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
 	 *  2. calling the page's load function with the appropriate options.
@@ -2436,7 +2696,8 @@ declare module '$app/paths' {
 declare module '$app/server' {
 	// @ts-ignore
 	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
-	import type { RequestEvent } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, RemoteForm } from '@sveltejs/kit';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2457,6 +2718,261 @@ declare module '$app/server' {
 	 * @since 2.20.0
 	 */
 	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import z from 'zod';
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<void>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<void, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  'unchecked',
+	 * 	(id: string) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<Input>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import z from 'zod';
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
+	/**
+	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 *
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export interface BlogPost {
+	 * 	id: string;
+	 * 	title: string;
+	 * 	content: string;
+	 * }
+	 *
+	 * export const like = command((postId: string) => {
+	 * 	blogPosts.get(postId).like();
+	 * });
+	 * ```
+	 *
+	 * ```svelte
+	 * <script lang="ts">
+	 * 	import { like } from './blog.remote.js';
+	 *
+	 * 	let post: BlogPost = $props();
+	 * </script>
+	 *
+	 * <h1>{post.title}</h1>
+	 * <p>{post.content}</p>
+	 * <button onclick={() => like(post.id)}>♡</button>
+	 * ```
+	 *
+	 * */
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
+	/**
+	 * Creates a form action. The passed function will be called when the form is submitted.
+	 * Returns an object that can be spread onto a form element to connect it to the function.
+	 * ```ts
+	 * import * as db from '$lib/server/db';
+	 *
+	 * export const createPost = form((formData) => {
+	 * 	const title = formData.get('title');
+	 * 	const content = formData.get('content');
+	 * 	return db.createPost({ title, content });
+	 * });
+	 * ```
+	 * ```svelte
+	 * <script>
+	 * 	import { createPost } from './blog.remote.js';
+	 * </script>
+	 *
+	 * <form {...createPost}>
+	 * 	<input type="text" name="title" />
+	 * 	<textarea name="content" />
+	 * 	<button type="submit">Create</button>
+	 * </form>
+	 * ```
+	 *
+	 * */
+	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T, U>;
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
+	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
 }

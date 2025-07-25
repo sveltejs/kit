@@ -120,6 +120,10 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			experimental: object({
+				remoteFunctions: boolean(false)
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: object({

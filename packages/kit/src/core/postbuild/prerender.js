@@ -14,6 +14,7 @@ import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
+import { stringify_remote_arg } from '../../runtime/shared.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -184,8 +185,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			files.add(posixify(`${config.appDir}/immutable/${file}`));
 		}
 	}
+
+	const remote_prefix = `${config.paths.base}/${config.appDir}/remote/`;
+
 	const seen = new Set();
 	const written = new Set();
+	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
@@ -229,7 +234,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
-				dependencies
+				dependencies,
+				remote_responses
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -258,7 +264,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 		const body = Buffer.from(await response.arrayBuffer());
 
-		save('pages', response, body, decoded, encoded, referrer, 'linked');
+		const category = decoded.startsWith(remote_prefix) ? 'data' : 'pages';
+		save(category, response, body, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -282,8 +289,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 
+			const category = decoded_dependency_path.startsWith(remote_prefix) ? 'data' : 'dependencies';
+
 			save(
-				'dependencies',
+				category,
 				result.response,
 				body,
 				decoded_dependency_path,
@@ -336,7 +345,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	/**
-	 * @param {'pages' | 'dependencies'} category
+	 * @param {'pages' | 'dependencies' | 'data'} category
 	 * @param {Response} response
 	 * @param {string | Uint8Array} body
 	 * @param {string} decoded
@@ -460,8 +469,25 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	/** @type {Array<Function & { __: import('types').RemoteInfo & { type: 'prerender'}}>} */
+	const remote_functions = [];
+
+	for (const remote of Object.values(manifest._.remotes)) {
+		const functions = Object.values(await remote()).filter(
+			(value) =>
+				typeof value === 'function' &&
+				/** @type {import('types').RemoteInfo} */ (value.__)?.type === 'prerender'
+		);
+		if (functions.length > 0) {
+			has_prerenderable_routes = true;
+			remote_functions.push(...functions);
+		}
+	}
+
 	if (
-		(config.prerender.entries.length === 0 && route_level_entries.length === 0) ||
+		(config.prerender.entries.length === 0 &&
+			route_level_entries.length === 0 &&
+			remote_functions.length === 0) ||
 		!has_prerenderable_routes
 	) {
 		return { prerendered, prerender_map };
@@ -496,6 +522,23 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
 			void enqueue(null, config.paths.base + entry, undefined, id);
+		}
+	}
+
+	const transport = (await internal.get_hooks()).transport ?? {};
+	for (const remote_function of remote_functions) {
+		// TODO this writes to /prerender/pages/... eventually, should it go into
+		// /prerender/dependencies like indirect calls due to page prerenders?
+		// Does it really matter?
+		if (remote_function.__.has_arg) {
+			for (const arg of (await remote_function.__.inputs?.()) ?? []) {
+				void enqueue(
+					null,
+					remote_prefix + remote_function.__.id + '/' + stringify_remote_arg(arg, transport)
+				);
+			}
+		} else {
+			void enqueue(null, remote_prefix + remote_function.__.id);
 		}
 	}
 
