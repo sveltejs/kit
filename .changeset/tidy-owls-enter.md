@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: ignore route groupes when generating typed routes
+fix: ignore route groups when generating typed routes
