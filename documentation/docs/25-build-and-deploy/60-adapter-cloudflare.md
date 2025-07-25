@@ -25,6 +25,7 @@ export default {
 		adapter: adapter({
 			// See below for an explanation of these options
 			config: undefined,
+			workerScriptPath: undefined,
 			platformProxy: {
 				configPath: undefined,
 				environment: undefined,
@@ -45,6 +46,12 @@ export default {
 ### config
 
 Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
+
+### workerScriptPath
+
+Specifies the output path of the generated Worker script file (e.g. `.svelte-kit/cloudflare/_worker.js`). By default, the adapter relies on the `main` field in your Wrangler configuration file to determine the Worker entrypoint. Setting this option allows you to control where the adapter emits the compiled Worker script.
+
+This is useful when you want to define your own Worker entrypoint (e.g. `src/index.ts`) that imports and wraps the SvelteKit handler, making it easier to add custom Cloudflare Worker handlers such as fetch, scheduled, or queue.
 
 ### platformProxy
 
@@ -226,4 +233,59 @@ assets.binding = "ASSETS"+++
 		"binding": "ASSETS"
 	}+++
 }
+```
+
+## Cloudflare Worker Handlers
+
+The `workerScriptPath` option allows you to control where the adapter outputs the compiled Worker script.
+
+By default, the Cloudflare adapter writes the compiled Worker to `.svelte-kit/cloudflare/_worker.js`, and this file is referenced as the `main` entry in your `wrangler.toml` or `wrangler.jsonc`.
+
+If you want to define your own custom Worker entrypoint (e.g. `src/index.ts`) to add additional handlers like `fetch`, `scheduled`, or `queue`, you can specify the generated script path using this option.
+
+### svelte.config.js
+
+```ts
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+export default {
+	kit: {
+--- 	adapter: adapter()---
++++		adapter: adapter({
+			workerScriptPath: '.svelte-kit/cloudflare/_worker.js'
+		})+++
+	}
+};
+```
+
+### wrangler.toml
+
+```toml
+/// file: wrangler.toml
+---main = ".svelte-kit/cloudflare/_worker.js"---
++++main = "src/index.ts"+++
+```
+
+### wrangler.jsonc
+
+```jsonc
+/// file: wrangler.jsonc
+{
+---	"main": ".svelte-kit/cloudflare/_worker.js",---
++++	"main": "src/index.ts",+++
+}
+```
+
+### src/index.ts
+
+```ts
+/// file: src/index.ts
+import sveltekit from '../.svelte-kit/cloudflare/_worker.js';
+
+export default {
+	async fetch(request, env, ctx) {
+		return sveltekit.fetch(request, env, ctx);
+	},
+} satisfies ExportedHandler<Env>;
 ```
