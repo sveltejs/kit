@@ -5,6 +5,7 @@ declare let id: RouteId;
 // okay
 id = '/';
 id = '/foo/[bar]/[baz]';
+id = '/(group)/path-a';
 
 // @ts-expect-error
 id = '/nope';
@@ -26,11 +27,9 @@ pathname = '/nope';
 pathname = '/foo';
 pathname = '/foo/1/2';
 
-// Test layout groups - these should work because groups are not part of URL
+// Test layout groups
 pathname = '/path-a';
-
-// Test that layout group names are NOT part of the pathname type
-// @ts-expect-error
+// @ts-expect-error layout group names are NOT part of the pathname type
 pathname = '/(group)/path-a';
 
 // read `pathname` otherwise it is treated as unused
