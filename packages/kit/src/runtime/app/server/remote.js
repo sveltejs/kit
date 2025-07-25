@@ -557,15 +557,6 @@ export function form(fn) {
 				},
 				/** @param {FormData} form_data */
 				fn: async (form_data) => {
-					if (prerendering) {
-						// @ts-expect-error
-						const name = wrapper.__.name;
-
-						throw new Error(
-							`Cannot call remote form function '${name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-						);
-					}
-
 					const event = getRequestEvent();
 					const info = get_remote_info(event);
 
