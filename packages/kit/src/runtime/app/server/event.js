@@ -19,6 +19,7 @@ import('node:async_hooks')
  *
  * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
  * @since 2.20.0
+ * @returns {RequestEvent}
  */
 export function getRequestEvent() {
 	const event = request_event ?? als?.getStore();
