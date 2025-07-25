@@ -558,9 +558,8 @@ export function command(id) {
 /**
  * Client-version of the `form` function from `$app/server`.
  * @template T
- * @template U
  * @param {string} id
- * @returns {RemoteForm<T, U>}
+ * @returns {RemoteForm<T>}
  */
 export function form(id) {
 	/**
@@ -677,7 +676,7 @@ export function form(id) {
 			return promise;
 		}
 
-		/** @type {RemoteForm<T, U>} */
+		/** @type {RemoteForm<T>} */
 		const instance = {};
 
 		instance.method = 'POST';
@@ -722,7 +721,7 @@ export function form(id) {
 			return form_data;
 		}
 
-		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
 			return (event) => {
@@ -758,7 +757,7 @@ export function form(id) {
 
 		instance.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
 
-		/** @param {Parameters<RemoteForm<any, any>['formAction']['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return (event) => {
@@ -780,7 +779,7 @@ export function form(id) {
 			};
 		};
 
-		/** @type {RemoteForm<any, any>['formAction']} */
+		/** @type {RemoteForm<any>['formAction']} */
 		// @ts-expect-error we gotta set enhance as a non-enumerable property
 		const form_action = {
 			type: 'submit',
@@ -789,7 +788,7 @@ export function form(id) {
 		};
 
 		Object.defineProperty(form_action, 'enhance', {
-			/** @type {RemoteForm<any, any>['formAction']['enhance']} */
+			/** @type {RemoteForm<any>['formAction']['enhance']} */
 			value: (callback) => {
 				return {
 					type: 'submit',
@@ -818,7 +817,7 @@ export function form(id) {
 				enumerable: false
 			},
 			enhance: {
-				/** @type {RemoteForm<any, any>['enhance']} */
+				/** @type {RemoteForm<any>['enhance']} */
 				value: (callback) => {
 					return {
 						method: 'POST',
@@ -832,7 +831,7 @@ export function form(id) {
 
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
-				/** @type {RemoteForm<any, any>['for']} */
+				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					let entry = instance_cache.get(key);
 

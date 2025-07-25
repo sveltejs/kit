@@ -170,7 +170,7 @@ export async function handle_remote_form_post(event, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any, any>} */ (module?.[func_name]);
+	let form = /** @type {RemoteForm<any>} */ (module?.[func_name]);
 
 	if (!form) {
 		event.setHeaders({
@@ -196,10 +196,15 @@ export async function handle_remote_form_post(event, manifest, id) {
 	try {
 		const form_data = await event.request.formData();
 		get_remote_info(event);
-		// @ts-expect-error
-		const data = await with_event(event, () => form.__.fn.call(null, form_data));
+		await with_event(event, () =>
+			/** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn.call(
+				null,
+				form_data
+			)
+		);
 
-		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
+		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
+		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
 		return {
 			type: 'success',
 			status: 200

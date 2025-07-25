@@ -170,32 +170,39 @@ async function form_tests() {
 }
 form_tests();
 
-function status_tests() {
+function boolean_tests() {
 	const q = query(() => 'Hello world');
 	const result = q();
-	if (result.status === 'loading') {
+
+	if (!result.ready) {
 		result.current === undefined;
 		// @ts-expect-error
 		result.current.length;
 		// @ts-expect-error
 		result.current?.length;
-	} else if (result.status === 'reloading') {
+	} else {
 		result.current === 'a';
 		result.current.length;
 		// @ts-expect-error
 		result.current === true;
-	} else if (result.status === 'error') {
+	}
+
+	if (result.loading) {
+		result.current === undefined;
+		result.current?.length;
+		// @ts-expect-error
+		result.current.length;
+		// @ts-expect-error
+		result.current === true;
+	}
+
+	if (result.error) {
 		result.current === 'a';
 		result.current?.length;
 		// @ts-expect-error
 		result.current.length;
 		// @ts-expect-error
 		result.current === true;
-	} else if (result.status === 'success') {
-		result.current === 'a';
-		result.current.length;
-		// @ts-expect-error
-		result.current === true;
 	}
 }
-status_tests();
+boolean_tests();

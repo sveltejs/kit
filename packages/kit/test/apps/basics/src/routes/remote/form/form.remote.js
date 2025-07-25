@@ -1,5 +1,5 @@
 import { form, query } from '$app/server';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 let task;
 

@@ -504,9 +504,8 @@ export function command(validate_or_fn, maybe_fn) {
  * ```
  *
  * @template T
- * @template [U=never]
  * @param {(formData: FormData) => MaybePromise<T>} fn
- * @returns {RemoteForm<T, U>}
+ * @returns {RemoteForm<T>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
@@ -518,7 +517,7 @@ export function form(fn) {
 	 * @param {string} [action]
 	 */
 	function create_instance(key, action = '') {
-		/** @type {RemoteForm<T, U>} */
+		/** @type {RemoteForm<T>} */
 		const wrapper = {};
 
 		wrapper.method = 'POST';
@@ -597,7 +596,7 @@ export function form(fn) {
 
 		if (key == undefined) {
 			Object.defineProperty(wrapper, 'for', {
-				/** @type {RemoteForm<any, any>['for']} */
+				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					const info = get_remote_info(getRequestEvent());
 					let entry = info.form_instances.get(key);
