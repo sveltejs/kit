@@ -143,9 +143,15 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
+ * @param {Object} [opts] Options related to the navigation
+ * @param {boolean} [opts.replace_state] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  */
-function native_navigation(url) {
-	location.href = url.href;
+function native_navigation(url, opts = {}) {
+	if (opts.replace_state) {
+		location.replace(url.href);
+	} else {
+		location.href = url.href;
+	}
 	return new Promise(() => {});
 }
 
@@ -339,7 +345,11 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate() {
+/**
+ * @param {Object} [opts] Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
+ */
+async function _invalidate(opts = {}) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -360,7 +370,12 @@ async function _invalidate() {
 	if (!navigation_result || nav_token !== token) return;
 
 	if (navigation_result.type === 'redirect') {
-		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		return _goto(
+			new URL(navigation_result.location, current.url).href,
+			{ replaceState: opts.replaceState },
+			1,
+			nav_token
+		);
 	}
 
 	if (navigation_result.props.page) {
@@ -1101,7 +1116,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status);
+					return await server_fallback(url, { id: route.id }, error, status, false);
 				}
 			}
 		} else {
@@ -1467,10 +1482,11 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404
+					404,
+					replace_state
 				);
 			} else {
-				return await native_navigation(url);
+				return await native_navigation(url, { replace_state });
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1481,7 +1497,8 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404
+				404,
+				replace_state
 			);
 		}
 	}
@@ -1510,7 +1527,12 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(
+				new URL(navigation_result.location, url).href,
+				{ replaceState: replace_state },
+				redirect_count + 1,
+				nav_token
+			);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1518,7 +1540,7 @@ async function navigate({
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url);
+			await native_navigation(url, { replace_state });
 		}
 	}
 
@@ -1660,9 +1682,10 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
+ * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
-async function server_fallback(url, route, error, status) {
+async function server_fallback(url, route, error, status, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
@@ -1682,7 +1705,7 @@ async function server_fallback(url, route, error, status) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url);
+	return await native_navigation(url, { replace_state });
 }
 
 if (import.meta.hot) {
@@ -1956,16 +1979,18 @@ export function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {Object} opts Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(opts);
 }
 
 /**
@@ -1982,15 +2007,17 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {Object} opts Options related to the invalidation
+ * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
-export function invalidateAll() {
+export function invalidateAll(opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidateAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate();
+	return _invalidate(opts);
 }
 
 /**
