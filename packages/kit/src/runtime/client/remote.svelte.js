@@ -54,6 +54,7 @@ class Prerender {
 	/** @type {T | undefined} */
 	#current = $state.raw();
 
+	#errored = $state(false);
 	#error = $state.raw(undefined);
 
 	/**
@@ -68,6 +69,7 @@ class Prerender {
 			},
 			(error) => {
 				this.#loading = false;
+				this.#errored = true;
 				this.#error = error;
 				throw error;
 			}
@@ -114,19 +116,15 @@ class Prerender {
 	}
 
 	/**
-	 * Returns the status of the resource:
+	 * The status of the resource:
 	 * - 'loading': no value yet
-	 * - 'success': got a value after a successful fetch
 	 * - 'error': got an error after a fetch failed
+	 * - 'idle': got a value after a successful fetch
 	 */
 	get status() {
-		if (this.#loading) {
-			return 'loading';
-		} else if (this.#error !== undefined) {
-			return 'error';
-		} else {
-			return 'success';
-		}
+		if (this.#loading) return 'loading';
+		if (this.#errored) return 'error';
+		return 'idle';
 	}
 }
 
@@ -162,6 +160,7 @@ class Query {
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
+	#errored = $state(false);
 	#error = $state.raw(undefined);
 
 	/** @type {Promise<T>['then']} */
@@ -226,6 +225,7 @@ class Query {
 				this.#inited = true;
 				this.#loading = false;
 				this.#raw = value;
+				this.#errored = false;
 				this.#error = undefined;
 
 				resolve();
@@ -235,6 +235,7 @@ class Query {
 				if (idx === -1) return;
 
 				this.#latest.splice(0, idx).forEach((r) => r());
+				this.#errored = true;
 				this.#error = e;
 				this.#loading = false;
 				reject(e);
@@ -283,23 +284,13 @@ class Query {
 	 * Returns the status of the resource:
 	 * - 'loading': no value yet
 	 * - 'reloading': value, currently refetching
-	 * - 'success': got a value after a successful fetch
 	 * - 'error': got an error after a fetch failed
+	 * - 'idle': got a value after a successful fetch
 	 */
 	get status() {
-		if (this.#loading) {
-			if (!this.#inited) {
-				return 'loading';
-			} else {
-				return 'reloading';
-			}
-		} else if (this.#error !== undefined) {
-			return 'error';
-		} else if (this.#inited) {
-			return 'success';
-		} else {
-			return 'loading';
-		}
+		if (this.#loading) return this.#inited ? 'reloading' : 'loading';
+		if (this.#errored) return 'error';
+		return 'idle';
 	}
 
 	/**
