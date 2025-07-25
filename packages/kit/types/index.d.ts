@@ -2434,8 +2434,6 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	// @ts-ignore
-	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
 	import type { RequestEvent } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2455,8 +2453,8 @@ declare module '$app/server' {
 	 *
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
-	 */
-	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
+	 * */
+	export function getRequestEvent(): RequestEvent;
 
 	export {};
 }
