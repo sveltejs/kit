@@ -1,7 +1,0 @@
-{
-	"main": "./dist/index.js",
-	"assets": {
-		"directory": "./dist/public",
-		"binding": "ASSETS"
-	}
-}
