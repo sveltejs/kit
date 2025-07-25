@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.26.1
+### Patch Changes
+
+
+- fix: posixify internal app server path ([#14049](https://github.com/sveltejs/kit/pull/14049))
+
+
+- fix: ignore route groups when generating typed routes ([#14050](https://github.com/sveltejs/kit/pull/14050))
+
 ## 2.26.0
 ### Minor Changes
 
