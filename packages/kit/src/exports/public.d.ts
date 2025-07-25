@@ -1566,7 +1566,7 @@ export interface Snapshot<T = any> {
  * </ul>
  * ```
  */
-export type RemoteForm<Success, Failure> = ((data: FormData) => Promise<void>) & {
+export type RemoteForm<Success, Failure> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
