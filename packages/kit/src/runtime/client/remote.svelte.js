@@ -50,6 +50,7 @@ class Prerender {
 	#promise;
 
 	#loading = $state(true);
+	#ready = $state(false);
 
 	/** @type {T | undefined} */
 	#current = $state.raw();
@@ -63,6 +64,7 @@ class Prerender {
 		this.#promise = fn().then(
 			(value) => {
 				this.#loading = false;
+				this.#ready = true;
 				this.#current = value;
 				return value;
 			},
@@ -107,26 +109,17 @@ class Prerender {
 	}
 
 	/**
-	 * Returns true if the resource is loading or reloading.
+	 * Returns true if the resource is loading.
 	 */
 	get loading() {
 		return this.#loading;
 	}
 
 	/**
-	 * Returns the status of the resource:
-	 * - 'loading': no value yet
-	 * - 'success': got a value after a successful fetch
-	 * - 'error': got an error after a fetch failed
+	 * Returns true once the resource has been loaded.
 	 */
-	get status() {
-		if (this.#loading) {
-			return 'loading';
-		} else if (this.#error !== undefined) {
-			return 'error';
-		} else {
-			return 'success';
-		}
+	get ready() {
+		return this.#ready;
 	}
 }
 
@@ -146,7 +139,7 @@ class Query {
 	#latest = [];
 
 	/** @type {boolean} */
-	#inited = $state(false);
+	#ready = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {Promise<void>} */
@@ -157,7 +150,7 @@ class Query {
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
-		if (!this.#inited) return undefined;
+		if (!this.#ready) return undefined;
 
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
@@ -223,7 +216,7 @@ class Query {
 				if (idx === -1) return;
 
 				this.#latest.splice(0, idx).forEach((r) => r());
-				this.#inited = true;
+				this.#ready = true;
 				this.#loading = false;
 				this.#raw = value;
 				this.#error = undefined;
@@ -280,26 +273,10 @@ class Query {
 	}
 
 	/**
-	 * Returns the status of the resource:
-	 * - 'loading': no value yet
-	 * - 'reloading': value, currently refetching
-	 * - 'success': got a value after a successful fetch
-	 * - 'error': got an error after a fetch failed
+	 * Returns true once the resource has been loaded for the first time.
 	 */
-	get status() {
-		if (this.#loading) {
-			if (!this.#inited) {
-				return 'loading';
-			} else {
-				return 'reloading';
-			}
-		} else if (this.#error !== undefined) {
-			return 'error';
-		} else if (this.#inited) {
-			return 'success';
-		} else {
-			return 'loading';
-		}
+	get ready() {
+		return this.#ready;
 	}
 
 	/**
@@ -313,7 +290,7 @@ class Query {
 	 * @param {T} value
 	 */
 	set(value) {
-		this.#inited = true;
+		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;

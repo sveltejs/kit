@@ -1668,17 +1668,12 @@ declare module '@sveltejs/kit' {
 			| {
 					/** The current value of the query. Undefined as long as there's no value yet */
 					get current(): undefined;
-					status: 'loading';
+					ready: false;
 			  }
 			| {
 					/** The current value of the query. Undefined as long as there's no value yet */
 					get current(): Awaited<T>;
-					status: 'success' | 'reloading';
-			  }
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): Awaited<T> | undefined;
-					status: 'error';
+					ready: true;
 			  }
 		);
 
