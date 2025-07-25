@@ -104,7 +104,31 @@ A form object such as `addLike` has enumerable properties — `method`, `action`
 
 By default, all queries used on the page (along with any `load` functions) are automatically refreshed following a form submission, meaning `getLikes(...)` in the example above will show updated data.
 
-In addition to the enumerable properties, remote forms (`addLike` in our example) have non-enumerable properties such as `result`, containing the return value, and `enhance` which allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations*  — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown): 
+In addition to the enumerable properties, remote forms (`addLike` in our example) have non-enumerable properties. One of them is `result` which contains the return value. Use it to display something in response to the submission.
+
+```svelte
+<!--- file: +page.svelte --->
+<script>
+  import { getLikes, addLike } from './likes.remote';
+  
+  let { item } = $props();
+</script>
+
++++{#if addLike.result?.success}
+  <p>success!</p>
+{/if}+++
+
+<form {...addLike}>
+  <input type="hidden" name="id" value={item.id} />
+  <button>add like</button>
+</form>
+
+<p>likes: {await getLikes(item.id)}</p>
+```
+
+### enhance
+
+The remote form property `enhance` allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations*  — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown): 
 
 ```svelte
 <!--- file: +page.svelte --->
@@ -164,6 +188,49 @@ export const addLike = form(async (data: FormData) => {
   // we can return arbitrary data from a form function
   return { success: true };
 });
+```
+
+### Forms in a list
+
+Sometimes you may have form submissions of the same type in a list, and each form action should be independently managed. Use the `for` method to create separate instances of the same form submission. In the following example, each todo item gets a separate `toggleTodo` form instance, which means you can toggle many in quick succession, with the submission results staying independent of each other:
+
+```svelte
+<!--- file: +page.svelte --->
+<script>
+  import { getTodos, toggleTodo } from './todos.remote';
+</script>
+
+{#each await getTodos() as todo (todo.id)}
+  {@const toggle = toggleTodo.for(todo.id)}
+  <form {...toggle}>
+    <input type="hidden" name="id" value={item.id} />
+    <input type="checkbox" checked={todo.checked} />
+    <button>toggle</button>
+    {#if toggle.result?.error}
+      <span class="error">Something went wrong</span>
+    {/if}
+  </form>
+{/each}
+```
+
+### formAction
+
+Forms allow you to have more than one button that kicks up a form submission. The non-primary buttons must have a `formaction` property in that case. The remote form provides a `formAction` property that allows you to do just that:
+
+```svelte
+<!--- file: +page.svelte --->
+<script>
+  import { addLike, removeLike } from './likes.remote';
+  
+  let { item } = $props();
+</script>
+
+<form {...addLike}>
+  <input type="hidden" name="id" value={item.id} />
+  <button>add like</button>
+  <button {...removeLike.formAction}>remove like</button>
+  <!--- removeLike.formAction.enhance(...) also exists --->
+</form>
 ```
 
 ## command
