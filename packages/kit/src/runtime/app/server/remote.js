@@ -1,10 +1,9 @@
-/** @import { RemoteForm, RemoteQuery, RemoteQueryFunction, RemoteResource, RemotePrerenderFunction, RemoteCommand, RequestEvent, ActionFailure as IActionFailure } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQuery, RemoteQueryFunction, RemoteResource, RemotePrerenderFunction, RemoteCommand, RequestEvent } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { uneval, parse } from 'devalue';
 import { error, json } from '@sveltejs/kit';
-import { ActionFailure } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { getRequestEvent, with_event } from './event.js';
 import { get_remote_info } from '../../server/remote.js';
@@ -506,7 +505,7 @@ export function command(validate_or_fn, maybe_fn) {
  *
  * @template T
  * @template [U=never]
- * @param {(formData: FormData) => MaybePromise<T | IActionFailure<U>>} fn
+ * @param {(formData: FormData) => MaybePromise<T>} fn
  * @returns {RemoteForm<T, U>}
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -569,9 +568,8 @@ export function form(fn) {
 					// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 					// where only one form submission is active at the same time
 					if (!event.isRemoteRequest) {
-						const normalized = result instanceof ActionFailure ? result.data : result;
-						uneval_result(wrapper.action, [], event, normalized);
-						info.form_result = [key, normalized];
+						uneval_result(wrapper.action, [], event, result);
+						info.form_result = [key, result];
 					}
 
 					return result;

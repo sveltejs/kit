@@ -1543,7 +1543,7 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteForm<Success, Failure> = {
+	export type RemoteForm<Result> = {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1579,9 +1579,9 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for: (key: string | number | boolean) => Omit<RemoteForm<Success, Failure>, 'for'>;
+		for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
 		/** The result of the form submission */
-		get result(): Success | Failure | undefined;
+		get result(): Result | undefined;
 		/** When there's an error during form submission, it appears on this property */
 		get error(): App.Error | undefined;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
@@ -2696,7 +2696,7 @@ declare module '$app/paths' {
 declare module '$app/server' {
 	// @ts-ignore
 	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
-	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, ActionFailure as IActionFailure, RemoteForm } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, RemoteForm } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2970,7 +2970,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T | IActionFailure<U>>): RemoteForm<T, U>;
+	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T, U>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

@@ -1566,7 +1566,7 @@ export interface Snapshot<T = any> {
  * </ul>
  * ```
  */
-export type RemoteForm<Success, Failure> = {
+export type RemoteForm<Result> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
@@ -1602,9 +1602,9 @@ export type RemoteForm<Success, Failure> = {
 	 *	{/each}
 	 * ```
 	 */
-	for: (key: string | number | boolean) => Omit<RemoteForm<Success, Failure>, 'for'>;
+	for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
 	/** The result of the form submission */
-	get result(): Success | Failure | undefined;
+	get result(): Result | undefined;
 	/** When there's an error during form submission, it appears on this property */
 	get error(): App.Error | undefined;
 	/** Spread this onto a `<button>` or `<input type="submit">` */

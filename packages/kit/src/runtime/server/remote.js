@@ -2,7 +2,7 @@
 /** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import { ActionFailure, HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { app_dir, base } from '__sveltekit/paths';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
@@ -58,7 +58,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data instanceof ActionFailure ? data.data : data, transport),
+					result: stringify(data, transport),
 					refreshes: stringify(
 						{
 							...get_remote_info(event).refreshes,
@@ -200,17 +200,10 @@ export async function handle_remote_form_post(event, manifest, id) {
 		const data = await with_event(event, () => form.__.fn.call(null, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
-		if (data instanceof ActionFailure) {
-			return {
-				type: 'failure',
-				status: data.status
-			};
-		} else {
-			return {
-				type: 'success',
-				status: 200
-			};
-		}
+		return {
+			type: 'success',
+			status: 200
+		};
 	} catch (e) {
 		const err = normalize_error(e);
 
