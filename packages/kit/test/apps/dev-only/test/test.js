@@ -76,6 +76,18 @@ Tips:
  - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
+	test('$app/server module is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-modules/static-import-2', {
+			wait_for_started: false
+		});
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $app/server into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from $app/server are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
+	});
+
 	test('server-only module is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/dynamic-import', {
 			wait_for_started: false
