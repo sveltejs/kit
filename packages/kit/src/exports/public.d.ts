@@ -212,8 +212,13 @@ export interface Cookies {
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 	 * @param name the name of the cookie
 	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param target the target, used to determine the domain and path of the cookie.
 	 */
-	get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+	get: (
+		name: string,
+		opts?: import('cookie').CookieParseOptions,
+		target?: { domain?: string; path?: string }
+	) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
