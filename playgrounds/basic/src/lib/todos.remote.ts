@@ -18,7 +18,7 @@ export const get_todo_prerendered = prerender(
 		console.log('get_todo prerendered', id);
 		return id;
 	},
-	{ entries: () => [1] }
+	{ inputs: () => [1] }
 );
 
 export const add_todo = command('unchecked', async (text: string) => {

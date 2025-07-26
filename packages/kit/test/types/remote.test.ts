@@ -1,16 +1,18 @@
 import { query, prerender, command, form } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { RemoteQuery } from '@sveltejs/kit';
+import { RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 
 function query_tests() {
-	const no_args: RemoteQuery<void, string> = query(() => 'Hello world');
+	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
 	no_args();
 	// @ts-expect-error
 	no_args('');
 
-	const one_arg: RemoteQuery<number, string> = query('unchecked', (a: number) => a.toString());
+	const one_arg: RemoteQueryFunction<number, string> = query('unchecked', (a: number) =>
+		a.toString()
+	);
 	one_arg(1);
 	// @ts-expect-error
 	one_arg('1');
@@ -52,11 +54,13 @@ function query_tests() {
 query_tests();
 
 function prerender_tests() {
-	const no_args: RemoteQuery<void, string> = prerender(() => 'Hello world');
+	const no_args: RemotePrerenderFunction<void, string> = prerender(() => 'Hello world');
 	no_args();
 	// @ts-expect-error
 	no_args('');
-	const one_arg: RemoteQuery<number, string> = prerender('unchecked', (a: number) => a.toString());
+	const one_arg: RemotePrerenderFunction<number, string> = prerender('unchecked', (a: number) =>
+		a.toString()
+	);
 	one_arg(1);
 	// @ts-expect-error
 	one_arg('1');
@@ -96,10 +100,10 @@ function prerender_tests() {
 	prerender_schema();
 
 	async function prerender_schema_entries() {
-		const q = prerender(schema, (a) => a, { entries: () => ['1'] });
+		const q = prerender(schema, (a) => a, { inputs: () => ['1'] });
 		q;
 		// @ts-expect-error
-		const q2 = prerender(schema, (a) => a, { entries: () => [1] });
+		const q2 = prerender(schema, (a) => a, { inputs: () => [1] });
 		q2;
 	}
 	prerender_schema_entries();
@@ -166,32 +170,39 @@ async function form_tests() {
 }
 form_tests();
 
-function status_tests() {
+function boolean_tests() {
 	const q = query(() => 'Hello world');
 	const result = q();
-	if (result.status === 'loading') {
+
+	if (!result.ready) {
 		result.current === undefined;
 		// @ts-expect-error
 		result.current.length;
 		// @ts-expect-error
 		result.current?.length;
-	} else if (result.status === 'reloading') {
+	} else {
 		result.current === 'a';
 		result.current.length;
 		// @ts-expect-error
 		result.current === true;
-	} else if (result.status === 'error') {
+	}
+
+	if (result.loading) {
+		result.current === undefined;
+		result.current?.length;
+		// @ts-expect-error
+		result.current.length;
+		// @ts-expect-error
+		result.current === true;
+	}
+
+	if (result.error) {
 		result.current === 'a';
 		result.current?.length;
 		// @ts-expect-error
 		result.current.length;
 		// @ts-expect-error
 		result.current === true;
-	} else if (result.status === 'success') {
-		result.current === 'a';
-		result.current.length;
-		// @ts-expect-error
-		result.current === true;
 	}
 }
-status_tests();
+boolean_tests();

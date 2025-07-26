@@ -1573,13 +1573,6 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#form-result-1')).toHaveText('hi');
 	});
 
-	test('form fail works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task', 'fail');
-		await page.click('#submit-btn-one');
-		await expect(page.locator('#form-result-1')).toHaveText('failed');
-	});
-
 	test('form error works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
@@ -1601,13 +1594,6 @@ test.describe('remote functions', () => {
 		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-two');
 		await expect(page.locator('#form-result-2')).toHaveText('hi');
-	});
-
-	test('form.formAction fail works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task', 'fail');
-		await page.click('#submit-btn-two');
-		await expect(page.locator('#form-result-2')).toHaveText('failed');
 	});
 
 	test('form.formAction error works', async ({ page }) => {

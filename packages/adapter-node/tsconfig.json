@@ -11,7 +11,8 @@
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		"skipLibCheck": true
 	},
 	"include": ["index.js", "src/**/*.js", "tests/**/*.js", "internal.d.ts", "utils.js"],
 	"exclude": ["tests/smoke.spec_disabled.js"]

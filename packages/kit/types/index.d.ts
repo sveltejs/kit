@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -385,11 +386,11 @@ declare module '@sveltejs/kit' {
 			privatePrefix?: string;
 		};
 		/**
-		 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+		 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
 		 */
 		experimental?: {
 			/**
-			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 			 * @default false
 			 */
 			remoteFunctions?: boolean;
@@ -771,10 +772,9 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
 	 *
-	 * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
-	 * This function is expected return an object shape that matches `App.Error`.
+	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
 	 */
 	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
@@ -861,11 +861,11 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -873,10 +873,10 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends NavigationEvent<Params, RouteId> {
 		/**
 		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -981,8 +981,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1121,13 +1121,13 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends Record<string, string> = Record<string, string>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * The URL of the current page.
 		 */
-		url: URL;
+		url: URL & { pathname: ResolvedPathname };
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
@@ -1169,8 +1169,8 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
 		 * Get or set cookies related to the current request
@@ -1266,8 +1266,8 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-		RouteId extends string | null = string | null
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 	export interface ResolveOptions {
@@ -1347,16 +1347,16 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
 		/**
 		 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1423,9 +1423,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 	/**
@@ -1433,9 +1433,9 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
-		RouteId extends string | null = string | null
+		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
 
 	/**
@@ -1513,14 +1513,15 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * The return value of a remote `form` function.
-	 * Spread it onto a `<form>` element to connect the form with the remote form action.
+	 * Spread it onto a `<form>` element to connect the element to the remote function.
+	 *
 	 * ```svelte
 	 * <script>
 	 *   import { createTodo } from './todos.remote.js';
 	 * </script>
 	 *
 	 * <form {...createTodo}>
-	 *   <input type="text" name="name" />
+	 *   <input name="text" />
 	 *   <!-- ... -->
 	 * </form>
 	 * ```
@@ -1536,7 +1537,9 @@ declare module '@sveltejs/kit' {
 	 *   const todo = { text, done: false };
 	 *
 	 *   // `updates` and `withOverride` enable optimistic UI updates
-	 *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
+	 *   await submit().updates(
+	 *     getTodos().withOverride((todos) => [...todos, todo])
+	 *   );
 	 * })}>
 	 *   <input name="text" />
 	 *   <!-- ... -->
@@ -1549,7 +1552,7 @@ declare module '@sveltejs/kit' {
 	 * </ul>
 	 * ```
 	 */
-	export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+	export type RemoteForm<Result> = {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1562,10 +1565,7 @@ declare module '@sveltejs/kit' {
 				data: FormData;
 				submit: () => Promise<void> & {
 					updates: (
-						...queries: Array<
-							| ReturnType<RemoteQuery<any, any>>
-							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-						>
+						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 					) => Promise<void>;
 				};
 			}) => void
@@ -1588,12 +1588,12 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+		for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
 		/** The result of the form submission */
-		get result(): Success | Failure | undefined;
+		get result(): Result | undefined;
 		/** When there's an error during form submission, it appears on this property */
 		get error(): App.Error | undefined;
-		/** Spread this onto a button or input of type submit */
+		/** Spread this onto a `<button>` or `<input type="submit">` */
 		formAction: {
 			type: 'submit';
 			formaction: string;
@@ -1605,10 +1605,7 @@ declare module '@sveltejs/kit' {
 					data: FormData;
 					submit: () => Promise<void> & {
 						updates: (
-							...queries: Array<
-								| ReturnType<RemoteQuery<any, any>>
-								| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-							>
+							...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 						) => Promise<void>;
 					};
 				}) => void
@@ -1667,25 +1664,29 @@ declare module '@sveltejs/kit' {
 	 */
 	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 		updates: (
-			...queries: Array<
-				| ReturnType<RemoteQuery<any, any>>
-				| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-			>
+			...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 		) => Promise<Awaited<Output>>;
 	};
 
-	/**
-	 * The return value of a remote `query` or `prerender` function.
-	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call through to the underlying function.
-	 * On the client, this will do a fetch to the server to retrieve the value.
-	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
-	 */
-	export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+	export type RemoteResource<T> = Promise<Awaited<T>> & {
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 		get error(): any;
 		/** `true` before the first result is available and during refreshes */
 		get loading(): boolean;
+	} & (
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): undefined;
+					ready: false;
+			  }
+			| {
+					/** The current value of the query. Undefined as long as there's no value yet */
+					get current(): Awaited<T>;
+					ready: true;
+			  }
+		);
+
+	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
@@ -1693,44 +1694,6 @@ declare module '@sveltejs/kit' {
 		 * transport the updated data to the client along with the response, if the action was successful.
 		 */
 		refresh: () => Promise<void>;
-		/**
-		 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
-		 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
-		 * Overrides are applied on new values, too, until they are released.
-		 *
-		 * ```svelte
-		 * <script>
-		 *   import { getList, commit } from './todos.remote.js';
-		 *   const list = getList();
-		 *   let release = [];
-		 * </script>
-		 *
-		 * <h2>Select items to remove</h2>
-		 *
-		 * <ul>
-		 *   {#each list as item}
-		 *     <li>{item.text}</li>
-		 *     <button onclick={() => {
-		 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
-		 *     }}>Remove</button>
-		 *   {/each}
-		 * </ul>
-		 *
-		 * <button onclick={() => {
-		 *   release.forEach((r) => r());
-		 *   release = [];
-		 * }}>Revert</button>
-		 *
-		 * <button onclick={async () => {
-		 *   await commit();
-		 *   release.forEach((r) => r());
-		 *   release = [];
-		 * }}>Confirm</button>
-		 * ```
-		 *
-		 * Can only be called on the client.
-		 */
-		override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
 		/**
 		 * Temporarily override the value of a query. Useful for optimistic UI updates.
 		 * `withOverride` expects a function that takes the current value and returns the new value.
@@ -1751,27 +1714,28 @@ declare module '@sveltejs/kit' {
 		 * </form>
 		 * ```
 		 */
-		withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+		withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
 			_key: string;
 			release: () => void;
 		};
-	} & (
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): undefined;
-					status: 'loading';
-			  }
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): Awaited<Output>;
-					status: 'success' | 'reloading';
-			  }
-			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
-					get current(): Awaited<Output> | undefined;
-					status: 'error';
-			  }
-		);
+	};
+
+	/**
+	 * The return value of a remote `prerender` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 */
+	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+	/**
+	 * The return value of a remote `query` function.
+	 * Call it with the input arguments to retrieve the value.
+	 * On the server, this will directly call the underlying function.
+	 * On the client, this will `fetch` data from the server.
+	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+	 */
+	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2665,10 +2629,13 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
+	import type { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
+	 *
+	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
 	 */
 	export let base: '' | `/${string}`;
 
@@ -2676,31 +2643,69 @@ declare module '$app/paths' {
 	 * An absolute path that matches [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 *
+	 * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
+	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
+		? RouteParams<T> extends Record<string, never>
+			? [route: T]
+			: [route: T, params: RouteParams<T>]
+		: [route: T];
+
 	/**
-	 * Populate a route ID with params to resolve a pathname.
+	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
 	 * @example
 	 * ```js
-	 * import { resolveRoute } from '$app/paths';
+	 * import { resolve } from '$app/paths';
 	 *
-	 * resolveRoute(
-	 *   `/blog/[slug]/[...somethingElse]`,
-	 *   {
-	 *     slug: 'hello-world',
-	 *     somethingElse: 'something/else'
-	 *   }
-	 * ); // `/blog/hello-world/something/else`
+	 * // using a pathname
+	 * const resolved = resolve(`/blog/hello-world`);
+	 *
+	 * // using a route ID plus parameters
+	 * const resolved = resolve('/blog/[slug]', {
+	 * 	slug: 'hello-world'
+	 * });
 	 * ```
+	 * @since 2.26
 	 */
-	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+
+	/**
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { asset } from '$app/paths';
+	 * </script>
+	 *
+	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * ```
+	 * @since 2.26
+	 */
+	export function asset(file: Asset): string;
+
+	/**
+	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
+	 */
+	export function resolveRoute<T extends RouteId | Pathname>(
+		...args: ResolveArgs<T>
+	): ResolvedPathname;
 
 	export {};
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteQuery, RemoteCommand, ActionFailure as IActionFailure, RemoteFormAction } from '@sveltejs/kit';
+	// @ts-ignore
+	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
+	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, RemoteForm } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2721,7 +2726,7 @@ declare module '$app/server' {
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
 	 */
-	export function getRequestEvent(): RequestEvent<Partial<Record<string, string>>, string | null>;
+	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2741,7 +2746,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Output>(fn: () => Output): RemoteQuery<void, Output>;
+	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2761,7 +2766,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteQuery<Input, Output>;
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
 	/**
 	 * Creates a remote function that can be invoked like a regular function within components.
 	 * The given function is invoked directly on the backend and via a fetch call on the client.
@@ -2781,7 +2786,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2790,7 +2795,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2798,15 +2803,15 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
-	export function prerender<Output>(fn: () => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<void>;
+	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<void, Output>;
+	} | undefined): RemotePrerenderFunction<void, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2815,22 +2820,22 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import { blogPosts } from '$lib/server/db';
 	 *
 	 * export const blogPost = prerender(
 	 *  'unchecked',
 	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
-	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<Input>;
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<Input, Output>;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
 	/**
 	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
 	 * ```ts
@@ -2839,7 +2844,7 @@ declare module '$app/server' {
 	 * export const blogPosts = prerender(() => blogPosts.getAll());
 	 * ```
 	 *
-	 * In case your function has an argument, you need to provide an `entries` function that returns a list representing the arguments to be used for prerendering.
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
 	 * ```ts
 	 * import z from 'zod';
 	 * import { blogPosts } from '$lib/server/db';
@@ -2847,15 +2852,15 @@ declare module '$app/server' {
 	 * export const blogPost = prerender(
 	 *  z.string(),
 	 * 	(id) => blogPosts.get(id),
-	 * 	{ entries: () => blogPosts.getAll().map((post) => post.id) }
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
 	 * );
 	 * ```
 	 *
 	 * */
-	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output, options?: {
-		entries?: RemotePrerenderEntryGenerator<StandardSchemaV1.InferOutput<Schema>>;
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
-	} | undefined): RemoteQuery<StandardSchemaV1.InferOutput<Schema>, Output>;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2974,8 +2979,8 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => T | IActionFailure<U>): RemoteFormAction<T, U>;
-	type RemotePrerenderEntryGenerator<Input = any> = () => MaybePromise<Input[]>;
+	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T, U>;
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};

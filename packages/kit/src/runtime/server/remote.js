@@ -1,8 +1,8 @@
-/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import { ActionFailure, HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { app_dir, base } from '__sveltekit/paths';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
@@ -53,12 +53,12 @@ export async function handle_remote_call(event, options, manifest, id) {
 				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
 			);
 			form_data.delete('sveltekit:remote_refreshes');
-			const data = await with_event(event, () => func.call(null, form_data));
+			const data = await with_event(event, () => info.fn.call(null, form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data instanceof ActionFailure ? data.data : data, transport),
+					result: stringify(data, transport),
 					refreshes: stringify(
 						{
 							...get_remote_info(event).refreshes,
@@ -86,7 +86,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const stringified_arg =
 				info.type === 'prerender'
 					? prerender_args
-					: info.type === 'query' || info.type === 'cache'
+					: info.type === 'query'
 						? /** @type {string} */ (
 								// new URL(...) necessary because we're hiding the URL from the user in the event object
 								new URL(event.request.url).searchParams.get('args')
@@ -169,9 +169,10 @@ export async function handle_remote_form_post(event, manifest, id) {
 	const [hash, func_name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
-	let func = module?.[func_name];
 
-	if (!func) {
+	let form = /** @type {RemoteForm<any>} */ (module?.[func_name]);
+
+	if (!form) {
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 			// "The server must generate an Allow header field in a 405 status code response"
@@ -188,26 +189,26 @@ export async function handle_remote_form_post(event, manifest, id) {
 	}
 
 	if (action_id) {
-		func = with_event(event, () => func.for(JSON.parse(action_id)));
+		// @ts-expect-error
+		form = with_event(event, () => form.for(JSON.parse(action_id)));
 	}
 
 	try {
 		const form_data = await event.request.formData();
 		get_remote_info(event);
-		const data = await with_event(event, () => func.call(null, form_data));
+		await with_event(event, () =>
+			/** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn.call(
+				null,
+				form_data
+			)
+		);
 
-		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it
-		if (data instanceof ActionFailure) {
-			return {
-				type: 'failure',
-				status: data.status
-			};
-		} else {
-			return {
-				type: 'success',
-				status: 200
-			};
-		}
+		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
+		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
+		return {
+			type: 'success',
+			status: 200
+		};
 	} catch (e) {
 		const err = normalize_error(e);
 

@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.26.0
+### Minor Changes
+
+
+- feat: better type-safety for `page.route.id`, `page.params`, page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: `resolve(...)` and `asset(...)` helpers for resolving paths ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: Add `$app/types` module with `Asset`, `RouteId`, `Pathname`, `ResolvedPathname` `RouteParams<T>` and `LayoutParams<T>` ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+## 2.25.2
+### Patch Changes
+
+
+- fix: correctly set URL when navigating during an ongoing navigation ([#14004](https://github.com/sveltejs/kit/pull/14004))
+
 ## 2.25.1
 ### Patch Changes
 

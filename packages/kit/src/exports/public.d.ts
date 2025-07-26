@@ -19,6 +19,12 @@ import {
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import {
+	RouteId as AppRouteId,
+	LayoutParams as AppLayoutParams,
+	ResolvedPathname
+	// @ts-ignore
+} from '$app/types';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -403,11 +409,11 @@ export interface KitConfig {
 		privatePrefix?: string;
 	};
 	/**
-	 * Experimental features which are exempt from semantic versioning. These features may change or be removed at any time.
+	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
 	 */
 	experimental?: {
 		/**
-		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may change or be removed at any time.
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
@@ -789,10 +795,9 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The server-side [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when schema validation fails in a remote function.
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
  *
- * If schema validation fails in a remote function, this function will be called with the validation issues and the event.
- * This function is expected return an object shape that matches `App.Error`.
+ * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
@@ -879,11 +884,11 @@ export interface Transporter<
  * rather than using `Load` directly.
  */
 export type Load<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
@@ -891,10 +896,10 @@ export type Load<
  * rather than using `LoadEvent` directly.
  */
 export interface LoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -999,8 +1004,8 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1139,13 +1144,13 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
  */
 export interface Page<
-	Params extends Record<string, string> = Record<string, string>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL;
+	url: URL & { pathname: ResolvedPathname };
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
@@ -1187,8 +1192,8 @@ export interface Page<
 export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -1284,8 +1289,8 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
  */
 export type RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 export interface ResolveOptions {
@@ -1365,16 +1370,16 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export type ServerLoad<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1441,9 +1446,9 @@ export interface ServerLoadEvent<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
@@ -1451,9 +1456,9 @@ export type Action<
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
@@ -1531,14 +1536,15 @@ export interface Snapshot<T = any> {
 
 /**
  * The return value of a remote `form` function.
- * Spread it onto a `<form>` element to connect the form with the remote form action.
+ * Spread it onto a `<form>` element to connect the element to the remote function.
+ *
  * ```svelte
  * <script>
  *   import { createTodo } from './todos.remote.js';
  * </script>
  *
  * <form {...createTodo}>
- *   <input type="text" name="name" />
+ *   <input name="text" />
  *   <!-- ... -->
  * </form>
  * ```
@@ -1554,7 +1560,9 @@ export interface Snapshot<T = any> {
  *   const todo = { text, done: false };
  *
  *   // `updates` and `withOverride` enable optimistic UI updates
- *   await submit().updates(getTodos.withOverride((todos) => [...todos, todo]));
+ *   await submit().updates(
+ *     getTodos().withOverride((todos) => [...todos, todo])
+ *   );
  * })}>
  *   <input name="text" />
  *   <!-- ... -->
@@ -1567,7 +1575,7 @@ export interface Snapshot<T = any> {
  * </ul>
  * ```
  */
-export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<void>) & {
+export type RemoteForm<Result> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
@@ -1580,10 +1588,7 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 			data: FormData;
 			submit: () => Promise<void> & {
 				updates: (
-					...queries: Array<
-						| ReturnType<RemoteQuery<any, any>>
-						| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-					>
+					...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 				) => Promise<void>;
 			};
 		}) => void
@@ -1606,12 +1611,12 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 	 *	{/each}
 	 * ```
 	 */
-	for: (key: string | number | boolean) => Omit<RemoteFormAction<Success, Failure>, 'for'>;
+	for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
 	/** The result of the form submission */
-	get result(): Success | Failure | undefined;
+	get result(): Result | undefined;
 	/** When there's an error during form submission, it appears on this property */
 	get error(): App.Error | undefined;
-	/** Spread this onto a button or input of type submit */
+	/** Spread this onto a `<button>` or `<input type="submit">` */
 	formAction: {
 		type: 'submit';
 		formaction: string;
@@ -1623,10 +1628,7 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
 				data: FormData;
 				submit: () => Promise<void> & {
 					updates: (
-						...queries: Array<
-							| ReturnType<RemoteQuery<any, any>>
-							| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-						>
+						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 					) => Promise<void>;
 				};
 			}) => void
@@ -1685,25 +1687,29 @@ export type RemoteFormAction<Success, Failure> = ((data: FormData) => Promise<vo
  */
 export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
 	updates: (
-		...queries: Array<
-			| ReturnType<RemoteQuery<any, any>>
-			| ReturnType<ReturnType<RemoteQuery<any, any>>['withOverride']>
-		>
+		...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
 	) => Promise<Awaited<Output>>;
 };
 
-/**
- * The return value of a remote `query` or `prerender` function.
- * Call it with the input arguments to retrieve the value.
- * On the server, this will directly call through to the underlying function.
- * On the client, this will do a fetch to the server to retrieve the value.
- * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
- */
-export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+export type RemoteResource<T> = Promise<Awaited<T>> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
 	get loading(): boolean;
+} & (
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): undefined;
+				ready: false;
+		  }
+		| {
+				/** The current value of the query. Undefined as long as there's no value yet */
+				get current(): Awaited<T>;
+				ready: true;
+		  }
+	);
+
+export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *
@@ -1711,44 +1717,6 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 	 * transport the updated data to the client along with the response, if the action was successful.
 	 */
 	refresh: () => Promise<void>;
-	/**
-	 * Temporarily override the value of a query. Useful for optimistic UI updates outside of a `command` or `form` remote function (for those, use `withOverride`).
-	 * `override` expects a function that takes the current value and returns the new value. It returns a function that will release the override.
-	 * Overrides are applied on new values, too, until they are released.
-	 *
-	 * ```svelte
-	 * <script>
-	 *   import { getList, commit } from './todos.remote.js';
-	 *   const list = getList();
-	 *   let release = [];
-	 * </script>
-	 *
-	 * <h2>Select items to remove</h2>
-	 *
-	 * <ul>
-	 *   {#each list as item}
-	 *     <li>{item.text}</li>
-	 *     <button onclick={() => {
-	 *       release.push(list.override((current) => current.filter((i) => i.id !== item.id)));
-	 *     }}>Remove</button>
-	 *   {/each}
-	 * </ul>
-	 *
-	 * <button onclick={() => {
-	 *   release.forEach((r) => r());
-	 *   release = [];
-	 * }}>Revert</button>
-	 *
-	 * <button onclick={async () => {
-	 *   await commit();
-	 *   release.forEach((r) => r());
-	 *   release = [];
-	 * }}>Confirm</button>
-	 * ```
-	 *
-	 * Can only be called on the client.
-	 */
-	override: (update: (current: Awaited<Output>) => Awaited<Output>) => () => void;
 	/**
 	 * Temporarily override the value of a query. Useful for optimistic UI updates.
 	 * `withOverride` expects a function that takes the current value and returns the new value.
@@ -1769,26 +1737,27 @@ export type RemoteQuery<Input, Output> = (arg: Input) => Promise<Awaited<Output>
 	 * </form>
 	 * ```
 	 */
-	withOverride: (update: (current: Awaited<Output>) => Awaited<Output>) => {
+	withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
 		_key: string;
 		release: () => void;
 	};
-} & (
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): undefined;
-				status: 'loading';
-		  }
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): Awaited<Output>;
-				status: 'success' | 'reloading';
-		  }
-		| {
-				/** The current value of the query. Undefined as long as there's no value yet */
-				get current(): Awaited<Output> | undefined;
-				status: 'error';
-		  }
-	);
+};
+
+/**
+ * The return value of a remote `prerender` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call the underlying function.
+ * On the client, this will `fetch` data from the server.
+ */
+export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+/**
+ * The return value of a remote `query` function.
+ * Call it with the input arguments to retrieve the value.
+ * On the server, this will directly call the underlying function.
+ * On the client, this will `fetch` data from the server.
+ * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+ */
+export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 
 export * from './index.js';

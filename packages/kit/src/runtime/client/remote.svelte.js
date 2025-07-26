@@ -1,4 +1,4 @@
-/** @import { RemoteFormAction, RemoteQuery, RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQueryFunction, RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 
 import { app_dir } from '__sveltekit/paths';
@@ -45,7 +45,92 @@ void (async () => {
  * @template T
  * @implements {Partial<Promise<T>>}
  */
-class Resource {
+class Prerender {
+	/** @type {Promise<T>} */
+	#promise;
+
+	#loading = $state(true);
+	#ready = $state(false);
+
+	/** @type {T | undefined} */
+	#current = $state.raw();
+
+	#error = $state.raw(undefined);
+
+	/**
+	 * @param {() => Promise<T>} fn
+	 */
+	constructor(fn) {
+		this.#promise = fn().then(
+			(value) => {
+				this.#loading = false;
+				this.#ready = true;
+				this.#current = value;
+				return value;
+			},
+			(error) => {
+				this.#loading = false;
+				this.#error = error;
+				throw error;
+			}
+		);
+	}
+
+	/**
+	 *
+	 * @param {((value: any) => any) | null | undefined} onfulfilled
+	 * @param {((reason: any) => any) | null | undefined} [onrejected]
+	 * @returns
+	 */
+	then(onfulfilled, onrejected) {
+		return this.#promise.then(onfulfilled, onrejected);
+	}
+
+	/**
+	 * @param {((reason: any) => any) | null | undefined} onrejected
+	 */
+	catch(onrejected) {
+		return this.#promise.catch(onrejected);
+	}
+
+	/**
+	 * @param {(() => any) | null | undefined} onfinally
+	 */
+	finally(onfinally) {
+		return this.#promise.finally(onfinally);
+	}
+
+	get current() {
+		return this.#current;
+	}
+
+	get error() {
+		return this.#error;
+	}
+
+	/**
+	 * Returns true if the resource is loading.
+	 */
+	get loading() {
+		return this.#loading;
+	}
+
+	/**
+	 * Returns true once the resource has been loaded.
+	 */
+	get ready() {
+		return this.#ready;
+	}
+}
+
+/**
+ * @template T
+ * @implements {Partial<Promise<T>>}
+ */
+class Query {
+	/** @type {string} */
+	_key;
+
 	#init = false;
 	/** @type {() => Promise<T>} */
 	#fn;
@@ -54,7 +139,7 @@ class Resource {
 	#latest = [];
 
 	/** @type {boolean} */
-	#inited = $state(false);
+	#ready = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {Promise<void>} */
@@ -65,7 +150,7 @@ class Resource {
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
-		if (!this.#inited) return undefined;
+		if (!this.#ready) return undefined;
 
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
@@ -91,9 +176,11 @@ class Resource {
 	});
 
 	/**
+	 * @param {string} key
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(fn) {
+	constructor(key, fn) {
+		this._key = key;
 		this.#fn = fn;
 		this.#promise = $state.raw(this.#run());
 	}
@@ -129,7 +216,7 @@ class Resource {
 				if (idx === -1) return;
 
 				this.#latest.splice(0, idx).forEach((r) => r());
-				this.#inited = true;
+				this.#ready = true;
 				this.#loading = false;
 				this.#raw = value;
 				this.#error = undefined;
@@ -186,42 +273,10 @@ class Resource {
 	}
 
 	/**
-	 * Returns the status of the resource:
-	 * - 'loading': no value yet
-	 * - 'reloading': value, currently refetching
-	 * - 'success': got a value after a successful fetch
-	 * - 'error': got an error after a fetch failed
+	 * Returns true once the resource has been loaded for the first time.
 	 */
-	get status() {
-		if (this.#loading) {
-			if (!this.#inited) {
-				return 'loading';
-			} else {
-				return 'reloading';
-			}
-		} else if (this.#error !== undefined) {
-			return 'error';
-		} else if (this.#inited) {
-			return 'success';
-		} else {
-			return 'loading';
-		}
-	}
-
-	/**
-	 * @param {(old: T) => T} fn
-	 * @returns {() => void}
-	 */
-	override(fn) {
-		this.#overrides.push(fn);
-
-		return () => {
-			const i = this.#overrides.indexOf(fn);
-
-			if (i !== -1) {
-				this.#overrides.splice(i, 1);
-			}
-		};
+	get ready() {
+		return this.#ready;
 	}
 
 	/**
@@ -235,38 +290,28 @@ class Resource {
 	 * @param {T} value
 	 */
 	set(value) {
-		this.#inited = true;
+		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
 		this.#promise = Promise.resolve();
-	}
-}
-
-/**
- * @template T
- * @extends {Resource<T>}
- */
-class Query extends Resource {
-	/** @type {string} */
-	_key;
-
-	/**
-	 * @param {string} key
-	 * @param {() => Promise<T>} fn
-	 */
-	constructor(key, fn) {
-		super(fn);
-		this._key = key;
 	}
 
 	/**
 	 * @param {(old: T) => T} fn
 	 */
 	withOverride(fn) {
+		this.#overrides.push(fn);
+
 		return {
 			_key: this._key,
-			release: this.override(fn)
+			release: () => {
+				const i = this.#overrides.indexOf(fn);
+
+				if (i !== -1) {
+					this.#overrides.splice(i, 1);
+				}
+			}
 		};
 	}
 }
@@ -274,12 +319,10 @@ class Query extends Resource {
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @param {string} id
- * @param {boolean} prerender
- * @returns {RemoteQuery<any, any>}
+ * @param {(key: string, args: string) => any} create
  */
-function remote_request(id, prerender) {
-	/** @type {RemoteQuery<any, any>} */
-	const fn = (/** @type {any} */ arg) => {
+function create_remote_function(id, create) {
+	return (/** @type {any} */ arg) => {
 		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, stringified_args);
 		let entry = query_map.get(cache_key);
@@ -306,69 +349,7 @@ function remote_request(id, prerender) {
 
 		let resource = entry?.resource;
 		if (!resource) {
-			resource = new Query(cache_key, async () => {
-				if (!started) {
-					const result = remote_responses[cache_key];
-					if (result) {
-						return result;
-					}
-				}
-
-				const url = `/${app_dir}/remote/${id}${stringified_args ? (prerender ? `/${stringified_args}` : `?args=${stringified_args}`) : ''}`;
-
-				// For prerender requests, check the Cache API first
-				if (prerender && prerender_cache) {
-					try {
-						const cached_response = await prerender_cache.match(url);
-						if (cached_response) {
-							const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
-								await cached_response.json()
-							);
-							return devalue.parse(cached_result.result, app.decoders);
-						}
-					} catch {
-						// Nothing we can do here
-					}
-				}
-
-				const response = await fetch(url);
-				if (!response.ok) {
-					throw new HttpError(500, 'Failed to execute remote function');
-				}
-
-				const result = /** @type { RemoteFunctionResponse } */ (await response.json());
-				if (result.type === 'redirect') {
-					// resource_cache.delete(cache_key);
-					// version++;
-					// await goto(result.location);
-					// /** @type {Resource<any>} */ (resource).refresh();
-					// TODO double-check this
-					await goto(result.location);
-					await new Promise((r) => setTimeout(r, 100));
-					throw new Redirect(307, result.location);
-				} else if (result.type === 'error') {
-					throw new HttpError(result.status ?? 500, result.error);
-				} else {
-					// For successful prerender requests, save to cache
-					if (prerender && prerender_cache) {
-						try {
-							await prerender_cache.put(
-								url,
-								// We need to create a new response because the original response is already consumed
-								new Response(JSON.stringify(result), {
-									headers: {
-										'Content-Type': 'application/json'
-									}
-								})
-							);
-						} catch {
-							// Nothing we can do here
-						}
-					}
-
-					return devalue.parse(result.result, app.decoders);
-				}
-			});
+			resource = create(cache_key, stringified_args);
 
 			Object.defineProperty(resource, '_key', {
 				value: cache_key,
@@ -404,29 +385,112 @@ function remote_request(id, prerender) {
 
 		return resource;
 	};
+}
 
-	return fn;
+/**
+ *
+ * @param {string} url
+ */
+async function remote_request(url) {
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new HttpError(500, 'Failed to execute remote function');
+	}
+
+	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+
+	if (result.type === 'redirect') {
+		// resource_cache.delete(cache_key);
+		// version++;
+		// await goto(result.location);
+		// /** @type {Query<any>} */ (resource).refresh();
+		// TODO double-check this
+		await goto(result.location);
+		await new Promise((r) => setTimeout(r, 100));
+		throw new Redirect(307, result.location);
+	}
+
+	if (result.type === 'error') {
+		throw new HttpError(result.status ?? 500, result.error);
+	}
+
+	return devalue.parse(result.result, app.decoders);
 }
 
 /**
  * @param {string} id
+ * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
-	return remote_request(id, false);
-}
+	return create_remote_function(id, (cache_key, stringified_args) => {
+		return new Query(cache_key, async () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
 
-// /**
-//  * @param {string} id
-//  */
-// export function cache(id) {
-// 	return remote_request(id, false);
-// }
+			const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${stringified_args}` : ''}`;
+
+			return await remote_request(url);
+		});
+	});
+}
 
 /**
  * @param {string} id
  */
 export function prerender(id) {
-	return remote_request(id, true);
+	return create_remote_function(id, (cache_key, stringified_args) => {
+		return new Prerender(async () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
+
+			const url = `/${app_dir}/remote/${id}${stringified_args ? `/${stringified_args}` : ''}`;
+
+			// Check the Cache API first
+			if (prerender_cache) {
+				try {
+					const cached_response = await prerender_cache.match(url);
+					if (cached_response) {
+						const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
+							await cached_response.json()
+						);
+						return devalue.parse(cached_result.result, app.decoders);
+					}
+				} catch {
+					// Nothing we can do here
+				}
+			}
+
+			const result = await remote_request(url);
+
+			// For successful prerender requests, save to cache
+			if (prerender_cache) {
+				try {
+					await prerender_cache.put(
+						url,
+						// We need to create a new response because the original response is already consumed
+						new Response(JSON.stringify(result), {
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						})
+					);
+				} catch {
+					// Nothing we can do here
+				}
+			}
+
+			return result;
+		});
+	});
 }
 
 /**
@@ -493,8 +557,9 @@ export function command(id) {
 
 /**
  * Client-version of the `form` function from `$app/server`.
+ * @template T
  * @param {string} id
- * @returns {RemoteFormAction<any, any>}
+ * @returns {RemoteForm<T>}
  */
 export function form(id) {
 	/**
@@ -611,6 +676,12 @@ export function form(id) {
 			return promise;
 		}
 
+		/** @type {RemoteForm<T>} */
+		const instance = {};
+
+		instance.method = 'POST';
+		instance.action = action;
+
 		/** @param {() => Promise<void>} submit */
 		function default_submit(submit) {
 			submit().catch((e) => {
@@ -650,7 +721,7 @@ export function form(id) {
 			return form_data;
 		}
 
-		/** @param {Parameters<RemoteFormAction<any, any>['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
 			return (event) => {
@@ -684,11 +755,9 @@ export function form(id) {
 			};
 		};
 
-		submit.method = 'POST';
-		submit.action = action;
-		submit.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
+		instance.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
 
-		/** @param {Parameters<RemoteFormAction<any, any>['formAction']['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return (event) => {
@@ -710,7 +779,7 @@ export function form(id) {
 			};
 		};
 
-		/** @type {RemoteFormAction<any, any>['formAction']} */
+		/** @type {RemoteForm<any>['formAction']} */
 		// @ts-expect-error we gotta set enhance as a non-enumerable property
 		const form_action = {
 			type: 'submit',
@@ -719,7 +788,7 @@ export function form(id) {
 		};
 
 		Object.defineProperty(form_action, 'enhance', {
-			/** @type {RemoteFormAction<any, any>['formAction']['enhance']} */
+			/** @type {RemoteForm<any>['formAction']['enhance']} */
 			value: (callback) => {
 				return {
 					type: 'submit',
@@ -730,7 +799,7 @@ export function form(id) {
 			enumerable: false
 		});
 
-		Object.defineProperties(submit, {
+		Object.defineProperties(instance, {
 			formAction: {
 				value: form_action,
 				enumerable: false
@@ -748,7 +817,7 @@ export function form(id) {
 				enumerable: false
 			},
 			enhance: {
-				/** @type {RemoteFormAction<any, any>['enhance']} */
+				/** @type {RemoteForm<any>['enhance']} */
 				value: (callback) => {
 					return {
 						method: 'POST',
@@ -761,8 +830,8 @@ export function form(id) {
 		});
 
 		if (key == undefined) {
-			Object.defineProperty(submit, 'for', {
-				/** @type {RemoteFormAction<any, any>['for']} */
+			Object.defineProperty(instance, 'for', {
+				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					let entry = instance_cache.get(key);
 
@@ -798,10 +867,9 @@ export function form(id) {
 			});
 		}
 
-		return submit;
+		return instance;
 	}
 
-	// @ts-expect-error we gotta set enhance etc as a non-enumerable properties
 	return create_instance();
 }
 
