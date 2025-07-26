@@ -14,6 +14,6 @@ MY_FEATURE_FLAG=""
 
 You can override `.env` values from the command line like so:
 
-```bash
+```sh
 MY_FEATURE_FLAG="enabled" npm run dev
 ```

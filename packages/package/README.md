@@ -4,7 +4,7 @@
 
 The quickest way to get started is via the [sv](https://npmjs.com/package/sv) package:
 
-```bash
+```sh
 npx sv create my-app
 cd my-app
 npm install
