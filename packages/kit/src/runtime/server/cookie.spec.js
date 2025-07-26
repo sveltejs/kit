@@ -69,7 +69,7 @@ test('a cookie should not be present after it is deleted', () => {
 test('default values when set is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b', { path: '/' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/?a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
 	assert.equal(opts?.path, '/');
@@ -79,7 +79,7 @@ test('default values when set is called', () => {
 test('default values when set is called on sub path', () => {
 	const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/foo/bar' });
 	cookies.set('a', 'b', { path: '' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/foo/bar?a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
 	assert.equal(opts?.path, '/foo/bar');
@@ -89,14 +89,14 @@ test('default values when set is called on sub path', () => {
 test('default values when on localhost', () => {
 	const { cookies, new_cookies } = cookies_setup({ href: 'http://localhost:1234' });
 	cookies.set('a', 'b', { path: '/' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/?a']?.options;
 	assert.equal(opts?.secure, false);
 });
 
 test('overridden defaults when set is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/a/b/c?a']?.options;
 	assert.equal(opts?.secure, false);
 	assert.equal(opts?.httpOnly, false);
 	assert.equal(opts?.path, '/a/b/c');
@@ -106,7 +106,7 @@ test('overridden defaults when set is called', () => {
 test('default values when delete is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { path: '/' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/?a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
 	assert.equal(opts?.path, '/');
@@ -117,7 +117,7 @@ test('default values when delete is called', () => {
 test('overridden defaults when delete is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/a/b/c?a']?.options;
 	assert.equal(opts?.secure, false);
 	assert.equal(opts?.httpOnly, false);
 	assert.equal(opts?.path, '/a/b/c');
@@ -128,7 +128,7 @@ test('overridden defaults when delete is called', () => {
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { path: '/', maxAge: 1234 });
-	const opts = new_cookies['a']?.options;
+	const opts = new_cookies['/?a']?.options;
 	assert.equal(opts?.maxAge, 0);
 });
 
@@ -136,7 +136,7 @@ test('last cookie set with the same name wins', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'foo', { path: '/' });
 	cookies.set('a', 'bar', { path: '/' });
-	const entry = new_cookies['a'];
+	const entry = new_cookies['/?a'];
 	assert.equal(entry?.value, 'bar');
 });
 
@@ -145,8 +145,8 @@ test('cookie names are case sensitive', () => {
 	// not that one should do this, but we follow the spec...
 	cookies.set('a', 'foo', { path: '/' });
 	cookies.set('A', 'bar', { path: '/' });
-	const entrya = new_cookies['a'];
-	const entryA = new_cookies['A'];
+	const entrya = new_cookies['/?a'];
+	const entryA = new_cookies['/?A'];
 	assert.equal(entrya?.value, 'foo');
 	assert.equal(entryA?.value, 'bar');
 });
@@ -211,5 +211,23 @@ test("set_internal isn't affected by defaults", () => {
 	set_internal('test', 'foo', options);
 
 	expect(cookies.get('test')).toEqual('foo');
-	expect(new_cookies['test']?.options).toEqual(options);
+	expect(new_cookies['/a/b/c?test']?.options).toEqual(options);
+});
+
+test('set same name in different path', () => {
+	const { cookies, new_cookies } = cookies_setup();
+
+	cookies.set('a', '1', { path: '/foo' });
+	cookies.set('a', '2', { path: '/bar' });
+	expect(new_cookies['/bar?a'].name).toEqual('a');
+	expect(new_cookies['/bar?a'].value).toEqual('2');
+	expect(new_cookies['/foo?a'].name).toEqual('a');
+	expect(new_cookies['/foo?a'].value).toEqual('1');
+});
+
+test('set cookie to specific domain and path', () => {
+	const { cookies } = cookies_setup();
+
+	cookies.set('a', 'b', { path: '/a/b/c', domain: 'test.com' });
+	expect(cookies.get('a', undefined, { domain: 'test.com', path: '/a/b/c' })).toEqual('b');
 });

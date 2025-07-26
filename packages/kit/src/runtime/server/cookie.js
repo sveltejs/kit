@@ -27,6 +27,20 @@ function validate_options(options) {
 }
 
 /**
+ * Generates a unique key for a cookie based on its domain, path, and name in
+ * cookies[<domain>/<path>?<name>].
+ * If the domain or path is undefined, it will be omitted.
+ * For example, cookies[/?name], cookies['example.com/foo?name'].
+ *
+ * @param {string | undefined} domain
+ * @param {string} path
+ * @param {string} name
+ */
+function generate_cookie_key(domain, path, name) {
+	return `${domain || ''}${path}?${name}`;
+}
+
+/**
  * @param {Request} request
  * @param {URL} url
  */
@@ -57,9 +71,11 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {{domain?: string, path?: string}} [target]
 		 */
-		get(name, opts) {
-			const c = new_cookies[name];
+		get(name, opts, target) {
+			const cookie_key = generate_cookie_key(target?.domain, target?.path || url?.pathname, name);
+			const c = new_cookies[cookie_key];
 			if (
 				c &&
 				domain_matches(url.hostname, c.options.domain) &&
@@ -213,10 +229,18 @@ export function get_cookies(request, url) {
 			path = resolve(normalized_url, path);
 		}
 
-		new_cookies[name] = { name, value, options: { ...options, path } };
+		new_cookies[generate_cookie_key(options.domain, path, name)] = {
+			name,
+			value,
+			options: { ...options, path }
+		};
 
 		if (__SVELTEKIT_DEV__) {
-			const serialized = serialize(name, value, new_cookies[name].options);
+			const serialized = serialize(
+				name,
+				value,
+				new_cookies[generate_cookie_key(options.domain, path, name)].options
+			);
 			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
