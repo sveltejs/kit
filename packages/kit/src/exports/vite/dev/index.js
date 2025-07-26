@@ -30,9 +30,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {(manifest_data: import('types').ManifestData) => void} manifest_cb
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, manifest_cb) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -109,7 +110,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
-
+			manifest_cb(manifest_data);
 			if (manifest_error) {
 				manifest_error = null;
 				vite.ws.send({ type: 'full-reload' });
