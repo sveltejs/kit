@@ -68,8 +68,8 @@ export function write_all_types(config, manifest_data) {
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
-	/** @type {string[]} */
-	const dynamic_routes = [];
+	/** @type {Set<string>} */
+	const dynamic_routes = new Set();
 
 	/** @type {string[]} */
 	const layouts = [];
@@ -79,10 +79,16 @@ export function write_all_types(config, manifest_data) {
 			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
-			dynamic_routes.push(route_type);
+			dynamic_routes.add(route_type);
 
 			const pathname = remove_group_segments(route.id);
 			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
+
+			if (pathname !== route.id) {
+				const route_type = `${s(pathname)}: { ${params.join('; ')} }`;
+
+				dynamic_routes.add(route_type);
+			}
 		} else {
 			const pathname = remove_group_segments(route.id);
 			pathnames.add(s(pathname));
@@ -114,11 +120,11 @@ export function write_all_types(config, manifest_data) {
 	fs.writeFileSync(
 		`${types_dir}/index.d.ts`,
 		[
-			`type DynamicRoutes = {\n\t${dynamic_routes.join(';\n\t')}\n};`,
+			`type DynamicRoutes = {\n\t${Array.from(dynamic_routes).join(';\n\t')}\n};`,
 			`type Layouts = {\n\t${layouts.join(';\n\t')}\n};`,
 			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
-			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
+			'export type RouteParams<T extends RouteId | keyof DynamicRoutes> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
 			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
 			`export type Pathname = ${Array.from(pathnames).join(' | ')};`,
 			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
