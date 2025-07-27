@@ -70,11 +70,10 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} [opts]
-		 * @param {{domain?: string, path?: string}} [target]
+		 * @param {import('cookie').CookieParseOptions & {domain?: string, path?: string}} [opts]
 		 */
-		get(name, opts, target) {
-			const cookie_key = generate_cookie_key(target?.domain, target?.path || url?.pathname, name);
+		get(name, opts) {
+			const cookie_key = generate_cookie_key(opts?.domain, opts?.path || url?.pathname, name);
 			const c = new_cookies[cookie_key];
 			if (
 				c &&

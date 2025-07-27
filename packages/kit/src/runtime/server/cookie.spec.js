@@ -225,9 +225,9 @@ test('set same name in different path', () => {
 	expect(new_cookies['/foo?a'].value).toEqual('1');
 });
 
-test('set cookie to specific domain and path', () => {
-	const { cookies } = cookies_setup();
+test('set cookie from sub domain with path', () => {
+	const { cookies } = cookies_setup({ href: 'https://sub.example.com/a/b/c' });
 
-	cookies.set('a', 'b', { path: '/a/b/c', domain: 'test.com' });
-	expect(cookies.get('a', undefined, { domain: 'test.com', path: '/a/b/c' })).toEqual('b');
+	cookies.set('foo', 'value', { path: '/a/b/c', domain: 'example.com' });
+	expect(cookies.get('foo', { domain: 'example.com', path: '/a/b/c' })).toEqual('value');
 });
