@@ -34,3 +34,7 @@ pathname = '/(group)/path-a';
 
 // read `pathname` otherwise it is treated as unused
 pathname;
+
+declare let subpath_with_group: RouteParams<'/path-b/[id]/path-c'>;
+
+subpath_with_group.id; // okay
