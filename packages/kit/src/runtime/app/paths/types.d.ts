@@ -1,5 +1,5 @@
 // @ts-ignore
-import { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
+import { Asset, DynamicRoutes, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 
 /**
  * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
@@ -19,7 +19,9 @@ export let base: '' | `/${string}`;
  */
 export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
-type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
+type ResolveArgs<T extends RouteId | Pathname | keyof DynamicRoutes> = T extends
+	| RouteId
+	| keyof DynamicRoutes
 	? RouteParams<T> extends Record<string, never>
 		? [route: T]
 		: [route: T, params: RouteParams<T>]
@@ -44,7 +46,9 @@ type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
  * ```
  * @since 2.26
  */
-export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+export function resolve<T extends RouteId | Pathname | keyof DynamicRoutes>(
+	...args: ResolveArgs<T>
+): ResolvedPathname;
 
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
