@@ -192,7 +192,10 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: string[];
+	remotes: Array<{
+		file: string;
+		hash: string;
+	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }

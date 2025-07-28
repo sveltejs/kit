@@ -268,9 +268,9 @@ export async function dev(vite, vite_config, svelte_config) {
 				}),
 				prerendered_routes: new Set(),
 				remotes: Object.fromEntries(
-					manifest_data.remotes.map((filename) => [
-						hash(filename),
-						() => vite.ssrLoadModule(filename)
+					manifest_data.remotes.map((remote) => [
+						remote.hash,
+						() => vite.ssrLoadModule(remote.file)
 					])
 				),
 				routes: compact(

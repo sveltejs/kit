@@ -130,9 +130,8 @@ export function build_remotes(out, normalize_id, manifest_data) {
 
 	// Create a mapping from hashed ID to original filename
 	const hash_to_original = new Map();
-	for (const filename of manifest_data.remotes) {
-		const hashed_id = hash(posixify(filename));
-		hash_to_original.set(hashed_id, filename);
+	for (const remote of manifest_data.remotes) {
+		hash_to_original.set(remote.hash, remote.file);
 	}
 
 	for (const remote_file_name of fs.readdirSync(remote_dir)) {

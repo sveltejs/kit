@@ -8,6 +8,7 @@ import { posixify, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
+import { hash } from '../../../utils/hash.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -475,14 +476,26 @@ function create_remotes(config) {
 
 	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
 
+	/** @type {import('types').ManifestData['remotes']} */
+	const remotes = [];
+
 	// TODO could files live in other directories, including node_modules?
-	return [config.kit.files.lib, config.kit.files.routes].flatMap((dir) =>
-		fs.existsSync(dir)
-			? walk(dir)
-					.filter((file) => extensions.some((ext) => file.endsWith(ext)))
-					.map((file) => posixify(`${dir}/${file}`))
-			: []
-	);
+	for (const dir of [config.kit.files.lib, config.kit.files.routes]) {
+		if (!fs.existsSync(dir)) continue;
+
+		for (const file of walk(dir)) {
+			if (extensions.some((ext) => file.endsWith(ext))) {
+				const posixified = posixify(`${dir}/${file}`);
+
+				remotes.push({
+					hash: hash(posixified),
+					file: posixified
+				});
+			}
+		}
+	}
+
+	return remotes;
 }
 
 /**
