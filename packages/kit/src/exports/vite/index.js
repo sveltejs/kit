@@ -614,7 +614,8 @@ Tips:
 				return;
 			}
 
-			const hashed_id = hash(posixify(id));
+			const file = posixify(path.relative(cwd, id));
+			const hashed = hash(file);
 
 			// For SSR, use a self-import at dev time and a separate function at build time
 			// to iterate over all exports of the file and add the necessary metadata
@@ -626,7 +627,7 @@ Tips:
 							dedent`
 						// Auto-generated part, do not edit
 						import * as $$_self_$$ from './${path.basename(id)}';
-						${enhance_remotes(hashed_id, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
+						${enhance_remotes(hashed, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
 					`;
 			}
 
@@ -636,7 +637,7 @@ Tips:
 			const remotes = new Map();
 
 			if (remote_exports) {
-				const exports = remote_exports.get(hashed_id);
+				const exports = remote_exports.get(hashed);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
@@ -675,7 +676,7 @@ Tips:
 				let fn = remote_import;
 				while (names.includes(fn)) fn = `${fn}$${n++}`;
 
-				const exports = names.map((n) => `export const ${n} = ${fn}('${hashed_id}/${n}');`);
+				const exports = names.map((n) => `export const ${n} = ${fn}('${hashed}/${n}');`);
 				const specifier = fn === remote_import ? fn : `${fn} as ${fn}`;
 
 				return { exports, specifier };

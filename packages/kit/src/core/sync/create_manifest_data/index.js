@@ -28,7 +28,7 @@ export default function create_manifest_data({
 	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
-	const remotes = create_remotes(config);
+	const remotes = create_remotes(config, cwd);
 
 	for (const route of routes) {
 		for (const param of route.params) {
@@ -470,8 +470,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 /**
  * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
  */
-function create_remotes(config) {
+function create_remotes(config, cwd) {
 	if (!config.kit.experimental.remoteFunctions) return [];
 
 	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
@@ -485,7 +486,7 @@ function create_remotes(config) {
 
 		for (const file of walk(dir)) {
 			if (extensions.some((ext) => file.endsWith(ext))) {
-				const posixified = posixify(`${dir}/${file}`);
+				const posixified = posixify(path.relative(cwd, `${dir}/${file}`));
 
 				remotes.push({
 					hash: hash(posixified),
