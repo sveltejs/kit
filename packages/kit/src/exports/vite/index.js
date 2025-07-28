@@ -397,6 +397,16 @@ async function kit({ svelte_config }) {
 				}
 			};
 
+			// TODO: remove this once https://github.com/cloudflare/workers-sdk/pull/10054 is released
+			// @ts-ignore
+			config.environments.ssr.resolve.conditions = [
+				// @ts-ignore
+				config.environments.ssr.resolve.conditions[0],
+				'worker',
+				// @ts-ignore
+				...config.environments.ssr.resolve.conditions.slice(1)
+			];
+
 			warn_overridden_config(config, new_config);
 
 			return new_config;
