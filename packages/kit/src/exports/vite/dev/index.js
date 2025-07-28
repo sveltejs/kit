@@ -158,9 +158,6 @@ export async function dev(vite, vite_config, svelte_config, dev_environment) {
 		});
 		invalidate_page_options = node_analyser.invalidate_page_options;
 
-		// vite.environments.ssr.hot.send('', {})
-		// vite.environments.ssr.hot.on()
-
 		for (const node of manifest_data.nodes) {
 			if (node.universal) {
 				const page_options = await node_analyser.get_page_options(node);
@@ -475,14 +472,47 @@ export async function dev(vite, vite_config, svelte_config, dev_environment) {
 	// const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
-		const serve_static_middleware = vite.middlewares.stack.find(
-			(middleware) =>
-				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
-		);
-
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
+
+		const serve_static_middleware_index = vite.middlewares.stack.findIndex(
+			(middleware) =>
+				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+		);
+		const serve_static_middleware = vite.middlewares.stack[serve_static_middleware_index];
+		vite.middlewares.stack[serve_static_middleware_index] = {
+			route: '',
+			/** @type {import('vite').Connect.NextHandleFunction} */
+			handle: (req, res, next) => {
+				// Vite's base middleware strips out the base path. Restore it
+				const original_url = req.url;
+				req.url = req.originalUrl;
+				const base = `${vite.config.server.https ? 'https' : 'http'}://${
+					req.headers[':authority'] || req.headers.host
+				}`;
+
+				const decoded = decodeURI(new URL(base + req.url).pathname);
+				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+				const allowed =
+					!vite_config.server.fs.strict ||
+					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
+
+				if (is_file && allowed) {
+					req.url = original_url;
+					// @ts-expect-error
+					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+					return not_found(req, res, svelte_config.kit.paths.base);
+				}
+
+				next();
+			}
+		};
 
 		vite.middlewares.stack.unshift({
 			route: '',
@@ -520,6 +550,7 @@ export async function dev(vite, vite_config, svelte_config, dev_environment) {
 		// 			return not_found(req, res, svelte_config.kit.paths.base);
 		// 		}
 
+		// TODO: serve service worker in dev from cloudflare worker
 		// 		if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
 		// 			const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
 
@@ -561,6 +592,7 @@ export async function dev(vite, vite_config, svelte_config, dev_environment) {
 		// 			request: req
 		// 		});
 
+		// TODO: ensure this runs even when cloudflare vite plugin takes over
 		// 		if (manifest_error) {
 		// 			console.error(colors.bold().red(manifest_error.message));
 
@@ -623,7 +655,7 @@ export async function dev(vite, vite_config, svelte_config, dev_environment) {
  * @param {import('connect').Server} server
  */
 function remove_static_middlewares(server) {
-	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
+	const static_middlewares = ['viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
 		if (static_middlewares.includes(server.stack[i].handle.name)) {

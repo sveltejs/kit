@@ -1,6 +1,7 @@
 import { Server } from '@sveltejs/kit/internal/server';
 // TODO: use prod variables when building
 // TODO: fix kit virtual module type issues when this file is consumed by an app
+import { version } from '__sveltekit/environment';
 import {
 	manifest,
 	env,
@@ -12,7 +13,7 @@ import * as Cache from 'worktop/cfw.cache';
 
 const app_path = `/${manifest.appPath}`;
 
-const immutable = `${app_path}/immutable/`;
+// const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
 const server = new Server(manifest);
@@ -41,25 +42,29 @@ export async function handleRequest(request, env, ctx) {
 	const stripped_pathname = pathname.replace(/\/$/, '');
 
 	// files in /static, the service worker, and Vite imported server assets
-	let is_static_asset = false;
-	const filename = stripped_pathname.slice(base_path.length + 1);
-	if (filename) {
-		is_static_asset =
-			manifest.assets.has(filename) ||
-			manifest.assets.has(filename + '/index.html') ||
-			filename in manifest._.server_assets ||
-			filename + '/index.html' in manifest._.server_assets;
-	}
+	// let is_static_asset = false;
+	// const filename = stripped_pathname.slice(base_path.length + 1);
+	// if (filename) {
+	// 	is_static_asset =
+	// 		manifest.assets.has(filename) ||
+	// 		manifest.assets.has(filename + '/index.html') ||
+	// 		filename in manifest._.server_assets ||
+	// 		filename + '/index.html' in manifest._.server_assets;
+	// }
 
 	let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
-	if (
-		is_static_asset ||
-		prerendered.has(pathname) ||
-		pathname === version_file ||
-		pathname.startsWith(immutable)
-	) {
-		res = await env.ASSETS.fetch(request);
+	// TODO: we should only return the version var in dev because the version file is not written to disk
+	if (pathname === version_file) {
+		res = new Response(version);
+	// } else if (
+	// 	is_static_asset ||
+	// 	prerendered.has(pathname) ||
+	// 	pathname === version_file ||
+	// 	pathname.startsWith(immutable)
+	// ) {
+	// // TODO: verify if the ASSETS can be used during development
+	// 	res = await env.ASSETS.fetch(request);
 	} else if (location && prerendered.has(location)) {
 		// trailing slash redirect for prerendered pages
 		if (search) location += search;
