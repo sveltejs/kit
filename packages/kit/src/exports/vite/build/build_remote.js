@@ -43,7 +43,7 @@ export async function treeshake_prerendered_remotes(out) {
 				dedent`
 					import {${prerendered_exports.join(',')}} from './__sibling__.${remote}';
 					import { prerender } from '../${path.basename(remote_entry)}';
-					${dynamic_exports.map((name) => `const ${name} = prerender(() => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
+					${dynamic_exports.map((name) => `const ${name} = prerender('unchecked', () => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
 					for (const [key, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
 						if (fn.__?.type === 'form') {
 							fn.__.set_action('${remote.slice(0, -3)}/' + key);
