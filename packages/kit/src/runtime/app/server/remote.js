@@ -264,10 +264,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
 					return await get_response(id, arg, event, async () => {
-						const response = await fetch(event.url.origin + url);
+						// TODO adapters can provide prerendered data more efficiently than
+						// fetching from the public internet
+						const response = await fetch(new URL(url, event.url.origin).href);
+
 						if (!response.ok) {
 							throw new Error('Prerendered response not found');
 						}
+
 						const prerendered = await response.json();
 						info.results[create_remote_cache_key(id, stringified_arg)] = prerendered.result;
 						return parse_remote_response(prerendered.result, info.transport);
