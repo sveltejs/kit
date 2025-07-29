@@ -102,21 +102,20 @@ export function query(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<RemoteQuery<any>>} */
-		const promise = (async () => {
-			if (prerendering) {
-				throw new Error(
-					`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-				);
-			}
-
-			// TODO don't do the additional work when we're being called from the client?
-			const event = getRequestEvent();
-			const result = await get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
-				run_remote_function(event, false, arg, validate, fn)
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 			);
-			return result;
-		})();
+		}
+
+		const event = getRequestEvent();
+
+		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
+		const promise = get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
+			run_remote_function(event, false, arg, validate, fn)
+		);
+
+		promise.catch(() => {});
 
 		promise.refresh = async () => {
 			const event = getRequestEvent();
@@ -253,7 +252,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<RemoteResource<Output>>} */
+		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
@@ -273,6 +272,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 						}
 
 						const prerendered = await response.json();
+
+						if (prerendered.type === 'error') {
+							error(prerendered.status, prerendered.error);
+						}
+
+						// TODO can we redirect here?
+
 						info.results[create_remote_cache_key(id, stringified_arg)] = prerendered.result;
 						return parse_remote_response(prerendered.result, info.transport);
 					});
@@ -285,16 +291,16 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url));
 			}
 
-			const maybe_promise = get_response(id, arg, event, () =>
+			const promise = get_response(id, arg, event, () =>
 				run_remote_function(event, false, arg, validate, fn)
 			);
 
 			if (info.prerendering) {
-				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
-				Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
+				info.prerendering.remote_responses.set(url, promise);
+				promise.catch(() => info.prerendering?.remote_responses.delete(url));
 			}
 
-			const result = await maybe_promise;
+			const result = await promise;
 
 			if (info.prerendering) {
 				const body = { type: 'result', result: stringify(result, info.transport) };
@@ -307,6 +313,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			// TODO this is missing error/loading/current/status
 			return result;
 		})();
+
+		promise.catch(() => {});
 
 		return /** @type {RemoteResource<Output>} */ (promise);
 	};
@@ -677,19 +685,15 @@ function create_validator(validate_or_fn, maybe_fn) {
  * @param {string} id
  * @param {any} arg
  * @param {RequestEvent} event
- * @param {() => T} get_result
- * @returns {T}
+ * @param {() => Promise<T>} get_result
+ * @returns {Promise<T>}
  */
 function get_response(id, arg, event, get_result) {
 	const info = get_remote_info(event);
 
-	// We only want to do this for full page visits where we can safely deduplicate calls (for remote calls we would have
-	// to ensure they come from the same user) and have to stringify the result into the HTML
-	if (event.isRemoteRequest) return get_result();
-
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
-	return /** @type {T} */ (info.results[cache_key] ??= Promise.resolve(get_result()));
+	return /** @type {Promise<T>} */ (info.results[cache_key] ??= get_result());
 }
 
 /** @param {string} feature */
