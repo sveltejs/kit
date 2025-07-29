@@ -44,15 +44,8 @@ export async function treeshake_prerendered_remotes(out) {
 					import { prerender } from '../${path.basename(remote_entry)}';
 					${dynamic_exports.map((name) => `const ${name} = prerender('unchecked', () => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
 					for (const [key, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
-						if (fn.__?.type === 'form') {
-							fn.__.set_action('${remote.slice(0, -3)}/' + key);
-							fn.__.name = key;
-						} else if (fn.__?.type === 'query' || fn.__?.type === 'prerender') {
-							fn.__.id = '${remote.slice(0, -3)}/' + key;
-							fn.__.name = key;
-						} else if (fn.__?.type === 'command') {
-							fn.__.name = key;
-						}
+						fn.__.id = '${remote.slice(0, -3)}/' + key;
+						fn.__.name = key;
 					}
 					export {${Object.keys(remote_module).join(',')}};
 				`
@@ -93,15 +86,8 @@ export const remote_code = dedent`
 	export default function enhance_remote_functions(exports, hashed_id, original_filename) {
 		for (const key in exports) {
 			const fn = exports[key];
-			if (fn?.__?.type === 'form') {
-				fn.__.set_action(hashed_id + '/' + key);
-				fn.__.name = key;
-			} else if (fn?.__?.type === 'query' || fn?.__?.type === 'prerender') {
-				fn.__.id = hashed_id + '/' + key;
-				fn.__.name = key;
-			} else if (fn?.__?.type === 'command') {
-				fn.__.name = key;
-			}
+			fn.__.id = hashed_id + '/' + key;
+			fn.__.name = key;
 		}
 	}
 `;

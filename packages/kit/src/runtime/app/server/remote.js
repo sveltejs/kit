@@ -525,68 +525,74 @@ export function form(fn) {
 
 	/**
 	 * @param {string | number | boolean} [key]
-	 * @param {string} [action]
 	 */
-	function create_instance(key, action = '') {
+	function create_instance(key) {
 		/** @type {RemoteForm<T>} */
-		const wrapper = {};
+		const instance = {};
 
-		wrapper.method = 'POST';
-		wrapper.action = action; // This will be set by generated server code on startup, and for nested instances by the `for` method it is set by the calling parent
-		wrapper.onsubmit = () => {};
+		instance.method = 'POST';
+		instance.onsubmit = () => {};
 
-		Object.defineProperty(wrapper, 'enhance', {
+		Object.defineProperty(instance, 'enhance', {
 			value: () => {
-				return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
+				return { action: instance.action, method: instance.method, onsubmit: instance.onsubmit };
 			}
 		});
 
 		const form_action = {
 			type: 'submit',
-			formaction: action,
 			onclick: () => {}
 		};
+
 		Object.defineProperty(form_action, 'enhance', {
 			value: () => {
-				return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
+				return { type: 'submit', formaction: instance.formAction.formaction, onclick: () => {} };
 			}
 		});
-		Object.defineProperty(wrapper, 'formAction', {
+
+		Object.defineProperty(instance, 'formAction', {
 			value: form_action
 		});
 
-		Object.defineProperty(wrapper, '__', {
-			value: /** @type {RemoteInfo} */ ({
-				type: 'form',
-				id: 'unused for forms',
-				// This allows us to deduplicate some logic at the callsites
-				set_action: (action) => {
-					wrapper.action = `?/remote=${encodeURIComponent(action)}`;
-					wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
-				},
-				/** @param {FormData} form_data */
-				fn: async (form_data) => {
-					const event = getRequestEvent();
-					const info = get_remote_info(event);
+		/** @type {RemoteInfo} */
+		const __ = {
+			type: 'form',
+			name: '',
+			id: '',
+			/** @param {FormData} form_data */
+			fn: async (form_data) => {
+				const event = getRequestEvent();
+				const info = get_remote_info(event);
 
-					if (!info.refreshes) {
-						info.refreshes = {};
-					}
-
-					const result = await run_remote_function(event, true, form_data, (d) => d, fn);
-
-					// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
-					// where only one form submission is active at the same time
-					if (!event.isRemoteRequest) {
-						info.form_result = [key, result];
-					}
-
-					return result;
+				if (!info.refreshes) {
+					info.refreshes = {};
 				}
-			})
+
+				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+
+				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
+				// where only one form submission is active at the same time
+				if (!event.isRemoteRequest) {
+					info.form_result = [key, result];
+				}
+
+				return result;
+			}
+		};
+
+		Object.defineProperty(instance, '__', { value: __ });
+
+		Object.defineProperty(instance, 'action', {
+			get: () => `?/remote=${__.id}`,
+			enumerable: true
 		});
 
-		Object.defineProperty(wrapper, 'result', {
+		Object.defineProperty(form_action, 'formaction', {
+			get: () => `?/remote=${__.id}`,
+			enumerable: true
+		});
+
+		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
 					const info = get_remote_info(getRequestEvent());
@@ -597,7 +603,7 @@ export function form(fn) {
 			}
 		});
 
-		Object.defineProperty(wrapper, 'error', {
+		Object.defineProperty(instance, 'error', {
 			get() {
 				// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
 				return /** @type {any} */ (null);
@@ -605,28 +611,26 @@ export function form(fn) {
 		});
 
 		if (key == undefined) {
-			Object.defineProperty(wrapper, 'for', {
+			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					const info = get_remote_info(getRequestEvent());
-					let entry = info.form_instances.get(key);
+					let instance = info.form_instances.get(key);
 
-					if (!entry) {
-						info.form_instances.set(
-							key,
-							(entry = create_instance(
-								key,
-								wrapper.action + encodeURIComponent(`/${JSON.stringify(key)}`)
-							))
-						);
+					if (!instance) {
+						instance = create_instance(key);
+						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.name = __.name;
+
+						info.form_instances.set(key, instance);
 					}
 
-					return entry;
+					return instance;
 				}
 			});
 		}
 
-		return wrapper;
+		return instance;
 	}
 
 	return create_instance();

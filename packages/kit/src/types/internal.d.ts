@@ -555,7 +555,6 @@ export type RemoteInfo =
 			type: 'form';
 			id: string;
 			name: string;
-			set_action: (action: string) => void;
 			fn: (data: FormData) => Promise<any>;
 	  }
 	| {
