@@ -16,6 +16,8 @@ import { import_peer } from '../../../utils/import.js';
 export function build_remotes(out, manifest_data) {
 	const dir = `${out}/server/remote`;
 
+	console.error('build_remotes', { dir });
+
 	for (const remote of manifest_data.remotes) {
 		const entry = `${dir}/${remote.hash}.js`;
 		const tmp = `${remote.hash}.tmp.js`;
@@ -101,6 +103,8 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 
 		input[prefix + remote.hash] = remote_file;
 	}
+
+	console.error(input);
 
 	const bundle = await vite.build({
 		configFile: false,

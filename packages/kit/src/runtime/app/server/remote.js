@@ -260,6 +260,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const id = wrapper.__.id;
 			if (!id) {
 				console.error(`missing id`, fn.toString());
+			} else {
+				console.error(`has id`, id, fn.toString());
 			}
 			const url = `${base}/${app_dir}/remote/${id}${stringified_arg ? `/${stringified_arg}` : ''}`;
 
