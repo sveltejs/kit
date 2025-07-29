@@ -1,7 +1,7 @@
 /** @import { ManifestData, ServerMetadata } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { posixify, rimraf } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
 
@@ -16,12 +16,20 @@ import { import_peer } from '../../../utils/import.js';
  * @param {ServerMetadata} metadata
  */
 export async function treeshake_prerendered_remotes(out, manifest_data, metadata) {
-	const remote_dir = path.join(out, 'server', 'remote');
+	if (manifest_data.remotes.length === 0) {
+		return;
+	}
 
-	if (!fs.existsSync(remote_dir)) return;
+	const dir = `${out}/server/remote`;
 
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
+
+	const prefix = 'optimized/';
+
+	const input = {
+		[path.basename(remote_entry.slice(0, -3))]: remote_entry
+	};
 
 	for (const remote of manifest_data.remotes) {
 		const exports = metadata.remotes.get(remote.hash);
@@ -37,58 +45,51 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 			(value.dynamic ? dynamic : prerendered).push(name);
 		}
 
-		const remote_file = posixify(path.join(`${out}/server/remote`, remote.hash + '.js'));
+		const remote_file = posixify(`${dir}/${remote.hash}.js`);
 
-		if (prerendered.length > 0) {
-			fs.writeFileSync(
-				remote_file,
-				dedent`
-					import { ${dynamic.join(', ')} } from './__sibling__.${remote.hash}.js';
-					import { prerender } from '../${path.basename(remote_entry)}';
+		fs.writeFileSync(
+			remote_file,
+			dedent`
+				import { ${dynamic.join(', ')} } from './${remote.hash}.tmp.js';
+				import { prerender } from '../${path.basename(remote_entry)}';
 
-					${prerendered.map((name) => `export const ${name} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`).join('\n')}
+				${prerendered.map((name) => `export const ${name} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`).join('\n')}
 
-					for (const [name, fn] of Object.entries({ ${Array.from(exports.keys()).join(', ')} })) {
-						fn.__.id = '${remote.hash}/' + name;
-						fn.__.name = name;
-					}
-
-					export { ${dynamic.join(', ')} };
-				`
-			);
-
-			const prefix = 'optimized/';
-
-			const bundle = await vite.build({
-				configFile: false,
-				build: {
-					ssr: true,
-					rollupOptions: {
-						external: (id) => {
-							return (
-								id !== remote_entry &&
-								id !== `../${path.basename(remote_entry)}` &&
-								!id.endsWith(`/__sibling__.${remote.hash}.js`) &&
-								id !== remote_file
-							);
-						},
-						input: {
-							[prefix + remote.hash]: remote_file,
-							[path.basename(remote_entry.slice(0, -3))]: remote_entry
-						}
-					}
+				for (const [name, fn] of Object.entries({ ${Array.from(exports.keys()).join(', ')} })) {
+					fn.__.id = '${remote.hash}/' + name;
+					fn.__.name = name;
 				}
-			});
 
-			// @ts-expect-error TypeScript doesn't know what type `bundle` is
-			for (const chunk of bundle.output) {
-				if (chunk.name.startsWith(prefix)) {
-					fs.writeFileSync(remote_file, chunk.code);
-				}
+				export { ${dynamic.join(', ')} };
+			`
+		);
+
+		input[prefix + remote.hash] = remote_file;
+	}
+
+	const bundle = await vite.build({
+		configFile: false,
+		build: {
+			ssr: true,
+			rollupOptions: {
+				external: (id) => {
+					if (id[0] === '.') return;
+					return !id.startsWith(dir);
+				},
+				input
 			}
-
-			rimraf(path.join(out, 'server', 'remote', `__sibling__.${remote.hash}.js`));
 		}
+	});
+
+	// @ts-expect-error TypeScript doesn't know what type `bundle` is
+	for (const chunk of bundle.output) {
+		if (chunk.name.startsWith(prefix)) {
+			fs.writeFileSync(`${dir}/${chunk.fileName.slice(prefix.length)}`, chunk.code);
+		}
+	}
+
+	for (const remote of manifest_data.remotes) {
+		fs.unlinkSync(`${dir}/${remote.hash}.tmp.js`);
 	}
 }
 
@@ -105,20 +106,20 @@ export function build_remotes(out, manifest_data) {
 
 	for (const remote of manifest_data.remotes) {
 		const entry = `${dir}/${remote.hash}.js`;
-		const sibling_file_name = `__sibling__.${remote.hash}.js`;
+		const tmp = `${remote.hash}.tmp.js`;
 
-		fs.renameSync(entry, `${dir}/${sibling_file_name}`);
+		fs.renameSync(entry, `${dir}/${tmp}`);
 		fs.writeFileSync(
 			entry,
 			dedent`
-				import * as $$_self_$$ from './${sibling_file_name}';
+				import * as $$_self_$$ from './${tmp}';
 
 				for (const [name, fn] of Object.entries($$_self_$$)) {
 					fn.__.id = '${remote.hash}/' + name;
 					fn.__.name = name;
 				}
 
-				export * from './${sibling_file_name}';
+				export * from './${tmp}';
 			`
 		);
 	}
