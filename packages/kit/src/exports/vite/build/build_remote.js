@@ -40,9 +40,9 @@ export function build_remotes(out, manifest_data) {
 
 	if (fs.existsSync(dir)) {
 		for (const file of fs.readdirSync(dir)) {
-			console.group(file);
-			console.log(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
-			console.groupEnd();
+			console.error(file);
+			console.error(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
+			console.error('\n\n');
 		}
 	}
 }
