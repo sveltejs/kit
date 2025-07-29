@@ -732,7 +732,7 @@ Tips:
 
 					// ...and every .remote file
 					for (const remote of manifest_data.remotes) {
-						input[`remote/${remote.hash}`] = remote.file;
+						input[`remote/${remote.hash}`] = path.resolve(remote.file);
 					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
