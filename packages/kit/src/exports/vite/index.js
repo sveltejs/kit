@@ -350,7 +350,7 @@ async function kit({ svelte_config }) {
 
 			// TODO: move these to the Cloudflare adapter
 
-			// vite-plugin-cloudflare doesn't allow `ssr.external` but VPS and Kit set it
+			// @cloudflare/vite-plugin doesn't allow `ssr.external` but VPS and SvelteKit set it
 			/** @type {import('vite').SSROptions} */ (config.ssr).external = undefined;
 			/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external =
 				undefined;
@@ -361,38 +361,12 @@ async function kit({ svelte_config }) {
 
 			// we need to set this because server environments don't inherit the top-level optimizeDeps option
 			// see https://vite.dev/guide/api-environment.html#environments-configuration
-			// const optimize_deps = vite.mergeConfig(
-			// 	config?.optimizeDeps ?? {},
-			// 	new_config?.optimizeDeps ?? {},
-			// 	false
-			// );
-			// new_config.environments = {
-			// 	ssr: {
-			// 		optimizeDeps: vite.mergeConfig(
-			// 			optimize_deps,
-			// 			{
-			// 				// ensure vite-plugin-cloudflare ignores virtual modules when optimising dependencies
-			// 				exclude: ['__sveltekit/*']
-			// 			},
-			// 			false
-			// 		)
-			// 	}
-			// };
 			// TODO: find a better way to inherit top level optimizeDeps options
 			new_config.environments = {
 				ssr: {
 					optimizeDeps: {
-						include: [
-							...(config.optimizeDeps?.include ?? []),
-							// @sveltejs/kit is excluded from optimization but some of its
-							// dependencies are packaged as CommonJS so we need to include those
-							'@sveltejs/kit > cookie',
-							'@sveltejs/kit > set-cookie-parser'
-						],
-						exclude: [...(new_config.optimizeDeps?.exclude ?? []), '__sveltekit/*'],
-						extensions: config.optimizeDeps?.extensions ?? [],
-						entries: new_config.optimizeDeps?.entries ?? [],
-						esbuildOptions: config.optimizeDeps?.esbuildOptions
+						exclude: ['__sveltekit', '$app'],
+						// entries: new_config.optimizeDeps?.entries ?? [],
 					}
 				}
 			};
