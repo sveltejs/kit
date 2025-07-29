@@ -167,10 +167,10 @@ async function analyse({
 
 	// analyse remotes
 	for (const [hash, load] of Object.entries(manifest._.remotes)) {
-		const modules = await load();
+		const module = await load();
 		const exports = new Map();
 
-		for (const [name, value] of Object.entries(modules)) {
+		for (const [name, value] of Object.entries(module)) {
 			const info = /** @type {import('types').RemoteInfo} */ (value?.__);
 			const type = info?.type;
 
