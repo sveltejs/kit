@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url';
 import { mkdirp, posixify, rimraf } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
-import { s } from '../../../utils/misc.js';
 
 /**
  * Loads the remote modules, checks which of those have prerendered remote functions that should be treeshaken,
@@ -23,7 +22,7 @@ export async function treeshake_prerendered_remotes(out) {
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
 
 	for (const remote of fs.readdirSync(`${out}/server/remote`)) {
-		if (remote.startsWith('__sibling__.') || remote === '__sveltekit__remote.js') continue; // skip sibling files
+		if (remote.startsWith('__sibling__.')) continue; // skip sibling files
 		const remote_file = posixify(path.join(`${out}/server/remote`, remote));
 		const remote_module = await import(pathToFileURL(remote_file).href);
 		const prerendered_exports = Object.entries(remote_module)
@@ -43,9 +42,9 @@ export async function treeshake_prerendered_remotes(out) {
 					import {${prerendered_exports.join(',')}} from './__sibling__.${remote}';
 					import { prerender } from '../${path.basename(remote_entry)}';
 					${dynamic_exports.map((name) => `const ${name} = prerender('unchecked', () => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
-					for (const [key, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
-						fn.__.id = '${remote.slice(0, -3)}/' + key;
-						fn.__.name = key;
+					for (const [name, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
+						fn.__.id = '${remote.slice(0, -3)}/' + name;
+						fn.__.name = name;
 					}
 					export {${Object.keys(remote_module).join(',')}};
 				`
@@ -62,7 +61,6 @@ export async function treeshake_prerendered_remotes(out) {
 								id !== remote_entry &&
 								id !== `../${path.basename(remote_entry)}` &&
 								!id.endsWith(`/__sibling__.${remote}`) &&
-								!id.endsWith(`/__sveltekit__remote.js`) &&
 								id !== remote_file
 							);
 						},
@@ -82,16 +80,6 @@ export async function treeshake_prerendered_remotes(out) {
 	}
 }
 
-export const remote_code = dedent`
-	export default function enhance_remote_functions(exports, hashed_id, original_filename) {
-		for (const key in exports) {
-			const fn = exports[key];
-			fn.__.id = hashed_id + '/' + key;
-			fn.__.name = key;
-		}
-	}
-`;
-
 /**
  * Moves the remote files to a sibling file and rewrites the original remote file to import from that sibling file,
  * enhancing the remote functions with their hashed ID.
@@ -101,10 +89,6 @@ export const remote_code = dedent`
  * @param {import('types').ManifestData} manifest_data
  */
 export function build_remotes(out, manifest_data) {
-	if (manifest_data.remotes.length === 0) {
-		return;
-	}
-
 	const dir = `${out}/server/remote`;
 
 	for (const remote of manifest_data.remotes) {
@@ -114,32 +98,16 @@ export function build_remotes(out, manifest_data) {
 		fs.renameSync(entry, `${dir}/${sibling_file_name}`);
 		fs.writeFileSync(
 			entry,
-			// We can't use __sveltekit/remotes here because it runs after the build where aliases would be resolved
 			dedent`
 				import * as $$_self_$$ from './${sibling_file_name}';
-				${enhance_remotes(remote.hash, './__sveltekit__remote.js', remote.file)}
+
+				for (const [name, fn] of Object.entries($$_self_$$)) {
+					fn.__.id = '${remote.hash}/' + name;
+					fn.__.name = name;
+				}
+
 				export * from './${sibling_file_name}';
 			`
 		);
 	}
-
-	fs.writeFileSync(
-		`${dir}/__sveltekit__remote.js`,
-		remote_code,
-		'utf-8'
-	);
-}
-
-/**
- * Generate the code that enhances the remote functions with their hashed ID.
- * @param {string} hashed_id
- * @param {string} import_path - where to import the helper function from
- * @param {string} original_filename - The original filename for better error messages
- */
-export function enhance_remotes(hashed_id, import_path, original_filename) {
-	return dedent`
-		import $$_enhance_remote_functions_$$ from '${import_path}';
-
-		$$_enhance_remote_functions_$$($$_self_$$, ${s(hashed_id)}, ${s(original_filename)});
-	`
 }

@@ -32,18 +32,11 @@ import {
 	service_worker,
 	sveltekit_environment,
 	sveltekit_paths,
-	sveltekit_server,
-	sveltekit_remotes
+	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import {
-	build_remotes,
-	enhance_remotes,
-	remote_code,
-	treeshake_prerendered_remotes
-} from './build/build_remote.js';
-import { validate_remote_functions } from '../internal/remote-functions.js';
+import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 
 const cwd = process.cwd();
 
@@ -562,10 +555,6 @@ Tips:
 						}
 					`;
 				}
-
-				case sveltekit_remotes: {
-					return remote_code;
-				}
 			}
 		}
 	};
@@ -624,9 +613,15 @@ Tips:
 					return (
 						code +
 						dedent`
-							// Auto-generated part, do not edit
 							import * as $$_self_$$ from './${path.basename(id)}';
-							${enhance_remotes(hashed, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
+							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
+
+							$$_validate_$$($$_self_$$, ${s(file)});
+
+							for (const [name, fn] of Object.entries($$_self_$$)) {
+								fn.__.id = ${s(hashed)} + '/' + name;
+								fn.__.name = name;
+							}
 						`
 					);
 				}
@@ -646,8 +641,6 @@ Tips:
 			// already loaded) so we can determine what it exports
 			if (dev_server) {
 				const module = await dev_server.ssrLoadModule(id);
-
-				validate_remote_functions(module, file);
 
 				for (const [name, value] of Object.entries(module)) {
 					const type = value?.__?.type;
