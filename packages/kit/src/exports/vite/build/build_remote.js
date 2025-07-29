@@ -1,3 +1,4 @@
+/** @import { ManifestData, ServerMetadata } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -12,8 +13,10 @@ import { import_peer } from '../../../utils/import.js';
  * and do a Vite build. This will not treeshake perfectly yet as everything except the remote files are treated as external,
  * so it will not go into those files to check what can be treeshaken inside them.
  * @param {string} out
+ * @param {ManifestData} manifest_data
+ * @param {ServerMetadata} metadata
  */
-export async function treeshake_prerendered_remotes(out) {
+export async function treeshake_prerendered_remotes(out, manifest_data, metadata) {
 	const remote_dir = path.join(out, 'server', 'remote');
 
 	if (!fs.existsSync(remote_dir)) return;
@@ -21,9 +24,8 @@ export async function treeshake_prerendered_remotes(out) {
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
 
-	for (const remote of fs.readdirSync(`${out}/server/remote`)) {
-		if (remote.startsWith('__sibling__.')) continue; // skip sibling files
-		const remote_file = posixify(path.join(`${out}/server/remote`, remote));
+	for (const remote of manifest_data.remotes) {
+		const remote_file = posixify(path.join(`${out}/server/remote`, remote.hash + '.js'));
 		const remote_module = await import(pathToFileURL(remote_file).href);
 		const prerendered_exports = Object.entries(remote_module)
 			.filter(([, _export]) => !(_export?.__?.type === 'prerender' && !_export.__.dynamic))
@@ -39,11 +41,11 @@ export async function treeshake_prerendered_remotes(out) {
 			fs.writeFileSync(
 				remote_file,
 				dedent`
-					import {${prerendered_exports.join(',')}} from './__sibling__.${remote}';
+					import {${prerendered_exports.join(',')}} from './__sibling__.${remote.hash}.js';
 					import { prerender } from '../${path.basename(remote_entry)}';
 					${dynamic_exports.map((name) => `const ${name} = prerender('unchecked', () => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
 					for (const [name, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
-						fn.__.id = '${remote.slice(0, -3)}/' + name;
+						fn.__.id = '${remote.hash}/' + name;
 						fn.__.name = name;
 					}
 					export {${Object.keys(remote_module).join(',')}};
@@ -60,22 +62,22 @@ export async function treeshake_prerendered_remotes(out) {
 							return (
 								id !== remote_entry &&
 								id !== `../${path.basename(remote_entry)}` &&
-								!id.endsWith(`/__sibling__.${remote}`) &&
+								!id.endsWith(`/__sibling__.${remote.hash}.js`) &&
 								id !== remote_file
 							);
 						},
 						input: {
-							[`remote/${remote.slice(0, -3)}`]: remote_file,
+							[`remote/${remote.hash}`]: remote_file,
 							[path.basename(remote_entry.slice(0, -3))]: remote_entry
 						}
 					}
 				}
 			});
 
-			fs.copyFileSync(path.join(temp_out_dir, 'remote', remote), remote_file);
+			fs.copyFileSync(path.join(temp_out_dir, 'remote', remote.hash + '.js'), remote_file);
 			rimraf(temp_out_dir);
 			rimraf(tmp_file);
-			rimraf(path.join(out, 'server', 'remote', `__sibling__.${remote}`));
+			rimraf(path.join(out, 'server', 'remote', `__sibling__.${remote.hash}.js`));
 		}
 	}
 }
@@ -86,7 +88,7 @@ export async function treeshake_prerendered_remotes(out) {
  * This is not done through a self-import like during DEV because we want to treeshake prerendered remote functions
  * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
  * @param {string} out
- * @param {import('types').ManifestData} manifest_data
+ * @param {ManifestData} manifest_data
  */
 export function build_remotes(out, manifest_data) {
 	const dir = `${out}/server/remote`;

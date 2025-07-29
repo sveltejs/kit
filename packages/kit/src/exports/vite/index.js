@@ -1112,7 +1112,7 @@ Tips:
 				);
 
 				// remove prerendered remote functions
-				await treeshake_prerendered_remotes(out);
+				await treeshake_prerendered_remotes(out, manifest_data, metadata);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {
