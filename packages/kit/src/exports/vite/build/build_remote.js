@@ -5,7 +5,6 @@ import { mkdirp, posixify, rimraf } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
 import { s } from '../../../utils/misc.js';
-import { hash } from '../../../utils/hash.js';
 
 /**
  * Loads the remote modules, checks which of those have prerendered remote functions that should be treeshaken,
