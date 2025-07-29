@@ -250,6 +250,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
+	console.error(`creating prerender function`, new Error().stack);
+
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
