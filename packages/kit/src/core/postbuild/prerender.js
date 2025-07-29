@@ -527,9 +527,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const transport = (await internal.get_hooks()).transport ?? {};
 	for (const remote_function of remote_functions) {
-		// TODO this writes to /prerender/pages/... eventually, should it go into
-		// /prerender/dependencies like indirect calls due to page prerenders?
-		// Does it really matter?
 		if (remote_function.__.has_arg) {
 			for (const arg of (await remote_function.__.inputs?.()) ?? []) {
 				void enqueue(
