@@ -644,8 +644,9 @@ Tips:
 					remotes.set(name, value);
 				}
 			} else if (dev_server) {
-				const modules = await dev_server.ssrLoadModule(id);
-				for (const [name, value] of Object.entries(modules)) {
+				const module = await dev_server.ssrLoadModule(id);
+
+				for (const [name, value] of Object.entries(module)) {
 					const type = value?.__?.type;
 					if (type) {
 						remotes.set(name, { type, dynamic: true });
@@ -657,11 +658,9 @@ Tips:
 				);
 			}
 
-			const exports = [];
-
-			for (const [name, { type }] of remotes) {
-				exports.push(`export const ${name} = __remote.${type}('${hashed}/${name}');`);
-			}
+			const exports = Array.from(remotes).map(([name, { type }]) => {
+				return `export const ${name} = __remote.${type}('${hashed}/${name}');`;
+			});
 
 			return {
 				code: `import * as __remote from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
