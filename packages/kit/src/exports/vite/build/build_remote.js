@@ -6,10 +6,10 @@ import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
 
 /**
- * Loads the remote modules, checks which of those have prerendered remote functions that should be treeshaken,
+ * For each remote module, checks if there are treeshakeable prerendered remote functions,
  * then accomplishes the treeshaking by rewriting the remote files to only include the non-prerendered imports,
  * replacing the prerendered remote functions with a dummy function that should never be called,
- * and do a Vite build. This will not treeshake perfectly yet as everything except the remote files are treated as external,
+ * and doing a Vite build. This will not treeshake perfectly yet as everything except the remote files are treated as external,
  * so it will not go into those files to check what can be treeshaken inside them.
  * @param {string} out
  * @param {ManifestData} manifest_data
