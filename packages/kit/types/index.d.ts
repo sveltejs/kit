@@ -2011,7 +2011,10 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
-		remotes: string[];
+		remotes: Array<{
+			file: string;
+			hash: string;
+		}>;
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}
@@ -2970,7 +2973,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T, U = never>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T, U>;
+	export function form<T>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
