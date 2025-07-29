@@ -37,6 +37,8 @@ export function build_remotes(out, manifest_data) {
 			`
 		);
 	}
+
+	console.error('files', fs.readdirSync(dir));
 }
 
 
