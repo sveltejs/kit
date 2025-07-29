@@ -371,7 +371,7 @@ export interface ServerMetadata {
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, its export names grouped by query/command/form/cache/prerender */
-	remotes: Map<string, Map<RemoteInfo['type'], string[]>>;
+	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {

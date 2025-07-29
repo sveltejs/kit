@@ -169,11 +169,20 @@ async function analyse({
 	for (const [hash, load] of Object.entries(manifest._.remotes)) {
 		const modules = await load();
 		const exports = new Map();
+
 		for (const [name, value] of Object.entries(modules)) {
-			const type = /** @type {import('types').RemoteInfo} */ (value?.__)?.type;
+			const info = /** @type {import('types').RemoteInfo} */ (value?.__);
+			const type = info?.type;
+
 			if (!type) continue;
-			exports.set(type, (exports.get(type) ?? []).concat(name));
+
+			exports.set(name, {
+				type,
+				// TODO use this for treeshaking
+				dynamic: type !== 'prerender' || info.dynamic
+			});
 		}
+
 		metadata.remotes.set(hash, exports);
 	}
 

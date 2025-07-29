@@ -633,7 +633,7 @@ Tips:
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<import('types').RemoteInfo['type'], string[]>} */
+			/** @type {Map<string, { type: import('types').RemoteInfo['type'], dynamic: boolean }>} */
 			const remotes = new Map();
 
 			if (remote_exports) {
@@ -648,7 +648,7 @@ Tips:
 				for (const [name, value] of Object.entries(modules)) {
 					const type = value?.__?.type;
 					if (type) {
-						remotes.set(type, (remotes.get(type) ?? []).concat(name));
+						remotes.set(name, { type, dynamic: true });
 					}
 				}
 			} else {
@@ -658,32 +658,13 @@ Tips:
 			}
 
 			const exports = [];
-			const specifiers = [];
 
-			for (const [type, _exports] of remotes) {
-				const result = exports_and_fn(type, _exports);
-				exports.push(...result.exports);
-				specifiers.push(result.specifier);
-			}
-
-			/**
-			 * @param {string} remote_import
-			 * @param {string[]} names
-			 */
-			function exports_and_fn(remote_import, names) {
-				// belt and braces — guard against an existing `export function query/command/prerender/cache/form() {...}`
-				let n = 1;
-				let fn = remote_import;
-				while (names.includes(fn)) fn = `${fn}$${n++}`;
-
-				const exports = names.map((n) => `export const ${n} = ${fn}('${hashed}/${n}');`);
-				const specifier = fn === remote_import ? fn : `${fn} as ${fn}`;
-
-				return { exports, specifier };
+			for (const [name, { type }] of remotes) {
+				exports.push(`export const ${name} = __remote.${type}('${hashed}/${name}');`);
 			}
 
 			return {
-				code: `import { ${specifiers.join(', ')} } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: `import * as __remote from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
 		}
 	};
