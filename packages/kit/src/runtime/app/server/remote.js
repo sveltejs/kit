@@ -689,15 +689,7 @@ function get_response(id, arg, event, get_result) {
 
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
-	if (!(cache_key in info.results)) {
-		// TODO better error handling when promise rejects?
-		info.results[cache_key] = Promise.resolve(get_result()).catch(() => {
-			delete info.results[cache_key];
-			return /** @type {any} */ (undefined);
-		});
-	}
-
-	return /** @type {T} */ (info.results[cache_key]);
+	return /** @type {T} */ (info.results[cache_key] ??= Promise.resolve(get_result()));
 }
 
 /** @param {string} feature */

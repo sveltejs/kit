@@ -412,6 +412,7 @@ export async function render_response({
 					remote[key] = await promise;
 				}
 
+				// TODO this is repeated in a few places — dedupe it
 				const replacer = (/** @type {any} */ thing) => {
 					for (const key in options.hooks.transport) {
 						const encoded = options.hooks.transport[key].encode(thing);
