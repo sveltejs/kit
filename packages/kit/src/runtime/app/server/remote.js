@@ -297,7 +297,6 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			if (info.prerendering) {
 				info.prerendering.remote_responses.set(url, promise);
-				promise.catch(() => info.prerendering?.remote_responses.delete(url));
 			}
 
 			const result = await promise;
