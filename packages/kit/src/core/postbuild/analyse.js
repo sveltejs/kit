@@ -175,13 +175,12 @@ async function analyse({
 
 		const exports = new Map();
 
-		for (const [name, value] of Object.entries(module)) {
-			const info = /** @type {import('types').RemoteInfo} */ (value?.__);
+		for (const name in module) {
+			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
 			const type = info.type;
 
 			exports.set(name, {
 				type,
-				// TODO use this for treeshaking
 				dynamic: type !== 'prerender' || info.dynamic
 			});
 		}
