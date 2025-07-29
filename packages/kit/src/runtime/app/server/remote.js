@@ -2,7 +2,7 @@
 /** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
-import { uneval, parse } from 'devalue';
+import { parse } from 'devalue';
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { getRequestEvent, with_event } from './event.js';

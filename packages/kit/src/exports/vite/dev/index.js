@@ -19,7 +19,6 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { hash } from '../../../utils/hash.js';
 import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
