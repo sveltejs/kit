@@ -8,6 +8,7 @@ import { posixify, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
+import { hash } from '../../../utils/hash.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -27,7 +28,7 @@ export default function create_manifest_data({
 	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
-	const remotes = create_remotes(config);
+	const remotes = create_remotes(config, cwd);
 
 	for (const route of routes) {
 		for (const param of route.params) {
@@ -469,21 +470,35 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 /**
  * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
  */
-function create_remotes(config) {
+function create_remotes(config, cwd) {
 	if (!config.kit.experimental.remoteFunctions) return [];
 
 	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
 
+	/** @type {import('types').ManifestData['remotes']} */
+	const remotes = [];
+
 	const externals = config.kit.remoteFunctions.allowedPaths.map((dir) => path.resolve(dir));
 
-	return [config.kit.files.lib, config.kit.files.routes, ...externals].flatMap((dir) =>
-		fs.existsSync(dir)
-			? walk(dir)
-					.filter((file) => extensions.some((ext) => file.endsWith(ext)))
-					.map((file) => posixify(`${dir}/${file}`))
-			: []
-	);
+	// TODO could files live in other directories, including node_modules?
+	for (const dir of [config.kit.files.lib, config.kit.files.routes, ...externals]) {
+		if (!fs.existsSync(dir)) continue;
+
+		for (const file of walk(dir)) {
+			if (extensions.some((ext) => file.endsWith(ext))) {
+				const posixified = posixify(path.relative(cwd, `${dir}/${file}`));
+
+				remotes.push({
+					hash: hash(posixified),
+					file: posixified
+				});
+			}
+		}
+	}
+
+	return remotes;
 }
 
 /**

@@ -192,7 +192,10 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: string[];
+	remotes: Array<{
+		file: string;
+		hash: string;
+	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }
@@ -368,7 +371,7 @@ export interface ServerMetadata {
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, its export names grouped by query/command/form/cache/prerender */
-	remotes: Map<string, Map<RemoteInfo['type'], string[]>>;
+	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {
@@ -552,7 +555,6 @@ export type RemoteInfo =
 			type: 'form';
 			id: string;
 			name: string;
-			set_action: (action: string) => void;
 			fn: (data: FormData) => Promise<any>;
 	  }
 	| {

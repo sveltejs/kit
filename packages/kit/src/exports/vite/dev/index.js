@@ -19,7 +19,6 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { hash } from '../../../utils/hash.js';
 import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
@@ -269,9 +268,9 @@ export async function dev(vite, vite_config, svelte_config, manifest_cb) {
 				}),
 				prerendered_routes: new Set(),
 				remotes: Object.fromEntries(
-					manifest_data.remotes.map((filename) => [
-						hash(filename),
-						() => vite.ssrLoadModule(filename)
+					manifest_data.remotes.map((remote) => [
+						remote.hash,
+						() => vite.ssrLoadModule(remote.file)
 					])
 				),
 				routes: compact(

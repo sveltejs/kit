@@ -61,3 +61,5 @@ export class ActionFailure {
 		this.data = data;
 	}
 }
+
+export { validate_remote_functions } from './remote-functions.js';

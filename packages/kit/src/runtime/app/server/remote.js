@@ -2,7 +2,7 @@
 /** @import { RemotePrerenderInputsGenerator, RemoteInfo, ServerHooks, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
-import { uneval, parse } from 'devalue';
+import { parse } from 'devalue';
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { getRequestEvent, with_event } from './event.js';
@@ -102,21 +102,20 @@ export function query(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<RemoteQuery<any>>} */
-		const promise = (async () => {
-			if (prerendering) {
-				throw new Error(
-					`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-				);
-			}
-
-			// TODO don't do the additional work when we're being called from the client?
-			const event = getRequestEvent();
-			const result = await get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
-				run_remote_function(event, false, arg, validate, fn)
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 			);
-			return result;
-		})();
+		}
+
+		const event = getRequestEvent();
+
+		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
+		const promise = get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
+			run_remote_function(event, false, arg, validate, fn)
+		);
+
+		promise.catch(() => {});
 
 		promise.refresh = async () => {
 			const event = getRequestEvent();
@@ -253,7 +252,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		/** @type {Partial<RemoteResource<Output>>} */
+		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
 			const event = getRequestEvent();
 			const info = get_remote_info(event);
@@ -264,11 +263,22 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			if (!info.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
 					return await get_response(id, arg, event, async () => {
-						const response = await fetch(event.url.origin + url);
+						// TODO adapters can provide prerendered data more efficiently than
+						// fetching from the public internet
+						const response = await fetch(new URL(url, event.url.origin).href);
+
 						if (!response.ok) {
 							throw new Error('Prerendered response not found');
 						}
+
 						const prerendered = await response.json();
+
+						if (prerendered.type === 'error') {
+							error(prerendered.status, prerendered.error);
+						}
+
+						// TODO can we redirect here?
+
 						info.results[create_remote_cache_key(id, stringified_arg)] = prerendered.result;
 						return parse_remote_response(prerendered.result, info.transport);
 					});
@@ -281,16 +291,15 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (info.prerendering.remote_responses.get(url));
 			}
 
-			const maybe_promise = get_response(id, arg, event, () =>
+			const promise = get_response(id, arg, event, () =>
 				run_remote_function(event, false, arg, validate, fn)
 			);
 
 			if (info.prerendering) {
-				info.prerendering.remote_responses.set(url, Promise.resolve(maybe_promise));
-				Promise.resolve(maybe_promise).catch(() => info.prerendering?.remote_responses.delete(url));
+				info.prerendering.remote_responses.set(url, promise);
 			}
 
-			const result = await maybe_promise;
+			const result = await promise;
 
 			if (info.prerendering) {
 				const body = { type: 'result', result: stringify(result, info.transport) };
@@ -303,6 +312,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			// TODO this is missing error/loading/current/status
 			return result;
 		})();
+
+		promise.catch(() => {});
 
 		return /** @type {RemoteResource<Output>} */ (promise);
 	};
@@ -514,69 +525,74 @@ export function form(fn) {
 
 	/**
 	 * @param {string | number | boolean} [key]
-	 * @param {string} [action]
 	 */
-	function create_instance(key, action = '') {
+	function create_instance(key) {
 		/** @type {RemoteForm<T>} */
-		const wrapper = {};
+		const instance = {};
 
-		wrapper.method = 'POST';
-		wrapper.action = action; // This will be set by generated server code on startup, and for nested instances by the `for` method it is set by the calling parent
-		wrapper.onsubmit = () => {};
+		instance.method = 'POST';
+		instance.onsubmit = () => {};
 
-		Object.defineProperty(wrapper, 'enhance', {
+		Object.defineProperty(instance, 'enhance', {
 			value: () => {
-				return { action: wrapper.action, method: wrapper.method, onsubmit: wrapper.onsubmit };
+				return { action: instance.action, method: instance.method, onsubmit: instance.onsubmit };
 			}
 		});
 
 		const form_action = {
 			type: 'submit',
-			formaction: action,
 			onclick: () => {}
 		};
+
 		Object.defineProperty(form_action, 'enhance', {
 			value: () => {
-				return { type: 'submit', formaction: wrapper.formAction.formaction, onclick: () => {} };
+				return { type: 'submit', formaction: instance.formAction.formaction, onclick: () => {} };
 			}
 		});
-		Object.defineProperty(wrapper, 'formAction', {
+
+		Object.defineProperty(instance, 'formAction', {
 			value: form_action
 		});
 
-		Object.defineProperty(wrapper, '__', {
-			value: /** @type {RemoteInfo} */ ({
-				type: 'form',
-				id: 'unused for forms',
-				// This allows us to deduplicate some logic at the callsites
-				set_action: (action) => {
-					wrapper.action = `?/remote=${encodeURIComponent(action)}`;
-					wrapper.formAction.formaction = `?/remote=${encodeURIComponent(action)}`;
-				},
-				/** @param {FormData} form_data */
-				fn: async (form_data) => {
-					const event = getRequestEvent();
-					const info = get_remote_info(event);
+		/** @type {RemoteInfo} */
+		const __ = {
+			type: 'form',
+			name: '',
+			id: '',
+			/** @param {FormData} form_data */
+			fn: async (form_data) => {
+				const event = getRequestEvent();
+				const info = get_remote_info(event);
 
-					if (!info.refreshes) {
-						info.refreshes = {};
-					}
-
-					const result = await run_remote_function(event, true, form_data, (d) => d, fn);
-
-					// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
-					// where only one form submission is active at the same time
-					if (!event.isRemoteRequest) {
-						uneval_result(wrapper.action, [], event, result);
-						info.form_result = [key, result];
-					}
-
-					return result;
+				if (!info.refreshes) {
+					info.refreshes = {};
 				}
-			})
+
+				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+
+				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
+				// where only one form submission is active at the same time
+				if (!event.isRemoteRequest) {
+					info.form_result = [key, result];
+				}
+
+				return result;
+			}
+		};
+
+		Object.defineProperty(instance, '__', { value: __ });
+
+		Object.defineProperty(instance, 'action', {
+			get: () => `?/remote=${__.id}`,
+			enumerable: true
 		});
 
-		Object.defineProperty(wrapper, 'result', {
+		Object.defineProperty(form_action, 'formaction', {
+			get: () => `?/remote=${__.id}`,
+			enumerable: true
+		});
+
+		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
 					const info = get_remote_info(getRequestEvent());
@@ -587,7 +603,7 @@ export function form(fn) {
 			}
 		});
 
-		Object.defineProperty(wrapper, 'error', {
+		Object.defineProperty(instance, 'error', {
 			get() {
 				// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
 				return /** @type {any} */ (null);
@@ -595,28 +611,26 @@ export function form(fn) {
 		});
 
 		if (key == undefined) {
-			Object.defineProperty(wrapper, 'for', {
+			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					const info = get_remote_info(getRequestEvent());
-					let entry = info.form_instances.get(key);
+					let instance = info.form_instances.get(key);
 
-					if (!entry) {
-						info.form_instances.set(
-							key,
-							(entry = create_instance(
-								key,
-								wrapper.action + encodeURIComponent(`/${JSON.stringify(key)}`)
-							))
-						);
+					if (!instance) {
+						instance = create_instance(key);
+						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.name = __.name;
+
+						info.form_instances.set(key, instance);
 					}
 
-					return entry;
+					return instance;
 				}
 			});
 		}
 
-		return wrapper;
+		return instance;
 	}
 
 	return create_instance();
@@ -674,61 +688,15 @@ function create_validator(validate_or_fn, maybe_fn) {
  * @param {string} id
  * @param {any} arg
  * @param {RequestEvent} event
- * @param {() => T} get_result
- * @returns {T}
+ * @param {() => Promise<T>} get_result
+ * @returns {Promise<T>}
  */
 function get_response(id, arg, event, get_result) {
 	const info = get_remote_info(event);
 
-	// We only want to do this for full page visits where we can safely deduplicate calls (for remote calls we would have
-	// to ensure they come from the same user) and have to stringify the result into the HTML
-	if (event.isRemoteRequest) return get_result();
-
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
 
-	if (!(cache_key in info.results)) {
-		// TODO better error handling when promise rejects?
-		info.results[cache_key] = Promise.resolve(get_result()).catch(() => {
-			delete info.results[cache_key];
-			return /** @type {any} */ (undefined);
-		});
-
-		uneval_result(id, arg, event, info.results[cache_key], cache_key);
-	}
-
-	return /** @type {T} */ (info.results[cache_key]);
-}
-
-/**
- * @param {string} id
- * @param {any} arg
- * @param {RequestEvent} event
- * @param {MaybePromise<any>} result
- * @param {string} [cache_key]
- */
-function uneval_result(id, arg, event, result, cache_key) {
-	const info = get_remote_info(event);
-
-	cache_key ??= create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
-
-	if (!(cache_key in info.unevaled_results)) {
-		const replacer = (/** @type {any} */ thing) => {
-			for (const key in info.transport) {
-				const encoded = info.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${uneval(encoded, replacer)})`;
-				}
-			}
-		};
-
-		// TODO better error handling when promise rejects?
-		info.unevaled_results[cache_key] = Promise.resolve(result)
-			.then((result) => uneval(result, replacer))
-			.catch(() => {
-				delete info.unevaled_results[cache_key];
-				return /** @type {any} */ (undefined);
-			});
-	}
+	return /** @type {Promise<T>} */ (info.results[cache_key] ??= get_result());
 }
 
 /** @param {string} feature */

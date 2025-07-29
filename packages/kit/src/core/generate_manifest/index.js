@@ -8,7 +8,6 @@ import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
 import { find_server_assets } from './find_server_assets.js';
-import { hash } from '../../utils/hash.js';
 import { uneval } from 'devalue';
 
 /**
@@ -102,7 +101,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					${(node_paths).map(loader).join(',\n')}
 				],
 				remotes: {
-					${build_data.manifest_data.remotes.map((filename) => `'${hash(filename)}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, filename).chunk.file))}`).join(',\n\t\t\t\t\t')}
+					${build_data.manifest_data.remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, remote.file).chunk.file))}`).join(',\n')}
 				},
 				routes: [
 					${routes.map(route => {

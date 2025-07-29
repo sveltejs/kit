@@ -32,17 +32,11 @@ import {
 	service_worker,
 	sveltekit_environment,
 	sveltekit_paths,
-	sveltekit_server,
-	sveltekit_remotes
+	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact, conjoin } from '../../utils/array.js';
-import {
-	build_remotes,
-	enhance_remotes,
-	remote_code,
-	treeshake_prerendered_remotes
-} from './build/build_remote.js';
+import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 
 const cwd = process.cwd();
 
@@ -561,10 +555,6 @@ Tips:
 						}
 					`;
 				}
-
-				case sveltekit_remotes: {
-					return remote_code;
-				}
 			}
 		}
 	};
@@ -614,49 +604,64 @@ Tips:
 				return;
 			}
 
-			const hashed_id = hash(posixify(id));
+			const file = posixify(path.relative(cwd, id));
+			const hashed = hash(file);
 
-			// For SSR, use a self-import at dev time and a separate function at build time
-			// to iterate over all exports of the file and add the necessary metadata
 			if (opts?.ssr) {
-				/** using @type {import('types').RemoteInfo} in here */
-				return !dev_server
-					? code
-					: code +
-							dedent`
-						// Auto-generated part, do not edit
-						import * as $$_self_$$ from './${path.basename(id)}';
-						${enhance_remotes(hashed_id, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
-					`;
+				// in dev, add metadata to remote functions by self-importing
+				if (dev_server) {
+					return (
+						code +
+						dedent`
+							import * as $$_self_$$ from './${path.basename(id)}';
+							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
+
+							$$_validate_$$($$_self_$$, ${s(file)});
+
+							for (const [name, fn] of Object.entries($$_self_$$)) {
+								fn.__.id = ${s(hashed)} + '/' + name;
+								fn.__.name = name;
+							}
+						`
+					);
+				}
+
+				// in prod, return as-is, and augment the build result instead.
+				// this allows us to treeshake non-dynamic `prerender` functions
+				return;
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<import('types').RemoteInfo['type'], string[]>} */
+			/** @type {Map<string, import('types').RemoteInfo['type']>} */
 			const remotes = new Map();
 
-			if (remote_exports) {
-				const exports = remote_exports.get(hashed_id);
+			// in dev, load the server module here (which will result in this hook
+			// being called again with `opts.ssr === true` if the module isn't
+			// already loaded) so we can determine what it exports
+			if (dev_server) {
+				const module = await dev_server.ssrLoadModule(id);
+
+				for (const [name, value] of Object.entries(module)) {
+					const type = value?.__?.type;
+					if (type) {
+						remotes.set(name, type);
+					}
+				}
+			}
+
+			// in prod, we already built and analysed the server code before
+			// building the client code, so `remote_exports` is populated
+			else if (remote_exports) {
+				const exports = remote_exports.get(hashed);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
-					remotes.set(name, value);
+					remotes.set(name, value.type);
 				}
-			} else if (dev_server) {
-				const modules = await dev_server.ssrLoadModule(id);
-				for (const [name, value] of Object.entries(modules)) {
-					const type = value?.__?.type;
-					if (type) {
-						remotes.set(type, (remotes.get(type) ?? []).concat(name));
-					}
-				}
-			} else {
-				throw new Error(
-					'plugin-remote error: Expected one of dev_server and remote_exports to be available'
-				);
 			}
 
-			if (!manifest_data.remotes.includes(id)) {
+			if (!manifest_data.remotes.some((remote) => remote.hash === hashed)) {
 				const relative_path = path.relative(dev_server.config.root, id);
 				const fn_names = [...remotes.values()].flat().map((name) => `"${name}"`);
 				const has_multiple = fn_names.length !== 1;
@@ -674,33 +679,16 @@ Tips:
 				);
 			}
 
-			const exports = [];
-			const specifiers = [];
+			let namespace = '__remote';
+			let uid = 1;
+			while (remotes.has(namespace)) namespace = `__remote${uid++}`;
 
-			for (const [type, _exports] of remotes) {
-				const result = exports_and_fn(type, _exports);
-				exports.push(...result.exports);
-				specifiers.push(result.specifier);
-			}
-
-			/**
-			 * @param {string} remote_import
-			 * @param {string[]} names
-			 */
-			function exports_and_fn(remote_import, names) {
-				// belt and braces — guard against an existing `export function query/command/prerender/cache/form() {...}`
-				let n = 1;
-				let fn = remote_import;
-				while (names.includes(fn)) fn = `${fn}$${n++}`;
-
-				const exports = names.map((n) => `export const ${n} = ${fn}('${hashed_id}/${n}');`);
-				const specifier = fn === remote_import ? fn : `${fn} as ${fn}`;
-
-				return { exports, specifier };
-			}
+			const exports = Array.from(remotes).map(([name, type]) => {
+				return `export const ${name} = ${namespace}.${type}('${hashed}/${name}');`;
+			});
 
 			return {
-				code: `import { ${specifiers.join(', ')} } from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
 		}
 	};
@@ -761,8 +749,8 @@ Tips:
 					});
 
 					// ...and every .remote file
-					for (const filename of manifest_data.remotes) {
-						input[`remote/${hash(filename)}`] = filename;
+					for (const remote of manifest_data.remotes) {
+						input[`remote/${remote.hash}`] = remote.file;
 					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
@@ -1120,7 +1108,7 @@ Tips:
 				);
 
 				// ...make sure remote exports have their IDs assigned...
-				build_remotes(out, (id) => normalize_id(id, normalized_lib, normalized_cwd), manifest_data);
+				build_remotes(out, manifest_data);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
@@ -1144,7 +1132,7 @@ Tips:
 				);
 
 				// remove prerendered remote functions
-				await treeshake_prerendered_remotes(out);
+				await treeshake_prerendered_remotes(out, manifest_data, metadata);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {
