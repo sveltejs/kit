@@ -40,10 +40,6 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 		const remote_file = posixify(path.join(`${out}/server/remote`, remote.hash + '.js'));
 
 		if (prerendered.length > 0) {
-			const temp_out_dir = path.join(out, 'server', 'remote-temp');
-			const tmp_file = posixify(path.join(out, 'server/remote/tmp.js'));
-			mkdirp(temp_out_dir);
-
 			fs.writeFileSync(
 				remote_file,
 				dedent`
@@ -61,11 +57,12 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 				`
 			);
 
-			await vite.build({
+			const prefix = 'optimized/';
+
+			const bundle = await vite.build({
 				configFile: false,
 				build: {
 					ssr: true,
-					outDir: temp_out_dir,
 					rollupOptions: {
 						external: (id) => {
 							return (
@@ -76,16 +73,20 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 							);
 						},
 						input: {
-							[`remote/${remote.hash}`]: remote_file,
+							[prefix + remote.hash]: remote_file,
 							[path.basename(remote_entry.slice(0, -3))]: remote_entry
 						}
 					}
 				}
 			});
 
-			fs.copyFileSync(path.join(temp_out_dir, 'remote', remote.hash + '.js'), remote_file);
-			rimraf(temp_out_dir);
-			rimraf(tmp_file);
+			// @ts-expect-error TypeScript doesn't know what type `bundle` is
+			for (const chunk of bundle.output) {
+				if (chunk.name.startsWith(prefix)) {
+					fs.writeFileSync(remote_file, chunk.code);
+				}
+			}
+
 			rimraf(path.join(out, 'server', 'remote', `__sibling__.${remote.hash}.js`));
 		}
 	}
