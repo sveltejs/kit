@@ -1,7 +1,6 @@
 /** @import { ManifestData, ServerMetadata } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { mkdirp, posixify, rimraf } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
@@ -25,30 +24,40 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
 
 	for (const remote of manifest_data.remotes) {
-		const remote_file = posixify(path.join(`${out}/server/remote`, remote.hash + '.js'));
-		const remote_module = await import(pathToFileURL(remote_file).href);
-		const prerendered_exports = Object.entries(remote_module)
-			.filter(([, _export]) => !(_export?.__?.type === 'prerender' && !_export.__.dynamic))
-			.map(([name]) => name);
-		const dynamic_exports = Object.keys(remote_module).filter(
-			(name) => !prerendered_exports.includes(name)
-		);
+		const exports = metadata.remotes.get(remote.hash);
+		if (!exports) throw new Error('An impossible situation occurred');
 
-		if (dynamic_exports.length > 0) {
+		/** @type {string[]} */
+		const dynamic = [];
+
+		/** @type {string[]} */
+		const prerendered = [];
+
+		for (const [name, value] of exports) {
+			(value.dynamic ? dynamic : prerendered).push(name);
+		}
+
+		const remote_file = posixify(path.join(`${out}/server/remote`, remote.hash + '.js'));
+
+		if (prerendered.length > 0) {
 			const temp_out_dir = path.join(out, 'server', 'remote-temp');
 			const tmp_file = posixify(path.join(out, 'server/remote/tmp.js'));
 			mkdirp(temp_out_dir);
+
 			fs.writeFileSync(
 				remote_file,
 				dedent`
-					import {${prerendered_exports.join(',')}} from './__sibling__.${remote.hash}.js';
+					import { ${dynamic.join(', ')} } from './__sibling__.${remote.hash}.js';
 					import { prerender } from '../${path.basename(remote_entry)}';
-					${dynamic_exports.map((name) => `const ${name} = prerender('unchecked', () => {throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?')});`).join('\n')}
-					for (const [name, fn] of Object.entries({${Object.keys(remote_module).join(',')}})) {
+
+					${prerendered.map((name) => `export const ${name} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`).join('\n')}
+
+					for (const [name, fn] of Object.entries({ ${Array.from(exports.keys()).join(', ')} })) {
 						fn.__.id = '${remote.hash}/' + name;
 						fn.__.name = name;
 					}
-					export {${Object.keys(remote_module).join(',')}};
+
+					export { ${dynamic.join(', ')} };
 				`
 			);
 
