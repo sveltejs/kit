@@ -6,6 +6,39 @@ import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
 
 /**
+ * Moves the remote files to a sibling file and rewrites the original remote file to import from that sibling file,
+ * enhancing the remote functions with their hashed ID.
+ * This is not done through a self-import like during DEV because we want to treeshake prerendered remote functions
+ * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
+ * @param {string} out
+ * @param {ManifestData} manifest_data
+ */
+export function build_remotes(out, manifest_data) {
+	const dir = `${out}/server/remote`;
+
+	for (const remote of manifest_data.remotes) {
+		const entry = `${dir}/${remote.hash}.js`;
+		const tmp = `${remote.hash}.tmp.js`;
+
+		fs.renameSync(entry, `${dir}/${tmp}`);
+		fs.writeFileSync(
+			entry,
+			dedent`
+				import * as $$_self_$$ from './${tmp}';
+
+				for (const [name, fn] of Object.entries($$_self_$$)) {
+					fn.__.id = '${remote.hash}/' + name;
+					fn.__.name = name;
+				}
+
+				export * from './${tmp}';
+			`
+		);
+	}
+}
+
+
+/**
  * For each remote module, checks if there are treeshakeable prerendered remote functions,
  * then accomplishes the treeshaking by rewriting the remote files to only include the non-prerendered imports,
  * replacing the prerendered remote functions with a dummy function that should never be called,
@@ -92,37 +125,5 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 
 	for (const remote of manifest_data.remotes) {
 		fs.unlinkSync(`${dir}/${remote.hash}.tmp.js`);
-	}
-}
-
-/**
- * Moves the remote files to a sibling file and rewrites the original remote file to import from that sibling file,
- * enhancing the remote functions with their hashed ID.
- * This is not done through a self-import like during DEV because we want to treeshake prerendered remote functions
- * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
- * @param {string} out
- * @param {ManifestData} manifest_data
- */
-export function build_remotes(out, manifest_data) {
-	const dir = `${out}/server/remote`;
-
-	for (const remote of manifest_data.remotes) {
-		const entry = `${dir}/${remote.hash}.js`;
-		const tmp = `${remote.hash}.tmp.js`;
-
-		fs.renameSync(entry, `${dir}/${tmp}`);
-		fs.writeFileSync(
-			entry,
-			dedent`
-				import * as $$_self_$$ from './${tmp}';
-
-				for (const [name, fn] of Object.entries($$_self_$$)) {
-					fn.__.id = '${remote.hash}/' + name;
-					fn.__.name = name;
-				}
-
-				export * from './${tmp}';
-			`
-		);
 	}
 }
