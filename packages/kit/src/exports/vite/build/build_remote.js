@@ -28,6 +28,8 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 	const prefix = 'optimized/';
 
 	const input = {
+		// include this file in the bundle, so that Rollup understands
+		// that functions like `prerender` are side-effect free
 		[path.basename(remote_entry.slice(0, -3))]: remote_entry
 	};
 
