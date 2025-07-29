@@ -38,7 +38,9 @@ export function build_remotes(out, manifest_data) {
 		);
 	}
 
-	console.error('files', fs.readdirSync(dir));
+	if (fs.existsSync(dir)) {
+		console.error('files', fs.readdirSync(dir));
+	}
 }
 
 
