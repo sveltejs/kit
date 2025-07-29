@@ -1,6 +1,5 @@
 /** @import { Transport } from '@sveltejs/kit' */
-
-import { stringify as _stringify, parse } from 'devalue';
+import * as devalue from 'devalue';
 
 /**
  * @param {string} route_id
@@ -29,7 +28,7 @@ export function stringify(data, transport) {
 		Object.entries(transport).map(([key, value]) => [key, value.encode])
 	);
 
-	return _stringify(data, encoders);
+	return devalue.stringify(data, encoders);
 }
 
 /**
@@ -68,7 +67,7 @@ export function parse_remote_args(stringified_arg, transport) {
 	const utf8_bytes = new Uint8Array([...binary_string].map((char) => char.charCodeAt(0)));
 	const json_string = new TextDecoder().decode(utf8_bytes);
 
-	return parse(json_string, decoders);
+	return devalue.parse(json_string, decoders);
 }
 
 /**
