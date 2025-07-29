@@ -28,6 +28,8 @@ export function build_remotes(out, manifest_data) {
 			dedent`
 				import * as $$_self_$$ from './${tmp}';
 
+				console.error('initing', import.meta.url);
+
 				for (const [name, fn] of Object.entries($$_self_$$)) {
 					fn.__.id = '${remote.hash}/' + name;
 					fn.__.name = name;
@@ -38,14 +40,6 @@ export function build_remotes(out, manifest_data) {
 				export * from './${tmp}';
 			`
 		);
-	}
-
-	if (fs.existsSync(dir)) {
-		for (const file of fs.readdirSync(dir)) {
-			console.error(file);
-			console.error(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
-			console.error('\n\n');
-		}
 	}
 }
 
