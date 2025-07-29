@@ -1,7 +1,7 @@
 /** @import { ManifestData, ServerMetadata } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { mkdirp, posixify, rimraf } from '../../../utils/filesystem.js';
+import { posixify, rimraf } from '../../../utils/filesystem.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { import_peer } from '../../../utils/import.js';
 
