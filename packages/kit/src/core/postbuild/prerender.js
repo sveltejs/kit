@@ -291,6 +291,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			const category = decoded_dependency_path.startsWith(remote_prefix) ? 'data' : 'dependencies';
 
+			// TODO remove this, am just trying to debug some windows nonsense
+			if (decoded_dependency_path === '/_app/remote/') {
+				console.error({
+					decoded,
+					encoded,
+					decoded_dependency_path,
+					encoded_dependency_path
+				});
+			}
+
 			save(
 				category,
 				result.response,
