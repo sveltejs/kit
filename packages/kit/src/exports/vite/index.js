@@ -617,53 +617,64 @@ Tips:
 			const file = posixify(path.relative(cwd, id));
 			const hashed = hash(file);
 
-			// For SSR, use a self-import at dev time and a separate function at build time
-			// to iterate over all exports of the file and add the necessary metadata
 			if (opts?.ssr) {
-				/** using @type {import('types').RemoteInfo} in here */
-				return !dev_server
-					? code
-					: code +
-							dedent`
-						// Auto-generated part, do not edit
-						import * as $$_self_$$ from './${path.basename(id)}';
-						${enhance_remotes(hashed, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
-					`;
+				// in dev, add metadata to remote functions by self-importing
+				if (dev_server) {
+					return (
+						code +
+						dedent`
+							// Auto-generated part, do not edit
+							import * as $$_self_$$ from './${path.basename(id)}';
+							${enhance_remotes(hashed, '__sveltekit/remotes', normalize_id(id, normalized_lib, normalized_cwd))}
+						`
+					);
+				}
+
+				// in prod, return as-is, and augment the build result instead.
+				// this allows us to treeshake non-dynamic `prerender` functions
+				return;
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, { type: import('types').RemoteInfo['type'], dynamic: boolean }>} */
+			/** @type {Map<string, import('types').RemoteInfo['type']>} */
 			const remotes = new Map();
 
-			if (remote_exports) {
-				const exports = remote_exports.get(hashed);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
-
-				for (const [name, value] of exports) {
-					remotes.set(name, value);
-				}
-			} else if (dev_server) {
+			// in dev, load the server module here (which will result in this hook
+			// being called again with `opts.ssr === true` if the module isn't
+			// already loaded) so we can determine what it exports
+			if (dev_server) {
 				const module = await dev_server.ssrLoadModule(id);
 
 				for (const [name, value] of Object.entries(module)) {
 					const type = value?.__?.type;
 					if (type) {
-						remotes.set(name, { type, dynamic: true });
+						remotes.set(name, type);
 					}
 				}
-			} else {
-				throw new Error(
-					'plugin-remote error: Expected one of dev_server and remote_exports to be available'
-				);
 			}
 
-			const exports = Array.from(remotes).map(([name, { type }]) => {
-				return `export const ${name} = __remote.${type}('${hashed}/${name}');`;
+			// in prod, we already built and analysed the server code before
+			// building the client code, so `remote_exports` is populated
+			else if (remote_exports) {
+				const exports = remote_exports.get(hashed);
+				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+
+				for (const [name, value] of exports) {
+					remotes.set(name, value.type);
+				}
+			}
+
+			let namespace = '__remote';
+			let uid = 1;
+			while (remotes.has(namespace)) namespace = `__remote${uid++}`;
+
+			const exports = Array.from(remotes).map(([name, type]) => {
+				return `export const ${name} = ${namespace}.${type}('${hashed}/${name}');`;
 			});
 
 			return {
-				code: `import * as __remote from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
 		}
 	};
