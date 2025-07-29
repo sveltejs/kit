@@ -388,7 +388,7 @@ export async function render_response({
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
-			const serialized = { form: 'null', error: 'null' };
+			const serialized = { form: 'null', error: 'null', remote: 'null' };
 
 			if (form_value) {
 				serialized.form = uneval_action_response(
@@ -402,18 +402,34 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
+			const remote_info = get_remote_info(event, true);
+
+			if (remote_info) {
+				/** @type {Record<string, any>} */
+				const remote = {};
+
+				for (const [key, promise] of Object.entries(remote_info?.results ?? {})) {
+					remote[key] = await promise;
+				}
+
+				const replacer = (/** @type {any} */ thing) => {
+					for (const key in options.hooks.transport) {
+						const encoded = options.hooks.transport[key].encode(thing);
+						if (encoded) {
+							return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+						}
+					}
+				};
+
+				serialized.remote = devalue.uneval(remote, replacer);
+			}
+
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`,
-				`remote: {${(
-					await Promise.all(
-						Object.entries(get_remote_info(event, true)?.unevaled_results || {}).map(
-							async ([key, value]) => `"${key}": ${await value}`
-						)
-					)
-				).join(', ')}}`
+				`remote: ${serialized.remote}`
 			];
 
 			if (status !== 200) {

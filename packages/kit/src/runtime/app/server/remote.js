@@ -571,7 +571,6 @@ export function form(fn) {
 					// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 					// where only one form submission is active at the same time
 					if (!event.isRemoteRequest) {
-						uneval_result(wrapper.action, [], event, result);
 						info.form_result = [key, result];
 					}
 
@@ -696,43 +695,9 @@ function get_response(id, arg, event, get_result) {
 			delete info.results[cache_key];
 			return /** @type {any} */ (undefined);
 		});
-
-		uneval_result(id, arg, event, info.results[cache_key], cache_key);
 	}
 
 	return /** @type {T} */ (info.results[cache_key]);
-}
-
-/**
- * @param {string} id
- * @param {any} arg
- * @param {RequestEvent} event
- * @param {MaybePromise<any>} result
- * @param {string} [cache_key]
- */
-function uneval_result(id, arg, event, result, cache_key) {
-	const info = get_remote_info(event);
-
-	cache_key ??= create_remote_cache_key(id, stringify_remote_arg(arg, info.transport));
-
-	if (!(cache_key in info.unevaled_results)) {
-		const replacer = (/** @type {any} */ thing) => {
-			for (const key in info.transport) {
-				const encoded = info.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${uneval(encoded, replacer)})`;
-				}
-			}
-		};
-
-		// TODO better error handling when promise rejects?
-		info.unevaled_results[cache_key] = Promise.resolve(result)
-			.then((result) => uneval(result, replacer))
-			.catch(() => {
-				delete info.unevaled_results[cache_key];
-				return /** @type {any} */ (undefined);
-			});
-	}
 }
 
 /** @param {string} feature */
