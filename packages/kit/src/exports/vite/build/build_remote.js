@@ -31,6 +31,8 @@ export function build_remotes(out, manifest_data) {
 				for (const [name, fn] of Object.entries($$_self_$$)) {
 					fn.__.id = '${remote.hash}/' + name;
 					fn.__.name = name;
+
+					console.error(fn.__);
 				}
 
 				export * from './${tmp}';
