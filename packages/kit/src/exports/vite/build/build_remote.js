@@ -16,8 +16,6 @@ import { import_peer } from '../../../utils/import.js';
 export function build_remotes(out, manifest_data) {
 	const dir = `${out}/server/remote`;
 
-	console.error('build_remotes', { dir });
-
 	for (const remote of manifest_data.remotes) {
 		const entry = `${dir}/${remote.hash}.js`;
 		const tmp = `${remote.hash}.tmp.js`;
@@ -28,13 +26,9 @@ export function build_remotes(out, manifest_data) {
 			dedent`
 				import * as $$_self_$$ from './${tmp}';
 
-				console.error('initing', import.meta.url);
-
 				for (const [name, fn] of Object.entries($$_self_$$)) {
 					fn.__.id = '${remote.hash}/' + name;
 					fn.__.name = name;
-
-					console.error(fn.__);
 				}
 
 				export * from './${tmp}';
@@ -59,7 +53,7 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 		return;
 	}
 
-	const dir = `${out}/server/remote`;
+	const dir = posixify(`${out}/server/remote`);
 
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 	const remote_entry = posixify(`${out}/server/remote-entry.js`);
@@ -107,8 +101,6 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 
 		input[prefix + remote.hash] = remote_file;
 	}
-
-	console.error(input);
 
 	const bundle = await vite.build({
 		configFile: false,

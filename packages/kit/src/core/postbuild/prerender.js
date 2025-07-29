@@ -482,14 +482,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Array<Function & { __: import('types').RemoteInfo & { type: 'prerender'}}>} */
 	const remote_functions = [];
 
-	console.error('in prerender.js >>>');
-	for (const key in manifest._.remotes) {
-		console.error({ key });
-		const loader = manifest._.remotes[key];
-		await loader();
-	}
-	console.error('<<<');
-
 	for (const remote of Object.values(manifest._.remotes)) {
 		const functions = Object.values(await remote()).filter(
 			(value) =>
