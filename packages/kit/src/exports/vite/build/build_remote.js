@@ -92,11 +92,6 @@ export async function treeshake_prerendered_remotes(out) {
 export const remote_code = dedent`
 	export default function enhance_remote_functions(exports, hashed_id, original_filename) {
 		for (const key in exports) {
-			if (key === 'default') {
-				throw new Error(
-					'Cannot export \`default\` from a remote module (' + original_filename + ') — please use named exports instead'
-				);
-			}
 			const fn = exports[key];
 			if (fn?.__?.type === 'form') {
 				fn.__.set_action(hashed_id + '/' + key);
@@ -106,8 +101,6 @@ export const remote_code = dedent`
 				fn.__.name = key;
 			} else if (fn?.__?.type === 'command') {
 				fn.__.name = key;
-			} else {
-				throw new Error('\`' + key + '\` exported from ' + original_filename + ' is invalid — all exports from this file must be remote functions');
 			}
 		}
 	}
@@ -119,42 +112,33 @@ export const remote_code = dedent`
  * This is not done through a self-import like during DEV because we want to treeshake prerendered remote functions
  * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
  * @param {string} out
- * @param {(path: string) => string} normalize_id
  * @param {import('types').ManifestData} manifest_data
  */
-export function build_remotes(out, normalize_id, manifest_data) {
-	const remote_dir = path.join(out, 'server', 'remote');
-
-	if (!fs.existsSync(remote_dir)) return
-
-	// Create a mapping from hashed ID to original filename
-	const hash_to_original = new Map();
-	for (const remote of manifest_data.remotes) {
-		hash_to_original.set(remote.hash, remote.file);
+export function build_remotes(out, manifest_data) {
+	if (manifest_data.remotes.length === 0) {
+		return;
 	}
 
-	for (const remote_file_name of fs.readdirSync(remote_dir)) {
-		const remote_file_path = path.join(remote_dir, remote_file_name);
-		const sibling_file_name = `__sibling__.${remote_file_name}`;
-		const sibling_file_path = path.join(remote_dir, sibling_file_name);
-		const hashed_id = remote_file_name.slice(0, -3); // remove .js extension
-		const original_filename = normalize_id(hash_to_original.get(hashed_id) || remote_file_name);
-		const file_content = fs.readFileSync(remote_file_path, 'utf-8');
+	const dir = `${out}/server/remote`;
 
-		fs.writeFileSync(sibling_file_path, file_content);
+	for (const remote of manifest_data.remotes) {
+		const entry = `${dir}/${remote.hash}.js`;
+		const sibling_file_name = `__sibling__.${remote.hash}.js`;
+
+		fs.renameSync(entry, `${dir}/${sibling_file_name}`);
 		fs.writeFileSync(
-			remote_file_path,
+			entry,
 			// We can't use __sveltekit/remotes here because it runs after the build where aliases would be resolved
 			dedent`
 				import * as $$_self_$$ from './${sibling_file_name}';
-				${enhance_remotes(hashed_id, './__sveltekit__remote.js', original_filename)}
+				${enhance_remotes(remote.hash, './__sveltekit__remote.js', remote.file)}
 				export * from './${sibling_file_name}';
 			`
 		);
 	}
 
 	fs.writeFileSync(
-		path.join(remote_dir, '__sveltekit__remote.js'),
+		`${dir}/__sveltekit__remote.js`,
 		remote_code,
 		'utf-8'
 	);

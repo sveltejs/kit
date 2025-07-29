@@ -43,6 +43,7 @@ import {
 	remote_code,
 	treeshake_prerendered_remotes
 } from './build/build_remote.js';
+import { validate_remote_functions } from '../internal/remote-functions.js';
 
 const cwd = process.cwd();
 
@@ -646,6 +647,8 @@ Tips:
 			if (dev_server) {
 				const module = await dev_server.ssrLoadModule(id);
 
+				validate_remote_functions(module, file);
+
 				for (const [name, value] of Object.entries(module)) {
 					const type = value?.__?.type;
 					if (type) {
@@ -1092,7 +1095,7 @@ Tips:
 				);
 
 				// ...make sure remote exports have their IDs assigned...
-				build_remotes(out, (id) => normalize_id(id, normalized_lib, normalized_cwd), manifest_data);
+				build_remotes(out, manifest_data);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
