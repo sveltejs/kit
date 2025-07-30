@@ -432,7 +432,7 @@ export function query(id) {
 				}
 			}
 
-			const url = `/${app_dir}/remote/${id}${payload ? `?args=${payload}` : ''}`;
+			const url = `/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			return await remote_request(url);
 		});
@@ -513,7 +513,7 @@ export function command(id) {
 			const response = await fetch(`/${app_dir}/remote/${id}`, {
 				method: 'POST',
 				body: JSON.stringify({
-					args: stringify_remote_arg(arg, app.hooks.transport),
+					payload: stringify_remote_arg(arg, app.hooks.transport),
 					refreshes: updates.map((u) => u._key)
 				}),
 				headers: {

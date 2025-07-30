@@ -73,8 +73,8 @@ export async function handle_remote_call(event, options, manifest, id) {
 		}
 
 		if (info.type === 'command') {
-			/** @type {{ args: string, refreshes: string[] }} */
-			const { args: payload, refreshes } = await event.request.json();
+			/** @type {{ payload: string, refreshes: string[] }} */
+			const { payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
 			const data = await with_event(event, () => fn(arg));
 			const refreshed = await apply_client_refreshes(refreshes);
@@ -93,7 +93,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 				? prerender_args
 				: /** @type {string} */ (
 						// new URL(...) necessary because we're hiding the URL from the user in the event object
-						new URL(event.request.url).searchParams.get('args')
+						new URL(event.request.url).searchParams.get('payload')
 					);
 
 		const data = await with_event(event, () => fn(parse_remote_arg(payload, transport)));
