@@ -12,39 +12,51 @@ import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.j
  * @returns {(arg?: any) => MaybePromise<any>}
  */
 export function create_validator(validate_or_fn, maybe_fn) {
+	// prevent functions without validators being called with arguments
 	if (!maybe_fn) {
-		return (arg) => {
-			if (arg !== undefined) {
+		return (...args) => {
+			if (args.length > 0) {
 				error(400, 'Bad Request');
 			}
 		};
-	} else if (validate_or_fn === 'unchecked') {
-		return (arg) => arg; // no validation
-	} else if ('~standard' in validate_or_fn) {
+	}
+
+	// if 'unchecked', pass input through without validating
+	if (validate_or_fn === 'unchecked') {
+		return (arg) => arg;
+	}
+
+	// use https://standardschema.dev validator if provided
+	if ('~standard' in validate_or_fn) {
 		return async (arg) => {
-			// Get event before asyn validation to ensure it's available in server environments without async local storage, too
+			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const event = getRequestEvent();
-			const remoteInfo = get_remote_info(event);
-			const result = await validate_or_fn['~standard'].validate(arg);
+			const info = get_remote_info(event);
+			const validate = validate_or_fn['~standard'].validate;
+
+			const result = await validate(arg);
+
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
 				error(
 					400,
-					await remoteInfo.handleValidationError({
+					await info.handleValidationError({
 						...result,
 						event
 					})
 				);
 			}
+
 			return result.value;
 		};
-	} else {
-		return () => {
-			throw new Error(
-				'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
-			);
-		};
 	}
+
+	// TODO should this error eagerly?
+	return () => {
+		throw new Error(
+			'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
+		);
+	};
 }
 
 /**
