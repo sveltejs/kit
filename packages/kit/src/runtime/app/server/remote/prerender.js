@@ -16,24 +16,9 @@ import {
 import { get_event_state } from '../../../server/event-state.js';
 
 /**
- * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = prerender(() => blogPosts.getAll());
- * ```
- *
- * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
- * ```ts
- * import z from 'zod';
- * import { blogPosts } from '$lib/server/db';
- *
- * export const blogPost = prerender(
- *  z.string(),
- * 	(id) => blogPosts.get(id),
- * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
- * );
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  *
  * @template Output
  * @overload
@@ -42,23 +27,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemotePrerenderFunction<void, Output>}
  */
 /**
- * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = prerender(() => blogPosts.getAll());
- * ```
- *
- * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export const blogPost = prerender(
- *  'unchecked',
- * 	(id: string) => blogPosts.get(id),
- * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
- * );
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  *
  * @template Input
  * @template Output
@@ -69,24 +40,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemotePrerenderFunction<Input, Output>}
  */
 /**
- * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = prerender(() => blogPosts.getAll());
- * ```
- *
- * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
- * ```ts
- * import z from 'zod';
- * import { blogPosts } from '$lib/server/db';
- *
- * export const blogPost = prerender(
- *  z.string(),
- * 	(id) => blogPosts.get(id),
- * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
- * );
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  *
  * @template {StandardSchemaV1} Schema
  * @template Output

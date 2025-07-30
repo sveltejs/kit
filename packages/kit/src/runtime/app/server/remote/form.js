@@ -6,35 +6,8 @@ import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
- * The callback runs with the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) when the form is submitted.
  *
- * ```ts
- * import { redirect } from '@sveltejs/kit';
- * import { form } from '$app/server';
- * import * as auth from '$lib/server/auth';
- * import * as db from '$lib/server/db';
- *
- * export const createPost = form(async (data) => {
- * 	const title = data.get('title');
- * 	const content = data.get('content');
- *
- * 	const user = await auth.getUser(); // get user from cookies, or throw an error
- * 	const post = await db.createPost({ user, title, content });
- *
- * 	redirect(303, `/blog/${post.slug}`);
- * });
- * ```
- * ```svelte
- * <script>
- * 	import { createPost } from './blog.remote.js';
- * </script>
- *
- * <form {...createPost}>
- * 	<input type="text" name="title" />
- * 	<textarea name="content" />
- * 	<button type="submit">Create</button>
- * </form>
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
  * @template T
  * @param {(data: FormData) => MaybePromise<T>} fn

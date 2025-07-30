@@ -6,33 +6,9 @@ import { check_experimental, create_validator, run_remote_function } from './sha
 import { get_event_state } from '../../../server/event-state.js';
 
 /**
- * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export interface BlogPost {
- * 	id: string;
- * 	title: string;
- * 	content: string;
- * }
- *
- * export const like = command((postId: string) => {
- * 	blogPosts.get(postId).like();
- * });
- * ```
- *
- * ```svelte
- * <script lang="ts">
- * 	import { like } from './blog.remote.js';
- *
- * 	let post: BlogPost = $props();
- * </script>
- *
- * <h1>{post.title}</h1>
- * <p>{post.content}</p>
- * <button onclick={() => like(post.id)}>♡</button>
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  *
  * @template Output
  * @overload
@@ -40,33 +16,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemoteCommand<void, Output>}
  */
 /**
- * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export interface BlogPost {
- * 	id: string;
- * 	title: string;
- * 	content: string;
- * }
- *
- * export const like = command((postId: string) => {
- * 	blogPosts.get(postId).like();
- * });
- * ```
- *
- * ```svelte
- * <script lang="ts">
- * 	import { like } from './blog.remote.js';
- *
- * 	let post: BlogPost = $props();
- * </script>
- *
- * <h1>{post.title}</h1>
- * <p>{post.content}</p>
- * <button onclick={() => like(post.id)}>♡</button>
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  *
  * @template Input
  * @template Output
@@ -76,33 +28,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemoteCommand<Input, Output>}
  */
 /**
- * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+ * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * ```ts
- * import { blogPosts } from '$lib/server/db';
- *
- * export interface BlogPost {
- * 	id: string;
- * 	title: string;
- * 	content: string;
- * }
- *
- * export const like = command((postId: string) => {
- * 	blogPosts.get(postId).like();
- * });
- * ```
- *
- * ```svelte
- * <script lang="ts">
- * 	import { like } from './blog.remote.js';
- *
- * 	let post: BlogPost = $props();
- * </script>
- *
- * <h1>{post.title}</h1>
- * <p>{post.content}</p>
- * <button onclick={() => like(post.id)}>♡</button>
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  *
  * @template {StandardSchemaV1} Schema
  * @template Output

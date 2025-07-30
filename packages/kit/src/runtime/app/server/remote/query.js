@@ -13,22 +13,9 @@ import {
 import { get_event_state } from '../../../server/event-state.js';
 
 /**
- * Creates a remote function that can be invoked like a regular function within components.
- * The given function is invoked directly on the backend and via a fetch call on the client.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = query(() => blogPosts.getAll());
- * ```
- * ```svelte
- * <script>
- *   import { blogPosts } from './blog.remote.js';
- * </script>
- *
- * {#await blogPosts() then posts}
- *   <!-- ... -->
- * {/await}
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
  *
  * @template Output
  * @overload
@@ -36,22 +23,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemoteQueryFunction<void, Output>}
  */
 /**
- * Creates a remote function that can be invoked like a regular function within components.
- * The given function is invoked directly on the backend and via a fetch call on the client.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = query(() => blogPosts.getAll());
- * ```
- * ```svelte
- * <script>
- *   import { blogPosts } from './blog.remote.js';
- * </script>
- *
- * {#await blogPosts() then posts}
- *   <!-- ... -->
- * {/await}
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
  *
  * @template Input
  * @template Output
@@ -61,22 +35,9 @@ import { get_event_state } from '../../../server/event-state.js';
  * @returns {RemoteQueryFunction<Input, Output>}
  */
 /**
- * Creates a remote function that can be invoked like a regular function within components.
- * The given function is invoked directly on the backend and via a fetch call on the client.
- * ```ts
- * import { blogPosts } from '$lib/server/db';
+ * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
  *
- * export const blogPosts = query(() => blogPosts.getAll());
- * ```
- * ```svelte
- * <script>
- *   import { blogPosts } from './blog.remote.js';
- * </script>
- *
- * {#await blogPosts() then posts}
- *   <!-- ... -->
- * {/await}
- * ```
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
  *
  * @template {StandardSchemaV1} Schema
  * @template Output
