@@ -4,6 +4,7 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
+import { isHttpError } from '@sveltejs/kit';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
 import { create_remote_cache_key } from '../../shared.js';
@@ -127,15 +128,6 @@ export function form(id) {
 		instance.method = 'POST';
 		instance.action = action;
 
-		/** @param {() => Promise<void>} submit */
-		function default_submit(submit) {
-			submit().catch((e) => {
-				const error = e instanceof HttpError ? e.body : { message: e.message };
-				const status = e instanceof HttpError ? e.status : 500;
-				void set_nearest_error_page(error, status);
-			});
-		}
-
 		/**
 		 * @param {HTMLFormElement} form_element
 		 * @param {HTMLElement | null} submitter
@@ -169,7 +161,7 @@ export function form(id) {
 		/** @param {Parameters<RemoteForm<any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
-			return (event) => {
+			return async (event) => {
 				const form = /** @type {HTMLFormElement} */ (event.target);
 				const method = event.submitter?.hasAttribute('formmethod')
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
@@ -192,20 +184,27 @@ export function form(id) {
 
 				const data = create_form_data(form, event.submitter);
 
-				callback({
-					form,
-					data,
-					submit: () => submit(data)
-				});
+				try {
+					await callback({
+						form,
+						data,
+						submit: () => submit(data)
+					});
+				} catch (e) {
+					const error =
+						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
+					const status = e instanceof HttpError ? e.status : 500;
+					void set_nearest_error_page(error, status);
+				}
 			};
 		};
 
-		instance.onsubmit = form_onsubmit(({ submit }) => default_submit(submit));
+		instance.onsubmit = form_onsubmit(({ submit }) => submit());
 
 		/** @param {Parameters<RemoteForm<any>['formAction']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
-			return (event) => {
+			return async (event) => {
 				const target = /** @type {HTMLButtonElement} */ (event.target);
 				const form = target.form;
 				if (!form) return;
@@ -216,11 +215,18 @@ export function form(id) {
 
 				const data = create_form_data(form, target);
 
-				callback({
-					form,
-					data,
-					submit: () => submit(data)
-				});
+				try {
+					await callback({
+						form,
+						data,
+						submit: () => submit(data)
+					});
+				} catch (e) {
+					const error =
+						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
+					const status = e instanceof HttpError ? e.status : 500;
+					void set_nearest_error_page(error, status);
+				}
 			};
 		};
 
@@ -229,7 +235,7 @@ export function form(id) {
 		const form_action = {
 			type: 'submit',
 			formaction: action,
-			onclick: form_action_onclick(({ submit }) => default_submit(submit))
+			onclick: form_action_onclick(({ submit }) => submit())
 		};
 
 		Object.defineProperty(form_action, 'enhance', {
