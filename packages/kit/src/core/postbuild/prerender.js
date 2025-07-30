@@ -460,11 +460,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	let has_prerenderable_routes = false;
+	let should_prerender = false;
 
 	for (const value of prerender_map.values()) {
 		if (value) {
-			has_prerenderable_routes = true;
+			should_prerender = true;
 			break;
 		}
 	}
@@ -478,17 +478,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		for (const fn of Object.values(module)) {
 			if (fn?.__?.type === 'prerender') {
 				prerender_functions.push(fn.__);
-				has_prerenderable_routes = true;
+				should_prerender = true;
 			}
 		}
 	}
 
-	if (
-		(config.prerender.entries.length === 0 &&
-			route_level_entries.length === 0 &&
-			prerender_functions.length === 0) ||
-		!has_prerenderable_routes
-	) {
+	if (!should_prerender) {
 		return { prerendered, prerender_map };
 	}
 
