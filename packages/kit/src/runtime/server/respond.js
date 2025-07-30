@@ -33,8 +33,9 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { add_remote_info, get_remote_id, handle_remote_call } from './remote.js';
+import { get_remote_id, handle_remote_call } from './remote.js';
 import { with_event } from '../app/server/event.js';
+import { create_event_state, EVENT_STATE } from './event-state.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -135,6 +136,7 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
+		[EVENT_STATE]: create_event_state(state, options),
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
 		fetch: null,
@@ -179,8 +181,6 @@ export async function respond(request, options, manifest, state) {
 		isSubRequest: state.depth > 0,
 		isRemoteRequest: !!remote_id
 	};
-
-	add_remote_info(event, state, options);
 
 	event.fetch = create_fetch({
 		event,

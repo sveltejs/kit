@@ -16,7 +16,7 @@ import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
 import { with_event } from '../../app/server/event.js';
-import { get_remote_info } from '../remote.js';
+import { get_event_state } from '../event-state.js';
 
 // TODO rename this function/module
 
@@ -402,14 +402,14 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
-			const remote_info = get_remote_info(event);
+			const remote_data = get_event_state(event).results;
 
-			if (remote_info) {
+			if (remote_data) {
 				/** @type {Record<string, any>} */
 				const remote = {};
 
-				for (const [key, promise] of Object.entries(remote_info?.results ?? {})) {
-					remote[key] = await promise;
+				for (const key in remote_data) {
+					remote[key] = await remote_data[key];
 				}
 
 				// TODO this is repeated in a few places — dedupe it

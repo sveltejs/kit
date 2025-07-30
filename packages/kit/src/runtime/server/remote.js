@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PrerenderOptions, RemoteFunctionResponse, RemoteInfo, ServerHooks, SSROptions, SSRState } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteInfo, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -11,6 +11,7 @@ import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
+import { get_event_state } from './event-state.js';
 
 /**
  * @param {RequestEvent} event
@@ -63,7 +64,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 					result: stringify(data, transport),
 					refreshes: stringify(
 						{
-							...get_remote_info(event).refreshes,
+							...get_event_state(event).refreshes,
 							...(await apply_client_refreshes(/** @type {string[]} */ (form_client_refreshes)))
 						},
 						transport
@@ -83,7 +84,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: stringify({ ...get_remote_info(event).refreshes, ...refreshed }, transport)
+					refreshes: stringify({ ...get_event_state(event).refreshes, ...refreshed }, transport)
 				})
 			);
 		}
@@ -107,7 +108,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 	} catch (error) {
 		if (error instanceof Redirect) {
 			const refreshes = {
-				...(get_remote_info(event).refreshes ?? {}), // could be set by form actions
+				...(get_event_state(event).refreshes ?? {}), // could be set by form actions
 				...(await apply_client_refreshes(form_client_refreshes ?? []))
 			};
 			return json({
@@ -233,50 +234,4 @@ export function get_remote_id(url) {
  */
 export function get_remote_action(url) {
 	return url.searchParams.get('/remote');
-}
-
-/**
- * @typedef {{
- * 	results: Record<string, Promise<any>>;
- *  form_result?: [key: any, value: any];
- * 	prerendering: PrerenderOptions | undefined
- *  transport: ServerHooks['transport'];
- *  handleValidationError: ServerHooks['handleValidationError'];
- *  form_instances: Map<any, any>;
- *  refreshes?: Record<string, any>;
- * }} RemoteEventInfo
- */
-
-const remote_info = Symbol('remote');
-
-/**
- * Adds the remote info on a hidden property of the event object
- * @param {RequestEvent} event
- * @param {SSRState} state
- * @param {SSROptions} options
- */
-export function add_remote_info(event, state, options) {
-	Object.defineProperty(event, remote_info, {
-		value: /** @type {RemoteEventInfo} */ ({
-			results: {},
-			form_result: undefined,
-			prerendering: state.prerendering,
-			transport: options.hooks.transport,
-			handleValidationError: options.hooks.handleValidationError,
-			form_instances: new Map()
-		}),
-		configurable: false,
-		writable: false,
-		enumerable: false
-	});
-}
-
-/**
- * Gets the remote info on a hidden property of the event object
- * @param {RequestEvent} event
- * @returns {RemoteEventInfo}
- */
-export function get_remote_info(event) {
-	// @ts-expect-error TS is not smart enough for this
-	return /** @type {RemoteEventInfo} */ (event[remote_info]);
 }

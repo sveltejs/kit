@@ -1,8 +1,8 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 import { getRequestEvent } from '../event.js';
-import { get_remote_info } from '../../../server/remote.js';
 import { check_experimental, run_remote_function } from './shared.js';
+import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a form action. The passed function will be called when the form is submitted.
@@ -76,16 +76,16 @@ export function form(fn) {
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
 				const event = getRequestEvent();
-				const info = get_remote_info(event);
+				const state = get_event_state(event);
 
-				info.refreshes ??= {};
+				state.refreshes ??= {};
 
 				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					info.form_result = [key, result];
+					state.form_result = [key, result];
 				}
 
 				return result;
@@ -107,8 +107,8 @@ export function form(fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const info = get_remote_info(getRequestEvent());
-					return info.form_result && info.form_result[0] === key ? info.form_result[1] : undefined;
+					const { form_result } = get_event_state(getRequestEvent());
+					return form_result && form_result[0] === key ? form_result[1] : undefined;
 				} catch {
 					return undefined;
 				}
@@ -126,15 +126,15 @@ export function form(fn) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
-					const info = get_remote_info(getRequestEvent());
-					let instance = info.form_instances.get(key);
+					const state = get_event_state(getRequestEvent());
+					let instance = state.form_instances.get(key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						info.form_instances.set(key, instance);
+						state.form_instances.set(key, instance);
 					}
 
 					return instance;

@@ -2,7 +2,6 @@
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { getRequestEvent } from '../event.js';
-import { get_remote_info } from '../../../server/remote.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {
@@ -11,6 +10,7 @@ import {
 	get_response,
 	run_remote_function
 } from './shared.js';
+import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a remote function that can be invoked like a regular function within components.
@@ -120,8 +120,9 @@ export function query(validate_or_fn, maybe_fn) {
 
 		promise.refresh = async () => {
 			const event = getRequestEvent();
-			const info = get_remote_info(event);
-			const refreshes = info.refreshes;
+			const state = get_event_state(event);
+			const refreshes = state?.refreshes;
+
 			if (!refreshes) {
 				throw new Error(
 					`Cannot call refresh on query '${wrapper.__.name}' because it is not executed in the context of a command/form remote function`
@@ -131,7 +132,7 @@ export function query(validate_or_fn, maybe_fn) {
 			refreshes[
 				create_remote_cache_key(
 					/** @type {RemoteInfo} */ (wrapper.__).id,
-					stringify_remote_arg(arg, info.transport)
+					stringify_remote_arg(arg, state.transport)
 				)
 			] = await /** @type {Promise<any>} */ (promise);
 		};

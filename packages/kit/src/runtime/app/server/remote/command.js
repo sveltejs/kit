@@ -2,9 +2,9 @@
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { getRequestEvent } from '../event.js';
-import { get_remote_info } from '../../../server/remote.js';
 import { prerendering } from '__sveltekit/environment';
 import { check_experimental, create_validator, run_remote_function } from './shared.js';
+import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
@@ -144,7 +144,7 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		get_remote_info(event).refreshes ??= {};
+		get_event_state(event).refreshes ??= {};
 
 		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
 
