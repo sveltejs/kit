@@ -1582,8 +1582,6 @@ declare module '@sveltejs/kit' {
 		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 		/** The result of the form submission */
 		get result(): Result | undefined;
-		/** When there's an error during form submission, it appears on this property */
-		get error(): App.Error | undefined;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		formAction: {
 			type: 'submit';
