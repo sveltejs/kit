@@ -1,6 +1,5 @@
 /** @import { RemoteForm, RemoteQueryFunction, RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-
 import { app_dir } from '__sveltekit/paths';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
@@ -8,7 +7,6 @@ import { DEV } from 'esm-env';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import {
 	app,
-	invalidateAll,
 	remote_responses,
 	started,
 	goto,
@@ -17,6 +15,7 @@ import {
 } from '../client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
 import { tick } from 'svelte';
+import { refresh_queries, release_overrides } from './shared.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = `sveltekit:${version}`;
@@ -127,7 +126,7 @@ class Prerender {
  * @template T
  * @implements {Partial<Promise<T>>}
  */
-class Query {
+export class Query {
 	/** @type {string} */
 	_key;
 
@@ -871,38 +870,4 @@ export function form(id) {
 	}
 
 	return create_instance();
-}
-
-/**
- * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
- */
-function release_overrides(updates) {
-	for (const update of updates) {
-		if ('release' in update) {
-			update.release();
-		}
-	}
-}
-
-/**
- * @param {string} stringified_refreshes
- * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
- */
-function refresh_queries(stringified_refreshes, updates = []) {
-	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
-	if (refreshes.length > 0) {
-		// `refreshes` is a superset of `updates`
-		for (const [key, value] of refreshes) {
-			// If there was an optimistic update, release it right before we update the query
-			const update = updates.find((u) => u._key === key);
-			if (update && 'release' in update) {
-				update.release();
-			}
-			// Update the query with the new value
-			const entry = query_map.get(key);
-			entry?.resource.set(value);
-		}
-	} else {
-		void invalidateAll();
-	}
 }
