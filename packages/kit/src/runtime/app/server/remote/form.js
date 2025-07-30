@@ -10,6 +10,7 @@ import { get_event_state } from '../../../server/event-state.js';
  *
  * ```ts
  * import { redirect } from '@sveltejs/kit';
+ * import { form } from '$app/server';
  * import * as auth from '$lib/server/auth';
  * import * as db from '$lib/server/db';
  *
