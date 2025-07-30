@@ -273,18 +273,10 @@ export function add_remote_info(event, state, options) {
 
 /**
  * Gets the remote info on a hidden property of the event object
- * @template {boolean | undefined} [Optional=false]
  * @param {RequestEvent} event
- * @param {Optional} [optional]
- * @returns {Optional extends true ? RemoteEventInfo | undefined : RemoteEventInfo}
+ * @returns {RemoteEventInfo}
  */
-export function get_remote_info(event, optional) {
-	if (!(remote_info in event)) {
-		// @ts-expect-error TS is not smart enough for this
-		if (optional) return undefined;
-		throw new Error('get_remote_info called without add_remote_info');
-	}
-
+export function get_remote_info(event) {
 	// @ts-expect-error TS is not smart enough for this
 	return /** @type {RemoteEventInfo} */ (event[remote_info]);
 }

@@ -402,7 +402,7 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
-			const remote_info = get_remote_info(event, true);
+			const remote_info = get_remote_info(event);
 
 			if (remote_info) {
 				/** @type {Record<string, any>} */
