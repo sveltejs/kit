@@ -273,48 +273,48 @@ export function form(id) {
 			}
 		});
 
-		if (key == undefined) {
-			Object.defineProperty(instance, 'for', {
-				/** @type {RemoteForm<any>['for']} */
-				value: (key) => {
-					let entry = instance_cache.get(key);
-
-					let tracking = true;
-					try {
-						$effect.pre(() => {
-							return () => {
-								entry.count--;
-								void tick().then(() => {
-									if (entry.count === 0) {
-										instance_cache.delete(key);
-									}
-								});
-							};
-						});
-					} catch {
-						tracking = false;
-					}
-
-					if (tracking) {
-						if (!entry) {
-							instance_cache.set(key, (entry = [1, create_instance(key)]));
-						} else {
-							entry.count++;
-						}
-					} else if (!entry) {
-						entry = [0, create_instance(key)];
-					}
-
-					return entry[1];
-				},
-				enumerable: false
-			});
-		}
-
 		return instance;
 	}
 
-	return create_instance();
+	const instance = create_instance();
+
+	Object.defineProperty(instance, 'for', {
+		/** @type {RemoteForm<any>['for']} */
+		value: (key) => {
+			let entry = instance_cache.get(key);
+
+			let tracking = true;
+			try {
+				$effect.pre(() => {
+					return () => {
+						entry.count--;
+						void tick().then(() => {
+							if (entry.count === 0) {
+								instance_cache.delete(key);
+							}
+						});
+					};
+				});
+			} catch {
+				tracking = false;
+			}
+
+			if (tracking) {
+				if (!entry) {
+					instance_cache.set(key, (entry = [1, create_instance(key)]));
+				} else {
+					entry.count++;
+				}
+			} else if (!entry) {
+				entry = [0, create_instance(key)];
+			}
+
+			return entry[1];
+		},
+		enumerable: false
+	});
+
+	return instance;
 }
 
 /**
