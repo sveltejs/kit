@@ -6,7 +6,7 @@ import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { app_dir, base } from '__sveltekit/paths';
 import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { parse_remote_args as parse_remote_arg, stringify } from '../shared.js';
+import { parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -70,8 +70,8 @@ export async function handle_remote_call(event, options, manifest, id) {
 			);
 		} else if (info.type === 'command') {
 			/** @type {{ args: string, refreshes: string[] }} */
-			const { args: stringified_arg, refreshes } = await event.request.json();
-			const arg = parse_remote_arg(stringified_arg, transport);
+			const { args: payload, refreshes } = await event.request.json();
+			const arg = parse_remote_arg(payload, transport);
 			const data = await with_event(event, () => func.call(null, arg));
 			const refreshed = await apply_client_refreshes(refreshes);
 
@@ -83,7 +83,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 				})
 			);
 		} else {
-			const stringified_arg =
+			const payload =
 				info.type === 'prerender'
 					? prerender_args
 					: info.type === 'query'
@@ -93,7 +93,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 							)
 						: await event.request.text();
 			const data = await with_event(event, () =>
-				func.call(null, parse_remote_arg(stringified_arg, transport))
+				func.call(null, parse_remote_arg(payload, transport))
 			);
 
 			return json(
@@ -135,7 +135,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 		return Object.fromEntries(
 			await Promise.all(
 				refreshes.map(async (key) => {
-					const [id, stringified_args] = key.split('|');
+					const [id, payload] = key.split('|');
 					const [hash, func_name] = id.split('/');
 					const remotes = manifest._.remotes;
 
@@ -149,9 +149,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 
 					return [
 						key,
-						await with_event(event, () =>
-							func.apply(null, parse_remote_arg(stringified_args, transport))
-						)
+						await with_event(event, () => func.apply(null, parse_remote_arg(payload, transport)))
 					];
 				})
 			)

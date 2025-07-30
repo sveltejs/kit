@@ -323,8 +323,8 @@ class Query {
  */
 function create_remote_function(id, create) {
 	return (/** @type {any} */ arg) => {
-		const stringified_args = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_cache_key(id, stringified_args);
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const cache_key = create_remote_cache_key(id, payload);
 		let entry = query_map.get(cache_key);
 
 		let tracking = true;
@@ -349,7 +349,7 @@ function create_remote_function(id, create) {
 
 		let resource = entry?.resource;
 		if (!resource) {
-			resource = create(cache_key, stringified_args);
+			resource = create(cache_key, payload);
 
 			Object.defineProperty(resource, '_key', {
 				value: cache_key,
@@ -423,7 +423,7 @@ async function remote_request(url) {
  * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
-	return create_remote_function(id, (cache_key, stringified_args) => {
+	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
 			if (!started) {
 				const result = remote_responses[cache_key];
@@ -432,7 +432,7 @@ export function query(id) {
 				}
 			}
 
-			const url = `/${app_dir}/remote/${id}${stringified_args ? `?args=${stringified_args}` : ''}`;
+			const url = `/${app_dir}/remote/${id}${payload ? `?args=${payload}` : ''}`;
 
 			return await remote_request(url);
 		});
@@ -443,7 +443,7 @@ export function query(id) {
  * @param {string} id
  */
 export function prerender(id) {
-	return create_remote_function(id, (cache_key, stringified_args) => {
+	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(async () => {
 			if (!started) {
 				const result = remote_responses[cache_key];
@@ -452,7 +452,7 @@ export function prerender(id) {
 				}
 			}
 
-			const url = `/${app_dir}/remote/${id}${stringified_args ? `/${stringified_args}` : ''}`;
+			const url = `/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			// Check the Cache API first
 			if (prerender_cache) {
