@@ -127,7 +127,7 @@ export function form(fn) {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					const state = get_event_state(getRequestEvent());
-					let instance = state.form_instances.get(key);
+					let instance = (state.form_instances ??= new Map()).get(key);
 
 					if (!instance) {
 						instance = create_instance(key);

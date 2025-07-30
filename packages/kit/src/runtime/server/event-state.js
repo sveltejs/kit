@@ -8,11 +8,11 @@ export const EVENT_STATE = Symbol('remote');
  * used for tracking things like remote function calls
  * @typedef {{
  * 	results: Record<string, Promise<any>>;
- *  form_result?: [key: any, value: any];
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
  *  handleValidationError: ServerHooks['handleValidationError'];
- *  form_instances: Map<any, any>;
+ *  form_instances?: Map<any, any>;
+ *  form_result?: [key: any, value: any];
  *  refreshes?: Record<string, any>;
  * }} RequestEventState
  */
@@ -25,11 +25,9 @@ export const EVENT_STATE = Symbol('remote');
 export function create_event_state(state, options) {
 	return {
 		results: {},
-		form_result: undefined,
 		prerendering: state.prerendering,
 		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		form_instances: new Map()
+		handleValidationError: options.hooks.handleValidationError
 	};
 }
 
