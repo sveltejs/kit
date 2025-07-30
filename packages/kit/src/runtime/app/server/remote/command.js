@@ -134,17 +134,11 @@ export function command(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		if (prerendering) {
-			throw new Error(
-				`Cannot call command '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
-		}
-
 		const event = getRequestEvent();
 
 		if (!event.isRemoteRequest) {
 			throw new Error(
-				`Cannot call command '${__.name}' during server side rendering. The only callable remote function types during server side rendering are 'query' and 'prerender'.`
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
 			);
 		}
 
