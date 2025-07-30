@@ -370,7 +370,7 @@ export interface ServerMetadata {
 		has_server_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
-	/** For each hashed remote file, its export names grouped by query/command/form/cache/prerender */
+	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
 }
 
