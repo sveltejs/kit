@@ -121,26 +121,26 @@ export async function run_remote_function(event, allow_cookies, arg, validate, f
 		cookies: {
 			...event.cookies,
 			set: (name, value, opts) => {
-				if (allow_cookies) {
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies set in remote functions must have an absolute path');
-					}
-					return event.cookies.set(name, value, opts);
+				if (!allow_cookies) {
+					throw new Error('Cannot set cookies in `query` or `prerender` functions');
 				}
-				throw new Error(
-					'cookies.set is not allowed in remote functions other than command and form'
-				);
+
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies set in remote functions must have an absolute path');
+				}
+
+				return event.cookies.set(name, value, opts);
 			},
 			delete: (name, opts) => {
-				if (allow_cookies) {
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies deleted in remote functions must have an absolute path');
-					}
-					return event.cookies.delete(name, opts);
+				if (!allow_cookies) {
+					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
 				}
-				throw new Error(
-					'cookies.delete is not allowed in remote functions other than command and form'
-				);
+
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies deleted in remote functions must have an absolute path');
+				}
+
+				return event.cookies.delete(name, opts);
 			}
 		},
 		route: { id: null },
