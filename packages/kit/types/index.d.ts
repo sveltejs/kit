@@ -2722,150 +2722,37 @@ declare module '$app/server' {
 	 */
 	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
 	/**
-	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export interface BlogPost {
-	 * 	id: string;
-	 * 	title: string;
-	 * 	content: string;
-	 * }
-	 *
-	 * export const like = command((postId: string) => {
-	 * 	blogPosts.get(postId).like();
-	 * });
-	 * ```
-	 *
-	 * ```svelte
-	 * <script lang="ts">
-	 * 	import { like } from './blog.remote.js';
-	 *
-	 * 	let post: BlogPost = $props();
-	 * </script>
-	 *
-	 * <h1>{post.title}</h1>
-	 * <p>{post.content}</p>
-	 * <button onclick={() => like(post.id)}>♡</button>
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
 	 * */
 	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
 	/**
-	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export interface BlogPost {
-	 * 	id: string;
-	 * 	title: string;
-	 * 	content: string;
-	 * }
-	 *
-	 * export const like = command((postId: string) => {
-	 * 	blogPosts.get(postId).like();
-	 * });
-	 * ```
-	 *
-	 * ```svelte
-	 * <script lang="ts">
-	 * 	import { like } from './blog.remote.js';
-	 *
-	 * 	let post: BlogPost = $props();
-	 * </script>
-	 *
-	 * <h1>{post.title}</h1>
-	 * <p>{post.content}</p>
-	 * <button onclick={() => like(post.id)}>♡</button>
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
 	 * */
 	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
 	/**
-	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export interface BlogPost {
-	 * 	id: string;
-	 * 	title: string;
-	 * 	content: string;
-	 * }
-	 *
-	 * export const like = command((postId: string) => {
-	 * 	blogPosts.get(postId).like();
-	 * });
-	 * ```
-	 *
-	 * ```svelte
-	 * <script lang="ts">
-	 * 	import { like } from './blog.remote.js';
-	 *
-	 * 	let post: BlogPost = $props();
-	 * </script>
-	 *
-	 * <h1>{post.title}</h1>
-	 * <p>{post.content}</p>
-	 * <button onclick={() => like(post.id)}>♡</button>
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
 	 * */
 	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
-	 * The callback runs with the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) when the form is submitted.
 	 *
-	 * ```ts
-	 * import { redirect } from '@sveltejs/kit';
-	 * import * as auth from '$lib/server/auth';
-	 * import * as db from '$lib/server/db';
-	 *
-	 * export const createPost = form(async (data) => {
-	 * 	const title = data.get('title');
-	 * 	const content = data.get('content');
-	 *
-	 * 	const user = await auth.getUser(); // get user from cookies, or throw an error
-	 * 	const post = await db.createPost({ user, title, content });
-	 *
-	 * 	redirect(303, `/blog/${post.slug}`);
-	 * });
-	 * ```
-	 * ```svelte
-	 * <script>
-	 * 	import { createPost } from './blog.remote.js';
-	 * </script>
-	 *
-	 * <form {...createPost}>
-	 * 	<input type="text" name="title" />
-	 * 	<textarea name="content" />
-	 * 	<button type="submit">Create</button>
-	 * </form>
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 *
 	 * */
 	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
 	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import z from 'zod';
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  z.string(),
-	 * 	(id) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
 	 * */
 	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
@@ -2873,23 +2760,9 @@ declare module '$app/server' {
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<void, Output>;
 	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  'unchecked',
-	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
 	 * */
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
@@ -2897,24 +2770,9 @@ declare module '$app/server' {
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<Input, Output>;
 	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import z from 'zod';
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  z.string(),
-	 * 	(id) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
 	 * */
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
@@ -2922,62 +2780,23 @@ declare module '$app/server' {
 		dynamic?: boolean;
 	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
 	 * */
 	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
 	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
 	 * */
 	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
 	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
 	 * */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
