@@ -68,7 +68,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 					)
 				})
 			);
-		} else if (info.type === 'command') {
+		}
+
+		if (info.type === 'command') {
 			/** @type {{ args: string, refreshes: string[] }} */
 			const { args: payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
@@ -82,27 +84,26 @@ export async function handle_remote_call(event, options, manifest, id) {
 					refreshes: stringify({ ...get_remote_info(event).refreshes, ...refreshed }, transport)
 				})
 			);
-		} else {
-			const payload =
-				info.type === 'prerender'
-					? prerender_args
-					: info.type === 'query'
-						? /** @type {string} */ (
-								// new URL(...) necessary because we're hiding the URL from the user in the event object
-								new URL(event.request.url).searchParams.get('args')
-							)
-						: await event.request.text();
-			const data = await with_event(event, () =>
-				func.call(null, parse_remote_arg(payload, transport))
-			);
-
-			return json(
-				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
-					result: stringify(data, transport)
-				})
-			);
 		}
+
+		const payload =
+			info.type === 'prerender'
+				? prerender_args
+				: /** @type {string} */ (
+						// new URL(...) necessary because we're hiding the URL from the user in the event object
+						new URL(event.request.url).searchParams.get('args')
+					);
+
+		const data = await with_event(event, () =>
+			func.call(null, parse_remote_arg(payload, transport))
+		);
+
+		return json(
+			/** @type {RemoteFunctionResponse} */ ({
+				type: 'result',
+				result: stringify(data, transport)
+			})
+		);
 	} catch (error) {
 		if (error instanceof Redirect) {
 			const refreshes = {
