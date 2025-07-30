@@ -96,13 +96,6 @@ export function form(fn) {
 			}
 		});
 
-		Object.defineProperty(instance, 'error', {
-			get() {
-				// When a form post fails on the server the nearest error page will be rendered instead, so we don't need this
-				return /** @type {any} */ (null);
-			}
-		});
-
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */

@@ -4,7 +4,6 @@
 import { app_dir } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { isHttpError } from '@sveltejs/kit';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
 import { create_remote_cache_key } from '../../shared.js';
@@ -30,8 +29,6 @@ export function form(id) {
 		let result = $state(
 			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
 		);
-		/** @type {any} */
-		let error = $state(undefined);
 
 		/**
 		 * @param {FormData} data
@@ -75,15 +72,13 @@ export function form(id) {
 					if (!response.ok) {
 						// We only end up here in case of a network error or if the server has an internal error
 						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						error = { message: 'Failed to execute remote function' };
 						result = undefined;
-						throw new Error(error.message);
+						throw new Error('Failed to execute remote function');
 					}
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						error = undefined;
 						result = devalue.parse(form_result.result, app.decoders);
 
 						refresh_queries(form_result.refreshes, updates);
@@ -96,8 +91,7 @@ export function form(id) {
 						void goto(form_result.location, { invalidateAll });
 					} else {
 						result = undefined;
-						error = form_result.error;
-						throw new HttpError(500, error);
+						throw new HttpError(500, form_result.error);
 					}
 				} catch (e) {
 					release_overrides(updates);
@@ -258,12 +252,6 @@ export function form(id) {
 			result: {
 				get() {
 					return result;
-				},
-				enumerable: false
-			},
-			error: {
-				get() {
-					return error;
 				},
 				enumerable: false
 			},
