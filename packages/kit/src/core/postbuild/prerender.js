@@ -469,25 +469,24 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	/** @type {Array<Function & { __: import('types').RemoteInfo & { type: 'prerender'}}>} */
-	const remote_functions = [];
+	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
+	const prerender_functions = [];
 
-	for (const remote of Object.values(manifest._.remotes)) {
-		const functions = Object.values(await remote()).filter(
-			(value) =>
-				typeof value === 'function' &&
-				/** @type {import('types').RemoteInfo} */ (value.__)?.type === 'prerender'
-		);
-		if (functions.length > 0) {
-			has_prerenderable_routes = true;
-			remote_functions.push(...functions);
+	for (const loader of Object.values(manifest._.remotes)) {
+		const module = await loader();
+
+		for (const fn of Object.values(module)) {
+			if (fn?.__?.type === 'prerender') {
+				prerender_functions.push(fn.__);
+				has_prerenderable_routes = true;
+			}
 		}
 	}
 
 	if (
 		(config.prerender.entries.length === 0 &&
 			route_level_entries.length === 0 &&
-			remote_functions.length === 0) ||
+			prerender_functions.length === 0) ||
 		!has_prerenderable_routes
 	) {
 		return { prerendered, prerender_map };
@@ -526,16 +525,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const transport = (await internal.get_hooks()).transport ?? {};
-	for (const remote_function of remote_functions) {
-		if (remote_function.__.has_arg) {
-			for (const arg of (await remote_function.__.inputs?.()) ?? []) {
-				void enqueue(
-					null,
-					remote_prefix + remote_function.__.id + '/' + stringify_remote_arg(arg, transport)
-				);
+	for (const info of prerender_functions) {
+		if (info.has_arg) {
+			for (const arg of (await info.inputs?.()) ?? []) {
+				void enqueue(null, remote_prefix + info.id + '/' + stringify_remote_arg(arg, transport));
 			}
 		} else {
-			void enqueue(null, remote_prefix + remote_function.__.id);
+			void enqueue(null, remote_prefix + info.id);
 		}
 	}
 
