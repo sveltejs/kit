@@ -361,8 +361,31 @@ async function kit({ svelte_config }) {
 
 			new_config.environments = {
 				ssr: {
+					// TODO: try to exclude `@sveltejs/kit`
 					optimizeDeps: {
-						exclude: ['__sveltekit', '$app']
+						// we need to exclude `svelte` so that `@sveltejs/kit` and user code
+						// use the same instance of `svelte` when setting and getting the context
+						exclude: ['__sveltekit', 'svelte'],
+						esbuildOptions: {
+							plugins: [
+								{
+									name: 'sveltekit-alias',
+									setup(build) {
+										build.onResolve({ filter: /^\$app\// }, async (args) => {
+											const result = await build.resolve(
+												`${runtime_directory}/${args.path.slice(1)}`,
+												{ kind: 'import-statement', resolveDir: args.resolveDir }
+											);
+											if (result.errors.length > 0) {
+												return { errors: result.errors };
+											}
+											return { path: result.path };
+										});
+									}
+								}
+							]
+						},
+						entries: [`${kit.files.routes}/**/+*.{svelte,js,ts}`]
 					}
 				}
 			};
