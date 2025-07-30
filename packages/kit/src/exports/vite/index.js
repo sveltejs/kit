@@ -408,7 +408,7 @@ async function kit({ svelte_config }) {
 				return `\0virtual:${id.substring(1)}`;
 			}
 			if (id === '__sveltekit/remote') {
-				return `${runtime_directory}/client/remote.svelte.js`;
+				return `${runtime_directory}/client/remote-functions/index.js`;
 			}
 			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;

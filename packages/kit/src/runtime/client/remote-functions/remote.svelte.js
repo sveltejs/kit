@@ -14,8 +14,8 @@ import {
 	goto,
 	set_nearest_error_page,
 	query_map
-} from './client.js';
-import { create_remote_cache_key, stringify_remote_arg } from '../shared.js';
+} from '../client.js';
+import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
 import { tick } from 'svelte';
 
 // Initialize Cache API for prerender functions
