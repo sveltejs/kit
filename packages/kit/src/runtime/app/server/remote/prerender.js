@@ -145,7 +145,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 						// TODO can we redirect here?
 
-						state.results[create_remote_cache_key(id, payload)] = prerendered.result;
+						(state.remote_data ??= {})[create_remote_cache_key(id, payload)] = prerendered.result;
 						return parse_remote_response(prerendered.result, state.transport);
 					});
 				} catch {

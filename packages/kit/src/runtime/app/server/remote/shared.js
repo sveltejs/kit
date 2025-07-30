@@ -74,7 +74,7 @@ export function get_response(id, arg, event, get_result) {
 	const state = get_event_state(event);
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
 
-	return /** @type {Promise<T>} */ (state.results[cache_key] ??= get_result());
+	return ((state.remote_data ??= {})[cache_key] ??= get_result());
 }
 
 /** @param {string} feature */
