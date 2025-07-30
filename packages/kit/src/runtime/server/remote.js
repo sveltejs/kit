@@ -138,15 +138,15 @@ export async function handle_remote_call(event, options, manifest, id) {
 				refreshes.map(async (key) => {
 					const [id, payload] = key.split('|');
 					const [hash, name] = id.split('/');
-					const remotes = manifest._.remotes;
+					const loader = manifest._.remotes[hash];
 
 					// TODO what do we do in this case? erroring after the mutation has happened is not great
-					if (!remotes[hash]) error(400, 'Bad request');
+					if (!loader) error(400, 'Bad Request');
 
-					const module = await remotes[hash]();
+					const module = await loader();
 					const fn = module[name];
 
-					if (!fn) error(400, 'Bad request');
+					if (!fn) error(400, 'Bad Request');
 
 					return [key, await with_event(event, () => fn(parse_remote_arg(payload, transport)))];
 				})
