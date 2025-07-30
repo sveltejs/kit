@@ -74,4 +74,4 @@ export function read(asset) {
 
 export { getRequestEvent } from './event.js';
 
-export { query, prerender, command, form } from './remote.js';
+export { query, prerender, command, form } from './remote/index.js';

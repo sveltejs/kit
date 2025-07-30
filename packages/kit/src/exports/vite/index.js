@@ -697,7 +697,7 @@ Tips:
 				if (ssr) {
 					input.index = `${runtime_directory}/server/index.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
-					input['remote-entry'] = `${runtime_directory}/app/server/remote.js`;
+					input['remote-entry'] = `${runtime_directory}/app/server/remote/index.js`;
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
