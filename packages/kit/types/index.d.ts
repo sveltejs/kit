@@ -2699,7 +2699,7 @@ declare module '$app/paths' {
 declare module '$app/server' {
 	// @ts-ignore
 	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
-	import type { RequestEvent, RemoteQueryFunction, RemotePrerenderFunction, RemoteCommand, RemoteForm } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2721,140 +2721,6 @@ declare module '$app/server' {
 	 * @since 2.20.0
 	 */
 	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
-	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
-	 *
-	 * */
-	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
-	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
-	 *
-	 * */
-	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
-	/**
-	 * Creates a remote function that can be invoked like a regular function within components.
-	 * The given function is invoked directly on the backend and via a fetch call on the client.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = query(() => blogPosts.getAll());
-	 * ```
-	 * ```svelte
-	 * <script>
-	 *   import { blogPosts } from './blog.remote.js';
-	 * </script>
-	 *
-	 * {#await blogPosts() then posts}
-	 *   <!-- ... -->
-	 * {/await}
-	 * ```
-	 *
-	 * */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
-	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import z from 'zod';
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  z.string(),
-	 * 	(id) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
-	 *
-	 * */
-	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
-		inputs?: RemotePrerenderInputsGenerator<void>;
-		dynamic?: boolean;
-	} | undefined): RemotePrerenderFunction<void, Output>;
-	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  'unchecked',
-	 * 	(id: string) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
-	 *
-	 * */
-	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
-		inputs?: RemotePrerenderInputsGenerator<Input>;
-		dynamic?: boolean;
-	} | undefined): RemotePrerenderFunction<Input, Output>;
-	/**
-	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
-	 * ```ts
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPosts = prerender(() => blogPosts.getAll());
-	 * ```
-	 *
-	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
-	 * ```ts
-	 * import z from 'zod';
-	 * import { blogPosts } from '$lib/server/db';
-	 *
-	 * export const blogPost = prerender(
-	 *  z.string(),
-	 * 	(id) => blogPosts.get(id),
-	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
-	 * );
-	 * ```
-	 *
-	 * */
-	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
-		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
-		dynamic?: boolean;
-	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a remote command. The given function is invoked directly on the server and via a fetch call on the client.
 	 *
@@ -2949,15 +2815,22 @@ declare module '$app/server' {
 	 * */
 	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
-	 * Creates a form action. The passed function will be called when the form is submitted.
-	 * Returns an object that can be spread onto a form element to connect it to the function.
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 * The callback runs with the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) when the form is submitted.
+	 *
 	 * ```ts
+	 * import { redirect } from '@sveltejs/kit';
+	 * import * as auth from '$lib/server/auth';
 	 * import * as db from '$lib/server/db';
 	 *
-	 * export const createPost = form((formData) => {
-	 * 	const title = formData.get('title');
-	 * 	const content = formData.get('content');
-	 * 	return db.createPost({ title, content });
+	 * export const createPost = form(async (data) => {
+	 * 	const title = data.get('title');
+	 * 	const content = data.get('content');
+	 *
+	 * 	const user = await auth.getUser(); // get user from cookies, or throw an error
+	 * 	const post = await db.createPost({ user, title, content });
+	 *
+	 * 	redirect(303, `/blog/${post.slug}`);
 	 * });
 	 * ```
 	 * ```svelte
@@ -2973,7 +2846,141 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function form<T>(fn: (formData: FormData) => MaybePromise<T>): RemoteForm<T>;
+	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import z from 'zod';
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<void>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<void, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  'unchecked',
+	 * 	(id: string) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<Input>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
+	/**
+	 * Creates a prerendered remote function. The given function is invoked at build time and the result is stored to disk.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = prerender(() => blogPosts.getAll());
+	 * ```
+	 *
+	 * In case your function has an argument, you need to provide an `inputs` function that returns a list representing the arguments to be used for prerendering.
+	 * ```ts
+	 * import z from 'zod';
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPost = prerender(
+	 *  z.string(),
+	 * 	(id) => blogPosts.get(id),
+	 * 	{ inputs: () => blogPosts.getAll().map((post) => post.id) }
+	 * );
+	 * ```
+	 *
+	 * */
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
+	/**
+	 * Creates a remote function that can be invoked like a regular function within components.
+	 * The given function is invoked directly on the backend and via a fetch call on the client.
+	 * ```ts
+	 * import { blogPosts } from '$lib/server/db';
+	 *
+	 * export const blogPosts = query(() => blogPosts.getAll());
+	 * ```
+	 * ```svelte
+	 * <script>
+	 *   import { blogPosts } from './blog.remote.js';
+	 * </script>
+	 *
+	 * {#await blogPosts() then posts}
+	 *   <!-- ... -->
+	 * {/await}
+	 * ```
+	 *
+	 * */
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

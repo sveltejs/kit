@@ -5,15 +5,22 @@ import { check_experimental, run_remote_function } from './shared.js';
 import { get_event_state } from '../../../server/event-state.js';
 
 /**
- * Creates a form action. The passed function will be called when the form is submitted.
- * Returns an object that can be spread onto a form element to connect it to the function.
+ * Creates a form object that can be spread onto a `<form>` element.
+ * The callback runs with the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) when the form is submitted.
+ *
  * ```ts
+ * import { redirect } from '@sveltejs/kit';
+ * import * as auth from '$lib/server/auth';
  * import * as db from '$lib/server/db';
  *
- * export const createPost = form((formData) => {
- * 	const title = formData.get('title');
- * 	const content = formData.get('content');
- * 	return db.createPost({ title, content });
+ * export const createPost = form(async (data) => {
+ * 	const title = data.get('title');
+ * 	const content = data.get('content');
+ *
+ * 	const user = await auth.getUser(); // get user from cookies, or throw an error
+ * 	const post = await db.createPost({ user, title, content });
+ *
+ * 	redirect(303, `/blog/${post.slug}`);
  * });
  * ```
  * ```svelte
@@ -29,7 +36,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * ```
  *
  * @template T
- * @param {(formData: FormData) => MaybePromise<T>} fn
+ * @param {(data: FormData) => MaybePromise<T>} fn
  * @returns {RemoteForm<T>}
  */
 /*@__NO_SIDE_EFFECTS__*/
