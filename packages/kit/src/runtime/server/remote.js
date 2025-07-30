@@ -107,7 +107,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 	} catch (error) {
 		if (error instanceof Redirect) {
 			const refreshes = {
-				...(get_remote_info(event).refreshes || {}), // could be set by form actions
+				...(get_remote_info(event).refreshes ?? {}), // could be set by form actions
 				...(await apply_client_refreshes(form_client_refreshes ?? []))
 			};
 			return json({
@@ -136,8 +136,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 		return Object.fromEntries(
 			await Promise.all(
 				refreshes.map(async (key) => {
-					const [id, payload] = key.split('|');
-					const [hash, name] = id.split('/');
+					const [hash, name, payload] = key.split('/');
 					const loader = manifest._.remotes[hash];
 
 					// TODO what do we do in this case? erroring after the mutation has happened is not great

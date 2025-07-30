@@ -469,15 +469,15 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		if (!get_remote_info(event).refreshes) {
-			get_remote_info(event).refreshes = {};
-		}
+		get_remote_info(event).refreshes ??= {};
 
 		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
+
 		// @ts-expect-error
 		promise.updates = () => {
 			throw new Error(`Cannot call '${wrapper.__.name}(...).updates(...)' on the server`);
 		};
+
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);
 	};
 
@@ -564,9 +564,7 @@ export function form(fn) {
 				const event = getRequestEvent();
 				const info = get_remote_info(event);
 
-				if (!info.refreshes) {
-					info.refreshes = {};
-				}
+				info.refreshes ??= {};
 
 				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
 
@@ -645,7 +643,7 @@ function create_validator(validate_or_fn, maybe_fn) {
 	if (!maybe_fn) {
 		return (arg) => {
 			if (arg !== undefined) {
-				error(400, 'Bad request');
+				error(400, 'Bad Request');
 			}
 		};
 	} else if (validate_or_fn === 'unchecked') {

@@ -73,5 +73,5 @@ export function parse_remote_arg(string, transport) {
  * @param {string} payload
  */
 export function create_remote_cache_key(id, payload) {
-	return id + '|' + payload;
+	return id + '/' + payload;
 }
