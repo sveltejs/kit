@@ -18,7 +18,7 @@ import { refresh_queries, release_overrides } from './shared.svelte.js';
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T> }>} */
-	const instance_cache = new Map();
+	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
@@ -42,7 +42,7 @@ export function form(id) {
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
 			// If the instance would be deleted in the meantime, the error property would be assigned to the old,
 			// no-longer-visible instance, so it would never be shown to the user.
-			const entry = instance_cache.get(key);
+			const entry = instances.get(key);
 			if (entry) {
 				entry.count++;
 			}
@@ -106,7 +106,7 @@ export function form(id) {
 						if (entry) {
 							entry.count--;
 							if (entry.count === 0) {
-								instance_cache.delete(key);
+								instances.delete(key);
 							}
 						}
 					});
@@ -282,36 +282,25 @@ export function form(id) {
 	Object.defineProperty(instance, 'for', {
 		/** @type {RemoteForm<any>['for']} */
 		value: (key) => {
-			let entry = instance_cache.get(key);
-			let tracking = true;
+			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
 
 			try {
 				$effect.pre(() => {
 					return () => {
-						const e = /** @type {{ count: number, instance: RemoteForm<T> }} */ (entry);
-
-						e.count--;
+						entry.count--;
 
 						void tick().then(() => {
-							if (e.count === 0) {
-								instance_cache.delete(key);
+							if (entry.count === 0) {
+								instances.delete(key);
 							}
 						});
 					};
 				});
+
+				entry.count += 1;
+				instances.set(key, entry);
 			} catch {
-				tracking = false;
-			}
-
-			if (tracking) {
-				if (!entry) {
-					entry = { count: 0, instance: create_instance(key) };
-					instance_cache.set(key, entry);
-				}
-
-				entry.count++;
-			} else if (!entry) {
-				entry = { count: 0, instance: create_instance(key) };
+				// not in an effect context
 			}
 
 			return entry.instance;
