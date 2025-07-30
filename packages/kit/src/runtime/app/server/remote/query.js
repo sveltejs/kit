@@ -98,21 +98,25 @@ export function query(validate_or_fn, maybe_fn) {
 
 	/** @type {(arg?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
+
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/** @type {RemoteInfo} */
+	const __ = { type: 'query', id: '', name: '' };
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
-				`Cannot call query '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+				`Cannot call query '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 			);
 		}
 
 		const event = getRequestEvent();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(/** @type {RemoteInfo} */ (wrapper.__).id, arg, event, () =>
+		const promise = get_response(__.id, arg, event, () =>
 			run_remote_function(event, false, arg, validate, fn)
 		);
 
@@ -125,28 +129,22 @@ export function query(validate_or_fn, maybe_fn) {
 
 			if (!refreshes) {
 				throw new Error(
-					`Cannot call refresh on query '${wrapper.__.name}' because it is not executed in the context of a command/form remote function`
+					`Cannot call refresh on query '${__.name}' because it is not executed in the context of a command/form remote function`
 				);
 			}
 
-			refreshes[
-				create_remote_cache_key(
-					/** @type {RemoteInfo} */ (wrapper.__).id,
-					stringify_remote_arg(arg, state.transport)
-				)
-			] = await /** @type {Promise<any>} */ (promise);
+			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
+			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
 		};
 
 		promise.withOverride = () => {
-			throw new Error(`Cannot call '${wrapper.__.name}.withOverride()' on the server`);
+			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
 		};
 
 		return /** @type {RemoteQuery<Output>} */ (promise);
 	};
 
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({ type: 'query', id: '' })
-	});
+	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
 }
