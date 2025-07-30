@@ -14,8 +14,8 @@ import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.j
 export function create_validator(validate_or_fn, maybe_fn) {
 	// prevent functions without validators being called with arguments
 	if (!maybe_fn) {
-		return (...args) => {
-			if (args.length > 0) {
+		return (arg) => {
+			if (arg !== undefined) {
 				error(400, 'Bad Request');
 			}
 		};
@@ -51,12 +51,9 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		};
 	}
 
-	// TODO should this error eagerly?
-	return () => {
-		throw new Error(
-			'Invalid validator passed to remote function. Expected "unchecked" or a standard schema'
-		);
-	};
+	throw new Error(
+		'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
+	);
 }
 
 /**
