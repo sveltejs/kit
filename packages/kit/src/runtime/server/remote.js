@@ -53,7 +53,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
 			);
 			form_data.delete('sveltekit:remote_refreshes');
-			const data = await with_event(event, () => info.fn.call(null, form_data));
+
+			const fn = info.fn;
+			const data = await with_event(event, () => fn(form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -74,7 +76,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			/** @type {{ args: string, refreshes: string[] }} */
 			const { args: payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
-			const data = await with_event(event, () => func.call(null, arg));
+			const data = await with_event(event, () => func(arg));
 			const refreshed = await apply_client_refreshes(refreshes);
 
 			return json(
@@ -94,9 +96,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 						new URL(event.request.url).searchParams.get('args')
 					);
 
-		const data = await with_event(event, () =>
-			func.call(null, parse_remote_arg(payload, transport))
-		);
+		const data = await with_event(event, () => func(parse_remote_arg(payload, transport)));
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
