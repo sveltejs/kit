@@ -109,12 +109,25 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	check_experimental('prerender');
 
 	const maybe_fn = typeof fn_or_options === 'function' ? fn_or_options : undefined;
+
 	/** @type {typeof maybe_options} */
 	const options = maybe_options ?? (maybe_fn ? undefined : fn_or_options);
+
 	/** @type {(arg?: Input) => MaybePromise<Output>} */
 	const fn = maybe_fn ?? validate_or_fn;
+
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/** @type {RemoteInfo} */
+	const __ = {
+		type: 'prerender',
+		id: '',
+		name: '',
+		has_arg: !!maybe_fn,
+		inputs: options?.inputs,
+		dynamic: options?.dynamic
+	};
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
@@ -123,7 +136,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const event = getRequestEvent();
 			const state = get_event_state(event);
 			const payload = stringify_remote_arg(arg, state.transport);
-			const id = wrapper.__.id;
+			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
@@ -184,15 +197,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		return /** @type {RemoteResource<Output>} */ (promise);
 	};
 
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({
-			type: 'prerender',
-			id: '',
-			has_arg: !!maybe_fn,
-			inputs: options?.inputs,
-			dynamic: options?.dynamic
-		})
-	});
+	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
 }

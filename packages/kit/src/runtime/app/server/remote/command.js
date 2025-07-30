@@ -125,14 +125,18 @@ export function command(validate_or_fn, maybe_fn) {
 
 	/** @type {(arg?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
+
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/** @type {RemoteInfo} */
+	const __ = { type: 'command', id: '', name: '' };
 
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
-				`Cannot call command '${wrapper.__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+				`Cannot call command '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
 			);
 		}
 
@@ -140,7 +144,7 @@ export function command(validate_or_fn, maybe_fn) {
 
 		if (!event.isRemoteRequest) {
 			throw new Error(
-				`Cannot call command '${wrapper.__.name}' during server side rendering. The only callable remote function types during server side rendering are 'query' and 'prerender'.`
+				`Cannot call command '${__.name}' during server side rendering. The only callable remote function types during server side rendering are 'query' and 'prerender'.`
 			);
 		}
 
@@ -150,17 +154,13 @@ export function command(validate_or_fn, maybe_fn) {
 
 		// @ts-expect-error
 		promise.updates = () => {
-			throw new Error(`Cannot call '${wrapper.__.name}(...).updates(...)' on the server`);
+			throw new Error(`Cannot call '${__.name}(...).updates(...)' on the server`);
 		};
 
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);
 	};
 
-	Object.defineProperty(wrapper, '__', {
-		value: /** @type {RemoteInfo} */ ({
-			type: 'command'
-		})
-	});
+	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
 }
