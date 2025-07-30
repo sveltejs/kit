@@ -19,18 +19,18 @@ import { DEV } from 'esm-env';
  * @param {string} id
  */
 export async function handle_remote_call(event, options, manifest, id) {
-	const [hash, func_name, prerender_args] = id.split('/');
+	const [hash, name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) error(404);
 
 	const module = await remotes[hash]();
-	const func = module[func_name];
+	const fn = module[name];
 
-	if (!func) error(404);
+	if (!fn) error(404);
 
 	/** @type {RemoteInfo} */
-	const info = func.__;
+	const info = fn.__;
 	const transport = options.hooks.transport;
 
 	/** @type {string[] | undefined} */
@@ -76,7 +76,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			/** @type {{ args: string, refreshes: string[] }} */
 			const { args: payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
-			const data = await with_event(event, () => func(arg));
+			const data = await with_event(event, () => fn(arg));
 			const refreshed = await apply_client_refreshes(refreshes);
 
 			return json(
@@ -96,7 +96,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 						new URL(event.request.url).searchParams.get('args')
 					);
 
-		const data = await with_event(event, () => func(parse_remote_arg(payload, transport)));
+		const data = await with_event(event, () => fn(parse_remote_arg(payload, transport)));
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -137,21 +137,18 @@ export async function handle_remote_call(event, options, manifest, id) {
 			await Promise.all(
 				refreshes.map(async (key) => {
 					const [id, payload] = key.split('|');
-					const [hash, func_name] = id.split('/');
+					const [hash, name] = id.split('/');
 					const remotes = manifest._.remotes;
 
 					// TODO what do we do in this case? erroring after the mutation has happened is not great
 					if (!remotes[hash]) error(400, 'Bad request');
 
 					const module = await remotes[hash]();
-					const func = module[func_name];
+					const fn = module[name];
 
-					if (!func) error(400, 'Bad request');
+					if (!fn) error(400, 'Bad request');
 
-					return [
-						key,
-						await with_event(event, () => func.apply(null, parse_remote_arg(payload, transport)))
-					];
+					return [key, await with_event(event, () => fn(parse_remote_arg(payload, transport)))];
 				})
 			)
 		);
@@ -165,11 +162,11 @@ export async function handle_remote_call(event, options, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 export async function handle_remote_form_post(event, manifest, id) {
-	const [hash, func_name, action_id] = id.split('/');
+	const [hash, name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.[func_name]);
+	let form = /** @type {RemoteForm<any>} */ (module?.[name]);
 
 	if (!form) {
 		event.setHeaders({
