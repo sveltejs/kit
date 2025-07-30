@@ -1,4 +1,4 @@
-/** @import { Query } from './remote.svelte.js' */
+/** @import { Query } from './query.svelte.js' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import * as devalue from 'devalue';
 import { app, goto, invalidateAll, query_map } from '../client.js';
