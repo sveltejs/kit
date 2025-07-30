@@ -45,6 +45,9 @@
 			"svelte-preprocess",
 			"unix-dgram",
 			"workerd"
-		]
+		],
+		"overrides": {
+			"esm-env": "github:benmccann/esm-env#bcbddbc&path:packages/esm-env"
+		}
 	}
 }
