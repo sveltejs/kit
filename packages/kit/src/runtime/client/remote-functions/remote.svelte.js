@@ -4,7 +4,7 @@ import { app_dir } from '__sveltekit/paths';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError } from '@sveltejs/kit/internal';
 import {
 	app,
 	remote_responses,
@@ -15,7 +15,7 @@ import {
 } from '../client.js';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides } from './shared.js';
+import { refresh_queries, release_overrides, remote_request } from './shared.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = `sveltekit:${version}`;
@@ -384,37 +384,6 @@ function create_remote_function(id, create) {
 
 		return resource;
 	};
-}
-
-/**
- *
- * @param {string} url
- */
-async function remote_request(url) {
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		throw new HttpError(500, 'Failed to execute remote function');
-	}
-
-	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-
-	if (result.type === 'redirect') {
-		// resource_cache.delete(cache_key);
-		// version++;
-		// await goto(result.location);
-		// /** @type {Query<any>} */ (resource).refresh();
-		// TODO double-check this
-		await goto(result.location);
-		await new Promise((r) => setTimeout(r, 100));
-		throw new Redirect(307, result.location);
-	}
-
-	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
-	}
-
-	return devalue.parse(result.result, app.decoders);
 }
 
 /**
