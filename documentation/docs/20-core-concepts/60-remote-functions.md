@@ -1,5 +1,5 @@
 ---
-title: Remote Functions
+title: Remote functions
 ---
 
 Remote functions are a new concept in SvelteKit since version 2.27 that allow you to declare functions inside a `.remote.ts` file, import them inside Svelte components and call them like regular functions. On the server they work like regular functions (and can access environment variables and database clients and so on), while on the client they become wrappers around `fetch`. Combined with Svelte's [experimental async feature](/docs/svelte/await-expressions) it allows you to load and manipulate date directly inside your components. If you're familiar with RPC and 'server functions', this is basically our take on the concept.
@@ -13,13 +13,13 @@ export default {
 		experimental: {
 			remoteFunctions: true
 		}
-    }
+	}
 };
 ```
 
 ## Overview
 
-Remote functions are declared inside a `.remote.ts` file. You can import them inside Svelte components and call them like regular async functions. On the server you import them directly; on the client, the module is transformed into a collection of functions that request data from the server. 
+Remote functions are declared inside a `.remote.ts` file. You can import them inside Svelte components and call them like regular async functions. On the server you import them directly; on the client, the module is transformed into a collection of functions that request data from the server.
 
 As of now there exist four types of remote function: `query`, `form`, `command` and `prerender`.
 
@@ -45,7 +45,7 @@ When called during server-rendering, the result is serialized into the HTML payl
 <!--- file: +page.svelte --->
 <script>
   import { getLikes } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -90,7 +90,7 @@ A form object such as `addLike` has enumerable properties — `method`, `action`
 <!--- file: +page.svelte --->
 <script>
   import { getLikes, addLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -110,7 +110,7 @@ In addition to the enumerable properties, remote forms (`addLike` in our example
 <!--- file: +page.svelte --->
 <script>
   import { getLikes, addLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -128,13 +128,13 @@ In addition to the enumerable properties, remote forms (`addLike` in our example
 
 ### enhance
 
-The remote form property `enhance` allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations*  — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown): 
+The remote form property `enhance` allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations*  — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown):
 
 ```svelte
 <!--- file: +page.svelte --->
 <script>
   import { getLikes, addLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -221,7 +221,7 @@ Forms allow you to have more than one button that kicks up a form submission. Th
 <!--- file: +page.svelte --->
 <script>
   import { addLike, removeLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -254,7 +254,7 @@ export const addLike = command(z.string(), async (id) => {
     set likes = likes + 1
     where id = ${id}
   `;
-  
+
   getLikes(id).refresh();
 
   // we can return arbitrary data from a command
@@ -268,7 +268,7 @@ Now simply call `addLike`, from (for example) an event handler:
 <!--- file: +page.svelte --->
 <script>
   import { getLikes, addLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -354,7 +354,7 @@ Queries have an `withOverride` method, which is useful for optimistic updates. I
 <!--- file: +page.svelte --->
 <script>
   import { getLikes, addLike } from './likes.remote';
-  
+
   let { item } = $props();
 </script>
 
@@ -400,12 +400,13 @@ export const getStuff = query(schema, async ({ id }) => {
 
 By default a failed schema validation will result in a generic `400` response with just the text `Bad Request`. You can adjust the returned shape by implementing the `handleValidationError` hook in `hooks.server.js`. The returned shape must adhere to the shape of `App.Error`.
 
-```ts
+```js
 /// file: src/hooks.server.ts
 import z from 'zod';
 
+/** @type {import('@sveltejs/kit').HandleValidationError} */
 export function handleValidationError({ issues }) {
-  return { validationErrors: z.prettifyError({ isses })}
+  return { validationErrors: z.prettifyError({ issues })}
 }
 ```
 
@@ -447,7 +448,7 @@ import { findUser } from '$lib/server/db';
 
 export const getProfile = query(async () => {
   const user = await getUser();
-  
+
   return {
     name: user.name,
     avatar: user.avatar
@@ -457,7 +458,7 @@ export const getProfile = query(async () => {
 // this function could be called from multiple places
 function getUser() {
   const { cookies, locals } = getRequestEvent();
-  
+
   locals.userPromise ??= findUser(cookies.get('session_id'));
   return await locals.userPromise;
 }
