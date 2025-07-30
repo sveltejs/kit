@@ -17,17 +17,6 @@ import { refresh_queries, release_overrides } from './shared.svelte.js';
  * @returns {RemoteForm<T>}
  */
 export function form(id) {
-	/**
-	 * Shallow clone an element, so that we can access e.g. `form.action` without worrying
-	 * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
-	 * @template {HTMLElement} T
-	 * @param {T} element
-	 * @returns {T}
-	 */
-	function clone(element) {
-		return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
-	}
-
 	const instance_cache = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -326,4 +315,15 @@ export function form(id) {
 	}
 
 	return create_instance();
+}
+
+/**
+ * Shallow clone an element, so that we can access e.g. `form.action` without worrying
+ * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
+ * @template {HTMLElement} T
+ * @param {T} element
+ * @returns {T}
+ */
+function clone(element) {
+	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
 }
