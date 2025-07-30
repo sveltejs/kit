@@ -34,8 +34,8 @@ import { query } from '$app/server';
 import * as db from '$lib/server/db';
 
 export const getLikes = query(z.string(), async (id) => {
-  const [row] = await db.sql`select likes from item where id = ${id}`;
-  return row.likes;
+	const [row] = await db.sql`select likes from item where id = ${id}`;
+	return row.likes;
 });
 ```
 
@@ -44,9 +44,9 @@ When called during server-rendering, the result is serialized into the HTML payl
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes } from './likes.remote';
+	import { getLikes } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -71,16 +71,16 @@ import * as db from '$lib/server/db';
 export const getLikes = query(z.string(), async (id) => {/*...*/});
 
 export const addLike = form(async (data: FormData) => {
-  const id = data.get('id') as string;
+	const id = data.get('id') as string;
 
-  await sql`
-    update item
-    set likes = likes + 1
-    where id = ${id}
-  `;
+	await sql`
+		update item
+		set likes = likes + 1
+		where id = ${id}
+	`;
 
-  // we can return arbitrary data from a form function
-  return { success: true };
+	// we can return arbitrary data from a form function
+	return { success: true };
 });
 ```
 
@@ -89,14 +89,14 @@ A form object such as `addLike` has enumerable properties — `method`, `action`
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes, addLike } from './likes.remote';
+	import { getLikes, addLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 <form {...addLike}>
-  <input type="hidden" name="id" value={item.id} />
-  <button>add like</button>
+	<input type="hidden" name="id" value={item.id} />
+	<button>add like</button>
 </form>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -109,18 +109,18 @@ In addition to the enumerable properties, remote forms (`addLike` in our example
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes, addLike } from './likes.remote';
+	import { getLikes, addLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 +++{#if addLike.result?.success}
-  <p>success!</p>
+	<p>success!</p>
 {/if}+++
 
 <form {...addLike}>
-  <input type="hidden" name="id" value={item.id} />
-  <button>add like</button>
+	<input type="hidden" name="id" value={item.id} />
+	<button>add like</button>
 </form>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -128,33 +128,33 @@ In addition to the enumerable properties, remote forms (`addLike` in our example
 
 ### enhance
 
-The remote form property `enhance` allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations*  — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown):
+The remote form property `enhance` allows us to customize how the form is progressively enhanced. We can use this to indicate that *only* `getLikes(...)` should be refreshed and through that also enable *single-flight mutations* — meaning that the updated data for `getLikes(...)` is sent back from the server along with the form result. Additionally we provide nicer behaviour in the case that the submission fails (by default, an error page will be shown):
 
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes, addLike } from './likes.remote';
+	import { getLikes, addLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 {#if addLike.result?.success}
-  <p>success!</p>
+	<p>success!</p>
 {/if}
 
 <form {...addLike.enhance(async ({ submit }) => {
-  try {
-    // by passing queries to `.updates(...)` we will prevent a global refresh and the
-    // refreshed data is sent together with the submission response (single flight mutation)
-    await submit().updates(getLikes(item.id));
-  } catch (error) {
-    // instead of showing an error page,
-    // present a demure notification
-    showToast(error.message);
-  }
+	try {
+		// by passing queries to `.updates(...)` we will prevent a global refresh and the
+		// refreshed data is sent together with the submission response (single flight mutation)
+		await submit().updates(getLikes(item.id));
+	} catch (error) {
+		// instead of showing an error page,
+		// present a demure notification
+		showToast(error.message);
+	}
 }}>
-  <input type="hidden" name="id" value={item.id} />
-  <button>add like</button>
+	<input type="hidden" name="id" value={item.id} />
+	<button>add like</button>
 </form>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -170,23 +170,23 @@ import { query, form } from '$app/server';
 import * as db from '$lib/server/db';
 
 export const getLikes = query(async (id: string) => {
-  const [row] = await sql`select likes from item where id = ${id}`;
-  return row.likes;
+	const [row] = await sql`select likes from item where id = ${id}`;
+	return row.likes;
 });
 
 export const addLike = form(async (data: FormData) => {
-  const id = data.get('id') as string;
+	const id = data.get('id') as string;
 
-  await sql`
-    update item
-    set likes = likes + 1
-    where id = ${id}
-  `;
+	await sql`
+		update item
+		set likes = likes + 1
+		where id = ${id}
+	`;
 
 +++ await getLikes(id).refresh();+++
 
-  // we can return arbitrary data from a form function
-  return { success: true };
+	// we can return arbitrary data from a form function
+	return { success: true };
 });
 ```
 
@@ -197,19 +197,19 @@ Sometimes you may have form submissions of the same type in a list, and each for
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getTodos, toggleTodo } from './todos.remote';
+	import { getTodos, toggleTodo } from './todos.remote';
 </script>
 
 {#each await getTodos() as todo (todo.id)}
-  {@const toggle = toggleTodo.for(todo.id)}
-  <form {...toggle}>
-    <input type="hidden" name="id" value={item.id} />
-    <input type="checkbox" checked={todo.checked} />
-    <button>toggle</button>
-    {#if toggle.result?.error}
-      <span class="error">Something went wrong</span>
-    {/if}
-  </form>
+	{@const toggle = toggleTodo.for(todo.id)}
+	<form {...toggle}>
+		<input type="hidden" name="id" value={item.id} />
+		<input type="checkbox" checked={todo.checked} />
+		<button>toggle</button>
+		{#if toggle.result?.error}
+			<span class="error">Something went wrong</span>
+		{/if}
+	</form>
 {/each}
 ```
 
@@ -220,16 +220,16 @@ Forms allow you to have more than one button that kicks up a form submission. Th
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { addLike, removeLike } from './likes.remote';
+	import { addLike, removeLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 <form {...addLike}>
-  <input type="hidden" name="id" value={item.id} />
-  <button>add like</button>
-  <button {...removeLike.formAction}>remove like</button>
-  <!--- removeLike.formAction.enhance(...) also exists --->
+	<input type="hidden" name="id" value={item.id} />
+	<button>add like</button>
+	<button {...removeLike.formAction}>remove like</button>
+	<!--- removeLike.formAction.enhance(...) also exists --->
 </form>
 ```
 
@@ -244,21 +244,21 @@ import { query, command } from '$app/server';
 import * as db from '$lib/server/db';
 
 export const getLikes = query(z.string(), async (id) => {
-  const [row] = await sql`select likes from item where id = ${id}`;
-  return row.likes;
+	const [row] = await sql`select likes from item where id = ${id}`;
+	return row.likes;
 });
 
 export const addLike = command(z.string(), async (id) => {
-  await sql`
-    update item
-    set likes = likes + 1
-    where id = ${id}
-  `;
+	await sql`
+		update item
+		set likes = likes + 1
+		where id = ${id}
+	`;
 
-  getLikes(id).refresh();
+	getLikes(id).refresh();
 
-  // we can return arbitrary data from a command
-  return { success: true };
+	// we can return arbitrary data from a command
+	return { success: true };
 });
 ```
 
@@ -267,21 +267,21 @@ Now simply call `addLike`, from (for example) an event handler:
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes, addLike } from './likes.remote';
+	import { getLikes, addLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 <button
-  onclick={async () => {
-    try {
-      await addLike();
-    } catch (error) {
-      showToast(error.message);
-    }
-  }}
+	onclick={async () => {
+		try {
+			await addLike();
+		} catch (error) {
+			showToast(error.message);
+		}
+	}}
 >
-  add like
+	add like
 </button>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -301,7 +301,7 @@ import z from 'zod';
 import { prerender } from '$app/server';
 
 export const getBlogPost = prerender(z.string(), (slug) => {
-  // ...
+	// ...
 });
 ```
 
@@ -309,7 +309,7 @@ You can use `prerender` functions on pages that are otherwise dynamic, allowing 
 
 > When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
 
-Prerendering is automatic, driven by SvelteKit's crawler, but  you can also provide an `entries` option to control what gets prerendered, in case some pages cannot be reached by the crawler:
+Prerendering is automatic, driven by SvelteKit's crawler, but you can also provide an `entries` option to control what gets prerendered, in case some pages cannot be reached by the crawler:
 
 ```ts
 /// file: blog.remote.ts
@@ -317,13 +317,13 @@ import z from 'zod';
 import { prerender } from '$app/server';
 
 export const getBlogPost = prerender(
-  z.string(),
-  (slug) => {
-    // ...
-  },
-  {
-    entries: () => ['first-post', 'second-post', 'third-post']
-  }
+	z.string(),
+	(slug) => {
+		// ...
+	},
+	{
+		entries: () => ['first-post', 'second-post', 'third-post']
+	}
 );
 ```
 
@@ -335,14 +335,14 @@ import z from 'zod';
 import { prerender } from '$app/server';
 
 export const getBlogPost = prerender(
-  z.string(),
-  (slug) => {
-    // ...
-  },
-  {
-+++   dynamic: true,+++
-    entries: () => ['first-post', 'second-post', 'third-post']
-  }
+	z.string(),
+	(slug) => {
+		// ...
+	},
+	{
+		+++dynamic: true,+++
+		entries: () => ['first-post', 'second-post', 'third-post']
+	}
 );
 ```
 
@@ -353,22 +353,22 @@ Queries have an `withOverride` method, which is useful for optimistic updates. I
 ```svelte
 <!--- file: +page.svelte --->
 <script>
-  import { getLikes, addLike } from './likes.remote';
+	import { getLikes, addLike } from './likes.remote';
 
-  let { item } = $props();
+	let { item } = $props();
 </script>
 
 <button
-  onclick={async () => {
-    try {
----      await addLike();---
-+++      await addLike().updates(getLikes(item.id).withOverride((n) => n + 1));+++
-    } catch (error) {
-      showToast(error.message);
-    }
-  }}
+	onclick={async () => {
+		try {
+			---await addLike();---
+			+++await addLike().updates(getLikes(item.id).withOverride((n) => n + 1));+++
+		} catch (error) {
+			showToast(error.message);
+		}
+	}}
 >
-  add like
+	add like
 </button>
 
 <p>likes: {await getLikes(item.id)}</p>
@@ -388,13 +388,13 @@ import { query } from '$app/server';
 import { z } from 'zod';
 
 const schema = z.object({
-  id: z.string()
+	id: z.string()
 });
 
 export const getStuff = query(schema, async ({ id }) => {
-    // `id` is typed correctly. if the function
-    // was called with bad arguments, it will
-    // result in a 400 Bad Request response
+	// `id` is typed correctly. if the function
+	// was called with bad arguments, it will
+	// result in a 400 Bad Request response
 });
 ```
 
@@ -406,7 +406,7 @@ import z from 'zod';
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
 export function handleValidationError({ issues }) {
-  return { validationErrors: z.prettifyError({ issues })}
+	return { validationErrors: z.prettifyError({ issues })}
 }
 ```
 
@@ -417,8 +417,8 @@ If you wish to opt out of validation (for example because you validate through o
 import { query } from '$app/server';
 
 export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
-    // the shape might not actually be what TypeScript thinks
-    // since bad actors might call this function with other arguments
+	// the shape might not actually be what TypeScript thinks
+	// since bad actors might call this function with other arguments
 });
 ```
 
@@ -429,7 +429,7 @@ In case your `query` does not accept arguments you don't need to pass a schema o
 import { query } from '$app/server';
 
 export const getStuff = query(() => {
-    // ...
+	// ...
 });
 ```
 
@@ -447,20 +447,20 @@ import { getRequestEvent, query } from '$app/server';
 import { findUser } from '$lib/server/db';
 
 export const getProfile = query(async () => {
-  const user = await getUser();
+	const user = await getUser();
 
-  return {
-    name: user.name,
-    avatar: user.avatar
-  };
+	return {
+		name: user.name,
+		avatar: user.avatar
+	};
 });
 
 // this function could be called from multiple places
 function getUser() {
-  const { cookies, locals } = getRequestEvent();
+	const { cookies, locals } = getRequestEvent();
 
-  locals.userPromise ??= findUser(cookies.get('session_id'));
-  return await locals.userPromise;
+	locals.userPromise ??= findUser(cookies.get('session_id'));
+	return await locals.userPromise;
 }
 ```
 
