@@ -3,6 +3,7 @@ import { app_dir } from '__sveltekit/paths';
 import { remote_responses, started } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
+
 /**
  * @param {string} id
  * @returns {RemoteQueryFunction<any, any>}
