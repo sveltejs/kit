@@ -359,27 +359,13 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').SSROptions} */ (config.ssr).noExternal = undefined;
 			/** @type {import('vite').SSROptions} */ (new_config.ssr).noExternal = undefined;
 
-			// we need to set this because server environments don't inherit the top-level optimizeDeps option
-			// see https://vite.dev/guide/api-environment.html#environments-configuration
-			// TODO: find a better way to inherit top level optimizeDeps options
 			new_config.environments = {
 				ssr: {
 					optimizeDeps: {
-						exclude: ['__sveltekit', '$app'],
-						// entries: new_config.optimizeDeps?.entries ?? [],
+						exclude: ['__sveltekit', '$app']
 					}
 				}
 			};
-
-			// TODO: remove this once https://github.com/cloudflare/workers-sdk/pull/10054 is released
-			// @ts-ignore
-			config.environments.ssr.resolve.conditions = [
-				// @ts-ignore
-				config.environments.ssr.resolve.conditions[0],
-				'worker',
-				// @ts-ignore
-				...config.environments.ssr.resolve.conditions.slice(1)
-			];
 
 			warn_overridden_config(config, new_config);
 
