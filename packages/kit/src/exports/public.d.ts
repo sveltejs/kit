@@ -1573,7 +1573,7 @@ export type RemoteForm<Result> = {
 	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 	onsubmit: (event: SubmitEvent) => void;
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
-	enhance: (
+	enhance(
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: FormData;
@@ -1583,7 +1583,7 @@ export type RemoteForm<Result> = {
 				) => Promise<void>;
 			};
 		}) => void
-	) => {
+	): {
 		method: 'POST';
 		action: string;
 		onsubmit: (event: SubmitEvent) => void;
@@ -1602,7 +1602,7 @@ export type RemoteForm<Result> = {
 	 *	{/each}
 	 * ```
 	 */
-	for: (key: string | number | boolean) => Omit<RemoteForm<Result>, 'for'>;
+	for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 	/** The result of the form submission */
 	get result(): Result | undefined;
 	/** When there's an error during form submission, it appears on this property */
@@ -1613,7 +1613,7 @@ export type RemoteForm<Result> = {
 		formaction: string;
 		onclick: (event: Event) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance: (
+		enhance(
 			callback: (opts: {
 				form: HTMLFormElement;
 				data: FormData;
@@ -1623,7 +1623,7 @@ export type RemoteForm<Result> = {
 					) => Promise<void>;
 				};
 			}) => void
-		) => {
+		): {
 			type: 'submit';
 			formaction: string;
 			onclick: (event: Event) => void;
@@ -1677,9 +1677,9 @@ export type RemoteForm<Result> = {
  * ```
  */
 export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-	updates: (
+	updates(
 		...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
-	) => Promise<Awaited<Output>>;
+	): Promise<Awaited<Output>>;
 };
 
 export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -1707,7 +1707,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
 	 * transport the updated data to the client along with the response, if the action was successful.
 	 */
-	refresh: () => Promise<void>;
+	refresh(): Promise<void>;
 	/**
 	 * Temporarily override the value of a query. Useful for optimistic UI updates.
 	 * `withOverride` expects a function that takes the current value and returns the new value.
@@ -1728,7 +1728,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * </form>
 	 * ```
 	 */
-	withOverride: (update: (current: Awaited<T>) => Awaited<T>) => {
+	withOverride(update: (current: Awaited<T>) => Awaited<T>): {
 		_key: string;
 		release: () => void;
 	};
