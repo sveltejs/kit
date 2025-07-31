@@ -680,38 +680,6 @@ export const getPost = prerender(
 );
 ```
 
-## Optimistic updates
-
-Queries have an `withOverride` method, which is useful for optimistic updates. It receives a function that transforms the query, and must be passed to `submit().updates(...)` or `myCommand.updates(...)`:
-
-```svelte
-<!--- file: +page.svelte --->
-<script>
-	import { getLikes, addLike } from './likes.remote';
-
-	let { item } = $props();
-</script>
-
-<button
-	onclick={async () => {
-		try {
-			---await addLike();---
-			+++await addLike().updates(getLikes(item.id).withOverride((n) => n + 1));+++
-		} catch (error) {
-			showToast(error.message);
-		}
-	}}
->
-	add like
-</button>
-
-<p>likes: {await getLikes(item.id)}</p>
-```
-
-> [!NOTE] You can also do `const likes = $derived(getLikes(item.id))` in your `<script>` and then do `likes.withOverride(...)` and `{await likes}` if you prefer, but since `getLikes(item.id)` returns the same object in both cases, this is optional
-
-Multiple overrides can be applied simultaneously — if you click the button multiple times, the number of likes will increment accordingly. If `addLike()` fails, the override releases and will decrement it again, otherwise the updated data (sans override) will match the optimistic update.
-
 ## Validation
 
 Data validation is an important part of remote functions. They look like regular JavaScript functions but they are actually auto-generated public endpoints. For that reason we strongly encourage you to validate the input using a [Standard Schema](https://standardschema.dev/) object, which you create for example through `Zod`:
