@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.27.0
+### Minor Changes
+
+
+- feat: remote functions ([#13986](https://github.com/sveltejs/kit/pull/13986))
+
 ## 2.26.1
 ### Patch Changes
 
