@@ -2634,35 +2634,40 @@ declare module '$app/server' {
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
@@ -2672,7 +2677,8 @@ declare module '$app/server' {
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
@@ -2682,7 +2688,8 @@ declare module '$app/server' {
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
 		dynamic?: boolean;
@@ -2692,21 +2699,24 @@ declare module '$app/server' {
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
 	/**
 	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
 	/**
 	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 *
-	 * */
+	 * @since 2.27
+	 */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
