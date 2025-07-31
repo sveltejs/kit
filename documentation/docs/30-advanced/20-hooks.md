@@ -145,16 +145,16 @@ export async function handleFetch({ event, request, fetch }) {
 
 ### handleValidationError
 
-This hook is called when a remote function is called with an argument that does not match its schema. It must return an object matching the shape of [`App.Error`](types#Error).
+This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
 
 Say you have a remote function that expects a string as its argument ...
 
 ```js
 /// file: todos.remote.js
-import z from 'zod';
+import * as v from 'valibot';
 import { query } from '$app/server';
 
-export getTodo = query(z.string(), (id) => {
+export const getTodo = query(v.string(), (id) => {
 	// implementation...
 });
 ```
@@ -165,14 +165,15 @@ To customise this message and add additional properties to the error object, imp
 
 ```js
 /// file: src/hooks.server.js
-import z from 'zod';
-
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues }) => {
-  // @ts-expect-error The types are too strict and disallow this but it's perfectly valid
-  return { message: 'Schema Error', validationErrors: z.treeifyError({ issues })};
+export function handleValidationError({ issues }) {
+	return {
+		message: 'No thank you'
+	};
 }
 ```
+
+Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
 
 ## Shared hooks
 
