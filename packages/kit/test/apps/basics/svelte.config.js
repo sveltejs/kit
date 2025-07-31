@@ -18,6 +18,11 @@ const config = {
 			}
 		},
 
+		csrf: {
+			checkOrigin: true,
+			allowedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
+		},
+
 		prerender: {
 			entries: [
 				'*',

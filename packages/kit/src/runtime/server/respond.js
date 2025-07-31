@@ -65,13 +65,15 @@ export async function respond(request, options, manifest, state) {
 	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
+		const request_origin = request.headers.get('origin');
 		const forbidden =
 			is_form_content_type(request) &&
 			(request.method === 'POST' ||
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
 				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+			request_origin !== url.origin &&
+			(!request_origin || !options.csrf_allowed_origins.includes(request_origin));
 
 		if (forbidden) {
 			const csrf_error = new HttpError(
