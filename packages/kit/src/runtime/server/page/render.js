@@ -3,7 +3,7 @@ import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import * as paths from '__sveltekit/paths';
-import { hash } from '../../hash.js';
+import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
@@ -15,6 +15,8 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
+import { with_event } from '../../app/server/event.js';
+import { get_event_state } from '../event-state.js';
 
 // TODO rename this function/module
 
@@ -189,14 +191,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_event(event, () => options.root.render(props, render_opts));
 			} finally {
 				paths.reset();
 			}
@@ -386,7 +388,7 @@ export async function render_response({
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
-			const serialized = { form: 'null', error: 'null' };
+			const serialized = { form: 'null', error: 'null', remote: 'null' };
 
 			if (form_value) {
 				serialized.form = uneval_action_response(
@@ -400,11 +402,35 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
+			const { remote_data } = get_event_state(event);
+
+			if (remote_data) {
+				/** @type {Record<string, any>} */
+				const remote = {};
+
+				for (const key in remote_data) {
+					remote[key] = await remote_data[key];
+				}
+
+				// TODO this is repeated in a few places — dedupe it
+				const replacer = (/** @type {any} */ thing) => {
+					for (const key in options.hooks.transport) {
+						const encoded = options.hooks.transport[key].encode(thing);
+						if (encoded) {
+							return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+						}
+					}
+				};
+
+				serialized.remote = devalue.uneval(remote, replacer);
+			}
+
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
-				`error: ${serialized.error}`
+				`error: ${serialized.error}`,
+				`remote: ${serialized.remote}`
 			];
 
 			if (status !== 200) {

@@ -316,7 +316,7 @@ function stringToNumber(param) {
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(content, node, image) {
-	/** @type {import('../types/internal.js').Attribute[]} attributes */
+	/** @type {import('../types/internal.js').Attribute[]} */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
 		(attribute) => 'name' in attribute && attribute.name === 'sizes'

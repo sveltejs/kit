@@ -100,6 +100,9 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 				nodes: [
 					${(node_paths).map(loader).join(',\n')}
 				],
+				remotes: {
+					${build_data.manifest_data.remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, remote.file).chunk.file))}`).join(',\n')}
+				},
 				routes: [
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;

@@ -417,6 +417,9 @@ importers:
 
   packages/kit:
     dependencies:
+      '@standard-schema/spec':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@sveltejs/acorn-typescript':
         specifier: ^1.0.5
         version: 1.0.5(acorn@8.14.1)
@@ -470,8 +473,8 @@ importers:
         specifier: ^2.4.7
         version: 2.4.7
       dts-buddy:
-        specifier: ^0.6.1
-        version: 0.6.1(typescript@5.6.3)
+        specifier: ^0.6.2
+        version: 0.6.2(typescript@5.6.3)
       rollup:
         specifier: ^4.14.2
         version: 4.40.1
@@ -2746,6 +2749,9 @@ packages:
     resolution: {integrity: sha512-doH1gimEu3A46VX6aVxpHTeHrytJAG6HgdxntYnCFiIFHEM/ZGpG8KiZGBChchjQmG0XFIBL552kBTjVcMZXwQ==}
     engines: {node: '>=12'}
 
+  '@standard-schema/spec@1.0.0':
+    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
+
   '@stylistic/eslint-plugin-js@2.1.0':
     resolution: {integrity: sha512-gdXUjGNSsnY6nPyqxu6lmDTtVrwCOjun4x8PUn0x04d5ucLI74N3MT1Q0UhdcOR9No3bo5PGDyBgXK+KmD787A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -3855,8 +3861,8 @@ packages:
   dropcss@1.0.16:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
 
-  dts-buddy@0.6.1:
-    resolution: {integrity: sha512-orWBhQBo542LCSm1KS0isZ+uyB/yRVoSwcgRY+mmWZrXcbf8HrDiqUk9x1qUbiQbqdK41NSCIAHLb26eXz0z3w==}
+  dts-buddy@0.6.2:
+    resolution: {integrity: sha512-KUmYrRKpVpjmnqM/JY93p1PWezMXodKCiMd5CFvfLtRCRc5i2GZiojrkVQXO2Dd8HeaU1C3sgTKDWxCEK5cyXA==}
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.4 <5.9'
@@ -8591,6 +8597,8 @@ snapshots:
     dependencies:
       escape-string-regexp: 5.0.0
 
+  '@standard-schema/spec@1.0.0': {}
+
   '@stylistic/eslint-plugin-js@2.1.0(eslint@9.29.0(jiti@2.4.2))':
     dependencies:
       '@types/eslint': 8.56.12
@@ -9791,7 +9799,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.6.1(typescript@5.6.3):
+  dts-buddy@0.6.2(typescript@5.6.3):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.0

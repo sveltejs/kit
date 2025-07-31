@@ -197,21 +197,27 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.universal?.load) {
+	const load = node?.universal?.load;
+
+	if (!load) {
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
-		url: event.url,
-		params: event.params,
-		data: server_data_node?.data ?? null,
-		route: event.route,
-		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-		setHeaders: event.setHeaders,
-		depends: () => {},
-		parent,
-		untrack: (fn) => fn()
-	});
+	// We're adding getRequestEvent context to the universal load function
+	// in order to be able to use remote calls within it.
+	const result = await with_event(event, () =>
+		load.call(null, {
+			url: event.url,
+			params: event.params,
+			data: server_data_node?.data ?? null,
+			route: event.route,
+			fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+			setHeaders: event.setHeaders,
+			depends: () => {},
+			parent,
+			untrack: (fn) => fn()
+		})
+	);
 
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, node.universal_id);
