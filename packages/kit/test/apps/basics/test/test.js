@@ -1589,14 +1589,14 @@ test.describe('remote functions', () => {
 		expect(await page.textContent('#echo-result')).toBe('Hello world');
 	});
 
-	test('form.formAction works', async ({ page }) => {
+	test('form.buttonProps works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-two');
 		await expect(page.locator('#form-result-2')).toHaveText('hi');
 	});
 
-	test('form.formAction error works', async ({ page }) => {
+	test('form.buttonProps error works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
 		await page.click('#submit-btn-two');

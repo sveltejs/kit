@@ -34,19 +34,19 @@ export function form(fn) {
 			}
 		});
 
-		const form_action = {
+		const button_props = {
 			type: 'submit',
 			onclick: () => {}
 		};
 
-		Object.defineProperty(form_action, 'enhance', {
+		Object.defineProperty(button_props, 'enhance', {
 			value: () => {
-				return { type: 'submit', formaction: instance.formAction.formaction, onclick: () => {} };
+				return { type: 'submit', formaction: instance.buttonProps.formaction, onclick: () => {} };
 			}
 		});
 
-		Object.defineProperty(instance, 'formAction', {
-			value: form_action
+		Object.defineProperty(instance, 'buttonProps', {
+			value: button_props
 		});
 
 		/** @type {RemoteInfo} */
@@ -80,7 +80,7 @@ export function form(fn) {
 			enumerable: true
 		});
 
-		Object.defineProperty(form_action, 'formaction', {
+		Object.defineProperty(button_props, 'formaction', {
 			get: () => `?/remote=${__.id}`,
 			enumerable: true
 		});

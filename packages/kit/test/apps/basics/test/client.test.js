@@ -1741,7 +1741,7 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form.formAction.enhance works', async ({ page }) => {
+	test('form.buttonProps.enhance works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task-enhance', 'abort');
 		await page.click('#submit-btn-enhance-two');
@@ -1768,7 +1768,7 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#get-task')).toHaveText('override');
 	});
 
-	test('form.formAction.enhance with override works', async ({ page }) => {
+	test('form.buttonProps.enhance with override works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task-override', 'override');
 		page.click('#submit-btn-override-one');

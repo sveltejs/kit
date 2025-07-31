@@ -195,7 +195,7 @@ export function form(id) {
 
 		instance.onsubmit = form_onsubmit(({ submit }) => submit());
 
-		/** @param {Parameters<RemoteForm<any>['formAction']['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return async (event) => {
@@ -224,19 +224,21 @@ export function form(id) {
 			};
 		};
 
-		/** @type {RemoteForm<any>['formAction']} */
+		/** @type {RemoteForm<any>['buttonProps']} */
 		// @ts-expect-error we gotta set enhance as a non-enumerable property
-		const form_action = {
+		const button_props = {
 			type: 'submit',
+			formmethod: 'POST',
 			formaction: action,
 			onclick: form_action_onclick(({ submit }) => submit())
 		};
 
-		Object.defineProperty(form_action, 'enhance', {
-			/** @type {RemoteForm<any>['formAction']['enhance']} */
+		Object.defineProperty(button_props, 'enhance', {
+			/** @type {RemoteForm<any>['buttonProps']['enhance']} */
 			value: (callback) => {
 				return {
 					type: 'submit',
+					formmethod: 'POST',
 					formaction: action,
 					onclick: form_action_onclick(callback)
 				};
@@ -244,8 +246,8 @@ export function form(id) {
 		});
 
 		Object.defineProperties(instance, {
-			formAction: {
-				value: form_action
+			buttonProps: {
+				value: button_props
 			},
 			result: {
 				get: () => result

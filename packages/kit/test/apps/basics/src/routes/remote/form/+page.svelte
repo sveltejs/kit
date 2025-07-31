@@ -9,7 +9,7 @@
 <form {...task_one}>
 	<input id="input-task" name="task" />
 	<button id="submit-btn-one">Task One</button>
-	<button id="submit-btn-two" {...task_two.formAction}>Task Two</button>
+	<button id="submit-btn-two" {...task_two.buttonProps}>Task Two</button>
 </form>
 
 <form
@@ -23,7 +23,7 @@
 	<button id="submit-btn-enhance-one">Task One (enhanced)</button>
 	<button
 		id="submit-btn-enhance-two"
-		{...task_two.formAction.enhance(async ({ data, submit }) => {
+		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
 			const task = data.get('task');
 			if (task === 'abort') return;
 			await submit();
@@ -41,7 +41,7 @@
 	<button id="submit-btn-override-one">Task One (with override)</button>
 	<button
 		id="submit-btn-override-two"
-		{...task_two.formAction.enhance(async ({ data, submit }) => {
+		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
 			const task = data.get('task');
 			await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
 		})}>Task Two (with override)</button

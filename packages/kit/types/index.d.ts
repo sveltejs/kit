@@ -1583,8 +1583,9 @@ declare module '@sveltejs/kit' {
 		/** The result of the form submission */
 		get result(): Result | undefined;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
-		formAction: {
+		buttonProps: {
 			type: 'submit';
+			formmethod: 'POST';
 			formaction: string;
 			onclick: (event: Event) => void;
 			/** Use the `enhance` method to influence what happens when the form is submitted. */
@@ -1600,6 +1601,7 @@ declare module '@sveltejs/kit' {
 				}) => void
 			): {
 				type: 'submit';
+				formmethod: 'POST';
 				formaction: string;
 				onclick: (event: Event) => void;
 			};
