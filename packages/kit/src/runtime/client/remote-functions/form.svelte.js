@@ -240,20 +240,15 @@ export function form(id) {
 					formaction: action,
 					onclick: form_action_onclick(callback)
 				};
-			},
-			enumerable: false
+			}
 		});
 
 		Object.defineProperties(instance, {
 			formAction: {
-				value: form_action,
-				enumerable: false
+				value: form_action
 			},
 			result: {
-				get() {
-					return result;
-				},
-				enumerable: false
+				get: () => result
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */
@@ -263,8 +258,7 @@ export function form(id) {
 						action,
 						onsubmit: form_onsubmit(callback)
 					};
-				},
-				enumerable: false
+				}
 			}
 		});
 
@@ -298,8 +292,7 @@ export function form(id) {
 			}
 
 			return entry.instance;
-		},
-		enumerable: false
+		}
 	});
 
 	return instance;

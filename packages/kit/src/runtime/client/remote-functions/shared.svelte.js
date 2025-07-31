@@ -73,8 +73,7 @@ export function create_remote_function(id, create) {
 			resource = create(cache_key, payload);
 
 			Object.defineProperty(resource, '_key', {
-				value: cache_key,
-				enumerable: false
+				value: cache_key
 			});
 
 			query_map.set(
