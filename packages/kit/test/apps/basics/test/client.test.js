@@ -1733,12 +1733,12 @@ test.describe('remote functions', () => {
 		await page.fill('#input-task-enhance', 'hi');
 		await page.click('#submit-btn-enhance-one');
 		await expect(page.locator('#form-result-1')).toHaveText('hi');
-		await expect(page.locator('#form-error-1')).toHaveText('');
 
 		await page.fill('#input-task-enhance', 'error');
 		await page.click('#submit-btn-enhance-one');
-		await expect(page.locator('#form-result-1')).toHaveText('');
-		await expect(page.locator('#form-error-1')).toHaveText('Expected error');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
 	});
 
 	test('form.formAction.enhance works', async ({ page }) => {
@@ -1751,12 +1751,12 @@ test.describe('remote functions', () => {
 		await page.fill('#input-task-enhance', 'hi');
 		await page.click('#submit-btn-enhance-two');
 		await expect(page.locator('#form-result-2')).toHaveText('hi');
-		await expect(page.locator('#form-error-2')).toHaveText('');
 
 		await page.fill('#input-task-enhance', 'error');
 		await page.click('#submit-btn-enhance-two');
-		await expect(page.locator('#form-result-2')).toHaveText('');
-		await expect(page.locator('#form-error-2')).toHaveText('Unexpected error (500 Internal Error)');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
 	});
 
 	test('form.enhance with override works', async ({ page }) => {

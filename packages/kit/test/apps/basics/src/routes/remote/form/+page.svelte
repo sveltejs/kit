@@ -16,9 +16,7 @@
 	{...task_one.enhance(async ({ data, submit }) => {
 		const task = data.get('task');
 		if (task === 'abort') return;
-		try {
-			await submit();
-		} catch {}
+		await submit();
 	})}
 >
 	<input id="input-task-enhance" name="task" />
@@ -28,9 +26,7 @@
 		{...task_two.formAction.enhance(async ({ data, submit }) => {
 			const task = data.get('task');
 			if (task === 'abort') return;
-			try {
-				await submit();
-			} catch {}
+			await submit();
 		})}>Task Two (enhanced)</button
 	>
 </form>
@@ -54,9 +50,6 @@
 
 <p id="form-result-1">{task_one.result}</p>
 <p id="form-result-2">{task_two.result}</p>
-
-<p id="form-error-1">{task_one.error?.message}</p>
-<p id="form-error-2">{task_two.error?.message}</p>
 
 {#each ['foo', 'bar'] as item}
 	<form {...task_one.for(item)}>
