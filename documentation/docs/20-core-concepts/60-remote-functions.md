@@ -442,6 +442,8 @@ The `command` function, like `form`, allows you to write data to the server. Unl
 
 > [!NOTE] Prefer `form` where possible, since it gracefully degrades if JavaScript is disabled or fails to load.
 
+As with `query`, if the function accepts an argument it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `command`.
+
 ```ts
 /// file: likes.remote.js
 // @filename: ambient.d.ts
@@ -450,11 +452,11 @@ declare module '$lib/server/database' {
 }
 // @filename: index.js
 // ---cut---
-import z from 'zod';
+import * as v from 'valibot';
 import { query, command } from '$app/server';
 import * as db from '$lib/server/database';
 
-export const getLikes = query(z.string(), async (id) => {
+export const getLikes = query(v.string(), async (id) => {
 	const [row] = await db.sql`
 		SELECT likes
 		FROM item
@@ -464,7 +466,7 @@ export const getLikes = query(z.string(), async (id) => {
 	return row.likes;
 });
 
-export const addLike = command(z.string(), async (id) => {
+export const addLike = command(v.string(), async (id) => {
 	await db.sql`
 		UPDATE item
 		SET likes = likes + 1
@@ -503,7 +505,7 @@ Now simply call `addLike`, from (for example) an event handler:
 
 ### Single-flight mutations
 
-As with forms, any queries on the page (such as `getLikes(item.id)` in the example above) will automatically be refreshed following a successful command, but we can make things more efficient by telling SvelteKit which queries will be affected by the command, either inside the command itself...
+As with forms, any queries on the page (such as `getLikes(item.id)` in the example above) will automatically be refreshed following a successful command. But we can make things more efficient by telling SvelteKit which queries will be affected by the command, either inside the command itself...
 
 ```js
 /// file: likes.remote.js
@@ -513,13 +515,13 @@ declare module '$lib/server/database' {
 }
 // @filename: index.js
 // ---cut---
-import z from 'zod';
+import * as v from 'valibot';
 import { query, command } from '$app/server';
 import * as db from '$lib/server/database';
 // ---cut---
-export const getLikes = query(z.string(), async (id) => { /* ... */ });
+export const getLikes = query(v.string(), async (id) => { /* ... */ });
 
-export const addLike = command(z.string(), async (id) => {
+export const addLike = command(v.string(), async (id) => {
 	await db.sql`
 		UPDATE item
 		SET likes = likes + 1
@@ -572,55 +574,108 @@ try {
 
 ## prerender
 
-This function is like `query` except that it will be invoked at build time to prerender the result. Use this for data that changes at most once per redeployment.
+The `prerender` function is similar to `query`, except that it will be invoked at build time to prerender the result. Use this for data that changes at most once per redeployment.
 
-```ts
-/// file: blog.remote.ts
-import z from 'zod';
+```js
+/// file: src/routes/blog/data.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
 import { prerender } from '$app/server';
+import * as db from '$lib/server/database';
 
-export const getBlogPost = prerender(z.string(), (slug) => {
-	// ...
+export const getPosts = prerender(async () => {
+	const posts = await db.sql`
+		SELECT title, slug
+		FROM post
+		ORDER BY published_at
+		DESC
+	`;
+
+	return posts;
 });
 ```
 
-You can use `prerender` functions on pages that are otherwise dynamic, allowing for partial prerendering of your data. This results in very fast navigation, since prerendered data can live on a CDN along with your other static assets, and will be put into the user's browser cache using the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) which even survives page reloads.
+You can use `prerender` functions on pages that are otherwise dynamic, allowing for partial prerendering of your data. This results in very fast navigation, since prerendered data can live on a CDN along with your other static assets.
+
+In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
 
 > [!NOTE] When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
 
-Prerendering is automatic, driven by SvelteKit's crawler, but you can also provide an `entries` option to control what gets prerendered, in case some pages cannot be reached by the crawler:
+### Prerender arguments
 
-```ts
-/// file: blog.remote.ts
-import z from 'zod';
+As with queries, prerender functions can accept an argument, which should be [validated](#query-Query-arguments) with a [Standard Schema](https://standardschema.dev/):
+
+```js
+/// file: src/routes/blog/data.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
+import * as v from 'valibot';
+import { error } from '@sveltejs/kit';
 import { prerender } from '$app/server';
+import * as db from '$lib/server/database';
 
-export const getBlogPost = prerender(
-	z.string(),
-	(slug) => {
-		// ...
-	},
+export const getPosts = prerender(async () => { /* ... */ });
+
+export const getPost = prerender(v.string(), async (slug) => {
+	const [post] = await db.sql`
+		SELECT * FROM post
+		WHERE slug = ${slug}
+	`;
+
+	if (!post) error(404, 'Not found');
+	return post;
+});
+```
+
+Any calls to `getPost(...)` found by SvelteKit's crawler while [prerendering pages](page-options#prerender) will be saved automatically, but you can also specify which values it should be called with using the `inputs` option:
+
+```js
+/// file: src/routes/blog/data.remote.js
+import * as v from 'valibot';
+import { prerender } from '$app/server';
+// ---cut---
+
+export const getPost = prerender(
+	v.string(),
+	async (slug) => { /* ... */ },
 	{
-		entries: () => ['first-post', 'second-post', 'third-post']
+		inputs: () => [
+			'first-post',
+			'second-post',
+			'third-post'
+		]
 	}
 );
 ```
 
-If the function is called at runtime with arguments that were not prerendered it will error by default, as the code will not have been included in the server bundle. You can set `dynamic: true` to change this behaviour:
+> [!NOTE] Svelte does not yet support asynchronous server-side rendering, and as such it's likely that you're only calling remote functions from the browser, rather than during prerendering. Because of this you will need to use `inputs`, for now. We're actively working on this roadblock.
 
-```ts
-/// file: blog.remote.ts
-import z from 'zod';
+By default, prerender functions are excluded from your server bundle, which means that you cannot call them with any arguments that were _not_ prerendered. You can set `dynamic: true` to change this behaviour:
+
+```js
+/// file: src/routes/blog/data.remote.js
+import * as v from 'valibot';
 import { prerender } from '$app/server';
+// ---cut---
 
-export const getBlogPost = prerender(
-	z.string(),
-	(slug) => {
-		// ...
-	},
+export const getPost = prerender(
+	v.string(),
+	async (slug) => { /* ... */ },
 	{
-		+++dynamic: true,+++
-		entries: () => ['first-post', 'second-post', 'third-post']
+		+++dynamic: true+++,
+		inputs: () => [
+			'first-post',
+			'second-post',
+			'third-post'
+		]
 	}
 );
 ```
@@ -664,7 +719,7 @@ Data validation is an important part of remote functions. They look like regular
 ```ts
 /// file: data.remote.ts
 import { query } from '$app/server';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const schema = z.object({
 	id: z.string()
@@ -681,7 +736,7 @@ By default a failed schema validation will result in a generic `400` response wi
 
 ```js
 /// file: src/hooks.server.ts
-import z from 'zod';
+import * as z from 'zod';
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
 export function handleValidationError({ issues }) {
