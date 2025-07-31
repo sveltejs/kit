@@ -14,6 +14,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @overload
  * @param {() => Output} fn
  * @returns {RemoteCommand<void, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -26,6 +27,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {'unchecked'} validate
  * @param {(arg: Input) => Output} fn
  * @returns {RemoteCommand<Input, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -38,6 +40,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {Schema} validate
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
  * @returns {RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @since 2.27
  */
 /**
  * @template Input
@@ -45,6 +48,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {any} validate_or_fn
  * @param {(arg?: Input) => Output} [maybe_fn]
  * @returns {RemoteCommand<Input, Output>}
+ * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {

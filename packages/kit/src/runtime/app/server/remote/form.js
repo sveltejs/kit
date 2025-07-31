@@ -12,6 +12,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @template T
  * @param {(data: FormData) => MaybePromise<T>} fn
  * @returns {RemoteForm<T>}
+ * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible

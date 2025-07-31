@@ -25,6 +25,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {() => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<void>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<void, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -38,6 +39,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {(arg: Input) => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<Input, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -51,6 +53,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @param {{ inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>, dynamic?: boolean }} [options]
  * @returns {RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @since 2.27
  */
 /**
  * @template Input
@@ -59,6 +62,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {any} [fn_or_options]
  * @param {{ inputs?: RemotePrerenderInputsGenerator<Input>, dynamic?: boolean }} [maybe_options]
  * @returns {RemotePrerenderFunction<Input, Output>}
+ * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function prerender(validate_or_fn, fn_or_options, maybe_options) {

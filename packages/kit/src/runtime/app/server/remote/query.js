@@ -21,6 +21,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @overload
  * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<void, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -33,6 +34,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {'unchecked'} validate
  * @param {(arg: Input) => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<Input, Output>}
+ * @since 2.27
  */
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -45,6 +47,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @returns {RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @since 2.27
  */
 /**
  * @template Input
@@ -52,6 +55,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @param {any} validate_or_fn
  * @param {(args?: Input) => MaybePromise<Output>} [maybe_fn]
  * @returns {RemoteQueryFunction<Input, Output>}
+ * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function query(validate_or_fn, maybe_fn) {
