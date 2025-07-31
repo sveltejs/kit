@@ -331,29 +331,6 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-### Forms in a list
-
-Sometimes you may have form submissions of the same type in a list, and each form action should be independently managed. Use the `for` method to create separate instances of the same form submission. In the following example, each todo item gets a separate `toggleTodo` form instance, which means you can toggle many in quick succession, with the submission results staying independent of each other:
-
-```svelte
-<!--- file: +page.svelte --->
-<script>
-	import { getTodos, toggleTodo } from './todos.remote';
-</script>
-
-{#each await getTodos() as todo (todo.id)}
-	{@const toggle = toggleTodo.for(todo.id)}
-	<form {...toggle}>
-		<input type="hidden" name="id" value={item.id} />
-		<input type="checkbox" checked={todo.checked} />
-		<button>toggle</button>
-		{#if toggle.result?.error}
-			<span class="error">Something went wrong</span>
-		{/if}
-	</form>
-{/each}
-```
-
 ### formAction
 
 Forms allow you to have more than one button that kicks up a form submission. The non-primary buttons must have a `formaction` property in that case. The remote form provides a `formAction` property that allows you to do just that:
