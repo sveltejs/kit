@@ -680,39 +680,26 @@ export const getPost = prerender(
 );
 ```
 
-## Validation
+## Handling validation errors
 
-Data validation is an important part of remote functions. They look like regular JavaScript functions but they are actually auto-generated public endpoints. For that reason we strongly encourage you to validate the input using a [Standard Schema](https://standardschema.dev/) object, which you create for example through `Zod`:
+As long as _you're_ not passing invalid data to your remote functions, there are only two reasons why the argument passed to a `command`, `query` or `prerender` function would fail validation:
 
-```ts
-/// file: data.remote.ts
-import { query } from '$app/server';
-import * as z from 'zod';
+- the function signature changed between deployments, and some users are currently on an older version of your app
+- someone is trying to attack your site by poking your exposed endpoints with bad data
 
-const schema = z.object({
-	id: z.string()
-});
-
-export const getStuff = query(schema, async ({ id }) => {
-	// `id` is typed correctly. if the function
-	// was called with bad arguments, it will
-	// result in a 400 Bad Request response
-});
-```
-
-By default a failed schema validation will result in a generic `400` response with just the text `Bad Request`. You can adjust the returned shape by implementing the `handleValidationError` hook in `hooks.server.js`. The returned shape must adhere to the shape of `App.Error`.
+In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#Server-hooks-handleValidationError) server hook, which, like [`handleError`](hooks#Shared-hooks-handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
 
 ```js
 /// file: src/hooks.server.ts
-import * as z from 'zod';
-
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export function handleValidationError({ issues }) {
-	return { validationErrors: z.prettifyError({ issues })}
+export function handleValidationError({ event, issues }) {
+	return {
+		message: 'Nice try, hacker!'
+	};
 }
 ```
 
-If you wish to opt out of validation (for example because you validate through other means, or just know this isn't a problem), you can do so by passing `'unchecked'` as the first argument instead:
+If you know what you're doing and want to opt out of validation, you can pass the string `'unchecked'` in place of a schema:
 
 ```ts
 /// file: data.remote.ts
@@ -724,24 +711,11 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 });
 ```
 
-In case your `query` does not accept arguments you don't need to pass a schema or `'unchecked'` - validation is added under the hood on your behalf to check that no arguments are passed to this function:
+> [!NOTE] `form` does not accept a schema since you are always passed a `FormData` object. You are free to parse and validate this as you see fit.
 
-```ts
-/// file: data.remote.ts
-import { query } from '$app/server';
+## Using `getRequestEvent`
 
-export const getStuff = query(() => {
-	// ...
-});
-```
-
-The same applies to `prerender` and `command`. `form` does not accept a schema since you are always passed a `FormData` object which you need to parse and validate yourself.
-
-## Accessing the current request event
-
-SvelteKit exposes a function called [`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent) which allows you to get details of the current request inside hooks, `load`, actions, server endpoints, and the functions they call.
-
-This function can now also be used in `query`, `form` and `command`, allowing us to do things like reading and writing cookies:
+Inside `query`, `form` and `command` you can use [`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
 
 ```ts
 /// file: user.remote.ts
@@ -766,7 +740,7 @@ function getUser() {
 }
 ```
 
-Note that some properties of `RequestEvent` are different in remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).
+Note that some properties of `RequestEvent` are different inside remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).
 
 ## Redirects
 
