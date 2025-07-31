@@ -1,4 +1,4 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
+/** @import { RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir } from '__sveltekit/paths';
@@ -45,7 +45,7 @@ export function form(id) {
 				entry.count++;
 			}
 
-			/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
+			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
 
 			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */

@@ -1503,45 +1503,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The return value of a remote `form` function.
-	 * Spread it onto a `<form>` element to connect the element to the remote function.
-	 *
-	 * ```svelte
-	 * <script>
-	 *   import { createTodo } from './todos.remote.js';
-	 * </script>
-	 *
-	 * <form {...createTodo}>
-	 *   <input name="text" />
-	 *   <!-- ... -->
-	 * </form>
-	 * ```
-	 * Use the `enhance` method to influence what happens when the form is submitted.
-	 * ```svelte
-	 * <script>
-	 *   import { getTodos, createTodo } from './todos.remote.js';
-	 * </script>
-	 *
-	 * <form {...myFormAction.enhance(async ({ data, submit }) => {
-	 *   // `data` is an instance of FormData (https://developer.mozilla.org/en-US/docs/Web/API/FormData)
-	 *   const text = data.get('text');
-	 *   const todo = { text, done: false };
-	 *
-	 *   // `updates` and `withOverride` enable optimistic UI updates
-	 *   await submit().updates(
-	 *     getTodos().withOverride((todos) => [...todos, todo])
-	 *   );
-	 * })}>
-	 *   <input name="text" />
-	 *   <!-- ... -->
-	 * </form>
-	 *
-	 * <ul>
-	 * 	{#each await getTodos() as todo}
-	 * 		<li>{todo.text}</li>
-	 * 	{/each}
-	 * </ul>
-	 * ```
+	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Result> = {
 		method: 'POST';
@@ -1555,9 +1517,7 @@ declare module '@sveltejs/kit' {
 				form: HTMLFormElement;
 				data: FormData;
 				submit: () => Promise<void> & {
-					updates: (
-						...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
-					) => Promise<void>;
+					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 				};
 			}) => void
 		): {
@@ -1594,9 +1554,7 @@ declare module '@sveltejs/kit' {
 					form: HTMLFormElement;
 					data: FormData;
 					submit: () => Promise<void> & {
-						updates: (
-							...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
-						) => Promise<void>;
+						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 					};
 				}) => void
 			): {
@@ -1609,54 +1567,10 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
-	 * The return value of a remote `command` function.
-	 * Call it with the input arguments to execute the command.
-	 *
-	 * Note: Prefer remote `form` functions when possible, as they
-	 * work without JavaScript enabled.
-	 *
-	 * ```svelte
-	 * <script>
-	 *   import { createTodo } from './todos.remote.js';
-	 *
-	 *   let text = $state('');
-	 * </script>
-	 *
-	 * <input bind:value={text} />
-	 * <button onclick={async () => {
-	 *   await createTodo({ text });
-	 * }}>
-	 *   Create Todo
-	 * </button>
-	 * ```
-	 * Use the `updates` method to specify which queries to update in response to the command.
-	 * ```svelte
-	 * <script>
-	 *   import { getTodos, createTodo } from './todos.remote.js';
-	 *
-	 *   let text = $state('');
-	 * </script>
-	 *
-	 * <input bind:value={text} />
-	 * <button onclick={async () => {
-	 *   await createTodo({ text }).updates(
-	 *     getTodos.withOverride((todos) => [...todos, { text, done: false }])
-	 *   );
-	 * }}>
-	 *   Create Todo
-	 * </button>
-	 *
-	 * <ul>
-	 * 	{#each await getTodos() as todo}
-	 * 		<li>{todo.text}</li>
-	 * 	{/each}
-	 * </ul>
-	 * ```
+	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-		updates(
-			...queries: Array<RemoteQuery<any> | ReturnType<RemoteQuery<any>['withOverride']>>
-		): Promise<Awaited<Output>>;
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
 	};
 
 	export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -1666,12 +1580,12 @@ declare module '@sveltejs/kit' {
 		get loading(): boolean;
 	} & (
 			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
+					/** The current value of the query. Undefined until `ready` is `true` */
 					get current(): undefined;
 					ready: false;
 			  }
 			| {
-					/** The current value of the query. Undefined as long as there's no value yet */
+					/** The current value of the query. Undefined until `ready` is `true` */
 					get current(): Awaited<T>;
 					ready: true;
 			  }
@@ -1681,15 +1595,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
-		 * On the server, this can be called in the context of a `command` or `form` remote function. It will then
-		 * transport the updated data to the client along with the response, if the action was successful.
+		 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
+		 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
 		 */
 		refresh(): Promise<void>;
 		/**
-		 * Temporarily override the value of a query. Useful for optimistic UI updates.
-		 * `withOverride` expects a function that takes the current value and returns the new value.
-		 * In other words this works like `override`, but is specifically for use as part of the `updates` method of a remote `command` or `form` submit
-		 * in order to coordinate query refreshes and override releases at once, without causing e.g. flickering in the UI.
+		 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Single-flight-mutations) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
 		 *
 		 * ```svelte
 		 * <script>
@@ -1698,33 +1609,30 @@ declare module '@sveltejs/kit' {
 		 * </script>
 		 *
 		 * <form {...addTodo.enhance(async ({ data, submit }) => {
-		 *   await submit().updates(todos.withOverride((todos) => [...todos, { text: data.get('text') }]));
+		 *   await submit().updates(
+		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+		 *   );
 		 * }}>
 		 *   <input type="text" name="text" />
 		 *   <button type="submit">Add Todo</button>
 		 * </form>
 		 * ```
 		 */
-		withOverride(update: (current: Awaited<T>) => Awaited<T>): {
-			_key: string;
-			release: () => void;
-		};
+		withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
 	};
 
+	export interface RemoteQueryOverride {
+		_key: string;
+		release(): void;
+	}
+
 	/**
-	 * The return value of a remote `prerender` function.
-	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call the underlying function.
-	 * On the client, this will `fetch` data from the server.
+	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
 	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
 
 	/**
-	 * The return value of a remote `query` function.
-	 * Call it with the input arguments to retrieve the value.
-	 * On the server, this will directly call the underlying function.
-	 * On the client, this will `fetch` data from the server.
-	 * When the query is called in a reactive context on the client, it will update its dependencies with a new value whenever `refresh()` or `override()` are called.
+	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
 	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 	interface AdapterEntry {

@@ -1,4 +1,4 @@
-/** @import { RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir } from '__sveltekit/paths';
@@ -17,7 +17,7 @@ export function command(id) {
 	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
 	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
 	return (arg) => {
-		/** @type {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} */
+		/** @type {Array<Query<any> | RemoteQueryOverride>} */
 		let updates = [];
 
 		/** @type {Promise<any> & { updates: (...args: any[]) => any }} */

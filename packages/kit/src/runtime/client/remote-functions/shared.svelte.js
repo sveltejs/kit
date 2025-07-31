@@ -1,5 +1,6 @@
-/** @import { Query } from './query.svelte.js' */
+/** @import { RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
+/** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
 import { app, goto, invalidateAll, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -108,7 +109,7 @@ export function create_remote_function(id, create) {
 }
 
 /**
- * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
+ * @param {Array<Query<any> | RemoteQueryOverride>} updates
  */
 export function release_overrides(updates) {
 	for (const update of updates) {
@@ -120,7 +121,7 @@ export function release_overrides(updates) {
 
 /**
  * @param {string} stringified_refreshes
- * @param {Array<Query<any> | ReturnType<Query<any>['withOverride']>>} updates
+ * @param {Array<Query<any> | RemoteQueryOverride>} updates
  */
 export function refresh_queries(stringified_refreshes, updates = []) {
 	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
