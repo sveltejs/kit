@@ -270,7 +270,7 @@ export const createPost = form(async (data) => {
 
 	// Refresh `getPosts()` on the server, and send
 	// the data back with the result of `createPost`
-	+++getPosts().refresh();+++
+	+++await getPosts().refresh();+++
 
 	// Redirect to the newly created page
 	redirect(303, `/blog/${slug}`);
