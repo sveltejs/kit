@@ -115,8 +115,8 @@ Additionally, you can add your own Netlify functions by creating a directory for
 
 ### Accessing the file system
 
-You can't use `fs` in edge deployments.
+You can't use `fs` in edge functions.
 
-You _can_ use it in serverless deployments, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. `read` does not work inside edge deployments (this may change in future).
+You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It also works inside edge deployments by fetching the file from the deployed public assets location.
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.
