@@ -24,7 +24,7 @@ const config = {
 
 		alias: {
 			$modules: './src/modules'
-		},	
+		},
 
 		prerender: {
 			entries: [

@@ -481,10 +481,7 @@ function create_remotes(config, cwd) {
 	const remotes = [];
 
 	// TODO could files live in other directories, including node_modules?
-	const directories = [
-		config.kit.files.lib,
-		config.kit.files.routes
-	];
+	const directories = [config.kit.files.lib, config.kit.files.routes];
 
 	// Add alias directories
 	for (const [, alias_path] of Object.entries(config.kit.alias)) {
