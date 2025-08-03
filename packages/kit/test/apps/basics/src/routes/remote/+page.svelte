@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { refreshAll } from '$app/navigation';
 	import { add, get_count, set_count, set_count_server } from './query-command.remote.js';
+	import { get_hello_from_modules } from '$modules/remotes/hello.remote.js';
 
 	let { data } = $props();
 
@@ -11,6 +12,9 @@
 	const count = browser ? get_count() : null; // so that we get a remote request in the browser
 </script>
 
+{#if browser}
+	<p id="hello-from-modules">{#await get_hello_from_modules() then result}{result}{/await}</p>
+{/if}
 <p id="echo-result">{data.echo_result}</p>
 <!-- TODO use await here once async lands -->
 {#if browser}

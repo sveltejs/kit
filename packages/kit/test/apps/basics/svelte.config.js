@@ -22,6 +22,10 @@ const config = {
 			remoteFunctions: true
 		},
 
+		alias: {
+			$modules: './src/modules'
+		},	
+
 		prerender: {
 			entries: [
 				'*',

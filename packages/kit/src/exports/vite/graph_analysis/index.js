@@ -5,6 +5,7 @@ import { app_server, env_dynamic_private, env_static_private } from '../module_i
 
 const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
+const REMOTE_FILE_PATTERN = /.*\.remote\..+/;
 
 /**
  * Checks if given id imports a module that is not allowed to be imported into client-side code.
@@ -18,6 +19,10 @@ const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 export function is_illegal(id, dirs) {
 	if (ILLEGAL_IMPORTS.has(id)) return true;
 	if (!id.startsWith(dirs.cwd) || id.startsWith(dirs.node_modules)) return false;
+	
+	// Allow remote functions to be imported on the client side (they get transformed)
+	if (REMOTE_FILE_PATTERN.test(path.basename(id))) return false;
+	
 	return ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) || id.startsWith(dirs.server);
 }
 

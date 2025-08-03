@@ -820,3 +820,19 @@ test('errors with both ts and js handlers for the same route', () => {
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
 	);
 });
+
+test('finds remote functions in alias directories', () => {
+	const { remotes } = create('samples/remotes-with-alias', {
+		kit: {
+			experimental: {
+				remoteFunctions: true
+			},
+			alias: {
+				$modules: './src/modules'
+			}
+		}
+	});
+
+	expect(remotes).toHaveLength(1);
+	expect(remotes[0].file).toBe('samples/remotes-with-alias/src/modules/remotes/hello.remote.js');
+});
