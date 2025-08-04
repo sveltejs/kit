@@ -244,6 +244,16 @@ describe('exec', () => {
 			route: '/[[slug1=doesntmatch]]/[...slug2=doesntmatch]',
 			path: '/a/b/c',
 			expected: undefined
+		},
+		{
+			route: '/[...catchall]',
+			path: '/\n',
+			expected: { catchall: '\n' }
+		},
+		{
+			route: '/[[...catchall]]',
+			path: '/\n',
+			expected: { catchall: '\n' }
 		}
 	];
 
