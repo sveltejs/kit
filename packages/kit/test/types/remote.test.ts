@@ -3,6 +3,7 @@ import { StandardSchemaV1 } from '@standard-schema/spec';
 import { RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
+const schema2: StandardSchemaV1<string, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
@@ -50,6 +51,13 @@ function query_tests() {
 		result;
 	}
 	query_schema();
+
+	async function query_schema_type() {
+		const q = query(schema2, (a) => a);
+		const result: number = await q('1');
+		result;
+	}
+	query_schema_type();
 }
 query_tests();
 
