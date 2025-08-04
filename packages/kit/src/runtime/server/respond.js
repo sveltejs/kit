@@ -609,7 +609,7 @@ export async function respond(request, options, manifest, state) {
 			// so we need to make an actual HTTP request
 			const fetchResponse = await fetch(request);
 
-			// the header for the response needs to be mutable, so we need to clone it
+			// the headers for the response needs to be mutable so that cookies can be added
 			return new Response(fetchResponse.body, {
 				status: fetchResponse.status,
 				statusText: fetchResponse.statusText,
