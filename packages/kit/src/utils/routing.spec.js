@@ -36,11 +36,11 @@ describe('parse_route_id', () => {
 			params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: false }]
 		},
 		'/[...catchall]': {
-			pattern: /^(?:\/(.*))?\/?$/,
+			pattern: /^(?:\/([^]*))?\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/foo/[...catchall]/bar': {
-			pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
+			pattern: /^\/foo(?:\/([^]*))?\/bar\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/matched/[id=uuid]': {
