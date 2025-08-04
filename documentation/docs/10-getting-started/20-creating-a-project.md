@@ -10,7 +10,7 @@ cd my-app
 npm run dev
 ```
 
-The first command will scaffold a new project in the `my-app` directory and install dependencies, asking you to confiugre basic tooling such as TypeScript. See [integrations](./integrations) for pointers on setting up additional tooling. The next commands will start a server on [localhost:5173](http://localhost:5173).
+The first command will scaffold a new project in the `my-app` directory and install dependencies, asking you to configure basic tooling such as TypeScript. See [integrations](./integrations) for pointers on setting up additional tooling. The next commands will start a server on [localhost:5173](http://localhost:5173).
 
 There are two basic concepts:
 
