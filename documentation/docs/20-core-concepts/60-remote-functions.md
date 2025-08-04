@@ -6,7 +6,7 @@ title: Remote functions
 	<p>Available since 2.27</p>
 </blockquote>
 
-Remote functions are a tool for type-safe communication between client and server. They can be _called_ anywhere in your app, but always _run_ on the server, and as such can safely access [server-only modules](server-only-modules) containing things like environment variables and database clients.
+Remote functions are a tool for type-safe communication between client and server. They can be _called_ anywhere in your app, but always _run_ on the server, and thus can safely access [server-only modules](server-only-modules) containing things like environment variables and database clients.
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
@@ -160,7 +160,7 @@ Any query can be updated via its `refresh` method:
 </button>
 ```
 
-> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. As such, you don't need a reference like `const posts = getPosts()` in order to refresh the query.
+> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to refresh the query.
 
 ## form
 
@@ -656,7 +656,7 @@ export const getPost = prerender(
 );
 ```
 
-> [!NOTE] Svelte does not yet support asynchronous server-side rendering, and as such it's likely that you're only calling remote functions from the browser, rather than during prerendering. Because of this you will need to use `inputs`, for now. We're actively working on this roadblock.
+> [!NOTE] Svelte does not yet support asynchronous server-side rendering, so it's likely that you're only calling remote functions from the browser, rather than during prerendering. Because of this, you will need to use `inputs`, for now. We're actively working on this roadblock.
 
 By default, prerender functions are excluded from your server bundle, which means that you cannot call them with any arguments that were _not_ prerendered. You can set `dynamic: true` to change this behaviour:
 
