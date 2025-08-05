@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { Worker, parentPort } from 'node:worker_threads';
+import process from 'node:process';
 
 /**
  * Runs a task in a subprocess so any dangling stuff gets killed upon completion.

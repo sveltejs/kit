@@ -1,35 +1,42 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { get_option } from '../../utils/options.js';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { resolve_route } from '../../utils/routing.js';
-import { get_page_config } from '../../utils/route_config.js';
+import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
+import { PageNodes } from '../../utils/page_nodes.js';
+import { build_server_nodes } from '../../exports/vite/build/build_server.js';
+import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
+ *   hash: boolean;
  *   manifest_path: string;
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   out: string;
+ *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  * }} opts
  */
-async function analyse({ manifest_path, manifest_data, server_manifest, tracked_features, env }) {
+async function analyse({
+	hash,
+	manifest_path,
+	manifest_data,
+	server_manifest,
+	tracked_features,
+	env,
+	out,
+	output_config
+}) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -57,18 +64,47 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
+	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
+	const static_exports = new Map();
+
+	// first, build server nodes without the client manifest so we can analyse it
+	await build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		output_config,
+		static_exports
+	);
+
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
 
 	// analyse nodes
 	for (const node of nodes) {
+		if (hash && node.universal) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
+
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+			has_server_load: has_server_load(node)
 		};
 	}
 
@@ -130,7 +166,29 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 		});
 	}
 
-	return metadata;
+	// analyse remotes
+	for (const remote of manifest_data.remotes) {
+		const loader = manifest._.remotes[remote.hash];
+		const module = await loader();
+
+		validate_remote_functions(module, remote.file);
+
+		const exports = new Map();
+
+		for (const name in module) {
+			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+			const type = info.type;
+
+			exports.set(name, {
+				type,
+				dynamic: type !== 'prerender' || info.dynamic
+			});
+		}
+
+		metadata.remotes.set(remote.hash, exports);
+	}
+
+	return { metadata, static_exports };
 }
 
 /**
@@ -170,25 +228,18 @@ function analyse_endpoint(route, mod) {
  * @param {import('types').SSRNode} leaf
  */
 function analyse_page(layouts, leaf) {
-	for (const layout of layouts) {
-		if (layout) {
-			validate_layout_server_exports(layout.server, layout.server_id);
-			validate_layout_exports(layout.universal, layout.universal_id);
-		}
-	}
-
 	/** @type {Array<'GET' | 'POST'>} */
 	const methods = ['GET'];
 	if (leaf.server?.actions) methods.push('POST');
 
-	validate_page_server_exports(leaf.server, leaf.server_id);
-	validate_page_exports(leaf.universal, leaf.universal_id);
+	const nodes = new PageNodes([...layouts, leaf]);
+	nodes.validate();
 
 	return {
-		config: get_page_config([...layouts, leaf]),
+		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: get_option([...layouts, leaf], 'prerender') ?? false
+		prerender: nodes.prerender()
 	};
 }
 

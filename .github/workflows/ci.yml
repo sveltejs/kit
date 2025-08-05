@@ -19,14 +19,26 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
+  pkg-pr-new:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpx pkg-pr-new publish --comment=off ./packages/*
   lint-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -45,12 +57,15 @@ jobs:
           - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
+          - node-version: 22
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -59,6 +74,10 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
@@ -78,7 +97,7 @@ jobs:
       matrix:
         include:
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
           - node-version: 18
@@ -90,7 +109,7 @@ jobs:
             e2e-browser: 'webkit'
             mode: 'dev'
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
           - node-version: 18
@@ -106,7 +125,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -115,6 +134,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:cross-platform:${{ matrix.mode }}
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
@@ -126,16 +147,55 @@ jobs:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
-  test-others:
+  test-kit-server-side-route-resolution:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: 'dev'
+          - mode: 'build'
     steps:
+      - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.0.0
+      - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install chromium
+      - run: pnpm run sync-all
+      - run: pnpm test:server-side-route-resolution:${{ matrix.mode }}
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
+      - name: Archive test results
+        if: failure()
+        shell: bash
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 3
+          name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
+          path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
+  test-others:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{matrix.node-version}}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts

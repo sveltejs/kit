@@ -117,7 +117,7 @@ export function remove_optional_params(id) {
  * @param {string} segment
  */
 function affects_path(segment) {
-	return !/^\([^)]+\)$/.test(segment);
+	return segment !== '' && !/^\([^)]+\)$/.test(segment);
 }
 
 /**
@@ -264,4 +264,12 @@ export function resolve_route(id, params) {
 			.filter(Boolean)
 			.join('/')
 	);
+}
+
+/**
+ * @param {import('types').SSRNode} node
+ * @returns {boolean}
+ */
+export function has_server_load(node) {
+	return node.server?.load !== undefined || node.server?.trailingSlash !== undefined;
 }

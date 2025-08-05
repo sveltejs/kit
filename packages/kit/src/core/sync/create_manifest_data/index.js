@@ -1,11 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
+import { isSvelte5Plus } from '../utils.js';
+import { hash } from '../../../utils/hash.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -18,13 +21,14 @@ import { sort_routes } from './sort.js';
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${runtime_directory}/components`,
+	fallback = `${runtime_directory}/components/${isSvelte5Plus() ? 'svelte-5' : 'svelte-4'}`,
 	cwd = process.cwd()
 }) {
 	const assets = create_assets(config);
 	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+	const remotes = create_remotes(config, cwd);
 
 	for (const route of routes) {
 		for (const param of route.params) {
@@ -39,6 +43,7 @@ export default function create_manifest_data({
 		hooks,
 		matchers,
 		nodes,
+		remotes,
 		routes
 	};
 }
@@ -269,6 +274,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					config.kit.moduleExtensions
 				);
 
+				if (config.kit.router.type === 'hash' && item.kind === 'server') {
+					throw new Error(
+						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
+					);
+				}
+
 				/**
 				 * @param {string} type
 				 * @param {string} existing_file
@@ -353,7 +364,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
-					'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
+					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your Svelte config file'
 				);
 			}
 		}
@@ -455,6 +466,37 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		nodes,
 		routes: sort_routes(routes)
 	};
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ */
+function create_remotes(config, cwd) {
+	if (!config.kit.experimental.remoteFunctions) return [];
+
+	const extensions = config.kit.moduleExtensions.map((ext) => `.remote${ext}`);
+
+	/** @type {import('types').ManifestData['remotes']} */
+	const remotes = [];
+
+	// TODO could files live in other directories, including node_modules?
+	for (const dir of [config.kit.files.lib, config.kit.files.routes]) {
+		if (!fs.existsSync(dir)) continue;
+
+		for (const file of walk(dir)) {
+			if (extensions.some((ext) => file.endsWith(ext))) {
+				const posixified = posixify(path.relative(cwd, `${dir}/${file}`));
+
+				remotes.push({
+					hash: hash(posixified),
+					file: posixified
+				});
+			}
+		}
+	}
+
+	return remotes;
 }
 
 /**

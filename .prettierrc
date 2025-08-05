@@ -23,15 +23,19 @@
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
 				"**/.svelte-kit/**",
+				"**/.custom-out-dir/**",
+				"**/build/**",
+				"**/test-results/**",
+				"**/.wrangler/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
 				"packages/kit/src/core/postbuild/fixtures/**/*",
-				"packages/migrate/migrations/routes/*/samples.md"
+				"packages/adapter-cloudflare/test/apps/workers/dist/**/*"
 			],
 			"options": {
-				"requirePragma": true
+				"rangeEnd": 0
 			}
 		}
 	]

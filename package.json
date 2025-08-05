@@ -8,31 +8,43 @@
 		"test:kit": "pnpm run --dir packages/kit test",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
-		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
-		"test:others": "pnpm test -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1",
+		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
+		"test:server-side-route-resolution:build": "pnpm run --dir packages/kit test:server-side-route-resolution:build",
+		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
+		"test:others": "pnpm -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1 test",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
-		"start": "cd sites/kit.svelte.dev && npm run dev",
 		"build": "pnpm --filter @sveltejs/* -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.1",
-		"@sveltejs/eslint-config": "^7.0.1",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"eslint": "^9.0.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.36.0",
-		"eslint-plugin-unicorn": "^54.0.0",
-		"playwright": "^1.44.1",
-		"typescript-eslint": "^8.0.0-alpha.20"
+		"@changesets/cli": "^2.29.5",
+		"@playwright/test": "catalog:",
+		"@sveltejs/eslint-config": "^8.2.0",
+		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
+		"eslint": "^9.29.0",
+		"prettier": "^3.6.0",
+		"prettier-plugin-svelte": "^3.4.0",
+		"typescript-eslint": "^8.35.0"
 	},
-	"packageManager": "pnpm@9.2.0",
+	"packageManager": "pnpm@10.14.0",
 	"engines": {
-		"pnpm": "^9.0.0"
+		"pnpm": ">=9.0.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@parcel/watcher",
+			"esbuild",
+			"netlify-cli",
+			"rolldown",
+			"sharp",
+			"svelte-preprocess",
+			"unix-dgram",
+			"workerd"
+		]
 	}
 }

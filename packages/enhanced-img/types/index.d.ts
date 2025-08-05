@@ -5,7 +5,7 @@ import './ambient.js';
 
 type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
 
-// https://svelte.dev/docs/typescript#enhancing-built-in-dom-types
+// https://svelte.dev/docs/svelte/typescript#enhancing-built-in-dom-types
 declare module 'svelte/elements' {
 	export interface SvelteHTMLElements {
 		'enhanced:img': EnhancedImgAttributes;

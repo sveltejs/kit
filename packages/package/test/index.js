@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import process from 'node:process';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,7 +42,7 @@ async function test_make_package(path, options) {
 
 	assert.equal(actual_files, expected_files);
 
-	const extensions = ['.json', '.svelte', '.ts', 'js'];
+	const extensions = ['.json', '.svelte', '.ts', 'js', '.map'];
 	for (const file of actual_files) {
 		const pathname = join(output, file);
 		if (fs.statSync(pathname).isDirectory()) continue;
@@ -67,6 +68,10 @@ async function test_make_package(path, options) {
  * @param {string} content
  */
 async function format(file, content) {
+	if (file.endsWith('.map')) {
+		return content;
+	}
+
 	if (file.endsWith('package.json')) {
 		// For some reason these are ordered differently in different test environments
 		const json = JSON.parse(content);
@@ -131,6 +136,16 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
+// only run this test in older Node versions
+// TODO: remove after dropping support for Node 20
+const is_node_without_ts_support =
+	process.versions.node && Number(process.versions.node.split('.', 1)[0]) < 22;
+if (!is_node_without_ts_support) {
+	test('create package with typescript using nodenext and svelte.config.ts', async () => {
+		await test_make_package('typescript-svelte-config');
+	});
+}
+
 test('create package and assets are not tampered', async () => {
 	await test_make_package('assets');
 });
@@ -149,6 +164,10 @@ test('create package and resolves $lib alias', async () => {
 
 test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
+});
+
+test('create package with declaration map', async () => {
+	await test_make_package('typescript-declaration-map');
 });
 
 test('create package with tsconfig specified', async () => {
@@ -227,7 +246,7 @@ if (!process.env.CI) {
 			await settled();
 			compare('post-error.svelte');
 		} finally {
-			watcher.close();
+			await watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');

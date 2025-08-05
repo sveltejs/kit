@@ -1,6 +1,10 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -118,6 +122,27 @@ test.describe('Endpoints', () => {
 		expect(await res.json()).toStrictEqual({
 			message: 'Im prerendered and called from a non-prerendered +page.server.js'
 		});
+	});
+
+	test('Partially Prerendered +server.js called from a non-prerendered +server.js works', async ({
+		baseURL
+	}) => {
+		for (const [description, url] of [
+			['direct', `${baseURL}/prerendering/prerendered-endpoint/api-with-param/prerendered`],
+			[
+				'proxied',
+				`${baseURL}/prerendering/prerendered-endpoint/proxy?api-with-param-option=prerendered`
+			]
+		]) {
+			await test.step(description, async () => {
+				const res = await fetch(url);
+
+				expect(res.status).toBe(200);
+				expect(await res.json()).toStrictEqual({
+					message: 'Im prerendered and called from a non-prerendered +page.server.js'
+				});
+			});
+		}
 	});
 
 	test('invalid request method returns allow header', async ({ request }) => {
@@ -249,6 +274,20 @@ test.describe('Endpoints', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('catch-all');
 	});
+
+	test('can get assets using absolute path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/absolute');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
+	});
+
+	test('can get assets using relative path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/relative');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('text/plain');
+		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
+	});
 });
 
 test.describe('Errors', () => {
@@ -358,7 +397,9 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No actions exist for this page (405 Method Not Allowed)'
+				message: process.env.DEV
+					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
+					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)'
 			}
 		});
 	});
@@ -424,6 +465,17 @@ test.describe('Errors', () => {
 			});
 		}
 	});
+
+	test('error thrown from load on the server respects page options when rendering the error page', async ({
+		request
+	}) => {
+		const res = await request.get('/errors/load-error-page-options/csr');
+		expect(res.status()).toBe(500);
+		const content = await res.text();
+		expect(content).toContain('Crashing now');
+		// the hydration script should not be present if the csr page option is respected
+		expect(content).not.toContain('kit.start(app');
+	});
 });
 
 test.describe('Load', () => {
@@ -437,6 +489,11 @@ test.describe('Load', () => {
 	test('fetch does not load a file with a # character', async ({ request }) => {
 		const response = await request.get('/load/static-file-with-hash');
 		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('fetch reads universal load assets on the server', async ({ page }) => {
+		await page.goto('/load/fetch-asset');
+		await expect(page.locator('p')).toHaveText('1');
 	});
 
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
@@ -482,6 +539,12 @@ test.describe('Load', () => {
 		expect(response.status()).toBe(204);
 		expect(await response.text()).toBe('');
 		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
+
+	test('allows logging URL search params', async ({ page }) => {
+		await page.goto('/load/server-log-search-param');
+
+		expect(await page.textContent('p')).toBe('hello world');
 	});
 });
 
@@ -567,17 +630,19 @@ test.describe('Static files', () => {
 		expect(await r2.json()).toEqual({ works: true });
 	});
 
-	test('Serves symlinked asset', async ({ request }) => {
-		const response = await request.get('/symlink-from/hello.txt');
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('hello');
-	});
+	if (process.platform !== 'win32') {
+		test('Serves symlinked asset', async ({ request }) => {
+			const response = await request.get('/symlink-from/hello.txt');
+			expect(response.status()).toBe(200);
+			expect(await response.text()).toBe('hello');
+		});
+	}
 });
 
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response.allHeaders())['set-cookie'];
+		const cookies = response ? (await response.allHeaders())['set-cookie'] : '';
 
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
@@ -587,7 +652,7 @@ test.describe('setHeaders', () => {
 test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
-		const cookies = await response.headerValue('set-cookie');
+		const cookies = response ? await response.headerValue('set-cookie') : '';
 
 		expect(cookies).toMatch('before=before');
 		expect(cookies).toMatch('after=after');
@@ -609,16 +674,97 @@ test.describe('Miscellaneous', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('foo');
 	});
+
+	test('serves prerendered non-latin pages', async ({ request }) => {
+		const response = await request.get('/prerendering/中文');
+		expect(response.status()).toBe(200);
+	});
 });
 
 test.describe('reroute', () => {
 	test('Apply reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/basic/a');
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/basic/a'
+		);
+	});
+
+	test('Apply async reroute when directly accessing a page', async ({ page }) => {
+		page
+			.context()
+			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
+		await page.goto('/reroute/async/a');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/a'
+		);
+	});
+
+	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/c');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
+	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/prerendered/to-destination');
+		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
 	});
 
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
 		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);
+	});
+});
+
+test.describe('init', () => {
+	test('init server hook is called once before the load function', async ({ page }) => {
+		await page.goto('/init-hooks');
+		await expect(page.locator('p')).toHaveText('1');
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('1');
+	});
+});
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in server endpoints', async ({ request }) => {
+		const response = await request.get('/get-request-event/endpoint');
+		expect(await response.text()).toBe('hello from hooks.server.js');
+	});
+});
+
+test.describe('$app/forms', () => {
+	test('deserialize works on the server', async ({ request }) => {
+		const response = await request.get('/serialization-form/server-deserialize');
+		expect(await response.json()).toEqual({ data: 'It works!' });
+	});
+});
+
+const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
+
+test.describe('$app/environment', () => {
+	test('treeshakes dev check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
+			'utf-8'
+		);
+		// check that import { dev } from '$app/environment' is treeshaken
+		expect(code).not.toContain('dev');
+	});
+
+	test('treeshakes browser check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(
+				root,
+				'.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'
+			),
+			'utf-8'
+		);
+		// check that import { browser } from '$app/environment' is treeshaken
+		expect(code).not.toContain('browser');
 	});
 });

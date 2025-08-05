@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/amp",
-	"version": "1.1.1",
+	"version": "1.1.4",
 	"description": "AMP integration for SvelteKit",
 	"keywords": [
 		"accelerated mobile pages",
@@ -14,7 +14,7 @@
 		"directory": "packages/amp"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"exports": {
 		".": {
@@ -34,6 +34,7 @@
 		"format": "pnpm lint --write"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {

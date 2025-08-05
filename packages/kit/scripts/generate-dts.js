@@ -1,5 +1,5 @@
 import { createBundle } from 'dts-buddy';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 await createBundle({
 	output: 'types/index.d.ts',
@@ -14,6 +14,7 @@ await createBundle({
 		'$app/navigation': 'src/runtime/app/navigation.js',
 		'$app/paths': 'src/runtime/app/paths/types.d.ts',
 		'$app/server': 'src/runtime/app/server/index.js',
+		'$app/state': 'src/runtime/app/state/index.js',
 		'$app/stores': 'src/runtime/app/stores.js'
 	},
 	include: ['src']
@@ -27,3 +28,9 @@ if (types.includes('__sveltekit/')) {
 			types
 	);
 }
+
+// this is hacky as all hell but it gets the tests passing. might be a bug in dts-buddy?
+// prettier-ignore
+writeFileSync('./types/index.d.ts', types.replace("declare module '$app/server' {", `declare module '$app/server' {
+	// @ts-ignore
+	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'`));
