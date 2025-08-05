@@ -110,7 +110,10 @@ test.describe('base path', () => {
 		await expect(page.locator('#count')).toHaveText('0');
 	});
 
-	test('prerender remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+	test('prerender remote function from client uses base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		test.skip(!javaScriptEnabled);
 
 		await page.goto('/path-base/remote');
@@ -119,7 +122,10 @@ test.describe('base path', () => {
 		await expect(page.locator('#prerendered')).toHaveText('yes');
 	});
 
-	test('command remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+	test('command remote function from client uses base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		test.skip(!javaScriptEnabled);
 
 		await page.goto('/path-base/remote');
