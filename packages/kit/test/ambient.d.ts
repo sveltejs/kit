@@ -14,8 +14,8 @@ declare global {
 		}
 	) => Promise<void>;
 
-	const invalidate: (url: string) => Promise<void>;
-	const invalidateAll: () => Promise<void>;
+	const invalidate: (url: string, opts?: { resetPageState?: boolean }) => Promise<void>;
+	const invalidateAll: (opts?: { resetPageState?: boolean }) => Promise<void>;
 	const preloadData: (url: string) => Promise<void>;
 	const beforeNavigate: (fn: (navigation: BeforeNavigate) => void | boolean) => void;
 	const afterNavigate: (fn: (navigation: AfterNavigate) => void) => void;

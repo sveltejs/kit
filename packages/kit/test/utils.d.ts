@@ -16,8 +16,8 @@ export const test: TestType<
 		PlaywrightTestOptions & {
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
-				invalidate(url: string): Promise<void>;
-				invalidateAll(): Promise<void>;
+				invalidate(url: string, opts?: { resetPageState?: boolean }): Promise<void>;
+				invalidateAll(opts?: { resetPageState?: boolean }): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
 				preloadCode(pathname: string): Promise<void>;

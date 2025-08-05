@@ -12,9 +12,9 @@ export const test = base.extend({
 		void use({
 			goto: (url, opts) => page.evaluate(({ url, opts }) => goto(url, opts), { url, opts }),
 
-			invalidate: (url) => page.evaluate((url) => invalidate(url), url),
+			invalidate: (url, opts) => page.evaluate((url) => invalidate(url, opts), url),
 
-			invalidateAll: () => page.evaluate(() => invalidateAll()),
+			invalidateAll: (opts) => page.evaluate(() => invalidateAll(opts)),
 
 			beforeNavigate: (fn) => page.evaluate((fn) => beforeNavigate(fn), fn),
 
