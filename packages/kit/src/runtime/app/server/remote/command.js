@@ -39,7 +39,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @overload
  * @param {Schema} validate
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
- * @returns {RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @returns {RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
 /**

@@ -2652,7 +2652,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -2691,9 +2691,9 @@ declare module '$app/server' {
 	 * @since 2.27
 	 */
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
-		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferOutput<Schema>>;
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferInput<Schema>>;
 		dynamic?: boolean;
-	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -2717,7 +2717,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
