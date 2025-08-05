@@ -40,6 +40,9 @@ const config = {
 		},
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
+		},
+		experimental: {
+			remoteFunctions: true
 		}
 	}
 };

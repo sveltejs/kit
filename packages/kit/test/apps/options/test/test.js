@@ -100,6 +100,43 @@ test.describe('base path', () => {
 		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
 		expect(await page.textContent('h2')).toBe('resolved');
 	});
+
+	test('query remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'get count' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('prerender remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/remote');
+		await expect(page.locator('#prerendered')).toHaveText('');
+		await page.locator('button', { hasText: 'get prerendered' }).click();
+		await expect(page.locator('#prerendered')).toHaveText('yes');
+	});
+
+	test('command remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'set count' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('form remote function from client uses base path', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('input').fill('1');
+		await page.locator('button', { hasText: 'submit' }).click();
+		await expect(page.locator('#count')).toHaveText('1');
+	});
 });
 
 test.describe('assets path', () => {
