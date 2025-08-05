@@ -90,7 +90,7 @@ export interface BuildData {
 		 */
 		css?: Array<string[] | undefined>;
 		/**
-		 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+		 * Contains the client route manifest in a form suitable for the server which is used for server-side route resolution.
 		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
 		 * Only set in case of `router.resolution === 'server'`.
 		 */
