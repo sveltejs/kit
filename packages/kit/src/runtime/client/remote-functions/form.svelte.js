@@ -1,7 +1,7 @@
 /** @import { RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
@@ -64,7 +64,7 @@ export function form(id) {
 						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
 
-					const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
 						body: data
 					});

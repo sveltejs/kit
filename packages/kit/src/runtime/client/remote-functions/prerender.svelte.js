@@ -1,5 +1,5 @@
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
@@ -124,7 +124,7 @@ export function prerender(id) {
 				}
 			}
 
-			const url = `/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			// Check the Cache API first
 			if (prerender_cache) {
