@@ -14,7 +14,7 @@ export const test = base.extend({
 
 			invalidate: (url) => page.evaluate((url) => invalidate(url), url),
 
-      invalidateAll: () => page.evaluate(() => invalidateAll()),
+			invalidateAll: () => page.evaluate(() => invalidateAll()),
 
 			beforeNavigate: (fn) => page.evaluate((fn) => beforeNavigate(fn), fn),
 

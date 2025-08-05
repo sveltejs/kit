@@ -2476,6 +2476,7 @@ declare module '$app/navigation' {
 	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * @param 
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**

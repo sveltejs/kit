@@ -565,19 +565,9 @@ function initialize(result, target, hydrate) {
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
- *   state?: App.PageData | null;
  * }} opts
  */
-function get_navigation_result_from_branch({
-	url,
-	params,
-	branch,
-	status,
-	error,
-	route,
-	form,
-	state
-}) {
+function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -652,7 +642,7 @@ function get_navigation_result_from_branch({
 			route: {
 				id: route?.id ?? null
 			},
-			state: state ?? {},
+			state: {},
 			status,
 			url: new URL(url),
 			form: form ?? null,
@@ -1173,9 +1163,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		status: 200,
 		error: null,
 		route,
-		// Reset `form`/`state` on navigation, but not invalidation
-		form: invalidating ? undefined : null,
-		state: invalidating ? page.state : null
+		// Reset `form` on navigation, but not invalidation
+		form: invalidating ? undefined : null
 	});
 }
 
@@ -2012,16 +2001,17 @@ export function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {{ resetPageState?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, { resetPageState = false } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(true, resetPageState);
 }
 
 /**
@@ -2038,15 +2028,16 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {{ resetPageState?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function invalidateAll() {
+export function invalidateAll({ resetPageState = false } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidateAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate();
+	return _invalidate(true, resetPageState);
 }
 
 /**
