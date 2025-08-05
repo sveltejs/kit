@@ -124,7 +124,7 @@ test.describe('base path', () => {
 
 		await page.goto('/path-base/remote');
 		await expect(page.locator('#count')).toHaveText('');
-		await page.locator('button', { hasText: 'set count' }).click();
+		await page.locator('button', { hasText: 'reset' }).click();
 		await expect(page.locator('#count')).toHaveText('0');
 	});
 

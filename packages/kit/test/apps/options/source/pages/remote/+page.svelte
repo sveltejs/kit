@@ -25,4 +25,4 @@
 	get prerendered
 </button>
 
-<p>{prerendered_result}</p>
+<p id="prerendered">{prerendered_result}</p>
