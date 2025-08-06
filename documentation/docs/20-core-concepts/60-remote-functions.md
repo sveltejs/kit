@@ -6,7 +6,7 @@ title: Remote functions
 	<p>Available since 2.27</p>
 </blockquote>
 
-Remote functions are a tool for type-safe communication between client and server. They can be _called_ anywhere in your app, but always _run_ on the server, and thus can safely access [server-only modules](server-only-modules) containing things like environment variables and database clients.
+Remote functions are a tool for type-safe communication between client and server. They can be _called_ anywhere in your app, but always _run_ on the server, meaning they can safely access [server-only modules](server-only-modules) containing things like environment variables and database clients.
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
