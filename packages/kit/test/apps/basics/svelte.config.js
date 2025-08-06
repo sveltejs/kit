@@ -19,7 +19,10 @@ const config = {
 		},
 
 		experimental: {
-			remoteFunctions: true
+			remoteFunctions: true,
+			tracing: {
+				server: true
+			}
 		},
 
 		prerender: {
@@ -44,9 +47,7 @@ const config = {
 
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-		},
-
-		experimental: { tracing: { server: true } }
+		}
 	}
 };
 
