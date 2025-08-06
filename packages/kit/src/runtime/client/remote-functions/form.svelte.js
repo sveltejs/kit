@@ -6,7 +6,6 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
-import { create_remote_cache_key } from '../../shared.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -26,10 +25,7 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state({});
-
-		// svelte-ignore state_referenced_locally
-		const initial_result = result;
+		let result = $state(started ? undefined : remote_responses[action_id]);
 
 		/**
 		 * @param {FormData} data
@@ -251,18 +247,7 @@ export function form(id) {
 				value: button_props
 			},
 			result: {
-				get: () => {
-					if (result === initial_result) {
-						// we have to evaluate the default result lazily because it's possible
-						// that `remote_responses` is still uninitialised at this point
-						// when we bundle the app into a single output and this module gets
-						// evaluated before `client.start()` is called
-						return !started
-							? (remote_responses[create_remote_cache_key(action, '')] ?? undefined)
-							: undefined;
-					}
-					return result;
-				}
+				get: () => result
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */
