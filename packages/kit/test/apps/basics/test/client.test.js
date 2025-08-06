@@ -1646,6 +1646,17 @@ test.describe('Shallow routing', () => {
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
 	});
+
+	test('pushState properly serializes objects', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/foo');
+		await expect(page.locator('p')).toHaveText('foo: nope');
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('foo: it works?!');
+
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('foo: nope');
+	});
 });
 
 test.describe('reroute', () => {

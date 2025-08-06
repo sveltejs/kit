@@ -42,8 +42,10 @@ import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
+	validate_load_response,
+	stringify,
 	validate_depends,
-	validate_load_response
+	parse as unstringify
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
@@ -1679,7 +1681,7 @@ async function navigate({
 		const entry = {
 			[HISTORY_INDEX]: (current_history_index += change),
 			[NAVIGATION_INDEX]: (current_navigation_index += change),
-			[STATES_KEY]: state
+			[STATES_KEY]: stringify(state, app.hooks.transport)
 		};
 
 		const fn = replace_state ? history.replaceState : history.pushState;
@@ -2265,18 +2267,8 @@ export function pushState(url, state) {
 		throw new Error('Cannot call pushState(...) on the server');
 	}
 
-	if (DEV) {
-		if (!started) {
-			throw new Error('Cannot call pushState(...) before router is initialized');
-		}
-
-		try {
-			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
-		} catch (error) {
-			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
-		}
+	if (DEV && !started) {
+		throw new Error('Cannot call pushState(...) before router is initialized');
 	}
 
 	update_scroll_positions(current_history_index);
@@ -2285,7 +2277,7 @@ export function pushState(url, state) {
 		[HISTORY_INDEX]: (current_history_index += 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
 		[PAGE_URL_KEY]: page.url.href,
-		[STATES_KEY]: state
+		[STATES_KEY]: stringify(state, app.hooks.transport)
 	};
 
 	history.pushState(opts, '', resolve_url(url));
@@ -2312,25 +2304,15 @@ export function replaceState(url, state) {
 		throw new Error('Cannot call replaceState(...) on the server');
 	}
 
-	if (DEV) {
-		if (!started) {
-			throw new Error('Cannot call replaceState(...) before router is initialized');
-		}
-
-		try {
-			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
-		} catch (error) {
-			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
-		}
+	if (DEV && !started) {
+		throw new Error('Cannot call replaceState(...) before router is initialized');
 	}
 
 	const opts = {
 		[HISTORY_INDEX]: current_history_index,
 		[NAVIGATION_INDEX]: current_navigation_index,
 		[PAGE_URL_KEY]: page.url.href,
-		[STATES_KEY]: state
+		[STATES_KEY]: stringify(state, app.hooks.transport)
 	};
 
 	history.replaceState(opts, '', resolve_url(url));
@@ -2637,7 +2619,7 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const scroll = scroll_positions[history_index];
-			const state = event.state[STATES_KEY] ?? {};
+			const state = unstringify(event.state[STATES_KEY], app.hooks.transport) ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
 			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
