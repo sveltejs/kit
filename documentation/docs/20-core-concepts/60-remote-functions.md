@@ -113,7 +113,7 @@ Query functions can accept an argument, such as the `slug` of an individual post
 
 	let { params } = $props();
 
-	const post = await getPost(params.slug);
+	const post = $derived(await getPost(params.slug));
 </script>
 
 <h1>{post.title}</h1>
