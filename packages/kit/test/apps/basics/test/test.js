@@ -1635,3 +1635,10 @@ test.describe('params prop', () => {
 		await expect(page.locator('p')).toHaveText('x: 456');
 	});
 });
+
+test.describe('svelte:html', () => {
+	test('server-renders correctly', async ({ page }) => {
+		await page.goto('/');
+		expect(page.locator('html')).toHaveAttribute('lang', 'en');
+	});
+});
