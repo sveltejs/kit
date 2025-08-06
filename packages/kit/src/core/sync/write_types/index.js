@@ -6,6 +6,7 @@ import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
 import { s } from '../../../utils/misc.js';
+import { get_route_segments } from '../../../utils/routing.js';
 
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -13,6 +14,10 @@ const replace_optional_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
 const replace_required_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[[^\]]+\]/g, '/${string}');
+/** Convert route ID to pathname by removing layout groups */
+const remove_group_segments = (/** @type {string} */ id) => {
+	return '/' + get_route_segments(id).join('/');
+};
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**
@@ -60,8 +65,8 @@ export function write_all_types(config, manifest_data) {
 		}
 	}
 
-	/** @type {string[]} */
-	const pathnames = [];
+	/** @type {Set<string>} */
+	const pathnames = new Set();
 
 	/** @type {string[]} */
 	const dynamic_routes = [];
@@ -76,9 +81,11 @@ export function write_all_types(config, manifest_data) {
 
 			dynamic_routes.push(route_type);
 
-			pathnames.push(`\`${replace_required_params(replace_optional_params(route.id))}\` & {}`);
+			const pathname = remove_group_segments(route.id);
+			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
 		} else {
-			pathnames.push(s(route.id));
+			const pathname = remove_group_segments(route.id);
+			pathnames.add(s(pathname));
 		}
 
 		/** @type {Map<string, boolean>} */
@@ -113,7 +120,7 @@ export function write_all_types(config, manifest_data) {
 			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
 			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
-			`export type Pathname = ${pathnames.join(' | ')};`,
+			`export type Pathname = ${Array.from(pathnames).join(' | ')};`,
 			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
 			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
 		].join('\n\n')

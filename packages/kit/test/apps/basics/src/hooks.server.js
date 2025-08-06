@@ -49,6 +49,11 @@ export const handleError = ({ event, error: e, status, message }) => {
 		: { message: `${error.message} (${status} ${message})` };
 };
 
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export const handleValidationError = ({ issues }) => {
+	return { message: issues[0].message };
+};
+
 export const handle = sequence(
 	({ event, resolve }) => {
 		const test_id = !building && event.url.searchParams.get('test_id');

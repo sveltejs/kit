@@ -268,7 +268,7 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/a/[...rest]',
-			pattern: '/^/a(?:/(.*))?/?$/',
+			pattern: '/^/a(?:/([^]*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
@@ -277,7 +277,7 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/b/[...rest]',
-			pattern: '/^/b(?:/(.*))?/?$/',
+			pattern: '/^/b(?:/([^]*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
@@ -301,12 +301,12 @@ test('allows rest parameters inside segments', () => {
 		},
 		{
 			id: '/prefix-[...rest]',
-			pattern: '/^/prefix-(.*?)/?$/',
+			pattern: '/^/prefix-([^]*?)/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
 			id: '/[...rest].json',
-			pattern: '/^/(.*?).json/?$/',
+			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 			}
@@ -714,7 +714,7 @@ test('handles pages without .svelte file', () => {
 		},
 		{
 			id: '/error/[...path]',
-			pattern: '/^/error(?:/(.*))?/?$/',
+			pattern: '/^/error(?:/([^]*))?/?$/',
 			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
 		},
 		{

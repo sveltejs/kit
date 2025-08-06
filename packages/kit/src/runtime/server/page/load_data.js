@@ -213,11 +213,11 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.universal?.load) {
+	const load = node?.universal?.load;
+
+	if (!load) {
 		return server_data_node?.data ?? null;
 	}
-
-	const { load } = node.universal;
 
 	const result = await record_span({
 		name: 'sveltekit.load',
@@ -229,20 +229,20 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await load.call(null, {
-				...traced_event,
-				url: event.url,
-				params: event.params,
-				data: server_data_node?.data ?? null,
-				route: event.route,
-				fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-				setHeaders: event.setHeaders,
-				depends: () => {},
-				parent,
-				untrack: (fn) => fn()
-			});
-
-			return result;
+			return with_event(traced_event, () =>
+				load.call(null, {
+					url: event.url,
+					params: event.params,
+					data: server_data_node?.data ?? null,
+					route: event.route,
+					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+					setHeaders: event.setHeaders,
+					depends: () => {},
+					parent,
+					untrack: (fn) => fn(),
+					tracing: traced_event.tracing
+				})
+			);
 		}
 	});
 

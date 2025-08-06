@@ -18,6 +18,10 @@ const config = {
 			}
 		},
 
+		experimental: {
+			remoteFunctions: true
+		},
+
 		prerender: {
 			entries: [
 				'*',

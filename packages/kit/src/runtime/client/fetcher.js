@@ -1,5 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
-import { hash } from '../hash.js';
+import { hash } from '../../utils/hash.js';
 import { b64_decode } from '../utils.js';
 
 let loading = 0;

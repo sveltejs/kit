@@ -1,10 +1,37 @@
 # @sveltejs/kit
 
+## 2.27.1
+### Patch Changes
+
+
+- fix: correctly type remote function input parameters from a schema ([#14098](https://github.com/sveltejs/kit/pull/14098))
+
+
+- fix: match URL-encoded newlines in rest route params ([#14102](https://github.com/sveltejs/kit/pull/14102))
+
+
+- fix: correctly spell server-side in error messages ([#14101](https://github.com/sveltejs/kit/pull/14101))
+
+## 2.27.0
+### Minor Changes
+
+
+- feat: remote functions ([#13986](https://github.com/sveltejs/kit/pull/13986))
+
+## 2.26.1
+### Patch Changes
+
+
+- fix: posixify internal app server path ([#14049](https://github.com/sveltejs/kit/pull/14049))
+
+
+- fix: ignore route groups when generating typed routes ([#14050](https://github.com/sveltejs/kit/pull/14050))
+
 ## 2.26.0
 ### Minor Changes
 
 
-- feat: better type-safety for `page.route.id`, `page.params`, page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
+- feat: better type-safety for `page.route.id`, `page.params`, `page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
 
 
 - feat: `resolve(...)` and `asset(...)` helpers for resolving paths ([#13864](https://github.com/sveltejs/kit/pull/13864))

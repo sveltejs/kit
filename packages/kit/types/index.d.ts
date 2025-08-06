@@ -3,6 +3,7 @@
 
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	import type { Span } from '@opentelemetry/api';
 	/**
@@ -56,7 +57,7 @@ declare module '@sveltejs/kit' {
 
 	const uniqueSymbol: unique symbol;
 
-	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	export interface ActionFailure<T = undefined> {
 		status: number;
 		data: T;
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -395,6 +396,12 @@ declare module '@sveltejs/kit' {
 			tracing?: {
 				server?: boolean;
 			};
+
+			/**
+			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
+			 * @default false
+			 */
+			remoteFunctions?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -762,6 +769,14 @@ declare module '@sveltejs/kit' {
 		status: number;
 		message: string;
 	}) => MaybePromise<void | App.Error>;
+
+	/**
+	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
+	 *
+	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
+	 */
+	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
+		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
@@ -1263,6 +1278,12 @@ declare module '@sveltejs/kit' {
 			/** The span associated with the current `handle` hook, `load` function, or form action. */
 			current: Span;
 		};
+
+		/**
+		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+		 * related to the data request in this case. Use this property instead if the distinction is important to you.
+		 */
+		isRemoteRequest: boolean;
 	}
 
 	/**
@@ -1337,6 +1358,8 @@ declare module '@sveltejs/kit' {
 		_: {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
+			/** hashed filename -> import to that file */
+			remotes: Record<string, () => Promise<any>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1526,6 +1549,140 @@ declare module '@sveltejs/kit' {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
+
+	/**
+	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 */
+	export type RemoteForm<Result> = {
+		method: 'POST';
+		/** The URL to send the form to. */
+		action: string;
+		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+		onsubmit: (event: SubmitEvent) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance(
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<void> & {
+					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+				};
+			}) => void
+		): {
+			method: 'POST';
+			action: string;
+			onsubmit: (event: SubmitEvent) => void;
+		};
+		/**
+		 * Create an instance of the form for the given key.
+		 * The key is stringified and used for deduplication to potentially reuse existing instances.
+		 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+		 * ```svelte
+		 * {#each todos as todo}
+		 *	{@const todoForm = updateTodo.for(todo.id)}
+		 *	<form {...todoForm}>
+		 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+		 *		...
+		 *	</form>
+		 *	{/each}
+		 * ```
+		 */
+		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
+		/** The result of the form submission */
+		get result(): Result | undefined;
+		/** Spread this onto a `<button>` or `<input type="submit">` */
+		buttonProps: {
+			type: 'submit';
+			formmethod: 'POST';
+			formaction: string;
+			onclick: (event: Event) => void;
+			/** Use the `enhance` method to influence what happens when the form is submitted. */
+			enhance(
+				callback: (opts: {
+					form: HTMLFormElement;
+					data: FormData;
+					submit: () => Promise<void> & {
+						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+					};
+				}) => void
+			): {
+				type: 'submit';
+				formmethod: 'POST';
+				formaction: string;
+				onclick: (event: Event) => void;
+			};
+		};
+	};
+
+	/**
+	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 */
+	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	};
+
+	export type RemoteResource<T> = Promise<Awaited<T>> & {
+		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+		get error(): any;
+		/** `true` before the first result is available and during refreshes */
+		get loading(): boolean;
+	} & (
+			| {
+					/** The current value of the query. Undefined until `ready` is `true` */
+					get current(): undefined;
+					ready: false;
+			  }
+			| {
+					/** The current value of the query. Undefined until `ready` is `true` */
+					get current(): Awaited<T>;
+					ready: true;
+			  }
+		);
+
+	export type RemoteQuery<T> = RemoteResource<T> & {
+		/**
+		 * On the client, this function will re-fetch the query from the server.
+		 *
+		 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
+		 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+		 */
+		refresh(): Promise<void>;
+		/**
+		 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Single-flight-mutations) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+		 *
+		 * ```svelte
+		 * <script>
+		 *   import { getTodos, addTodo } from './todos.remote.js';
+		 *   const todos = getTodos();
+		 * </script>
+		 *
+		 * <form {...addTodo.enhance(async ({ data, submit }) => {
+		 *   await submit().updates(
+		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+		 *   );
+		 * }}>
+		 *   <input type="text" name="text" />
+		 *   <button type="submit">Add Todo</button>
+		 * </form>
+		 * ```
+		 */
+		withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+	};
+
+	export interface RemoteQueryOverride {
+		_key: string;
+		release(): void;
+	}
+
+	/**
+	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 */
+	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+	/**
+	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 */
+	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -1784,7 +1941,7 @@ declare module '@sveltejs/kit' {
 			 */
 			css?: Array<string[] | undefined>;
 			/**
-			 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+			 * Contains the client route manifest in a form suitable for the server which is used for server-side route resolution.
 			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
 			 * Only set in case of `router.resolution === 'server'`.
 			 */
@@ -1810,6 +1967,10 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
+		remotes: Array<{
+			file: string;
+			hash: string;
+		}>;
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}
@@ -2007,7 +2168,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -2037,13 +2198,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit | undefined): Response;
+	export function json(data: any, init?: ResponseInit): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit | undefined): Response;
+	export function text(body: string, init?: ResponseInit): Response;
 	/**
 	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2054,7 +2215,7 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
+	export function fail<T = undefined>(status: number, data: T): ActionFailure<T>;
 	/**
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
@@ -2343,7 +2504,7 @@ declare module '$app/navigation' {
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
-	} | undefined): Promise<void>;
+	}): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -2366,6 +2527,13 @@ declare module '$app/navigation' {
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
 	export function invalidateAll(): Promise<void>;
+	/**
+	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+	 * Returns a `Promise` that resolves when the page is subsequently updated.
+	 * */
+	export function refreshAll({ includeLoadFunctions }?: {
+		includeLoadFunctions?: boolean;
+	}): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -2488,7 +2656,8 @@ declare module '$app/paths' {
 declare module '$app/server' {
 	// @ts-ignore
 	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
-	import type { RequestEvent } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2509,6 +2678,97 @@ declare module '$app/server' {
 	 * @since 2.20.0
 	 */
 	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
+	/**
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
+	/**
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
+	/**
+	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
+	/**
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
+	/**
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<void>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<void, Output>;
+	/**
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<Input>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
+	/**
+	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
+		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferInput<Schema>>;
+		dynamic?: boolean;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	/**
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function query<Output>(fn: () => MaybePromise<Output>): RemoteQueryFunction<void, Output>;
+	/**
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function query<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteQueryFunction<Input, Output>;
+	/**
+	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
+	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
 }

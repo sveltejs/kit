@@ -22,7 +22,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
-import { hash } from '../../runtime/hash.js';
+import { hash } from '../../utils/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
@@ -36,6 +36,7 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 
 const cwd = process.cwd();
 
@@ -167,6 +168,9 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
+/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
+let remote_exports = undefined;
+
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
@@ -212,6 +216,9 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
+
+	const normalized_cwd = vite.normalizePath(cwd);
+	const normalized_lib = vite.normalizePath(kit.files.lib);
 
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
@@ -322,9 +329,10 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
+					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: kit.experimental.tracing.server ? 'true' : 'false'
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
 				};
 
 				if (!secondary_build_started) {
@@ -334,7 +342,8 @@ async function kit({ svelte_config }) {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
+					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
+					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: kit.experimental.tracing.server ? 'true' : 'false'
 				};
@@ -383,8 +392,6 @@ async function kit({ svelte_config }) {
 					parsed_importer.name === parsed_service_worker.name;
 
 				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
-					const normalized_cwd = vite.normalizePath(cwd);
-					const normalized_lib = vite.normalizePath(kit.files.lib);
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
@@ -402,6 +409,9 @@ async function kit({ svelte_config }) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
+			if (id === '__sveltekit/remote') {
+				return `${runtime_directory}/client/remote-functions/index.js`;
+			}
 			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
@@ -415,8 +425,6 @@ async function kit({ svelte_config }) {
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
-				const normalized_cwd = vite.normalizePath(cwd);
-				const normalized_lib = vite.normalizePath(kit.files.lib);
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
@@ -582,6 +590,93 @@ Tips:
 		}
 	};
 
+	/** @type {import('vite').ViteDevServer} */
+	let dev_server;
+
+	/** @type {import('vite').Plugin} */
+	const plugin_remote = {
+		name: 'vite-plugin-sveltekit-remote',
+
+		configureServer(_dev_server) {
+			dev_server = _dev_server;
+		},
+
+		async transform(code, id, opts) {
+			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+				return;
+			}
+
+			const file = posixify(path.relative(cwd, id));
+			const hashed = hash(file);
+
+			if (opts?.ssr) {
+				// in dev, add metadata to remote functions by self-importing
+				if (dev_server) {
+					return (
+						code +
+						dedent`
+							import * as $$_self_$$ from './${path.basename(id)}';
+							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
+
+							$$_validate_$$($$_self_$$, ${s(file)});
+
+							for (const [name, fn] of Object.entries($$_self_$$)) {
+								fn.__.id = ${s(hashed)} + '/' + name;
+								fn.__.name = name;
+							}
+						`
+					);
+				}
+
+				// in prod, return as-is, and augment the build result instead.
+				// this allows us to treeshake non-dynamic `prerender` functions
+				return;
+			}
+
+			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+			/** @type {Map<string, import('types').RemoteInfo['type']>} */
+			const remotes = new Map();
+
+			// in dev, load the server module here (which will result in this hook
+			// being called again with `opts.ssr === true` if the module isn't
+			// already loaded) so we can determine what it exports
+			if (dev_server) {
+				const module = await dev_server.ssrLoadModule(id);
+
+				for (const [name, value] of Object.entries(module)) {
+					const type = value?.__?.type;
+					if (type) {
+						remotes.set(name, type);
+					}
+				}
+			}
+
+			// in prod, we already built and analysed the server code before
+			// building the client code, so `remote_exports` is populated
+			else if (remote_exports) {
+				const exports = remote_exports.get(hashed);
+				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+
+				for (const [name, value] of exports) {
+					remotes.set(name, value.type);
+				}
+			}
+
+			let namespace = '__remote';
+			let uid = 1;
+			while (remotes.has(namespace)) namespace = `__remote${uid++}`;
+
+			const exports = Array.from(remotes).map(([name, type]) => {
+				return `export const ${name} = ${namespace}.${type}('${hashed}/${name}');`;
+			});
+
+			return {
+				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+			};
+		}
+	};
+
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
@@ -604,6 +699,7 @@ Tips:
 				if (ssr) {
 					input.index = `${runtime_directory}/server/index.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
+					input['remote-entry'] = `${runtime_directory}/app/server/remote/index.js`;
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -635,6 +731,11 @@ Tips:
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+
+					// ...and every .remote file
+					for (const remote of manifest_data.remotes) {
+						input[`remote/${remote.hash}`] = path.resolve(remote.file);
+					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
@@ -836,6 +937,8 @@ Tips:
 					output_config: svelte_config.output
 				});
 
+				remote_exports = metadata.remotes;
+
 				log.info('Building app');
 
 				// create client build
@@ -986,6 +1089,9 @@ Tips:
 					static_exports
 				);
 
+				// ...make sure remote exports have their IDs assigned...
+				build_remotes(out, manifest_data);
+
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
 					hash: kit.router.type === 'hash',
@@ -1006,6 +1112,9 @@ Tips:
 						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
 					})};\n`
 				);
+
+				// remove prerendered remote functions
+				await treeshake_prerendered_remotes(out, manifest_data, metadata);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {
@@ -1077,7 +1186,13 @@ Tips:
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	return [
+		plugin_setup,
+		kit.experimental.remoteFunctions && plugin_remote,
+		plugin_virtual_modules,
+		plugin_guard,
+		plugin_compile
+	].filter((p) => !!p);
 }
 
 /**

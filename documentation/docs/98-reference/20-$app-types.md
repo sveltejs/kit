@@ -51,12 +51,12 @@ type Pathname = '/' | '/my-route' | `/my-other-route/${string}` & {};
 
 ## ResolvedPathname
 
-`Pathname`, but possibly prefixed with a [base path](https://svelte.dev/docs/kit/configuration#paths). Used for `page.url.pathname`.
+Similar to `Pathname`, but possibly prefixed with a [base path](https://svelte.dev/docs/kit/configuration#paths). Used for `page.url.pathname`.
 
 <div class="ts-block">
 
 ```dts
-type Pathname = `${'' | `/${string}`}/` | `${'' | `/${string}`}/my-route` | `${'' | `/${string}`}/my-other-route/${string}` | {};
+type ResolvedPathname = `${'' | `/${string}`}/` | `${'' | `/${string}`}/my-route` | `${'' | `/${string}`}/my-other-route/${string}` | {};
 ```
 
 </div>
