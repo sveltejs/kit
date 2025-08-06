@@ -1622,6 +1622,11 @@ test.describe('remote functions', () => {
 		await clicknav('[href="/remote/prerender/functions-only"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
 	});
+
+	test('query returns correct data from modules', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#hello-from-modules')).toHaveText('hello from $modules');
+	});
 });
 
 test.describe('params prop', () => {
