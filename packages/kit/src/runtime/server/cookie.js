@@ -71,26 +71,13 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions & {domain?: string, path?: string}} [opts]
+		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
-			// Try to get cookie using the unique key format if domain/path specified
-			if (opts?.domain !== undefined || opts?.path !== undefined) {
-				const cookie_key = generate_cookie_key(
-					opts?.domain,
-					opts?.path || url?.pathname || '/',
-					name
-				);
-				const c = new_cookies[cookie_key];
-				if (c) {
-					// When specifically requesting a cookie by domain/path, we return it directly
-					// if it exists in our storage, since the key already encodes the path/domain matching
-					return c.value;
-				}
-			}
+			// Look for the most specific matching cookie from new_cookies
+			let best_match = null;
+			let best_specificity = -1;
 
-			// Fallback: look for any cookie with this name that matches current domain/path
-			// This maintains backward compatibility
 			for (const key in new_cookies) {
 				const c = new_cookies[key];
 				if (
@@ -99,8 +86,17 @@ export function get_cookies(request, url) {
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
 				) {
-					return c.value;
+					// Calculate path specificity (more specific paths have higher specificity)
+					const path_specificity = (c.options.path || '/').split('/').length;
+					if (path_specificity > best_specificity) {
+						best_match = c;
+						best_specificity = path_specificity;
+					}
 				}
+			}
+
+			if (best_match) {
+				return best_match.value;
 			}
 
 			const req_cookies = parse(header, { decode: opts?.decode });

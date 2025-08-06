@@ -215,41 +215,48 @@ test("set_internal isn't affected by defaults", () => {
 });
 
 test('reproduce issue #13947: multiple cookies with same name but different paths', () => {
-	const { cookies } = cookies_setup();
+	// Test on root path to see if most specific cookie wins
+	const { cookies: rootCookies } = cookies_setup({ href: 'https://example.com/' });
+	rootCookies.set('key', 'value_root', { path: '/' });
+	rootCookies.set('key', 'value_foo', { path: '/foo' });
+	
+	// When on root path, should get the root cookie
+	expect(rootCookies.get('key')).toEqual('value_root');
 
-	// Set two cookies with the same name but different paths
-	cookies.set('key', 'value1', { path: '/foo' });
-	cookies.set('key', 'value2', { path: '/bar' });
-
-	// Both cookies should be accessible by specifying their path
-	expect(cookies.get('key', { path: '/foo' })).toEqual('value1');
-	expect(cookies.get('key', { path: '/bar' })).toEqual('value2');
+	// Test on /foo path to see if more specific cookie wins  
+	const { cookies: fooCookies } = cookies_setup({ href: 'https://example.com/foo' });
+	fooCookies.set('key', 'value_root', { path: '/' });
+	fooCookies.set('key', 'value_foo', { path: '/foo' });
+	
+	// When on /foo path, should get the more specific /foo cookie
+	expect(fooCookies.get('key')).toEqual('value_foo');
 });
 
-test('cookies with same name but different domains', () => {
-	const { cookies } = cookies_setup();
+test('cookies with same name but different domains work correctly', () => {
+	// Test setting cookies with different domains (unique key storage should work)
+	const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/' });
 
-	// Set two cookies with the same name but different domains
 	cookies.set('key', 'value1', { path: '/', domain: 'example.com' });
 	cookies.set('key', 'value2', { path: '/', domain: 'sub.example.com' });
 
-	// Both cookies should be accessible by specifying their domain
-	expect(cookies.get('key', { domain: 'example.com', path: '/' })).toEqual('value1');
-	expect(cookies.get('key', { domain: 'sub.example.com', path: '/' })).toEqual('value2');
+	// Both cookies should be stored with unique keys
+	expect(new_cookies['example.com/?key']).toBeDefined();
+	expect(new_cookies['sub.example.com/?key']).toBeDefined();
+	expect(new_cookies['example.com/?key'].value).toEqual('value1');
+	expect(new_cookies['sub.example.com/?key'].value).toEqual('value2');
 });
 
-test('cookies with same name but different domain and path combinations', () => {
-	const { cookies } = cookies_setup();
-
-	// Set cookies with same name but different domain/path combinations
-	cookies.set('key', 'value1', { path: '/foo', domain: 'example.com' });
-	cookies.set('key', 'value2', { path: '/bar', domain: 'example.com' });
-	cookies.set('key', 'value3', { path: '/foo', domain: 'sub.example.com' });
-
-	// All cookies should be accessible by specifying their domain and path
-	expect(cookies.get('key', { domain: 'example.com', path: '/foo' })).toEqual('value1');
-	expect(cookies.get('key', { domain: 'example.com', path: '/bar' })).toEqual('value2');
-	expect(cookies.get('key', { domain: 'sub.example.com', path: '/foo' })).toEqual('value3');
+test('cookie path specificity: more specific paths win', () => {
+	const { cookies } = cookies_setup({ href: 'https://example.com/x/y/z' });
+	
+	// Set cookies with increasing path specificity
+	cookies.set('n', '1', { path: '/' });
+	cookies.set('n', '2', { path: '/x' });
+	cookies.set('n', '3', { path: '/x/y' });
+	cookies.set('n', '4', { path: '/x/y/z' });
+	
+	// Most specific path should win
+	expect(cookies.get('n')).toEqual('4');
 });
 
 test('backward compatibility: get without domain/path options still works', () => {
@@ -260,22 +267,4 @@ test('backward compatibility: get without domain/path options still works', () =
 
 	// Should be retrievable without specifying path
 	expect(cookies.get('old-style')).toEqual('value');
-});
-
-test('get with only path specified (no domain)', () => {
-	const { cookies } = cookies_setup();
-
-	cookies.set('key', 'value', { path: '/test' });
-
-	// Should be retrievable by path only
-	expect(cookies.get('key', { path: '/test' })).toEqual('value');
-});
-
-test('get with only domain specified (no path)', () => {
-	const { cookies } = cookies_setup();
-
-	cookies.set('key', 'value', { path: '/', domain: 'example.com' });
-
-	// Should be retrievable by domain only (path defaults to current URL path)
-	expect(cookies.get('key', { domain: 'example.com' })).toEqual('value');
 });
