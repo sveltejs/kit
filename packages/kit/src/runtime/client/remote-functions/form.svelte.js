@@ -25,10 +25,11 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		const initial_result = {};
-
 		/** @type {any} */
-		let result = $state(initial_result);
+		let result = $state({});
+
+		// svelte-ignore state_referenced_locally
+		const initial_result = result;
 
 		/**
 		 * @param {FormData} data
