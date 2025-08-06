@@ -86,8 +86,8 @@ export function get_cookies(request, url) {
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
 				) {
-					// Calculate path specificity (more specific paths have higher specificity)
-					const path_specificity = (c.options.path || '/').split('/').length;
+					// Calculate path specificity (longer paths are more specific)
+					const path_specificity = (c.options.path || '/').length;
 					if (path_specificity > best_specificity) {
 						best_match = c;
 						best_specificity = path_specificity;
