@@ -219,15 +219,15 @@ test('reproduce issue #13947: multiple cookies with same name but different path
 	const { cookies: rootCookies } = cookies_setup({ href: 'https://example.com/' });
 	rootCookies.set('key', 'value_root', { path: '/' });
 	rootCookies.set('key', 'value_foo', { path: '/foo' });
-	
+
 	// When on root path, should get the root cookie
 	expect(rootCookies.get('key')).toEqual('value_root');
 
-	// Test on /foo path to see if more specific cookie wins  
+	// Test on /foo path to see if more specific cookie wins
 	const { cookies: fooCookies } = cookies_setup({ href: 'https://example.com/foo' });
 	fooCookies.set('key', 'value_root', { path: '/' });
 	fooCookies.set('key', 'value_foo', { path: '/foo' });
-	
+
 	// When on /foo path, should get the more specific /foo cookie
 	expect(fooCookies.get('key')).toEqual('value_foo');
 });
@@ -248,13 +248,13 @@ test('cookies with same name but different domains work correctly', () => {
 
 test('cookie path specificity: more specific paths win', () => {
 	const { cookies } = cookies_setup({ href: 'https://example.com/x/y/z' });
-	
+
 	// Set cookies with increasing path specificity
 	cookies.set('n', '1', { path: '/' });
 	cookies.set('n', '2', { path: '/x' });
 	cookies.set('n', '3', { path: '/x/y' });
 	cookies.set('n', '4', { path: '/x/y/z' });
-	
+
 	// Most specific path should win
 	expect(cookies.get('n')).toEqual('4');
 });
