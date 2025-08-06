@@ -27,6 +27,21 @@ function validate_options(options) {
 }
 
 /**
+ * Generates a unique key for a cookie based on its domain, path, and name in
+ * the format: `<domain>/<path>?<name>`.
+ * If domain is undefined, it will be omitted.
+ * For example: `/?name`, `example.com/foo?name`.
+ *
+ * @param {string | undefined} domain
+ * @param {string} path
+ * @param {string} name
+ * @returns {string}
+ */
+function generate_cookie_key(domain, path, name) {
+	return `${domain || ''}${path}?${name}`;
+}
+
+/**
  * @param {Request} request
  * @param {URL} url
  */
@@ -56,16 +71,33 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie').CookieParseOptions & {domain?: string, path?: string}} [opts]
 		 */
 		get(name, opts) {
-			const c = new_cookies[name];
-			if (
-				c &&
-				domain_matches(url.hostname, c.options.domain) &&
-				path_matches(url.pathname, c.options.path)
-			) {
-				return c.value;
+			// Try to get cookie using the unique key format if domain/path specified
+			if (opts?.domain !== undefined || opts?.path !== undefined) {
+				const cookie_key = generate_cookie_key(
+					opts?.domain, 
+					opts?.path || url?.pathname || '/', 
+					name
+				);
+				const c = new_cookies[cookie_key];
+				if (c) {
+					// When specifically requesting a cookie by domain/path, we return it directly
+					// if it exists in our storage, since the key already encodes the path/domain matching
+					return c.value;
+				}
+			}
+			
+			// Fallback: look for any cookie with this name that matches current domain/path
+			// This maintains backward compatibility
+			for (const key in new_cookies) {
+				const c = new_cookies[key];
+				if (c && c.name === name &&
+					domain_matches(url.hostname, c.options.domain) &&
+					path_matches(url.pathname, c.options.path)) {
+					return c.value;
+				}
 			}
 
 			const req_cookies = parse(header, { decode: opts?.decode });
@@ -213,10 +245,12 @@ export function get_cookies(request, url) {
 			path = resolve(normalized_url, path);
 		}
 
-		new_cookies[name] = { name, value, options: { ...options, path } };
+		// Generate unique key for cookie storage
+		const cookie_key = generate_cookie_key(options.domain, path, name);
+		new_cookies[cookie_key] = { name, value, options: { ...options, path } };
 
 		if (__SVELTEKIT_DEV__) {
-			const serialized = serialize(name, value, new_cookies[name].options);
+			const serialized = serialize(name, value, new_cookies[cookie_key].options);
 			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
