@@ -75,7 +75,7 @@ export default function (opts = {}) {
 			await bundle.write({
 				dir: `${out}/server`,
 				format: 'esm',
-				sourcemap: true,
+				sourcemap: builder.viteConfig.build.sourcemap ?? true,
 				chunkFileNames: 'chunks/[name]-[hash].js'
 			});
 

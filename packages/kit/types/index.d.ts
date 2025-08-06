@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { ResolvedConfig } from 'vite';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -87,6 +88,8 @@ declare module '@sveltejs/kit' {
 		prerendered: Prerendered;
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
+		/** Resolved Vite config. */
+		viteConfig: ResolvedConfig;
 
 		// TODO 3.0 remove this method
 		/**

@@ -82,6 +82,7 @@ export function create_builder({
 		config,
 		prerendered,
 		routes,
+		viteConfig: vite_config,
 
 		async compress(directory) {
 			if (!existsSync(directory)) {

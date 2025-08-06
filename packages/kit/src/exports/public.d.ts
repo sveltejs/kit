@@ -25,6 +25,7 @@ import {
 	ResolvedPathname
 	// @ts-ignore
 } from '$app/types';
+import { ResolvedConfig } from 'vite';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -110,6 +111,8 @@ export interface Builder {
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
+	/** Resolved Vite config. */
+	viteConfig: ResolvedConfig;
 
 	// TODO 3.0 remove this method
 	/**
