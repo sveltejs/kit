@@ -178,7 +178,7 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-export let remote_responses = __SVELTEKIT_PAYLOAD__.data ?? {};
+export const remote_responses = __SVELTEKIT_PAYLOAD__.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
