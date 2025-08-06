@@ -77,8 +77,8 @@ export function get_cookies(request, url) {
 			// Try to get cookie using the unique key format if domain/path specified
 			if (opts?.domain !== undefined || opts?.path !== undefined) {
 				const cookie_key = generate_cookie_key(
-					opts?.domain, 
-					opts?.path || url?.pathname || '/', 
+					opts?.domain,
+					opts?.path || url?.pathname || '/',
 					name
 				);
 				const c = new_cookies[cookie_key];
@@ -88,14 +88,17 @@ export function get_cookies(request, url) {
 					return c.value;
 				}
 			}
-			
+
 			// Fallback: look for any cookie with this name that matches current domain/path
 			// This maintains backward compatibility
 			for (const key in new_cookies) {
 				const c = new_cookies[key];
-				if (c && c.name === name &&
+				if (
+					c &&
+					c.name === name &&
 					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path)) {
+					path_matches(url.pathname, c.options.path)
+				) {
 					return c.value;
 				}
 			}
