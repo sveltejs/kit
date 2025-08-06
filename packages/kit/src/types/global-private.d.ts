@@ -10,14 +10,17 @@ declare global {
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
 	/** The `__sveltekit_abc123` object in the init `<script>` */
 	const __SVELTEKIT_PAYLOAD__: {
+		/** The basepath, usually relative to the current page */
 		base: string;
-		assets: string;
+		/** Path to externally-hosted assets */
+		assets?: string;
 		/** Public environment variables */
 		env?: Record<string, string>;
 		/** Serialized data from remote functions */
 		data?: Record<string, any>;
-		/** Streamed promises */
+		/** Create a placeholder promise */
 		defer?: (id: number) => Promise<any>;
+		/** Resolve a placeholder promise */
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
 	/**
