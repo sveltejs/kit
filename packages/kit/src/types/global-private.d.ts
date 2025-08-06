@@ -14,7 +14,9 @@ declare global {
 		assets: string;
 		/** Public environment variables */
 		env?: Record<string, string>;
+		/** Serialized data from remote functions */
 		data?: Record<string, any>;
+		/** Streamed promises */
 		defer?: (id: number) => Promise<any>;
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
