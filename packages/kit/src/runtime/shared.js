@@ -50,6 +50,17 @@ export function stringify_remote_arg(value, transport) {
 }
 
 /**
+ * Parses `string` with `devalue.parse`, using the provided transport decoders.
+ * @param {string} string
+ * @param {Transport} transport
+ */
+export function parse(string, transport) {
+	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
+
+	return devalue.parse(string, decoders);
+}
+
+/**
  * Parses the argument (if any) for a remote function
  * @param {string} string
  * @param {Transport} transport
@@ -57,15 +68,13 @@ export function stringify_remote_arg(value, transport) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
-
 	// We don't need to add back the `=`-padding because atob can handle it
 	const base64_restored = string.replace(/-/g, '+').replace(/_/g, '/');
 	const binary_string = atob(base64_restored);
 	const utf8_bytes = new Uint8Array([...binary_string].map((char) => char.charCodeAt(0)));
 	const json_string = new TextDecoder().decode(utf8_bytes);
 
-	return devalue.parse(json_string, decoders);
+	return parse(json_string, transport);
 }
 
 /**
