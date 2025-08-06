@@ -56,7 +56,10 @@ test.describe('paths', () => {
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
 
-	test('query remote function from client accounts for base path', async ({ page, javaScriptEnabled }) => {
+	test('query remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		test.skip(!javaScriptEnabled);
 
 		await page.goto('/basepath/remote');
@@ -89,7 +92,10 @@ test.describe('paths', () => {
 		await expect(page.locator('#count')).toHaveText('0');
 	});
 
-	test('form remote function from client accounts for base path', async ({ page, javaScriptEnabled }) => {
+	test('form remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		test.skip(!javaScriptEnabled);
 
 		await page.goto('/basepath/remote');
