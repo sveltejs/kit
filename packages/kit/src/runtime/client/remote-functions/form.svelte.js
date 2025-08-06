@@ -25,10 +25,10 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
+		const initial_result = {};
+
 		/** @type {any} */
-		let result = $state(
-			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
-		);
+		let result = $state(initial_result);
 
 		/**
 		 * @param {FormData} data
@@ -250,7 +250,18 @@ export function form(id) {
 				value: button_props
 			},
 			result: {
-				get: () => result
+				get: () => {
+					if (result === initial_result) {
+						// we have to evaluate the default result lazily because it's possible
+						// that `remote_responses` is still uninitialised at this point
+						// when we bundle the app into a single output and this module gets
+						// evaluated before `client.start()` is called
+						return !started
+							? (remote_responses[create_remote_cache_key(action, '')] ?? undefined)
+							: undefined;
+					}
+					return result;
+				}
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */
