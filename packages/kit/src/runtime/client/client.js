@@ -2619,7 +2619,9 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const scroll = scroll_positions[history_index];
-			const state = event.state[STATES_KEY] ? unstringify(event.state[STATES_KEY], app.hooks.transport) : {};
+			const state = event.state[STATES_KEY]
+				? unstringify(event.state[STATES_KEY], app.hooks.transport)
+				: {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
 			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
