@@ -411,7 +411,7 @@ export async function render_response({
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
-			const serialized = { form: 'null', error: 'null', remote: 'null' };
+			const serialized = { form: 'null', error: 'null' };
 
 			if (form_value) {
 				serialized.form = uneval_action_response(
