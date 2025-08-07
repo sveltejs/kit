@@ -118,13 +118,26 @@ export function get_cookies(request, url) {
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });
 
+			// Group cookies by name and find the most specific one for each name
+			const lookup = new Map();
+
 			for (const c of Object.values(new_cookies)) {
 				if (
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
 				) {
-					cookies[c.name] = c.value;
+					const existing = lookup.get(c.name);
+
+					// If no existing cookie or this one has a more specific (longer) path, use this one
+					if (!existing || c.options.path.length > existing.options.path.length) {
+						lookup.set(c.name, c);
+					}
 				}
+			}
+
+			// Add the most specific cookies to the result
+			for (const c of lookup.values()) {
+				cookies[c.name] = c.value;
 			}
 
 			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
