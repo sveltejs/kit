@@ -105,6 +105,8 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
 			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
 			validated.kit.files.hooks.universal = path.resolve(cwd, validated.kit.files.hooks.universal);
+		} else if (key === 'tracing') {
+			validated.kit.files.tracing.server = path.resolve(cwd, validated.kit.files.tracing.server);
 		} else {
 			// @ts-expect-error
 			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);

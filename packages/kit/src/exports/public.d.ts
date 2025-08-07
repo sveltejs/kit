@@ -51,6 +51,12 @@ export interface Adapter {
 		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+
+		/**
+		 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
+		 * also deploy to a platform that supports `@opentelemetry/api`.
+		 */
+		tracing?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -452,6 +458,13 @@ export interface KitConfig {
 			 * @since 2.3.0
 			 */
 			universal?: string;
+		};
+		/**
+		 * the location of your server tracing file
+		 * @default "src/tracing.server"
+		 */
+		tracing?: {
+			server?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`

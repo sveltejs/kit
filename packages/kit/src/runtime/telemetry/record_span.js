@@ -16,7 +16,7 @@ export async function record_span({ name, attributes, fn }) {
 		return fn(noop_span);
 	}
 
-	const { SpanStatusCode, tracer } = otel;
+	const { SpanStatusCode, tracer } = await otel;
 
 	return tracer.startActiveSpan(name, { attributes }, async (span) => {
 		try {

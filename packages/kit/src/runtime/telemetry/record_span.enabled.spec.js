@@ -30,17 +30,20 @@ const { tracer, span } = vi.hoisted(() => {
 });
 
 vi.mock(import('./otel.js'), async (original) => {
-	const { otel } = await original();
+	const { otel: unresolved_otel } = await original();
+	const otel = await unresolved_otel;
 
 	if (otel === null) {
 		throw new Error('Problem setting up tests; otel is null');
 	}
 
 	return {
-		otel: {
+		otel: Promise.resolve({
 			tracer,
-			SpanStatusCode: otel.SpanStatusCode
-		}
+			SpanStatusCode: otel.SpanStatusCode,
+			propagation: otel.propagation,
+			context: otel.context
+		})
 	};
 });
 

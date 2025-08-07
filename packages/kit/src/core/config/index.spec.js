@@ -94,6 +94,9 @@ const get_defaults = (prefix = '') => ({
 			appTemplate: join(prefix, 'src/app.html'),
 			errorTemplate: join(prefix, 'src/error.html')
 		},
+		tracing: {
+			server: join(prefix, 'src/tracing.server')
+		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
 		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },

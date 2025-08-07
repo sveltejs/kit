@@ -38,6 +38,7 @@ import { with_event } from '../app/server/event.js';
 import { record_span } from '../telemetry/record_span.js';
 import { merge_tracing } from '../utils.js';
 import { create_event_state, EVENT_STATE } from './event-state.js';
+import { otel } from '../telemetry/otel.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -57,6 +58,8 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 let warned_on_devtools_json_request = false;
 
+export const respond = propagate_context(internal_respond);
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -64,7 +67,7 @@ let warned_on_devtools_json_request = false;
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function respond(request, options, manifest, state) {
+export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -696,4 +699,26 @@ export function load_page_nodes(page, manifest) {
 		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
 		manifest._.nodes[page.leaf]()
 	]);
+}
+
+/**
+ * It's likely that, in a distributed system, there are spans starting outside the SvelteKit server -- eg.
+ * started on the frontend client, or in a service that calls the SvelteKit server. There are standardized
+ * ways to represent this context in HTTP headers, so we can extract that context and run our tracing inside of it
+ * so that when our traces are exported, they are associated with the correct parent context.
+ * @param {typeof internal_respond} fn
+ * @returns {typeof internal_respond}
+ */
+function propagate_context(fn) {
+	return async (req, ...rest) => {
+		if (otel === null) {
+			return fn(req, ...rest);
+		}
+
+		const { propagation, context } = await otel;
+		const c = propagation.extract(context.active(), Object.fromEntries(req.headers));
+		return context.with(c, async () => {
+			return await fn(req, ...rest);
+		});
+	};
 }

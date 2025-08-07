@@ -134,6 +134,9 @@ const options = object(
 					server: string(join('src', 'hooks.server')),
 					universal: string(join('src', 'hooks'))
 				}),
+				tracing: object({
+					server: string(join('src', 'tracing.server'))
+				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
