@@ -2000,16 +2000,17 @@ export function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {{ resetPageState?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, { resetPageState = false } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(true, resetPageState);
 }
 
 /**
@@ -2026,15 +2027,16 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {{ resetPageState?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function invalidateAll() {
+export function invalidateAll({ resetPageState = false } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidateAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate();
+	return _invalidate(true, resetPageState);
 }
 
 /**

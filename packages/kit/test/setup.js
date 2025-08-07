@@ -1,6 +1,7 @@
 import {
 	goto,
 	invalidate,
+	invalidateAll,
 	preloadCode,
 	preloadData,
 	beforeNavigate,
@@ -14,6 +15,7 @@ export function setup() {
 		Object.assign(window, {
 			goto,
 			invalidate,
+			invalidateAll,
 			preloadCode,
 			preloadData,
 			beforeNavigate,

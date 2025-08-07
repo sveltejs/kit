@@ -2473,11 +2473,15 @@ declare module '$app/navigation' {
 	 * ```
 	 * @param resource The invalidated URL
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean), { resetPageState }?: {
+		resetPageState?: boolean;
+	}): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export function invalidateAll(): Promise<void>;
+	export function invalidateAll({ resetPageState }?: {
+		resetPageState?: boolean;
+	}): Promise<void>;
 	/**
 	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
 	 * Returns a `Promise` that resolves when the page is subsequently updated.
