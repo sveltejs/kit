@@ -331,7 +331,10 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_PAYLOAD__: new_config.build.ssr
+						? '{}'
+						: `globalThis.__sveltekit_${version_hash}`
 				};
 
 				if (!secondary_build_started) {
@@ -343,8 +346,12 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false'
+					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
 				};
+
+				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
+				globalThis.__sveltekit_dev = {};
 
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
 				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.

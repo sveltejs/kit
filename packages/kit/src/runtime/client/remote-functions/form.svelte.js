@@ -6,7 +6,6 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
-import { create_remote_cache_key } from '../../shared.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -26,9 +25,7 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state(
-			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
-		);
+		let result = $state(started ? undefined : remote_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);

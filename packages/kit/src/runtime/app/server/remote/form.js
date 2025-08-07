@@ -67,7 +67,7 @@ export function form(fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					state.form_result = [key, result];
+					(state.remote_data ??= {})[__.id] = result;
 				}
 
 				return result;
@@ -89,8 +89,8 @@ export function form(fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { form_result } = get_event_state(getRequestEvent());
-					return form_result && form_result[0] === key ? form_result[1] : undefined;
+					const { remote_data } = get_event_state(getRequestEvent());
+					return remote_data?.[__.id];
 				} catch {
 					return undefined;
 				}
