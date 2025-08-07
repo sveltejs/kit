@@ -12,9 +12,6 @@ catalogs:
     '@sveltejs/vite-plugin-svelte':
       specifier: ^6.0.0-next.3
       version: 6.0.0-next.3
-    '@types/node':
-      specifier: ^18.19.119
-      version: 18.19.119
     cross-env:
       specifier: ^7.0.3
       version: 7.0.3
@@ -400,7 +397,7 @@ importers:
         specifier: ^1.0.5
         version: 1.0.8
       '@types/node':
-        specifier: 'catalog:'
+        specifier: ^18.19.119
         version: 18.19.119
       rollup:
         specifier: ^4.27.4
