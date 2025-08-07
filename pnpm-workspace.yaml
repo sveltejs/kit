@@ -16,5 +16,3 @@ catalog:
   '@sveltejs/vite-plugin-svelte': '^6.0.0-next.3'
   'vitest': '^3.2.3'
   'vite': '^6.3.5'
-
-shellEmulator: true
