@@ -401,16 +401,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const file = output_filename(decoded, is_html, type);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
-		// Warn about prerendering non-HTML root endpoints
-		if (decoded === config.paths.base + '/' && !is_html && category === 'pages') {
-			log.warn(
-				`Prerendering root +server.js endpoint with content-type '${type}'. ` +
-					`Note: Most static hosts expect 'index.html' at the root. ` +
-					`Consider setting 'export const prerender = false' in your root +server.js and ` +
-					`'export const prerender = true' in nested routes instead.`
-			);
-		}
-
 		if (written.has(file)) return;
 
 		const encoded_route_id = response.headers.get('x-sveltekit-routeid');
