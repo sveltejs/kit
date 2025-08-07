@@ -12,6 +12,9 @@ catalogs:
     '@sveltejs/vite-plugin-svelte':
       specifier: ^6.0.0-next.3
       version: 6.0.0-next.3
+    '@types/node':
+      specifier: ^18.19.119
+      version: 18.19.119
     cross-env:
       specifier: ^7.0.3
       version: 7.0.3
@@ -60,7 +63,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       typescript:
         specifier: ^5.3.3
@@ -88,7 +91,7 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       esbuild:
         specifier: ^0.25.4
@@ -179,7 +182,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       '@types/set-cookie-parser':
         specifier: ^2.4.7
@@ -255,7 +258,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       polka:
         specifier: ^1.0.0-next.28
@@ -282,7 +285,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       sirv:
         specifier: ^3.0.0
@@ -352,7 +355,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       typescript:
         specifier: ^5.3.3
@@ -397,7 +400,7 @@ importers:
         specifier: ^1.0.5
         version: 1.0.8
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       rollup:
         specifier: ^4.27.4
@@ -470,7 +473,7 @@ importers:
         specifier: ^3.4.38
         version: 3.4.38
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       '@types/set-cookie-parser':
         specifier: ^2.4.7
@@ -1197,7 +1200,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
-        specifier: ^18.19.119
+        specifier: 'catalog:'
         version: 18.19.119
       '@types/semver':
         specifier: ^7.5.6
