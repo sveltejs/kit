@@ -80,17 +80,18 @@ export function get_cookies(request, url) {
 
 			for (const key in new_cookies) {
 				const c = new_cookies[key];
+
 				if (
-					c &&
 					c.name === name &&
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
 				) {
-					// Calculate path specificity (longer paths are more specific)
-					const path_specificity = (c.options.path || '/').length;
-					if (path_specificity > best_specificity) {
+					// Longer paths are more specific
+					const path_length = c.options.path.length;
+
+					if (path_length > best_specificity) {
 						best_match = c;
-						best_specificity = path_specificity;
+						best_specificity = path_length;
 					}
 				}
 			}
