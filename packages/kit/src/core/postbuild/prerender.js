@@ -107,7 +107,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			env
 		});
 
-		const file = output_filename('/', true);
+		const file = output_filename('/', true, undefined);
 		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
 
 		mkdirp(dirname(dest));
@@ -165,15 +165,53 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/**
 	 * @param {string} path
 	 * @param {boolean} is_html
+	 * @param {string} [content_type]
 	 */
-	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1) || 'index.html';
+	function output_filename(path, is_html, content_type) {
+		const file = path.slice(config.paths.base.length + 1);
+
+		// Special handling for root path
+		if (!file) {
+			if (is_html) {
+				return 'index.html';
+			}
+			// For non-HTML root endpoints, determine extension from content-type
+			if (content_type) {
+				const ext = get_extension_from_content_type(content_type);
+				return ext ? `index${ext}` : 'index';
+			}
+			return 'index';
+		}
 
 		if (is_html && !file.endsWith('.html')) {
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
 		}
 
 		return file;
+	}
+
+	/**
+	 * @param {string} content_type
+	 * @returns {string}
+	 */
+	function get_extension_from_content_type(content_type) {
+		// Extract the mime type (ignore charset and other parameters)
+		const mime = content_type.split(';')[0].trim().toLowerCase();
+
+		// Common mime type to extension mappings
+		const mime_to_ext = {
+			'application/json': '.json',
+			'text/plain': '.txt',
+			'text/css': '.css',
+			'text/javascript': '.js',
+			'application/javascript': '.js',
+			'application/xml': '.xml',
+			'text/xml': '.xml',
+			'application/pdf': '.pdf',
+			'image/svg+xml': '.svg'
+		};
+
+		return mime_to_ext[mime] || '';
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
@@ -360,8 +398,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
-		const file = output_filename(decoded, is_html);
+		const file = output_filename(decoded, is_html, type);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
+
+		// Warn about prerendering non-HTML root endpoints
+		if (decoded === config.paths.base + '/' && !is_html && category === 'pages') {
+			log.warn(
+				`Prerendering root +server.js endpoint with content-type '${type}'. ` +
+					`Note: Most static hosts expect 'index.html' at the root. ` +
+					`Consider setting 'export const prerender = false' in your root +server.js and ` +
+					`'export const prerender = true' in nested routes instead.`
+			);
+		}
 
 		if (written.has(file)) return;
 
