@@ -1542,6 +1542,8 @@ declare module '@sveltejs/kit' {
 		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 		/** The result of the form submission */
 		get result(): Result | undefined;
+		/** The number of pending submissions */
+		get pending(): number;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -1563,14 +1565,20 @@ declare module '@sveltejs/kit' {
 				formaction: string;
 				onclick: (event: Event) => void;
 			};
+			/** The number of pending submissions */
+			get pending(): number;
 		};
 	};
 
 	/**
 	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
-	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	export type RemoteCommand<Input, Output> = {
+		(arg: Input): Promise<Awaited<Output>> & {
+			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+		};
+		/** The number of pending command executions */
+		get pending(): number;
 	};
 
 	export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -2120,7 +2128,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -2150,13 +2158,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit): Response;
+	export function json(data: any, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit): Response;
+	export function text(body: string, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create an `ActionFailure` object. Call when form submission fails.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2455,7 +2463,7 @@ declare module '$app/navigation' {
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
-	}): Promise<void>;
+	} | undefined): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -2484,7 +2492,7 @@ declare module '$app/navigation' {
 	 * */
 	export function refreshAll({ includeLoadFunctions }?: {
 		includeLoadFunctions?: boolean;
-	}): Promise<void>;
+	} | undefined): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
