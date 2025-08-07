@@ -6,6 +6,10 @@
 <!-- TODO use await here once async lands -->
 <p id="get-task">{#await current_task then task}{task}{/await}</p>
 
+<!-- Test pending state for forms -->
+<p id="form-pending">Form pending: {task_one.pending}</p>
+<p id="form-button-pending">Button pending: {task_two.buttonProps.pending}</p>
+
 <form {...task_one}>
 	<input id="input-task" name="task" />
 	<button id="submit-btn-one">Task One</button>

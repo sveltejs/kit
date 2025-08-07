@@ -30,6 +30,9 @@ export function form(id) {
 			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
 		);
 
+		/** @type {number} */
+		let pending_count = $state(0);
+
 		/**
 		 * @param {FormData} data
 		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
@@ -44,6 +47,9 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
+
+			// Increment pending count when submission starts
+			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
@@ -97,6 +103,9 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
+					// Decrement pending count when submission completes
+					pending_count--;
+
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;
@@ -245,12 +254,19 @@ export function form(id) {
 			}
 		});
 
+		Object.defineProperty(button_props, 'pending', {
+			get: () => pending_count
+		});
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
 			result: {
 				get: () => result
+			},
+			pending: {
+				get: () => pending_count
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */

@@ -22,6 +22,11 @@
 {/if}
 <p id="command-result">{command_result}</p>
 
+<!-- Test pending state for commands -->
+{#if browser}
+	<p id="command-pending">Command pending: {set_count.pending}</p>
+{/if}
+
 <button onclick={() => set_count_server(0)} id="reset-btn">reset</button>
 
 <button onclick={() => count.refresh()} id="refresh-btn">Refresh</button>
