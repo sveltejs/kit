@@ -11,8 +11,8 @@
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
-		"test:server-side-route-resolution:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && DEV=true ROUTER_RESOLUTION=server playwright test",
-		"test:server-side-route-resolution:build": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && ROUTER_RESOLUTION=server playwright test"
+		"test:server-side-route-resolution:dev": "rm -rf test/errors.json && DEV=true ROUTER_RESOLUTION=server playwright test",
+		"test:server-side-route-resolution:build": "rm -rf test/errors.json && ROUTER_RESOLUTION=server playwright test"
 	},
 	"devDependencies": {
 		"@fontsource/libre-barcode-128-text": "^5.1.0",
