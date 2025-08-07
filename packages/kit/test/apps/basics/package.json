@@ -11,10 +11,11 @@
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
 		"test:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && DEV=true playwright test",
 		"test:build": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && PUBLIC_PRERENDERING=false playwright test",
-		"test:cross-platform:dev": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && DEV=true playwright test test/cross-platform/",
-		"test:cross-platform:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && playwright test test/cross-platform/",
+		"test:cross-platform:dev": "pnpm test-setup && DEV=true playwright test test/cross-platform/",
+		"test:cross-platform:build": "pnpm test-setup && playwright test test/cross-platform/",
 		"test:server-side-route-resolution:dev": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && DEV=true ROUTER_RESOLUTION=server playwright test",
-		"test:server-side-route-resolution:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test"
+		"test:server-side-route-resolution:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test",
+		"test-setup": "node test/setup.js && rm -rf test/errors.json"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
