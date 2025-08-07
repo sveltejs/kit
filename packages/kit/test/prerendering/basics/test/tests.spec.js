@@ -281,13 +281,3 @@ test('identifies missing ids', () => {
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
 	expect(missing_ids).toEqual(['missing-id']);
 });
-
-test('prerenders +server.js endpoints with correct extensions based on content-type', () => {
-	// JSON endpoint should not have .html extension
-	const jsonContent = read('json-endpoint');
-	expect(jsonContent).toBe('{"message":"This is JSON content"}');
-
-	// Plain text endpoint should not have .html extension
-	const textContent = read('text-endpoint');
-	expect(textContent).toBe('This is plain text content');
-});

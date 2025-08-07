@@ -3,5 +3,5 @@ import { json } from '@sveltejs/kit';
 export const prerender = true;
 
 export function GET() {
-	return json({ message: 'This is JSON content' });
+	return json({ message: 'Root server endpoint returning JSON' });
 }

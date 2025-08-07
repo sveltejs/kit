@@ -1,0 +1,1 @@
+<h1>Nested page that should be prerendered</h1>

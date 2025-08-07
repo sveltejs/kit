@@ -1,7 +1,7 @@
 export const prerender = true;
 
 export function GET() {
-	return new Response('This is plain text content', {
+	return new Response('Root server endpoint returning plain text', {
 		headers: {
 			'content-type': 'text/plain'
 		}
