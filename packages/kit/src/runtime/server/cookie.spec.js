@@ -216,20 +216,20 @@ test("set_internal isn't affected by defaults", () => {
 
 test('reproduce issue #13947: multiple cookies with same name but different paths', () => {
 	// Test on root path to see if most specific cookie wins
-	const { cookies: rootCookies } = cookies_setup({ href: 'https://example.com/' });
-	rootCookies.set('key', 'value_root', { path: '/' });
-	rootCookies.set('key', 'value_foo', { path: '/foo' });
+	const { cookies: root_cookies } = cookies_setup({ href: 'https://example.com/' });
+	root_cookies.set('key', 'value_root', { path: '/' });
+	root_cookies.set('key', 'value_foo', { path: '/foo' });
 
 	// When on root path, should get the root cookie
-	expect(rootCookies.get('key')).toEqual('value_root');
+	expect(root_cookies.get('key')).toEqual('value_root');
 
 	// Test on /foo path to see if more specific cookie wins
-	const { cookies: fooCookies } = cookies_setup({ href: 'https://example.com/foo' });
-	fooCookies.set('key', 'value_root', { path: '/' });
-	fooCookies.set('key', 'value_foo', { path: '/foo' });
+	const { cookies: foo_cookies } = cookies_setup({ href: 'https://example.com/foo' });
+	foo_cookies.set('key', 'value_root', { path: '/' });
+	foo_cookies.set('key', 'value_foo', { path: '/foo' });
 
 	// When on /foo path, should get the more specific /foo cookie
-	expect(fooCookies.get('key')).toEqual('value_foo');
+	expect(foo_cookies.get('key')).toEqual('value_foo');
 });
 
 test('cookies with same name but different domains work correctly', () => {
