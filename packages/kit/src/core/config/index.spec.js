@@ -87,15 +87,15 @@ const get_defaults = (prefix = '') => ({
 				server: join(prefix, 'src/hooks.server'),
 				universal: join(prefix, 'src/hooks')
 			},
+			tracing: {
+				server: join(prefix, 'src/tracing.server')
+			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
 			appTemplate: join(prefix, 'src/app.html'),
 			errorTemplate: join(prefix, 'src/error.html')
-		},
-		tracing: {
-			server: join(prefix, 'src/tracing.server')
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
