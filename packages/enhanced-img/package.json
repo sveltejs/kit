@@ -4,7 +4,7 @@
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "https://github.com/sveltejs/kit.git",
 		"directory": "packages/enhanced-img"
 	},
 	"keywords": [
