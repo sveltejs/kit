@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import process from 'node:process';
 
 /** @typedef {import('./types.js').Validator} Validator */
@@ -125,18 +124,19 @@ const options = object(
 			}),
 
 			files: object({
+				src: string('src'),
 				assets: string('static'),
 				hooks: object({
-					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
+					client: string(null),
+					server: string(null),
+					universal: string(null)
 				}),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html'))
+				lib: string(null),
+				params: string(null),
+				routes: string(null),
+				serviceWorker: string(null),
+				appTemplate: string(null),
+				errorTemplate: string(null)
 			}),
 
 			inlineStyleThreshold: number(0),
