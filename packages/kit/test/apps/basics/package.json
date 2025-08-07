@@ -11,8 +11,8 @@
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
 		"test:dev": "rm -rf test/errors.json && DEV=true playwright test",
 		"test:build": "rm -rf test/errors.json && PUBLIC_PRERENDERING=false playwright test",
-		"test:cross-platform:dev": "pnpm test-setup && DEV=true playwright test test/cross-platform/",
-		"test:cross-platform:build": "pnpm test-setup && playwright test test/cross-platform/",
+		"test:cross-platform:dev": "node test/setup.js && rm -rf test/errors.json && DEV=true playwright test test/cross-platform/",
+		"test:cross-platform:build": "node test/setup.js && rm -rf test/errors.json && playwright test test/cross-platform/",
 		"test:server-side-route-resolution:dev": "node test/setup.js && rm -rf test/errors.json && DEV=true ROUTER_RESOLUTION=server playwright test",
 		"test:server-side-route-resolution:build": "node test/setup.js && rm -rf test/errors.json && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test"
 	},
