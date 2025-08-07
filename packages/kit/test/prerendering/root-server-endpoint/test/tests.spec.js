@@ -11,7 +11,7 @@ test('prerenders root +server.js endpoint with correct extension', () => {
 	// The root +server.js should be saved as index.json, not index.html
 	assert.isTrue(fs.existsSync(`${build}/index.json`), 'index.json should exist');
 	assert.isFalse(fs.existsSync(`${build}/index.html`), 'index.html should NOT exist');
-	
+
 	const content = read('index.json');
 	expect(content).toBe('{"message":"Root server endpoint returning JSON"}');
 });
