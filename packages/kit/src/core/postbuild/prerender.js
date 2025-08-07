@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { mimes } from 'mrmime';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -184,7 +185,44 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 
 		if (is_html && !file.endsWith('.html')) {
+			// For redirects from paths with existing extensions, 
+			// we need to handle them specially to avoid .json.html
+			const parts = file.split('/');
+			const lastPart = parts[parts.length - 1];
+			
+			// If the path already has an extension (like data.json),
+			// create a directory with index.html instead
+			if (lastPart.includes('.') && !lastPart.endsWith('.html')) {
+				return file + '/index.html';
+			}
+			
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
+		}
+
+		// For non-HTML non-root endpoints, also determine extension from content-type
+		if (!is_html && content_type) {
+			const ext = get_extension_from_content_type(content_type);
+			if (ext) {
+				// Check if the file already has the correct extension
+				if (file.endsWith(ext)) {
+					return file;
+				}
+				
+				// Check if the parent directory name already has an extension
+				// e.g., "foo.json" from "foo.json/+server.js"
+				const parts = file.split('/');
+				const lastPart = parts[parts.length - 1];
+				
+				// If the last part has any extension, keep as-is
+				// Otherwise, add the appropriate extension
+				if (lastPart.includes('.')) {
+					return file;
+				}
+				
+				// If the path ends with a slash, add index with extension
+				// Otherwise add /index with extension (for directory-based routes)
+				return file + (file.endsWith('/') ? `index${ext}` : `/index${ext}`);
+			}
 		}
 
 		return file;
@@ -197,22 +235,33 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	function get_extension_from_content_type(content_type) {
 		// Extract the mime type (ignore charset and other parameters)
 		const mime = content_type.split(';')[0].trim().toLowerCase();
-
-		// Common mime type to extension mappings
-		/** @type {Record<string, string>} */
-		const mime_to_ext = {
-			'application/json': '.json',
+		
+		// Common mime types with well-known extensions
+		const common_types = {
 			'text/plain': '.txt',
-			'text/css': '.css',
-			'text/javascript': '.js',
+			'text/html': '.html',
+			'application/json': '.json',
 			'application/javascript': '.js',
+			'text/javascript': '.js',
+			'text/css': '.css',
 			'application/xml': '.xml',
-			'text/xml': '.xml',
-			'application/pdf': '.pdf',
-			'image/svg+xml': '.svg'
+			'text/xml': '.xml'
 		};
-
-		return mime_to_ext[mime] || '';
+		
+		// Check common types first
+		if (common_types[mime]) {
+			return common_types[mime];
+		}
+		
+		// Fall back to mrmime for everything else
+		// Find the first extension that maps to this mime type
+		for (const [ext, m] of Object.entries(mimes)) {
+			if (m === mime) {
+				return '.' + ext;
+			}
+		}
+		
+		return '';
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));

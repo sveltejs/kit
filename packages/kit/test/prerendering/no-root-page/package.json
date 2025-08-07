@@ -1,5 +1,5 @@
 {
-	"name": "prerendering-test-root-server-text",
+	"name": "prerendering-test-no-root-page",
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
