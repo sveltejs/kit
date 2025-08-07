@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.4.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
 ## 2.4.0
 ### Minor Changes
 
