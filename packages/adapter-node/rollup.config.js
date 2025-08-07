@@ -42,14 +42,8 @@ export default [
 			file: 'files/index.js',
 			format: 'esm'
 		},
-		plugins: [
-			clearOutput('files/index.js'),
-			nodeResolve({ preferBuiltins: true }),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'HANDLER']
+		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json(), prefixBuiltinModules()],
+		external: ['./start.js']
 	},
 	{
 		input: 'src/env.js',

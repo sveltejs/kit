@@ -1,3 +1,4 @@
+/** @import { BuildOptions } from 'esbuild' */
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -106,7 +107,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				}
 
 				return true;
-			}
+			},
+			tracing: () => true
 		}
 	};
 }
@@ -174,9 +176,8 @@ async function generate_edge_functions({ builder }) {
 		version: 1
 	};
 
-	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+	/** @type {BuildOptions} */
+	const esbuild_config = {
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -194,6 +195,21 @@ async function generate_edge_functions({ builder }) {
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
 		external: builtinModules.map((id) => `node:${id}`),
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
+	};
+	await esbuild.build({
+		entryPoints: [`${tmp}/entry.js`],
+		outfile: '.netlify/edge-functions/render.js',
+		...esbuild_config
+	});
+	await esbuild.build({
+		entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
+		outfile: '.netlify/edge-functions/tracing.server.js',
+		...esbuild_config
+	});
+	builder.trace({
+		entrypoint: '.netlify/edge-functions/render.js',
+		tracing: '.netlify/edge-functions/tracing.server.js',
+		tla: false
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
@@ -272,6 +288,12 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
+			builder.trace({
+				entrypoint: `.netlify/functions-internal/${name}.mjs`,
+				tracing: '.netlify/server/tracing.server.js',
+				start: `${name}.start.mjs`,
+				exports: ['handler']
+			});
 
 			const redirect = `/.netlify/functions/${name} 200`;
 			redirects.push(`${pattern} ${redirect}`);
@@ -286,6 +308,12 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
+		builder.trace({
+			entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
+			tracing: '.netlify/server/tracing.server.js',
+			exports: ['handler']
+		});
+
 		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
 	}
 

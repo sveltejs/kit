@@ -113,6 +113,11 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
+			builder.trace({
+				entrypoint: worker_dest,
+				tracing: `${builder.getServerDirectory()}/tracing.server.js`,
+				tla: false
+			});
 
 			// _headers
 			if (existsSync('_headers')) {
@@ -184,7 +189,8 @@ export default function (options = {}) {
 				}
 
 				return true;
-			}
+			},
+			tracing: () => true
 		}
 	};
 }
