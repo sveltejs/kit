@@ -46,7 +46,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
- * @returns {RemoteQueryFunction<StandardSchemaV1.InferOutput<Schema>, Output>}
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
 /**

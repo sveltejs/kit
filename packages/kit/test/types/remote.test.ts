@@ -3,21 +3,22 @@ import { StandardSchemaV1 } from '@standard-schema/spec';
 import { RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
+const schema2: StandardSchemaV1<string, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
-	no_args();
+	void no_args();
 	// @ts-expect-error
-	no_args('');
+	void no_args('');
 
 	const one_arg: RemoteQueryFunction<number, string> = query('unchecked', (a: number) =>
 		a.toString()
 	);
-	one_arg(1);
+	void one_arg(1);
 	// @ts-expect-error
-	one_arg('1');
+	void one_arg('1');
 	// @ts-expect-error
-	one_arg();
+	void one_arg();
 
 	async function query_without_args() {
 		const q = query(() => 'Hello world');
@@ -27,45 +28,52 @@ function query_tests() {
 		const wrong: number = await q();
 		wrong;
 		// @ts-expect-error
-		q(1);
+		void q(1);
 		// @ts-expect-error
-		query((a: string) => 'hi');
+		query((_: string) => 'hi');
 	}
-	query_without_args();
+	void query_without_args();
 
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
 		const result: number = await q(1);
 		result;
 		// @ts-expect-error
-		q(1, 2, 3);
+		void q(1, 2, 3);
 		// @ts-expect-error
-		q('1', '2');
+		void q('1', '2');
 	}
-	query_unsafe();
+	void query_unsafe();
 
-	async function query_schema() {
+	async function query_schema_input_only() {
 		const q = query(schema, (a) => a);
 		const result: string = await q('1');
 		result;
 	}
-	query_schema();
+	void query_schema_input_only();
+
+	async function query_schema_input_and_output() {
+		const q = query(schema2, (a) => a);
+		const result: number = await q('1');
+		result;
+	}
+	void query_schema_input_and_output();
 }
 query_tests();
 
 function prerender_tests() {
 	const no_args: RemotePrerenderFunction<void, string> = prerender(() => 'Hello world');
-	no_args();
+	void no_args();
 	// @ts-expect-error
-	no_args('');
+	void no_args('');
 	const one_arg: RemotePrerenderFunction<number, string> = prerender('unchecked', (a: number) =>
 		a.toString()
 	);
-	one_arg(1);
+	void one_arg(1);
 	// @ts-expect-error
-	one_arg('1');
+	void one_arg('1');
 	// @ts-expect-error
-	one_arg();
+	void one_arg();
 
 	async function prerender_without_args() {
 		const q = prerender(() => 'Hello world');
@@ -75,31 +83,31 @@ function prerender_tests() {
 		const wrong: number = await q();
 		wrong;
 		// @ts-expect-error
-		q(1);
+		void q(1);
 		// @ts-expect-error
-		query((a: string) => 'hi');
+		query((_: string) => 'hi');
 	}
-	prerender_without_args();
+	void prerender_without_args();
 
 	async function prerender_unsafe() {
 		const q = prerender('unchecked', (a: number) => a);
 		const result: number = await q(1);
 		result;
 		// @ts-expect-error
-		q(1, 2, 3);
+		void q(1, 2, 3);
 		// @ts-expect-error
-		q('1', '2');
+		void q('1', '2');
 	}
-	prerender_unsafe();
+	void prerender_unsafe();
 
 	async function prerender_schema() {
 		const q = prerender(schema, (a) => a);
 		const result: string = await q('1');
 		result;
 	}
-	prerender_schema();
+	void prerender_schema();
 
-	async function prerender_schema_entries() {
+	function prerender_schema_entries() {
 		const q = prerender(schema, (a) => a, { inputs: () => ['1'] });
 		q;
 		// @ts-expect-error
@@ -125,31 +133,31 @@ function command_tests() {
 		const wrong: number = await cmd();
 		wrong;
 	}
-	command_without_args();
+	void command_without_args();
 
 	async function command_unsafe() {
 		const cmd = command('unchecked', (a: string) => a);
 		const result: string = await cmd('test');
 		result;
 		// @ts-expect-error
-		cmd(1);
+		void cmd(1);
 		// @ts-expect-error
-		cmd('1', 2);
+		void cmd('1', 2);
 	}
-	command_unsafe();
+	void command_unsafe();
 
 	async function command_schema() {
 		const cmd = command(schema, (a) => a);
 		const result: string = await cmd('foo');
 		result;
 		// @ts-expect-error
-		cmd(123);
+		void cmd(123);
 	}
-	command_schema();
+	void command_schema();
 }
 command_tests();
 
-async function form_tests() {
+function form_tests() {
 	const q = query(() => '');
 	const f = form((f) => {
 		f.get('');

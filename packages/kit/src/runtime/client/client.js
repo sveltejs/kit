@@ -178,7 +178,7 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-export let remote_responses;
+export const remote_responses = __SVELTEKIT_PAYLOAD__.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -288,7 +288,6 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
-	remote_responses = hydrate?.remote ?? {};
 
 	await _app.hooks.init?.();
 
