@@ -268,3 +268,19 @@ test('backward compatibility: get without domain/path options still works', () =
 	// Should be retrievable without specifying path
 	expect(cookies.get('old-style')).toEqual('value');
 });
+
+test('getAll should return most specific cookie when multiple cookies have same name', () => {
+	// This test demonstrates the bug: getAll doesn't respect path specificity like get() does
+	const { cookies } = cookies_setup({ href: 'https://example.com/foo/bar' });
+
+	// Set cookies with the same name but different path specificity
+	// Setting most specific first, then less specific ones to expose the bug
+	cookies.set('duplicate', 'foobar_value', { path: '/foo/bar' }); // Most specific
+	cookies.set('duplicate', 'root_value', { path: '/' }); // Least specific
+	cookies.set('duplicate', 'foo_value', { path: '/foo' }); // Middle specificity
+
+	const all = cookies.getAll();
+	const duplicate = all.find((c) => c.name === 'duplicate');
+
+	expect(duplicate?.value).toEqual('foobar_value');
+});
