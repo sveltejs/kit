@@ -1,7 +1,13 @@
 <script>
 	import { browser } from '$app/environment';
 	import { refreshAll } from '$app/navigation';
-	import { add, get_count, set_count, set_count_server, resolve_deferreds } from './query-command.remote.js';
+	import {
+		add,
+		get_count,
+		set_count,
+		set_count_server,
+		resolve_deferreds
+	} from './query-command.remote.js';
 
 	let { data } = $props();
 
