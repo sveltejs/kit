@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { PrerenderOptions, ServerHooks, SSROptions, SSRState } from 'types' */
+/** @import { MaybePromise, PrerenderOptions, ServerHooks, SSROptions, SSRState } from 'types' */
 
 export const EVENT_STATE = Symbol('remote');
 
@@ -11,8 +11,7 @@ export const EVENT_STATE = Symbol('remote');
  *  transport: ServerHooks['transport'];
  *  handleValidationError: ServerHooks['handleValidationError'];
  *  form_instances?: Map<any, any>;
- *  form_result?: [key: any, value: any];
- * 	remote_data?: Record<string, Promise<any>>;
+ * 	remote_data?: Record<string, MaybePromise<any>>;
  *  refreshes?: Record<string, any>;
  * }} RequestEventState
  */

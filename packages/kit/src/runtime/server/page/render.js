@@ -378,6 +378,29 @@ export async function render_response({
 						}`);
 		}
 
+		const { remote_data } = get_event_state(event);
+
+		if (remote_data) {
+			/** @type {Record<string, any>} */
+			const remote = {};
+
+			for (const key in remote_data) {
+				remote[key] = await remote_data[key];
+			}
+
+			// TODO this is repeated in a few places — dedupe it
+			const replacer = (/** @type {any} */ thing) => {
+				for (const key in options.hooks.transport) {
+					const encoded = options.hooks.transport[key].encode(thing);
+					if (encoded) {
+						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					}
+				}
+			};
+
+			properties.push(`data: ${devalue.uneval(remote, replacer)}`);
+		}
+
 		// create this before declaring `data`, which may contain references to `${global}`
 		blocks.push(`${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
@@ -388,7 +411,7 @@ export async function render_response({
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
-			const serialized = { form: 'null', error: 'null', remote: 'null' };
+			const serialized = { form: 'null', error: 'null' };
 
 			if (form_value) {
 				serialized.form = uneval_action_response(
@@ -402,35 +425,11 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
-			const { remote_data } = get_event_state(event);
-
-			if (remote_data) {
-				/** @type {Record<string, any>} */
-				const remote = {};
-
-				for (const key in remote_data) {
-					remote[key] = await remote_data[key];
-				}
-
-				// TODO this is repeated in a few places — dedupe it
-				const replacer = (/** @type {any} */ thing) => {
-					for (const key in options.hooks.transport) {
-						const encoded = options.hooks.transport[key].encode(thing);
-						if (encoded) {
-							return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-						}
-					}
-				};
-
-				serialized.remote = devalue.uneval(remote, replacer);
-			}
-
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
-				`error: ${serialized.error}`,
-				`remote: ${serialized.remote}`
+				`error: ${serialized.error}`
 			];
 
 			if (status !== 200) {

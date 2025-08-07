@@ -1,12 +1,11 @@
 /** @import { RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
-import { create_remote_cache_key } from '../../shared.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -26,9 +25,7 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state(
-			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
-		);
+		let result = $state(started ? undefined : remote_responses[action_id]);
 
 		/**
 		 * @param {FormData} data
@@ -64,7 +61,7 @@ export function form(id) {
 						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
 
-					const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
 						body: data
 					});
