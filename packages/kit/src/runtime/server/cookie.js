@@ -75,26 +75,15 @@ export function get_cookies(request, url) {
 		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
-			let best_match = null;
-			let best_specificity = -1;
-
-			for (const key in new_cookies) {
-				const c = new_cookies[key];
-
-				if (
-					c.name === name &&
-					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path)
-				) {
-					// Longer paths are more specific
-					const path_length = c.options.path.length;
-
-					if (path_length > best_specificity) {
-						best_match = c;
-						best_specificity = path_length;
-					}
-				}
-			}
+			const best_match = Object.values(new_cookies)
+				.filter((c) => {
+					return (
+						c.name === name &&
+						domain_matches(url.hostname, c.options.domain) &&
+						path_matches(url.pathname, c.options.path)
+					);
+				})
+				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
 
 			if (best_match) {
 				return best_match.value || undefined;
