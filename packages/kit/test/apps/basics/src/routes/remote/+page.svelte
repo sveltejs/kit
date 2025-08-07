@@ -1,7 +1,7 @@
 <script>
 	import { browser } from '$app/environment';
 	import { refreshAll } from '$app/navigation';
-	import { add, get_count, set_count, set_count_server } from './query-command.remote.js';
+	import { add, get_count, set_count, set_count_server, resolve_deferreds } from './query-command.remote.js';
 
 	let { data } = $props();
 
@@ -65,8 +65,18 @@
 >
 	command (override + refresh)
 </button>
+<button
+	onclick={async () => {
+		// deferred for pending state testing
+		command_result = await set_count({ c: 7, deferred: true });
+	}}
+	id="command-deferred-btn"
+>
+	command (deferred)
+</button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>
 <button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
 	refreshAll (remote functions only)
 </button>
+<button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>

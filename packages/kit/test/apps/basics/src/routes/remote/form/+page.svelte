@@ -1,5 +1,5 @@
 <script>
-	import { get_task, task_one, task_two } from './form.remote.js';
+	import { get_task, task_one, task_two, resolve_deferreds } from './form.remote.js';
 	const current_task = get_task();
 </script>
 
@@ -54,6 +54,10 @@
 
 <p id="form-result-1">{task_one.result}</p>
 <p id="form-result-2">{task_two.result}</p>
+
+<form {...resolve_deferreds}>
+	<button id="resolve-deferreds" type="submit">Resolve Deferreds</button>
+</form>
 
 {#each ['foo', 'bar'] as item}
 	<form {...task_one.for(item)}>
