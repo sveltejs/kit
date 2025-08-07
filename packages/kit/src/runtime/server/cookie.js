@@ -97,7 +97,7 @@ export function get_cookies(request, url) {
 			}
 
 			if (best_match) {
-				return best_match.value;
+				return best_match.value || undefined;
 			}
 
 			const req_cookies = parse(header, { decode: opts?.decode });

@@ -63,7 +63,7 @@ test('a cookie should not be present after it is deleted', () => {
 	cookies.set('a', 'b', { path: '/' });
 	expect(cookies.get('a')).toEqual('b');
 	cookies.delete('a', { path: '/' });
-	assert.isNotOk(cookies.get('a'));
+	assert.isUndefined(cookies.get('a'));
 });
 
 test('default values when set is called', () => {
