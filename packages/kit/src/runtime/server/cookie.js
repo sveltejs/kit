@@ -52,8 +52,8 @@ export function get_cookies(request, url) {
 	/** @type {string | undefined} */
 	let normalized_url;
 
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
-	const new_cookies = {};
+	/** @type {Map<string, import('./page/types.js').Cookie>} */
+	const new_cookies = new Map();
 
 	/** @type {import('cookie').CookieSerializeOptions} */
 	const defaults = {
@@ -75,7 +75,7 @@ export function get_cookies(request, url) {
 		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
-			const best_match = Object.values(new_cookies)
+			const best_match = Array.from(new_cookies.values())
 				.filter((c) => {
 					return (
 						c.name === name &&
@@ -121,7 +121,7 @@ export function get_cookies(request, url) {
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
 
-			for (const c of Object.values(new_cookies)) {
+			for (const c of new_cookies.values()) {
 				if (
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
@@ -205,8 +205,7 @@ export function get_cookies(request, url) {
 		};
 
 		// cookies previous set during this event with cookies.set have higher precedence
-		for (const key in new_cookies) {
-			const cookie = new_cookies[key];
+		for (const cookie of new_cookies.values()) {
 			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
 			if (!path_matches(destination.pathname, cookie.options.path)) continue;
 
@@ -249,10 +248,11 @@ export function get_cookies(request, url) {
 
 		// Generate unique key for cookie storage
 		const cookie_key = generate_cookie_key(options.domain, path, name);
-		new_cookies[cookie_key] = { name, value, options: { ...options, path } };
+		const cookie = { name, value, options: { ...options, path } };
+		new_cookies.set(cookie_key, cookie);
 
 		if (__SVELTEKIT_DEV__) {
-			const serialized = serialize(name, value, new_cookies[cookie_key].options);
+			const serialized = serialize(name, value, cookie.options);
 			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
@@ -306,7 +306,7 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types.js').Cookie[]} cookies
+ * @param {MapIterator<import('./page/types.js').Cookie>} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
