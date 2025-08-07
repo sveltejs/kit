@@ -199,6 +199,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const mime = content_type.split(';')[0].trim().toLowerCase();
 
 		// Common mime type to extension mappings
+		/** @type {Record<string, string>} */
 		const mime_to_ext = {
 			'application/json': '.json',
 			'text/plain': '.txt',
