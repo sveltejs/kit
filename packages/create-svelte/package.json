@@ -15,7 +15,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit.git",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/create-svelte"
 	},
 	"license": "MIT",
