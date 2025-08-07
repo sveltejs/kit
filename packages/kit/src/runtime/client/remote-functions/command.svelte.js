@@ -17,6 +17,8 @@ export function command(id) {
 	/** @type {number} */
 	let pending_count = $state(0);
 
+	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
+	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
 	/** @type {RemoteCommand<any, any>} */
 	const command_function = (arg) => {
 		/** @type {Array<Query<any> | RemoteQueryOverride>} */
