@@ -1,7 +1,7 @@
 /** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
@@ -33,7 +33,7 @@ export function command(id) {
 				// Wait a tick to give room for the `updates` method to be called
 				await Promise.resolve();
 
-				const response = await fetch(`/${app_dir}/remote/${id}`, {
+				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
 						payload: stringify_remote_arg(arg, app.hooks.transport),
