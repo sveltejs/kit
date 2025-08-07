@@ -48,14 +48,18 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			/** @type {Record<string, string>} */
+			const input = {
+				index: `${tmp}/index.js`,
+				manifest: `${tmp}/manifest.js`,
+				'tracing.server': `${tmp}/tracing.server.js`
+			};
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
 			const bundle = await rollup({
-				input: {
-					index: `${tmp}/index.js`,
-					manifest: `${tmp}/manifest.js`
-				},
+				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
@@ -89,10 +93,17 @@ export default function (opts = {}) {
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+
+			builder.trace({
+				entrypoint: `${out}/index.js`,
+				tracing: `${out}/server/tracing.server.js`,
+				exports: ['path', 'host', 'port', 'server']
+			});
 		},
 
 		supports: {
-			read: () => true
+			read: () => true,
+			tracing: () => true
 		}
 	};
 }
