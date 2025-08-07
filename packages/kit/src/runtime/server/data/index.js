@@ -176,10 +176,12 @@ function json_response(json, status = 200) {
  * @param {Redirect} redirect
  */
 export function redirect_json_response(redirect) {
-	return json_response({
-		type: 'redirect',
-		location: redirect.location
-	});
+	return json_response(
+		/** @type {import('types').ServerRedirectNode} */ ({
+			type: 'redirect',
+			location: redirect.location
+		})
+	);
 }
 
 /**

@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.1.2
+### Patch Changes
+
+
+- fix: resolve the absolute path of the Wrangler config setting `assets.directory` in case the config file is in a different directory than the root project ([#14036](https://github.com/sveltejs/kit/pull/14036))
+
+- Updated dependencies [[`793ae28`](https://github.com/sveltejs/kit/commit/793ae28a339ca33b7e27f14158b1726bfeedd729)]:
+  - @sveltejs/kit@2.27.0
+
 ## 7.1.1
 ### Patch Changes
 

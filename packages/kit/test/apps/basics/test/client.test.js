@@ -1644,3 +1644,194 @@ test.describe('routing', () => {
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
 	});
 });
+
+// have to run in serial because commands mutate in-memory data on the server
+test.describe('remote functions', () => {
+	test.describe.configure({ mode: 'default' });
+	test.afterEach(async ({ page }) => {
+		if (page.url().endsWith('/remote')) {
+			await page.click('#reset-btn');
+		}
+	});
+
+	test('hydrated data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		// only the calls in the template are done, not the one in the load function
+		expect(request_count).toBe(2);
+	});
+
+	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-btn');
+		await expect(page.locator('#command-result')).toHaveText('2');
+		await expect(page.locator('#count-result')).toHaveText('2 / 2 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
+	});
+
+	test('command returns correct sum and does client-initiated single flight mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('3');
+		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does server-initiated single flight mutation', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('4');
+		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		page.click('#multiply-override-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await expect(page.locator('#command-result')).toHaveText('5');
+		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('form.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-one');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-1')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-one');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
+	});
+
+	test('form.buttonProps.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-two');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-2')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-two');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
+	});
+
+	test('form.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.buttonProps.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('prerendered entries not called in prod', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+		await page.goto('/remote/prerender');
+
+		await page.click('#fetch-prerendered');
+		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
+
+		await page.click('#fetch-not-prerendered');
+		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
+	});
+
+	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-all');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(3);
+	});
+
+	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-remote-only');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(2);
+	});
+
+	test('validation works', async ({ page }) => {
+		await page.goto('/remote/validation');
+		await expect(page.locator('p')).toHaveText('pending');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button:nth-of-type(1)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(2)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(3)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(4)');
+		await expect(page.locator('p')).toHaveText('success');
+	});
+});

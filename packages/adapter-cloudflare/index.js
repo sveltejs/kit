@@ -1,9 +1,10 @@
 import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
@@ -32,6 +33,7 @@ export default function (options = {}) {
 			}
 
 			const wrangler_config = validate_wrangler_config(options.config);
+
 			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -48,7 +50,12 @@ export default function (options = {}) {
 					worker_dest = wrangler_config.main;
 				}
 				if (wrangler_config.assets?.directory) {
-					dest = wrangler_config.assets.directory;
+					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
+					// `main` and `pages_build_output_dir` so we need to do it ourselves here
+					const parent_dir = wrangler_config.configPath
+						? path.dirname(path.resolve(wrangler_config.configPath))
+						: process.cwd();
+					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
 				}
 				if (wrangler_config.assets?.binding) {
 					assets_binding = wrangler_config.assets.binding;
