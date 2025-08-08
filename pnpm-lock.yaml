@@ -1202,9 +1202,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
-      uvu:
-        specifier: ^0.5.6
-        version: 0.5.6
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.3(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
 
   packages/test-redirect-importer:
     dependencies:
@@ -3766,10 +3766,6 @@ packages:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
     engines: {node: '>= 0.8'}
 
-  dequal@2.0.3:
-    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
-    engines: {node: '>=6'}
-
   destr@2.0.5:
     resolution: {integrity: sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA==}
 
@@ -3838,10 +3834,6 @@ packages:
 
   diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
-    engines: {node: '>=0.3.1'}
-
-  diff@5.2.0:
-    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
     engines: {node: '>=0.3.1'}
 
   dir-glob@3.0.1:
@@ -6685,11 +6677,6 @@ packages:
 
   uuid@11.1.0:
     resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
-    hasBin: true
-
-  uvu@0.5.6:
-    resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
-    engines: {node: '>=8'}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -9591,8 +9578,6 @@ snapshots:
 
   depd@2.0.0: {}
 
-  dequal@2.0.3: {}
-
   destr@2.0.5: {}
 
   destroy@1.2.0: {}
@@ -9662,8 +9647,6 @@ snapshots:
   devalue@5.1.0: {}
 
   diff@4.0.2: {}
-
-  diff@5.2.0: {}
 
   dir-glob@3.0.1:
     dependencies:
@@ -12701,13 +12684,6 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@11.1.0: {}
-
-  uvu@0.5.6:
-    dependencies:
-      dequal: 2.0.3
-      diff: 5.2.0
-      kleur: 4.1.5
-      sade: 1.8.1
 
   v8-compile-cache-lib@3.0.1: {}
 

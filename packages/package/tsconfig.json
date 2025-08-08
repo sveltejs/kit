@@ -9,5 +9,5 @@
 		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["*.js", "src/**/*", "test/index.js"]
+	"include": ["*.js", "src/**/*", "test/index.spec.js"]
 }
