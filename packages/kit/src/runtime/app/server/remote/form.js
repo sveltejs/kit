@@ -97,6 +97,16 @@ export function form(fn) {
 			}
 		});
 
+		// On the server, pending is always 0
+		Object.defineProperty(instance, 'pending', {
+			get: () => 0
+		});
+
+		// On the server, buttonProps.pending is always 0
+		Object.defineProperty(button_props, 'pending', {
+			get: () => 0
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
