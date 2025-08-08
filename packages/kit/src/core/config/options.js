@@ -124,19 +124,19 @@ const options = object(
 			}),
 
 			files: object({
-				src: string('src'),
-				assets: string('static'),
+				src: deprecate(string('src')),
+				assets: deprecate(string('static')),
 				hooks: object({
-					client: string(null),
-					server: string(null),
-					universal: string(null)
+					client: deprecate(string(null)),
+					server: deprecate(string(null)),
+					universal: deprecate(string(null))
 				}),
-				lib: string(null),
-				params: string(null),
-				routes: string(null),
-				serviceWorker: string(null),
-				appTemplate: string(null),
-				errorTemplate: string(null)
+				lib: deprecate(string(null)),
+				params: deprecate(string(null)),
+				routes: deprecate(string(null)),
+				serviceWorker: deprecate(string(null)),
+				appTemplate: deprecate(string(null)),
+				errorTemplate: deprecate(string(null))
 			}),
 
 			inlineStyleThreshold: number(0),
@@ -286,6 +286,25 @@ const options = object(
 	},
 	true
 );
+
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(get_message(keypath));
+		}
+
+		return fn(input, keypath);
+	};
+}
 
 /**
  * @param {Record<string, Validator>} children
