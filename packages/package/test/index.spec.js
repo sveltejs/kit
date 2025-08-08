@@ -4,8 +4,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { test, expect } from 'vitest';
 
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
@@ -40,13 +39,13 @@ async function test_make_package(path, options) {
 	const expected_files = walk(ewd, true);
 	const actual_files = walk(output, true);
 
-	assert.equal(actual_files, expected_files);
+	expect(actual_files).toEqual(expected_files);
 
 	const extensions = ['.json', '.svelte', '.ts', 'js', '.map'];
 	for (const file of actual_files) {
 		const pathname = join(output, file);
 		if (fs.statSync(pathname).isDirectory()) continue;
-		assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+		expect(expected_files.includes(file), `Did not expect ${file} in ${path}`).toBeTruthy();
 
 		const expected = fs.readFileSync(join(ewd, file));
 		const actual = fs.readFileSync(join(output, file));
@@ -55,9 +54,9 @@ async function test_make_package(path, options) {
 		if (extensions.some((ext) => pathname.endsWith(ext))) {
 			const expected_content = await format(file, expected.toString('utf-8'));
 			const actual_content = await format(file, actual.toString('utf-8'));
-			assert.fixture(actual_content, expected_content, err_msg);
+			expect(actual_content, err_msg).toBe(expected_content);
 		} else {
-			assert.ok(expected.equals(actual), err_msg);
+			expect(expected.equals(actual)).toBeTruthy();
 		}
 	}
 }
@@ -95,13 +94,12 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 
 		try {
 			await build({ cwd, input, output, types: true, config });
-			assert.unreachable('Must not pass build');
+			throw new Error('Must not pass build');
 		} catch (/** @type {any} */ error) {
-			assert.instance(error, Error);
+			expect(error).toBeInstanceOf(Error);
 			switch (dir) {
 				case 'no-lib-folder':
-					assert.match(
-						error.message.replace(/\\/g, '/'),
+					expect(error.message.replace(/\\/g, '/')).toMatch(
 						'test/errors/no-lib-folder/src/lib does not exist'
 					);
 					break;
@@ -109,12 +107,11 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 				// 	it detects tsconfig in packages/kit instead and creates package folder
 				// 	in packages/kit/package, not sure how to handle and test this yet
 				// case 'no-tsconfig':
-				// 	assert.match(error.message, 'Failed to locate tsconfig or jsconfig');
+				// 	expect(error.message).toMatch('Failed to locate tsconfig or jsconfig');
 				// 	break;
 
 				default:
-					assert.unreachable('All error test must be handled');
-					break;
+					throw new Error('All error test must be handled');
 			}
 		} finally {
 			rimraf(output);
@@ -192,7 +189,7 @@ if (!process.env.CI) {
 
 		/** @param {string} file */
 		function compare(file) {
-			assert.equal(read(`package/${file}`), read(`expected/${file}`));
+			expect(read(`package/${file}`)).toEqual(read(`expected/${file}`));
 		}
 
 		/** @param {string} file */
@@ -254,7 +251,7 @@ if (!process.env.CI) {
 			remove('src/lib/b.ts');
 			remove('src/lib/post-error.svelte');
 		}
-	});
+	}, 30_000);
 }
 
 /**
@@ -262,11 +259,10 @@ if (!process.env.CI) {
  * @param {string[]} expected
  */
 function has_warnings(actual, expected) {
-	assert.equal(actual.length, expected.length);
-	assert.equal(
-		actual.filter((warning) => expected.some((str) => warning.startsWith(str))).length,
-		expected.length
-	);
+	expect(actual.length).toEqual(expected.length);
+	expect(
+		actual.filter((warning) => expected.some((str) => warning.startsWith(str))).length
+	).toEqual(expected.length);
 }
 
 test('validates package (1)', () => {
@@ -321,7 +317,7 @@ test('validates package (all ok 1)', () => {
 		peerDependencies: { svelte: '^3.55.0' }
 	});
 
-	assert.equal(warnings.length, 0);
+	expect(warnings.length).toEqual(0);
 });
 
 test('validates package (all ok 2)', () => {
@@ -339,7 +335,5 @@ test('validates package (all ok 2)', () => {
 		svelte: './dist/C.svelte'
 	});
 
-	assert.equal(warnings.length, 0);
+	expect(warnings.length).toEqual(0);
 });
-
-test.run();
