@@ -17,7 +17,13 @@ import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, normalize_id, strip_virtual_prefix } from './utils.js';
+import {
+	get_config_aliases,
+	get_env,
+	normalize_id,
+	stackless,
+	strip_virtual_prefix
+} from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -456,7 +462,7 @@ Tips:
 						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
 					}
 
-					throw new Error(`${error_prefix}${error_suffix}`);
+					throw stackless(`${error_prefix}${error_suffix}`);
 				}
 			}
 

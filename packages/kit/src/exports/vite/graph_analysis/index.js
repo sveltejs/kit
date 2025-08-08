@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
-import { normalize_id, strip_virtual_prefix } from '../utils.js';
+import { normalize_id, stackless, strip_virtual_prefix } from '../utils.js';
 import { app_server, env_dynamic_private, env_static_private } from '../module_ids.js';
 
 const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
@@ -62,7 +62,7 @@ export function module_guard(context, { cwd, lib }) {
 				id
 			)} into client-side code:\n${pyramid}`;
 
-			throw new Error(message);
+			throw stackless(message);
 		}
 
 		const module = context.getModuleInfo(id);
