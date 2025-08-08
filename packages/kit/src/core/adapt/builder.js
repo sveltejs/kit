@@ -1,6 +1,10 @@
+/** @import { Builder } from '@sveltejs/kit' */
+/** @import { ResolvedConfig } from 'vite' */
+/** @import { RouteDefinition } from '@sveltejs/kit' */
+/** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger } from 'types' */
 import colors from 'kleur';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
-import { extname, resolve } from 'node:path';
+import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -12,6 +16,7 @@ import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
+import { reserved } from '../env.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -19,16 +24,16 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
 /**
  * Creates the Builder which is passed to adapters for building the application.
  * @param {{
- *   config: import('types').ValidatedConfig;
- *   build_data: import('types').BuildData;
- *   server_metadata: import('types').ServerMetadata;
- *   route_data: import('types').RouteData[];
- *   prerendered: import('types').Prerendered;
- *   prerender_map: import('types').PrerenderMap;
- *   log: import('types').Logger;
- *   vite_config: import('vite').ResolvedConfig;
+ *   config: ValidatedConfig;
+ *   build_data: BuildData;
+ *   server_metadata: ServerMetadata;
+ *   route_data: RouteData[];
+ *   prerendered: Prerendered;
+ *   prerender_map: PrerenderMap;
+ *   log: Logger;
+ *   vite_config: ResolvedConfig;
  * }} opts
- * @returns {import('@sveltejs/kit').Builder}
+ * @returns {Builder}
  */
 export function create_builder({
 	config,
@@ -40,7 +45,7 @@ export function create_builder({
 	log,
 	vite_config
 }) {
-	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
+	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
 
 	/**
@@ -48,11 +53,11 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
+		const { config, methods, page, api } = /** @type {ServerMetadataRoute} */ (
 			server_metadata.routes.get(route.id)
 		);
 
-		/** @type {import('@sveltejs/kit').RouteDefinition} */
+		/** @type {RouteDefinition} */
 		const facade = {
 			id: route.id,
 			api,
@@ -229,6 +234,37 @@ export function create_builder({
 
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
+		},
+
+		hasServerTracingFile() {
+			return existsSync(`${config.kit.outDir}/output/server/tracing.server.js`);
+		},
+
+		trace({
+			entrypoint,
+			tracing,
+			start = join(dirname(entrypoint), 'start.js'),
+			tla = true,
+			exports = ['default']
+		}) {
+			if (!existsSync(tracing)) {
+				throw new Error(
+					`Tracing file ${tracing} not found. This is probably a bug in your adapter.`
+				);
+			}
+			if (!existsSync(entrypoint)) {
+				throw new Error(
+					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
+				);
+			}
+
+			copy(entrypoint, start);
+			if (existsSync(`${entrypoint}.map`)) {
+				copy(`${entrypoint}.map`, `${start}.map`);
+			}
+
+			rimraf(entrypoint);
+			write(entrypoint, create_tracing_facade({ entrypoint, tracing, start, exports, tla }));
 		}
 	};
 }
@@ -253,4 +289,79 @@ async function compress_file(file, format = 'gz') {
 	const destination = createWriteStream(`${file}.${format}`);
 
 	await pipe(source, compress, destination);
+}
+
+/**
+ * Given a list of exports, generate a facade that:
+ * - Imports the tracing file
+ * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
+ * - Re-exports `exports` from the entrypoint
+ *
+ * `default` receives special treatment: It will be imported as `default` and exported with `export default`.
+ *
+ * @param {Required<Parameters<Builder['trace']>[0]>} opts
+ * @returns {string}
+ */
+function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
+	const relative_tracing = relative(dirname(entrypoint), tracing);
+	const relative_start = relative(dirname(entrypoint), start);
+	const import_tracing = `import './${relative_tracing}';`;
+
+	let alias_index = 0;
+	const aliases = new Map();
+
+	for (const name of exports.filter((name) => reserved.has(name))) {
+		/*
+							you can do evil things like `export { c as class }`.
+							in order to import these, you need to alias them, and then un-alias them when re-exporting
+							this map will allow us to generate the following:
+							import { class as _1 } from 'entrypoint';
+							export { _1 as class };
+						*/
+		let alias = `_${alias_index++}`;
+		while (exports.includes(alias)) {
+			alias = `_${alias_index++}`;
+		}
+
+		aliases.set(name, alias);
+	}
+
+	const import_statements = [];
+	const export_statements = [];
+
+	for (const name of exports) {
+		const alias = aliases.get(name);
+		if (alias) {
+			if (tla) {
+				// TLA generates a `const {} = await import('entrypoint')` so we need to use object destructuring
+				import_statements.push(`${name}: ${alias}`);
+			} else {
+				// non-TLA generates a `import { name as alias } from 'entrypoint'`
+				import_statements.push(`${name} as ${alias}`);
+			}
+
+			if (name !== 'default') {
+				export_statements.push(`${alias} as ${name}`);
+			}
+		} else {
+			import_statements.push(`${name}`);
+
+			if (name !== 'default') {
+				export_statements.push(`${name}`);
+			}
+		}
+	}
+
+	const default_alias = aliases.get('default');
+	const entrypoint_facade = [
+		tla
+			? `const { ${import_statements.join(', ')} } = await import('./${relative_start}');`
+			: `import { ${import_statements.join(', ')} } from './${relative_start}';`,
+		default_alias ? `export default ${default_alias};` : '',
+		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
+	]
+		.filter(Boolean)
+		.join('\n');
+
+	return `${import_tracing}\n${entrypoint_facade}`;
 }
