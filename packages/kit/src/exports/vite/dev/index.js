@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
@@ -376,7 +376,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		sync.update(svelte_config, manifest_data, file);
 	});
 
-	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
+	const { appTemplate, errorTemplate, serviceWorker, hooks, tracing } = svelte_config.kit.files;
 
 	// vite client only executes a full reload if the triggering html file path is index.html
 	// kit defaults to src/app.html, so unless user changed that to index.html
@@ -394,7 +394,8 @@ export async function dev(vite, vite_config, svelte_config) {
 			file === appTemplate ||
 			file === errorTemplate ||
 			file.startsWith(serviceWorker) ||
-			file.startsWith(hooks.server)
+			file.startsWith(hooks.server) ||
+			file.startsWith(tracing.server)
 		) {
 			sync.server(svelte_config);
 		}
@@ -500,6 +501,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 					return;
 				}
+
+				await load_module_if_exists(vite, tracing.server);
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
@@ -659,4 +662,20 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * @param {import('vite').ViteDevServer} vite
+ * @param {string} path
+ * @returns {Promise<void>}
+ */
+async function load_module_if_exists(vite, path) {
+	let extless_path = path;
+	if (extless_path.endsWith('.js') || extless_path.endsWith('.ts')) {
+		extless_path = extless_path.slice(-3);
+	}
+
+	if (existsSync(`${extless_path}.js`) || existsSync(`${extless_path}.ts`)) {
+		await vite.ssrLoadModule(extless_path);
+	}
 }

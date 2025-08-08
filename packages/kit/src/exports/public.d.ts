@@ -25,6 +25,7 @@ import {
 	ResolvedPathname
 	// @ts-ignore
 } from '$app/types';
+import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -50,6 +51,12 @@ export interface Adapter {
 		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+
+		/**
+		 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
+		 * also deploy to a platform that supports `@opentelemetry/api`.
+		 */
+		tracing?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -408,10 +415,17 @@ export interface KitConfig {
 		 */
 		privatePrefix?: string;
 	};
-	/**
-	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
-	 */
+	/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
 	experimental?: {
+		/**
+		 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
+		 * @default { server: false }
+		 * @since 2.26.0 // TODO: update this before publishing
+		 */
+		tracing?: {
+			server?: boolean;
+		};
+
 		/**
 		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
@@ -444,6 +458,13 @@ export interface KitConfig {
 			 * @since 2.3.0
 			 */
 			universal?: string;
+		};
+		/**
+		 * the location of your server tracing file
+		 * @default "src/tracing.server"
+		 */
+		tracing?: {
+			server?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -992,6 +1013,19 @@ export interface LoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current `load` function. */
+		current: Span;
+	};
 }
 
 export interface NavigationEvent<
@@ -1267,6 +1301,20 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		current: Span;
+	};
+
 	/**
 	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
@@ -1430,6 +1478,19 @@ export interface ServerLoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.26.0 // TODO: update this before publishing
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current server `load` function. */
+		current: Span;
+	};
 }
 
 /**

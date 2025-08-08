@@ -35,7 +35,10 @@ import {
 } from '../pathname.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { with_event } from '../app/server/event.js';
+import { record_span } from '../telemetry/record_span.js';
+import { merge_tracing } from '../utils.js';
 import { create_event_state, EVENT_STATE } from './event-state.js';
+import { otel } from '../telemetry/otel.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -55,6 +58,8 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 let warned_on_devtools_json_request = false;
 
+export const respond = propagate_context(internal_respond);
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -62,7 +67,7 @@ let warned_on_devtools_json_request = false;
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function respond(request, options, manifest, state) {
+export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -136,7 +141,7 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
-		[EVENT_STATE]: create_event_state(state, options),
+		[EVENT_STATE]: create_event_state(state, options, record_span),
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
 		fetch: null,
@@ -379,32 +384,69 @@ export async function respond(request, options, manifest, state) {
 			disable_search(url);
 		}
 
-		const response = await with_event(event, () =>
-			options.hooks.handle({
-				event,
-				resolve: (event, opts) =>
-					// counter-intuitively, we need to clear the event, so that it's not
-					// e.g. accessible when loading modules needed to handle the request
-					with_event(null, () =>
-						resolve(event, page_nodes, opts).then((response) => {
-							// add headers/cookies here, rather than inside `resolve`, so that we
-							// can do it once for all responses instead of once per `return`
-							for (const key in headers) {
-								const value = headers[key];
-								response.headers.set(key, /** @type {string} */ (value));
-							}
+		const response = await record_span({
+			name: 'sveltekit.handle.root',
+			attributes: {
+				'http.route': event.route.id || 'unknown',
+				'http.method': event.request.method,
+				'http.url': event.url.href,
+				'sveltekit.is_data_request': is_data_request,
+				'sveltekit.is_sub_request': event.isSubRequest
+			},
+			fn: async (root_span) => {
+				const traced_event = {
+					...event,
+					tracing: {
+						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+						root: root_span,
+						current: root_span
+					}
+				};
+				return await with_event(traced_event, () =>
+					options.hooks.handle({
+						event: traced_event,
+						resolve: (event, opts) => {
+							return record_span({
+								name: 'sveltekit.resolve',
+								attributes: {
+									'http.route': event.route.id || 'unknown'
+								},
+								fn: async (resolve_span) => {
+									// counter-intuitively, we need to clear the event, so that it's not
+									// e.g. accessible when loading modules needed to handle the request
+									return with_event(null, () =>
+										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
+											(response) => {
+												// add headers/cookies here, rather than inside `resolve`, so that we
+												// can do it once for all responses instead of once per `return`
+												for (const key in headers) {
+													const value = headers[key];
+													response.headers.set(key, /** @type {string} */ (value));
+												}
 
-							add_cookies_to_headers(response.headers, Object.values(new_cookies));
+												add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-							if (state.prerendering && event.route.id !== null) {
-								response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-							}
+												if (state.prerendering && event.route.id !== null) {
+													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+												}
 
-							return response;
-						})
-					)
-			})
-		);
+												resolve_span.setAttributes({
+													'http.response.status_code': response.status,
+													'http.response.body.size':
+														response.headers.get('content-length') || 'unknown'
+												});
+
+												return response;
+											}
+										)
+									);
+								}
+							});
+						}
+					})
+				);
+			}
+		});
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
@@ -657,4 +699,26 @@ export function load_page_nodes(page, manifest) {
 		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
 		manifest._.nodes[page.leaf]()
 	]);
+}
+
+/**
+ * It's likely that, in a distributed system, there are spans starting outside the SvelteKit server -- eg.
+ * started on the frontend client, or in a service that calls the SvelteKit server. There are standardized
+ * ways to represent this context in HTTP headers, so we can extract that context and run our tracing inside of it
+ * so that when our traces are exported, they are associated with the correct parent context.
+ * @param {typeof internal_respond} fn
+ * @returns {typeof internal_respond}
+ */
+function propagate_context(fn) {
+	return async (req, ...rest) => {
+		if (otel === null) {
+			return fn(req, ...rest);
+		}
+
+		const { propagation, context } = await otel;
+		const c = propagation.extract(context.active(), Object.fromEntries(req.headers));
+		return context.with(c, async () => {
+			return await fn(req, ...rest);
+		});
+	};
 }

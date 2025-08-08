@@ -121,6 +121,9 @@ const options = object(
 			}),
 
 			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				}),
 				remoteFunctions: boolean(false)
 			}),
 
@@ -130,6 +133,9 @@ const options = object(
 					client: string(join('src', 'hooks.client')),
 					server: string(join('src', 'hooks.server')),
 					universal: string(join('src', 'hooks'))
+				}),
+				tracing: object({
+					server: string(join('src', 'tracing.server'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),

@@ -12,6 +12,24 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { get_event_state } from './event-state.js';
+import { record_span } from '../telemetry/record_span.js';
+import { merge_tracing } from '../utils.js';
+
+/** @type {typeof handle_remote_call_internal} */
+export async function handle_remote_call(event, options, manifest, id) {
+	return record_span({
+		name: 'sveltekit.remote.call',
+		attributes: {
+			'sveltekit.remote.call.id': id
+		},
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
+			return with_event(traced_event, () =>
+				handle_remote_call_internal(traced_event, options, manifest, id)
+			);
+		}
+	});
+}
 
 /**
  * @param {RequestEvent} event
@@ -19,7 +37,7 @@ import { get_event_state } from './event-state.js';
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-export async function handle_remote_call(event, options, manifest, id) {
+async function handle_remote_call_internal(event, options, manifest, id) {
 	const [hash, name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -33,6 +51,11 @@ export async function handle_remote_call(event, options, manifest, id) {
 	/** @type {RemoteInfo} */
 	const info = fn.__;
 	const transport = options.hooks.transport;
+
+	event.tracing.current.setAttributes({
+		'sveltekit.remote.call.type': info.type,
+		'sveltekit.remote.call.name': info.name
+	});
 
 	/** @type {string[] | undefined} */
 	let form_client_refreshes;
@@ -155,13 +178,29 @@ export async function handle_remote_call(event, options, manifest, id) {
 	}
 }
 
+/** @type {typeof handle_remote_form_post_internal} */
+export async function handle_remote_form_post(event, manifest, id) {
+	return record_span({
+		name: 'sveltekit.remote.form.post',
+		attributes: {
+			'sveltekit.remote.form.post.id': id
+		},
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
+			return with_event(traced_event, () =>
+				handle_remote_form_post_internal(traced_event, manifest, id)
+			);
+		}
+	});
+}
+
 /**
  * @param {RequestEvent} event
  * @param {SSRManifest} manifest
  * @param {string} id
  * @returns {Promise<ActionResult>}
  */
-export async function handle_remote_form_post(event, manifest, id) {
+async function handle_remote_form_post_internal(event, manifest, id) {
 	const [hash, name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();

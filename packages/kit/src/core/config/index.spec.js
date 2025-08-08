@@ -77,6 +77,7 @@ const get_defaults = (prefix = '') => ({
 			privatePrefix: ''
 		},
 		experimental: {
+			tracing: { server: false },
 			remoteFunctions: false
 		},
 		files: {
@@ -85,6 +86,9 @@ const get_defaults = (prefix = '') => ({
 				client: join(prefix, 'src/hooks.client'),
 				server: join(prefix, 'src/hooks.server'),
 				universal: join(prefix, 'src/hooks')
+			},
+			tracing: {
+				server: join(prefix, 'src/tracing.server')
 			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
@@ -406,4 +410,71 @@ test('errors on loading config with incorrect default export', async () => {
 		message,
 		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
+});
+
+test('accepts valid tracing values', () => {
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: { server: true }
+				}
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: { server: false }
+				}
+			}
+		});
+	});
+
+	assert.doesNotThrow(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					tracing: undefined
+				}
+			}
+		});
+	});
+});
+
+test('errors on invalid tracing values', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: true
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing should be an object$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: 'server'
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing should be an object$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					tracing: { server: 'invalid' }
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
 });

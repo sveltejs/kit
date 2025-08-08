@@ -1,3 +1,9 @@
+/** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
+/** @import { MaybePromise } from 'types' */
+import { with_event } from '../../runtime/app/server/event.js';
+import { get_event_state } from '../../runtime/server/event-state.js';
+import { merge_tracing } from '../../runtime/utils.js';
+
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
  * The behavior for the `handle` options is as follows:
@@ -66,8 +72,8 @@
  * first post-processing
  * ```
  *
- * @param {...import('@sveltejs/kit').Handle} handlers The chain of `handle` functions
- * @returns {import('@sveltejs/kit').Handle}
+ * @param {...Handle} handlers The chain of `handle` functions
+ * @returns {Handle}
  */
 export function sequence(...handlers) {
 	const length = handlers.length;
@@ -78,44 +84,59 @@ export function sequence(...handlers) {
 
 		/**
 		 * @param {number} i
-		 * @param {import('@sveltejs/kit').RequestEvent} event
-		 * @param {import('@sveltejs/kit').ResolveOptions | undefined} parent_options
-		 * @returns {import('types').MaybePromise<Response>}
+		 * @param {RequestEvent} event
+		 * @param {ResolveOptions | undefined} parent_options
+		 * @returns {MaybePromise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			return handle({
-				event,
-				resolve: (event, options) => {
-					/** @type {import('@sveltejs/kit').ResolveOptions['transformPageChunk']} */
-					const transformPageChunk = async ({ html, done }) => {
-						if (options?.transformPageChunk) {
-							html = (await options.transformPageChunk({ html, done })) ?? '';
-						}
+			return get_event_state(event).tracing.record_span({
+				name: 'sveltekit.handle.child',
+				attributes: {
+					'sveltekit.handle.child.index': i
+				},
+				fn: async (current) => {
+					const traced_event = merge_tracing(event, current);
+					return await with_event(traced_event, () =>
+						handle({
+							event: traced_event,
+							resolve: (event, options) => {
+								/** @type {ResolveOptions['transformPageChunk']} */
+								const transformPageChunk = async ({ html, done }) => {
+									if (options?.transformPageChunk) {
+										html = (await options.transformPageChunk({ html, done })) ?? '';
+									}
 
-						if (parent_options?.transformPageChunk) {
-							html = (await parent_options.transformPageChunk({ html, done })) ?? '';
-						}
+									if (parent_options?.transformPageChunk) {
+										html = (await parent_options.transformPageChunk({ html, done })) ?? '';
+									}
 
-						return html;
-					};
+									return html;
+								};
 
-					/** @type {import('@sveltejs/kit').ResolveOptions['filterSerializedResponseHeaders']} */
-					const filterSerializedResponseHeaders =
-						parent_options?.filterSerializedResponseHeaders ??
-						options?.filterSerializedResponseHeaders;
+								/** @type {ResolveOptions['filterSerializedResponseHeaders']} */
+								const filterSerializedResponseHeaders =
+									parent_options?.filterSerializedResponseHeaders ??
+									options?.filterSerializedResponseHeaders;
 
-					/** @type {import('@sveltejs/kit').ResolveOptions['preload']} */
-					const preload = parent_options?.preload ?? options?.preload;
+								/** @type {ResolveOptions['preload']} */
+								const preload = parent_options?.preload ?? options?.preload;
 
-					return i < length - 1
-						? apply_handle(i + 1, event, {
-								transformPageChunk,
-								filterSerializedResponseHeaders,
-								preload
-							})
-						: resolve(event, { transformPageChunk, filterSerializedResponseHeaders, preload });
+								return i < length - 1
+									? apply_handle(i + 1, event, {
+											transformPageChunk,
+											filterSerializedResponseHeaders,
+											preload
+										})
+									: resolve(event, {
+											transformPageChunk,
+											filterSerializedResponseHeaders,
+											preload
+										});
+							}
+						})
+					);
 				}
 			});
 		}
