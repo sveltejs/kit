@@ -370,8 +370,6 @@ importers:
         specifier: ^5.3.3
         version: 5.8.3
 
-  packages/create-svelte: {}
-
   packages/enhanced-img:
     dependencies:
       magic-string:
