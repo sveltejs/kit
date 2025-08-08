@@ -962,23 +962,36 @@ Tips:
 
 				secondary_build_started = true;
 
-				const { output: client_chunks } = /** @type {import('vite').Rollup.RollupOutput} */ (
-					await vite.build({
-						configFile: vite_config.configFile,
-						// CLI args
-						mode: vite_config_env.mode,
-						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen,
-						build: {
-							minify: initial_config.build?.minify,
-							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap
-						},
-						optimizeDeps: {
-							force: vite_config.optimizeDeps.force
-						}
-					})
-				);
+				let client_chunks;
+
+				try {
+					const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
+						await vite.build({
+							configFile: vite_config.configFile,
+							// CLI args
+							mode: vite_config_env.mode,
+							logLevel: vite_config.logLevel,
+							clearScreen: vite_config.clearScreen,
+							build: {
+								minify: initial_config.build?.minify,
+								assetsInlineLimit: vite_config.build.assetsInlineLimit,
+								sourcemap: vite_config.build.sourcemap
+							},
+							optimizeDeps: {
+								force: vite_config.optimizeDeps.force
+							}
+						})
+					);
+
+					client_chunks = bundle.output;
+				} catch (e) {
+					const error =
+						e instanceof Error ? e : new Error(/** @type {any} */ (e).message ?? e ?? '<unknown>');
+
+					// without this, errors that occur during the secondary build
+					// will be logged twice
+					throw stackless(error.stack ?? error.message);
+				}
 
 				copy(
 					`${out}/server/${kit.appDir}/immutable/assets`,
