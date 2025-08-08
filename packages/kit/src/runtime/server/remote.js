@@ -25,7 +25,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			return with_event(traced_event, () =>
-				handle_remote_call_internal(event, options, manifest, id)
+				handle_remote_call_internal(traced_event, options, manifest, id)
 			);
 		}
 	});
@@ -37,7 +37,7 @@ export async function handle_remote_call(event, options, manifest, id) {
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-export async function handle_remote_call_internal(event, options, manifest, id) {
+async function handle_remote_call_internal(event, options, manifest, id) {
 	const [hash, name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -51,6 +51,11 @@ export async function handle_remote_call_internal(event, options, manifest, id) 
 	/** @type {RemoteInfo} */
 	const info = fn.__;
 	const transport = options.hooks.transport;
+
+	event.tracing.current.setAttributes({
+		'sveltekit.remote.call.type': info.type,
+		'sveltekit.remote.call.name': info.name
+	});
 
 	/** @type {string[] | undefined} */
 	let form_client_refreshes;
@@ -182,7 +187,9 @@ export async function handle_remote_form_post(event, manifest, id) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return with_event(traced_event, () => handle_remote_form_post_internal(event, manifest, id));
+			return with_event(traced_event, () =>
+				handle_remote_form_post_internal(traced_event, manifest, id)
+			);
 		}
 	});
 }
