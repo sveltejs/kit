@@ -136,8 +136,8 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
-// only run this test in older Node versions
-// TODO: remove after dropping support for Node 20
+// only run this test in newer Node versions
+// TODO: remove after dropping support for Node < 22.18
 const [major, minor] = process.versions.node.split('.', 2).map((str) => +str);
 const has_ts_support = major > 22 || (major === 22 && minor >= 18);
 
