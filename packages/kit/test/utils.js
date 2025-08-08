@@ -4,9 +4,9 @@ import http from 'node:http';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { test as base, devices } from '@playwright/test';
+import { defineConfig, test as base, devices } from '@playwright/test';
 
-/** @type {import('./utils.js')['test']} */
+/** @type {import('./types')['test']} */
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
@@ -268,8 +268,7 @@ if (!test_browser_device) {
 	);
 }
 
-/** @type {import('./utils.js')['config']} */
-export const config = {
+export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
@@ -306,7 +305,7 @@ export const config = {
 		: 'list',
 	testDir: 'test',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
-};
+});
 
 /**
  * @param {SpanData} current_span

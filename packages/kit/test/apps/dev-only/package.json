@@ -8,12 +8,11 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "cross-env DEV=true playwright test"
+		"test": "DEV=true playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"cross-env": "catalog:",
 		"e2e-test-dep-error": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks-client": "file:./_test_dependencies/cjs-only",

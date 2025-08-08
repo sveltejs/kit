@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 5.1.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
 ## 5.1.0
 ### Minor Changes
 

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 7.0.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
 ## 7.0.0
 ### Major Changes
 
