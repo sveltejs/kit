@@ -3,8 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import create_manifest_data from './index.js';
-import options from '../../config/options.js';
 import { sort_routes } from './sort.js';
+import { validate_config } from '../../config/index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
@@ -13,7 +13,7 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @param {import('@sveltejs/kit').Config} config
  */
 const create = (dir, config = {}) => {
-	const initial = options(config, 'config');
+	const initial = validate_config(config);
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
 	initial.kit.files.params = path.resolve(cwd, 'params');
