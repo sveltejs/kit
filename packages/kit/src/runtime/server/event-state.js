@@ -1,6 +1,8 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, PrerenderOptions, ServerHooks, SSROptions, SSRState } from 'types' */
 
+import { record_span } from '../telemetry/record_span.js';
+
 export const EVENT_STATE = Symbol('remote');
 
 /**
@@ -10,6 +12,9 @@ export const EVENT_STATE = Symbol('remote');
  * 	prerendering: PrerenderOptions | undefined
  *  transport: ServerHooks['transport'];
  *  handleValidationError: ServerHooks['handleValidationError'];
+ *  tracing: {
+ *    record_span: typeof record_span
+ *  }
  *  form_instances?: Map<any, any>;
  * 	remote_data?: Record<string, MaybePromise<any>>;
  *  refreshes?: Record<string, any>;
@@ -25,7 +30,13 @@ export function create_event_state(state, options) {
 	return {
 		prerendering: state.prerendering,
 		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError
+		handleValidationError: options.hooks.handleValidationError,
+		// this is necessary to avoid importing `record_span` in `sequence`, which
+		// won't work because `record_span` depends on `otel`, which depends on
+		// being bundled through Vite.
+		tracing: {
+			record_span
+		}
 	};
 }
 

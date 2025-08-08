@@ -1,8 +1,8 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
 import { with_event } from '../../runtime/app/server/event.js';
+import { get_event_state } from '../../runtime/server/event-state.js';
 import { merge_tracing } from '../../runtime/utils.js';
-import { record_span } from '../../runtime/telemetry/record_span.js';
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
@@ -91,7 +91,7 @@ export function sequence(...handlers) {
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			return record_span({
+			return get_event_state(event).tracing.record_span({
 				name: 'sveltekit.handle.child',
 				attributes: {
 					'sveltekit.handle.child.index': i
