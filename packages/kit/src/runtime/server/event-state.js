@@ -1,7 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, PrerenderOptions, ServerHooks, SSROptions, SSRState } from 'types' */
-
-import { record_span } from '../telemetry/record_span.js';
+/** @import { type record_span } from '../telemetry/record_span.js' */
 
 export const EVENT_STATE = Symbol('remote');
 
@@ -24,9 +23,10 @@ export const EVENT_STATE = Symbol('remote');
 /**
  * @param {SSRState} state
  * @param {SSROptions} options
+ * @param {typeof record_span} record_span
  * @returns {RequestEventState}
  */
-export function create_event_state(state, options) {
+export function create_event_state(state, options, record_span) {
 	return {
 		prerendering: state.prerendering,
 		transport: options.hooks.transport,

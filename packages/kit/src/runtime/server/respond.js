@@ -141,7 +141,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
-		[EVENT_STATE]: create_event_state(state, options),
+		[EVENT_STATE]: create_event_state(state, options, record_span),
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
 		fetch: null,
