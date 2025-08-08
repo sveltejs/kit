@@ -240,7 +240,13 @@ export function create_builder({
 			return existsSync(`${config.kit.outDir}/output/server/tracing.server.js`);
 		},
 
-		trace({ entrypoint, tracing, start = 'start.js', tla = true, exports = ['default'] }) {
+		trace({
+			entrypoint,
+			tracing,
+			start = join(dirname(entrypoint), 'start.js'),
+			tla = true,
+			exports = ['default']
+		}) {
 			if (!existsSync(tracing)) {
 				throw new Error(
 					`Tracing file ${tracing} not found. This is probably a bug in your adapter.`
@@ -252,10 +258,9 @@ export function create_builder({
 				);
 			}
 
-			const start_path = join(dirname(entrypoint), start);
-			copy(entrypoint, start_path);
+			copy(entrypoint, start);
 			if (existsSync(`${entrypoint}.map`)) {
-				copy(`${entrypoint}.map`, `${start_path}.map`);
+				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
 			rimraf(entrypoint);
@@ -299,6 +304,7 @@ async function compress_file(file, format = 'gz') {
  */
 function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
 	const relative_tracing = relative(dirname(entrypoint), tracing);
+	const relative_start = relative(dirname(entrypoint), start);
 	const import_tracing = `import './${relative_tracing}';`;
 
 	let alias_index = 0;
@@ -349,8 +355,8 @@ function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
 	const default_alias = aliases.get('default');
 	const entrypoint_facade = [
 		tla
-			? `const { ${import_statements.join(', ')} } = await import('./${start}');`
-			: `import { ${import_statements.join(', ')} } from './${start}';`,
+			? `const { ${import_statements.join(', ')} } = await import('./${relative_start}');`
+			: `import { ${import_statements.join(', ')} } from './${relative_start}';`,
 		default_alias ? `export default ${default_alias};` : '',
 		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
 	]
