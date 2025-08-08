@@ -138,9 +138,10 @@ test('create package with typescript using nodenext', async () => {
 
 // only run this test in older Node versions
 // TODO: remove after dropping support for Node 20
-const is_node_without_ts_support =
-	process.versions.node && Number(process.versions.node.split('.', 1)[0]) < 22;
-if (!is_node_without_ts_support) {
+const [major, minor] = process.versions.node.split('.', 2).map((str) => +str);
+const has_ts_support = major > 22 || (major === 22 && minor >= 18);
+
+if (has_ts_support) {
 	test('create package with typescript using nodenext and svelte.config.ts', async () => {
 		await test_make_package('typescript-svelte-config');
 	});
