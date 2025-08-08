@@ -97,6 +97,9 @@ const get_defaults = (prefix = '') => ({
 		moduleExtensions: ['.js', '.ts'],
 		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
 		outDir: join(prefix, '.svelte-kit'),
+		remoteFunctions: {
+			allowedPaths: []
+		},
 		router: {
 			type: 'pathname',
 			resolution: 'client'

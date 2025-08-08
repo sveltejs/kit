@@ -1834,4 +1834,13 @@ test.describe('remote functions', () => {
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
 	});
+
+	test('external remote whitelisting works', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#external-allowed')).toHaveText('external success');
+		await expect(page.locator('#external-not-allowed')).not.toHaveText('external failure');
+		await expect(page.locator('#external-not-allowed')).toHaveText(
+			'Failed to execute remote function'
+		);
+	});
 });

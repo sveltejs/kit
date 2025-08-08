@@ -2,6 +2,8 @@
 	import { browser } from '$app/environment';
 	import { refreshAll } from '$app/navigation';
 	import { add, get_count, set_count, set_count_server } from './query-command.remote.js';
+	import { external_allowed } from '../../external-remotes/allowed/allowed.remote.js';
+	import { external_not_allowed } from '../../external-remotes/not-allowed/not-allowed.remote.js';
 
 	let { data } = $props();
 
@@ -9,6 +11,9 @@
 	let release;
 
 	const count = browser ? get_count() : null; // so that we get a remote request in the browser
+
+	const external_allowed_result = browser ? external_allowed() : null;
+	const external_not_allowed_result = browser ? external_not_allowed() : null;
 </script>
 
 <p id="echo-result">{data.echo_result}</p>
@@ -65,3 +70,19 @@
 <button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
 	refreshAll (remote functions only)
 </button>
+
+<p id="external-allowed">
+	allowed: {#await external_allowed_result then result}
+		{result}
+	{:catch error}
+		{error}
+	{/await}
+</p>
+
+<p id="external-not-allowed">
+	not allowed: {#await external_not_allowed_result then result}
+		{result}
+	{:catch error}
+		{error}
+	{/await}
+</p>
