@@ -502,9 +502,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				if (existsSync(tracing.server)) {
-					await vite.ssrLoadModule(tracing.server);
-				}
+				await load_module_if_exists(vite, tracing.server);
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
@@ -664,4 +662,20 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * @param {import('vite').ViteDevServer} vite
+ * @param {string} path
+ * @returns {Promise<void>}
+ */
+async function load_module_if_exists(vite, path) {
+	let extless_path = path;
+	if (extless_path.endsWith('.js') || extless_path.endsWith('.ts')) {
+		extless_path = extless_path.slice(-3);
+	}
+
+	if (existsSync(`${extless_path}.js`) || existsSync(`${extless_path}.ts`)) {
+		await vite.ssrLoadModule(extless_path);
+	}
 }
