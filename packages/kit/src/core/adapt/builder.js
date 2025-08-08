@@ -236,10 +236,11 @@ export function create_builder({
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
+		hasServerTracingFile() {
+			return existsSync(`${config.kit.outDir}/output/server/tracing.server.js`);
+		},
+
 		trace({ entrypoint, tracing, start = 'start.js', tla = true, exports = ['default'] }) {
-			if (!config.kit.experimental.tracing.server) {
-				return;
-			}
 			if (!existsSync(tracing)) {
 				throw new Error(
 					`Tracing file ${tracing} not found. This is probably a bug in your adapter.`

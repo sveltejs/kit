@@ -51,9 +51,12 @@ export default function (opts = {}) {
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${tmp}/index.js`,
-				manifest: `${tmp}/manifest.js`,
-				'tracing.server': `${tmp}/tracing.server.js`
+				manifest: `${tmp}/manifest.js`
 			};
+
+			if (builder.hasServerTracingFile()) {
+				input['tracing.server'] = `${tmp}/tracing.server.js`;
+			}
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
@@ -94,11 +97,13 @@ export default function (opts = {}) {
 				}
 			});
 
-			builder.trace({
-				entrypoint: `${out}/index.js`,
-				tracing: `${out}/server/tracing.server.js`,
-				exports: ['path', 'host', 'port', 'server']
-			});
+			if (builder.hasServerTracingFile()) {
+				builder.trace({
+					entrypoint: `${out}/index.js`,
+					tracing: `${out}/server/tracing.server.js`,
+					exports: ['path', 'host', 'port', 'server']
+				});
+			}
 		},
 
 		supports: {

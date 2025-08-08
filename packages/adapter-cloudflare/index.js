@@ -113,11 +113,13 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
-			builder.trace({
-				entrypoint: worker_dest,
-				tracing: `${builder.getServerDirectory()}/tracing.server.js`,
-				tla: false
-			});
+			if (builder.hasServerTracingFile()) {
+				builder.trace({
+					entrypoint: worker_dest,
+					tracing: `${builder.getServerDirectory()}/tracing.server.js`,
+					tla: false
+				});
+			}
 
 			// _headers
 			if (existsSync('_headers')) {
