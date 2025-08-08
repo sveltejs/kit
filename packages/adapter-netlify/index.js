@@ -196,21 +196,26 @@ async function generate_edge_functions({ builder }) {
 		external: builtinModules.map((id) => `node:${id}`),
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	};
-	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
-		...esbuild_config
-	});
-	await esbuild.build({
-		entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
-		outfile: '.netlify/edge-functions/tracing.server.js',
-		...esbuild_config
-	});
+	await Promise.all([
+		esbuild.build({
+			entryPoints: [`${tmp}/entry.js`],
+			outfile: '.netlify/edge-functions/render.js',
+			...esbuild_config
+		}),
+		builder.hasServerTracingFile() &&
+			esbuild.build({
+				entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
+				outfile: '.netlify/edge/tracing.server.js',
+				...esbuild_config
+			})
+	]);
+
 	if (builder.hasServerTracingFile()) {
 		builder.trace({
 			entrypoint: '.netlify/edge-functions/render.js',
-			tracing: '.netlify/edge-functions/tracing.server.js',
-			tla: false
+			tracing: '.netlify/edge/tracing.server.js',
+			tla: false,
+			start: '.netlify/edge/start.js'
 		});
 	}
 
@@ -294,7 +299,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 				builder.trace({
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
 					tracing: '.netlify/server/tracing.server.js',
-					start: `${name}.start.mjs`,
+					start: `.netlify/functions-start/${name}.start.mjs`,
 					exports: ['handler']
 				});
 			}
@@ -316,6 +321,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 			builder.trace({
 				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
 				tracing: '.netlify/server/tracing.server.js',
+				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
 				exports: ['handler']
 			});
 		}
