@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
@@ -502,7 +502,9 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				await vite.ssrLoadModule(tracing.server);
+				if (existsSync(tracing.server)) {
+					await vite.ssrLoadModule(tracing.server);
+				}
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
