@@ -435,7 +435,7 @@ async function kit({ svelte_config }) {
 				? `globalThis.__sveltekit_${version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
-			if (options?.ssr === false && process.env.TEST !== 'true') {
+			if (!is_build && options?.ssr === false && process.env.TEST !== 'true') {
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
