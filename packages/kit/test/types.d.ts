@@ -1,6 +1,5 @@
 import {
 	PlaywrightTestArgs,
-	PlaywrightTestConfig,
 	PlaywrightTestOptions,
 	PlaywrightWorkerArgs,
 	PlaywrightWorkerOptions,
@@ -43,5 +42,3 @@ export const test: TestType<
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
-
-export const config: PlaywrightTestConfig;
