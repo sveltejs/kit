@@ -23,7 +23,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent, isSvelte5Plus, write } from '../../core/sync/utils.js';
+import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -740,17 +740,13 @@ Tips:
 					});
 
 					// ...and the server tracing file
-					const instrument_server = resolve_entry(kit.files.tracing.server);
-					if (instrument_server) {
+					const server_tracing = resolve_entry(kit.files.tracing.server);
+					if (server_tracing) {
 						const { adapter } = kit;
 						if (adapter && !adapter.supports?.tracing?.()) {
-							throw new Error(`${instrument_server} is unsupported in ${adapter.name}.`);
+							throw new Error(`${server_tracing} is unsupported in ${adapter.name}.`);
 						}
-						input['tracing.server'] = instrument_server;
-					} else {
-						const generated_path = `${kit.outDir}/generated/server/tracing.server.js`;
-						write(generated_path, 'export {}');
-						input['tracing.server'] = generated_path;
+						input['tracing.server'] = server_tracing;
 					}
 
 					// ...and every .remote file

@@ -206,11 +206,13 @@ async function generate_edge_functions({ builder }) {
 		outfile: '.netlify/edge-functions/tracing.server.js',
 		...esbuild_config
 	});
-	builder.trace({
-		entrypoint: '.netlify/edge-functions/render.js',
-		tracing: '.netlify/edge-functions/tracing.server.js',
-		tla: false
-	});
+	if (builder.hasServerTracingFile()) {
+		builder.trace({
+			entrypoint: '.netlify/edge-functions/render.js',
+			tracing: '.netlify/edge-functions/tracing.server.js',
+			tla: false
+		});
+	}
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
@@ -288,12 +290,14 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
-			builder.trace({
-				entrypoint: `.netlify/functions-internal/${name}.mjs`,
-				tracing: '.netlify/server/tracing.server.js',
-				start: `${name}.start.mjs`,
-				exports: ['handler']
-			});
+			if (builder.hasServerTracingFile()) {
+				builder.trace({
+					entrypoint: `.netlify/functions-internal/${name}.mjs`,
+					tracing: '.netlify/server/tracing.server.js',
+					start: `${name}.start.mjs`,
+					exports: ['handler']
+				});
+			}
 
 			const redirect = `/.netlify/functions/${name} 200`;
 			redirects.push(`${pattern} ${redirect}`);
@@ -308,11 +312,13 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		builder.trace({
-			entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
-			tracing: '.netlify/server/tracing.server.js',
-			exports: ['handler']
-		});
+		if (builder.hasServerTracingFile()) {
+			builder.trace({
+				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
+				tracing: '.netlify/server/tracing.server.js',
+				exports: ['handler']
+			});
+		}
 
 		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
 	}

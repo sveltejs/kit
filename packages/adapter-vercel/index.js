@@ -100,10 +100,12 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				builder.trace({
-					entrypoint: `${tmp}/index.js`,
-					tracing: `${builder.getServerDirectory()}/tracing.server.js`
-				});
+				if (builder.hasServerTracingFile()) {
+					builder.trace({
+						entrypoint: `${tmp}/index.js`,
+						tracing: `${builder.getServerDirectory()}/tracing.server.js`
+					});
+				}
 
 				write(
 					`${tmp}/manifest.js`,
@@ -178,26 +180,31 @@ const plugin = function (defaults = {}) {
 						outfile: `${outdir}/index.js`,
 						...esbuild_config
 					});
-					const instrumentation_result = await esbuild.build({
-						entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
-						outfile: `${outdir}/tracing.server.js`,
-						...esbuild_config
-					});
 
-					builder.trace({
-						entrypoint: `${outdir}/index.js`,
-						tracing: `${outdir}/tracing.server.js`,
-						tla: false
-					});
+					let instrumentation_result;
+					if (builder.hasServerTracingFile()) {
+						instrumentation_result = await esbuild.build({
+							entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
+							outfile: `${outdir}/tracing.server.js`,
+							...esbuild_config
+						});
 
-					if (result.warnings.length > 0 || instrumentation_result.warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(
-							[...result.warnings, ...instrumentation_result.warnings],
-							{
-								kind: 'warning',
-								color: true
-							}
-						);
+						builder.trace({
+							entrypoint: `${outdir}/index.js`,
+							tracing: `${outdir}/tracing.server.js`,
+							tla: false
+						});
+					}
+
+					const warnings = instrumentation_result
+						? [...result.warnings, ...instrumentation_result.warnings]
+						: result.warnings;
+
+					if (warnings.length > 0) {
+						const formatted = await esbuild.formatMessages(warnings, {
+							kind: 'warning',
+							color: true
+						});
 
 						console.error(formatted.join('\n'));
 					}

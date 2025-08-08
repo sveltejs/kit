@@ -172,15 +172,22 @@ declare module '@sveltejs/kit' {
 		) => string[];
 
 		/**
+		 * Check if the server tracing file exists.
+		 * @returns true if the server tracing file exists, false otherwise
+		 */
+		hasServerTracingFile: () => boolean;
+
+		/**
 		 * Trace `entrypoint` with `tracing`.
 		 *
-		 * If server tracing is enabled, renames `entrypoint` to `start` and creates a new module at
+		 * Renames `entrypoint` to `start` and creates a new module at
 		 * `entrypoint` which imports `tracing` and then dynamically imports `start`. This allows
 		 * the module hooks necessary for tracing libraries to be loaded prior to any application code.
 		 *
 		 * Caveats:
 		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
+		 * - Use {@link hasServerTracingFile} to check if the user has a server tracing file; if they don't, you shouldn't do this.
 		 *
 		 * @param options an object containing the following properties:
 		 * @param options.entrypoint the path to the entrypoint to trace.
