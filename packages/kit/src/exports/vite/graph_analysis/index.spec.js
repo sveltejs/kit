@@ -49,8 +49,8 @@ test('throws an error when importing $env/static/private', () => {
 			}
 		},
 		`Cannot import $env/static/private into client-side code:
-		- src/routes/+page.svelte imports
-		 - $env/static/private`
+		 src/routes/+page.svelte imports
+		  $env/static/private`
 	);
 });
 
@@ -65,8 +65,8 @@ test('throws an error when dynamically importing $env/static/private', () => {
 			}
 		},
 		`Cannot import $env/static/private into client-side code:
-		- src/routes/+page.svelte dynamically imports
-		 - $env/static/private`
+		 src/routes/+page.svelte dynamically imports
+		  $env/static/private`
 	);
 });
 
@@ -81,8 +81,8 @@ test('throws an error when importing $env/dynamic/private', () => {
 			}
 		},
 		`Cannot import $env/dynamic/private into client-side code:
-		- src/routes/+page.svelte imports
-		 - $env/dynamic/private`
+		 src/routes/+page.svelte imports
+		  $env/dynamic/private`
 	);
 });
 
@@ -97,8 +97,8 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 			}
 		},
 		`Cannot import $env/dynamic/private into client-side code:
-		- src/routes/+page.svelte dynamically imports
-		 - $env/dynamic/private`
+		 src/routes/+page.svelte dynamically imports
+		  $env/dynamic/private`
 	);
 });
 
@@ -119,8 +119,8 @@ test('throws an error when importing a .server.js module', () => {
 			'~/src/routes/illegal.server.js': {}
 		},
 		`Cannot import src/routes/illegal.server.js into client-side code:
-		- src/routes/+page.svelte imports
-		 - src/routes/illegal.server.js`
+		 src/routes/+page.svelte imports
+		  src/routes/illegal.server.js`
 	);
 });
 
@@ -136,8 +136,8 @@ test('throws an error when importing a $lib/server/**/*.js module', () => {
 			'~/src/lib/server/some/module.js': {}
 		},
 		`Cannot import $lib/server/some/module.js into client-side code:
-		- src/routes/+page.svelte imports
-		 - $lib/server/some/module.js`
+		 src/routes/+page.svelte imports
+		  $lib/server/some/module.js`
 	);
 });
 

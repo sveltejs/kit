@@ -54,11 +54,11 @@ export function module_guard(context, { cwd, lib }) {
 					.map(({ id, dynamic }, i) => {
 						id = normalize_id(id, lib, cwd);
 
-						return `${'  '.repeat(i)}- ${strip_virtual_prefix(id)} ${
+						return `${' '.repeat(i + 1)}${strip_virtual_prefix(id)} ${
 							dynamic ? 'dynamically imports' : 'imports'
 						}\n`;
 					})
-					.join('') + `${'  '.repeat(chain.length)}- ${strip_virtual_prefix(id)}`;
+					.join('') + `${' '.repeat(chain.length + 1)}${strip_virtual_prefix(id)}`;
 
 			const message = `Cannot import ${strip_virtual_prefix(
 				id
