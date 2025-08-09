@@ -15,15 +15,9 @@ import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
-import { is_illegal, module_guard } from './graph_analysis/index.js';
+import { is_illegal } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import {
-	get_config_aliases,
-	get_env,
-	normalize_id,
-	stackless,
-	strip_virtual_prefix
-} from './utils.js';
+import { get_config_aliases, get_env, normalize_id, stackless } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -240,6 +234,12 @@ async function kit({ svelte_config }) {
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
+		enforce: 'pre',
+
+		configureServer(_dev_server) {
+			dev_server = _dev_server;
+		},
+
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -380,14 +380,18 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Map<string, string>} */
+	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		resolveId(id, importer) {
+		// Run this plugin before built-in resolution, so that relative imports
+		// are added to the module graph
+		enforce: 'pre',
+
+		async resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
 				return `${kit.outDir}/generated/client-optimized/app.js`;
 			}
@@ -395,6 +399,7 @@ async function kit({ svelte_config }) {
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
+			// TODO move this logic to plugin_guard
 			if (importer) {
 				const parsed_importer = path.parse(importer);
 
@@ -411,8 +416,6 @@ async function kit({ svelte_config }) {
 						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
-
-				import_map.set(id, importer);
 			}
 
 			// treat $env/static/[public|private] as virtual
@@ -426,6 +429,21 @@ async function kit({ svelte_config }) {
 			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
+
+			if (importer && !importer.endsWith('index.html')) {
+				const resolved = await this.resolve(id, importer, { skipSelf: true });
+
+				if (resolved) {
+					let importers = import_map.get(resolved.id);
+
+					if (!importers) {
+						importers = new Set();
+						import_map.set(resolved.id, importers);
+					}
+
+					importers.add(importer);
+				}
+			}
 		},
 
 		load(id, options) {
@@ -434,37 +452,6 @@ async function kit({ svelte_config }) {
 			const global = is_build
 				? `globalThis.__sveltekit_${version_hash}`
 				: 'globalThis.__sveltekit_dev';
-
-			if (!is_build && options?.ssr === false && process.env.TEST !== 'true') {
-				if (
-					is_illegal(id, {
-						cwd: normalized_cwd,
-						node_modules: vite.normalizePath(path.resolve('node_modules')),
-						server: vite.normalizePath(path.join(normalized_lib, 'server'))
-					})
-				) {
-					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-
-					const illegal_module = strip_virtual_prefix(relative);
-
-					const error_prefix = `Cannot import ${illegal_module} into client-side code. This could leak sensitive information.`;
-					const error_suffix = `
-Tips:
- - To resolve this error, ensure that no exports from ${illegal_module} are used, even transitively, in client-side code.
- - If you're only using the import as a type, change it to \`import type\`.
- - If you're not sure which module is causing this, try building your app to see the import chain.`;
-
-					if (import_map.has(illegal_module)) {
-						const importer = path.relative(
-							cwd,
-							/** @type {string} */ (import_map.get(illegal_module))
-						);
-						throw new Error(`${error_prefix}\nImported by: ${importer}.${error_suffix}`);
-					}
-
-					throw stackless(`${error_prefix}${error_suffix}`);
-				}
-			}
 
 			switch (id) {
 				case env_static_private:
@@ -580,23 +567,54 @@ Tips:
 	const plugin_guard = {
 		name: 'vite-plugin-sveltekit-guard',
 
-		writeBundle: {
-			sequential: true,
-			handler(_options) {
-				if (vite_config.build.ssr) return;
+		load(id, options) {
+			if (options?.ssr === false && process.env.TEST !== 'true') {
+				if (
+					is_illegal(id, {
+						cwd: normalized_cwd,
+						node_modules: vite.normalizePath(path.resolve('node_modules')),
+						server: vite.normalizePath(path.join(normalized_lib, 'server'))
+					})
+				) {
+					// in dev, this doesn't exist, so we need to create it
+					manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
-				const guard = module_guard(this, {
-					cwd: vite.normalizePath(process.cwd()),
-					lib: vite.normalizePath(kit.files.lib)
-				});
+					/** @type {Set<string>} */
+					const entrypoints = new Set();
+					for (const node of manifest_data.nodes) {
+						if (node.component) entrypoints.add(node.component);
+						if (node.universal) entrypoints.add(node.universal);
+					}
 
-				manifest_data.nodes.forEach((_node, i) => {
-					const id = vite.normalizePath(
-						path.resolve(kit.outDir, `generated/client-optimized/nodes/${i}.js`)
-					);
+					const chain = [id];
+					let current = id;
 
-					guard.check(id);
-				});
+					while (true) {
+						const importers = import_map.get(current);
+						if (!importers) break;
+
+						const candidates = Array.from(importers).filter((id) => !chain.includes(id));
+						if (candidates.length === 0) break;
+
+						chain.push((current = candidates[0]));
+
+						if (entrypoints.has(path.relative(cwd, current))) {
+							let message = `Cannot import ${normalize_id(id, kit.files.lib, cwd)} into client-side code. This could leak sensitive information.`;
+
+							const pyramid = chain
+								.reverse()
+								.map((id, i) => {
+									return `${' '.repeat(i + 1)}${normalize_id(id, kit.files.lib, cwd)}`;
+								})
+								.join(' imports\n');
+
+							message += `\n\n${pyramid}`;
+							message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+							throw stackless(message);
+						}
+					}
+				}
 			}
 		}
 	};
@@ -607,10 +625,6 @@ Tips:
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
-
-		configureServer(_dev_server) {
-			dev_server = _dev_server;
-		},
 
 		async transform(code, id, opts) {
 			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
