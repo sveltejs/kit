@@ -234,12 +234,6 @@ async function kit({ svelte_config }) {
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
-		enforce: 'pre',
-
-		configureServer(_dev_server) {
-			dev_server = _dev_server;
-		},
-
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -387,11 +381,7 @@ async function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		// Run this plugin before built-in resolution, so that relative imports
-		// are added to the module graph
-		enforce: 'pre',
-
-		async resolveId(id, importer) {
+		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
 				return `${kit.outDir}/generated/client-optimized/app.js`;
 			}
@@ -423,26 +413,13 @@ async function kit({ svelte_config }) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
+
 			if (id === '__sveltekit/remote') {
 				return `${runtime_directory}/client/remote-functions/index.js`;
 			}
+
 			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
-			}
-
-			if (importer && !importer.endsWith('index.html')) {
-				const resolved = await this.resolve(id, importer, { skipSelf: true });
-
-				if (resolved) {
-					let importers = import_map.get(resolved.id);
-
-					if (!importers) {
-						importers = new Set();
-						import_map.set(resolved.id, importers);
-					}
-
-					importers.add(importer);
-				}
 			}
 		},
 
@@ -567,6 +544,27 @@ async function kit({ svelte_config }) {
 	const plugin_guard = {
 		name: 'vite-plugin-sveltekit-guard',
 
+		// Run this plugin before built-in resolution, so that relative imports
+		// are added to the module graph
+		enforce: 'pre',
+
+		async resolveId(id, importer) {
+			if (importer && !importer.endsWith('index.html')) {
+				const resolved = await this.resolve(id, importer, { skipSelf: true });
+
+				if (resolved) {
+					let importers = import_map.get(resolved.id);
+
+					if (!importers) {
+						importers = new Set();
+						import_map.set(resolved.id, importers);
+					}
+
+					importers.add(importer);
+				}
+			}
+		},
+
 		load(id, options) {
 			if (options?.ssr === true || process.env.TEST === 'true') return;
 
@@ -625,6 +623,10 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
+
+		configureServer(_dev_server) {
+			dev_server = _dev_server;
+		},
 
 		async transform(code, id, opts) {
 			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
