@@ -19,15 +19,13 @@ export function get_relative_path(from, to) {
 	return from_parts.concat(to_parts).join('/');
 }
 
-const native_b64_supported = 'fromBase64' in Uint8Array;
-
 /**
  * @param {string} encoded
  * @param {{ alphabet?: 'base64' | 'base64url' }=} options
  * @returns {Uint8Array}
  */
 export function base64_decode(encoded, options) {
-	if (native_b64_supported) {
+	if ('fromBase64' in Uint8Array) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return Uint8Array.fromBase64(encoded, options);
 	}
@@ -86,7 +84,7 @@ export function base64_decode(encoded, options) {
  * @returns {string}
  */
 export function base64_encode(bytes, options) {
-	if (native_b64_supported) {
+	if ('toBase64' in Uint8Array.prototype) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return bytes.toBase64(options);
 	}
