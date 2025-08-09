@@ -1,6 +1,4 @@
-import { base64_encode } from '../../utils.js';
-
-const encoder = new TextEncoder();
+import { base64_encode, text_encoder } from '../../utils.js';
 
 /**
  * SHA-256 hashing function adapted from https://bitwiseshiftleft.github.io/sjcl
@@ -162,7 +160,7 @@ function reverse_endianness(bytes) {
 
 /** @param {string} str */
 function encode(str) {
-	const encoded = encoder.encode(str);
+	const encoded = text_encoder.encode(str);
 	const length = encoded.length * 8;
 
 	// result should be a multiple of 512 bits in length,

@@ -1,6 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { base64_decode, base64_encode } from './utils.js';
+import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
 
 /**
  * @param {string} route_id
@@ -42,7 +42,7 @@ export function stringify_remote_arg(value, transport) {
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
 	const json_string = stringify(value, transport);
 
-	return base64_encode(new TextEncoder().encode(json_string), {
+	return base64_encode(text_encoder.encode(json_string), {
 		alphabet: 'base64url',
 		omitPadding: true
 	});
@@ -56,8 +56,7 @@ export function stringify_remote_arg(value, transport) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const utf8_bytes = base64_decode(string, { alphabet: 'base64url' });
-	const json_string = new TextDecoder().decode(utf8_bytes);
+	const json_string = text_decoder.decode(base64_decode(string, { alphabet: 'base64url' }));
 
 	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
 

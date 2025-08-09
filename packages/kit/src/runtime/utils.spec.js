@@ -1,5 +1,5 @@
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
-import { base64_decode, base64_encode } from './utils.js';
+import { base64_decode, base64_encode, text_encoder } from './utils.js';
 
 const inputs = [
 	'hello world',
@@ -8,8 +8,6 @@ const inputs = [
 	'the quick brown fox jumps over the lazy dog',
 	'工欲善其事，必先利其器'
 ];
-
-const text_encoder = new TextEncoder();
 
 const buffer = globalThis.Buffer;
 beforeEach(() => {
