@@ -20,7 +20,6 @@ export function get_relative_path(from, to) {
 }
 
 const native_b64_supported = 'fromBase64' in Uint8Array;
-const node_b64_supported = 'Buffer' in globalThis;
 
 /**
  * @param {string} encoded
@@ -32,7 +31,7 @@ export function base64_decode(encoded, options) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return Uint8Array.fromBase64(encoded, options);
 	}
-	if (node_b64_supported) {
+	if ('Buffer' in globalThis) {
 		const buffer = Buffer.from(encoded, options?.alphabet === 'base64url' ? 'base64url' : 'base64');
 		return new Uint8Array(buffer);
 	}
@@ -91,7 +90,7 @@ export function base64_encode(bytes, options) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return bytes.toBase64(options);
 	}
-	if (node_b64_supported) {
+	if ('Buffer' in globalThis) {
 		const buffer = Buffer.from(bytes.buffer);
 		const encoded = buffer.toString(options?.alphabet === 'base64url' ? 'base64url' : 'base64');
 		if (options?.omitPadding) {
