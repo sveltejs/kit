@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
-import { b64_encode } from '../../utils.js';
+import { base64_encode } from '../../utils.js';
 import { with_event } from '../../app/server/event.js';
 
 /**
@@ -316,12 +316,14 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					return async () => {
 						const buffer = await response.arrayBuffer();
 
+						const bytes = new Uint8Array(buffer);
+
 						if (dependency) {
-							dependency.body = new Uint8Array(buffer);
+							dependency.body = bytes;
 						}
 
 						if (buffer instanceof ArrayBuffer) {
-							await push_fetched(b64_encode(buffer), true);
+							await push_fetched(base64_encode(bytes), true);
 						}
 
 						return buffer;
