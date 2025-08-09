@@ -627,7 +627,7 @@ async function kit({ svelte_config }) {
 					}
 				}
 
-				console.error({ chain, entrypoints });
+				console.error({ id, cwd, normalized, chain, entrypoints });
 
 				throw new Error('An impossible situation occurred');
 			}
