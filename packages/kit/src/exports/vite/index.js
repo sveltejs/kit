@@ -554,7 +554,7 @@ async function kit({ svelte_config }) {
 				const resolved = await this.resolve(id, importer, { skipSelf: true });
 
 				if (resolved) {
-					const normalized = normalize_id(resolved.id, kit.files.lib, normalized_cwd);
+					const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
 
 					let importers = import_map.get(normalized);
 
@@ -563,7 +563,7 @@ async function kit({ svelte_config }) {
 						import_map.set(normalized, importers);
 					}
 
-					importers.add(normalize_id(importer, kit.files.lib, normalized_cwd));
+					importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
 				}
 			}
 		},
@@ -576,7 +576,7 @@ async function kit({ svelte_config }) {
 			// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 			const is_internal = id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
 
-			const normalized = normalize_id(id, kit.files.lib, cwd);
+			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 
 			const is_server_only =
 				normalized === '$env/static/private' ||
@@ -596,7 +596,7 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
-				const normalized = normalize_id(id, kit.files.lib, normalized_cwd);
+				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 				const chain = [normalized];
 
 				let current = normalized;
@@ -626,8 +626,6 @@ async function kit({ svelte_config }) {
 						throw stackless(message);
 					}
 				}
-
-				console.error({ id, cwd, normalized, chain, entrypoints });
 
 				throw new Error('An impossible situation occurred');
 			}
