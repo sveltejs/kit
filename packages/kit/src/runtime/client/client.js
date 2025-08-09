@@ -44,6 +44,7 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { text_decoder } from '../utils.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -2781,7 +2782,6 @@ async function load_data(url, invalid) {
 		 */
 		const deferreds = new Map();
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
-		const decoder = new TextDecoder();
 
 		/**
 		 * @param {any} data
@@ -2804,7 +2804,7 @@ async function load_data(url, invalid) {
 			const { done, value } = await reader.read();
 			if (done && !text) break;
 
-			text += !value && text ? '\n' : decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
+			text += !value && text ? '\n' : text_decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
 
 			while (true) {
 				const split = text.indexOf('\n');
