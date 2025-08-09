@@ -568,51 +568,51 @@ async function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-guard',
 
 		load(id, options) {
-			if (options?.ssr === false && process.env.TEST !== 'true') {
-				if (
-					is_illegal(id, {
-						cwd: normalized_cwd,
-						node_modules: vite.normalizePath(path.resolve('node_modules')),
-						server: vite.normalizePath(path.join(normalized_lib, 'server'))
-					})
-				) {
-					// in dev, this doesn't exist, so we need to create it
-					manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+			if (options?.ssr === true || process.env.TEST === 'true') return;
 
-					/** @type {Set<string>} */
-					const entrypoints = new Set();
-					for (const node of manifest_data.nodes) {
-						if (node.component) entrypoints.add(node.component);
-						if (node.universal) entrypoints.add(node.universal);
-					}
+			if (
+				is_illegal(id, {
+					cwd: normalized_cwd,
+					node_modules: vite.normalizePath(path.resolve('node_modules')),
+					server: vite.normalizePath(path.join(normalized_lib, 'server'))
+				})
+			) {
+				// in dev, this doesn't exist, so we need to create it
+				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
-					const chain = [id];
-					let current = id;
+				/** @type {Set<string>} */
+				const entrypoints = new Set();
+				for (const node of manifest_data.nodes) {
+					if (node.component) entrypoints.add(node.component);
+					if (node.universal) entrypoints.add(node.universal);
+				}
 
-					while (true) {
-						const importers = import_map.get(current);
-						if (!importers) break;
+				const chain = [id];
+				let current = id;
 
-						const candidates = Array.from(importers).filter((id) => !chain.includes(id));
-						if (candidates.length === 0) break;
+				while (true) {
+					const importers = import_map.get(current);
+					if (!importers) break;
 
-						chain.push((current = candidates[0]));
+					const candidates = Array.from(importers).filter((id) => !chain.includes(id));
+					if (candidates.length === 0) break;
 
-						if (entrypoints.has(path.relative(cwd, current))) {
-							let message = `Cannot import ${normalize_id(id, kit.files.lib, cwd)} into client-side code. This could leak sensitive information.`;
+					chain.push((current = candidates[0]));
 
-							const pyramid = chain
-								.reverse()
-								.map((id, i) => {
-									return `${' '.repeat(i + 1)}${normalize_id(id, kit.files.lib, cwd)}`;
-								})
-								.join(' imports\n');
+					if (entrypoints.has(path.relative(cwd, current))) {
+						let message = `Cannot import ${normalize_id(id, kit.files.lib, cwd)} into code that runs in the browser, as this could leak sensitive information.`;
 
-							message += `\n\n${pyramid}`;
-							message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+						const pyramid = chain
+							.reverse()
+							.map((id, i) => {
+								return `${' '.repeat(i + 1)}${normalize_id(id, kit.files.lib, cwd)}`;
+							})
+							.join(' imports\n');
 
-							throw stackless(message);
-						}
+						message += `\n\n${pyramid}`;
+						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+						throw stackless(message);
 					}
 				}
 			}
