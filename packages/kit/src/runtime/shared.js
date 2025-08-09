@@ -43,7 +43,7 @@ export function stringify_remote_arg(value, transport) {
 	const json_string = stringify(value, transport);
 
 	const bytes = new TextEncoder().encode(json_string);
-	return base64_encode(bytes).replaceAll('+', '-').replaceAll('/', '_');
+	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
 /**
@@ -55,6 +55,7 @@ export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
 	const json_string = text_decoder.decode(
+		// no need to add back `=` characters, atob can handle it
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
