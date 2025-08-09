@@ -35,7 +35,7 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
-import { compact } from '../../utils/array.js';
+import { compact, conjoin } from '../../utils/array.js';
 import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 
 const cwd = process.cwd();
@@ -668,6 +668,24 @@ Tips:
 				}
 			}
 
+			if (!manifest_data.remotes.some((remote) => remote.hash === hashed)) {
+				const relative_path = path.relative(dev_server.config.root, id);
+				const fn_names = [...remotes.values()].flat().map((name) => `"${name}"`);
+				const has_multiple = fn_names.length !== 1;
+				console.warn(
+					colors
+						.bold()
+						.yellow(
+							`Remote function${has_multiple ? 's' : ''} ${conjoin(fn_names)} from ${relative_path} ${has_multiple ? 'are' : 'is'} not accessible by default.`
+						)
+				);
+				console.warn(
+					colors.yellow(
+						`To whitelist ${has_multiple ? 'them' : 'it'}, add "${path.dirname(relative_path)}" to \`kit.remoteFunctions.allowedPaths\` in \`svelte.config.js\`.`
+					)
+				);
+			}
+
 			let namespace = '__remote';
 			let uid = 1;
 			while (remotes.has(namespace)) namespace = `__remote${uid++}`;
@@ -842,7 +860,7 @@ Tips:
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			return await dev(vite, vite_config, svelte_config, (data) => (manifest_data = data));
 		},
 
 		/**
