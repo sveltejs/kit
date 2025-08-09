@@ -15,7 +15,6 @@ import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
-import { is_illegal } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env, normalize_id, stackless } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
@@ -535,6 +534,7 @@ async function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
+	const server_only_pattern = /.*\.server\..+/;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -568,15 +568,25 @@ async function kit({ svelte_config }) {
 		},
 
 		load(id, options) {
-			if (options?.ssr === true || process.env.TEST === 'true') return;
+			if (options?.ssr === true || process.env.TEST === 'true') {
+				return;
+			}
 
-			if (
-				is_illegal(id, {
-					cwd: normalized_cwd,
-					node_modules: vite.normalizePath(path.resolve('node_modules')),
-					server: vite.normalizePath(path.join(normalized_lib, 'server'))
-				})
-			) {
+			// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+			const is_internal =
+				id.startsWith(normalized_cwd) &&
+				!id.startsWith(vite.normalizePath(path.resolve('node_modules')));
+
+			const normalized = normalize_id(id, kit.files.lib, cwd);
+
+			const is_server_only =
+				normalized === '$env/static/private' ||
+				normalized === '$env/dynamic/private' ||
+				normalized === '$app/server' ||
+				normalized.startsWith('$lib/server') ||
+				(is_internal && server_only_pattern.test(path.basename(id)));
+
+			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
 				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
