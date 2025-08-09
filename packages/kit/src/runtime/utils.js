@@ -20,16 +20,21 @@ export function get_relative_path(from, to) {
 }
 
 const native_b64_supported = 'fromBase64' in Uint8Array;
+const node_b64_supported = 'Buffer' in globalThis;
 
 /**
  * @param {string} encoded
  * @param {{ alphabet?: 'base64' | 'base64url' }=} options
- * @returns {Uint8Array<ArrayBuffer>}
+ * @returns {Uint8Array}
  */
 export function base64_decode(encoded, options) {
 	if (native_b64_supported) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return Uint8Array.fromBase64(encoded, options);
+	}
+	if (node_b64_supported) {
+		const buffer = Buffer.from(encoded, options?.alphabet === 'base64url' ? 'base64url' : 'base64');
+		return new Uint8Array(buffer);
 	}
 
 	const decode_map = options?.alphabet === 'base64url' ? b64_url_decode_map : b64_decode_map;
@@ -41,14 +46,7 @@ export function base64_decode(encoded, options) {
 		let bits_read = 0;
 		for (let j = 0; j < 4; j++) {
 			const char = encoded[i + j];
-			// if (padding === DecodingPadding.Required && encoded[i + j] === "=") {
-			// 	continue;
-			// }
-			if (
-				// padding === DecodingPadding.Ignore &&
-				i + j >= encoded.length ||
-				char === '='
-			) {
+			if (i + j >= encoded.length || char === '=') {
 				continue;
 			}
 			if (j > 0 && encoded[i + j - 1] === '=') {
@@ -92,6 +90,14 @@ export function base64_encode(bytes, options) {
 	if (native_b64_supported) {
 		// @ts-expect-error - https://github.com/microsoft/TypeScript/pull/61696
 		return bytes.toBase64(options);
+	}
+	if (node_b64_supported) {
+		const buffer = Buffer.from(bytes.buffer);
+		const encoded = buffer.toString(options?.alphabet === 'base64url' ? 'base64url' : 'base64');
+		if (options?.omitPadding) {
+			return encoded.replace(/=+$/, '');
+		}
+		return encoded;
 	}
 
 	const alphabet = options?.alphabet === 'base64url' ? b64_url_alphabet : b64_alphabet;

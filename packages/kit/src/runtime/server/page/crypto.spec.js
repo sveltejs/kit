@@ -8,7 +8,7 @@ const inputs = [
 	'abcd',
 	'the quick brown fox jumps over the lazy dog',
 	'工欲善其事，必先利其器'
-].slice(0);
+];
 
 inputs.forEach((input) => {
 	test(input, async () => {
