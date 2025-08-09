@@ -400,6 +400,12 @@ declare module '@sveltejs/kit' {
 		 */
 		files?: {
 			/**
+			 * the location of your source code
+			 * @default "src"
+			 * @since 2.28
+			 */
+			src?: string;
+			/**
 			 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
 			 * @default "static"
 			 */
