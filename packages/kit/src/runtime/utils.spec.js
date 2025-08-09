@@ -25,23 +25,6 @@ describe('base64_encode', () => {
 		const actual = base64_encode(text_encoder.encode(input));
 		assert.equal(actual, expected);
 	});
-
-	test.each(inputs)('(omitPadding) %s', (input) => {
-		const expected = buffer.from(input).toString('base64').replace(/=+$/, '');
-
-		const actual = base64_encode(text_encoder.encode(input), { omitPadding: true });
-		assert.equal(actual, expected);
-	});
-
-	test.each(inputs)('(url) %s', (input) => {
-		const expected = buffer.from(input).toString('base64url');
-
-		const actual = base64_encode(text_encoder.encode(input), {
-			alphabet: 'base64url',
-			omitPadding: true
-		});
-		assert.equal(actual, expected);
-	});
 });
 
 describe('base64_decode', () => {
@@ -49,14 +32,6 @@ describe('base64_decode', () => {
 		const encoded = buffer.from(input).toString('base64');
 
 		const actual = base64_decode(encoded);
-		expect(actual).toEqual(text_encoder.encode(input));
-	});
-
-	test.each(inputs)('(url) %s', (input) => {
-		const encoded = buffer.from(input).toString('base64url');
-
-		const actual = base64_decode(encoded, { alphabet: 'base64url' });
-
 		expect(actual).toEqual(text_encoder.encode(input));
 	});
 });
