@@ -42,6 +42,7 @@ test.describe('Endpoints', () => {
 
 test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
+		test.slow();
 		await page.goto('/load/change-detection/one/a');
 		expect(await page.textContent('h1')).toBe('layout loads: 1');
 		expect(await page.textContent('h2')).toBe('x: a: 1');
