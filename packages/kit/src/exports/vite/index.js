@@ -597,7 +597,9 @@ async function kit({ svelte_config }) {
 
 					chain.push((current = candidates[0]));
 
-					if (entrypoints.has(path.relative(cwd, current))) {
+					const normalized = normalize_id(current, kit.files.lib, cwd);
+
+					if (entrypoints.has(normalized)) {
 						let message = `Cannot import ${normalize_id(id, kit.files.lib, cwd)} into code that runs in the browser, as this could leak sensitive information.`;
 
 						const pyramid = chain

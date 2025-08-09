@@ -113,6 +113,8 @@ export function not_found(req, res, base) {
 	}
 }
 
+const query_pattern = /\?.*$/s;
+
 /**
  * Removes cwd/lib path from the start of the id
  * @param {string} id
@@ -120,6 +122,8 @@ export function not_found(req, res, base) {
  * @param {string} cwd
  */
 export function normalize_id(id, lib, cwd) {
+	id = id.replace(query_pattern, '');
+
 	if (id.startsWith(lib)) {
 		id = id.replace(lib, '$lib');
 	}
