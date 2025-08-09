@@ -374,9 +374,6 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Map<string, Set<string>>} */
-	const import_map = new Map();
-
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
@@ -536,6 +533,9 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {Map<string, Set<string>>} */
+	const import_map = new Map();
+
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
 	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
@@ -553,14 +553,16 @@ async function kit({ svelte_config }) {
 				const resolved = await this.resolve(id, importer, { skipSelf: true });
 
 				if (resolved) {
-					let importers = import_map.get(resolved.id);
+					const normalized = normalize_id(resolved.id, kit.files.lib, cwd);
+
+					let importers = import_map.get(normalized);
 
 					if (!importers) {
 						importers = new Set();
-						import_map.set(resolved.id, importers);
+						import_map.set(normalized, importers);
 					}
 
-					importers.add(importer);
+					importers.add(normalize_id(importer, kit.files.lib, cwd));
 				}
 			}
 		},
@@ -585,27 +587,27 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
-				const chain = [id];
-				let current = id;
+				const normalized = normalize_id(id, kit.files.lib, cwd);
+				const chain = [normalized];
+
+				let current = normalized;
 
 				while (true) {
 					const importers = import_map.get(current);
 					if (!importers) break;
 
-					const candidates = Array.from(importers).filter((id) => !chain.includes(id));
+					const candidates = Array.from(importers).filter((importer) => !chain.includes(importer));
 					if (candidates.length === 0) break;
 
 					chain.push((current = candidates[0]));
 
-					const normalized = normalize_id(current, kit.files.lib, cwd);
-
-					if (entrypoints.has(normalized)) {
-						let message = `Cannot import ${normalize_id(id, kit.files.lib, cwd)} into code that runs in the browser, as this could leak sensitive information.`;
+					if (entrypoints.has(current)) {
+						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
 
 						const pyramid = chain
 							.reverse()
 							.map((id, i) => {
-								return `${' '.repeat(i + 1)}${normalize_id(id, kit.files.lib, cwd)}`;
+								return `${' '.repeat(i + 1)}${id}`;
 							})
 							.join(' imports\n');
 
