@@ -554,7 +554,7 @@ async function kit({ svelte_config }) {
 				const resolved = await this.resolve(id, importer, { skipSelf: true });
 
 				if (resolved) {
-					const normalized = normalize_id(resolved.id, kit.files.lib, cwd);
+					const normalized = normalize_id(resolved.id, kit.files.lib, normalized_cwd);
 
 					let importers = import_map.get(normalized);
 
@@ -563,7 +563,7 @@ async function kit({ svelte_config }) {
 						import_map.set(normalized, importers);
 					}
 
-					importers.add(normalize_id(importer, kit.files.lib, cwd));
+					importers.add(normalize_id(importer, kit.files.lib, normalized_cwd));
 				}
 			}
 		},
@@ -596,7 +596,7 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
-				const normalized = normalize_id(id, kit.files.lib, cwd);
+				const normalized = normalize_id(id, kit.files.lib, normalized_cwd);
 				const chain = [normalized];
 
 				let current = normalized;
