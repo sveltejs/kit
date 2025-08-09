@@ -218,6 +218,7 @@ async function kit({ svelte_config }) {
 
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
+	const normalized_node_modules = vite.normalizePath(path.resolve('node_modules'));
 
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
@@ -573,9 +574,7 @@ async function kit({ svelte_config }) {
 			}
 
 			// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-			const is_internal =
-				id.startsWith(normalized_cwd) &&
-				!id.startsWith(vite.normalizePath(path.resolve('node_modules')));
+			const is_internal = id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
 
 			const normalized = normalize_id(id, kit.files.lib, cwd);
 
