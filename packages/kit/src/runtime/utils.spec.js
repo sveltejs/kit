@@ -1,14 +1,20 @@
 import { assert, describe, expect, test } from 'vitest';
 
-// Hack to pretend Buffer isn't available, to test the fallback implementation
+/** @type {typeof import('./utils.js')} */
+let module;
 
-// @ts-expect-error
-const _buffer = globalThis.Buffer;
-delete globalThis.Buffer;
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { base64_decode, base64_encode } = require('./utils.js');
-// @ts-expect-error
-globalThis.Buffer = _buffer;
+// Hack to pretend Buffer isn't available, to test the fallback implementation
+if ('Buffer' in globalThis) {
+	const _buffer = globalThis.Buffer;
+	// @ts-expect-error
+	delete globalThis.Buffer;
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	module = require('./utils.js');
+	globalThis.Buffer = _buffer;
+} else {
+	module = await import('./utils.js');
+}
+const { base64_decode, base64_encode } = module;
 
 const inputs = [
 	'hello world',
