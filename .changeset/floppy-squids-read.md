@@ -2,4 +2,4 @@
 '@sveltejs/adapter-auto': minor
 ---
 
-Added Deno as one of supported package managers
+feat: add Deno as a supported package manager
