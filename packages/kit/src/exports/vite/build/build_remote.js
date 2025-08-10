@@ -105,6 +105,7 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 	const bundle = await vite.build({
 		configFile: false,
 		build: {
+			write: false,
 			ssr: true,
 			rollupOptions: {
 				external: (id) => {
