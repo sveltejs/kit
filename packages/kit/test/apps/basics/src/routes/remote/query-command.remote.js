@@ -23,7 +23,7 @@ export const resolve_deferreds = command(() => {
 	for (const deferred of deferreds) {
 		deferred.resolve();
 	}
-	deferreds.length = 0; // Clear the array
+	deferreds.length = 0;
 });
 
 export const set_count_server = command('unchecked', async (c) => {

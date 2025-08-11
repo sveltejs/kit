@@ -12,7 +12,7 @@ export const resolve_deferreds = form(async () => {
 	for (const deferred of deferreds) {
 		deferred.resolve();
 	}
-	deferreds.length = 0; // Clear the array
+	deferreds.length = 0;
 	return 'resolved';
 });
 
