@@ -8,6 +8,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
+import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
 
@@ -142,7 +143,7 @@ export function json(data, init) {
 	// means less duplicated work
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		headers.set('content-length', text_encoder.encode(body).byteLength.toString());
 	}
 
 	if (!headers.has('content-type')) {
@@ -155,8 +156,6 @@ export function json(data, init) {
 	});
 }
 
-const encoder = new TextEncoder();
-
 /**
  * Create a `Response` object from the supplied body.
  * @param {string} body The value that will be used as-is.
@@ -165,7 +164,7 @@ const encoder = new TextEncoder();
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		const encoded = encoder.encode(body);
+		const encoded = text_encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
 		return new Response(encoded, {
 			...init,
