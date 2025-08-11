@@ -1,8 +1,7 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
-import { getRequestEvent } from '@sveltejs/kit/internal';
+import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
 import { check_experimental, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.

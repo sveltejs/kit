@@ -1,8 +1,8 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
-import { b64_encode, merge_tracing } from '../../utils.js';
-import { with_event } from '@sveltejs/kit/internal';
+import { b64_encode } from '../../utils.js';
+import { with_event, merge_tracing } from '@sveltejs/kit/internal';
 import { record_span } from '../../telemetry/record_span.js';
 import { get_node_type } from '../utils.js';
 

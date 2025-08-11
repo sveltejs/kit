@@ -3,7 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
-import { getRequestEvent } from '@sveltejs/kit/internal';
+import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '__sveltekit/paths';
 import {
@@ -13,7 +13,6 @@ import {
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.

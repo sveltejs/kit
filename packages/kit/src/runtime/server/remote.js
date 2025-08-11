@@ -2,7 +2,14 @@
 /** @import { RemoteFunctionResponse, RemoteInfo, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import { HttpError, Redirect, SvelteKitError, with_event } from '@sveltejs/kit/internal';
+import {
+	HttpError,
+	Redirect,
+	SvelteKitError,
+	with_event,
+	get_event_state,
+	merge_tracing
+} from '@sveltejs/kit/internal';
 import { app_dir, base } from '__sveltekit/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { parse_remote_arg, stringify } from '../shared.js';
@@ -10,9 +17,7 @@ import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { get_event_state } from './event-state.js';
 import { record_span } from '../telemetry/record_span.js';
-import { merge_tracing } from '../utils.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, options, manifest, id) {

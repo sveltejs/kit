@@ -1,9 +1,8 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent } from '@sveltejs/kit/internal';
+import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
 import { check_experimental, create_validator, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.

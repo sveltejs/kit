@@ -2,9 +2,8 @@
 /** @import { ServerHooks, MaybePromise } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { getRequestEvent, with_event } from '@sveltejs/kit/internal';
+import { getRequestEvent, with_event, EVENT_STATE, get_event_state } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
-import { EVENT_STATE, get_event_state } from '../../../server/event-state.js';
 
 /**
  * @param {any} validate_or_fn

@@ -8,13 +8,13 @@ import {
 	Redirect,
 	ActionFailure,
 	SvelteKitError,
-	with_event
+	with_event,
+	merge_tracing
 } from '@sveltejs/kit/internal';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { record_span } from '../../telemetry/record_span.js';
-import { merge_tracing } from '../../utils.js';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {

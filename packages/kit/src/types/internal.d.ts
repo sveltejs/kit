@@ -30,6 +30,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { Span } from '@opentelemetry/api';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -565,6 +566,12 @@ export type RemoteInfo =
 			dynamic?: boolean;
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
+
+export type RecordSpan = <T>(options: {
+	name: string;
+	attributes: Record<string, any>;
+	fn: (current: Span) => Promise<T>;
+}) => Promise<T>;
 
 export * from '../exports/index.js';
 export * from './private.js';

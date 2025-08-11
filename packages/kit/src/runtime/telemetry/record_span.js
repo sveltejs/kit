@@ -1,16 +1,9 @@
-/** @import { Attributes, Span } from '@opentelemetry/api' */
+/** @import { RecordSpan } from 'types' */
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop_span } from './noop.js';
 import { otel } from './otel.js';
 
-/**
- * @template T
- * @param {Object} options
- * @param {string} options.name
- * @param {Attributes} options.attributes
- * @param {function(Span): Promise<T>} options.fn
- * @returns {Promise<T>}
- */
+/** @type {RecordSpan} */
 export async function record_span({ name, attributes, fn }) {
 	if (otel === null) {
 		return fn(noop_span);
