@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: don't write temporary remote function bundle to disk
+fix: avoid writing remote function bundle to disk when treeshaking prerendered queries
