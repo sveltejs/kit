@@ -138,7 +138,7 @@ test('fills in defaults', async () => {
 
 test('errors on invalid values', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
 				kit: {
@@ -151,7 +151,7 @@ test('errors on invalid values', () => {
 
 test('errors on invalid nested values', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
 				kit: {
@@ -166,7 +166,7 @@ test('errors on invalid nested values', () => {
 
 test('does not error on invalid top-level values', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				onwarn: () => {}
 			})
@@ -176,7 +176,7 @@ test('does not error on invalid top-level values', () => {
 
 test('errors on extension without leading .', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				extensions: ['blah']
 			})
