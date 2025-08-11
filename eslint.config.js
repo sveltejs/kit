@@ -13,6 +13,7 @@ export default [
 			'**/.svelte-kit',
 			'**/test-results',
 			'**/build',
+			'**/dist',
 			'**/.custom-out-dir',
 			'packages/adapter-*/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
