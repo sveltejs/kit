@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, invalidateAll, query_map } from '../client.js';
+import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { tick } from 'svelte';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
