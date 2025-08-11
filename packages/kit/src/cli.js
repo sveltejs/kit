@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
@@ -27,15 +27,18 @@ prog
 	.describe('Synchronise generated type definitions')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
-		if (!fs.existsSync('svelte.config.js')) {
-			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
+		const config_files = ['js', 'ts']
+			.map((ext) => `svelte.config.${ext}`)
+			.filter((f) => fs.existsSync(f));
+		if (config_files.length === 0) {
+			console.warn(`Missing Svelte config file in ${process.cwd()} — skipping`);
 			return;
 		}
 
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			await sync.all_types(config, mode);
+			sync.all_types(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

@@ -12,7 +12,8 @@
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		"skipLibCheck": true
 	},
-	"include": ["**/*.js", "index.d.ts", "internal.d.ts"]
+	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }

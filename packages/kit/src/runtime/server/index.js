@@ -5,6 +5,7 @@ import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_app } from './app.js';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -14,6 +15,9 @@ const prerender_env_handler = {
 		);
 	}
 };
+
+/** @type {Promise<any>} */
+let init_promise;
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -32,10 +36,7 @@ export class Server {
 	}
 
 	/**
-	 * @param {{
-	 *   env: Record<string, string>;
-	 *   read?: (file: string) => ReadableStream;
-	 * }} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
 	 */
 	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
@@ -60,34 +61,98 @@ export class Server {
 		set_safe_public_env(public_env);
 
 		if (read) {
-			set_read_implementation(read);
+			// Wrap the read function to handle MaybePromise<ReadableStream>
+			// and ensure the public API stays synchronous
+			/** @param {string} file */
+			const wrapped_read = (file) => {
+				const result = read(file);
+				if (result instanceof ReadableStream) {
+					return result;
+				} else {
+					return new ReadableStream({
+						async start(controller) {
+							try {
+								const stream = await Promise.resolve(result);
+								if (!stream) {
+									controller.close();
+									return;
+								}
+
+								const reader = stream.getReader();
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									controller.enqueue(value);
+								}
+
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						}
+					});
+				}
+			};
+
+			set_read_implementation(wrapped_read);
 		}
 
-		if (!this.#options.hooks) {
+		// During DEV and for some adapters this function might be called in quick succession,
+		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
+		await (init_promise ??= (async () => {
 			try {
 				const module = await get_hooks();
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError: module.handleError || (({ error }) => console.error(error)),
+					handleError:
+						module.handleError ||
+						(({ status, error }) =>
+							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					reroute: module.reroute || (() => {})
+					handleValidationError:
+						module.handleValidationError ||
+						(({ issues }) => {
+							console.error('Remote function schema validation failed:', issues);
+							return { message: 'Bad Request' };
+						}),
+					reroute: module.reroute || (() => {}),
+					transport: module.transport || {}
 				};
-			} catch (error) {
+
+				set_app({
+					decoders: module.transport
+						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
+						: {}
+				});
+
+				if (module.init) {
+					await module.init();
+				}
+			} catch (e) {
 				if (DEV) {
 					this.#options.hooks = {
 						handle: () => {
-							throw error;
+							throw e;
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						reroute: () => {}
+						handleValidationError: () => {
+							return { message: 'Bad Request' };
+						},
+						reroute: () => {},
+						transport: {}
 					};
+
+					set_app({
+						decoders: {}
+					});
 				} else {
-					throw error;
+					throw e;
 				}
 			}
-		}
+		})());
 	}
 
 	/**

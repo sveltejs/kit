@@ -34,7 +34,7 @@ async function do_build(options, analyse_code) {
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, temp, options.cwd, alias, files);
+		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
 	}
 
 	for (const file of files) {
@@ -78,9 +78,10 @@ export async function watch(options) {
 	let timeout;
 
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
+	/** @type {Promise<void>} */
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
-	watcher.on('all', async (type, filepath) => {
+	watcher.on('all', (type, filepath) => {
 		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });
@@ -137,7 +138,7 @@ export async function watch(options) {
 
 			if (!errored && options.types) {
 				try {
-					await emit_dts(input, output, options.cwd, alias, files);
+					await emit_dts(input, output, output, options.cwd, alias, files, tsconfig);
 					console.log('Updated .d.ts files');
 				} catch (e) {
 					errored = true;

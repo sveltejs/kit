@@ -1,7 +1,7 @@
 import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
-import { b64_decode } from '../../utils.js';
+import { base64_decode } from '../../utils.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -27,13 +27,15 @@ export function read(asset) {
 	}
 
 	// handle inline assets internally
-	if (asset.startsWith('data:')) {
-		const [prelude, data] = asset.split(';');
-		const type = prelude.slice(5) || 'application/octet-stream';
+	const match = /^data:([^;,]+)?(;base64)?,/.exec(asset);
+	if (match) {
+		const type = match[1] ?? 'application/octet-stream';
+		const data = asset.slice(match[0].length);
 
-		if (data.startsWith('base64,')) {
-			const decoded = b64_decode(data.slice(7));
+		if (match[2] !== undefined) {
+			const decoded = base64_decode(data);
 
+			// @ts-ignore passing a Uint8Array to `new Response(...)` is fine
 			return new Response(decoded, {
 				headers: {
 					'Content-Length': decoded.byteLength.toString(),
@@ -52,7 +54,9 @@ export function read(asset) {
 		});
 	}
 
-	const file = DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1);
+	const file = decodeURIComponent(
+		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
+	);
 
 	if (file in manifest._.server_assets) {
 		const length = manifest._.server_assets[file];
@@ -68,3 +72,7 @@ export function read(asset) {
 
 	throw new Error(`Asset does not exist: ${file}`);
 }
+
+export { getRequestEvent } from './event.js';
+
+export { query, prerender, command, form } from './remote/index.js';

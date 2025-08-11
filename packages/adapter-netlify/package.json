@@ -1,14 +1,22 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "4.2.0",
+	"version": "5.1.1",
 	"description": "A SvelteKit adapter that creates a Netlify app",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"netlify",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://svelte.dev",
 	"type": "module",
 	"exports": {
 		".": {
@@ -24,31 +32,34 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && cp src/edge.js files/edge.js",
-		"test": "vitest run",
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.20.2",
+		"esbuild": "^0.25.4",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
-		"@netlify/functions": "^2.4.1",
-		"@rollup/plugin-commonjs": "^25.0.7",
+		"@netlify/edge-functions": "^2.15.1",
+		"@netlify/functions": "^4.0.0",
+		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^15.2.3",
+		"@rollup/plugin-node-resolve": "^16.0.0",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@types/node": "^18.19.119",
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^1.5.0"
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

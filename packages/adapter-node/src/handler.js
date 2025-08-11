@@ -1,6 +1,7 @@
 import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
@@ -8,6 +9,7 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
+import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
 
@@ -19,7 +21,8 @@ const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
-const body_size_limit = Number(env('BODY_SIZE_LIMIT', '524288'));
+
+const body_size_limit = parse_as_bytes(env('BODY_SIZE_LIMIT', '512K'));
 
 if (isNaN(body_size_limit)) {
 	throw new Error(
@@ -83,7 +86,7 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
@@ -105,7 +108,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(
+	await setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
@@ -190,10 +193,5 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
-		serve_prerendered(),
-		ssr
-	].filter(Boolean)
+	[serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean)
 );

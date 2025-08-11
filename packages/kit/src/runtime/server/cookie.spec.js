@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
+import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 
 installPolyfills();
 
@@ -53,7 +53,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 			...headers
 		})
 	});
-	return get_cookies(request, url, 'ignore');
+	const result = get_cookies(request, url);
+	result.set_trailing_slash('ignore');
+	return result;
 };
 
 test('a cookie should not be present after it is deleted', () => {

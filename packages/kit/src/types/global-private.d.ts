@@ -4,6 +4,25 @@ declare global {
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
 	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
+	/** true if corresponding config option is set to true */
+	const __SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: boolean;
+	/** True if `config.kit.router.resolution === 'client'` */
+	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
+	/** The `__sveltekit_abc123` object in the init `<script>` */
+	const __SVELTEKIT_PAYLOAD__: {
+		/** The basepath, usually relative to the current page */
+		base: string;
+		/** Path to externally-hosted assets */
+		assets?: string;
+		/** Public environment variables */
+		env?: Record<string, string>;
+		/** Serialized data from remote functions */
+		data?: Record<string, any>;
+		/** Create a placeholder promise */
+		defer?: (id: number) => Promise<any>;
+		/** Resolve a placeholder promise */
+		resolve?: (data: { id: number; data: any; error: any }) => void;
+	};
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

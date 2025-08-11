@@ -1,7 +1,20 @@
-import fs from 'node:fs';
-import { sequence } from '@sveltejs/kit/hooks';
+import { building, dev } from '$app/environment';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
+import { _set_from_init } from './routes/init-hooks/+page.server';
+import { getRequestEvent } from '$app/server';
+
+// @ts-ignore this doesn't exist in old Node
+Promise.withResolvers ??= () => {
+	const d = {};
+	d.promise = new Promise((resolve, reject) => {
+		d.resolve = resolve;
+		d.reject = reject;
+	});
+	return d;
+};
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -35,9 +48,19 @@ export const handleError = ({ event, error: e, status, message }) => {
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
 
+	if (event.url.pathname.startsWith('/get-request-event/')) {
+		const ev = getRequestEvent();
+		message = ev.locals.message;
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };
+};
+
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export const handleValidationError = ({ issues }) => {
+	return { message: issues[0].message };
 };
 
 export const handle = sequence(
@@ -136,9 +159,31 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
+		if (!dev && !building && event.url.pathname === '/prerendering/prerendered-endpoint/api') {
+			error(
+				500,
+				`Server hooks should not be called for prerendered endpoints: isSubRequest=${event.isSubRequest}`
+			);
+		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
 		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
 			event.locals.url = new URL(event.request.url);
 		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname.startsWith('/get-request-event/')) {
+			const e = getRequestEvent();
+
+			if (event !== e) {
+				throw new Error('event !== e');
+			}
+
+			e.locals.message = 'hello from hooks.server.js';
+		}
+
 		return resolve(event);
 	}
 );
@@ -153,4 +198,8 @@ export async function handleFetch({ request, fetch }) {
 	}
 
 	return fetch(request);
+}
+
+export function init() {
+	_set_from_init();
 }

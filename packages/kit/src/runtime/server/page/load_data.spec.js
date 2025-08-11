@@ -5,6 +5,7 @@ import { create_universal_fetch } from './load_data.js';
  * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
  */
 function create_fetch(event) {
+	// eslint-disable-next-line @typescript-eslint/require-await
 	event.fetch = event.fetch || (async () => new Response('foo'));
 	event.request = event.request || new Request('doesnt:matter');
 	event.route = event.route || { id: 'foo' };
@@ -38,6 +39,7 @@ test('keeps body when mode isnt no-cors on same domain', async () => {
 
 test('succeeds when acao header present on cors', async () => {
 	const fetch = create_fetch({
+		// eslint-disable-next-line @typescript-eslint/require-await
 		fetch: async () => new Response('foo', { headers: { 'access-control-allow-origin': '*' } })
 	});
 	const response = await fetch('https://domain-a.com');
@@ -48,12 +50,19 @@ test('succeeds when acao header present on cors', async () => {
 test('errors when no acao header present on cors', async () => {
 	const fetch = create_fetch({});
 
-	expect(async () => {
+	await expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
 	}).rejects.toThrowError(
 		"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
 	);
+});
+
+test('succeeds when fetching from local scheme', async () => {
+	const fetch = create_fetch({});
+	const response = await fetch('data:text/plain;foo');
+	const text = await response.text();
+	assert.equal(text, 'foo');
 });
 
 test('errors when trying to access non-serialized request headers on the server', async () => {
