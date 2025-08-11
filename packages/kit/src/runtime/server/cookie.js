@@ -41,7 +41,7 @@ export function get_cookies(request, url) {
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
-	/** @type {import('cookie').CookieSerializeOptions}*/
+	/** @type {import('cookie').CookieSerializeOptions} */
 	const defaults = {
 		httpOnly: true,
 		sameSite: 'lax',
