@@ -4,8 +4,8 @@ import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import { get_config_aliases } from './utils.js';
 
-test('transform kit.alias to resolve.alias', () => {
-	const config = validate_config({
+test('transform kit.alias to resolve.alias', async () => {
+	const config = await validate_config(async () => ({
 		kit: {
 			alias: {
 				simpleKey: 'simple/value',
@@ -15,7 +15,7 @@ test('transform kit.alias to resolve.alias', () => {
 				'$regexChar/*': 'windows\\path\\*'
 			}
 		}
-	});
+	}));
 
 	const aliases = get_config_aliases(config.kit);
 

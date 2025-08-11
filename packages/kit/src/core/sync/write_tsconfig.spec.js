@@ -2,8 +2,8 @@ import { assert, expect, test } from 'vitest';
 import { validate_config } from '../config/index.js';
 import { get_tsconfig } from './write_tsconfig.js';
 
-test('Creates tsconfig path aliases from kit.alias', () => {
-	const { kit } = validate_config({
+test('Creates tsconfig path aliases from kit.alias', async () => {
+	const { kit } = await validate_config(async () => ({
 		kit: {
 			alias: {
 				simpleKey: 'simple/value',
@@ -13,7 +13,7 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 				$routes: '.svelte-kit/types/src/routes'
 			}
 		}
-	});
+	}));
 
 	const { compilerOptions } = get_tsconfig(kit);
 
@@ -31,8 +31,8 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 	});
 });
 
-test('Allows generated tsconfig to be mutated', () => {
-	const { kit } = validate_config({
+test('Allows generated tsconfig to be mutated', async () => {
+	const { kit } = await validate_config(async () => ({
 		kit: {
 			typescript: {
 				config: (config) => {
@@ -40,7 +40,7 @@ test('Allows generated tsconfig to be mutated', () => {
 				}
 			}
 		}
-	});
+	}));
 
 	const config = get_tsconfig(kit);
 
@@ -48,8 +48,8 @@ test('Allows generated tsconfig to be mutated', () => {
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
-test('Allows generated tsconfig to be replaced', () => {
-	const { kit } = validate_config({
+test('Allows generated tsconfig to be replaced', async () => {
+	const { kit } = await validate_config(async () => ({
 		kit: {
 			typescript: {
 				config: (config) => ({
@@ -58,7 +58,7 @@ test('Allows generated tsconfig to be replaced', () => {
 				})
 			}
 		}
-	});
+	}));
 
 	const config = get_tsconfig(kit);
 
@@ -66,14 +66,14 @@ test('Allows generated tsconfig to be replaced', () => {
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
-test('Creates tsconfig include from kit.files', () => {
-	const { kit } = validate_config({
+test('Creates tsconfig include from kit.files', async () => {
+	const { kit } = await validate_config(async () => ({
 		kit: {
 			files: {
 				lib: 'app'
 			}
 		}
-	});
+	}));
 
 	const { include } = get_tsconfig(kit);
 

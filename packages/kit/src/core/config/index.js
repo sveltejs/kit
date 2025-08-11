@@ -70,7 +70,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		console.log(
 			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
 		);
-		return process_config({}, { cwd });
+		return await process_config(async () => ({}), { cwd });
 	}
 	const config_file = config_files[0];
 	if (config_files.length > 1) {
@@ -78,10 +78,15 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
 		);
 	}
-	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+
+	const get_config = async () => {
+		/** @type {{ default: import('@sveltejs/kit').Config }} */
+		const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+		return config.default;
+	};
 
 	try {
-		return process_config(config.default, { cwd });
+		return await process_config(get_config, { cwd });
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
@@ -92,11 +97,11 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Config} config
- * @returns {import('types').ValidatedConfig}
+ * @param {() => Promise<import('@sveltejs/kit').Config>} get_config
+ * @returns {Promise<import('types').ValidatedConfig>}
  */
-function process_config(config, { cwd = process.cwd() } = {}) {
-	const validated = validate_config(config);
+async function process_config(get_config, { cwd = process.cwd() } = {}) {
+	const validated = await validate_config(get_config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
@@ -115,14 +120,25 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Config} config
- * @returns {import('types').ValidatedConfig}
+ * @param {() => Promise<import('@sveltejs/kit').Config>} get_config
+ * @returns {Promise<import('types').ValidatedConfig>}
  */
-export function validate_config(config) {
+export async function validate_config(get_config) {
+	const config = await get_config();
+
 	if (typeof config !== 'object') {
 		throw new Error(
 			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 		);
+	}
+
+	if (config.kit?.version?.name) {
+		const same_config = await get_config();
+		if (config.kit.version.name !== same_config.kit?.version?.name) {
+			throw new Error(
+				'The `version.name` option must be deterministic (e.g. a commit ref rather than` Math.random()` or `Date.now().toString()`). See https://svelte.dev/docs/kit/configuration#version'
+			);
+		}
 	}
 
 	const validated = options(config, 'config');
