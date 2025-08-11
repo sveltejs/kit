@@ -61,8 +61,6 @@ export function command(id) {
 					release_overrides(updates);
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
-					console.log('refreshes', result.refreshes);
-
 					if (result.refreshes) {
 						refresh_queries(result.refreshes, updates);
 					}
