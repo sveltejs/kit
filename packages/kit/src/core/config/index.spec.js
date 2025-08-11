@@ -211,7 +211,7 @@ test('fills in partial blanks', async () => {
 
 test('fails if kit.appDir is blank', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					appDir: ''
@@ -223,7 +223,7 @@ test('fails if kit.appDir is blank', () => {
 
 test('fails if kit.appDir is only slash', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					appDir: '/'
@@ -237,7 +237,7 @@ test('fails if kit.appDir is only slash', () => {
 
 test('fails if kit.appDir starts with slash', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					appDir: '/_app'
@@ -251,7 +251,7 @@ test('fails if kit.appDir starts with slash', () => {
 
 test('fails if kit.appDir ends with slash', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					appDir: '_app/'
@@ -265,7 +265,7 @@ test('fails if kit.appDir ends with slash', () => {
 
 test('fails if paths.base is not root-relative', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			// @ts-expect-error
 			Promise.resolve({
 				kit: {
@@ -282,7 +282,7 @@ test('fails if paths.base is not root-relative', () => {
 
 test("fails if paths.base ends with '/'", () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					paths: {
@@ -298,7 +298,7 @@ test("fails if paths.base ends with '/'", () => {
 
 test('fails if paths.assets is relative', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			// @ts-expect-error
 			Promise.resolve({
 				kit: {
@@ -315,7 +315,7 @@ test('fails if paths.assets is relative', () => {
 
 test('fails if paths.assets has trailing slash', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			Promise.resolve({
 				kit: {
 					paths: {
@@ -331,7 +331,7 @@ test('fails if paths.assets has trailing slash', () => {
 
 test('fails if prerender.entries are invalid', () => {
 	expect(
-		validate_config(() =>
+		void validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
 				kit: {

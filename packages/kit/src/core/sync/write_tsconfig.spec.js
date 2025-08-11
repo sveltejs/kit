@@ -3,17 +3,19 @@ import { validate_config } from '../config/index.js';
 import { get_tsconfig } from './write_tsconfig.js';
 
 test('Creates tsconfig path aliases from kit.alias', async () => {
-	const { kit } = await validate_config(async () => ({
-		kit: {
-			alias: {
-				simpleKey: 'simple/value',
-				key: 'value',
-				'key/*': 'some/other/value/*',
-				keyToFile: 'path/to/file.ts',
-				$routes: '.svelte-kit/types/src/routes'
+	const { kit } = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				alias: {
+					simpleKey: 'simple/value',
+					key: 'value',
+					'key/*': 'some/other/value/*',
+					keyToFile: 'path/to/file.ts',
+					$routes: '.svelte-kit/types/src/routes'
+				}
 			}
-		}
-	}));
+		})
+	);
 
 	const { compilerOptions } = get_tsconfig(kit);
 
@@ -32,15 +34,17 @@ test('Creates tsconfig path aliases from kit.alias', async () => {
 });
 
 test('Allows generated tsconfig to be mutated', async () => {
-	const { kit } = await validate_config(async () => ({
-		kit: {
-			typescript: {
-				config: (config) => {
-					config.extends = 'some/other/tsconfig.json';
+	const { kit } = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				typescript: {
+					config: (config) => {
+						config.extends = 'some/other/tsconfig.json';
+					}
 				}
 			}
-		}
-	}));
+		})
+	);
 
 	const config = get_tsconfig(kit);
 
@@ -49,16 +53,18 @@ test('Allows generated tsconfig to be mutated', async () => {
 });
 
 test('Allows generated tsconfig to be replaced', async () => {
-	const { kit } = await validate_config(async () => ({
-		kit: {
-			typescript: {
-				config: (config) => ({
-					...config,
-					extends: 'some/other/tsconfig.json'
-				})
+	const { kit } = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				typescript: {
+					config: (config) => ({
+						...config,
+						extends: 'some/other/tsconfig.json'
+					})
+				}
 			}
-		}
-	}));
+		})
+	);
 
 	const config = get_tsconfig(kit);
 
@@ -67,13 +73,15 @@ test('Allows generated tsconfig to be replaced', async () => {
 });
 
 test('Creates tsconfig include from kit.files', async () => {
-	const { kit } = await validate_config(async () => ({
-		kit: {
-			files: {
-				lib: 'app'
+	const { kit } = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				files: {
+					lib: 'app'
+				}
 			}
-		}
-	}));
+		})
+	);
 
 	const { include } = get_tsconfig(kit);
 
