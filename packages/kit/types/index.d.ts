@@ -993,7 +993,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
-		 * @since 2.26.0 // TODO: update this before publishing
+		 * @since 2.28.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */
