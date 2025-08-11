@@ -1020,12 +1020,15 @@ export interface NavigationEvent<
 /**
  * Information about the target of a specific navigation.
  */
-export interface NavigationTarget {
+export interface NavigationTarget<
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
+> {
 	/**
 	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 	 */
-	params: Record<string, string> | null;
+	params: Params | null;
 	/**
 	 * Info about the target route
 	 */
@@ -1033,7 +1036,7 @@ export interface NavigationTarget {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
-		id: string | null;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL that is navigated to
