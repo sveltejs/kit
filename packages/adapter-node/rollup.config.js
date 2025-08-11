@@ -44,12 +44,12 @@ export default [
 		},
 		plugins: [
 			clearOutput('files/index.js'),
-			nodeResolve(),
+			nodeResolve({ preferBuiltins: true }),
 			commonjs(),
 			json(),
 			prefixBuiltinModules()
 		],
-		external: ['./start.js']
+		external: ['ENV', 'HANDLER']
 	},
 	{
 		input: 'src/env.js',
