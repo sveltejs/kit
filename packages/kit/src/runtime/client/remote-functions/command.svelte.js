@@ -61,7 +61,11 @@ export function command(id) {
 					release_overrides(updates);
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
-					refresh_queries(result.refreshes, updates);
+					console.log('refreshes', result.refreshes);
+
+					if (result.refreshes) {
+						refresh_queries(result.refreshes, updates);
+					}
 
 					return devalue.parse(result.result, app.decoders);
 				}
