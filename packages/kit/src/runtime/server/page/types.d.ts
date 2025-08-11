@@ -1,4 +1,4 @@
-import { CookieSerializeOptions } from 'cookie';
+import { CookieSerializeOptions } from '@sveltejs/kit';
 import { SSRNode, CspDirectives, ServerDataNode } from 'types';
 
 export interface Fetched {
@@ -29,12 +29,8 @@ export interface CspOpts {
 	prerender: boolean;
 }
 
-export interface CustomCookieSerializeOptions extends CookieSerializeOptions {
-	path: string;
-}
-
 export interface Cookie {
 	name: string;
 	value: string;
-	options: CustomCookieSerializeOptions;
+	options: CookieSerializeOptions;
 }

@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import * as cookie from 'cookie';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -185,6 +186,11 @@ declare module '@sveltejs/kit' {
 		[key: string]: any;
 	}
 
+	/** The same as `CookieSerializeOptions` from the `cookie` package, but with a required `path` property */
+	export interface CookieSerializeOptions extends cookie.CookieSerializeOptions {
+		path: string;
+	}
+
 	export interface Cookies {
 		/**
 		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
@@ -209,11 +215,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => void;
+		set: (name: string, value: string, opts: CookieSerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -222,7 +224,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: CookieSerializeOptions) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -235,11 +237,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		serialize: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => string;
+		serialize: (name: string, value: string, opts: CookieSerializeOptions) => string;
 	}
 
 	/**
@@ -2362,6 +2360,7 @@ declare module '$app/environment' {
 }
 
 declare module '$app/forms' {
+	import * as cookie from 'cookie';
 	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
@@ -2417,6 +2416,7 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
+	import * as cookie from 'cookie';
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
@@ -2620,6 +2620,7 @@ declare module '$app/server' {
 	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
 	import type { RequestEvent, RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import * as cookie from 'cookie';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
