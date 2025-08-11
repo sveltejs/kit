@@ -6,7 +6,7 @@ import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
-import { with_event } from '../app/server/event.js';
+import { with_event } from '../../exports/internal/event.js';
 
 /** @param {any} body */
 export function is_pojo(body) {

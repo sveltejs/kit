@@ -4,7 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
-	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams_1, ResolvedPathname } from '$app/types';
 	import type { Span } from '@opentelemetry/api';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -873,7 +873,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
@@ -885,7 +885,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
@@ -1006,7 +1006,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1146,7 +1146,7 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1194,7 +1194,7 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1305,7 +1305,7 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
@@ -1386,14 +1386,14 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
@@ -1475,7 +1475,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
@@ -1485,7 +1485,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;

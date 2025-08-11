@@ -62,4 +62,6 @@ export class ActionFailure {
 	}
 }
 
+export { with_event, getRequestEvent } from './event.js';
+
 export { validate_remote_functions } from './remote-functions.js';

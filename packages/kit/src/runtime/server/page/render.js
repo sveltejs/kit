@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
-import { with_event } from '../../app/server/event.js';
+import { with_event } from '@sveltejs/kit/internal';
 import { get_event_state } from '../event-state.js';
 
 // TODO rename this function/module

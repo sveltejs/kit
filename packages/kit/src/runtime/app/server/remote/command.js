@@ -1,7 +1,7 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent } from '../event.js';
+import { getRequestEvent } from '@sveltejs/kit/internal';
 import { check_experimental, create_validator, run_remote_function } from './shared.js';
 import { get_event_state } from '../../../server/event-state.js';
 

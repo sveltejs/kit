@@ -2,7 +2,7 @@
 /** @import { ServerHooks, MaybePromise } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { getRequestEvent, with_event } from '../event.js';
+import { getRequestEvent, with_event } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { EVENT_STATE, get_event_state } from '../../../server/event-state.js';
 

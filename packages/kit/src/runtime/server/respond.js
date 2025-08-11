@@ -1,6 +1,6 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { Redirect, SvelteKitError, with_event } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -34,7 +34,6 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
-import { with_event } from '../app/server/event.js';
 import { record_span } from '../telemetry/record_span.js';
 import { merge_tracing } from '../utils.js';
 import { create_event_state, EVENT_STATE } from './event-state.js';

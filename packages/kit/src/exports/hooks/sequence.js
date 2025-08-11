@@ -1,6 +1,6 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
-import { with_event } from '../../runtime/app/server/event.js';
+import { with_event } from '@sveltejs/kit/internal';
 import { get_event_state } from '../../runtime/server/event-state.js';
 import { merge_tracing } from '../../runtime/utils.js';
 
