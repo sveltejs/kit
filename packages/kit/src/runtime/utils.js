@@ -1,3 +1,5 @@
+import { BROWSER } from 'esm-env';
+
 export const text_encoder = new TextEncoder();
 export const text_decoder = new TextDecoder();
 
@@ -27,6 +29,11 @@ export function get_relative_path(from, to) {
  * @returns {string}
  */
 export function base64_encode(bytes) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		return globalThis.Buffer.from(bytes).toString('base64');
+	}
+
 	let binary = '';
 
 	for (let i = 0; i < bytes.length; i++) {
@@ -41,6 +48,12 @@ export function base64_encode(bytes) {
  * @returns {Uint8Array}
  */
 export function base64_decode(encoded) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		const buffer = globalThis.Buffer.from(encoded, 'base64');
+		return new Uint8Array(buffer);
+	}
+
 	const binary = atob(encoded);
 	const bytes = new Uint8Array(binary.length);
 

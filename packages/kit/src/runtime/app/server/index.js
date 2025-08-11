@@ -35,6 +35,7 @@ export function read(asset) {
 		if (match[2] !== undefined) {
 			const decoded = base64_decode(data);
 
+			// @ts-ignore passing a Uint8Array to `new Response(...)` is fine
 			return new Response(decoded, {
 				headers: {
 					'Content-Length': decoded.byteLength.toString(),
