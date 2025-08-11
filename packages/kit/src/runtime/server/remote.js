@@ -58,16 +58,11 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const fn = info.fn;
 			const data = await with_event(event, () => fn(form_data));
 
-			const refreshes = {
-				...get_event_state(event).refreshes,
-				...(await apply_client_refreshes(/** @type {string[]} */ (form_client_refreshes)))
-			};
-
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined
+					refreshes: await serialize_refreshes(/** @type {string[]} */ (form_client_refreshes))
 				})
 			);
 		}
@@ -77,13 +72,12 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const { payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
 			const data = await with_event(event, () => fn(arg));
-			const refreshed = await apply_client_refreshes(refreshes);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: stringify({ ...get_event_state(event).refreshes, ...refreshed }, transport)
+					refreshes: await serialize_refreshes(refreshes)
 				})
 			);
 		}
@@ -106,14 +100,10 @@ export async function handle_remote_call(event, options, manifest, id) {
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const refreshes = {
-				...(get_event_state(event).refreshes ?? {}), // could be set by form actions
-				...(await apply_client_refreshes(form_client_refreshes ?? []))
-			};
 			return json({
 				type: 'redirect',
 				location: error.location,
-				refreshes: Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined
+				refreshes: await serialize_refreshes(form_client_refreshes ?? [])
 			});
 		}
 
@@ -131,26 +121,33 @@ export async function handle_remote_call(event, options, manifest, id) {
 		);
 	}
 
-	/** @param {string[]} refreshes */
-	async function apply_client_refreshes(refreshes) {
-		return Object.fromEntries(
-			await Promise.all(
-				refreshes.map(async (key) => {
-					const [hash, name, payload] = key.split('/');
-					const loader = manifest._.remotes[hash];
+	/**
+	 * @param {string[]} client_refreshes
+	 */
+	async function serialize_refreshes(client_refreshes) {
+		const refreshes = {
+			...get_event_state(event).refreshes,
+			...Object.fromEntries(
+				await Promise.all(
+					client_refreshes.map(async (key) => {
+						const [hash, name, payload] = key.split('/');
+						const loader = manifest._.remotes[hash];
 
-					// TODO what do we do in this case? erroring after the mutation has happened is not great
-					if (!loader) error(400, 'Bad Request');
+						// TODO what do we do in this case? erroring after the mutation has happened is not great
+						if (!loader) error(400, 'Bad Request');
 
-					const module = await loader();
-					const fn = module[name];
+						const module = await loader();
+						const fn = module[name];
 
-					if (!fn) error(400, 'Bad Request');
+						if (!fn) error(400, 'Bad Request');
 
-					return [key, await with_event(event, () => fn(parse_remote_arg(payload, transport)))];
-				})
+						return [key, await with_event(event, () => fn(parse_remote_arg(payload, transport)))];
+					})
+				)
 			)
-		);
+		};
+
+		return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined;
 	}
 }
 
