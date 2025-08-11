@@ -42,7 +42,13 @@ export default [
 			file: 'files/index.js',
 			format: 'esm'
 		},
-		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json(), prefixBuiltinModules()],
+		plugins: [
+			clearOutput('files/index.js'),
+			nodeResolve(),
+			commonjs(),
+			json(),
+			prefixBuiltinModules()
+		],
 		external: ['./start.js']
 	},
 	{
