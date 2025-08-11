@@ -5,17 +5,19 @@ import { posixify } from '../../utils/filesystem.js';
 import { get_config_aliases } from './utils.js';
 
 test('transform kit.alias to resolve.alias', async () => {
-	const config = await validate_config(async () => ({
-		kit: {
-			alias: {
-				simpleKey: 'simple/value',
-				key: 'value',
-				'key/*': 'value/*',
-				$regexChar: 'windows\\path',
-				'$regexChar/*': 'windows\\path\\*'
+	const config = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				alias: {
+					simpleKey: 'simple/value',
+					key: 'value',
+					'key/*': 'value/*',
+					$regexChar: 'windows\\path',
+					'$regexChar/*': 'windows\\path\\*'
+				}
 			}
-		}
-	}));
+		})
+	);
 
 	const aliases = get_config_aliases(config.kit);
 

@@ -124,7 +124,7 @@ const get_defaults = (prefix = '') => ({
 });
 
 test('fills in defaults', async () => {
-	const validated = await validate_config(async () => ({}));
+	const validated = await validate_config(() => Promise.resolve({}));
 
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 
@@ -138,55 +138,65 @@ test('fills in defaults', async () => {
 
 test('errors on invalid values', () => {
 	expect(
-		// @ts-expect-error - given value expected to throw
-		validate_config(async () => ({
-			kit: {
-				appDir: 42
-			}
-		}))
+		validate_config(() =>
+			// @ts-expect-error - given value expected to throw
+			Promise.resolve({
+				kit: {
+					appDir: 42
+				}
+			})
+		)
 	).rejects.toThrow(/^config\.kit\.appDir should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {
 	expect(
-		// @ts-expect-error - given value expected to throw
-		validate_config(async () => ({
-			kit: {
-				files: {
-					potato: 42
+		validate_config(() =>
+			// @ts-expect-error - given value expected to throw
+			Promise.resolve({
+				kit: {
+					files: {
+						potato: 42
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(/^Unexpected option config\.kit\.files\.potato$/);
 });
 
-test('does not error on invalid top-level values', async () => {
+test('does not error on invalid top-level values', () => {
 	expect(
-		validate_config(async () => ({
-			onwarn: () => {}
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				onwarn: () => {}
+			})
+		)
 	).resolves.not.toThrow();
 });
 
 test('errors on extension without leading .', () => {
 	expect(
-		validate_config(async () => ({
-			extensions: ['blah']
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				extensions: ['blah']
+			})
+		)
 	).rejects.toThrow(/Each member of config\.extensions must start with '\.' — saw 'blah'/);
 });
 
 test('fills in partial blanks', async () => {
-	const validated = await validate_config(async () => ({
-		kit: {
-			files: {
-				assets: 'public'
-			},
-			version: {
-				name: '0'
+	const validated = await validate_config(() =>
+		Promise.resolve({
+			kit: {
+				files: {
+					assets: 'public'
+				},
+				version: {
+					name: '0'
+				}
 			}
-		}
-	}));
+		})
+	);
 
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 
@@ -201,21 +211,25 @@ test('fills in partial blanks', async () => {
 
 test('fails if kit.appDir is blank', () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				appDir: ''
-			}
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					appDir: ''
+				}
+			})
+		)
 	).rejects.toThrow(/^config\.kit\.appDir cannot be empty$/);
 });
 
 test('fails if kit.appDir is only slash', () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				appDir: '/'
-			}
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					appDir: '/'
+				}
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/
 	);
@@ -223,11 +237,13 @@ test('fails if kit.appDir is only slash', () => {
 
 test('fails if kit.appDir starts with slash', () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				appDir: '/_app'
-			}
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					appDir: '/_app'
+				}
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/
 	);
@@ -235,11 +251,13 @@ test('fails if kit.appDir starts with slash', () => {
 
 test('fails if kit.appDir ends with slash', () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				appDir: '_app/'
-			}
-		}))
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					appDir: '_app/'
+				}
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/
 	);
@@ -247,14 +265,16 @@ test('fails if kit.appDir ends with slash', () => {
 
 test('fails if paths.base is not root-relative', () => {
 	expect(
-		// @ts-expect-error
-		validate_config(async () => ({
-			kit: {
-				paths: {
-					base: 'https://example.com/somewhere/else'
+		validate_config(() =>
+			// @ts-expect-error
+			Promise.resolve({
+				kit: {
+					paths: {
+						base: 'https://example.com/somewhere/else'
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/
 	);
@@ -262,13 +282,15 @@ test('fails if paths.base is not root-relative', () => {
 
 test("fails if paths.base ends with '/'", () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				paths: {
-					base: '/github-pages/'
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					paths: {
+						base: '/github-pages/'
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/
 	);
@@ -276,14 +298,16 @@ test("fails if paths.base ends with '/'", () => {
 
 test('fails if paths.assets is relative', () => {
 	expect(
-		// @ts-expect-error
-		validate_config(async () => ({
-			kit: {
-				paths: {
-					assets: 'foo'
+		validate_config(() =>
+			// @ts-expect-error
+			Promise.resolve({
+				kit: {
+					paths: {
+						assets: 'foo'
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/
 	);
@@ -291,13 +315,15 @@ test('fails if paths.assets is relative', () => {
 
 test('fails if paths.assets has trailing slash', () => {
 	expect(
-		validate_config(async () => ({
-			kit: {
-				paths: {
-					assets: 'https://cdn.example.com/stuff/'
+		validate_config(() =>
+			Promise.resolve({
+				kit: {
+					paths: {
+						assets: 'https://cdn.example.com/stuff/'
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(
 		/^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/
 	);
@@ -305,14 +331,16 @@ test('fails if paths.assets has trailing slash', () => {
 
 test('fails if prerender.entries are invalid', () => {
 	expect(
-		// @ts-expect-error - given value expected to throw
-		validate_config(async () => ({
-			kit: {
-				prerender: {
-					entries: ['foo']
+		validate_config(() =>
+			// @ts-expect-error - given value expected to throw
+			Promise.resolve({
+				kit: {
+					prerender: {
+						entries: ['foo']
+					}
 				}
-			}
-		}))
+			})
+		)
 	).rejects.toThrow(
 		/^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/
 	);
@@ -327,11 +355,13 @@ function validate_paths(name, input, output) {
 	test(name, async () => {
 		expect(
 			(
-				await validate_config(async () => ({
-					kit: {
-						paths: input
-					}
-				}))
+				await validate_config(() =>
+					Promise.resolve({
+						kit: {
+							paths: input
+						}
+					})
+				)
 			).kit.paths
 		).toEqual(output);
 	});

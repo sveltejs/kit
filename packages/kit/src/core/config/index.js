@@ -70,7 +70,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		console.log(
 			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
 		);
-		return await process_config(async () => ({}), { cwd });
+		return await process_config(() => Promise.resolve({}), { cwd });
 	}
 	const config_file = config_files[0];
 	if (config_files.length > 1) {
