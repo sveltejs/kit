@@ -58,17 +58,16 @@ export async function handle_remote_call(event, options, manifest, id) {
 			const fn = info.fn;
 			const data = await with_event(event, () => fn(form_data));
 
+			const refreshes = {
+				...get_event_state(event).refreshes,
+				...(await apply_client_refreshes(/** @type {string[]} */ (form_client_refreshes)))
+			};
+
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: stringify(
-						{
-							...get_event_state(event).refreshes,
-							...(await apply_client_refreshes(/** @type {string[]} */ (form_client_refreshes)))
-						},
-						transport
-					)
+					refreshes: Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined
 				})
 			);
 		}

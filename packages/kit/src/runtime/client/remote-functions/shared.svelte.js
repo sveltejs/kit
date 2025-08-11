@@ -125,19 +125,16 @@ export function release_overrides(updates) {
  */
 export function refresh_queries(stringified_refreshes, updates = []) {
 	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
-	if (refreshes.length > 0) {
-		// `refreshes` is a superset of `updates`
-		for (const [key, value] of refreshes) {
-			// If there was an optimistic update, release it right before we update the query
-			const update = updates.find((u) => u._key === key);
-			if (update && 'release' in update) {
-				update.release();
-			}
-			// Update the query with the new value
-			const entry = query_map.get(key);
-			entry?.resource.set(value);
+
+	// `refreshes` is a superset of `updates`
+	for (const [key, value] of refreshes) {
+		// If there was an optimistic update, release it right before we update the query
+		const update = updates.find((u) => u._key === key);
+		if (update && 'release' in update) {
+			update.release();
 		}
-	} else {
-		void invalidateAll();
+		// Update the query with the new value
+		const entry = query_map.get(key);
+		entry?.resource.set(value);
 	}
 }

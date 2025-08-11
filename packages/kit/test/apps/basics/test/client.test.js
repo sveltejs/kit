@@ -1664,7 +1664,7 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(2);
 	});
 
-	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
+	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
@@ -1673,9 +1673,9 @@ test.describe('remote functions', () => {
 
 		await page.click('#multiply-btn');
 		await expect(page.locator('#command-result')).toHaveText('2');
-		await expect(page.locator('#count-result')).toHaveText('2 / 2 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
+		expect(request_count).toBe(1); // 1 for the command, no refreshes
 	});
 
 	test('command returns correct sum and does client-initiated single flight mutation', async ({

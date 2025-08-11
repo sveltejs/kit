@@ -5,7 +5,14 @@ import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
+import {
+	app,
+	remote_responses,
+	started,
+	goto,
+	set_nearest_error_page,
+	invalidateAll
+} from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -84,7 +91,11 @@ export function form(id) {
 					if (form_result.type === 'result') {
 						result = devalue.parse(form_result.result, app.decoders);
 
-						refresh_queries(form_result.refreshes, updates);
+						if (form_result.refreshes) {
+							refresh_queries(form_result.refreshes, updates);
+						} else {
+							void invalidateAll();
+						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
 						const invalidateAll = !refreshes && updates.length === 0;
