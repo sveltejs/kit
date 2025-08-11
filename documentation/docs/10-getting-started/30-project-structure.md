@@ -19,7 +19,8 @@ my-project/
 │ ├ error.html
 │ ├ hooks.client.js
 │ ├ hooks.server.js
-│ └ service-worker.js
+| ├ service-worker.js
+│ └ tracing.server.js
 ├ static/
 │ └ [your static assets]
 ├ tests/
@@ -54,6 +55,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
+- `tracing.server.js` contains your [tracing](observability) setup and instrumentation code
 
 (Whether the project contains `.js` or `.ts` files depends on whether you opt to use TypeScript when you create your project.)
 

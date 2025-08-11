@@ -1,0 +1,62 @@
+---
+title: Observability
+---
+
+<blockquote class="since note">
+	<p>Available since 2.28</p>
+</blockquote>
+
+> [!NOTE] This feature is experimental. Expect bugs and breaking changes in minor versions (though we'll do our best to keep those to an absolute minimum). Please provide feedback!
+
+Sometimes, you may need to observe how your application is behaving in order to improve performance or find the root cause of a pesky bug. To help with this, SvelteKit can emit serverside [OpenTelemetry](https://opentelemetry.io) spans for the following:
+
+- `handle`
+- `sequence` (`sequence`d `handle` functions will show up as children of each other and the root handle hook)
+- `load` (includes univeral `load`s when they're run on the server)
+- Form actions
+- Remote Functions
+
+To enable these spans, add the following to your `svelte.config.js`'s `kit` configuration:
+
+```ts
+{
+  experimental: {
+    tracing: {
+      server: true
+    }
+  }
+}
+```
+
+Just telling SvelteKit to emit spans won't get you far, though -- you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/tracing.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported.
+
+> [!NOTE] Tracing -- and more significantly, tracing instrumentation -- can have a nontrivial overhead. Before you go all-in on tracing, consider whether or not you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
+
+## Development Quickstart
+
+To view your first trace, you'll need to set up a local collector. We recommend [Jaeger](https://www.jaegertracing.io/docs/2.7/getting-started/), as they provide an easy-to-use quickstart command. Once your collector is running locally:
+
+- Turn on the experemental flag from above in your `svelte.config.js`
+- Use your package manager to install `@opentelemetry/sdk-node`, `opentelemetry/auto-instrumentations-node`, `@opentelemetry/exporter-trace-otlp-proto`, and `import-in-the-middle`
+- Create `src/tracing.server.ts` with the following:
+
+```ts
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { createAddHookMessageChannel } from 'import-in-the-middle';
+import { register } from 'module';
+
+const { registerOptions } = createAddHookMessageChannel();
+register('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);
+
+const sdk = new NodeSDK({
+	serviceName: 'test-sveltekit-tracing',
+	traceExporter: new OTLPTraceExporter(),
+	instrumentations: [getNodeAutoInstrumentations()]
+});
+
+sdk.start();
+```
+
+Any serverside requests will now begin generating traces, which you can view in Jaeger's web console at http://localhost:16686. 
