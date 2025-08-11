@@ -137,8 +137,8 @@ test('fills in defaults', async () => {
 });
 
 test('errors on invalid values', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
@@ -151,8 +151,8 @@ test('errors on invalid values', () => {
 });
 
 test('errors on invalid nested values', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
@@ -167,8 +167,8 @@ test('errors on invalid nested values', () => {
 });
 
 test('does not error on invalid top-level values', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				onwarn: () => {}
@@ -178,8 +178,8 @@ test('does not error on invalid top-level values', () => {
 });
 
 test('errors on extension without leading .', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				extensions: ['blah']
@@ -214,8 +214,8 @@ test('fills in partial blanks', async () => {
 });
 
 test('fails if kit.appDir is blank', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -227,8 +227,8 @@ test('fails if kit.appDir is blank', () => {
 });
 
 test('fails if kit.appDir is only slash', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -242,8 +242,8 @@ test('fails if kit.appDir is only slash', () => {
 });
 
 test('fails if kit.appDir starts with slash', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -257,8 +257,8 @@ test('fails if kit.appDir starts with slash', () => {
 });
 
 test('fails if kit.appDir ends with slash', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -272,8 +272,8 @@ test('fails if kit.appDir ends with slash', () => {
 });
 
 test('fails if paths.base is not root-relative', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			// @ts-expect-error
 			Promise.resolve({
@@ -290,8 +290,8 @@ test('fails if paths.base is not root-relative', () => {
 });
 
 test("fails if paths.base ends with '/'", () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -307,8 +307,8 @@ test("fails if paths.base ends with '/'", () => {
 });
 
 test('fails if paths.assets is relative', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			// @ts-expect-error
 			Promise.resolve({
@@ -325,8 +325,8 @@ test('fails if paths.assets is relative', () => {
 });
 
 test('fails if paths.assets has trailing slash', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			Promise.resolve({
 				kit: {
@@ -342,8 +342,8 @@ test('fails if paths.assets has trailing slash', () => {
 });
 
 test('fails if prerender.entries are invalid', () => {
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
 	expect(
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		validate_config(() =>
 			// @ts-expect-error - given value expected to throw
 			Promise.resolve({
