@@ -397,7 +397,7 @@ declare module '@sveltejs/kit' {
 			/**
 			 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
 			 * @default { server: false }
-			 * @since 2.26.0 // TODO: update this before publishing
+			 * @since 2.28.0
 			 */
 			tracing?: {
 				server?: boolean;
@@ -1281,7 +1281,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-		 * @since 2.26.0 // TODO: update this before publishing
+		 * @since 2.28.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */
@@ -1458,7 +1458,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-		 * @since 2.26.0 // TODO: update this before publishing
+		 * @since 2.28.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */
