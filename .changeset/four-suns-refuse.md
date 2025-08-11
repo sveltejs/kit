@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+"@sveltejs/kit": feat
 ---
 
-add `RouteId` and `RouteParams` to NavigationTarget interface
+feat: add `RouteId` and `RouteParams` to NavigationTarget interface
