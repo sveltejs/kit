@@ -133,10 +133,10 @@ SvelteKit is a web application framework for building modern web applications wi
 | Command | Expected Time | Recommended Timeout |
 |---------|---------------|-------------------|
 | `pnpm install --frozen-lockfile` | 3-4 minutes | 10+ minutes |
-| `pnpm run lint` | 2-3 minutes | 5+ minutes |
+| `pnpm run lint` | 1-2 minutes | 5+ minutes |
 | `pnpm run check` | 3-4 minutes | 8+ minutes |
-| `pnpm test:kit` | 10-30 minutes | 60+ minutes |
-| `pnpm test:others` | 5-15 minutes | 30+ minutes |
+| `pnpm test:kit` | 10-15 minutes | 30+ minutes |
+| `pnpm test:others` | 2-3 minutes | 10+ minutes |
 | `pnpm run format` | ~15 seconds | 2+ minutes |
 | `pnpm build` | 1-2 seconds | 2+ minutes |
 | Dev server startup | 1-2 seconds | 1+ minute |
