@@ -1,4 +1,4 @@
-import fs, { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
@@ -502,7 +502,10 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				await load_module_if_exists(vite, tracing.server);
+				const resolved_tracing = resolve_entry(tracing.server);
+				if (resolved_tracing) {
+					await vite.ssrLoadModule(resolved_tracing);
+				}
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
@@ -662,20 +665,4 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
-}
-
-/**
- * @param {import('vite').ViteDevServer} vite
- * @param {string} path
- * @returns {Promise<void>}
- */
-async function load_module_if_exists(vite, path) {
-	let extless_path = path;
-	if (extless_path.endsWith('.js') || extless_path.endsWith('.ts')) {
-		extless_path = extless_path.slice(-3);
-	}
-
-	if (existsSync(`${extless_path}.js`) || existsSync(`${extless_path}.ts`)) {
-		await vite.ssrLoadModule(extless_path);
-	}
 }
