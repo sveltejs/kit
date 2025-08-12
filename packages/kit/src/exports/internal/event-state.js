@@ -35,7 +35,8 @@ export function add_event_state({ event, state, options, record_span }) {
 			tracing: {
 				record_span
 			}
-		}
+		},
+		enumerable: false
 	});
 	return event;
 }
