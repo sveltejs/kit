@@ -177,7 +177,7 @@ Type information for `page.data` is provided by `App.PageData`.
 
 ## Universal vs server
 
-As we've seen, there are two types of `load` function:
+As we've seen, there are two types of `load` functions:
 
 * `+page.js` and `+layout.js` files export _universal_ `load` functions that run both on the server and in the browser
 * `+page.server.js` and `+layout.server.js` files export _server_ `load` functions that only run server-side
