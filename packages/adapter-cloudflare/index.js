@@ -34,23 +34,6 @@ export default function (options = {}) {
 
 			const wrangler_config = validate_wrangler_config(options.config);
 
-			if (
-				!wrangler_config?.compatibility_flags.includes('nodejs_compat') &&
-				!wrangler_config?.compatibility_flags.includes('nodejs_als')
-			) {
-				const file = wrangler_config.configPath
-					? path.relative(process.cwd(), wrangler_config.configPath)
-					: 'your wrangler configuration';
-
-				throw new Error(
-					`\u001B\u001B[31m` +
-						`\nPlease add the "nodejs_als" compatibility flag to ${file}, as SvelteKit uses the AsyncLocalStorage API and your app may break in production without it.\n\n` +
-						`Alternatively, if you are using Node APIs in your app, you should add the "nodejs_compat" flag.\n\n` +
-						`For more information on compatibility flags see https://svelte.dev/docs/kit/adapter-cloudflare#Node-compatibility.\n` +
-						`\u001B[39m\u001B`
-				);
-			}
-
 			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -316,6 +299,23 @@ function validate_wrangler_config(config_file = undefined) {
 	if (!is_building_for_cloudflare_pages(wrangler_config)) {
 		// probably deploying to Cloudflare Workers
 		validate_worker_settings(wrangler_config);
+	}
+
+	if (
+		!wrangler_config?.compatibility_flags.includes('nodejs_compat') &&
+		!wrangler_config?.compatibility_flags.includes('nodejs_als')
+	) {
+		const file = config_file
+			? path.relative(process.cwd(), config_file)
+			: 'your wrangler configuration';
+
+		throw new Error(
+			`\u001B\u001B[31m` +
+				`\nPlease add the "nodejs_als" compatibility flag to ${file}, as SvelteKit uses the AsyncLocalStorage API and your app may break in production without it.\n\n` +
+				`Alternatively, if you are using Node APIs in your app, you should add the "nodejs_compat" flag.\n\n` +
+				`For more information on compatibility flags see https://svelte.dev/docs/kit/adapter-cloudflare#Node-compatibility.\n` +
+				`\u001B[39m\u001B`
+		);
 	}
 
 	return wrangler_config;
