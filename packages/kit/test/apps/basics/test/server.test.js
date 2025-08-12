@@ -1238,3 +1238,10 @@ test.describe('tracing', () => {
 		});
 	});
 });
+
+test.describe('remote functions', () => {
+	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
+	});
+});

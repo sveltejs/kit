@@ -22,7 +22,7 @@ jobs:
   pkg-pr-new:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -34,7 +34,7 @@ jobs:
   lint-all:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -64,7 +64,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -124,7 +124,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -158,7 +158,7 @@ jobs:
           - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -187,7 +187,7 @@ jobs:
       matrix:
         node-version: [18, 20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:

@@ -42,6 +42,7 @@ test.describe('Endpoints', () => {
 
 test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
+		test.slow();
 		await page.goto('/load/change-detection/one/a');
 		expect(await page.textContent('h1')).toBe('layout loads: 1');
 		expect(await page.textContent('h2')).toBe('x: a: 1');
@@ -1664,7 +1665,7 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(2);
 	});
 
-	test('command returns correct sum and refreshes all data by default', async ({ page }) => {
+	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
@@ -1673,9 +1674,9 @@ test.describe('remote functions', () => {
 
 		await page.click('#multiply-btn');
 		await expect(page.locator('#command-result')).toHaveText('2');
-		await expect(page.locator('#count-result')).toHaveText('2 / 2 (false)');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(4); // 1 for the command, 3 for the refresh
+		expect(request_count).toBe(1); // 1 for the command, no refreshes
 	});
 
 	test('command returns correct sum and does client-initiated single flight mutation', async ({
@@ -1815,6 +1816,25 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(2);
 	});
 
+	test('command tracks pending state', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initial pending should be 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and pending to go back to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
 	test('validation works', async ({ page }) => {
 		await page.goto('/remote/validation');
 		await expect(page.locator('p')).toHaveText('pending');
@@ -1833,5 +1853,54 @@ test.describe('remote functions', () => {
 
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('command pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initially no pending commands
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and verify results
+		await expect(page.locator('#command-result')).toHaveText('7');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
+	test('form pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		// Initially no pending forms
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
+
+		// Fill form with slow operation
+		await page.fill('#input-task', 'deferred');
+
+		// Submit form - this will hang until we resolve it
+		await page.click('#submit-btn-one');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 1');
+
+		// Resolve the deferred form submission
+		await page.click('#resolve-deferreds');
+
+		// Wait for form submission to complete and verify results
+		await expect(page.locator('#get-task')).toHaveText('deferred');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
 	});
 });

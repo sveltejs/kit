@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { hash } from '../../utils/hash.js';
-import { b64_decode } from '../utils.js';
+import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
@@ -98,7 +98,7 @@ export function initial_fetch(resource, opts) {
 		if (b64 !== null) {
 			// Can't use native_fetch('data:...;base64,${body}')
 			// csp can block the request
-			body = b64_decode(body);
+			body = base64_decode(body);
 		}
 
 		return Promise.resolve(new Response(body, init));

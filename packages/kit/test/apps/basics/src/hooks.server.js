@@ -7,6 +7,16 @@ import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 import '$lib/tracing-config';
 
+// @ts-ignore this doesn't exist in old Node
+Promise.withResolvers ??= () => {
+	const d = {};
+	d.promise = new Promise((resolve, reject) => {
+		d.resolve = resolve;
+		d.reject = reject;
+	});
+	return d;
+};
+
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively

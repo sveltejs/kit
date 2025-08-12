@@ -1070,12 +1070,15 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Information about the target of a specific navigation.
 	 */
-	export interface NavigationTarget {
+	export interface NavigationTarget<
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
+	> {
 		/**
 		 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 		 */
-		params: Record<string, string> | null;
+		params: Params | null;
 		/**
 		 * Info about the target route
 		 */
@@ -1083,7 +1086,7 @@ declare module '@sveltejs/kit' {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 */
-			id: string | null;
+			id: RouteId | null;
 		};
 		/**
 		 * The URL that is navigated to
@@ -1642,6 +1645,8 @@ declare module '@sveltejs/kit' {
 		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 		/** The result of the form submission */
 		get result(): Result | undefined;
+		/** The number of pending submissions */
+		get pending(): number;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -1663,14 +1668,20 @@ declare module '@sveltejs/kit' {
 				formaction: string;
 				onclick: (event: Event) => void;
 			};
+			/** The number of pending submissions */
+			get pending(): number;
 		};
 	};
 
 	/**
 	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
-	export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	export type RemoteCommand<Input, Output> = {
+		(arg: Input): Promise<Awaited<Output>> & {
+			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+		};
+		/** The number of pending command executions */
+		get pending(): number;
 	};
 
 	export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -1700,7 +1711,7 @@ declare module '@sveltejs/kit' {
 		 */
 		refresh(): Promise<void>;
 		/**
-		 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Single-flight-mutations) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+		 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
 		 *
 		 * ```svelte
 		 * <script>

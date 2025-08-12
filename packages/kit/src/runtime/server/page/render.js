@@ -16,6 +16,7 @@ import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
 import { with_event, get_event_state } from '@sveltejs/kit/internal';
+import { text_encoder } from '../../utils.js';
 
 // TODO rename this function/module
 
@@ -23,8 +24,6 @@ const updated = {
 	...readable(false),
 	check: () => false
 };
-
-const encoder = new TextEncoder();
 
 /**
  * Creates the HTML response.
@@ -585,9 +584,9 @@ export async function render_response({
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
-						controller.enqueue(encoder.encode(transformed + '\n'));
+						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(encoder.encode(chunk));
+							controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},

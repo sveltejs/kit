@@ -86,5 +86,10 @@ export function command(validate_or_fn, maybe_fn) {
 
 	Object.defineProperty(wrapper, '__', { value: __ });
 
+	// On the server, pending is always 0
+	Object.defineProperty(wrapper, 'pending', {
+		get: () => 0
+	});
+
 	return wrapper;
 }
