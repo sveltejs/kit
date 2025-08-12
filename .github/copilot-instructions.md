@@ -59,10 +59,25 @@ SvelteKit is a web application framework for building modern web applications wi
    npx sv create test-app --template minimal --no-install --no-types
    # Press Enter to skip additional packages
    cd test-app
-   npm install
-   npm run dev
+   
+   # Use pnpm if available, otherwise fall back to npm
+   if command -v pnpm &> /dev/null; then
+     pnpm install
+     # Link local @sveltejs/kit development version by adding pnpm overrides
+     # Replace PATH_TO_KIT_REPO with the actual path to your kit repository
+     npm pkg set 'pnpm.overrides.@sveltejs/kit'='link:PATH_TO_KIT_REPO/packages/kit'
+     pnpm install --no-frozen-lockfile
+     pnpm run dev
+   else
+     npm install
+     # For npm, manually link the local package
+     # Replace PATH_TO_KIT_REPO with the actual path to your kit repository
+     npm link PATH_TO_KIT_REPO/packages/kit
+     npm run dev
+   fi
    ```
    - Verify the app starts and loads at http://localhost:5173/
+   - Verify it's using the local @sveltejs/kit version (check that `node_modules/@sveltejs/kit` is a symlink)
 
 2. **Test the CLI**:
    ```bash
