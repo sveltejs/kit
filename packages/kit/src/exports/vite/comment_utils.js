@@ -95,6 +95,7 @@ export function is_within_comment(content, match_index) {
 		in_multi_line_comment ||
 		in_html_comment ||
 		in_single_quote ||
-		in_double_quote
+		in_double_quote ||
+		in_template_literal
 	);
 }
