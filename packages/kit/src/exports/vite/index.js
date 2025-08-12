@@ -739,6 +739,16 @@ Tips:
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the server tracing file
+					const server_tracing = resolve_entry(kit.files.tracing.server);
+					if (server_tracing) {
+						const { adapter } = kit;
+						if (adapter && !adapter.supports?.tracing?.()) {
+							throw new Error(`${server_tracing} is unsupported in ${adapter.name}.`);
+						}
+						input['tracing.server'] = server_tracing;
+					}
+
 					// ...and every .remote file
 					for (const remote of manifest_data.remotes) {
 						input[`remote/${remote.hash}`] = path.resolve(remote.file);

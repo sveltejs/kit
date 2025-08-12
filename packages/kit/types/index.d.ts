@@ -172,6 +172,45 @@ declare module '@sveltejs/kit' {
 		) => string[];
 
 		/**
+		 * Check if the server tracing file exists.
+		 * @returns true if the server tracing file exists, false otherwise
+		 */
+		hasServerTracingFile: () => boolean;
+
+		/**
+		 * Trace `entrypoint` with `tracing`.
+		 *
+		 * Renames `entrypoint` to `start` and creates a new module at
+		 * `entrypoint` which imports `tracing` and then dynamically imports `start`. This allows
+		 * the module hooks necessary for tracing libraries to be loaded prior to any application code.
+		 *
+		 * Caveats:
+		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
+		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
+		 * - Use {@link hasServerTracingFile} to check if the user has a server tracing file; if they don't, you shouldn't do this.
+		 *
+		 * @param options an object containing the following properties:
+		 * @param options.entrypoint the path to the entrypoint to trace.
+		 * @param options.tracing the path to the tracing file.
+		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+		 * @param options.tla Whether to use top-level await. If `true`, the `tracing` file will be statically imported and then the `start` file will be dynamically imported. If `false`, both files will be serially imported. Auto-instrumentation will not work properly without a dynamic `await`.
+		 * @param options.exports an array of exports to re-export from the entrypoint. `default` represents the default export. Defaults to `['default']`.
+		 */
+		trace: ({
+			entrypoint,
+			tracing,
+			start,
+			tla,
+			exports
+		}: {
+			entrypoint: string;
+			tracing: string;
+			start?: string;
+			tla?: boolean;
+			exports?: string[];
+		}) => void;
+
+		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
 		 */
