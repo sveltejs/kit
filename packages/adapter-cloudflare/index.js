@@ -116,8 +116,7 @@ export default function (options = {}) {
 			if (builder.hasServerTracingFile()) {
 				builder.trace({
 					entrypoint: worker_dest,
-					tracing: `${builder.getServerDirectory()}/tracing.server.js`,
-					tla: false
+					tracing: `${builder.getServerDirectory()}/tracing.server.js`
 				});
 			}
 

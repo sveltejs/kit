@@ -101,7 +101,9 @@ export default function (opts = {}) {
 				builder.trace({
 					entrypoint: `${out}/index.js`,
 					tracing: `${out}/server/tracing.server.js`,
-					exports: ['path', 'host', 'port', 'server']
+					module: {
+						exports: ['path', 'host', 'port', 'server']
+					}
 				});
 			}
 		},

@@ -214,7 +214,6 @@ async function generate_edge_functions({ builder }) {
 		builder.trace({
 			entrypoint: '.netlify/edge-functions/render.js',
 			tracing: '.netlify/edge/tracing.server.js',
-			tla: false,
 			start: '.netlify/edge/start.js'
 		});
 	}
@@ -300,7 +299,9 @@ function generate_lambda_functions({ builder, publish, split }) {
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
 					tracing: '.netlify/server/tracing.server.js',
 					start: `.netlify/functions-start/${name}.start.mjs`,
-					exports: ['handler']
+					module: {
+						exports: ['handler']
+					}
 				});
 			}
 
@@ -322,7 +323,9 @@ function generate_lambda_functions({ builder, publish, split }) {
 				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
 				tracing: '.netlify/server/tracing.server.js',
 				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
-				exports: ['handler']
+				module: {
+					exports: ['handler']
+				}
 			});
 		}
 

@@ -4,6 +4,11 @@ import adapter from '../../../index.js';
 const config = {
 	kit: {
 		adapter: adapter()
+	},
+	experimental: {
+		tracing: {
+			serverFile: true
+		}
 	}
 };
 
