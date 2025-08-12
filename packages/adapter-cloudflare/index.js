@@ -301,10 +301,9 @@ function validate_wrangler_config(config_file = undefined) {
 		validate_worker_settings(wrangler_config);
 	}
 
-	if (
-		!wrangler_config?.compatibility_flags.includes('nodejs_compat') &&
-		!wrangler_config?.compatibility_flags.includes('nodejs_als')
-	) {
+	const flags = wrangler_config?.compatibility_flags ?? [];
+
+	if (flags.includes('nodejs_compat') && flags.includes('nodejs_als')) {
 		const file = config_file
 			? path.relative(process.cwd(), config_file)
 			: 'your wrangler configuration';
