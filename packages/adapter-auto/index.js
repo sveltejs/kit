@@ -1,25 +1,31 @@
 import { execSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
-import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
-import { dirname, join } from 'node:path';
-import { existsSync } from 'node:fs';
+import path from 'node:path';
+import fs from 'node:fs';
+import process from 'node:process';
 
 /** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {
 	npm: (name, version) => `npm install -D ${name}@${version}`,
 	pnpm: (name, version) => `pnpm add -D ${name}@${version}`,
-	yarn: (name, version) => `yarn add -D ${name}@${version}`
+	yarn: (name, version) => `yarn add -D ${name}@${version}`,
+	bun: (name, version) => `bun add -D ${name}@${version}`,
+	deno: (name, version) => `deno install -D npm:${name}@${version}`
 };
 
 function detect_lockfile() {
 	let dir = process.cwd();
 
+	/** @param {string} file */
+	const exists = (file) => fs.existsSync(path.join(dir, file));
+
 	do {
-		if (existsSync(join(dir, 'pnpm-lock.yaml'))) return 'pnpm';
-		if (existsSync(join(dir, 'yarn.lock'))) return 'yarn';
-		if (existsSync(join(dir, 'package-lock.json'))) return 'npm';
-	} while (dir !== (dir = dirname(dir)));
+		if (exists('pnpm-lock.yaml')) return 'pnpm';
+		if (exists('yarn.lock')) return 'yarn';
+		if (exists('package-lock.json')) return 'npm';
+		if (exists('bun.lockb') || exists('bun.lock')) return 'bun';
+		if (exists('deno.lock')) return 'deno';
+	} while (dir !== (dir = path.dirname(dir)));
 
 	return 'npm';
 }
@@ -35,12 +41,40 @@ function detect_package_manager() {
 	}
 }
 
-/** @param {string} name */
-function import_from_cwd(name) {
-	const cwd = pathToFileURL(process.cwd()).href;
-	const url = resolve(name, cwd + '/x.js');
+/**
+ * Resolves a peer dependency relative to the current CWD. Duplicated with `packages/kit`
+ * @param {string} dependency
+ */
+function resolve_peer(dependency) {
+	let [name, ...parts] = dependency.split('/');
+	if (name[0] === '@') name += `/${parts.shift()}`;
 
-	return import(url);
+	let dir = process.cwd();
+
+	while (!fs.existsSync(`${dir}/node_modules/${name}/package.json`)) {
+		if (dir === (dir = path.dirname(dir))) {
+			throw new Error(
+				`Could not resolve peer dependency "${name}" relative to your project — please install it and try again.`
+			);
+		}
+	}
+
+	const pkg_dir = `${dir}/node_modules/${name}`;
+	const pkg = JSON.parse(fs.readFileSync(`${pkg_dir}/package.json`, 'utf-8'));
+
+	const subpackage = ['.', ...parts].join('/');
+
+	let exported = pkg.exports[subpackage];
+
+	while (typeof exported !== 'string') {
+		if (!exported) {
+			throw new Error(`Could not find valid "${subpackage}" export in ${name}/package.json`);
+		}
+
+		exported = exported['import'] ?? exported['default'];
+	}
+
+	return path.resolve(pkg_dir, exported);
 }
 
 /** @typedef {import('@sveltejs/kit').Adapter} Adapter */
@@ -53,46 +87,42 @@ async function get_adapter() {
 
 	if (!match) return;
 
-	/** @type {{ default: () => Adapter }} */
-	let module;
+	/** @type {string} */
+	let resolved;
 
 	try {
-		module = await import_from_cwd(match.module);
-	} catch (error) {
-		if (
-			error.code === 'ERR_MODULE_NOT_FOUND' &&
-			error.message.startsWith(`Cannot find package '${match.module}'`)
-		) {
-			const package_manager = detect_package_manager();
-			const command = commands[package_manager](match.module, match.version);
+		resolved = resolve_peer(match.module);
+	} catch {
+		const package_manager = detect_package_manager();
+		const command = commands[package_manager](match.module, match.version);
 
-			try {
-				console.log(`Installing ${match.module}...`);
+		try {
+			console.log(`Installing ${match.module}...`);
 
-				execSync(command, {
-					stdio: 'inherit',
-					env: {
-						...process.env,
-						NODE_ENV: undefined
-					}
-				});
+			execSync(command, {
+				stdio: 'inherit',
+				env: {
+					...process.env,
+					NODE_ENV: undefined
+				}
+			});
 
-				module = await import_from_cwd(match.module);
+			resolved = resolve_peer(match.module);
 
-				console.log(`Successfully installed ${match.module}.`);
-				console.warn(
-					`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
-				);
-			} catch (e) {
-				throw new Error(
-					`Could not install ${match.module}. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`,
-					{ cause: e }
-				);
-			}
-		} else {
-			throw error;
+			console.log(`Successfully installed ${match.module}.`);
+			console.warn(
+				`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
+			);
+		} catch (e) {
+			throw new Error(
+				`Could not install ${match.module}. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`,
+				{ cause: e }
+			);
 		}
 	}
+
+	/** @type {{ default: () => Adapter }} */
+	const module = await import(resolved);
 
 	const adapter = module.default();
 
@@ -114,14 +144,25 @@ export default () => ({
 		if (adapter) return adapter.adapt(builder);
 
 		builder.log.warn(
-			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
+			'Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing'
 		);
 	},
 	supports: {
 		read: () => {
-			throw new Error(
-				"The read function imported from $app/server only works in certain environments. Since you're using @sveltejs/adapter-auto, SvelteKit cannot determine whether it will work when your app is deployed. Please replace it with an adapter tailored to your target environment."
+			supports_error(
+				'The read function imported from $app/server only works in certain environments'
 			);
 		}
 	}
 });
+
+/**
+ * @param {string} message
+ * @returns {never}
+ * @throws {Error}
+ */
+function supports_error(message) {
+	throw new Error(
+		`${message}. Since you're using @sveltejs/adapter-auto, SvelteKit cannot determine whether it will work when your app is deployed. Please replace it with an adapter tailored to your target environment.`
+	);
+}

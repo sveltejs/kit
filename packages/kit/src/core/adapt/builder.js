@@ -138,6 +138,7 @@ export function create_builder({
 						generateManifest: ({ relativePath }) =>
 							generate_manifest({
 								build_data,
+								prerendered: [],
 								relative_path: relativePath,
 								routes: Array.from(filtered)
 							})
@@ -185,6 +186,7 @@ export function create_builder({
 		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
+				prerendered: prerendered.paths,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
@@ -217,7 +219,12 @@ export function create_builder({
 
 		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
-			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
+
+			return [
+				...copy(`${source}/pages`, dest),
+				...copy(`${source}/dependencies`, dest),
+				...copy(`${source}/data`, dest)
+			];
 		},
 
 		writeServer(dest) {

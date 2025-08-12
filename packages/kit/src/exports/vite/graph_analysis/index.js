@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
-import { strip_virtual_prefix } from '../utils.js';
+import { normalize_id, strip_virtual_prefix } from '../utils.js';
 import { app_server, env_dynamic_private, env_static_private } from '../module_ids.js';
 
 const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
@@ -84,26 +84,4 @@ export function module_guard(context, { cwd, lib }) {
 			follow(id, []);
 		}
 	};
-}
-
-/**
- * Removes cwd/lib path from the start of the id
- * @param {string} id
- * @param {string} lib
- * @param {string} cwd
- */
-export function normalize_id(id, lib, cwd) {
-	if (id.startsWith(lib)) {
-		id = id.replace(lib, '$lib');
-	}
-
-	if (id.startsWith(cwd)) {
-		id = path.relative(cwd, id);
-	}
-
-	if (id === app_server) {
-		return '$app/server';
-	}
-
-	return posixify(id);
 }

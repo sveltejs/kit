@@ -1,5 +1,14 @@
-import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
+import { HttpError, Redirect, ActionFailure } from './internal/index.js';
 import { BROWSER, DEV } from 'esm-env';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	has_data_suffix,
+	has_resolution_suffix,
+	strip_data_suffix,
+	strip_resolution_suffix
+} from '../runtime/pathname.js';
+import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
 
@@ -84,6 +93,14 @@ export function isHttpError(e, status) {
 /**
  * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+ *
+ * Most common status codes:
+ *  * `303 See Other`: redirect as a GET request (often used after a form POST request)
+ *  * `307 Temporary Redirect`: redirect will keep the request method
+ *  * `308 Permanent Redirect`: redirect will keep the request method, SEO will be transferred to the new page
+ *
+ * [See all redirect status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages)
+ *
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
  * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
@@ -126,7 +143,7 @@ export function json(data, init) {
 	// means less duplicated work
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		headers.set('content-length', text_encoder.encode(body).byteLength.toString());
 	}
 
 	if (!headers.has('content-type')) {
@@ -139,8 +156,6 @@ export function json(data, init) {
 	});
 }
 
-const encoder = new TextEncoder();
-
 /**
  * Create a `Response` object from the supplied body.
  * @param {string} body The value that will be used as-is.
@@ -149,7 +164,7 @@ const encoder = new TextEncoder();
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		const encoded = encoder.encode(body);
+		const encoded = text_encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
 		return new Response(encoded, {
 			...init,
@@ -164,15 +179,15 @@ export function text(body, init) {
 }
 
 /**
- * Create an `ActionFailure` object.
+ * Create an `ActionFailure` object. Call when form submission fails.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @overload
  * @param {number} status
  * @returns {import('./public.js').ActionFailure<undefined>}
  */
 /**
- * Create an `ActionFailure` object.
- * @template {Record<string, unknown> | undefined} [T=undefined]
+ * Create an `ActionFailure` object. Call when form submission fails.
+ * @template [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {T} data Data associated with the failure (e.g. validation errors)
  * @overload
@@ -181,7 +196,7 @@ export function text(body, init) {
  * @returns {import('./public.js').ActionFailure<T>}
  */
 /**
- * Create an `ActionFailure` object.
+ * Create an `ActionFailure` object. Call when form submission fails.
  * @param {number} status
  * @param {any} [data]
  * @returns {import('./public.js').ActionFailure<any>}
@@ -189,4 +204,60 @@ export function text(body, init) {
 export function fail(status, data) {
 	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
+}
+
+/**
+ * Checks whether this is an action failure thrown by {@link fail}.
+ * @param {unknown} e The object to check.
+ * @return {e is import('./public.js').ActionFailure}
+ */
+export function isActionFailure(e) {
+	return e instanceof ActionFailure;
+}
+
+/**
+ * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
+ * Returns the normalized URL as well as a method for adding the potential suffix back
+ * based on a new pathname (possibly including search) or URL.
+ * ```js
+ * import { normalizeUrl } from '@sveltejs/kit';
+ *
+ * const { url, denormalize } = normalizeUrl('/blog/post/__data.json');
+ * console.log(url.pathname); // /blog/post
+ * console.log(denormalize('/blog/post/a')); // /blog/post/a/__data.json
+ * ```
+ * @param {URL | string} url
+ * @returns {{ url: URL, wasNormalized: boolean, denormalize: (url?: string | URL) => URL }}
+ * @since 2.18.0
+ */
+export function normalizeUrl(url) {
+	url = new URL(url, 'http://internal');
+
+	const is_route_resolution = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const has_trailing_slash = url.pathname !== '/' && url.pathname.endsWith('/');
+
+	if (is_route_resolution) {
+		url.pathname = strip_resolution_suffix(url.pathname);
+	} else if (is_data_request) {
+		url.pathname = strip_data_suffix(url.pathname);
+	} else if (has_trailing_slash) {
+		url.pathname = url.pathname.slice(0, -1);
+	}
+
+	return {
+		url,
+		wasNormalized: is_data_request || is_route_resolution || has_trailing_slash,
+		denormalize: (new_url = url) => {
+			new_url = new URL(new_url, url);
+			if (is_route_resolution) {
+				new_url.pathname = add_resolution_suffix(new_url.pathname);
+			} else if (is_data_request) {
+				new_url.pathname = add_data_suffix(new_url.pathname);
+			} else if (has_trailing_slash && !new_url.pathname.endsWith('/')) {
+				new_url.pathname += '/';
+			}
+			return new_url;
+		}
+	};
 }

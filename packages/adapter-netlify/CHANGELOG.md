@@ -1,5 +1,137 @@
 # @sveltejs/adapter-netlify
 
+## 5.1.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.1.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` in edge functions ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
+## 5.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade to esbuild 0.25.4 ([#13770](https://github.com/sveltejs/kit/pull/13770))
+
+## 5.0.1
+### Patch Changes
+
+
+- chore(deps): upgrade esbuild to 0.25.2 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 5.0.0
+### Major Changes
+
+
+- fix: error if the `_headers` and `_redirects` files are in the `/static` directory instead of the project root ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+## 4.4.2
+### Patch Changes
+
+
+- fix: correctly import manifest on Windows machines ([#13495](https://github.com/sveltejs/kit/pull/13495))
+
+- Updated dependencies [[`28cf64589a331ea4770c0883216c5e16d1de7496`](https://github.com/sveltejs/kit/commit/28cf64589a331ea4770c0883216c5e16d1de7496), [`ef1e8047225e7a79c6d121d8ed1a571e5ea44f08`](https://github.com/sveltejs/kit/commit/ef1e8047225e7a79c6d121d8ed1a571e5ea44f08), [`2e6527b92875976b79cc00e7b75ee0ad8b69a239`](https://github.com/sveltejs/kit/commit/2e6527b92875976b79cc00e7b75ee0ad8b69a239), [`0c0172e1463218fe63a67c587173bb3065a53c49`](https://github.com/sveltejs/kit/commit/0c0172e1463218fe63a67c587173bb3065a53c49)]:
+  - @sveltejs/kit@2.17.3
+
+## 4.4.1
+### Patch Changes
+
+
+- fix: avoid unnecessary Netlify edge function invocations for static files, which resolves a conflict between Netlify Edge Functions and Netlify Identity ([#12052](https://github.com/sveltejs/kit/pull/12052))
+
+## 4.4.0
+### Minor Changes
+
+
+- chore: upgrade esbuild to 0.24.0 ([#12270](https://github.com/sveltejs/kit/pull/12270))
+
+
+### Patch Changes
+
+- Updated dependencies [[`d030f4bb285e70844d09b3f0c87809bae43014b8`](https://github.com/sveltejs/kit/commit/d030f4bb285e70844d09b3f0c87809bae43014b8), [`67dd214863cbc5852eb0e8512efbb7bad5358e8a`](https://github.com/sveltejs/kit/commit/67dd214863cbc5852eb0e8512efbb7bad5358e8a)]:
+  - @sveltejs/kit@2.9.0
+
+## 4.3.6
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 4.3.5
+### Patch Changes
+
+
+- fix: correctly handle relative paths when fetching assets on the server ([#12113](https://github.com/sveltejs/kit/pull/12113))
+
+- Updated dependencies [[`df48fc6ede3859beabaae9fd7c6f722215bb8a42`](https://github.com/sveltejs/kit/commit/df48fc6ede3859beabaae9fd7c6f722215bb8a42), [`5780deba8e3ebd0e2b0abea029068ad0c6daf6ad`](https://github.com/sveltejs/kit/commit/5780deba8e3ebd0e2b0abea029068ad0c6daf6ad), [`6f9aefdb8699fc126d76a88471602cb9a80822eb`](https://github.com/sveltejs/kit/commit/6f9aefdb8699fc126d76a88471602cb9a80822eb), [`8aa95b4b3431e79f62f580abdcdcb157b4de86cd`](https://github.com/sveltejs/kit/commit/8aa95b4b3431e79f62f580abdcdcb157b4de86cd)]:
+  - @sveltejs/kit@2.7.0
+
+## 4.3.4
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
+## 4.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 4.3.2
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 4.3.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
+## 4.3.0
+### Minor Changes
+
+
+- chore(deps): upgrade to esbuild 0.21 ([#12415](https://github.com/sveltejs/kit/pull/12415))
+
+
+### Patch Changes
+
+- Updated dependencies [[`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4), [`5645614f497931f587b7cb8b3c885fce892a6a72`](https://github.com/sveltejs/kit/commit/5645614f497931f587b7cb8b3c885fce892a6a72), [`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4)]:
+  - @sveltejs/kit@2.5.18
+
 ## 4.2.1
 
 ### Patch Changes

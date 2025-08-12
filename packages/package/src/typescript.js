@@ -14,11 +14,13 @@ import { load_pkg_json } from './config.js';
  *
  * @param {string} input
  * @param {string} output
+ * @param {string} final_output
  * @param {string} cwd
  * @param {Record<string, string>} alias
  * @param {import('./types.js').File[]} files
+ * @param {string | undefined} tsconfig
  */
-export async function emit_dts(input, output, cwd, alias, files) {
+export async function emit_dts(input, output, final_output, cwd, alias, files, tsconfig) {
 	const tmp = `${output}/__package_types_tmp__`;
 	rimraf(tmp);
 	mkdirp(tmp);
@@ -26,13 +28,20 @@ export async function emit_dts(input, output, cwd, alias, files) {
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
 	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
-	const no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	let no_svelte_3;
+	try {
+		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	} catch {
+		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
+		no_svelte_3 = true;
+	}
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: no_svelte_3
 			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
 			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: path.relative(cwd, tmp)
+		declarationDir: path.relative(cwd, tmp),
+		tsconfig
 	});
 
 	const handwritten = new Set();
@@ -52,8 +61,28 @@ export async function emit_dts(input, output, cwd, alias, files) {
 			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
 		}
 
-		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
-		write(path.join(output, normalized), resolve_aliases(input, normalized, source, alias));
+		let source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		if (file.endsWith('.d.ts.map')) {
+			// Because we put the .d.ts files in a temporary directory, the relative path needs to be adjusted
+			const parsed = JSON.parse(source);
+			if (parsed.sources) {
+				parsed.sources = /** @type {string[]} */ (parsed.sources).map((source) =>
+					posixify(
+						path.join(
+							path.relative(
+								path.dirname(path.join(final_output, normalized)),
+								path.dirname(path.join(input, normalized))
+							),
+							path.basename(source)
+						)
+					)
+				);
+				source = JSON.stringify(parsed);
+			}
+		} else {
+			source = resolve_aliases(input, normalized, source, alias);
+		}
+		write(path.join(output, normalized), source);
 	}
 
 	rimraf(tmp);

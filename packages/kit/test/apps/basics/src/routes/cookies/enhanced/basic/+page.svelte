@@ -5,9 +5,7 @@
 	export let data;
 </script>
 
-Cookie: <span id="cookie-value">
-	{data.cookie}
-</span>
+Cookie: <span id="cookie-value">{`${data.cookie}`}</span>
 
 <form method="post" action="?/setTeapot" use:enhance>
 	<button id="teapot">Set cookie to "teapot"</button>

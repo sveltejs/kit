@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { assert, expect, beforeEach, test } from 'vitest';
-import { copy, mkdirp } from './filesystem.js';
+import { copy, mkdirp, resolve_entry } from './filesystem.js';
 
 /** @type {string} */
 let source_dir;
@@ -98,4 +98,37 @@ test('replaces strings', () => {
 		readFileSync(join(dest_dir, 'foo.md'), 'utf8'),
 		'the quick brown fox jumps over the lazy dog'
 	);
+});
+
+test('resolves index files', () => {
+	write(join('service-worker', 'index.js'), '');
+
+	expect(resolve_entry(source_dir + '/service-worker')).toBe(
+		join(source_dir, 'service-worker', 'index.js')
+	);
+});
+
+test('resolves entries that have an extension', () => {
+	write('hooks.js', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.js'))).toBe(join(source_dir, 'hooks.js'));
+});
+
+test('resolves universal hooks file when hooks folder exists', () => {
+	write(join('hooks', 'not-index.js'), '');
+	write('hooks.js', '');
+
+	expect(resolve_entry(source_dir + '/hooks')).toBe(join(source_dir, 'hooks.js'));
+});
+
+test('ignores hooks.server folder when resolving universal hooks file', () => {
+	write(join('hooks.server', 'index.js'), '');
+
+	expect(resolve_entry(source_dir + '/hooks')).null;
+});
+
+test('ignores hooks folder when resolving universal hooks file', () => {
+	write(join('hooks', 'hooks.server.js'), '');
+
+	expect(resolve_entry(source_dir + '/hooks')).null;
 });

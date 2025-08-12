@@ -2,6 +2,7 @@ import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+import process from 'node:process';
 
 installPolyfills();
 
@@ -35,7 +36,7 @@ export default async (req, res) => {
 
 	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
-	setResponse(
+	void setResponse(
 		res,
 		await server.respond(request, {
 			getClientAddress() {

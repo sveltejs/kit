@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
@@ -38,7 +39,7 @@ if (socket_activation) {
 	});
 } else {
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path ? path : host + ':' + port}`);
+		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
 
@@ -56,10 +57,10 @@ function graceful_shutdown(reason) {
 		if (error) return;
 
 		if (shutdown_timeout_id) {
-			shutdown_timeout_id = clearTimeout(shutdown_timeout_id);
+			clearTimeout(shutdown_timeout_id);
 		}
 		if (idle_timeout_id) {
-			idle_timeout_id = clearTimeout(idle_timeout_id);
+			clearTimeout(idle_timeout_id);
 		}
 
 		// @ts-expect-error custom events cannot be typed

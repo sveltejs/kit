@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,72 +16,112 @@ test.describe.serial('Illegal imports', () => {
 		await page.goto('/illegal-imports/env/dynamic-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
+Imported by: src/routes/illegal-imports/env/dynamic-private/+page.svelte.
+Tips:
+ - To resolve this error, ensure that no exports from $env/dynamic/private are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('$env/dynamic/private is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/dynamic-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/dynamic/private into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/dynamic/private into client-side code. This could leak sensitive information.
+Imported by: src/routes/illegal-imports/env/dynamic-private-dynamic-import/+page.svelte.
+Tips:
+ - To resolve this error, ensure that no exports from $env/dynamic/private are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('$env/static/private is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/static-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
+Imported by: src/routes/illegal-imports/env/static-private/+page.svelte.
+Tips:
+ - To resolve this error, ensure that no exports from $env/static/private are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('$env/static/private is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/static-private-dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $env/static/private into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $env/static/private into client-side code. This could leak sensitive information.
+Imported by: src/routes/illegal-imports/env/static-private-dynamic-import/+page.svelte.
+Tips:
+ - To resolve this error, ensure that no exports from $env/static/private are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('server-only module is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from src/routes/illegal-imports/server-only-modules/illegal.server.js are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
+	});
+
+	test('$app/server module is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-modules/static-import-2', {
+			wait_for_started: false
+		});
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $app/server into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from $app/server are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('server-only module is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from src/routes/illegal-imports/server-only-modules/illegal.server.js are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('server-only folder is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-folder/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/private.js into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from $lib/server/blah/private.js are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 
 	test('server-only folder is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-folder/dynamic-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/private.js into client-side code'
-		);
+		expect(await page.textContent('.message-body'))
+			.toBe(`Cannot import $lib/server/blah/private.js into client-side code. This could leak sensitive information.
+Tips:
+ - To resolve this error, ensure that no exports from $lib/server/blah/private.js are used, even transitively, in client-side code.
+ - If you're only using the import as a type, change it to \`import type\`.
+ - If you're not sure which module is causing this, try building your app -- it will create a more helpful error.`);
 	});
 });
 
