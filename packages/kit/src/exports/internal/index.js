@@ -1,3 +1,5 @@
+import { copy_event_state } from './event-state.js';
+
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -64,7 +66,7 @@ export class ActionFailure {
 
 export { with_event, getRequestEvent } from './event.js';
 
-export { get_event_state, add_event_state } from './event-state.js';
+export { get_event_state, add_event_state, copy_event_state } from './event-state.js';
 
 export { validate_remote_functions } from './remote-functions.js';
 
@@ -75,11 +77,12 @@ export { validate_remote_functions } from './remote-functions.js';
  * @returns {T}
  */
 export function merge_tracing(event_like, current) {
-	return {
+	// @ts-expect-error
+	return copy_event_state(event_like, {
 		...event_like,
 		tracing: {
 			...event_like.tracing,
 			current
 		}
-	};
+	});
 }

@@ -5,7 +5,8 @@ import {
 	SvelteKitError,
 	with_event,
 	add_event_state,
-	merge_tracing
+	merge_tracing,
+	copy_event_state
 } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
@@ -401,14 +402,14 @@ export async function internal_respond(request, options, manifest, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = {
+				const traced_event = copy_event_state(event, {
 					...event,
 					tracing: {
 						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 						root: root_span,
 						current: root_span
 					}
-				};
+				});
 				return await with_event(traced_event, () =>
 					options.hooks.handle({
 						event: traced_event,

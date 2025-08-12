@@ -2,7 +2,12 @@
 /** @import { ServerHooks, MaybePromise } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { getRequestEvent, with_event, get_event_state } from '@sveltejs/kit/internal';
+import {
+	getRequestEvent,
+	with_event,
+	get_event_state,
+	copy_event_state
+} from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 
 /**
@@ -110,10 +115,8 @@ export function parse_remote_response(data, transport) {
  */
 export async function run_remote_function(event, allow_cookies, arg, validate, fn) {
 	/** @type {RequestEvent} */
-	const cleansed = {
+	const cleansed = copy_event_state(event, {
 		...event,
-		// @ts-expect-error this isn't part of the public `RequestEvent` type
-		[EVENT_STATE]: event[EVENT_STATE],
 		setHeaders: () => {
 			throw new Error('setHeaders is not allowed in remote functions');
 		},
@@ -144,7 +147,7 @@ export async function run_remote_function(event, allow_cookies, arg, validate, f
 		},
 		route: { id: null },
 		url: new URL(event.url.origin)
-	};
+	});
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const validated = await with_event(cleansed, () => validate(arg));

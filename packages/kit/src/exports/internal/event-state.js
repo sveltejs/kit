@@ -24,7 +24,7 @@ const EVENT_STATE = Symbol('sveltekit private event state');
  * @returns {RequestEvent}
  */
 export function add_event_state({ event, state, options, record_span }) {
-	Object.defineProperty(event, EVENT_STATE, {
+	return Object.defineProperty(event, EVENT_STATE, {
 		value: {
 			prerendering: state.prerendering,
 			transport: options.hooks.transport,
@@ -35,10 +35,18 @@ export function add_event_state({ event, state, options, record_span }) {
 			tracing: {
 				record_span
 			}
-		},
-		enumerable: false
+		}
 	});
-	return event;
+}
+
+/**
+ * @param {RequestEvent} event
+ * @param {RequestEvent} target
+ */
+export function copy_event_state(event, target) {
+	return Object.defineProperty(target, EVENT_STATE, {
+		value: get_event_state(event)
+	});
 }
 
 /**

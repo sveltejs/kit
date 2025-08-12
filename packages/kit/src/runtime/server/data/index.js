@@ -1,5 +1,5 @@
 import { text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError, SvelteKitError, Redirect, copy_event_state } from '@sveltejs/kit/internal';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
@@ -44,7 +44,7 @@ export async function render_data(
 		const url = new URL(event.url);
 		url.pathname = normalize_path(url.pathname, trailing_slash);
 
-		const new_event = { ...event, url };
+		const new_event = copy_event_state(event, { ...event, url });
 
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {
