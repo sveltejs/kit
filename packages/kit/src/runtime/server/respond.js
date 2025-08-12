@@ -4,8 +4,7 @@ import {
 	Redirect,
 	SvelteKitError,
 	with_event,
-	create_event_state,
-	EVENT_STATE,
+	add_event_state,
 	merge_tracing
 } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
@@ -144,52 +143,56 @@ export async function internal_respond(request, options, manifest, state) {
 	);
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
-	const event = {
-		[EVENT_STATE]: create_event_state(state, options, record_span),
-		cookies,
-		// @ts-expect-error `fetch` needs to be created after the `event` itself
-		fetch: null,
-		getClientAddress:
-			state.getClientAddress ||
-			(() => {
-				throw new Error(
-					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-				);
-			}),
-		locals: {},
-		params: {},
-		platform: state.platform,
-		request,
-		route: { id: null },
-		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
+	const event = add_event_state({
+		state,
+		options,
+		record_span,
+		event: {
+			cookies,
+			// @ts-expect-error `fetch` needs to be created after the `event` itself
+			fetch: null,
+			getClientAddress:
+				state.getClientAddress ||
+				(() => {
 					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+						`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 					);
-				} else if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
-				} else {
-					headers[lower] = value;
+				}),
+			locals: {},
+			params: {},
+			platform: state.platform,
+			request,
+			route: { id: null },
+			setHeaders: (new_headers) => {
+				if (__SVELTEKIT_DEV__) {
+					validateHeaders(new_headers);
+				}
 
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
+				for (const key in new_headers) {
+					const lower = key.toLowerCase();
+					const value = new_headers[key];
+
+					if (lower === 'set-cookie') {
+						throw new Error(
+							'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+						);
+					} else if (lower in headers) {
+						throw new Error(`"${key}" header is already set`);
+					} else {
+						headers[lower] = value;
+
+						if (state.prerendering && lower === 'cache-control') {
+							state.prerendering.cache = /** @type {string} */ (value);
+						}
 					}
 				}
-			}
-		},
-		url,
-		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0,
-		isRemoteRequest: !!remote_id
-	};
+			},
+			url,
+			isDataRequest: is_data_request,
+			isSubRequest: state.depth > 0,
+			isRemoteRequest: !!remote_id
+		}
+	});
 
 	event.fetch = create_fetch({
 		event,

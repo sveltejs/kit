@@ -89,7 +89,6 @@ export function sequence(...handlers) {
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			console.log('in sequence', get_event_state(event));
 			return get_event_state(event).tracing.record_span({
 				name: 'sveltekit.handle.sequenced.${i}',
 				attributes: {

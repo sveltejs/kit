@@ -64,7 +64,7 @@ export class ActionFailure {
 
 export { with_event, getRequestEvent } from './event.js';
 
-export { get_event_state, create_event_state, EVENT_STATE } from './event-state.js';
+export { get_event_state, add_event_state } from './event-state.js';
 
 export { validate_remote_functions } from './remote-functions.js';
 

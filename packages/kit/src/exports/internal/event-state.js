@@ -1,7 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, PrerenderOptions, ServerHooks, SSROptions, SSRState, RecordSpan } from 'types' */
 
-export const EVENT_STATE = Symbol('sveltekit private event state');
+const EVENT_STATE = Symbol('sveltekit private event state');
 
 /**
  * Internal state associated with the current `RequestEvent`,
@@ -20,23 +20,24 @@ export const EVENT_STATE = Symbol('sveltekit private event state');
  */
 
 /**
- * @param {SSRState} state
- * @param {SSROptions} options
- * @param {RecordSpan} record_span
- * @returns {RequestEventState}
+ * @param {{ event: RequestEvent, state: SSRState, options: SSROptions, record_span: RecordSpan }} args
+ * @returns {RequestEvent}
  */
-export function create_event_state(state, options, record_span) {
-	return {
-		prerendering: state.prerendering,
-		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		// this is necessary to avoid importing `record_span` in `sequence`, which
-		// won't work because `record_span` depends on `otel`, which depends on
-		// being bundled through Vite.
-		tracing: {
-			record_span
+export function add_event_state({ event, state, options, record_span }) {
+	Object.defineProperty(event, EVENT_STATE, {
+		value: {
+			prerendering: state.prerendering,
+			transport: options.hooks.transport,
+			handleValidationError: options.hooks.handleValidationError,
+			// this is necessary to avoid importing `record_span` in `sequence`, which
+			// won't work because `record_span` depends on `otel`, which depends on
+			// being bundled through Vite.
+			tracing: {
+				record_span
+			}
 		}
-	};
+	});
+	return event;
 }
 
 /**
