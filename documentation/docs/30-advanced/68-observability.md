@@ -12,8 +12,8 @@ Sometimes, you may need to observe how your application is behaving in order to 
 
 - `handle` hook (`sequence`d `handle` functions will show up as children of each other and the root handle hook) 
 - `load` functions (includes univeral `load` functions when they're run on the server)
-- Form actions
-- Remote functions
+- [Form actions](form-actions)
+- [Remote functions](remote-functions)
 
 Just telling SvelteKit to emit spans won't get you far, though -- you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/tracing.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported, providing your deployment platform supports it and your adapter is aware of it.
 
