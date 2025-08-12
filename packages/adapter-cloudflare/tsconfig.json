@@ -10,7 +10,17 @@
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
+		"lib": ["es2021"],
+		"types": ["@cloudflare/workers-types"]
 	},
-	"include": ["index.js", "internal.d.ts", "src/worker.js"]
+	"include": [
+		"index.js",
+		"utils.js",
+		"utils.spec.js",
+		"test/utils.js",
+		"internal.d.ts",
+		"src/worker.js"
+	]
 }

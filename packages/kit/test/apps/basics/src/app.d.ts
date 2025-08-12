@@ -10,10 +10,9 @@ declare global {
 		}
 
 		interface PageState {
-			active: boolean;
+			active?: boolean;
+			count?: number;
 		}
-
-		interface Platform {}
 	}
 }
 

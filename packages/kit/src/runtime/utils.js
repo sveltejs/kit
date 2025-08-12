@@ -1,37 +1,7 @@
-/**
- * @param {string} text
- * @returns {ArrayBufferLike}
- */
-export function b64_decode(text) {
-	const d = atob(text);
+import { BROWSER } from 'esm-env';
 
-	const u8 = new Uint8Array(d.length);
-
-	for (let i = 0; i < d.length; i++) {
-		u8[i] = d.charCodeAt(i);
-	}
-
-	return u8.buffer;
-}
-
-/**
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-export function b64_encode(buffer) {
-	if (globalThis.Buffer) {
-		return Buffer.from(buffer).toString('base64');
-	}
-
-	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
-
-	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
-	return btoa(
-		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
-			new Uint16Array(new Uint8Array(buffer))
-		)
-	);
-}
+export const text_encoder = new TextEncoder();
+export const text_decoder = new TextDecoder();
 
 /**
  * Like node's path.relative, but without using node
@@ -52,4 +22,44 @@ export function get_relative_path(from, to) {
 	while (i--) from_parts[i] = '..';
 
 	return from_parts.concat(to_parts).join('/');
+}
+
+/**
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+export function base64_encode(bytes) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		return globalThis.Buffer.from(bytes).toString('base64');
+	}
+
+	let binary = '';
+
+	for (let i = 0; i < bytes.length; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+
+	return btoa(binary);
+}
+
+/**
+ * @param {string} encoded
+ * @returns {Uint8Array}
+ */
+export function base64_decode(encoded) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		const buffer = globalThis.Buffer.from(encoded, 'base64');
+		return new Uint8Array(buffer);
+	}
+
+	const binary = atob(encoded);
+	const bytes = new Uint8Array(binary.length);
+
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+
+	return bytes;
 }

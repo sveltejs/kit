@@ -1,5 +1,29 @@
 # @sveltejs/adapter-auto
 
+## 6.0.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 6.0.1
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+- Updated dependencies [[`bd1c04662332cbafa843c35a2e783486116af3d5`](https://github.com/sveltejs/kit/commit/bd1c04662332cbafa843c35a2e783486116af3d5), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f)]:
+  - @sveltejs/kit@2.21.0
+
+## 6.0.0
+### Major Changes
+
+
+- feat: upgrade `@sveltejs/adapter-cloudflare` to version 7 ([#13661](https://github.com/sveltejs/kit/pull/13661))
+
 ## 5.0.0
 ### Major Changes
 

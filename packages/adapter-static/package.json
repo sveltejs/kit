@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "3.0.8",
+	"version": "3.0.9",
 	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"keywords": [
 		"adapter",
@@ -13,7 +13,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-static"
 	},
 	"license": "MIT",
@@ -39,14 +39,14 @@
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.44.1",
+		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
-		"@types/node": "^18.19.48",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@types/node": "^18.19.119",
 		"sirv": "^3.0.0",
-		"svelte": "^5.23.1",
+		"svelte": "^5.35.5",
 		"typescript": "^5.3.3",
-		"vite": "^6.0.11"
+		"vite": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"

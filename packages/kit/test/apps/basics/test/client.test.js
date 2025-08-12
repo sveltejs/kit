@@ -42,6 +42,7 @@ test.describe('Endpoints', () => {
 
 test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
+		test.slow();
 		await page.goto('/load/change-detection/one/a');
 		expect(await page.textContent('h1')).toBe('layout loads: 1');
 		expect(await page.textContent('h2')).toBe('x: a: 1');
@@ -576,11 +577,15 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.invalidateall');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
 		await page.click('button.invalidateall');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 
@@ -591,7 +596,9 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.goto');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
@@ -633,14 +640,18 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.server');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
@@ -665,14 +676,18 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.shared');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
@@ -689,7 +704,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.server');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -698,7 +715,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -714,7 +733,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.shared');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -723,7 +744,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -739,7 +762,9 @@ test.describe('Invalidation', () => {
 		expect(shared).toBeDefined();
 
 		await page.click('button.specified');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout = await page.textContent('p.layout');
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -748,7 +773,9 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 
 		await page.click('button.neither');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		expect(await page.textContent('p.layout')).toBe(next_layout);
 		expect(await page.textContent('p.server')).toBe(next_server);
 		expect(await page.textContent('p.shared')).toBe(next_shared);
@@ -812,14 +839,18 @@ test.describe('Invalidation', () => {
 		expect(_page).toBeDefined();
 
 		await page.click('button.invalidate');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout_1 = await page.textContent('p.layout');
 		const next_page_1 = await page.textContent('p.page');
 		expect(next_layout_1).not.toBe(layout);
 		expect(next_page_1).toBe(_page);
 
 		await page.click('button.goto');
-		await page.evaluate(() => window.promise);
+		await page.evaluate(
+			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
+		);
 		const next_layout_2 = await page.textContent('p.layout');
 		const next_page_2 = await page.textContent('p.page');
 		expect(next_layout_2).toBe(next_layout_1);
@@ -1113,7 +1144,7 @@ test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
 		const response = await page.goto('/routing/content-negotiation');
 
-		expect(response.headers()['vary']).toBe('Accept');
+		expect(response?.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');
@@ -1143,9 +1174,13 @@ test.describe('env', () => {
 
 	test('can access public env in hooks.client.js', async ({ page }) => {
 		await page.goto('/');
-		expect(await page.evaluate(() => window.PUBLIC_DYNAMIC)).toBe(
-			'accessible anywhere/evaluated at run time'
-		);
+		expect(
+			await page.evaluate(
+				() =>
+					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (window)
+						.PUBLIC_DYNAMIC
+			)
+		).toBe('accessible anywhere/evaluated at run time');
 	});
 
 	test('uses correct dynamic env when navigating from prerendered page', async ({
@@ -1210,10 +1245,10 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(page.locator('p.success', { timeout: 15000 })).toHaveText('success');
-		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText(
-			'fail (500 Internal Error)'
-		);
+		await expect(page.locator('p.success')).toHaveText('success', { timeout: 15000 });
+		await expect(page.locator('p.fail')).toHaveText('fail (500 Internal Error)', {
+			timeout: 15000
+		});
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
@@ -1297,12 +1332,13 @@ test.describe('Assets', () => {
 
 		expect(
 			await page.evaluate(() => {
+				/** @type {HTMLLinkElement[]} */
 				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
 
 				for (let i = 0; i < links.length; ) {
 					const link = links.shift();
-					const asset_name = link.href.split('/').at(-1);
-					if (links.some((link) => link.href.includes(asset_name))) {
+					const asset_name = link?.href.split('/').at(-1);
+					if (asset_name && links.some((link) => link.href.includes(asset_name))) {
 						return false;
 					}
 				}
@@ -1388,7 +1424,7 @@ test.describe('Shallow routing', () => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
-		const now = await page.locator('span').textContent();
+		const now = /** @type {string} */ (await page.locator('span').textContent());
 
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
@@ -1442,6 +1478,20 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
+
+	test('pushState does not loop infinitely in $effect', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/effect');
+		await expect(page.locator('p')).toHaveText('count: 0');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('count: 1');
+	});
+
+	test('replaceState does not loop infinitely in $effect', async ({ page }) => {
+		await page.goto('/shallow-routing/replace-state/effect');
+		await expect(page.locator('p')).toHaveText('count: 0');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('count: 1');
+	});
 });
 
 test.describe('reroute', () => {
@@ -1494,10 +1544,10 @@ test.describe('reroute', () => {
 		await page.goto('/reroute/external');
 		const current_url = new URL(page.url());
 
-		//click the link with the text External URL
+		// click the link with the text External URL
 		await page.click("a[data-test='external-url']");
 
-		//The URl should not have the same origin as the current URL
+		// The URL should not have the same origin as the current URL
 		const new_url = new URL(page.url());
 		expect(current_url.origin).not.toEqual(new_url.origin);
 	});
@@ -1583,5 +1633,274 @@ test.describe('binding_property_non_reactive warn', () => {
 		});
 		await page.goto('/');
 		expect(is_warning_thrown).toBeFalsy();
+	});
+});
+
+test.describe('routing', () => {
+	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
+		await page.goto('/routing/long-navigation');
+		await page.click('a[href="/routing"]');
+		await page.click('a[href="/routing"]');
+		await expect(page.locator('h1')).toHaveText('Great success!');
+		await expect(page).toHaveURL((url) => url.pathname === '/routing');
+	});
+});
+
+// have to run in serial because commands mutate in-memory data on the server
+test.describe('remote functions', () => {
+	test.describe.configure({ mode: 'default' });
+	test.afterEach(async ({ page }) => {
+		if (page.url().endsWith('/remote')) {
+			await page.click('#reset-btn');
+		}
+	});
+
+	test('hydrated data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		// only the calls in the template are done, not the one in the load function
+		expect(request_count).toBe(2);
+	});
+
+	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-btn');
+		await expect(page.locator('#command-result')).toHaveText('2');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // 1 for the command, no refreshes
+	});
+
+	test('command returns correct sum and does client-initiated single flight mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('3');
+		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does server-initiated single flight mutation', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('4');
+		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		page.click('#multiply-override-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await expect(page.locator('#command-result')).toHaveText('5');
+		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('form.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-one');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-1')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-one');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
+	});
+
+	test('form.buttonProps.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-two');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-2')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-two');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
+	});
+
+	test('form.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.buttonProps.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('prerendered entries not called in prod', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+		await page.goto('/remote/prerender');
+
+		await page.click('#fetch-prerendered');
+		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
+
+		await page.click('#fetch-not-prerendered');
+		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
+	});
+
+	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-all');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(3);
+	});
+
+	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-remote-only');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(2);
+	});
+
+	test('command tracks pending state', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initial pending should be 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and pending to go back to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
+	test('validation works', async ({ page }) => {
+		await page.goto('/remote/validation');
+		await expect(page.locator('p')).toHaveText('pending');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button:nth-of-type(1)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(2)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(3)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(4)');
+		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('command pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initially no pending commands
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and verify results
+		await expect(page.locator('#command-result')).toHaveText('7');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
+	test('form pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		// Initially no pending forms
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
+
+		// Fill form with slow operation
+		await page.fill('#input-task', 'deferred');
+
+		// Submit form - this will hang until we resolve it
+		await page.click('#submit-btn-one');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 1');
+
+		// Resolve the deferred form submission
+		await page.click('#resolve-deferreds');
+
+		// Wait for form submission to complete and verify results
+		await expect(page.locator('#get-task')).toHaveText('deferred');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
 	});
 });

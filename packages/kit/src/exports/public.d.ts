@@ -2,7 +2,6 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -18,7 +17,14 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import {
+	RouteId as AppRouteId,
+	LayoutParams as AppLayoutParams,
+	ResolvedPathname
+	// @ts-ignore
+} from '$app/types';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -36,18 +42,18 @@ export interface Adapter {
 	 */
 	adapt: (builder: Builder) => MaybePromise<void>;
 	/**
-	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 	 */
 	supports?: {
 		/**
-		 * Test support for `read` from `$app/server`
-		 * @param config The merged route config
+		 * Test support for `read` from `$app/server`.
+		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
-	 * during dev, build and prerendering
+	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 }
@@ -73,7 +79,7 @@ type OptionalUnion<
 
 declare const uniqueSymbol: unique symbol;
 
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+export interface ActionFailure<T = undefined> {
 	status: number;
 	data: T;
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -98,7 +104,7 @@ export interface Builder {
 	/** Create `dir` and any required parent directories. */
 	mkdirp: (dir: string) => void;
 
-	/** The fully resolved `svelte.config.js`. */
+	/** The fully resolved Svelte config. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
@@ -188,23 +194,16 @@ export interface Builder {
 	compress: (directory: string) => Promise<void>;
 }
 
-export interface Config {
+/**
+ * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
+ */
+export interface Config extends SvelteConfig {
 	/**
-	 * Options passed to [`svelte.compile`](https://svelte.dev/docs/svelte/svelte-compiler#CompileOptions).
-	 * @default {}
+	 * SvelteKit options.
+	 *
+	 * @see https://svelte.dev/docs/kit/configuration
 	 */
-	compilerOptions?: CompileOptions;
-	/**
-	 * List of file extensions that should be treated as Svelte files.
-	 * @default [".svelte"]
-	 */
-	extensions?: string[];
-	/** SvelteKit options */
 	kit?: KitConfig;
-	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
-	preprocess?: any;
-	/** `vite-plugin-svelte` plugin options. */
-	vitePlugin?: PluginOptions;
 	/** Any additional options required by tooling that integrates with Svelte. */
 	[key: string]: any;
 }
@@ -410,6 +409,16 @@ export interface KitConfig {
 		privatePrefix?: string;
 	};
 	/**
+	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
+	 */
+	experimental?: {
+		/**
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
+		 * @default false
+		 */
+		remoteFunctions?: boolean;
+	};
+	/**
 	 * Where to find various files within your project.
 	 */
 	files?: {
@@ -468,7 +477,7 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	/**
-	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page that are smaller than this value are merged and inlined in a `<style>` block.
 	 *
 	 * > [!NOTE] This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
 	 * @default 0
@@ -777,6 +786,14 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
+ *
+ * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
+ */
+export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
+	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+
+/**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
@@ -790,7 +807,7 @@ export type HandleClientError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
  */
 export type HandleFetch = (input: {
 	event: RequestEvent;
@@ -858,11 +875,11 @@ export interface Transporter<
  * rather than using `Load` directly.
  */
 export type Load<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
@@ -870,10 +887,10 @@ export type Load<
  * rather than using `LoadEvent` directly.
  */
 export interface LoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -978,8 +995,8 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
@@ -1003,12 +1020,15 @@ export interface NavigationEvent<
 /**
  * Information about the target of a specific navigation.
  */
-export interface NavigationTarget {
+export interface NavigationTarget<
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
+> {
 	/**
 	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 	 */
-	params: Record<string, string> | null;
+	params: Params | null;
 	/**
 	 * Info about the target route
 	 */
@@ -1016,7 +1036,7 @@ export interface NavigationTarget {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
-		id: string | null;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL that is navigated to
@@ -1118,13 +1138,13 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
  */
 export interface Page<
-	Params extends Record<string, string> = Record<string, string>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL;
+	url: URL & { pathname: ResolvedPathname };
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
@@ -1166,8 +1186,8 @@ export interface Page<
 export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -1250,6 +1270,11 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+	/**
+	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+	 * related to the data request in this case. Use this property instead if the distinction is important to you.
+	 */
+	isRemoteRequest: boolean;
 }
 
 /**
@@ -1258,8 +1283,8 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
  */
 export type RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 export interface ResolveOptions {
@@ -1310,7 +1335,7 @@ export interface ServerInitOptions {
 	/** A map of environment variables. */
 	env: Record<string, string>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
-	read?: (file: string) => ReadableStream;
+	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
 export interface SSRManifest {
@@ -1324,6 +1349,8 @@ export interface SSRManifest {
 	_: {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
+		remotes: Record<string, () => Promise<any>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1337,16 +1364,16 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export type ServerLoad<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
@@ -1409,23 +1436,23 @@ export interface ServerLoadEvent<
 }
 
 /**
- * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+ * Shape of a form action method that is part of `export const actions = {...}` in `+page.server.js`.
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
- * Shape of the `export const actions = {..}` object in `+page.server.js`.
+ * Shape of the `export const actions = {...}` object in `+page.server.js`.
  * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
  */
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
-	RouteId extends string | null = string | null
+	RouteId extends AppRouteId | null = AppRouteId | null
 > = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
@@ -1500,5 +1527,147 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+/**
+ * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ */
+export type RemoteForm<Result> = {
+	method: 'POST';
+	/** The URL to send the form to. */
+	action: string;
+	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+	onsubmit: (event: SubmitEvent) => void;
+	/** Use the `enhance` method to influence what happens when the form is submitted. */
+	enhance(
+		callback: (opts: {
+			form: HTMLFormElement;
+			data: FormData;
+			submit: () => Promise<void> & {
+				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+			};
+		}) => void
+	): {
+		method: 'POST';
+		action: string;
+		onsubmit: (event: SubmitEvent) => void;
+	};
+	/**
+	 * Create an instance of the form for the given key.
+	 * The key is stringified and used for deduplication to potentially reuse existing instances.
+	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+	 * ```svelte
+	 * {#each todos as todo}
+	 *	{@const todoForm = updateTodo.for(todo.id)}
+	 *	<form {...todoForm}>
+	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+	 *		...
+	 *	</form>
+	 *	{/each}
+	 * ```
+	 */
+	for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
+	/** The result of the form submission */
+	get result(): Result | undefined;
+	/** The number of pending submissions */
+	get pending(): number;
+	/** Spread this onto a `<button>` or `<input type="submit">` */
+	buttonProps: {
+		type: 'submit';
+		formmethod: 'POST';
+		formaction: string;
+		onclick: (event: Event) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance(
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<void> & {
+					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+				};
+			}) => void
+		): {
+			type: 'submit';
+			formmethod: 'POST';
+			formaction: string;
+			onclick: (event: Event) => void;
+		};
+		/** The number of pending submissions */
+		get pending(): number;
+	};
+};
+
+/**
+ * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+ */
+export type RemoteCommand<Input, Output> = {
+	(arg: Input): Promise<Awaited<Output>> & {
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	};
+	/** The number of pending command executions */
+	get pending(): number;
+};
+
+export type RemoteResource<T> = Promise<Awaited<T>> & {
+	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+	get error(): any;
+	/** `true` before the first result is available and during refreshes */
+	get loading(): boolean;
+} & (
+		| {
+				/** The current value of the query. Undefined until `ready` is `true` */
+				get current(): undefined;
+				ready: false;
+		  }
+		| {
+				/** The current value of the query. Undefined until `ready` is `true` */
+				get current(): Awaited<T>;
+				ready: true;
+		  }
+	);
+
+export type RemoteQuery<T> = RemoteResource<T> & {
+	/**
+	 * On the client, this function will re-fetch the query from the server.
+	 *
+	 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
+	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+	 */
+	refresh(): Promise<void>;
+	/**
+	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, addTodo } from './todos.remote.js';
+	 *   const todos = getTodos();
+	 * </script>
+	 *
+	 * <form {...addTodo.enhance(async ({ data, submit }) => {
+	 *   await submit().updates(
+	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+	 *   );
+	 * }}>
+	 *   <input type="text" name="text" />
+	 *   <button type="submit">Add Todo</button>
+	 * </form>
+	 * ```
+	 */
+	withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+};
+
+export interface RemoteQueryOverride {
+	_key: string;
+	release(): void;
+}
+
+/**
+ * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+ */
+export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+/**
+ * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ */
+export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 
 export * from './index.js';

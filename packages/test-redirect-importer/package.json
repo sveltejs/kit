@@ -1,0 +1,12 @@
+{
+	"name": "test-redirect-importer",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"dependencies": {
+		"@sveltejs/kit": "workspace:*"
+	}
+}

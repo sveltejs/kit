@@ -10,6 +10,8 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
+import { build_server_nodes } from '../../exports/vite/build/build_server.js';
+import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
@@ -20,7 +22,9 @@ export default forked(import.meta.url, analyse);
  *   manifest_data: import('types').ManifestData;
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   out: string;
+ *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  * }} opts
  */
 async function analyse({
@@ -29,7 +33,9 @@ async function analyse({
 	manifest_data,
 	server_manifest,
 	tracked_features,
-	env
+	env,
+	out,
+	output_config
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -58,10 +64,27 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
+	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
+	const static_exports = new Map();
+
+	// first, build server nodes without the client manifest so we can analyse it
+	await build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		output_config,
+		static_exports
+	);
+
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
@@ -143,7 +166,29 @@ async function analyse({
 		});
 	}
 
-	return metadata;
+	// analyse remotes
+	for (const remote of manifest_data.remotes) {
+		const loader = manifest._.remotes[remote.hash];
+		const module = await loader();
+
+		validate_remote_functions(module, remote.file);
+
+		const exports = new Map();
+
+		for (const name in module) {
+			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+			const type = info.type;
+
+			exports.set(name, {
+				type,
+				dynamic: type !== 'prerender' || info.dynamic
+			});
+		}
+
+		metadata.remotes.set(remote.hash, exports);
+	}
+
+	return { metadata, static_exports };
 }
 
 /**
