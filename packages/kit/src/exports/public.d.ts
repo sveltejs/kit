@@ -1026,7 +1026,7 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated/started
- * - `form`: The user submitted a `<form>` with a GET method
+ * - `form`: The user submitted a `<form method="GET">`
  * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1045,7 +1045,7 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>` with a GET method
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1083,7 +1083,7 @@ export interface BeforeNavigate extends Navigation {
 export interface OnNavigate extends Navigation {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>` with a GET method
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1102,7 +1102,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form>` with a GET method
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
