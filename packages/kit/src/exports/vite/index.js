@@ -37,6 +37,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
+import { should_ignore } from './static_analysis/utils.js';
 
 const cwd = process.cwd();
 
@@ -90,7 +91,7 @@ const warning_preprocessor = {
 		const basename = path.basename(filename);
 		if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
 			const match = content.match(options_regex);
-			if (match) {
+			if (match && match.index !== undefined && !should_ignore(content, match.index)) {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
