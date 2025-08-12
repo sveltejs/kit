@@ -239,6 +239,11 @@ test.describe('Load', () => {
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
+	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
+		await page.goto('/load/fetch-same-url');
+		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
+	});
+
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
 		/** @type {string[]} */
 		const logs = [];
