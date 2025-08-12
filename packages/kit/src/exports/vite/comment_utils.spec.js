@@ -141,7 +141,8 @@ test.each([
 		'"/* /* nested */ */"; export const trailingSlash = "always"',
 		'+page.svelte',
 		true
-	]
+	],
+	['page option match inside string', '"export const trailingSlash = true"', '+page.svelte', false]
 ])('warning behavior: %s', (_description, content, filename, should_warn) => {
 	const result = should_warn_for_content(content, filename);
 	expect(result).toBe(should_warn);
