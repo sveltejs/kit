@@ -10,7 +10,7 @@ title: Observability
 
 Sometimes, you may need to observe how your application is behaving in order to improve performance or find the root cause of a pesky bug. To help with this, SvelteKit can emit server-side [OpenTelemetry](https://opentelemetry.io) spans for the following:
 
-- `handle` hook (`sequence`d `handle` functions will show up as children of each other and the root handle hook) 
+- [`handle`](hooks#Server-hooks-handle) hook (`handle` functions running in a [`sequence`](@sveltejs-kit-hooks#sequence) will show up as children of each other and the root handle hook) 
 - [`load`](load) functions (includes universal `load` functions when they're run on the server)
 - [Form actions](form-actions)
 - [Remote functions](remote-functions)
