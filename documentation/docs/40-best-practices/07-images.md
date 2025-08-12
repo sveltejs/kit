@@ -33,7 +33,7 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 Install:
 
 ```sh
-npm install --save-dev @sveltejs/enhanced-img
+npm i -D @sveltejs/enhanced-img
 ```
 
 Adjust `vite.config.js`:

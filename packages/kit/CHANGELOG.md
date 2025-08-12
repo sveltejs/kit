@@ -1,5 +1,32 @@
 # @sveltejs/kit
 
+## 2.28.0
+### Minor Changes
+
+
+- feat: add `RouteId` and `RouteParams` to NavigationTarget interface ([#14167](https://github.com/sveltejs/kit/pull/14167))
+
+
+- feat: add `pending` property to forms and commands ([#14137](https://github.com/sveltejs/kit/pull/14137))
+
+
+### Patch Changes
+
+
+- fix: `fetch` imported assets during prerender ([#12201](https://github.com/sveltejs/kit/pull/12201))
+
+
+- chore: refactor redundant base64 encoding/decoding functions ([#14160](https://github.com/sveltejs/kit/pull/14160))
+
+
+- fix: use correct cache result when fetching same url multiple times ([#12355](https://github.com/sveltejs/kit/pull/12355))
+
+
+- fix: don't refresh queries automatically when running commands ([#14170](https://github.com/sveltejs/kit/pull/14170))
+
+
+- fix: avoid writing remote function bundle to disk when treeshaking prerendered queries ([#14161](https://github.com/sveltejs/kit/pull/14161))
+
 ## 2.27.3
 ### Patch Changes
 
