@@ -46,7 +46,8 @@ If you're only using the import as a type, change it to \`import type\`.`);
 			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-modules/static-import/+page.svelte imports
-  src/routes/illegal-imports/server-only-modules/illegal.server.js
+  src/routes/illegal-imports/server-only-modules/static-import/foo.js imports
+   src/routes/illegal-imports/server-only-modules/illegal.server.js
 
 If you're only using the import as a type, change it to \`import type\`.`);
 	});
