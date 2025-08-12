@@ -84,12 +84,7 @@ test.each([
 		'+page.svelte',
 		true
 	],
-	[
-		'valid export const ssr',
-		'export const ssr = false',
-		'+page.svelte',
-		true
-	],
+	['valid export const ssr', 'export const ssr = false', '+page.svelte', true],
 	[
 		'valid export const with spacing',
 		'export const   trailingSlash   =   "always"',
