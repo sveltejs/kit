@@ -122,7 +122,8 @@ const options = object(
 
 			experimental: object({
 				tracing: object({
-					server: boolean(false)
+					server: boolean(false),
+					serverFile: boolean(false)
 				}),
 				remoteFunctions: boolean(false)
 			}),

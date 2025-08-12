@@ -458,11 +458,23 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
-		 * @default { server: false }
+		 * @default { server: false, serverFile: false }
 		 * @since 2.28.0
 		 */
 		tracing?: {
+			/**
+			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations includeing the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+			 * @default false
+			 * @since 2.28.0
+			 */
 			server?: boolean;
+
+			/**
+			 * Enables `tracing.server.js` for tracing instrumentation.
+			 * @default false
+			 * @since 2.28.0
+			 */
+			serverFile?: boolean;
 		};
 
 		/**

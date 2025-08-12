@@ -77,7 +77,7 @@ const get_defaults = (prefix = '') => ({
 			privatePrefix: ''
 		},
 		experimental: {
-			tracing: { server: false },
+			tracing: { server: false, serverFile: false },
 			remoteFunctions: false
 		},
 		files: {

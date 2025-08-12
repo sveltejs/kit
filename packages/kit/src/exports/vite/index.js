@@ -746,6 +746,11 @@ Tips:
 						if (adapter && !adapter.supports?.tracing?.()) {
 							throw new Error(`${server_tracing} is unsupported in ${adapter.name}.`);
 						}
+						if (!kit.experimental.tracing.serverFile) {
+							throw new Error(
+								'`tracing.server.js` is experimental. To use it, set `kit.experimental.tracing.serverFile`.'
+							);
+						}
 						input['tracing.server'] = server_tracing;
 					}
 
