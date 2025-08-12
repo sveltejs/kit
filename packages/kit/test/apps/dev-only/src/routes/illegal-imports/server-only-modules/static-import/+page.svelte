@@ -1,5 +1,5 @@
 <script>
-	import { should_explode } from '../illegal.server.js';
+	import { should_explode } from './foo';
 </script>
 
 <p>{should_explode}</p>
