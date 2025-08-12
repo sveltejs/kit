@@ -2,4 +2,4 @@
 	const { data } = $props();
 </script>
 
-<p>{data.asset}</p>
+<p>{data.message}</p>

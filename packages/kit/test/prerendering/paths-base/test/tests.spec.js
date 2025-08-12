@@ -32,5 +32,5 @@ test('prerenders /path-base/assets', () => {
 
 test('prerenders /path-base/assets/emitted', () => {
 	const content = read('assets/emitted.html');
-	assert.ok(content.includes('<p>A custom asset emitted by a vite plugin during build.</p>'));
+	assert.ok(content.includes('<p>hello from message.csv'));
 });
