@@ -35,7 +35,7 @@ export default {
 
 > [!NOTE] Tracing -- and more significantly, tracing instrumentation -- can have a nontrivial overhead. Before you go all-in on tracing, consider whether or not you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
 
-## Development Quickstart
+## Development quickstart
 
 To view your first trace, you'll need to set up a local collector. We'll use [Jaeger](https://www.jaegertracing.io/docs/getting-started/) in this example, as they provide an easy-to-use quickstart command. Once your collector is running locally:
 
