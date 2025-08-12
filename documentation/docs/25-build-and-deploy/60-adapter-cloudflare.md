@@ -130,7 +130,7 @@ SvelteKit uses the [`AsyncLocalStorage`](https://nodejs.org/api/async_context.ht
 ```jsonc
 /// file: wrangler.jsonc
 {
-	"compatibility_flags": ["nodejs_compat"]
+	"compatibility_flags": ["nodejs_als"]
 }
 ```
 
