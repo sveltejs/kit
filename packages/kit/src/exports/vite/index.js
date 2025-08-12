@@ -17,7 +17,13 @@ import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, normalize_id, strip_virtual_prefix } from './utils.js';
+import {
+	error_for_missing_config,
+	get_config_aliases,
+	get_env,
+	normalize_id,
+	strip_virtual_prefix
+} from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -747,8 +753,10 @@ Tips:
 							throw new Error(`${server_tracing} is unsupported in ${adapter.name}.`);
 						}
 						if (!kit.experimental.tracing.serverFile) {
-							throw new Error(
-								'`tracing.server.js` is experimental. To use it, set `kit.experimental.tracing.serverFile`.'
+							error_for_missing_config(
+								'tracing.server.js',
+								'kit.experimental.tracing.serverFile',
+								'true'
 							);
 						}
 						input['tracing.server'] = server_tracing;

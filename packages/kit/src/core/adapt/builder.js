@@ -244,8 +244,9 @@ export function create_builder({
 			entrypoint,
 			tracing,
 			start = join(dirname(entrypoint), 'start.js'),
-			tla = true,
-			exports = ['default']
+			module = {
+				exports: ['default']
+			}
 		}) {
 			if (!existsSync(tracing)) {
 				throw new Error(
@@ -263,8 +264,20 @@ export function create_builder({
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
+			const relative_tracing = relative(dirname(entrypoint), tracing);
+			const relative_start = relative(dirname(entrypoint), start);
+
+			const facade =
+				'generateText' in module
+					? module.generateText({ tracing: relative_tracing, start: relative_start })
+					: create_tracing_facade({
+							tracing: relative_tracing,
+							start: relative_start,
+							exports: module.exports
+						});
+
 			rimraf(entrypoint);
-			write(entrypoint, create_tracing_facade({ entrypoint, tracing, start, exports, tla }));
+			write(entrypoint, facade);
 		}
 	};
 }
@@ -299,13 +312,11 @@ async function compress_file(file, format = 'gz') {
  *
  * `default` receives special treatment: It will be imported as `default` and exported with `export default`.
  *
- * @param {Required<Parameters<Builder['trace']>[0]>} opts
+ * @param {{ tracing: string; start: string; exports: string[] }} opts
  * @returns {string}
  */
-function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
-	const relative_tracing = relative(dirname(entrypoint), tracing);
-	const relative_start = relative(dirname(entrypoint), start);
-	const import_tracing = `import './${relative_tracing}';`;
+function create_tracing_facade({ tracing, start, exports }) {
+	const import_tracing = `import './${tracing}';`;
 
 	let alias_index = 0;
 	const aliases = new Map();
@@ -332,13 +343,7 @@ function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
 	for (const name of exports) {
 		const alias = aliases.get(name);
 		if (alias) {
-			if (tla) {
-				// TLA generates a `const {} = await import('entrypoint')` so we need to use object destructuring
-				import_statements.push(`${name}: ${alias}`);
-			} else {
-				// non-TLA generates a `import { name as alias } from 'entrypoint'`
-				import_statements.push(`${name} as ${alias}`);
-			}
+			import_statements.push(`${name}: ${alias}`);
 
 			if (name !== 'default') {
 				export_statements.push(`${alias} as ${name}`);
@@ -354,9 +359,7 @@ function create_tracing_facade({ entrypoint, tracing, start, exports, tla }) {
 
 	const default_alias = aliases.get('default');
 	const entrypoint_facade = [
-		tla
-			? `const { ${import_statements.join(', ')} } = await import('./${relative_start}');`
-			: `import { ${import_statements.join(', ')} } from './${relative_start}';`,
+		`const { ${import_statements.join(', ')} } = await import('./${start}');`,
 		default_alias ? `export default ${default_alias};` : '',
 		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
 	]

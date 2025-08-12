@@ -1,7 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, PrerenderOptions, ServerHooks, SSROptions, SSRState, RecordSpan } from 'types' */
 
-export const EVENT_STATE = Symbol('remote');
+export const EVENT_STATE = Symbol('sveltekit private event state');
 
 /**
  * Internal state associated with the current `RequestEvent`,

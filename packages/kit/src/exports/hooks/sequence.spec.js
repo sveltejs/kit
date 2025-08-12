@@ -1,21 +1,20 @@
 import { assert, expect, test } from 'vitest';
 import { sequence } from './sequence.js';
 import { installPolyfills } from '../node/polyfills.js';
-import { EVENT_STATE } from '@sveltejs/kit/internal';
+import { add_event_state } from '@sveltejs/kit/internal';
 
 installPolyfills();
 
-const dummy_event = /** @type {import('@sveltejs/kit').RequestEvent} */ (
-	/** @type {unknown} */ ({
-		tracing: { root: {} },
-		[EVENT_STATE]: {
-			tracing: {
-				// @ts-expect-error
-				record_span: ({ fn }) => fn()
-			}
+const dummy_event = add_event_state({
+	// @ts-expect-error
+	record_span: ({ fn }) => fn(),
+	event: {
+		tracing: {
+			// @ts-expect-error
+			root: {}
 		}
-	})
-);
+	}
+});
 
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */

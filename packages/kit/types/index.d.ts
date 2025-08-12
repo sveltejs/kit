@@ -32,6 +32,7 @@ declare module '@sveltejs/kit' {
 			/**
 			 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
 			 * also deploy to a platform that supports `@opentelemetry/api`.
+			 * @since 2.29.0
 			 */
 			tracing?: () => boolean;
 		};
@@ -174,6 +175,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Check if the server tracing file exists.
 		 * @returns true if the server tracing file exists, false otherwise
+		 * @since 2.29.0
 		 */
 		hasServerTracingFile: () => boolean;
 
@@ -193,21 +195,21 @@ declare module '@sveltejs/kit' {
 		 * @param options.entrypoint the path to the entrypoint to trace.
 		 * @param options.tracing the path to the tracing file.
 		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
-		 * @param options.tla Whether to use top-level await. If `true`, the `tracing` file will be statically imported and then the `start` file will be dynamically imported. If `false`, both files will be serially imported. Auto-instrumentation will not work properly without a dynamic `await`.
-		 * @param options.exports an array of exports to re-export from the entrypoint. `default` represents the default export. Defaults to `['default']`.
+		 * @param options.module configuration for the resulting entrypoint module.
+		 * @param options.module.generateText a function that receives the relative paths to the tracing and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
+		 * @since 2.29.0
 		 */
-		trace: ({
-			entrypoint,
-			tracing,
-			start,
-			tla,
-			exports
-		}: {
+		trace: (args: {
 			entrypoint: string;
 			tracing: string;
 			start?: string;
-			tla?: boolean;
-			exports?: string[];
+			module?:
+				| {
+						exports: string[];
+				  }
+				| {
+						generateText: (args: { tracing: string; start: string }) => string;
+				  };
 		}) => void;
 
 		/**
@@ -431,25 +433,25 @@ declare module '@sveltejs/kit' {
 			 */
 			privatePrefix?: string;
 		};
-		/** Experimental features. Here be dragons. Breaking changes may occur in minor releases. */
+		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 		experimental?: {
 			/**
-			 * Whether to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), and [form actions](https://svelte.dev/docs/kit/form-actions).
+			 * Options for enabling to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions),  and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 			 * @default { server: false, serverFile: false }
-			 * @since 2.28.0
+			 * @since 2.29.0
 			 */
 			tracing?: {
 				/**
-				 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations includeing the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+				 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 				 * @default false
-				 * @since 2.28.0
+				 * @since 2.29.0
 				 */
 				server?: boolean;
 
 				/**
 				 * Enables `tracing.server.js` for tracing instrumentation.
 				 * @default false
-				 * @since 2.28.0
+				 * @since 2.29.0
 				 */
 				serverFile?: boolean;
 			};
@@ -1044,7 +1046,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
-		 * @since 2.28.0
+		 * @since 2.29.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */
@@ -1335,7 +1337,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-		 * @since 2.28.0
+		 * @since 2.29.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */
@@ -1512,7 +1514,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-		 * @since 2.28.0
+		 * @since 2.29.0
 		 */
 		tracing: {
 			/** Whether tracing is enabled. */

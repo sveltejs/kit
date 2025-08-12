@@ -257,17 +257,17 @@ async function call_action(event, actions) {
 	}
 
 	return record_span({
-		name: 'sveltekit.action',
+		name: 'sveltekit.form_action',
 		attributes: {
-			'sveltekit.action.name': name,
+			'sveltekit.form_action.name': name,
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
 			const result = await with_event(merge_tracing(event, current), () => action(event));
 			if (result instanceof ActionFailure) {
 				current.setAttributes({
-					'sveltekit.action.result.type': 'failure',
-					'sveltekit.action.result.status': result.status
+					'sveltekit.form_action.result.type': 'failure',
+					'sveltekit.form_action.result.status': result.status
 				});
 			}
 

@@ -4,6 +4,7 @@ import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
 	env_dynamic_private,
@@ -156,3 +157,50 @@ export function normalize_id(id, lib, cwd) {
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
+
+/**
+ * For `error_for_missing_config('tracing.server.js', 'kit.experimental.tracing.serverFile', true)`,
+ * returns:
+ *
+ * ```
+ * To enable `tracing.server.js`, add the following to your `svelte.config.js`:
+ *
+ *\`\`\`js
+ *	kit:
+ *		experimental:
+ *			tracing:
+ *				server: true
+ *			}
+ *		}
+ *	}
+ *\`\`\`
+ *```
+ * @param {string} feature_name
+ * @param {string} path
+ * @param {string} value
+ * @returns {never}
+ */
+export function error_for_missing_config(feature_name, path, value) {
+	const parts = path.split('.');
+	const hole = '__HOLE__';
+	/** @param {number} n */
+	const indent = (n) => '  '.repeat(n);
+
+	const result = parts.reduce((acc, part, i) => {
+		if (i === parts.length - 1) {
+			return acc.replace(hole, `${indent(i)}${part}: ${value}`);
+		} else {
+			return acc.replace(hole, `${indent(i)}${part}: {\n${hole}\n${indent(i)}}`);
+		}
+	}, hole);
+
+	throw new Error(
+		dedent`\
+			To enable \`${feature_name}\`, add the following to your \`svelte.config.js\`:
+
+			\`\`\`js
+			${result}
+			\`\`\`
+		`
+	);
+}

@@ -192,7 +192,9 @@ const plugin = function (defaults = {}) {
 						builder.trace({
 							entrypoint: `${outdir}/index.js`,
 							tracing: `${outdir}/tracing.server.js`,
-							tla: false
+							module: {
+								generateText: generate_traced_edge_module
+							}
 						});
 					}
 
@@ -833,6 +835,25 @@ function is_prerendered(route) {
 		route.prerender === true ||
 		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
+}
+
+/**
+ * @param {{ tracing: string; start: string }} opts
+ */
+function generate_traced_edge_module({ tracing, start }) {
+	return `\
+import './${tracing}';
+const promise = import('./${start}');
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+export default async (req, res) => {
+	const { default: handler } = await promise;
+	return handler(req, res);
+}
+`;
 }
 
 export default plugin;
