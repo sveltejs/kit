@@ -197,17 +197,13 @@ export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace
  * @returns {never}
  */
 export function error_for_missing_config(feature_name, path, value) {
-	const parts = path.split('.');
 	const hole = '__HOLE__';
-	/** @param {number} n */
-	const indent = (n) => '  '.repeat(n);
 
-	const result = parts.reduce((acc, part, i) => {
-		if (i === parts.length - 1) {
-			return acc.replace(hole, `${indent(i)}${part}: ${value}`);
-		} else {
-			return acc.replace(hole, `${indent(i)}${part}: {\n${hole}\n${indent(i)}}`);
-		}
+	const result = path.split('.').reduce((acc, part, i, parts) => {
+		const indent = '  '.repeat(i);
+		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
+
+		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
 
 	throw new Error(
