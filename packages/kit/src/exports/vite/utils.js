@@ -168,7 +168,7 @@ export function normalize_id(id, lib, cwd) {
 export function stackless(message) {
 	const error = new Error(message);
 	error.stack = '';
-	throw error;
+	return error;
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
