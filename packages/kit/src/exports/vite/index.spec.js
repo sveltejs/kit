@@ -1,10 +1,11 @@
 import { expect, test, vi } from 'vitest';
 import path from 'node:path';
+import { is_within_comment } from './comment_utils.js';
 
 // Mock the colors module to avoid issues in tests
 vi.mock('kleur', () => ({
 	default: {
-		bold: () => ({ red: (str) => str })
+		bold: () => ({ red: (/** @type {string} */ str) => str })
 	}
 }));
 
@@ -13,42 +14,14 @@ vi.mock('kleur', () => ({
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
 /**
- * Check if a match position is within a comment
- * @param {string} content - The full content
- * @param {number} matchIndex - The index where the match starts
- * @returns {boolean} - True if the match is within a comment
+ * @param {string} content
+ * @param {string} filename
  */
-function isWithinComment(content, matchIndex) {
-	// Check for single-line comment
-	const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
-	const lineContent = content.slice(lineStart, matchIndex);
-	if (lineContent.trim().startsWith('//')) {
-		return true;
-	}
-
-	// Check for multi-line comment /* */
-	const beforeMatch = content.slice(0, matchIndex);
-	const lastCommentStart = beforeMatch.lastIndexOf('/*');
-	const lastCommentEnd = beforeMatch.lastIndexOf('*/');
-	if (lastCommentStart > lastCommentEnd) {
-		return true;
-	}
-
-	// Check for HTML comment <!-- -->
-	const lastHtmlCommentStart = beforeMatch.lastIndexOf('<!--');
-	const lastHtmlCommentEnd = beforeMatch.lastIndexOf('-->');
-	if (lastHtmlCommentStart > lastHtmlCommentEnd) {
-		return true;
-	}
-
-	return false;
-}
-
-function shouldWarnForContent(content, filename) {
+function should_warn_for_content(content, filename) {
 	const basename = path.basename(filename);
 	if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
 		const match = content.match(options_regex);
-		return match && !isWithinComment(content, match.index);
+		return match && match.index !== undefined && !is_within_comment(content, match.index);
 	}
 	return false;
 }
@@ -132,8 +105,44 @@ test.each([
 		'<!--\n  export const trailingSlash = "always"\n-->',
 		'+page.svelte',
 		false
+	],
+	[
+		'edge case: comment delimiters in strings',
+		'"/*"; export const trailingSlash = "always"; "*/"',
+		'+page.svelte',
+		true // Should warn because the export is not actually in a comment
+	],
+	[
+		'escaped quotes in strings',
+		'"comment with \\"/*\\" inside"; export const trailingSlash = "always"',
+		'+page.svelte',
+		true
+	],
+	[
+		'single quotes with comment delimiters',
+		"'/*'; export const trailingSlash = 'always'; '*/'",
+		'+page.svelte',
+		true
+	],
+	[
+		'template literal with comment delimiters',
+		'`/*`; export const trailingSlash = "always"; `*/`',
+		'+page.svelte',
+		true
+	],
+	[
+		'real comment after string with comment delimiter',
+		'"fake /*"; /* real comment with export const trailingSlash = "always" */',
+		'+page.svelte',
+		false
+	],
+	[
+		'nested comment-like structures in strings',
+		'"/* /* nested */ */"; export const trailingSlash = "always"',
+		'+page.svelte',
+		true
 	]
-])('warning behavior: %s', (description, content, filename, shouldWarn) => {
-	const result = shouldWarnForContent(content, filename);
-	expect(result).toBe(shouldWarn);
+])('warning behavior: %s', (_description, content, filename, should_warn) => {
+	const result = should_warn_for_content(content, filename);
+	expect(result).toBe(should_warn);
 });

@@ -37,6 +37,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
+import { is_within_comment } from './comment_utils.js';
 
 const cwd = process.cwd();
 
@@ -79,38 +80,6 @@ const enforced_config = {
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
-/**
- * Check if a match position is within a comment
- * @param {string} content - The full content
- * @param {number} matchIndex - The index where the match starts
- * @returns {boolean} - True if the match is within a comment
- */
-function isWithinComment(content, matchIndex) {
-	// Check for single-line comment
-	const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
-	const lineContent = content.slice(lineStart, matchIndex);
-	if (lineContent.trim().startsWith('//')) {
-		return true;
-	}
-
-	// Check for multi-line comment /* */
-	const beforeMatch = content.slice(0, matchIndex);
-	const lastCommentStart = beforeMatch.lastIndexOf('/*');
-	const lastCommentEnd = beforeMatch.lastIndexOf('*/');
-	if (lastCommentStart > lastCommentEnd) {
-		return true;
-	}
-
-	// Check for HTML comment <!-- -->
-	const lastHtmlCommentStart = beforeMatch.lastIndexOf('<!--');
-	const lastHtmlCommentEnd = beforeMatch.lastIndexOf('-->');
-	if (lastHtmlCommentStart > lastHtmlCommentEnd) {
-		return true;
-	}
-
-	return false;
-}
-
 /** @type {Set<string>} */
 const warned = new Set();
 
@@ -122,7 +91,7 @@ const warning_preprocessor = {
 		const basename = path.basename(filename);
 		if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
 			const match = content.match(options_regex);
-			if (match && !isWithinComment(content, match.index)) {
+			if (match && match.index !== undefined && !is_within_comment(content, match.index)) {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
