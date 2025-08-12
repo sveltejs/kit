@@ -323,12 +323,12 @@ function create_tracing_facade({ tracing, start, exports }) {
 
 	for (const name of exports.filter((name) => reserved.has(name))) {
 		/*
-							you can do evil things like `export { c as class }`.
-							in order to import these, you need to alias them, and then un-alias them when re-exporting
-							this map will allow us to generate the following:
-							import { class as _1 } from 'entrypoint';
-							export { _1 as class };
-						*/
+		 * you can do evil things like `export { c as class }`.
+		 * in order to import these, you need to alias them, and then un-alias them when re-exporting
+		 * this map will allow us to generate the following:
+		 * import { class as _1 } from 'entrypoint';
+		 * export { _1 as class };
+		 */
 		let alias = `_${alias_index++}`;
 		while (exports.includes(alias)) {
 			alias = `_${alias_index++}`;
@@ -344,23 +344,15 @@ function create_tracing_facade({ tracing, start, exports }) {
 		const alias = aliases.get(name);
 		if (alias) {
 			import_statements.push(`${name}: ${alias}`);
-
-			if (name !== 'default') {
-				export_statements.push(`${alias} as ${name}`);
-			}
+			export_statements.push(`${alias} as ${name}`);
 		} else {
 			import_statements.push(`${name}`);
-
-			if (name !== 'default') {
-				export_statements.push(`${name}`);
-			}
+			export_statements.push(`${name}`);
 		}
 	}
 
-	const default_alias = aliases.get('default');
 	const entrypoint_facade = [
 		`const { ${import_statements.join(', ')} } = await import('./${start}');`,
-		default_alias ? `export default ${default_alias};` : '',
 		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
 	]
 		.filter(Boolean)
