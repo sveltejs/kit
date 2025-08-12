@@ -14,7 +14,7 @@ test.describe.serial('Illegal imports', () => {
 
 	test('$env/dynamic/private is not importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/dynamic-private', {
-			// wait_for_started: false
+			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body'))
 			.toBe(`Cannot import $env/dynamic/private into code that runs in the browser, as this could leak sensitive information.
