@@ -583,7 +583,7 @@ async function kit({ svelte_config }) {
 				normalized === '$env/static/private' ||
 				normalized === '$env/dynamic/private' ||
 				normalized === '$app/server' ||
-				normalized.startsWith('$lib/server') ||
+				normalized.startsWith('$lib/server/') ||
 				(is_internal && server_only_pattern.test(path.basename(id)));
 
 			if (is_server_only) {
