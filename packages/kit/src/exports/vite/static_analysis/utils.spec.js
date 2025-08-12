@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest';
 import path from 'node:path';
-import { is_within_comment } from './comment_utils.js';
+import { should_ignore } from './utils.js';
 
 // Mock the colors module to avoid issues in tests
 vi.mock('kleur', () => ({
@@ -21,7 +21,7 @@ function should_warn_for_content(content, filename) {
 	const basename = path.basename(filename);
 	if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
 		const match = content.match(options_regex);
-		return match && match.index !== undefined && !is_within_comment(content, match.index);
+		return match && match.index !== undefined && !should_ignore(content, match.index);
 	}
 	return false;
 }

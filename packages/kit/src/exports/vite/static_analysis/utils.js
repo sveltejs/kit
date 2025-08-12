@@ -1,10 +1,10 @@
 /**
- * Check if a match position is within a comment, accounting for strings and escaped characters
+ * Check if a match position is within a comment or a string
  * @param {string} content - The full content
  * @param {number} match_index - The index where the match starts
  * @returns {boolean} - True if the match is within a comment
  */
-export function is_within_comment(content, match_index) {
+export function should_ignore(content, match_index) {
 	// Track if we're inside different types of quotes and comments
 	let in_single_quote = false;
 	let in_double_quote = false;
