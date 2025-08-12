@@ -89,6 +89,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 	"name": "<any-name-you-want>",
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2025-01-01",
+	"compatibility_flags": ["nodejs_als"],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare",
@@ -101,6 +102,8 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 Please follow the [framework guide](https://developers.cloudflare.com/workers/frameworks/framework-guides/svelte/) for Cloudflare Workers to begin.
 
 ## Cloudflare Pages
+
+Ensure that you have enabled the `nodejs_als` compatibility flag in your dashboard, or via your Wrangler configuration.
 
 ### Deployment
 
@@ -119,6 +122,19 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 ### Notes
 
 Functions contained in the [`/functions` directory](https://developers.cloudflare.com/pages/functions/routing/) at the project's root will _not_ be included in the deployment. Instead, functions should be implemented as [server endpoints](routing#server) in your SvelteKit app, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/functions/advanced-mode/).
+
+## Node compatibility
+
+SvelteKit uses the [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage) API internally. You need to enable the `nodejs_als` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), either via the Cloudflare dashboard (if using Pages) or your Wrangler configuration, or your app may break in production.
+
+```jsonc
+/// file: wrangler.jsonc
+{
+	"compatibility_flags": ["nodejs_compat"]
+}
+```
+
+If you app makes use of other Node.js APIs such as `node:path`, enable support via the `nodejs_compat` compatibility flag instead.
 
 ## Runtime APIs
 
@@ -166,17 +182,6 @@ The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/)
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
 
 ## Troubleshooting
-
-### Node.js compatibility
-
-If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
-
-```jsonc
-/// file: wrangler.jsonc
-{
-	"compatibility_flags": ["nodejs_compat"]
-}
-```
 
 ### Worker size limits
 
