@@ -4,9 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
-import options from '../../config/options.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
+import { validate_config } from '../../config/index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
@@ -16,7 +16,7 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 function run_test(dir) {
 	rimraf(path.join(cwd, dir, '.svelte-kit'));
 
-	const initial = options({}, 'config');
+	const initial = validate_config({});
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
 	initial.kit.files.params = path.resolve(cwd, dir, 'params');

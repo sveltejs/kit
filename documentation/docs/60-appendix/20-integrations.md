@@ -19,7 +19,7 @@ You will also need to use a preprocessor if you're using TypeScript with Svelte 
 
 ## Adders
 
-Run `npx sv add` to setup many different complex integrations with a single command including:
+Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
 - prettier (formatting)
 - eslint (linting)
 - vitest (unit testing)
