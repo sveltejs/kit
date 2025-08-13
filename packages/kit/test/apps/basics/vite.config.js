@@ -32,7 +32,7 @@ export default defineConfig({
 						instances: [{ browser: 'chromium' }],
 						headless: true
 					},
-					include: ['test/**/*.spec.js'],
+					include: ['unit-test/**/*.spec.js'],
 					setupFiles: ['./vitest-setup-client.ts']
 				}
 			}
