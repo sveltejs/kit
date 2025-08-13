@@ -259,8 +259,8 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (resolve_opts.preload({ type: 'css', path })) {
-				const preload_atts = ['rel="preload"', 'as="style"'];
-				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+				const preload_atts = ['rel="preload"', 'as="style"', 'nopush'];
+				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join('; ')}`);
 			}
 		}
 
@@ -281,6 +281,16 @@ export async function render_response({
 			];
 
 			head += `\n\t\t<link ${attributes.join(' ')}>`;
+
+			const preload_atts = [
+				'rel="preload"',
+				'as="font"',
+				`type="font/${ext}"`,
+				'crossorigin',
+				'nopush'
+			];
+
+			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join('; ')}`);
 		}
 	}
 
