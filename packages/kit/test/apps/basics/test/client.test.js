@@ -1661,7 +1661,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0'); // Ensure count is not bumped
 
 		await page.goBack();
-		await expect(page.locator('p')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
 		await expect(page.locator('[data-testid=count]')).toHaveText('count: nope');
 	});
 });
