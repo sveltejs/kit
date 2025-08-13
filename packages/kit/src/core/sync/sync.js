@@ -32,6 +32,7 @@ export function create(config) {
 	write_server(config, output);
 	write_root(manifest_data, output);
 	write_all_types(config, manifest_data);
+	write_non_ambient(config.kit, manifest_data);
 
 	return { manifest_data };
 }
@@ -67,6 +68,7 @@ export function all_types(config, mode) {
 	init(config, mode);
 	const manifest_data = create_manifest_data({ config });
 	write_all_types(config, manifest_data);
+	write_non_ambient(config.kit, manifest_data);
 }
 
 /**
