@@ -1,6 +1,6 @@
 import path from 'node:path';
 import process from 'node:process';
-import { hash } from '../../runtime/hash.js';
+import { hash } from '../../utils/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
@@ -67,8 +67,9 @@ export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let handleValidationError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	${server_hooks ? `({ handle, handleFetch, handleError, handleValidationError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
@@ -78,6 +79,7 @@ export async function get_hooks() {
 		handle,
 		handleFetch,
 		handleError,
+		handleValidationError,
 		init,
 		reroute,
 		transport

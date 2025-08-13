@@ -6,6 +6,16 @@ import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 
+// @ts-ignore this doesn't exist in old Node
+Promise.withResolvers ??= () => {
+	const d = {};
+	d.promise = new Promise((resolve, reject) => {
+		d.resolve = resolve;
+		d.reject = reject;
+	});
+	return d;
+};
+
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively
@@ -46,6 +56,11 @@ export const handleError = ({ event, error: e, status, message }) => {
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };
+};
+
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export const handleValidationError = ({ issues }) => {
+	return { message: issues[0].message };
 };
 
 export const handle = sequence(

@@ -131,7 +131,7 @@ Set this string as an environment variable on Vercel by logging in and going to 
 
 To get this key known about for local development, you can use the [Vercel CLI](https://vercel.com/docs/cli/env) by running the `vercel env pull` command locally like so:
 
-```bash
+```sh
 vercel env pull .env.development.local
 ```
 
@@ -194,6 +194,6 @@ Projects created before a certain date may default to using an older Node versio
 
 You can't use `fs` in edge functions.
 
-You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. `read` does not work inside routes deployed as edge functions (this may change in future).
+You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It also works inside routes deployed as edge functions by fetching the file from the deployed public assets location.
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.

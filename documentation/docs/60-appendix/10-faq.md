@@ -195,14 +195,14 @@ Currently ESM Support within the latest Yarn (version 3) is considered [experime
 
 The below seems to work although your results may vary. First create a new application:
 
-```bash
+```sh
 yarn create svelte myapp
 cd myapp
 ```
 
 And enable Yarn Berry:
 
-```bash
+```sh
 yarn set version berry
 yarn install
 ```

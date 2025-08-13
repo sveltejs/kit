@@ -1,6 +1,7 @@
 import { parse, serialize } from 'cookie';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
+import { text_encoder } from '../utils.js';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -217,7 +218,7 @@ export function get_cookies(request, url) {
 
 		if (__SVELTEKIT_DEV__) {
 			const serialized = serialize(name, value, new_cookies[name].options);
-			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 

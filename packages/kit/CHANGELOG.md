@@ -1,5 +1,119 @@
 # @sveltejs/kit
 
+## 2.29.1
+### Patch Changes
+
+
+- chore: allow remote functions in all of the src directory ([#14198](https://github.com/sveltejs/kit/pull/14198))
+
+## 2.29.0
+### Minor Changes
+
+
+- feat: add a `kit.files.src` option ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+### Patch Changes
+
+
+- fix: don't treat `$lib/server.ts` or `$lib/server_whatever.ts` as server-only modules, only `$lib/server/**` ([#14191](https://github.com/sveltejs/kit/pull/14191))
+
+
+- fix: make illegal server-only import errors actually useful ([#14155](https://github.com/sveltejs/kit/pull/14155))
+
+
+- chore: deprecate `config.kit.files` options ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+- fix: avoid warning if page options in a Svelte file belongs to a comment ([#14180](https://github.com/sveltejs/kit/pull/14180))
+
+## 2.28.0
+### Minor Changes
+
+
+- feat: add `RouteId` and `RouteParams` to NavigationTarget interface ([#14167](https://github.com/sveltejs/kit/pull/14167))
+
+
+- feat: add `pending` property to forms and commands ([#14137](https://github.com/sveltejs/kit/pull/14137))
+
+
+### Patch Changes
+
+
+- fix: `fetch` imported assets during prerender ([#12201](https://github.com/sveltejs/kit/pull/12201))
+
+
+- chore: refactor redundant base64 encoding/decoding functions ([#14160](https://github.com/sveltejs/kit/pull/14160))
+
+
+- fix: use correct cache result when fetching same url multiple times ([#12355](https://github.com/sveltejs/kit/pull/12355))
+
+
+- fix: don't refresh queries automatically when running commands ([#14170](https://github.com/sveltejs/kit/pull/14170))
+
+
+- fix: avoid writing remote function bundle to disk when treeshaking prerendered queries ([#14161](https://github.com/sveltejs/kit/pull/14161))
+
+## 2.27.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 2.27.2
+### Patch Changes
+
+
+- fix: ensure `form()` remote functions work when the app is configured to a single output ([#14127](https://github.com/sveltejs/kit/pull/14127))
+
+
+- fix: use the configured base path when calling remote functions from the client ([#14106](https://github.com/sveltejs/kit/pull/14106))
+
+## 2.27.1
+### Patch Changes
+
+
+- fix: correctly type remote function input parameters from a schema ([#14098](https://github.com/sveltejs/kit/pull/14098))
+
+
+- fix: match URL-encoded newlines in rest route params ([#14102](https://github.com/sveltejs/kit/pull/14102))
+
+
+- fix: correctly spell server-side in error messages ([#14101](https://github.com/sveltejs/kit/pull/14101))
+
+## 2.27.0
+### Minor Changes
+
+
+- feat: remote functions ([#13986](https://github.com/sveltejs/kit/pull/13986))
+
+## 2.26.1
+### Patch Changes
+
+
+- fix: posixify internal app server path ([#14049](https://github.com/sveltejs/kit/pull/14049))
+
+
+- fix: ignore route groups when generating typed routes ([#14050](https://github.com/sveltejs/kit/pull/14050))
+
+## 2.26.0
+### Minor Changes
+
+
+- feat: better type-safety for `page.route.id`, `page.params`, `page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: `resolve(...)` and `asset(...)` helpers for resolving paths ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: Add `$app/types` module with `Asset`, `RouteId`, `Pathname`, `ResolvedPathname` `RouteParams<T>` and `LayoutParams<T>` ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+## 2.25.2
+### Patch Changes
+
+
+- fix: correctly set URL when navigating during an ongoing navigation ([#14004](https://github.com/sveltejs/kit/pull/14004))
+
 ## 2.25.1
 ### Patch Changes
 

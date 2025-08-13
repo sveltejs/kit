@@ -1,4 +1,4 @@
-const encoder = new TextEncoder();
+import { text_encoder } from '../../utils.js';
 
 /**
  * SHA-256 hashing function adapted from https://bitwiseshiftleft.github.io/sjcl
@@ -102,7 +102,7 @@ export function sha256(data) {
 	const bytes = new Uint8Array(out.buffer);
 	reverse_endianness(bytes);
 
-	return base64(bytes);
+	return btoa(String.fromCharCode(...bytes));
 }
 
 /** The SHA-256 initialization vector */
@@ -160,7 +160,7 @@ function reverse_endianness(bytes) {
 
 /** @param {string} str */
 function encode(str) {
-	const encoded = encoder.encode(str);
+	const encoded = text_encoder.encode(str);
 	const length = encoded.length * 8;
 
 	// result should be a multiple of 512 bits in length,
@@ -181,59 +181,4 @@ function encode(str) {
 	words[words.length - 1] = length;
 
 	return words;
-}
-
-/*
-	Based on https://gist.github.com/enepomnyaschih/72c423f727d395eeaa09697058238727
-
-	MIT License
-	Copyright (c) 2020 Egor Nepomnyaschih
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to deal
-	in the Software without restriction, including without limitation the rights
-	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
-	The above copyright notice and this permission notice shall be included in all
-	copies or substantial portions of the Software.
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-	SOFTWARE.
-*/
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
-
-/** @param {Uint8Array} bytes */
-export function base64(bytes) {
-	const l = bytes.length;
-
-	let result = '';
-	let i;
-
-	for (i = 2; i < l; i += 3) {
-		result += chars[bytes[i - 2] >> 2];
-		result += chars[((bytes[i - 2] & 0x03) << 4) | (bytes[i - 1] >> 4)];
-		result += chars[((bytes[i - 1] & 0x0f) << 2) | (bytes[i] >> 6)];
-		result += chars[bytes[i] & 0x3f];
-	}
-
-	if (i === l + 1) {
-		// 1 octet yet to write
-		result += chars[bytes[i - 2] >> 2];
-		result += chars[(bytes[i - 2] & 0x03) << 4];
-		result += '==';
-	}
-
-	if (i === l) {
-		// 2 octets yet to write
-		result += chars[bytes[i - 2] >> 2];
-		result += chars[((bytes[i - 2] & 0x03) << 4) | (bytes[i - 1] >> 4)];
-		result += chars[(bytes[i - 1] & 0x0f) << 2];
-		result += '=';
-	}
-
-	return result;
 }

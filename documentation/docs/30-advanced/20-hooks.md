@@ -143,6 +143,38 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
+### handleValidationError
+
+This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+
+Say you have a remote function that expects a string as its argument ...
+
+```js
+/// file: todos.remote.js
+import * as v from 'valibot';
+import { query } from '$app/server';
+
+export const getTodo = query(v.string(), (id) => {
+	// implementation...
+});
+```
+
+...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+
+To customise this message and add additional properties to the error object, implement `handleValidationError`:
+
+```js
+/// file: src/hooks.server.js
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export function handleValidationError({ issues }) {
+	return {
+		message: 'No thank you'
+	};
+}
+```
+
+Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
+
 ## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
