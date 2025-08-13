@@ -394,8 +394,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			file === appTemplate ||
 			file === errorTemplate ||
 			file.startsWith(serviceWorker) ||
-			file.startsWith(hooks.server) ||
-			file.startsWith(path.resolve(cwd, 'src/tracing.server'))
+			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config);
 		}
