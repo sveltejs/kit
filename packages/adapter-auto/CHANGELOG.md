@@ -1,5 +1,131 @@
 # @sveltejs/adapter-auto
 
+## 6.1.0
+### Minor Changes
+
+
+- feat: add Deno as a supported package manager ([#14163](https://github.com/sveltejs/kit/pull/14163))
+
+
+### Patch Changes
+
+- Updated dependencies [[`ece3906`](https://github.com/sveltejs/kit/commit/ece3906e11ab0eeac3778abc4666f2145f98f22e), [`5ac9d27`](https://github.com/sveltejs/kit/commit/5ac9d2737263364c9b6e63b115b7aa9792bd1b3f), [`fed6331`](https://github.com/sveltejs/kit/commit/fed6331722a3ea47df9dd8ab01ba23f549fe5385), [`69f4e5f`](https://github.com/sveltejs/kit/commit/69f4e5feacfee429025e78b0e1e0a7b2e0639dc9), [`6b34122`](https://github.com/sveltejs/kit/commit/6b34122b4446da545d261ad96217016412b16510), [`9493537`](https://github.com/sveltejs/kit/commit/949353793a2d27e7cc44dddbdbcf40639b33a4b7), [`f67ba09`](https://github.com/sveltejs/kit/commit/f67ba09e43a598e20d7f8bba62bbc0547fd3f8b1)]:
+  - @sveltejs/kit@2.28.0
+
+## 6.0.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 6.0.1
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+- Updated dependencies [[`bd1c04662332cbafa843c35a2e783486116af3d5`](https://github.com/sveltejs/kit/commit/bd1c04662332cbafa843c35a2e783486116af3d5), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f)]:
+  - @sveltejs/kit@2.21.0
+
+## 6.0.0
+### Major Changes
+
+
+- feat: upgrade `@sveltejs/adapter-cloudflare` to version 7 ([#13661](https://github.com/sveltejs/kit/pull/13661))
+
+## 5.0.0
+### Major Changes
+
+
+- feat: update Netlify and Cloudflare Pages major versions ([#13615](https://github.com/sveltejs/kit/pull/13615))
+
+## 4.0.0
+### Major Changes
+
+
+- feat: update Vercel, Cloudflare Pages, and Netlify adapter major versions ([#13142](https://github.com/sveltejs/kit/pull/13142))
+
+
+### Patch Changes
+
+- Updated dependencies [[`1bedcc1cfc1f2d85946c1423f60faa8a2a56148b`](https://github.com/sveltejs/kit/commit/1bedcc1cfc1f2d85946c1423f60faa8a2a56148b), [`e201fa9380a00e072a80a2dcab56de3d77e5b67c`](https://github.com/sveltejs/kit/commit/e201fa9380a00e072a80a2dcab56de3d77e5b67c), [`f3f08582d41b08c3fd1daf742e5703d9cdca7823`](https://github.com/sveltejs/kit/commit/f3f08582d41b08c3fd1daf742e5703d9cdca7823), [`d4bcfccb4503b12fe76140dbb6cfddc81f9419fc`](https://github.com/sveltejs/kit/commit/d4bcfccb4503b12fe76140dbb6cfddc81f9419fc), [`d09bc033123903f359c1ad6fd3a6d8d7fc19298a`](https://github.com/sveltejs/kit/commit/d09bc033123903f359c1ad6fd3a6d8d7fc19298a)]:
+  - @sveltejs/kit@2.15.3
+
+## 3.3.1
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 3.3.0
+### Minor Changes
+
+
+- feat: add support for Bun package manager ([#12854](https://github.com/sveltejs/kit/pull/12854))
+
+## 3.2.5
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
+## 3.2.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 3.2.3
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 3.2.2
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 3.2.1
+
+### Patch Changes
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
+- Updated dependencies [[`460d4526c80358958e58a2451fe1b663fdc656e9`](https://github.com/sveltejs/kit/commit/460d4526c80358958e58a2451fe1b663fdc656e9), [`16cd900c304e0cf0f16b484aa61a5ba0531d8751`](https://github.com/sveltejs/kit/commit/16cd900c304e0cf0f16b484aa61a5ba0531d8751)]:
+  - @sveltejs/kit@2.5.10
+
+## 3.2.0
+
+### Minor Changes
+
+- feat: add support for Google Cloud Run ([#12015](https://github.com/sveltejs/kit/pull/12015))
+
+## 3.1.1
+
+### Patch Changes
+
+- fix: better error message when using `read` ([#11689](https://github.com/sveltejs/kit/pull/11689))
+
 ## 3.1.0
 
 ### Minor Changes

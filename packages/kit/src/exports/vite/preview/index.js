@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { not_found } from '../utils.js';
@@ -14,7 +14,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{ middlewares: import('connect').Server }} vite
+ * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -47,8 +47,11 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const server = new Server(manifest);
 	await server.init({
-		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, '')
+		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
+
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -125,9 +128,18 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
+				const dir = pathname.startsWith(`/${svelte_config.kit.appDir}/remote/`) ? 'data' : 'pages';
+
 				let filename = normalizePath(
-					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
+					join(svelte_config.kit.outDir, `output/prerendered/${dir}` + pathname)
 				);
+
+				try {
+					filename = decodeURI(filename);
+				} catch {
+					// malformed URI
+				}
+
 				let prerendered = is_file(filename);
 
 				if (!prerendered) {
@@ -175,14 +187,14 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers['host'];
+			const host = req.headers[':authority'] || req.headers.host;
 
 			const request = await getRequest({
 				base: `${protocol}://${host}`,
 				request: req
 			});
 
-			setResponse(
+			await setResponse(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -190,7 +202,14 @@ export async function preview(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(join(dir, file));
+						}
+
+						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+					},
+					emulator
 				})
 			);
 		});

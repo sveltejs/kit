@@ -22,7 +22,7 @@ export async function build(options) {
  * @param {(name: string, code: string) => void} analyse_code
  */
 async function do_build(options, analyse_code) {
-	const { input, output, temp, extensions, alias } = normalize_options(options);
+	const { input, output, temp, extensions, alias, tsconfig } = normalize_options(options);
 
 	if (!fs.existsSync(input)) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
@@ -34,11 +34,11 @@ async function do_build(options, analyse_code) {
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, temp, options.cwd, alias, files);
+		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
 	}
 
 	for (const file of files) {
-		await process_file(input, temp, file, options.config.preprocess, alias, analyse_code);
+		await process_file(input, temp, file, options.config.preprocess, alias, tsconfig, analyse_code);
 	}
 
 	rimraf(output);
@@ -62,7 +62,7 @@ export async function watch(options) {
 
 	validate();
 
-	const { input, output, extensions, alias } = normalize_options(options);
+	const { input, output, extensions, alias, tsconfig } = normalize_options(options);
 
 	const message = `\nWatching ${path.relative(options.cwd, input)} for changes...\n`;
 
@@ -78,9 +78,10 @@ export async function watch(options) {
 	let timeout;
 
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
+	/** @type {Promise<void>} */
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
-	watcher.on('all', async (type, filepath) => {
+	watcher.on('all', (type, filepath) => {
 		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });
@@ -119,7 +120,15 @@ export async function watch(options) {
 				if (type === 'add' || type === 'change') {
 					console.log(`Processing ${file.name}`);
 					try {
-						await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+						await process_file(
+							input,
+							output,
+							file,
+							options.config.preprocess,
+							alias,
+							tsconfig,
+							analyse_code
+						);
 					} catch (e) {
 						errored = true;
 						console.error(e);
@@ -129,7 +138,7 @@ export async function watch(options) {
 
 			if (!errored && options.types) {
 				try {
-					await emit_dts(input, output, options.cwd, alias, files);
+					await emit_dts(input, output, output, options.cwd, alias, files, tsconfig);
 					console.log('Updated .d.ts files');
 				} catch (e) {
 					errored = true;
@@ -170,6 +179,7 @@ function normalize_options(options) {
 		'__package__'
 	);
 	const extensions = options.config.extensions ?? ['.svelte'];
+	const tsconfig = options.tsconfig ? path.resolve(options.cwd, options.tsconfig) : undefined;
 
 	const alias = {
 		$lib: path.resolve(options.cwd, options.config.kit?.files?.lib ?? 'src/lib'),
@@ -181,7 +191,8 @@ function normalize_options(options) {
 		output,
 		temp,
 		extensions,
-		alias
+		alias,
+		tsconfig
 	};
 }
 
@@ -191,9 +202,10 @@ function normalize_options(options) {
  * @param {import('./types.js').File} file
  * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup | undefined} preprocessor
  * @param {Record<string, string>} aliases
+ * @param {string | undefined} tsconfig
  * @param {(name: string, code: string) => void} analyse_code
  */
-async function process_file(input, output, file, preprocessor, aliases, analyse_code) {
+async function process_file(input, output, file, preprocessor, aliases, tsconfig, analyse_code) {
 	const filename = path.join(input, file.name);
 	const dest = path.join(output, file.dest);
 
@@ -208,7 +220,7 @@ async function process_file(input, output, file, preprocessor, aliases, analyse_
 		}
 
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
-			contents = await transpile_ts(filename, contents);
+			contents = await transpile_ts(tsconfig, filename, contents);
 		}
 
 		contents = resolve_aliases(input, file.name, contents, aliases);

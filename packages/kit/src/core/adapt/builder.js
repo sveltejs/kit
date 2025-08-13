@@ -1,4 +1,5 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import colors from 'kleur';
+import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -10,6 +11,7 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -136,12 +138,20 @@ export function create_builder({
 						generateManifest: ({ relativePath }) =>
 							generate_manifest({
 								build_data,
+								prerendered: [],
 								relative_path: relativePath,
 								routes: Array.from(filtered)
 							})
 					});
 				}
 			}
+		},
+
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
 		},
 
 		async generateFallback(dest) {
@@ -152,6 +162,16 @@ export function create_builder({
 				manifest_path,
 				env: { ...env.private, ...env.public }
 			});
+
+			if (existsSync(dest)) {
+				console.log(
+					colors
+						.bold()
+						.yellow(
+							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+						)
+				);
+			}
 
 			write(dest, fallback);
 		},
@@ -166,6 +186,7 @@ export function create_builder({
 		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
+				prerendered: prerendered.paths,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
@@ -198,7 +219,12 @@ export function create_builder({
 
 		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
-			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
+
+			return [
+				...copy(`${source}/pages`, dest),
+				...copy(`${source}/dependencies`, dest),
+				...copy(`${source}/data`, dest)
+			];
 		},
 
 		writeServer(dest) {

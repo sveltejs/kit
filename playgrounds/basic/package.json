@@ -1,19 +1,51 @@
 {
-	"name": "playground",
+	"name": "playground-basic",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview"
+		"build": "vite build && npm run package",
+		"preview": "vite preview",
+		"package": "svelte-kit sync && svelte-package && publint",
+		"prepare": "svelte-kit sync",
+		"prepublishOnly": "npm run package",
+		"check": "svelte-kit sync && svelte-check",
+		"check:watch": "svelte-kit sync && svelte-check --watch",
+		"format": "prettier --config ../../.prettierrc --write .",
+		"lint": "prettier --config ../../.prettierrc --check ."
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/adapter-cloudflare": "workspace:*",
+		"@sveltejs/adapter-netlify": "workspace:*",
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/adapter-vercel": "workspace:*",
+		"@sveltejs/amp": "workspace:*",
+		"@sveltejs/enhanced-img": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"svelte": "^4.2.8",
-		"typescript": "^5.3.3",
-		"vite": "^5.0.8"
+		"@sveltejs/package": "workspace:*",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"prettier": "^3.3.2",
+		"prettier-plugin-svelte": "^3.2.6",
+		"publint": "^0.3.0",
+		"svelte": "^5.35.5",
+		"svelte-check": "^4.1.1",
+		"typescript": "^5.5.0",
+		"vite": "catalog:"
 	},
-	"type": "module"
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"svelte": "./dist/index.js",
+	"types": "./dist/index.d.ts"
 }

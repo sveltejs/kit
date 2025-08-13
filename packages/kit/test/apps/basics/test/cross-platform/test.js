@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
@@ -6,9 +7,10 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies styles correctly', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
+	/**
+	 * @param {(selector: string, prop: string) => Promise<string>} get_computed_style
+	 */
+	function check_styles(get_computed_style) {
 		test.step('applies imported styles', async () => {
 			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
 		});
@@ -28,6 +30,27 @@ test.describe('CSS', () => {
 		test.step('does not apply raw and url', async () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
+	}
+
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
+		await page.goto('/css');
+		// without this assertion, the WebKit browser seems to close before we can compute the styles
+		await expect(page.locator('.styled')).toBeVisible();
+		check_styles(get_computed_style);
+	});
+
+	test('applies styles correctly after client-side navigation', async ({
+		page,
+		app,
+		get_computed_style,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/css');
+
+		check_styles(get_computed_style);
 	});
 
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
@@ -197,7 +220,8 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope) (500 Internal Error)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
+					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
 			);
 		});
 	}
@@ -593,6 +617,11 @@ test.describe('Redirects', () => {
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
+
+	test('works when used from another package', async ({ page }) => {
+		await page.goto('/redirect/package');
+		expect(await page.textContent('h1')).toBe('c');
+	});
 });
 
 test.describe('Routing', () => {
@@ -747,7 +776,6 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -755,12 +783,8 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
-		expect(
-			await page.evaluate(
-				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
-			)
-		).toBe('next focus element');
+
+		await page.waitForSelector('button:focus');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
@@ -1031,5 +1055,34 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+
+	test('no xss via tracked search parameters', async ({ page }) => {
+		// https://github.com/sveltejs/kit/security/advisories/GHSA-6q87-84jw-cjhp
+		await page.goto('/xss/query-tracking?</script/><script>window.pwned%3D1</script/>');
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
+	});
+});
+
+test.describe('$app/server', () => {
+	test('can read a file', async ({ page }) => {
+		await page.goto('/read-file');
+
+		const auto = await page.textContent('[data-testid="auto"]');
+		const url = await page.textContent('[data-testid="url"]');
+		const local_glob = await page.textContent('[data-testid="local_glob"]');
+		const external_glob = await page.textContent('[data-testid="external_glob"]');
+		const svg = await page.innerHTML('[data-testid="svg"]');
+
+		// the emoji is there to check that base64 decoding works correctly
+		expect(auto?.trim()).toBe('Imported without ?url 😎');
+		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob?.trim()).toBe(
+			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
+		);
+		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
 	});
 });

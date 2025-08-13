@@ -26,7 +26,7 @@ export function parse_route_id(id) {
 									rest: true,
 									chained: true
 								});
-								return '(?:/(.*))?';
+								return '(?:/([^]*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
 							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
@@ -86,7 +86,7 @@ export function parse_route_id(id) {
 											rest: !!is_rest,
 											chained: is_rest ? i === 1 && parts[0] === '' : false
 										});
-										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
+										return is_rest ? '([^]*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
 									return escape(content);
@@ -117,7 +117,7 @@ export function remove_optional_params(id) {
  * @param {string} segment
  */
 function affects_path(segment) {
-	return !/^\([^)]+\)$/.test(segment);
+	return segment !== '' && !/^\([^)]+\)$/.test(segment);
 }
 
 /**
@@ -264,4 +264,12 @@ export function resolve_route(id, params) {
 			.filter(Boolean)
 			.join('/')
 	);
+}
+
+/**
+ * @param {import('types').SSRNode} node
+ * @returns {boolean}
+ */
+export function has_server_load(node) {
+	return node.server?.load !== undefined || node.server?.trailingSlash !== undefined;
 }

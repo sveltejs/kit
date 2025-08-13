@@ -1,29 +1,42 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { get_option } from '../../utils/options.js';
-import {
-	validate_layout_exports,
-	validate_layout_server_exports,
-	validate_page_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
+import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { resolve_route } from '../../utils/routing.js';
+import { has_server_load, resolve_route } from '../../utils/routing.js';
+import { check_feature } from '../../utils/features.js';
+import { createReadableStream } from '@sveltejs/kit/node';
+import { PageNodes } from '../../utils/page_nodes.js';
+import { build_server_nodes } from '../../exports/vite/build/build_server.js';
+import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
+ *   hash: boolean;
  *   manifest_path: string;
- *   env: Record<string, string>
+ *   manifest_data: import('types').ManifestData;
+ *   server_manifest: import('vite').Manifest;
+ *   tracked_features: Record<string, string[]>;
+ *   env: Record<string, string>;
+ *   out: string;
+ *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  * }} opts
  */
-async function analyse({ manifest_path, env }) {
+async function analyse({
+	hash,
+	manifest_path,
+	manifest_data,
+	server_manifest,
+	tracked_features,
+	env,
+	out,
+	output_config
+}) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -48,19 +61,50 @@ async function analyse({ manifest_path, env }) {
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
 	internal.set_safe_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
+
+	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
+	const static_exports = new Map();
+
+	// first, build server nodes without the client manifest so we can analyse it
+	await build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		output_config,
+		static_exports
+	);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
 
 	// analyse nodes
 	for (const node of nodes) {
+		if (hash && node.universal) {
+			const options = Object.keys(node.universal).filter((o) => o !== 'load');
+			if (options.length > 0) {
+				throw new Error(
+					`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
+						.filter((o) => o !== 'load')
+						.map((o) => `'${o}'`)
+						.join(', ')})`
+				);
+			}
+		}
+
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+			has_server_load: has_server_load(node)
 		};
 	}
 
@@ -89,12 +133,26 @@ async function analyse({ manifest_path, env }) {
 			}
 		}
 
+		const route_config = page?.config ?? endpoint?.config ?? {};
+		const prerender = page?.prerender ?? endpoint?.prerender;
+
+		if (prerender !== true) {
+			for (const feature of list_features(
+				route,
+				manifest_data,
+				server_manifest,
+				tracked_features
+			)) {
+				check_feature(route.id, route_config, feature, config.adapter);
+			}
+		}
+
 		const page_methods = page?.methods ?? [];
 		const api_methods = endpoint?.methods ?? [];
 		const entries = page?.entries ?? endpoint?.entries;
 
 		metadata.routes.set(route.id, {
-			config: page?.config ?? endpoint?.config,
+			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
 				methods: page_methods
@@ -102,13 +160,35 @@ async function analyse({ manifest_path, env }) {
 			api: {
 				methods: api_methods
 			},
-			prerender: page?.prerender ?? endpoint?.prerender,
+			prerender,
 			entries:
 				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
 	}
 
-	return metadata;
+	// analyse remotes
+	for (const remote of manifest_data.remotes) {
+		const loader = manifest._.remotes[remote.hash];
+		const module = await loader();
+
+		validate_remote_functions(module, remote.file);
+
+		const exports = new Map();
+
+		for (const name in module) {
+			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+			const type = info.type;
+
+			exports.set(name, {
+				type,
+				dynamic: type !== 'prerender' || info.dynamic
+			});
+		}
+
+		metadata.remotes.set(remote.hash, exports);
+	}
+
+	return { metadata, static_exports };
 }
 
 /**
@@ -148,45 +228,67 @@ function analyse_endpoint(route, mod) {
  * @param {import('types').SSRNode} leaf
  */
 function analyse_page(layouts, leaf) {
-	for (const layout of layouts) {
-		if (layout) {
-			validate_layout_server_exports(layout.server, layout.server_id);
-			validate_layout_exports(layout.universal, layout.universal_id);
-		}
-	}
-
 	/** @type {Array<'GET' | 'POST'>} */
 	const methods = ['GET'];
 	if (leaf.server?.actions) methods.push('POST');
 
-	validate_page_server_exports(leaf.server, leaf.server_id);
-	validate_page_exports(leaf.universal, leaf.universal_id);
+	const nodes = new PageNodes([...layouts, leaf]);
+	nodes.validate();
 
 	return {
-		config: get_config([...layouts, leaf]),
+		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: get_option([...layouts, leaf], 'prerender') ?? false
+		prerender: nodes.prerender()
 	};
 }
 
 /**
- * Do a shallow merge (first level) of the config object
- * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {Record<string, string[]>} tracked_features
  */
-function get_config(nodes) {
-	/** @type {any} */
-	let current = {};
+function list_features(route, manifest_data, server_manifest, tracked_features) {
+	const features = new Set();
 
-	for (const node of nodes) {
-		if (!node?.universal?.config && !node?.server?.config) continue;
+	const route_data = /** @type {import('types').RouteData} */ (
+		manifest_data.routes.find((r) => r.id === route.id)
+	);
 
-		current = {
-			...current,
-			...node?.universal?.config,
-			...node?.server?.config
-		};
+	/** @param {string} id */
+	function visit(id) {
+		const chunk = server_manifest[id];
+		if (!chunk) return;
+
+		if (chunk.file in tracked_features) {
+			for (const feature of tracked_features[chunk.file]) {
+				features.add(feature);
+			}
+		}
+
+		if (chunk.imports) {
+			for (const id of chunk.imports) {
+				visit(id);
+			}
+		}
 	}
 
-	return Object.keys(current).length ? current : undefined;
+	let page_node = route_data?.leaf;
+	while (page_node) {
+		if (page_node.server) visit(page_node.server);
+		page_node = page_node.parent ?? null;
+	}
+
+	if (route_data.endpoint) {
+		visit(route_data.endpoint.file);
+	}
+
+	if (manifest_data.hooks.server) {
+		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
+		// we don't currently account for that case
+		visit(manifest_data.hooks.server);
+	}
+
+	return Array.from(features);
 }

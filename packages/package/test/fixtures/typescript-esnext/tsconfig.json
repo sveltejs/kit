@@ -1,6 +1,9 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "ESNext"
+		"module": "ESNext",
+		"verbatimModuleSyntax": true,
+		"checkJs": true,
+		"noEmit": true
 	}
 }

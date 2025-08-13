@@ -20,13 +20,18 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	const stylesheets = new Set();
 
 	/** @type {Set<string>} */
-	const fonts = new Set();
+	const imported_assets = new Set();
+
+	/** @type {Map<string, { css: Set<string>; assets: Set<string> }>} */
+	const stylesheet_map = new Map();
 
 	/**
 	 * @param {string} current
 	 * @param {boolean} add_js
+	 * @param {string} initial_importer
+	 * @param {number} dynamic_import_depth
 	 */
-	function traverse(current, add_js) {
+	function traverse(current, add_js, initial_importer, dynamic_import_depth) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
@@ -35,11 +40,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.assets) {
-			for (const asset of chunk.assets) {
-				if (/\.(woff2?|ttf|otf)$/.test(asset)) {
-					fonts.add(asset);
-				}
-			}
+			chunk.assets.forEach(asset => imported_assets.add(asset));
 		}
 
 		if (chunk.css) {
@@ -47,23 +48,49 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((file) => traverse(file, add_js));
+			chunk.imports.forEach((file) => traverse(file, add_js, initial_importer, dynamic_import_depth));
 		}
 
-		if (add_dynamic_css && chunk.dynamicImports) {
-			chunk.dynamicImports.forEach((file) => traverse(file, false));
+		if (!add_dynamic_css) return;
+
+		if ((chunk.css || chunk.assets) && dynamic_import_depth <= 1) {
+			// group files based on the initial importer because if a file is only ever
+			// a transitive dependency, it doesn't have a suitable name we can map back to
+			// the server manifest
+			if (stylesheet_map.has(initial_importer)) {
+				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (stylesheet_map.get(initial_importer));
+				if (chunk.css) chunk.css.forEach((file) => css.add(file));
+				if (chunk.assets) chunk.assets.forEach((file) => assets.add(file));
+			} else {
+				stylesheet_map.set(initial_importer, {
+					css: new Set(chunk.css),
+					assets: new Set(chunk.assets)
+				});
+			}
+		}
+
+		if (chunk.dynamicImports) {
+			dynamic_import_depth++;
+			chunk.dynamicImports.forEach((file) => {
+				traverse(file, false, file, dynamic_import_depth);
+			});
 		}
 	}
 
 	const { chunk, file } = resolve_symlinks(manifest, entry);
 
-	traverse(file, true);
+	traverse(file, true, entry, 0);
+
+	const assets = Array.from(imported_assets);
 
 	return {
+		assets,
 		file: chunk.file,
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets),
-		fonts: Array.from(fonts)
+		// TODO do we need this separately?
+		fonts: filter_fonts(assets),
+		stylesheet_map
 	};
 }
 
@@ -83,7 +110,15 @@ export function resolve_symlinks(manifest, file) {
 	return { chunk, file };
 }
 
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
+/**
+ * @param {string[]} assets 
+ * @returns {string[]}
+ */
+export function filter_fonts(assets) {
+	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
+}
+
+const method_names = new Set((['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']));
 
 // If we'd written this in TypeScript, it could be easy...
 /**

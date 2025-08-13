@@ -1,10 +1,11 @@
 import { BROWSER, DEV } from 'esm-env';
-import { hash } from '../hash.js';
+import { hash } from '../../utils/hash.js';
+import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
 /** @type {typeof fetch} */
-export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
+const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -17,12 +18,14 @@ export function unlock_fetch() {
 if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
+	// detect whether async stack traces work
+	// eslint-disable-next-line @typescript-eslint/require-await
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
 	};
 
-	check_stack_trace();
+	void check_stack_trace();
 
 	/**
 	 * @param {RequestInfo | URL} input
@@ -50,7 +53,7 @@ if (DEV && BROWSER) {
 
 		if (in_load_heuristic && !used_kit_fetch) {
 			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
 			);
 		}
 
@@ -77,22 +80,6 @@ if (DEV && BROWSER) {
 const cache = new Map();
 
 /**
- * @param {string} text
- * @returns {ArrayBufferLike}
- */
-function b64_decode(text) {
-	const d = atob(text);
-
-	const u8 = new Uint8Array(d.length);
-
-	for (let i = 0; i < d.length; i++) {
-		u8[i] = d.charCodeAt(i);
-	}
-
-	return u8.buffer;
-}
-
-/**
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
  * @param {URL | string} resource
@@ -103,6 +90,7 @@ export function initial_fetch(resource, opts) {
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
+		script.remove(); // In case multiple script tags match the same selector
 		let { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
@@ -111,7 +99,7 @@ export function initial_fetch(resource, opts) {
 		if (b64 !== null) {
 			// Can't use native_fetch('data:...;base64,${body}')
 			// csp can block the request
-			body = b64_decode(body);
+			body = base64_decode(body);
 		}
 
 		return Promise.resolve(new Response(body, init));
@@ -150,7 +138,7 @@ export function subsequent_fetch(resource, resolved, opts) {
  * @param {RequestInfo | URL} resource
  * @param {RequestInit & Record<string, any> | undefined} opts
  */
-function dev_fetch(resource, opts) {
+export function dev_fetch(resource, opts) {
 	const patched_opts = { ...opts };
 	// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
 	Object.defineProperty(patched_opts, '__sveltekit_fetch__', {

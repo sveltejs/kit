@@ -105,7 +105,7 @@ export function walk(cwd, dirs = false) {
 		}
 	}
 
-	return walk_dir(''), all_files;
+	return (walk_dir(''), all_files);
 }
 
 /** @param {string} str */
@@ -149,6 +149,19 @@ export function to_fs(str) {
 }
 
 /**
+ * Removes `/@fs` prefix from given path and posixifies it
+ * @param {string} str
+ */
+export function from_fs(str) {
+	str = posixify(str);
+	if (!str.startsWith('/@fs')) return str;
+
+	str = str.slice(4);
+	// Windows/Linux separation - Windows starts with a drive letter, we need to strip the additional / here
+	return str[2] === ':' && /[A-Z]/.test(str[1]) ? str.slice(1) : str;
+}
+
+/**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
  * @returns {string|null}
@@ -156,22 +169,26 @@ export function to_fs(str) {
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
-		if (stats.isDirectory()) {
-			return resolve_entry(path.join(entry, 'index'));
+		if (stats.isFile()) {
+			return entry;
 		}
 
-		return entry;
-	} else {
-		const dir = path.dirname(entry);
-
-		if (fs.existsSync(dir)) {
-			const base = path.basename(entry);
-			const files = fs.readdirSync(dir);
-
-			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
-
-			if (found) return path.join(dir, found);
+		const index = path.join(entry, 'index');
+		if (fs.existsSync(index + '.js') || fs.existsSync(index + '.ts')) {
+			return resolve_entry(index);
 		}
+	}
+
+	const dir = path.dirname(entry);
+
+	if (fs.existsSync(dir)) {
+		const base = path.basename(entry);
+		const files = fs.readdirSync(dir);
+		const found = files.find((file) => {
+			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
+		});
+
+		if (found) return path.join(dir, found);
 	}
 
 	return null;

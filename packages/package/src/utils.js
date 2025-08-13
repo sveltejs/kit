@@ -1,6 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { VERSION } from 'svelte/compiler';
 import { posixify, mkdirp, walk } from './filesystem.js';
+
+const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
 
 /**
  * Resolves aliases
@@ -14,10 +17,9 @@ import { posixify, mkdirp, walk } from './filesystem.js';
 export function resolve_aliases(input, file, content, aliases) {
 	/**
 	 * @param {string} match
-	 * @param {string} _
 	 * @param {string} import_path
 	 */
-	const replace_import_path = (match, _, import_path) => {
+	const replace_import_path = (match, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
 			if (!import_path.startsWith(alias)) continue;
 
@@ -30,8 +32,26 @@ export function resolve_aliases(input, file, content, aliases) {
 		return match;
 	};
 
-	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
-	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
+	// import/export ... from ...
+	content = content.replace(
+		/\b(import|export)\s+([\w*\s{},]*)\s+from\s+(['"])([^'";]+)\3/g,
+		(_, keyword, specifier, quote, import_path) =>
+			replace_import_path(
+				`${keyword} ${specifier} from ${quote}${import_path}${quote}`,
+				import_path
+			)
+	);
+
+	// import(...)
+	content = content.replace(/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g, (_, quote, import_path) =>
+		replace_import_path(`import(${quote}${import_path}${quote})`, import_path)
+	);
+
+	// import '...'
+	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (_, quote, import_path) =>
+		replace_import_path(`import ${quote}${import_path}${quote}`, import_path)
+	);
+
 	return content;
 }
 
@@ -45,8 +65,13 @@ export function strip_lang_tags(content) {
 	return content
 		.replace(
 			/(<!--[^]*?-->)|(<script[^>]*?)\s(?:type|lang)=(["'])(.*?)\3/g,
-			// things like application/ld+json should be kept as-is. Preprocessed languages are "ts" etc
-			(match, s1, s2, _, s4) => (s4?.startsWith('application/') ? match : (s1 ?? '') + (s2 ?? ''))
+			// Things like application/ld+json should be kept as-is. Preprocessed languages are "ts" etc.
+			// Svelte 5 deals with TypeScript natively, and in the template, too, therefore keep it in.
+			// Not removing it would mean Svelte parses without its TS plugin and then runs into errors.
+			(match, comment, tag_open, _, type) =>
+				type?.startsWith('application/') || (is_svelte_5_plus && type === 'ts')
+					? match
+					: (comment ?? '') + (tag_open ?? '')
 		)
 		.replace(/(<!--[^]*?-->)|(<style[^>]*?)\s(?:type|lang)=(["']).*?\3/g, '$1$2');
 }

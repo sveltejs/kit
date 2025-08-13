@@ -1,5 +1,118 @@
 # @sveltejs/package
 
+## 2.4.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 2.4.0
+### Minor Changes
+
+
+- feat: support svelte.config.ts ([#13935](https://github.com/sveltejs/kit/pull/13935))
+  
+  > **NOTE**
+  >
+  > Your runtime has to support importing TypeScript files for `svelte.config.ts` to work.
+  > In Node.js, the feature is supported with the `--experimental-strip-types` flag starting in Node 22.6.0 and supported without a flag starting in Node 23.6.0.
+
+## 2.3.12
+### Patch Changes
+
+
+- fix: handle non-semver-style dependency versions ([#13925](https://github.com/sveltejs/kit/pull/13925))
+
+## 2.3.11
+### Patch Changes
+
+
+- fix: handle missing package.json gracefully ([#13691](https://github.com/sveltejs/kit/pull/13691))
+
+## 2.3.10
+### Patch Changes
+
+
+- chore: update to chokidar 4.0.3 ([#13381](https://github.com/sveltejs/kit/pull/13381))
+
+## 2.3.9
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency for more up-to-date `d.ts` output ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+
+- fix: adjust declaration map paths ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+## 2.3.8
+### Patch Changes
+
+
+- fix: resolve aliases more robustly ([#13351](https://github.com/sveltejs/kit/pull/13351))
+
+## 2.3.7
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 2.3.6
+### Patch Changes
+
+
+- docs: demonstrate sv migrate over prior commands ([#12840](https://github.com/sveltejs/kit/pull/12840))
+
+## 2.3.5
+### Patch Changes
+
+
+- fix: use input tsconfig when calling emitDts ([#12612](https://github.com/sveltejs/kit/pull/12612))
+
+
+- chore(deps): update dependency chokidar to v4 ([#12671](https://github.com/sveltejs/kit/pull/12671))
+
+## 2.3.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.3.3
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 2.3.2
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 2.3.1
+
+### Patch Changes
+
+- fix: don't strip `lang="ts"` tag in Svelte 5 ([#12080](https://github.com/sveltejs/kit/pull/12080))
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: add option to specify the tsconfig/jsconfig ([#11698](https://github.com/sveltejs/kit/pull/11698))
+
+## 2.2.7
+
+### Patch Changes
+
+- chore: update chokidar to 3.6.0 ([#11811](https://github.com/sveltejs/kit/pull/11811))
+
+## 2.2.6
+
+### Patch Changes
+
+- chore: bump svelte2tsx dependency to support generating types for `.svelte.js/ts` files ([#11619](https://github.com/sveltejs/kit/pull/11619))
+
 ## 2.2.5
 
 ### Patch Changes

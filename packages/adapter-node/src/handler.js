@@ -1,27 +1,43 @@
 import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
+import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-await server.init({ env: process.env });
+
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', '').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
-const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
+
+const body_size_limit = parse_as_bytes(env('BODY_SIZE_LIMIT', '512K'));
+
+if (isNaN(body_size_limit)) {
+	throw new Error(
+		`Invalid BODY_SIZE_LIMIT: '${env('BODY_SIZE_LIMIT')}'. Please provide a numeric value.`
+	);
+}
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
+
+const asset_dir = `${dir}/client${base}`;
+
+await server.init({
+	env: process.env,
+	read: (file) => createReadableStream(`${asset_dir}/${file}`)
+});
 
 /**
  * @param {string} path
@@ -70,20 +86,29 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	const request = await getRequest({
-		base: origin || get_origin(req.headers),
-		request: req,
-		bodySizeLimit: body_size_limit
-	});
+	/** @type {Request} */
+	let request;
 
-	setResponse(
+	try {
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
+	} catch {
+		res.statusCode = 400;
+		res.end('Bad Request');
+		return;
+	}
+
+	await setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
@@ -167,10 +192,5 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
-		serve_prerendered(),
-		ssr
-	].filter(Boolean)
+	[serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean)
 );

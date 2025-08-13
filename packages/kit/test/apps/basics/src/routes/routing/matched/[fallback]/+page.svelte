@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
-<h1>fallback: {$page.params.fallback}</h1>
+<h1>fallback: {page.params.fallback}</h1>
