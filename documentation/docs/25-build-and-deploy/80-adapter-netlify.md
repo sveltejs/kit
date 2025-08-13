@@ -96,6 +96,7 @@ During compilation, redirect rules are automatically appended to your `_redirect
 With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) when the `edge` property is `false` in the adapter config or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when it is `true`.
 
 ```js
+// @errors: 2339
 // @filename: ambient.d.ts
 /// <reference types="@sveltejs/adapter-netlify" />
 // @filename: +page.server.js
