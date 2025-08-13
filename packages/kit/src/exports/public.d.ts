@@ -514,13 +514,6 @@ export interface KitConfig {
 			universal?: string;
 		};
 		/**
-		 * the location of your server tracing file
-		 * @default "src/tracing.server"
-		 */
-		tracing?: {
-			server?: string;
-		};
-		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
 		 * @default "src/lib"
 		 */

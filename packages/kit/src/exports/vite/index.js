@@ -784,7 +784,8 @@ async function kit({ svelte_config }) {
 					});
 
 					// ...and the server tracing file
-					const server_tracing = resolve_entry(kit.files.tracing.server);
+					// TODO: Resolve this however we resolve all of the other files after we deprecate the `files` options
+					const server_tracing = resolve_entry(path.resolve(cwd, 'src/tracing.server'));
 					if (server_tracing) {
 						const { adapter } = kit;
 						if (adapter && !adapter.supports?.tracing?.()) {
