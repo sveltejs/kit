@@ -1,9 +1,11 @@
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestStore } from 'types' */
+/** @import { AsyncLocalStorage } from 'node:async_hooks' */
 
 /** @type {RequestStore | null} */
 let sync_store = null;
 
-/** @type {import('node:async_hooks').AsyncLocalStorage<RequestStore | null> | null} */
+/** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -19,6 +21,8 @@ import('node:async_hooks')
  *
  * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
  * @since 2.20.0
+ *
+ * @returns {RequestEvent}
  */
 export function getRequestEvent() {
 	const event = try_get_request_store()?.event;

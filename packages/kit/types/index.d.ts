@@ -4,7 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
-	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams_1, ResolvedPathname } from '$app/types';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	import type { Span } from '@opentelemetry/api';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -919,7 +919,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `Load` directly.
 	 */
 	export type Load<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
@@ -931,7 +931,7 @@ declare module '@sveltejs/kit' {
 	 * rather than using `LoadEvent` directly.
 	 */
 	export interface LoadEvent<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
@@ -1052,7 +1052,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEvent<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1078,7 +1078,7 @@ declare module '@sveltejs/kit' {
 	 * Information about the target of a specific navigation.
 	 */
 	export interface NavigationTarget<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1195,7 +1195,7 @@ declare module '@sveltejs/kit' {
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
 	 */
 	export interface Page<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1243,7 +1243,7 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	export interface RequestEvent<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> {
 		/**
@@ -1354,7 +1354,7 @@ declare module '@sveltejs/kit' {
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://svelte.dev/docs/kit/types#Generated-types) instead.
 	 */
 	export type RequestHandler<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
@@ -1435,14 +1435,14 @@ declare module '@sveltejs/kit' {
 	 * rather than using `ServerLoad` directly.
 	 */
 	export type ServerLoad<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> extends RequestEvent<Params, RouteId> {
@@ -1524,7 +1524,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Action<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
@@ -1534,7 +1534,7 @@ declare module '@sveltejs/kit' {
 	 * See [form actions](https://svelte.dev/docs/kit/form-actions) for more information.
 	 */
 	export type Actions<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
 	> = Record<string, Action<Params, OutputData, RouteId>>;
@@ -2724,12 +2724,8 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	// @ts-ignore
-	import { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types'
-	import type { RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
-	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams_1 } from '$app/types';
-	import type { Span } from '@opentelemetry/api';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -2748,8 +2744,9 @@ declare module '$app/server' {
 	 *
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
-	 */
-	export function getRequestEvent(): RequestEvent<AppLayoutParams<"/">, any>;
+	 *
+	 * */
+	export function getRequestEvent(): RequestEvent;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -2839,168 +2836,6 @@ declare module '$app/server' {
 	 * @since 2.27
 	 */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
-	interface Cookies {
-		/**
-		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
-		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
-		 */
-		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
-
-		/**
-		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
-		 */
-		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
-
-		/**
-		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
-		 *
-		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
-		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-		 * @param name the name of the cookie
-		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
-		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => void;
-
-		/**
-		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
-		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
-		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
-
-		/**
-		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
-		 *
-		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
-		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-		 *
-		 * @param name the name of the cookie
-		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
-		 */
-		serialize: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => string;
-	}
-
-	interface RequestEvent<
-		Params extends AppLayoutParams_1<'/'> = AppLayoutParams_1<'/'>,
-		RouteId extends AppRouteId | null = AppRouteId | null
-	> {
-		/**
-		 * Get or set cookies related to the current request
-		 */
-		cookies: Cookies;
-		/**
-		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
-		 *
-		 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
-		 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
-		 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-		 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle)
-		 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
-		 *
-		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
-		 */
-		fetch: typeof fetch;
-		/**
-		 * The client's IP address, set by the adapter.
-		 */
-		getClientAddress: () => string;
-		/**
-		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle).
-		 */
-		locals: App.Locals;
-		/**
-		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-		 */
-		params: Params;
-		/**
-		 * Additional data made available through the adapter.
-		 */
-		platform: Readonly<App.Platform> | undefined;
-		/**
-		 * The original request object.
-		 */
-		request: Request;
-		/**
-		 * Info about the current route.
-		 */
-		route: {
-			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-			 */
-			id: RouteId;
-		};
-		/**
-		 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
-		 *
-		 *	```js
-		 *	/// file: src/routes/blog/+page.js
-		 *	export async function load({ fetch, setHeaders }) {
-		 *		const url = `https://cms.example.com/articles.json`;
-		 *		const response = await fetch(url);
-		 *
-		 *		setHeaders({
-		 *			age: response.headers.get('age'),
-		 *			'cache-control': response.headers.get('cache-control')
-		 *		});
-		 *
-		 *		return response.json();
-		 *	}
-		 *	```
-		 *
-		 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
-		 *
-		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
-		 */
-		setHeaders: (headers: Record<string, string>) => void;
-		/**
-		 * The requested URL.
-		 */
-		url: URL;
-		/**
-		 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
-		 * related to the data request in this case. Use this property instead if the distinction is important to you.
-		 */
-		isDataRequest: boolean;
-		/**
-		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
-		 */
-		isSubRequest: boolean;
-
-		/**
-		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-		 * @since 2.29.0
-		 */
-		tracing: {
-			/** Whether tracing is enabled. */
-			enabled: boolean;
-			/** The root span for the request. This span is named `sveltekit.handle.root`. */
-			root: Span;
-			/** The span associated with the current `handle` hook, `load` function, or form action. */
-			current: Span;
-		};
-
-		/**
-		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
-		 * related to the data request in this case. Use this property instead if the distinction is important to you.
-		 */
-		isRemoteRequest: boolean;
-	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
