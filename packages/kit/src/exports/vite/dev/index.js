@@ -502,7 +502,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const resolved_tracing = resolve_entry(path.resolve(cwd, 'src/tracing.server'));
+				const resolved_tracing = resolve_entry(path.join(kit.files.src, 'tracing.server'));
 				if (resolved_tracing) {
 					await vite.ssrLoadModule(resolved_tracing);
 				}
