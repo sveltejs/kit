@@ -1,11 +1,11 @@
-import { escape_html_attr } from '../../../utils/escape.js';
-import { base64, sha256 } from './crypto.js';
+import { escape_html } from '../../../utils/escape.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const quoted = new Set([
@@ -186,10 +186,6 @@ class BaseProvider {
 			this.#style_src.push(source);
 		}
 
-		if (this.#style_src_needs_csp) {
-			this.#style_src.push(source);
-		}
-
 		if (this.#style_src_attr_needs_csp) {
 			this.#style_src_attr.push(source);
 		}
@@ -300,7 +296,7 @@ class CspProvider extends BaseProvider {
 			return;
 		}
 
-		return `<meta http-equiv="content-security-policy" content=${escape_html_attr(content)}>`;
+		return `<meta http-equiv="content-security-policy" content="${escape_html(content, true)}">`;
 	}
 }
 

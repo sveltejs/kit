@@ -11,12 +11,15 @@
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
+			"@sveltejs/kit/node/polyfills": ["./src/exports/node/polyfills.js"],
+			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
+			"$app/server": ["./src/runtime/app/server/index.js"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["*.js", "scripts/**/*", "src/**/*", "src/types/**/*"],
+	"include": ["*.js", "scripts/**/*", "src/**/*"],
 	"exclude": ["./**/write_types/test/**"]
 }

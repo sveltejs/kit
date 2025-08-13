@@ -8,40 +8,16 @@ Please see [the Svelte FAQ](../svelte/faq) and [`vite-plugin-svelte` FAQ](https:
 
 ## What can I make with SvelteKit?
 
-SvelteKit can be used to create most kinds of applications. Out of the box, SvelteKit supports many features including:
-
-- Dynamic page content with [load](load) functions and [API routes](routing#server).
-- SEO-friendly dynamic content with [server-side rendering (SSR)](glossary#SSR).
-- User-friendly progressively-enhanced interactive pages with SSR and [Form Actions](form-actions).
-- Static pages with [prerendering](page-options#prerender).
-
-SvelteKit can also be deployed to a wide spectrum of hosted architectures via [adapters](adapters). In cases where SSR is used (or server-side logic is added without prerendering), those functions will be adapted to the target backend. Some examples include:
-
-- Self-hosted dynamic web applications with a [Node.js backend](adapter-node).
-- Serverless web applications with backend loaders and APIs deployed as remote functions. See [zero-config deployments](adapter-auto) for popular deployment options.
-- [Static pre-rendered sites](adapter-static) such as a blog or multi-page site hosted on a CDN or static host. Statically-generated sites are shipped without a backend.
-- [Single-page Applications (SPAs)](single-page-apps) with client-side routing and rendering for API-driven dynamic content. SPAs are shipped without a backend and are not server-rendered. This option is commonly chosen when bundling SvelteKit with an app written in PHP, .Net, Java, C, Golang, Rust, etc.
-- A mix of the above; some routes can be static, and some routes can use backend functions to fetch dynamic information. This can be configured with [page options](page-options) that includes the option to opt out of SSR.
-
-In order to support SSR, a JS backend — such as Node.js or Deno-based server, serverless function, or edge function — is required.
-
-It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [integrations](./integrations) for more examples and integrations.
+See [the documentation regarding project types](project-types) for more details.
 
 ## How do I include details from package.json in my application?
 
-You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](./configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
+If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
 
-```js
+```ts
+// @errors: 2732
 /// file: svelte.config.js
-// @filename: index.js
-/// <reference types="@types/node" />
-import { URL } from 'node:url';
-// ---cut---
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
-const path = fileURLToPath(new URL('package.json', import.meta.url));
-const pkg = JSON.parse(readFileSync(path, 'utf8'));
+import pkg from './package.json' with { type: 'json' };
 ```
 
 ## How do I fix the error I'm getting trying to include a package?
@@ -59,7 +35,7 @@ Libraries work best in the browser with Vite when they distribute an ESM version
 
 If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
 
-## How do I use the view transitions API with SvelteKit?
+## How do I use the view transitions API?
 
 While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`]($app-navigation#onNavigate) to trigger a view transition on every client-side navigation.
 
@@ -81,15 +57,13 @@ onNavigate((navigation) => {
 
 For more, see ["Unlocking view transitions"](/blog/view-transitions) on the Svelte blog.
 
-## How do I use X with SvelteKit?
-
-Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
-
-### How do I setup a database?
+## How do I set up a database?
 
 Put the code to query your database in a [server route](./routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.server.js` and import your database helpers into any endpoint that needs them.
 
-### How do I use a client-side only library that depends on `document` or `window`?
+You can use [the Svelte CLI](/docs/cli/overview) to automatically set up database integrations.
+
+## How do I use a client-side library accessing `document` or `window`?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
@@ -157,7 +131,7 @@ Finally, you may also consider using an `{#await}` block:
 {/await}
 ```
 
-### How do I use a different backend API server?
+## How do I use a different backend API server?
 
 You can use [`event.fetch`](./load#Making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#Server-hooks-handleFetch) helpful.
 
@@ -175,7 +149,7 @@ export function GET({ params, url }) {
 
 (Note that you may also need to proxy `POST`/`PATCH` etc requests, and forward `request.headers`, depending on your needs.)
 
-### How do I use middleware?
+## How do I use middleware?
 
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
@@ -209,6 +183,8 @@ export default config;
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
+## How do I use Yarn?
+
 ### Does it work with Yarn 2?
 
 Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Node module resolution algorithm, and [doesn't yet work with native JavaScript modules](https://github.com/yarnpkg/berry/issues/638) which SvelteKit — along with an [increasing number of packages](https://blog.sindresorhus.com/get-ready-for-esm-aa53530b3f77) — uses). You can use `nodeLinker: 'node-modules'` in your [`.yarnrc.yml`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) file to disable pnp, but it's probably easier to just use npm or [pnpm](https://pnpm.io/), which is similarly fast and efficient but without the compatibility headaches.
@@ -217,9 +193,7 @@ Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Nod
 
 Currently ESM Support within the latest Yarn (version 3) is considered [experimental](https://github.com/yarnpkg/berry/pull/2161).
 
-The below seems to work although your results may vary.
-
-First create a new application:
+The below seems to work although your results may vary. First create a new application:
 
 ```sh
 yarn create svelte myapp
@@ -232,8 +206,6 @@ And enable Yarn Berry:
 yarn set version berry
 yarn install
 ```
-
-#### Yarn 3 global cache
 
 One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
 

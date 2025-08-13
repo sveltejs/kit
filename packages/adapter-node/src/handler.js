@@ -9,6 +9,7 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
+import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
 
@@ -18,23 +19,10 @@ const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
-const host_header = env('HOST_HEADER', 'host').toLowerCase();
+const host_header = env('HOST_HEADER', '').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
 
-/**
- * @param {string} bytes
- */
-function parse_body_size_limit(bytes) {
-	const multiplier =
-		{
-			K: 1024,
-			M: 1024 * 1024,
-			G: 1024 * 1024 * 1024
-		}[bytes[bytes.length - 1]?.toUpperCase()] ?? 1;
-	return Number(multiplier != 1 ? bytes.substring(0, bytes.length - 1) : bytes) * multiplier;
-}
-
-const body_size_limit = parse_body_size_limit(env('BODY_SIZE_LIMIT', '512K'));
+const body_size_limit = parse_as_bytes(env('BODY_SIZE_LIMIT', '512K'));
 
 if (isNaN(body_size_limit)) {
 	throw new Error(
@@ -98,7 +86,7 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
@@ -120,7 +108,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(
+	await setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
@@ -194,21 +182,13 @@ function sequence(handlers) {
  * @returns
  */
 function get_origin(headers) {
-	const protocol = (protocol_header && headers[protocol_header]) || 'https';
-	const host = headers[host_header];
+	const protocol = (protocol_header && headers[protocol_header]) ?? 'https';
+	const host = (host_header && headers[host_header]) ?? headers['host'];
 	const port = port_header && headers[port_header];
-	if (port) {
-		return `${protocol}://${host}:${port}`;
-	} else {
-		return `${protocol}://${host}`;
-	}
+
+	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
 export const handler = sequence(
-	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
-		serve_prerendered(),
-		ssr
-	].filter(Boolean)
+	[serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean)
 );

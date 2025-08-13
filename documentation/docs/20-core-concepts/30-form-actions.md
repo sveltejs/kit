@@ -102,7 +102,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 ## Anatomy of an action
 
-Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
+Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `page.form` app-wide until the next update.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -140,7 +140,7 @@ export const actions = {
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data, form } = $props();
 </script>
 
@@ -152,11 +152,18 @@ export const actions = {
 ```
 
 > [!LEGACY]
-> In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties
+> `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` and `form` properties individually:
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+> let { data, form } = $props();
+> ```
+>
+> In Svelte 4, you'd use `export let data` and `export let form` instead to declare properties.
 
 ### Validation errors
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `page.status` and the data through `form`:
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -339,20 +346,20 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 <script>
 	+++import { enhance } from '$app/forms';+++
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 </script>
 
 <form method="POST" +++use:enhance+++>
 ```
 
-> [!NOTE] `use:enhance` can only be used with forms that have `method="POST"`. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` will result in an error.
+> [!NOTE] `use:enhance` can only be used with forms that have `method="POST"` and point to actions defined in a `+page.server.js` file. It will not work with `method="GET"`, which is the default for forms without a specified method. Attempting to use `use:enhance` on forms without `method="POST"` or posting to a `+server.js` endpoint will result in an error.
 
 > [!NOTE] Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
+- update the `form` property, `page.form` and `page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, the `form` prop and the `page.form` state will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
 - reset the `<form>` element
 - invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
@@ -361,7 +368,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 
 ### Customising use:enhance
 
-To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
+To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
 
 ```svelte
 <form
@@ -383,14 +390,14 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. You can do so with `applyAction`:
+If you return a callback, you override the default post-submission behavior. To get it back, call `update`, which accepts `invalidateAll` and `reset` parameters, or use `applyAction` on the result:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
 	import { enhance, +++applyAction+++ } from '$app/forms';
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 </script>
 
@@ -411,7 +418,7 @@ If you return a callback, you may need to reproduce part of the default `use:enh
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
+- `success`, `failure` — sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location, { invalidateAll: true })`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
@@ -427,11 +434,12 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
 
-	/** @type {{ form: import('./$types').ActionData }} */
+	/** @type {import('./$types').PageProps} */
 	let { form } = $props();
 
-	/** @param {{ currentTarget: EventTarget & HTMLFormElement}} event */
+	/** @param {SubmitEvent & { currentTarget: EventTarget & HTMLFormElement}} event */
 	async function handleSubmit(event) {
+		event.preventDefault();
 		const data = new FormData(event.currentTarget);
 
 		const response = await fetch(event.currentTarget.action, {
@@ -451,7 +459,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	}
 </script>
 
-<form method="POST" on:submit|preventDefault={handleSubmit}>
+<form method="POST" onsubmit={handleSubmit}>
 	<!-- content -->
 </form>
 ```
@@ -461,6 +469,7 @@ Note that you need to `deserialize` the response before processing it further us
 If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
 
 ```js
+// @errors: 2532 2304
 const response = await fetch(this.action, {
 	method: 'POST',
 	body: data,
@@ -484,7 +493,7 @@ Form actions are the preferred way to send data to the server, since they can be
 	}
 </script>
 
-<button on:click={rerun}>Rerun CI</button>
+<button onclick={rerun}>Rerun CI</button>
 ```
 
 ```js

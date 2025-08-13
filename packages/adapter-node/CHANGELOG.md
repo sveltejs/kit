@@ -1,5 +1,50 @@
 # @sveltejs/adapter-node
 
+## 5.2.14
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.2.13
+### Patch Changes
+
+
+- fix: remove unnecessary static directory serving middleware ([#13953](https://github.com/sveltejs/kit/pull/13953))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
+## 5.2.12
+### Patch Changes
+
+
+- fix: include ambient type declarations ([#12088](https://github.com/sveltejs/kit/pull/12088))
+
+- Updated dependencies [[`d440c68acac67ed64eea4b9bda267e229303db7b`](https://github.com/sveltejs/kit/commit/d440c68acac67ed64eea4b9bda267e229303db7b), [`6774ebc34330b12ae8c0cae08e98b577d819fffb`](https://github.com/sveltejs/kit/commit/6774ebc34330b12ae8c0cae08e98b577d819fffb), [`777c8ef11f17d2ab48aee0f2347c051663da5826`](https://github.com/sveltejs/kit/commit/777c8ef11f17d2ab48aee0f2347c051663da5826), [`f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2`](https://github.com/sveltejs/kit/commit/f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2), [`34a03ff16af29e917abebb649b31eadfc40a98a0`](https://github.com/sveltejs/kit/commit/34a03ff16af29e917abebb649b31eadfc40a98a0), [`1c77e283896058084c1cb5752d9ec207987a585e`](https://github.com/sveltejs/kit/commit/1c77e283896058084c1cb5752d9ec207987a585e), [`04958cca5905aaeeff367c9e4a5ce6e90fc64779`](https://github.com/sveltejs/kit/commit/04958cca5905aaeeff367c9e4a5ce6e90fc64779), [`9dc5c0e3e01a3c07010e9996688169be68e1dde8`](https://github.com/sveltejs/kit/commit/9dc5c0e3e01a3c07010e9996688169be68e1dde8), [`00e1a7621de554054d068e4525a9e505d1c2e588`](https://github.com/sveltejs/kit/commit/00e1a7621de554054d068e4525a9e505d1c2e588), [`9fcd1e7574197fa6e7ac000a030378d877cb8837`](https://github.com/sveltejs/kit/commit/9fcd1e7574197fa6e7ac000a030378d877cb8837), [`e541a4057a00f5ab6740fb51b7f88f17776da50a`](https://github.com/sveltejs/kit/commit/e541a4057a00f5ab6740fb51b7f88f17776da50a), [`37f72fbb075b481de8263f62c77125333735f382`](https://github.com/sveltejs/kit/commit/37f72fbb075b481de8263f62c77125333735f382), [`b60707ca8e755be95c86490122aa1b792b9bd6be`](https://github.com/sveltejs/kit/commit/b60707ca8e755be95c86490122aa1b792b9bd6be), [`699f4405c752261cf46c1ad32e4dbadceaffc75b`](https://github.com/sveltejs/kit/commit/699f4405c752261cf46c1ad32e4dbadceaffc75b), [`e2a4538c48295cde06f64fb8c7f0b333fbf95496`](https://github.com/sveltejs/kit/commit/e2a4538c48295cde06f64fb8c7f0b333fbf95496), [`a91ba1f326b6e244503de9a010771d942b461dad`](https://github.com/sveltejs/kit/commit/a91ba1f326b6e244503de9a010771d942b461dad)]:
+  - @sveltejs/kit@2.16.0
+
+## 5.2.11
+### Patch Changes
+
+
+- chore(deps): update dependency @rollup/plugin-node-resolve to v16 ([#13164](https://github.com/sveltejs/kit/pull/13164))
+
+- Updated dependencies [[`19823dd716568140011eaa86110bb8868f0e2513`](https://github.com/sveltejs/kit/commit/19823dd716568140011eaa86110bb8868f0e2513), [`5d30191d13a596bda50e27e54522c10f3f6461e3`](https://github.com/sveltejs/kit/commit/5d30191d13a596bda50e27e54522c10f3f6461e3)]:
+  - @sveltejs/kit@2.12.2
+
+## 5.2.10
+### Patch Changes
+
+
+- chore: append http on listening address ([#13146](https://github.com/sveltejs/kit/pull/13146))
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
 ## 5.2.9
 ### Patch Changes
 

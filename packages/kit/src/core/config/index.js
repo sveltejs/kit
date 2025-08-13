@@ -57,17 +57,27 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates svelte.config.js
+ * Loads and validates Svelte config file
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+	const config_files = ['js', 'ts']
+		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
+		.filter((f) => fs.existsSync(f));
 
-	if (!fs.existsSync(config_file)) {
+	if (config_files.length === 0) {
+		console.log(
+			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
+		);
 		return process_config({}, { cwd });
 	}
-
+	const config_file = config_files[0];
+	if (config_files.length > 1) {
+		console.log(
+			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
+		);
+	}
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
 	try {
@@ -76,7 +86,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		const error = /** @type {Error} */ (e);
 
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Could not load svelte.config.js: ${error.message}\n`;
+		error.stack = `Could not load ${config_file}: ${error.message}\n`;
 		throw error;
 	}
 }
@@ -111,9 +121,35 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 export function validate_config(config) {
 	if (typeof config !== 'object') {
 		throw new Error(
-			'svelte.config.js must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
+			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 		);
 	}
 
-	return options(config, 'config');
+	const validated = options(config, 'config');
+	const files = validated.kit.files;
+
+	files.hooks.client ??= path.join(files.src, 'hooks.client');
+	files.hooks.server ??= path.join(files.src, 'hooks.server');
+	files.hooks.universal ??= path.join(files.src, 'hooks');
+	files.lib ??= path.join(files.src, 'lib');
+	files.params ??= path.join(files.src, 'params');
+	files.routes ??= path.join(files.src, 'routes');
+	files.serviceWorker ??= path.join(files.src, 'service-worker');
+	files.appTemplate ??= path.join(files.src, 'app.html');
+	files.errorTemplate ??= path.join(files.src, 'error.html');
+
+	if (validated.kit.router.resolution === 'server') {
+		if (validated.kit.router.type === 'hash') {
+			throw new Error(
+				"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
+			);
+		}
+		if (validated.kit.output.bundleStrategy !== 'split') {
+			throw new Error(
+				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+			);
+		}
+	}
+
+	return validated;
 }

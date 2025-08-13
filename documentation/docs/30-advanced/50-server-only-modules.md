@@ -10,7 +10,7 @@ The [`$env/static/private`]($env-static-private) and [`$env/dynamic/private`]($e
 
 ## Server-only utilities
 
-The [`$app/server`]($app-server) module, which contains a `read` function for reading assets from the filesystem, can likewise only be imported by code that runs on the server.
+The [`$app/server`]($app-server) module, which contains a [`read`]($app-server#read) function for reading assets from the filesystem, can likewise only be imported by code that runs on the server.
 
 ## Your modules
 

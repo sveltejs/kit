@@ -5,15 +5,16 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"svelte": "^4.2.10",
-		"svelte-check": "^4.0.1",
-		"typescript": "^5.3.3",
-		"vite": "^5.3.2"
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "^5.35.5",
+		"svelte-check": "^4.1.1",
+		"typescript": "^5.5.4",
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

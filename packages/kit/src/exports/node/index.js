@@ -1,7 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
-import { SvelteKitError } from '../../runtime/control.js';
+import { SvelteKitError } from '../internal/index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -26,7 +26,7 @@ function get_raw_body(req, body_size_limit) {
 
 	if (req.destroyed) {
 		const readable = new ReadableStream();
-		readable.cancel();
+		void readable.cancel();
 		return readable;
 	}
 
@@ -176,7 +176,7 @@ export async function setResponse(res, response) {
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {
-		reader.cancel();
+		void reader.cancel();
 		return;
 	}
 
@@ -193,7 +193,7 @@ export async function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	next();
+	void next();
 	async function next() {
 		try {
 			for (;;) {

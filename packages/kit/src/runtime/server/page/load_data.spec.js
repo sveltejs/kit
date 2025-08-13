@@ -47,15 +47,22 @@ test('succeeds when acao header present on cors', async () => {
 	assert.equal(text, 'foo');
 });
 
-test('errors when no acao header present on cors', () => {
+test('errors when no acao header present on cors', async () => {
 	const fetch = create_fetch({});
 
-	expect(async () => {
+	await expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
 	}).rejects.toThrowError(
 		"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
 	);
+});
+
+test('succeeds when fetching from local scheme', async () => {
+	const fetch = create_fetch({});
+	const response = await fetch('data:text/plain;foo');
+	const text = await response.text();
+	assert.equal(text, 'foo');
 });
 
 test('errors when trying to access non-serialized request headers on the server', async () => {
