@@ -219,7 +219,12 @@ export function create_builder({
 
 		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
-			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
+
+			return [
+				...copy(`${source}/pages`, dest),
+				...copy(`${source}/dependencies`, dest),
+				...copy(`${source}/data`, dest)
+			];
 		},
 
 		writeServer(dest) {

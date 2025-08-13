@@ -98,7 +98,10 @@ export function get_tsconfig(kit) {
 	const config = {
 		compilerOptions: {
 			// generated options
-			paths: get_tsconfig_paths(kit),
+			paths: {
+				...get_tsconfig_paths(kit),
+				'$app/types': ['./types/index.d.ts']
+			},
 			rootDirs: [config_relative('.'), './types'],
 
 			// essential options

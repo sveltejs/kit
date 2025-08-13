@@ -1,5 +1,50 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.1.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 7.1.2
+### Patch Changes
+
+
+- fix: resolve the absolute path of the Wrangler config setting `assets.directory` in case the config file is in a different directory than the root project ([#14036](https://github.com/sveltejs/kit/pull/14036))
+
+- Updated dependencies [[`793ae28`](https://github.com/sveltejs/kit/commit/793ae28a339ca33b7e27f14158b1726bfeedd729)]:
+  - @sveltejs/kit@2.27.0
+
+## 7.1.1
+### Patch Changes
+
+
+- fix: support assets-only workers in wrangler validation ([#14019](https://github.com/sveltejs/kit/pull/14019))
+
+- Updated dependencies [[`fda0165`](https://github.com/sveltejs/kit/commit/fda0165804011d221bb196a26565eea3e08b9d42)]:
+  - @sveltejs/kit@2.25.2
+
+## 7.1.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: include missing utils file ([#14009](https://github.com/sveltejs/kit/pull/14009))
+
+
+- fix: correctly warn users when assets key is missing ([#13844](https://github.com/sveltejs/kit/pull/13844))
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
 ## 7.0.5
 ### Patch Changes
 

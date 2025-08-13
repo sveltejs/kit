@@ -1,5 +1,5 @@
 import { escape_html } from '../../../utils/escape.js';
-import { hash } from '../../hash.js';
+import { hash } from '../../../utils/hash.js';
 
 /**
  * Inside a script element, only `</script` and `<!--` hold special meaning to the HTML parser.
