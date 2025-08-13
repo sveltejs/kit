@@ -8,7 +8,7 @@
 		set_count_server,
 		resolve_deferreds
 	} from './query-command.remote.js';
-	import { external } from '../../external-remotes/allowed.remote.js';
+	import { external } from '../../../external-remotes/allowed.remote.js';
 
 	let { data } = $props();
 
