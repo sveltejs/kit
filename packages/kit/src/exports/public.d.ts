@@ -17,8 +17,8 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -55,7 +55,7 @@ export interface Adapter {
 		/**
 		 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
 		 * also deploy to a platform that supports `@opentelemetry/api`.
-		 * @since 2.29.0
+		 * @since 2.30.0
 		 */
 		tracing?: () => boolean;
 	};
@@ -198,7 +198,7 @@ export interface Builder {
 	/**
 	 * Check if the server tracing file exists.
 	 * @returns true if the server tracing file exists, false otherwise
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	hasServerTracingFile: () => boolean;
 
@@ -221,7 +221,7 @@ export interface Builder {
 	 * @param options.module configuration for the resulting entrypoint module.
 	 * @param options.module.exports
 	 * @param options.module.generateText a function that receives the relative paths to the tracing and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	trace: (args: {
 		entrypoint: string;
@@ -460,22 +460,22 @@ export interface KitConfig {
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
 		/**
-		 * Options for enabling to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions),  and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+		 * Options to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 		 * @default { server: false, serverFile: false }
-		 * @since 2.29.0
+		 * @since 2.30.0
 		 */
 		tracing?: {
 			/**
 			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 			 * @default false
-			 * @since 2.29.0
+			 * @since 2.30.0
 			 */
 			server?: boolean;
 
 			/**
 			 * Enables `tracing.server.js` for tracing instrumentation.
 			 * @default false
-			 * @since 2.29.0
+			 * @since 2.30.0
 			 */
 			serverFile?: boolean;
 		};
@@ -488,26 +488,38 @@ export interface KitConfig {
 	};
 	/**
 	 * Where to find various files within your project.
+	 * @deprecated
 	 */
 	files?: {
 		/**
+		 * the location of your source code
+		 * @deprecated
+		 * @default "src"
+		 * @since 2.28
+		 */
+		src?: string;
+		/**
 		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 * @deprecated
 		 * @default "static"
 		 */
 		assets?: string;
 		hooks?: {
 			/**
 			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
 			/**
 			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks"
 			 * @since 2.3.0
 			 */
@@ -515,31 +527,37 @@ export interface KitConfig {
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 * @deprecated
 		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
 		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
+		 * @deprecated
 		 * @default "src/params"
 		 */
 		params?: string;
 		/**
 		 * the files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing))
+		 * @deprecated
 		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
 		 * the location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers))
+		 * @deprecated
 		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
 		 * the location of the template for HTML responses
+		 * @deprecated
 		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
 		 * the location of the template for fallback error responses
+		 * @deprecated
 		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
@@ -1063,7 +1081,7 @@ export interface LoadEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */
@@ -1354,7 +1372,7 @@ export interface RequestEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */
@@ -1531,7 +1549,7 @@ export interface ServerLoadEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */

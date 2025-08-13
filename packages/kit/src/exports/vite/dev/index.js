@@ -394,8 +394,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			file === appTemplate ||
 			file === errorTemplate ||
 			file.startsWith(serviceWorker) ||
-			file.startsWith(hooks.server) ||
-			file.startsWith(path.resolve(cwd, 'src/tracing.server'))
+			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config);
 		}
@@ -502,7 +501,10 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const resolved_tracing = resolve_entry(path.resolve(cwd, 'src/tracing.server'));
+				const resolved_tracing = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'tracing.server')
+				);
+
 				if (resolved_tracing) {
 					await vite.ssrLoadModule(resolved_tracing);
 				}

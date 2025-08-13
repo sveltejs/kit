@@ -1,5 +1,26 @@
 # @sveltejs/kit
 
+## 2.29.0
+### Minor Changes
+
+
+- feat: add a `kit.files.src` option ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+### Patch Changes
+
+
+- fix: don't treat `$lib/server.ts` or `$lib/server_whatever.ts` as server-only modules, only `$lib/server/**` ([#14191](https://github.com/sveltejs/kit/pull/14191))
+
+
+- fix: make illegal server-only import errors actually useful ([#14155](https://github.com/sveltejs/kit/pull/14155))
+
+
+- chore: deprecate `config.kit.files` options ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+- fix: avoid warning if page options in a Svelte file belongs to a comment ([#14180](https://github.com/sveltejs/kit/pull/14180))
+
 ## 2.28.0
 ### Minor Changes
 
