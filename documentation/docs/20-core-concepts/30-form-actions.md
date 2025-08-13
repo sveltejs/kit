@@ -469,6 +469,7 @@ Note that you need to `deserialize` the response before processing it further us
 If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
 
 ```js
+// @errors: 2532 2304
 const response = await fetch(this.action, {
 	method: 'POST',
 	body: data,
