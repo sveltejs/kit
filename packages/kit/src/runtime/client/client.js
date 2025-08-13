@@ -2283,7 +2283,7 @@ export function pushState(url, state) {
 	history.pushState(opts, '', resolve_url(url));
 	has_navigated = true;
 
-	page.state = state;
+	page.state = unstringify(opts[STATES_KEY], app.hooks.transport);
 	root.$set({
 		// we need to assign a new page object so that subscribers are correctly notified
 		page: untrack(() => clone_page(page))
@@ -2317,7 +2317,7 @@ export function replaceState(url, state) {
 
 	history.replaceState(opts, '', resolve_url(url));
 
-	page.state = state;
+	page.state = unstringify(opts[STATES_KEY], app.hooks.transport);
 	root.$set({
 		page: untrack(() => clone_page(page))
 	});

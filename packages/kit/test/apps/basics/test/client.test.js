@@ -1649,13 +1649,20 @@ test.describe('Shallow routing', () => {
 
 	test('pushState properly serializes objects', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state/foo');
-		await expect(page.locator('p')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: nope');
 
-		await page.locator('button').click();
-		await expect(page.locator('p')).toHaveText('foo: it works?!');
+		await page.getByText('push state').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0');
+
+		await page.getByText('bump count').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0'); // Ensure count is not bumped
 
 		await page.goBack();
 		await expect(page.locator('p')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: nope');
 	});
 });
 
