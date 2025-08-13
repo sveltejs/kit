@@ -1,13 +1,8 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import {
-	getRequestEvent,
-	with_event,
-	get_event_state,
-	copy_event_state
-} from '@sveltejs/kit/internal';
+import { with_request_store, get_request_store } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 
 /**
@@ -34,8 +29,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 	if ('~standard' in validate_or_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
-			const event = getRequestEvent();
-			const state = get_event_state(event);
+			const { event, state } = get_request_store();
 			const validate = validate_or_fn['~standard'].validate;
 
 			const result = await validate(arg);
@@ -70,12 +64,11 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @template {MaybePromise<any>} T
  * @param {string} id
  * @param {any} arg
- * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export function get_response(id, arg, event, get_result) {
-	const state = get_event_state(event);
+export function get_response(id, arg, state, get_result) {
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
 
 	return ((state.remote_data ??= {})[cache_key] ??= get_result());
@@ -108,14 +101,15 @@ export function parse_remote_response(data, transport) {
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {boolean} allow_cookies
  * @param {any} arg
  * @param {(arg: any) => any} validate
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, allow_cookies, arg, validate, fn) {
+export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
 	/** @type {RequestEvent} */
-	const cleansed = copy_event_state(event, {
+	const cleansed = {
 		...event,
 		setHeaders: () => {
 			throw new Error('setHeaders is not allowed in remote functions');
@@ -147,9 +141,9 @@ export async function run_remote_function(event, allow_cookies, arg, validate, f
 		},
 		route: { id: null },
 		url: new URL(event.url.origin)
-	});
+	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_event(cleansed, () => validate(arg));
-	return with_event(cleansed, () => fn(validated));
+	const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
+	return with_request_store({ event: cleansed, state }, () => fn(validated));
 }

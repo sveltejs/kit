@@ -1,20 +1,35 @@
-import { assert, expect, test } from 'vitest';
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { RequestState } from 'types' */
+import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
 import { installPolyfills } from '../node/polyfills.js';
-import { add_event_state } from '@sveltejs/kit/internal';
+import { noop_span } from '../../runtime/telemetry/noop.js';
+
+const dummy_event = vi.hoisted(
+	() =>
+		/** @type {RequestEvent} */ ({
+			tracing: {
+				root: {}
+			}
+		})
+);
+
+vi.mock(import('@sveltejs/kit/internal'), async (actualPromise) => {
+	const actual = await actualPromise();
+	return {
+		...actual,
+		get_request_store: () => ({
+			event: dummy_event,
+			state: /** @type {RequestState} */ ({
+				tracing: {
+					record_span: ({ fn }) => fn(noop_span)
+				}
+			})
+		})
+	};
+});
 
 installPolyfills();
-
-const dummy_event = add_event_state({
-	// @ts-expect-error
-	record_span: ({ fn }) => fn(),
-	event: {
-		tracing: {
-			// @ts-expect-error
-			root: {}
-		}
-	}
-});
 
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */

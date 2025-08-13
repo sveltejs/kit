@@ -1,6 +1,6 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
-import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal';
 import { check_experimental, run_remote_function } from './shared.js';
 
 /**
@@ -56,12 +56,11 @@ export function form(fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
-				const event = getRequestEvent();
-				const state = get_event_state(event);
+				const { event, state } = get_request_store();
 
 				state.refreshes ??= {};
 
-				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+				const result = await run_remote_function(event, state, true, form_data, (d) => d, fn);
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
@@ -88,7 +87,7 @@ export function form(fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { remote_data } = get_event_state(getRequestEvent());
+					const { remote_data } = get_request_store().state;
 					return remote_data?.[__.id];
 				} catch {
 					return undefined;
@@ -110,7 +109,7 @@ export function form(fn) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
-					const state = get_event_state(getRequestEvent());
+					const { state } = get_request_store();
 					let instance = (state.form_instances ??= new Map()).get(key);
 
 					if (!instance) {

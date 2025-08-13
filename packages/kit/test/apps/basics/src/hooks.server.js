@@ -65,7 +65,8 @@ export const handleValidationError = ({ issues }) => {
 };
 
 export const handle = sequence(
-	({ event, resolve }) => {
+	// eslint-disable-next-line prefer-arrow-callback -- this needs a name for tests
+	function set_tracing_test_id({ event, resolve }) {
 		const test_id = !building && event.url.searchParams.get('test_id');
 		if (test_id) {
 			event.tracing.root.setAttribute('test_id', test_id);

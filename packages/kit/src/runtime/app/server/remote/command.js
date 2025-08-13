@@ -1,7 +1,7 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal';
 import { check_experimental, create_validator, run_remote_function } from './shared.js';
 
 /**
@@ -64,7 +64,7 @@ export function command(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		const event = getRequestEvent();
+		const { event, state } = get_request_store();
 
 		if (!event.isRemoteRequest) {
 			throw new Error(
@@ -72,9 +72,9 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		get_event_state(event).refreshes ??= {};
+		state.refreshes ??= {};
 
-		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
+		const promise = Promise.resolve(run_remote_function(event, state, true, arg, validate, fn));
 
 		// @ts-expect-error
 		promise.updates = () => {

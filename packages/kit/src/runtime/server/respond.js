@@ -1,12 +1,11 @@
+/** @import { RequestState } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import {
 	Redirect,
 	SvelteKitError,
-	with_event,
-	add_event_state,
 	merge_tracing,
-	copy_event_state
+	with_request_store
 } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
@@ -143,57 +142,62 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
+	/** @type {RequestState} */
+	const event_state = {
+		prerendering: state.prerendering,
+		transport: options.hooks.transport,
+		handleValidationError: options.hooks.handleValidationError,
+		tracing: {
+			record_span
+		}
+	};
+
 	/** @type {import('@sveltejs/kit').RequestEvent} */
-	const event = add_event_state({
-		state,
-		options,
-		record_span,
-		event: {
-			cookies,
-			// @ts-expect-error `fetch` needs to be created after the `event` itself
-			fetch: null,
-			getClientAddress:
-				state.getClientAddress ||
-				(() => {
+	const event = {
+		cookies,
+		// @ts-expect-error `fetch` needs to be created after the `event` itself
+		fetch: null,
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
+				throw new Error(
+					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
+				);
+			}),
+		locals: {},
+		params: {},
+		platform: state.platform,
+		request,
+		route: { id: null },
+		setHeaders: (new_headers) => {
+			if (__SVELTEKIT_DEV__) {
+				validateHeaders(new_headers);
+			}
+
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+				const value = new_headers[key];
+
+				if (lower === 'set-cookie') {
 					throw new Error(
-						`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
-				}),
-			locals: {},
-			params: {},
-			platform: state.platform,
-			request,
-			route: { id: null },
-			setHeaders: (new_headers) => {
-				if (__SVELTEKIT_DEV__) {
-					validateHeaders(new_headers);
-				}
+				} else if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				} else {
+					headers[lower] = value;
 
-				for (const key in new_headers) {
-					const lower = key.toLowerCase();
-					const value = new_headers[key];
-
-					if (lower === 'set-cookie') {
-						throw new Error(
-							'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-						);
-					} else if (lower in headers) {
-						throw new Error(`"${key}" header is already set`);
-					} else {
-						headers[lower] = value;
-
-						if (state.prerendering && lower === 'cache-control') {
-							state.prerendering.cache = /** @type {string} */ (value);
-						}
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
 					}
 				}
-			},
-			url,
-			isDataRequest: is_data_request,
-			isSubRequest: state.depth > 0,
-			isRemoteRequest: !!remote_id
-		}
-	});
+			}
+		},
+		url,
+		isDataRequest: is_data_request,
+		isSubRequest: state.depth > 0,
+		isRemoteRequest: !!remote_id
+	};
 
 	event.fetch = create_fetch({
 		event,
@@ -402,15 +406,15 @@ export async function internal_respond(request, options, manifest, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = copy_event_state(event, {
+				const traced_event = {
 					...event,
 					tracing: {
 						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 						root: root_span,
 						current: root_span
 					}
-				});
-				return await with_event(traced_event, () =>
+				};
+				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
 						resolve: (event, opts) => {
@@ -422,7 +426,7 @@ export async function internal_respond(request, options, manifest, state) {
 								fn: async (resolve_span) => {
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
-									return with_event(null, () =>
+									return with_request_store(null, () =>
 										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
 											(response) => {
 												// add headers/cookies here, rather than inside `resolve`, so that we
@@ -510,7 +514,7 @@ export async function internal_respond(request, options, manifest, state) {
 			add_cookies_to_headers(response.headers, Object.values(new_cookies));
 			return response;
 		}
-		return await handle_fatal_error(event, options, e);
+		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/**
@@ -531,6 +535,7 @@ export async function internal_respond(request, options, manifest, state) {
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
+					event_state,
 					options,
 					manifest,
 					state,
@@ -544,7 +549,7 @@ export async function internal_respond(request, options, manifest, state) {
 			}
 
 			if (remote_id) {
-				return await handle_remote_call(event, options, manifest, remote_id);
+				return await handle_remote_call(event, event_state, options, manifest, remote_id);
 			}
 
 			if (route) {
@@ -556,6 +561,7 @@ export async function internal_respond(request, options, manifest, state) {
 				if (is_data_request) {
 					response = await render_data(
 						event,
+						event_state,
 						route,
 						options,
 						manifest,
@@ -564,13 +570,14 @@ export async function internal_respond(request, options, manifest, state) {
 						trailing_slash
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					response = await render_endpoint(event, event_state, await route.endpoint(), state);
 				} else if (route.page) {
 					if (!page_nodes) {
 						throw new Error('page_nodes not found. This should never happen');
 					} else if (page_methods.has(method)) {
 						response = await render_page(
 							event,
+							event_state,
 							route.page,
 							options,
 							manifest,
@@ -663,6 +670,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 				return await respond_with_error({
 					event,
+					event_state,
 					options,
 					manifest,
 					state,
@@ -684,7 +692,7 @@ export async function internal_respond(request, options, manifest, state) {
 			// and I don't even know how to describe it. need to investigate at some point
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, options, e);
+			return await handle_fatal_error(event, event_state, options, e);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');

@@ -1,6 +1,6 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
-import { with_event, get_event_state, merge_tracing } from '@sveltejs/kit/internal';
+import { merge_tracing, get_request_store, with_request_store } from '@sveltejs/kit/internal';
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
@@ -87,16 +87,15 @@ export function sequence(...handlers) {
 		 * @returns {MaybePromise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
+			const store = get_request_store();
 			const handle = handlers[i];
 
-			return get_event_state(event).tracing.record_span({
-				name: 'sveltekit.handle.sequenced.${i}',
-				attributes: {
-					'sveltekit.handle.sequenced.name': handle.name
-				},
+			return store.state.tracing.record_span({
+				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
+				attributes: {},
 				fn: async (current) => {
 					const traced_event = merge_tracing(event, current);
-					return await with_event(traced_event, () =>
+					return await with_request_store({ event: traced_event, state: store.state }, () =>
 						handle({
 							event: traced_event,
 							resolve: (event, options) => {

@@ -1,12 +1,11 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, with_request_store } from '@sveltejs/kit/internal';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
-import { with_event } from '../../exports/internal/event.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -67,13 +66,14 @@ export function static_error_page(options, status, message) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
-export async function handle_fatal_error(event, options, error) {
+export async function handle_fatal_error(event, state, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = get_status(error);
-	const body = await handle_error_and_jsonify(event, options, error);
+	const body = await handle_error_and_jsonify(event, state, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -92,11 +92,12 @@ export async function handle_fatal_error(event, options, error) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {Promise<App.Error>}
  */
-export async function handle_error_and_jsonify(event, options, error) {
+export async function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	}
@@ -109,7 +110,7 @@ export async function handle_error_and_jsonify(event, options, error) {
 	const message = get_message(error);
 
 	return (
-		(await with_event(event, () =>
+		(await with_request_store({ event, state }, () =>
 			options.hooks.handleError({ error, event, status, message })
 		)) ?? { message }
 	);

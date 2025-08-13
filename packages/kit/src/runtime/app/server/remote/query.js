@@ -1,7 +1,7 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent, get_event_state } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {
@@ -77,19 +77,18 @@ export function query(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const event = getRequestEvent();
+		const { event, state } = get_request_store();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, event, () =>
-			run_remote_function(event, false, arg, validate, fn)
+		const promise = get_response(__.id, arg, state, () =>
+			run_remote_function(event, state, false, arg, validate, fn)
 		);
 
 		promise.catch(() => {});
 
 		promise.refresh = async () => {
-			const event = getRequestEvent();
-			const state = get_event_state(event);
-			const refreshes = state?.refreshes;
+			const { state } = get_request_store();
+			const refreshes = state.refreshes;
 
 			if (!refreshes) {
 				throw new Error(

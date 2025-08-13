@@ -820,10 +820,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});
@@ -912,10 +910,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});
@@ -984,10 +980,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});
@@ -1042,10 +1036,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});
@@ -1134,10 +1126,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});
@@ -1200,10 +1190,8 @@ test.describe('tracing', () => {
 			span_id: expect.any(String),
 			children: expect.arrayContaining([
 				expect.objectContaining({
-					name: 'sveltekit.handle.child',
-					attributes: expect.objectContaining({
-						'sveltekit.handle.child.index': 0
-					})
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
 				})
 			])
 		});

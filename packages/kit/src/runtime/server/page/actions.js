@@ -8,7 +8,7 @@ import {
 	Redirect,
 	ActionFailure,
 	SvelteKitError,
-	with_event,
+	with_request_store,
 	merge_tracing
 } from '@sveltejs/kit/internal';
 import { get_status, normalize_error } from '../../../utils/error.js';
@@ -28,10 +28,11 @@ export function is_action_json_request(event) {
 
 /**
  * @param {RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {SSROptions} options
  * @param {SSRNode['server'] | undefined} server
  */
-export async function handle_action_json_request(event, options, server) {
+export async function handle_action_json_request(event, event_state, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -44,7 +45,7 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, no_actions_error)
+				error: await handle_error_and_jsonify(event, event_state, options, no_actions_error)
 			},
 			{
 				status: no_actions_error.status,
@@ -60,7 +61,7 @@ export async function handle_action_json_request(event, options, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, event_state, actions);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -101,7 +102,12 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(err))
+				error: await handle_error_and_jsonify(
+					event,
+					event_state,
+					options,
+					check_incorrect_fail_use(err)
+				)
 			},
 			{
 				status: get_status(err)
@@ -147,10 +153,11 @@ export function is_action_request(event) {
 
 /**
  * @param {RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {SSRNode['server'] | undefined} server
  * @returns {Promise<ActionResult>}
  */
-export async function handle_action_request(event, server) {
+export async function handle_action_request(event, event_state, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -173,7 +180,7 @@ export async function handle_action_request(event, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = await call_action(event, event_state, actions);
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -224,10 +231,11 @@ function check_named_default_separate(actions) {
 
 /**
  * @param {RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {NonNullable<ServerNode['actions']>} actions
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, actions) {
+async function call_action(event, event_state, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -263,7 +271,10 @@ async function call_action(event, actions) {
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const result = await with_event(merge_tracing(event, current), () => action(event));
+			const traced_event = merge_tracing(event, current);
+			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
+				action(traced_event)
+			);
 			if (result instanceof ActionFailure) {
 				current.setAttributes({
 					'sveltekit.form_action.result.type': 'failure',

@@ -1,9 +1,9 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { RequestStore } from 'types' */
 
-/** @type {RequestEvent | null} */
-let request_event = null;
+/** @type {RequestStore | null} */
+let sync_store = null;
 
-/** @type {import('node:async_hooks').AsyncLocalStorage<RequestEvent | null> | null} */
+/** @type {import('node:async_hooks').AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -21,7 +21,7 @@ import('node:async_hooks')
  * @since 2.20.0
  */
 export function getRequestEvent() {
-	const event = request_event ?? als?.getStore();
+	const event = try_get_request_store()?.event;
 
 	if (!event) {
 		let message =
@@ -38,16 +38,28 @@ export function getRequestEvent() {
 	return event;
 }
 
+export function get_request_store() {
+	const result = try_get_request_store();
+	if (!result) {
+		throw new Error('Could not get the request store. This is an internal error.');
+	}
+	return result;
+}
+
+export function try_get_request_store() {
+	return sync_store ?? als?.getStore() ?? null;
+}
+
 /**
  * @template T
- * @param {RequestEvent | null} event
+ * @param {RequestStore | null} store
  * @param {() => T} fn
  */
-export function with_event(event, fn) {
+export function with_request_store(store, fn) {
 	try {
-		request_event = event;
-		return als ? als.run(event, fn) : fn();
+		sync_store = store;
+		return als ? als.run(store, fn) : fn();
 	} finally {
-		request_event = null;
+		sync_store = null;
 	}
 }
