@@ -180,7 +180,8 @@ export let app;
 
 /** @type {Record<string, any>} */
 // avoid referencing `__SVELTEKIT_PAYLOAD__` because it will be undefined unless this module was loaded by Vite
-export const remote_responses = (typeof __SVELTEKIT_PAYLOAD__ !== 'undefined' ? __SVELTEKIT_PAYLOAD__.data : undefined) ?? {};
+export const remote_responses =
+	(typeof __SVELTEKIT_PAYLOAD__ !== 'undefined' ? __SVELTEKIT_PAYLOAD__.data : undefined) ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
