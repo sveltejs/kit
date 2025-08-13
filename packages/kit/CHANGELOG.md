@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.29.1
+### Patch Changes
+
+
+- chore: allow remote functions in all of the src directory ([#14198](https://github.com/sveltejs/kit/pull/14198))
+
 ## 2.29.0
 ### Minor Changes
 
