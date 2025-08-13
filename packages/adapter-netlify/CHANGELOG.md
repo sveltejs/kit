@@ -1,5 +1,26 @@
 # @sveltejs/adapter-netlify
 
+## 5.1.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.1.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` in edge functions ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
 ## 5.0.2
 ### Patch Changes
 

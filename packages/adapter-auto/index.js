@@ -9,7 +9,8 @@ const commands = {
 	npm: (name, version) => `npm install -D ${name}@${version}`,
 	pnpm: (name, version) => `pnpm add -D ${name}@${version}`,
 	yarn: (name, version) => `yarn add -D ${name}@${version}`,
-	bun: (name, version) => `bun add -D ${name}@${version}`
+	bun: (name, version) => `bun add -D ${name}@${version}`,
+	deno: (name, version) => `deno install -D npm:${name}@${version}`
 };
 
 function detect_lockfile() {
@@ -23,6 +24,7 @@ function detect_lockfile() {
 		if (exists('yarn.lock')) return 'yarn';
 		if (exists('package-lock.json')) return 'npm';
 		if (exists('bun.lockb') || exists('bun.lock')) return 'bun';
+		if (exists('deno.lock')) return 'deno';
 	} while (dir !== (dir = path.dirname(dir)));
 
 	return 'npm';

@@ -113,6 +113,8 @@ export function not_found(req, res, base) {
 	}
 }
 
+const query_pattern = /\?.*$/s;
+
 /**
  * Removes cwd/lib path from the start of the id
  * @param {string} id
@@ -120,6 +122,8 @@ export function not_found(req, res, base) {
  * @param {string} cwd
  */
 export function normalize_id(id, lib, cwd) {
+	id = id.replace(query_pattern, '');
+
 	if (id.startsWith(lib)) {
 		id = id.replace(lib, '$lib');
 	}
@@ -153,6 +157,18 @@ export function normalize_id(id, lib, cwd) {
 	}
 
 	return posixify(id);
+}
+
+/**
+ * For times when you need to throw an error, but without
+ * displaying a useless stack trace (since the developer
+ * can't do anything useful with it)
+ * @param {string} message
+ */
+export function stackless(message) {
+	const error = new Error(message);
+	error.stack = '';
+	return error;
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');

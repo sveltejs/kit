@@ -1556,3 +1556,82 @@ test.describe('getRequestEvent', () => {
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
 	});
 });
+
+test.describe('remote functions', () => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		}
+	});
+
+	test('form works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'hi');
+		await page.click('#submit-btn-one');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+	});
+
+	test('form error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
+	});
+
+	test('form redirect works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'redirect');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#echo-result')).toBe('Hello world');
+	});
+
+	test('form.buttonProps works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'hi');
+		await page.click('#submit-btn-two');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+	});
+
+	test('form.buttonProps error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
+	});
+
+	test('form.for(...) scopes form submission', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.click('#submit-btn-item-foo');
+		await expect(page.locator('#form-result-foo')).toHaveText('foo');
+		await expect(page.locator('#form-result-bar')).toHaveText('');
+		await expect(page.locator('#form-result-1')).toHaveText('');
+	});
+
+	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/whole-page"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/functions-only"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+	});
+});
+
+test.describe('params prop', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop');
+
+		await clicknav('[href="/params-prop/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});

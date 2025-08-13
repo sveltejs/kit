@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
-import { b64_encode } from '../../utils.js';
+import { base64_encode, text_decoder } from '../../utils.js';
 import { with_event } from '../../app/server/event.js';
 
 /**
@@ -197,21 +197,27 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.universal?.load) {
+	const load = node?.universal?.load;
+
+	if (!load) {
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
-		url: event.url,
-		params: event.params,
-		data: server_data_node?.data ?? null,
-		route: event.route,
-		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-		setHeaders: event.setHeaders,
-		depends: () => {},
-		parent,
-		untrack: (fn) => fn()
-	});
+	// We're adding getRequestEvent context to the universal load function
+	// in order to be able to use remote calls within it.
+	const result = await with_event(event, () =>
+		load.call(null, {
+			url: event.url,
+			params: event.params,
+			data: server_data_node?.data ?? null,
+			route: event.route,
+			fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+			setHeaders: event.setHeaders,
+			depends: () => {},
+			parent,
+			untrack: (fn) => fn()
+		})
+	);
 
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, node.universal_id);
@@ -310,12 +316,14 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					return async () => {
 						const buffer = await response.arrayBuffer();
 
+						const bytes = new Uint8Array(buffer);
+
 						if (dependency) {
-							dependency.body = new Uint8Array(buffer);
+							dependency.body = bytes;
 						}
 
 						if (buffer instanceof ArrayBuffer) {
-							await push_fetched(b64_encode(buffer), true);
+							await push_fetched(base64_encode(bytes), true);
 						}
 
 						return buffer;
@@ -388,13 +396,12 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 async function stream_to_string(stream) {
 	let result = '';
 	const reader = stream.getReader();
-	const decoder = new TextDecoder();
 	while (true) {
 		const { done, value } = await reader.read();
 		if (done) {
 			break;
 		}
-		result += decoder.decode(value);
+		result += text_decoder.decode(value);
 	}
 	return result;
 }

@@ -41,7 +41,8 @@ async function generate_fallback({ manifest_path, env }) {
 		},
 		prerendering: {
 			fallback: true,
-			dependencies: new Map()
+			dependencies: new Map(),
+			remote_responses: new Map()
 		},
 		read: (file) => readFileSync(join(config.files.assets, file))
 	});

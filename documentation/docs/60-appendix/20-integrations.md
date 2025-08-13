@@ -22,7 +22,7 @@ You will also need to use a preprocessor if you're using TypeScript with Svelte 
 
 ## Adders
 
-Run `npx sv add` to setup many different complex integrations with a single command including:
+Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
 - prettier (formatting)
 - eslint (linting)
 - vitest (unit testing)
@@ -44,7 +44,7 @@ See [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of [packa
 
 `svelte-preprocess` has some additional functionality not found in `vitePreprocess` such as support for Pug, Babel, and global styles. However, `vitePreprocess` may be faster and require less configuration, so it is used by default. Note that CoffeeScript is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit.
 
-You will need to install `svelte-preprocess` with `npm install --save-dev svelte-preprocess` and [add it to your `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm install -D sass` or `npm install -D less`.
+You will need to install `svelte-preprocess` with `npm i -D svelte-preprocess` and [add it to your `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm i -D sass` or `npm i -D less`.
 
 ## Vite plugins
 

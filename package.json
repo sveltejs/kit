@@ -11,36 +11,39 @@
 		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm run --dir packages/kit test:server-side-route-resolution:build",
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
-		"test:others": "pnpm -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1 test",
+		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
-		"build": "pnpm --filter @sveltejs/* -r build",
+		"build": "pnpm --filter '@sveltejs/*' -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.11",
+		"@changesets/cli": "^2.29.5",
 		"@playwright/test": "catalog:",
-		"@sveltejs/eslint-config": "^8.1.0",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"eslint": "^9.6.0",
-		"prettier": "^3.1.1",
-		"prettier-plugin-svelte": "^3.1.2",
-		"typescript-eslint": "^8.24.0"
+		"@sveltejs/eslint-config": "^8.2.0",
+		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
+		"eslint": "^9.29.0",
+		"prettier": "^3.6.0",
+		"prettier-plugin-svelte": "^3.4.0",
+		"typescript-eslint": "^8.39.0"
 	},
-	"packageManager": "pnpm@10.12.4",
+	"packageManager": "pnpm@10.14.0",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@parcel/watcher",
 			"esbuild",
+			"netlify-cli",
 			"rolldown",
 			"sharp",
 			"svelte-preprocess",
+			"unix-dgram",
 			"workerd"
 		]
 	}

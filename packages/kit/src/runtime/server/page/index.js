@@ -1,8 +1,8 @@
-import { text } from '../../../exports/index.js';
+import { text } from '@sveltejs/kit';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../pathname.js';
-import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
+import { get_remote_action, handle_remote_form_post } from '../remote.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
@@ -54,9 +55,15 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
-			// for action requests, first call handler in +page.server.js
-			// (this also determines status code)
-			action_result = await handle_action_request(event, leaf_node.server);
+			const remote_id = get_remote_action(event.url);
+			if (remote_id) {
+				action_result = await handle_remote_form_post(event, manifest, remote_id);
+			} else {
+				// for action requests, first call handler in +page.server.js
+				// (this also determines status code)
+				action_result = await handle_action_request(event, leaf_node.server);
+			}
+
 			if (action_result?.type === 'redirect') {
 				return redirect_response(action_result.status, action_result.location);
 			}
