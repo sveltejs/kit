@@ -212,7 +212,7 @@ export interface Builder {
 	 * Caveats:
 	 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 	 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
-	 * - Use {@link hasServerTracingFile} to check if the user has a server tracing file; if they don't, you shouldn't do this.
+	 * - Use `hasServerTracingFile` to check if the user has a server tracing file; if they don't, you shouldn't do this.
 	 *
 	 * @param options an object containing the following properties:
 	 * @param options.entrypoint the path to the entrypoint to trace.
