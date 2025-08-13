@@ -185,10 +185,8 @@ function get_origin(headers) {
 	const protocol = (protocol_header && headers[protocol_header]) || 'https';
 	const host = (host_header && headers[host_header]) || headers['host'];
 	const port = port_header && headers[port_header];
-	
-  return port
-    ? `${protocol}://${host}:${port}`
-    : `${protocol}://${host}`;
+
+	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
 export const handler = sequence(
