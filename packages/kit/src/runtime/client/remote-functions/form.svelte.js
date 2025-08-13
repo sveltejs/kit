@@ -216,7 +216,7 @@ export function form(id) {
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return async (event) => {
-				const target = /** @type {HTMLButtonElement} */ (event.target);
+				const target = /** @type {HTMLButtonElement} */ (event.currentTarget);
 				const form = target.form;
 				if (!form) return;
 
