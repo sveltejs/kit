@@ -702,6 +702,9 @@ declare module '@sveltejs/kit' {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
+			 *
+			 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+			 *
 			 * @default (config) => config
 			 * @since 1.3.0
 			 */
