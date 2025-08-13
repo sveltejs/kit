@@ -35,6 +35,6 @@ form3.status = 200;
 // @ts-expect-error - cannot both be present at the same time
 form3 = { foo: '', status: 200 };
 
-let foo: any = null;
+const foo: any = null;
 // @ts-expect-error ActionFailure is not a class and so you can't do instanceof
 foo instanceof Kit.ActionFailure;

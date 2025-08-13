@@ -1,10 +1,11 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { json } from '../../../exports/index.js';
+import { json } from '@sveltejs/kit';
+import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
+import { with_event } from '../../app/server/event.js';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
 export function is_action_json_request(event) {
@@ -103,7 +104,7 @@ export async function handle_action_json_request(event, options, server) {
 /**
  * @param {HttpError | Error} error
  */
-function check_incorrect_fail_use(error) {
+export function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
 		? new Error('Cannot "throw fail()". Use "return fail()"')
 		: error;
@@ -246,7 +247,7 @@ async function call_action(event, actions) {
 		);
 	}
 
-	return action(event);
+	return with_event(event, () => action(event));
 }
 
 /** @param {any} data */

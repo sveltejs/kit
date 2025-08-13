@@ -2,6 +2,9 @@ import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -462,6 +465,17 @@ test.describe('Errors', () => {
 			});
 		}
 	});
+
+	test('error thrown from load on the server respects page options when rendering the error page', async ({
+		request
+	}) => {
+		const res = await request.get('/errors/load-error-page-options/csr');
+		expect(res.status()).toBe(500);
+		const content = await res.text();
+		expect(content).toContain('Crashing now');
+		// the hydration script should not be present if the csr page option is respected
+		expect(content).not.toContain('kit.start(app');
+	});
 });
 
 test.describe('Load', () => {
@@ -616,17 +630,19 @@ test.describe('Static files', () => {
 		expect(await r2.json()).toEqual({ works: true });
 	});
 
-	test('Serves symlinked asset', async ({ request }) => {
-		const response = await request.get('/symlink-from/hello.txt');
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('hello');
-	});
+	if (process.platform !== 'win32') {
+		test('Serves symlinked asset', async ({ request }) => {
+			const response = await request.get('/symlink-from/hello.txt');
+			expect(response.status()).toBe(200);
+			expect(await response.text()).toBe('hello');
+		});
+	}
 });
 
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response.allHeaders())['set-cookie'];
+		const cookies = response ? (await response.allHeaders())['set-cookie'] : '';
 
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
@@ -636,7 +652,7 @@ test.describe('setHeaders', () => {
 test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
-		const cookies = await response.headerValue('set-cookie');
+		const cookies = response ? await response.headerValue('set-cookie') : '';
 
 		expect(cookies).toMatch('before=before');
 		expect(cookies).toMatch('after=after');
@@ -683,6 +699,13 @@ test.describe('reroute', () => {
 		);
 	});
 
+	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/async/c');
+		expect(await page.textContent('h1')).toContain(
+			'Successfully rewritten, URL should still show a: /reroute/async/c'
+		);
+	});
+
 	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/prerendered/to-destination');
 		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
@@ -700,5 +723,55 @@ test.describe('init', () => {
 		await expect(page.locator('p')).toHaveText('1');
 		await page.reload();
 		await expect(page.locator('p')).toHaveText('1');
+	});
+});
+
+test.describe('getRequestEvent', () => {
+	test('getRequestEvent works in server endpoints', async ({ request }) => {
+		const response = await request.get('/get-request-event/endpoint');
+		expect(await response.text()).toBe('hello from hooks.server.js');
+	});
+});
+
+test.describe('$app/forms', () => {
+	test('deserialize works on the server', async ({ request }) => {
+		const response = await request.get('/serialization-form/server-deserialize');
+		expect(await response.json()).toEqual({ data: 'It works!' });
+	});
+});
+
+const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
+
+test.describe('$app/environment', () => {
+	test('treeshakes dev check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
+			'utf-8'
+		);
+		// check that import { dev } from '$app/environment' is treeshaken
+		expect(code).not.toContain('dev');
+	});
+
+	test('treeshakes browser check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(
+				root,
+				'.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'
+			),
+			'utf-8'
+		);
+		// check that import { browser } from '$app/environment' is treeshaken
+		expect(code).not.toContain('browser');
+	});
+});
+
+test.describe('remote functions', () => {
+	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
 	});
 });

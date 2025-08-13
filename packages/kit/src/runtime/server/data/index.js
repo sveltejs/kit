@@ -1,14 +1,13 @@
-import { HttpError, SvelteKitError, Redirect } from '../../control.js';
+import { text } from '@sveltejs/kit';
+import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
-import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
-
-const encoder = new TextEncoder();
+import { text_encoder } from '../../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -129,9 +128,9 @@ export async function render_data(
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					controller.enqueue(encoder.encode(data));
+					controller.enqueue(text_encoder.encode(data));
 					for await (const chunk of chunks) {
-						controller.enqueue(encoder.encode(chunk));
+						controller.enqueue(text_encoder.encode(chunk));
 					}
 					controller.close();
 				},
@@ -176,10 +175,12 @@ function json_response(json, status = 200) {
  * @param {Redirect} redirect
  */
 export function redirect_json_response(redirect) {
-	return json_response({
-		type: 'redirect',
-		location: redirect.location
-	});
+	return json_response(
+		/** @type {import('types').ServerRedirectNode} */ ({
+			type: 'redirect',
+			location: redirect.location
+		})
+	);
 }
 
 /**
@@ -253,8 +254,8 @@ export function get_data_json(event, options, nodes) {
 				return JSON.stringify(node);
 			}
 
-			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${stringify_uses(
-				node
+			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
+				serialize_uses(node)
 			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 		});
 
@@ -263,6 +264,8 @@ export function get_data_json(event, options, nodes) {
 			chunks: count > 0 ? iterator : null
 		};
 	} catch (e) {
+		// @ts-expect-error
+		e.path = 'data' + e.path;
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }

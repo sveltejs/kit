@@ -145,10 +145,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				const response = await respond(request, options, manifest, {
-					...state,
-					depth: state.depth + 1
-				});
+				const response = await internal_fetch(request, options, manifest, state);
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
@@ -194,4 +191,44 @@ function normalize_fetch_input(info, init, url) {
 	}
 
 	return new Request(typeof info === 'string' ? new URL(info, url) : info, init);
+}
+
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
+async function internal_fetch(request, options, manifest, state) {
+	if (request.signal) {
+		if (request.signal.aborted) {
+			throw new DOMException('The operation was aborted.', 'AbortError');
+		}
+
+		let remove_abort_listener = () => {};
+		/** @type {Promise<never>} */
+		const abort_promise = new Promise((_, reject) => {
+			const on_abort = () => {
+				reject(new DOMException('The operation was aborted.', 'AbortError'));
+			};
+			request.signal.addEventListener('abort', on_abort, { once: true });
+			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+		});
+
+		const result = await Promise.race([
+			respond(request, options, manifest, {
+				...state,
+				depth: state.depth + 1
+			}),
+			abort_promise
+		]);
+		remove_abort_listener();
+		return result;
+	} else {
+		return await respond(request, options, manifest, {
+			...state,
+			depth: state.depth + 1
+		});
+	}
 }

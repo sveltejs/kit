@@ -1,5 +1,140 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.1.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 7.1.2
+### Patch Changes
+
+
+- fix: resolve the absolute path of the Wrangler config setting `assets.directory` in case the config file is in a different directory than the root project ([#14036](https://github.com/sveltejs/kit/pull/14036))
+
+- Updated dependencies [[`793ae28`](https://github.com/sveltejs/kit/commit/793ae28a339ca33b7e27f14158b1726bfeedd729)]:
+  - @sveltejs/kit@2.27.0
+
+## 7.1.1
+### Patch Changes
+
+
+- fix: support assets-only workers in wrangler validation ([#14019](https://github.com/sveltejs/kit/pull/14019))
+
+- Updated dependencies [[`fda0165`](https://github.com/sveltejs/kit/commit/fda0165804011d221bb196a26565eea3e08b9d42)]:
+  - @sveltejs/kit@2.25.2
+
+## 7.1.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: include missing utils file ([#14009](https://github.com/sveltejs/kit/pull/14009))
+
+
+- fix: correctly warn users when assets key is missing ([#13844](https://github.com/sveltejs/kit/pull/13844))
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
+## 7.0.5
+### Patch Changes
+
+
+- fix: deprecate `platform.context` in favor of `platform.ctx` to align with Cloudflare's naming convention ([#13856](https://github.com/sveltejs/kit/pull/13856))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
+## 7.0.4
+### Patch Changes
+
+
+- fix: address build failure when using `paths.base` (#13769) ([#13846](https://github.com/sveltejs/kit/pull/13846))
+
+- Updated dependencies [[`6a6538c4bd937667a56ef5f6673cdef3f2ea7a77`](https://github.com/sveltejs/kit/commit/6a6538c4bd937667a56ef5f6673cdef3f2ea7a77), [`6261a877ae97ff85d07277c51391d925ed1bd096`](https://github.com/sveltejs/kit/commit/6261a877ae97ff85d07277c51391d925ed1bd096), [`e7b57e74bdea976ae070562bda76d4bb78cdb6da`](https://github.com/sveltejs/kit/commit/e7b57e74bdea976ae070562bda76d4bb78cdb6da), [`408e1f5c2ae593b460861098e8e01f945af395ab`](https://github.com/sveltejs/kit/commit/408e1f5c2ae593b460861098e8e01f945af395ab), [`c6cd8c3a5ed96d423a65af5cb5468e3e963cfb54`](https://github.com/sveltejs/kit/commit/c6cd8c3a5ed96d423a65af5cb5468e3e963cfb54), [`1a406752aafc2b80d9ccb49f15ebc10301c84480`](https://github.com/sveltejs/kit/commit/1a406752aafc2b80d9ccb49f15ebc10301c84480), [`6c442395a8e6656ff49ecd4041d8e12ed65e80dd`](https://github.com/sveltejs/kit/commit/6c442395a8e6656ff49ecd4041d8e12ed65e80dd)]:
+  - @sveltejs/kit@2.21.3
+
+## 7.0.3
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250507.0 ([#13773](https://github.com/sveltejs/kit/pull/13773))
+
+## 7.0.2
+### Patch Changes
+
+
+- chore(deps): upgrade @cloudflare/workers-types to 4.20250415.0 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 7.0.1
+### Patch Changes
+
+
+- fix: correctly write the worker to the `pages_build_output_dir` path if set in the Wrangler configuration path ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+
+- fix: correctly resolve paths provided by the Wrangler config on Windows ([#13671](https://github.com/sveltejs/kit/pull/13671))
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
+## 7.0.0
+### Major Changes
+
+
+- feat: support specifically building for Cloudflare Workers Static Assets ([#13634](https://github.com/sveltejs/kit/pull/13634))
+
+
+### Patch Changes
+
+
+- chore: remove `esbuild` as dependency ([#13633](https://github.com/sveltejs/kit/pull/13633))
+
+- Updated dependencies [[`370e9f95c1d6efd5393f73d2dbef68143b27f681`](https://github.com/sveltejs/kit/commit/370e9f95c1d6efd5393f73d2dbef68143b27f681)]:
+  - @sveltejs/kit@2.20.3
+
+## 6.0.1
+### Patch Changes
+
+
+- fix: revert writing server files to the cloudflare build directory ([#13622](https://github.com/sveltejs/kit/pull/13622))
+
+## 6.0.0
+### Major Changes
+
+
+- fix: copy the `_headers` and `_redirects` files from the project root instead of the `/static` directory ([#13227](https://github.com/sveltejs/kit/pull/13227))
+
+
+### Patch Changes
+
+
+- fix: write server files to the cloudflare build directory ([#13610](https://github.com/sveltejs/kit/pull/13610))
+
+## 5.1.0
+### Minor Changes
+
+
+- feat: support wrangler 4 ([#13580](https://github.com/sveltejs/kit/pull/13580))
+
+
+### Patch Changes
+
+- Updated dependencies [[`001bc04dece9b0983efc2187225772c19d135345`](https://github.com/sveltejs/kit/commit/001bc04dece9b0983efc2187225772c19d135345)]:
+  - @sveltejs/kit@2.19.2
+
 ## 5.0.3
 ### Patch Changes
 

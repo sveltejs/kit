@@ -1,11 +1,16 @@
-import { CacheStorage, IncomingRequestCfProperties } from '@cloudflare/workers-types';
+import {
+	CacheStorage,
+	IncomingRequestCfProperties,
+	ExecutionContext
+} from '@cloudflare/workers-types';
 
 declare global {
 	namespace App {
 		export interface Platform {
-			context: {
-				waitUntil(promise: Promise<any>): void;
-			};
+			env: unknown;
+			ctx: ExecutionContext;
+			/** @deprecated Use `ctx` instead */
+			context: ExecutionContext;
 			caches: CacheStorage;
 			cf?: IncomingRequestCfProperties;
 		}

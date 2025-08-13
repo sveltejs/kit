@@ -18,6 +18,10 @@ const config = {
 			}
 		},
 
+		experimental: {
+			remoteFunctions: true
+		},
+
 		prerender: {
 			entries: [
 				'*',
@@ -25,7 +29,13 @@ const config = {
 				'/routing/prerendered/trailing-slash/never',
 				'/routing/prerendered/trailing-slash/ignore'
 			],
-			handleHttpError: 'warn'
+			handleHttpError: ({ path, message }) => {
+				if (path.includes('/reroute/async')) {
+					throw new Error('shouldnt error on ' + path);
+				}
+
+				console.warn(message);
+			}
 		},
 		serviceWorker: {
 			register: true,

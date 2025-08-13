@@ -188,7 +188,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 Server `load` functions _always_ run on the server.
 
-By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#Making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
+By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#Making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server-side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
 
 If a route contains both universal and server `load` functions, the server `load` runs first.
 
@@ -206,7 +206,7 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers.
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers. If you need to serialize/deserialize custom types, use [transport hooks](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport).
 
 ### When to use which
 
@@ -712,6 +712,74 @@ To prevent data waterfalls and preserve layout `load` caches:
 - Use auth guards directly in `+page.server.js` `load` functions for route specific protection
 
 Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
+
+## Using `getRequestEvent`
+
+When running server `load` functions, the `event` object passed to the function as an argument can also be retrieved with [`getRequestEvent`]($app-server#getRequestEvent). This allows shared logic (such as authentication guards) to access information about the current request without it needing to be passed around.
+
+For example, you might have a function that requires users to be logged in, and redirects them to `/login` if not:
+
+```js
+/// file: src/lib/server/auth.js
+// @filename: ambient.d.ts
+interface User {
+	name: string;
+}
+
+declare namespace App {
+	interface Locals {
+		user?: User;
+	}
+}
+
+// @filename: index.ts
+// ---cut---
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
+export function requireLogin() {
+	const { locals, url } = getRequestEvent();
+
+	// assume `locals.user` is populated in `handle`
+	if (!locals.user) {
+		const redirectTo = url.pathname + url.search;
+		const params = new URLSearchParams({ redirectTo });
+
+		redirect(307, `/login?${params}`);
+	}
+
+	return locals.user;
+}
+```
+
+Now, you can call `requireLogin` in any `load` function (or [form action](form-actions), for example) to guarantee that the user is logged in:
+
+```js
+/// file: +page.server.js
+// @filename: ambient.d.ts
+
+declare module '$lib/server/auth' {
+	interface User {
+		name: string;
+	}
+
+	export function requireLogin(): User;
+}
+
+// @filename: index.ts
+// ---cut---
+import { requireLogin } from '$lib/server/auth';
+
+export function load() {
+	const user = requireLogin();
+
+	// `user` is guaranteed to be a user object here, because otherwise
+	// `requireLogin` would throw a redirect and we wouldn't get here
+	return {
+		message: `hello ${user.name}!`
+	};
+}
+```
 
 ## Further reading
 

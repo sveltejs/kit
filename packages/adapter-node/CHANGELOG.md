@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 5.2.14
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.2.13
+### Patch Changes
+
+
+- fix: remove unnecessary static directory serving middleware ([#13953](https://github.com/sveltejs/kit/pull/13953))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
 ## 5.2.12
 ### Patch Changes
 

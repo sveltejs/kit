@@ -2,8 +2,6 @@
 	import { page, navigating } from '$app/state';
 
 	let { children } = $props();
-
-	$inspect(navigating.to);
 </script>
 
 <nav>

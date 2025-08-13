@@ -1,6 +1,7 @@
+import { Redirect } from '@sveltejs/kit/internal';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
-import { Redirect } from '../control.js';
+import { with_event } from '../app/server/event.js';
 import { method_not_allowed } from './utils.js';
 
 /**
@@ -14,7 +15,7 @@ export async function render_endpoint(event, mod, state) {
 
 	let handler = mod[method] || mod.fallback;
 
-	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
+	if (method === 'HEAD' && !mod.HEAD && mod.GET) {
 		handler = mod.GET;
 	}
 
@@ -28,7 +29,7 @@ export async function render_endpoint(event, mod, state) {
 		throw new Error('Cannot prerender endpoints that have mutative methods');
 	}
 
-	if (state.prerendering && !prerender) {
+	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {
 		if (state.depth > 0) {
 			// if request came from a prerendered page, bail
 			throw new Error(`${event.route.id} is not prerenderable`);
@@ -40,8 +41,8 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		let response = await handler(
-			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
+		const response = await with_event(event, () =>
+			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 
 		if (!(response instanceof Response)) {
@@ -50,15 +51,28 @@ export async function render_endpoint(event, mod, state) {
 			);
 		}
 
-		if (state.prerendering) {
-			// the returned Response might have immutable Headers
-			// so we should clone them before trying to mutate them
-			response = new Response(response.body, {
+		if (state.prerendering && (!state.prerendering.inside_reroute || prerender)) {
+			// The returned Response might have immutable Headers
+			// so we should clone them before trying to mutate them.
+			// We also need to clone the response body since it may be read twice during prerendering
+			const cloned = new Response(response.clone().body, {
 				status: response.status,
 				statusText: response.statusText,
 				headers: new Headers(response.headers)
 			});
-			response.headers.set('x-sveltekit-prerender', String(prerender));
+			cloned.headers.set('x-sveltekit-prerender', String(prerender));
+
+			if (state.prerendering.inside_reroute && prerender) {
+				// Without this, the route wouldn't be recorded as prerendered,
+				// because there's nothing after reroute that would do that.
+				cloned.headers.set(
+					'x-sveltekit-routeid',
+					encodeURI(/** @type {string} */ (event.route.id))
+				);
+				state.prerendering.dependencies.set(event.url.pathname, { response: cloned, body: null });
+			} else {
+				return cloned;
+			}
 		}
 
 		return response;

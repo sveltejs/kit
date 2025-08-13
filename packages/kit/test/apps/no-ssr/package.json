@@ -9,17 +9,16 @@
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "cross-env DEV=true playwright test",
+		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
-		"cross-env": "^7.0.3",
-		"svelte": "^5.2.9",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "^5.35.5",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
-		"vite": "^6.0.11"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

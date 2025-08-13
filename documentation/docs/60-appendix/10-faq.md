@@ -14,7 +14,8 @@ See [the documentation regarding project types](project-types) for more details.
 
 If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
 
-```js
+```ts
+// @errors: 2732
 /// file: svelte.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
@@ -192,9 +193,7 @@ Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Nod
 
 Currently ESM Support within the latest Yarn (version 3) is considered [experimental](https://github.com/yarnpkg/berry/pull/2161).
 
-The below seems to work although your results may vary.
-
-First create a new application:
+The below seems to work although your results may vary. First create a new application:
 
 ```sh
 yarn create svelte myapp
@@ -207,8 +206,6 @@ And enable Yarn Berry:
 yarn set version berry
 yarn install
 ```
-
-#### Yarn 3 global cache
 
 One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
 

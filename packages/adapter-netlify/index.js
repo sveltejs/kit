@@ -5,32 +5,15 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
+import { VERSION } from '@sveltejs/kit';
+
+const [kit_major, kit_minor] = VERSION.split('.');
 
 /**
  * @typedef {{
  *   build?: { publish?: string }
  *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
  * } & toml.JsonMap} NetlifyConfig
- */
-
-/**
- * TODO(serhalp) Replace this custom type with an import from `@netlify/edge-functions`,
- * once that type is fixed to include `excludedPath` and `function`.
- * @typedef {{
- *	 functions: Array<
- *		 | {
- *				 function: string;
- *				 path: string;
- *				 excludedPath?: string | string[];
- *		   }
- *		 | {
- *				 function: string;
- *				 pattern: string;
- *				 excludedPattern?: string | string[];
- *		   }
- *	 >;
- *	 version: 1;
- *	 }} HandlerManifest
  */
 
 const name = '@sveltejs/adapter-netlify';
@@ -52,6 +35,18 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				throw new Error(
 					'@sveltejs/adapter-netlify >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
 						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
 				);
 			}
 
@@ -102,11 +97,11 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		},
 
 		supports: {
-			// reading from the filesystem only works in serverless functions
 			read: ({ route }) => {
-				if (edge) {
+				// TODO bump peer dep in next adapter major to simplify this
+				if (edge && kit_major === '2' && kit_minor < '25') {
 					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions and SvelteKit < 2.25.0`
 					);
 				}
 
@@ -149,7 +144,7 @@ async function generate_edge_functions({ builder }) {
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
-	const excludedPath = [
+	const excluded = [
 		// Contains static files
 		`/${builder.getAppPath()}/*`,
 		...builder.prerendered.paths,
@@ -167,13 +162,13 @@ async function generate_edge_functions({ builder }) {
 		'/.netlify/*'
 	];
 
-	/** @type {HandlerManifest} */
+	/** @type {import('@netlify/edge-functions').Manifest} */
 	const edge_manifest = {
 		functions: [
 			{
 				function: 'render',
 				path,
-				excludedPath
+				excludedPath: /** @type {`/${string}`[]} */ (excluded)
 			}
 		],
 		version: 1
@@ -220,7 +215,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
 
-	builder.copy(`${files}/esm`, '.netlify', { replace });
+	builder.copy(files, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
 	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
@@ -298,12 +293,12 @@ function generate_lambda_functions({ builder, publish, split }) {
 	// so that generated redirects are appended to custom redirects
 	// rather than replaced by them
 	builder.log.minor('Writing redirects...');
-	const redirect_file = join(publish, '_redirects');
+	const redirects_file = join(publish, '_redirects');
 	if (existsSync('_redirects')) {
-		builder.copy('_redirects', redirect_file);
+		builder.copy('_redirects', redirects_file);
 	}
-	builder.mkdirp(dirname(redirect_file));
-	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
+	builder.mkdirp(dirname(redirects_file));
+	appendFileSync(redirects_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {

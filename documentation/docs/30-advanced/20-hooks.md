@@ -106,7 +106,7 @@ Note that `resolve(...)` will never throw an error, it will always return a `Pro
 
 ### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request that happens inside a `load` or `action` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) the result of an [`event.fetch`](load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
@@ -126,13 +126,9 @@ export async function handleFetch({ request, fetch }) {
 }
 ```
 
-**Credentials**
+Requests made with `event.fetch` follow the browser's credentials model — for same-origin requests, `cookie` and `authorization` headers are forwarded unless the `credentials` option is set to `"omit"`. For cross-origin requests, `cookie` will be included if the request URL belongs to a subdomain of the app — for example if your app is on `my-domain.com`, and your API is on `api.my-domain.com`, cookies will be included in the request.
 
-For same-origin requests, SvelteKit's `fetch` implementation will forward `cookie` and `authorization` headers unless the `credentials` option is set to `"omit"`.
-
-For cross-origin requests, `cookie` will be included if the request URL belongs to a subdomain of the app — for example if your app is on `my-domain.com`, and your API is on `api.my-domain.com`, cookies will be included in the request.
-
-If your app and your API are on sibling subdomains — `www.my-domain.com` and `api.my-domain.com` for example — then a cookie belonging to a common parent domain like `my-domain.com` will _not_ be included, because SvelteKit has no way to know which domain the cookie belongs to. In these cases you will need to manually include the cookie using `handleFetch`:
+There is one caveat: if your app and your API are on sibling subdomains — `www.my-domain.com` and `api.my-domain.com` for example — then a cookie belonging to a common parent domain like `my-domain.com` will _not_ be included, because SvelteKit has no way to know which domain the cookie belongs to. In these cases you will need to manually include the cookie using `handleFetch`:
 
 ```js
 /// file: src/hooks.server.js
@@ -147,13 +143,45 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
+### handleValidationError
+
+This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+
+Say you have a remote function that expects a string as its argument ...
+
+```js
+/// file: todos.remote.js
+import * as v from 'valibot';
+import { query } from '$app/server';
+
+export const getTodo = query(v.string(), (id) => {
+	// implementation...
+});
+```
+
+...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+
+To customise this message and add additional properties to the error object, implement `handleValidationError`:
+
+```js
+/// file: src/hooks.server.js
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export function handleValidationError({ issues }) {
+	return {
+		message: 'No thank you'
+	};
+}
+```
+
+Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
+
 ## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an [unexpected error](errors#Unexpected-errors) is thrown during loading or rendering, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
@@ -253,6 +281,7 @@ This function runs once, when the server is created or the app starts in the bro
 > [!NOTE] If your environment supports top-level await, the `init` function is really no different from writing your initialisation logic at the top level of the module, but some environments — most notably, Safari — don't.
 
 ```js
+// @errors: 2307
 /// file: src/hooks.server.js
 import * as db from '$lib/server/database';
 
@@ -276,9 +305,8 @@ This function runs before `handle` and allows you to change how URLs are transla
 For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
 
 ```js
+// @errors: 2345 2304
 /// file: src/hooks.js
-// @errors: 2345
-// @errors: 2304
 
 /** @type {Record<string, string>} */
 const translated = {
@@ -299,15 +327,14 @@ The `lang` parameter will be correctly derived from the returned pathname.
 
 Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
 
-Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise. In case you fetch data, make sure to use the `fetch` provided to the `reroute` function. It has the [same benefits](load#Making-fetch-requests) as using the special `fetch` of `load` functions, with the caveat that `params` and `id` are unavailable to [`handleFetch`](#Server-hooks-handleFetch) because the route is not known yet.
+Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for example) fetch data from your backend to decide where to reroute to. Use this carefully and make sure it's fast, as it will delay navigation otherwise. If you need to fetch data, use the `fetch` provided as an argument. It has the [same benefits](load#Making-fetch-requests) as the `fetch` provided to `load` functions, with the caveat that `params` and `id` are unavailable to [`handleFetch`](#Server-hooks-handleFetch) because the route is not yet known.
 
 ```js
+// @errors: 2345 2304
 /// file: src/hooks.js
-// @errors: 2345
-// @errors: 2304
 
 /** @type {import('@sveltejs/kit').Reroute} */
-export function reroute({ url, fetch }) {
+export async function reroute({ url, fetch }) {
 	// Ask a special endpoint within your app about the destination
 	if (url.pathname === '/api/reroute') return;
 
@@ -324,9 +351,10 @@ export function reroute({ url, fetch }) {
 
 ### transport
 
-This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns `false` for anything that isn't an instance of the type) and a corresponding `decode` function:
+This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns a falsy value for anything that isn't an instance of the type) and a corresponding `decode` function:
 
 ```js
+// @errors: 2307
 /// file: src/hooks.js
 import { Vector } from '$lib/math';
 
