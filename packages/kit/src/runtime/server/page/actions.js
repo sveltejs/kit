@@ -104,7 +104,7 @@ export async function handle_action_json_request(event, options, server) {
 /**
  * @param {HttpError | Error} error
  */
-function check_incorrect_fail_use(error) {
+export function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
 		? new Error('Cannot "throw fail()". Use "return fail()"')
 		: error;

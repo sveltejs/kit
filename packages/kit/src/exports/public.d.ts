@@ -17,7 +17,8 @@ import {
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { SvelteConfig, PluginOptions } from '@sveltejs/vite-plugin-svelte';
+import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -78,7 +79,7 @@ type OptionalUnion<
 
 declare const uniqueSymbol: unique symbol;
 
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+export interface ActionFailure<T = undefined> {
 	status: number;
 	data: T;
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -406,6 +407,16 @@ export interface KitConfig {
 		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
+	};
+	/**
+	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
+	 */
+	experimental?: {
+		/**
+		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
+		 * @default false
+		 */
+		remoteFunctions?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -775,6 +786,14 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
+ *
+ * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
+ */
+export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
+	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+
+/**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
@@ -1001,12 +1020,15 @@ export interface NavigationEvent<
 /**
  * Information about the target of a specific navigation.
  */
-export interface NavigationTarget {
+export interface NavigationTarget<
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
+> {
 	/**
 	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 	 */
-	params: Record<string, string> | null;
+	params: Params | null;
 	/**
 	 * Info about the target route
 	 */
@@ -1014,7 +1036,7 @@ export interface NavigationTarget {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
-		id: string | null;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL that is navigated to
@@ -1024,8 +1046,8 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated/started
- * - `form`: The user submitted a `<form>` with a GET method
- * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+ * - `form`: The user submitted a `<form method="GET">`
+ * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1043,7 +1065,7 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1081,7 +1103,7 @@ export interface BeforeNavigate extends Navigation {
 export interface OnNavigate extends Navigation {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1100,7 +1122,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1248,6 +1270,11 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+	/**
+	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
+	 * related to the data request in this case. Use this property instead if the distinction is important to you.
+	 */
+	isRemoteRequest: boolean;
 }
 
 /**
@@ -1322,6 +1349,8 @@ export interface SSRManifest {
 	_: {
 		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
+		remotes: Record<string, () => Promise<any>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1498,5 +1527,147 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+/**
+ * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ */
+export type RemoteForm<Result> = {
+	method: 'POST';
+	/** The URL to send the form to. */
+	action: string;
+	/** Event handler that intercepts the form submission on the client to prevent a full page reload */
+	onsubmit: (event: SubmitEvent) => void;
+	/** Use the `enhance` method to influence what happens when the form is submitted. */
+	enhance(
+		callback: (opts: {
+			form: HTMLFormElement;
+			data: FormData;
+			submit: () => Promise<void> & {
+				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+			};
+		}) => void
+	): {
+		method: 'POST';
+		action: string;
+		onsubmit: (event: SubmitEvent) => void;
+	};
+	/**
+	 * Create an instance of the form for the given key.
+	 * The key is stringified and used for deduplication to potentially reuse existing instances.
+	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
+	 * ```svelte
+	 * {#each todos as todo}
+	 *	{@const todoForm = updateTodo.for(todo.id)}
+	 *	<form {...todoForm}>
+	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
+	 *		...
+	 *	</form>
+	 *	{/each}
+	 * ```
+	 */
+	for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
+	/** The result of the form submission */
+	get result(): Result | undefined;
+	/** The number of pending submissions */
+	get pending(): number;
+	/** Spread this onto a `<button>` or `<input type="submit">` */
+	buttonProps: {
+		type: 'submit';
+		formmethod: 'POST';
+		formaction: string;
+		onclick: (event: Event) => void;
+		/** Use the `enhance` method to influence what happens when the form is submitted. */
+		enhance(
+			callback: (opts: {
+				form: HTMLFormElement;
+				data: FormData;
+				submit: () => Promise<void> & {
+					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+				};
+			}) => void
+		): {
+			type: 'submit';
+			formmethod: 'POST';
+			formaction: string;
+			onclick: (event: Event) => void;
+		};
+		/** The number of pending submissions */
+		get pending(): number;
+	};
+};
+
+/**
+ * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+ */
+export type RemoteCommand<Input, Output> = {
+	(arg: Input): Promise<Awaited<Output>> & {
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	};
+	/** The number of pending command executions */
+	get pending(): number;
+};
+
+export type RemoteResource<T> = Promise<Awaited<T>> & {
+	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
+	get error(): any;
+	/** `true` before the first result is available and during refreshes */
+	get loading(): boolean;
+} & (
+		| {
+				/** The current value of the query. Undefined until `ready` is `true` */
+				get current(): undefined;
+				ready: false;
+		  }
+		| {
+				/** The current value of the query. Undefined until `ready` is `true` */
+				get current(): Awaited<T>;
+				ready: true;
+		  }
+	);
+
+export type RemoteQuery<T> = RemoteResource<T> & {
+	/**
+	 * On the client, this function will re-fetch the query from the server.
+	 *
+	 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
+	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+	 */
+	refresh(): Promise<void>;
+	/**
+	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import { getTodos, addTodo } from './todos.remote.js';
+	 *   const todos = getTodos();
+	 * </script>
+	 *
+	 * <form {...addTodo.enhance(async ({ data, submit }) => {
+	 *   await submit().updates(
+	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+	 *   );
+	 * }}>
+	 *   <input type="text" name="text" />
+	 *   <button type="submit">Add Todo</button>
+	 * </form>
+	 * ```
+	 */
+	withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+};
+
+export interface RemoteQueryOverride {
+	_key: string;
+	release(): void;
+}
+
+/**
+ * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+ */
+export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+
+/**
+ * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ */
+export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 
 export * from './index.js';
