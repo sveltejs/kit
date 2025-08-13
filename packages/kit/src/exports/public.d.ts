@@ -55,7 +55,7 @@ export interface Adapter {
 		/**
 		 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
 		 * also deploy to a platform that supports `@opentelemetry/api`.
-		 * @since 2.29.0
+		 * @since 2.30.0
 		 */
 		tracing?: () => boolean;
 	};
@@ -198,7 +198,7 @@ export interface Builder {
 	/**
 	 * Check if the server tracing file exists.
 	 * @returns true if the server tracing file exists, false otherwise
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	hasServerTracingFile: () => boolean;
 
@@ -221,7 +221,7 @@ export interface Builder {
 	 * @param options.module configuration for the resulting entrypoint module.
 	 * @param options.module.exports
 	 * @param options.module.generateText a function that receives the relative paths to the tracing and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	trace: (args: {
 		entrypoint: string;
@@ -462,20 +462,20 @@ export interface KitConfig {
 		/**
 		 * Options to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 		 * @default { server: false, serverFile: false }
-		 * @since 2.29.0
+		 * @since 2.30.0
 		 */
 		tracing?: {
 			/**
 			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 			 * @default false
-			 * @since 2.29.0
+			 * @since 2.30.0
 			 */
 			server?: boolean;
 
 			/**
 			 * Enables `tracing.server.js` for tracing instrumentation.
 			 * @default false
-			 * @since 2.29.0
+			 * @since 2.30.0
 			 */
 			serverFile?: boolean;
 		};
@@ -1063,7 +1063,7 @@ export interface LoadEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */
@@ -1354,7 +1354,7 @@ export interface RequestEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */
@@ -1531,7 +1531,7 @@ export interface ServerLoadEvent<
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
-	 * @since 2.29.0
+	 * @since 2.30.0
 	 */
 	tracing: {
 		/** Whether tracing is enabled. */
