@@ -711,16 +711,30 @@ export interface KitConfig {
 	};
 	serviceWorker?: {
 		/**
-		 * Whether to automatically register the service worker, if it exists.
-		 * @default true
-		 */
-		register?: boolean;
-		/**
 		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
 		 * @default (filename) => !/\.DS_Store/.test(filename)
 		 */
-		files?(filepath: string): boolean;
-	};
+		files?: (file: string) => boolean;
+	} & (
+		| {
+				/**
+				 * Whether to automatically register the service worker, if it exists.
+				 * @default true
+				 */
+				register: true;
+				/**
+				 * Options for serviceWorker.register("...", options);
+				 */
+				options?: RegistrationOptions;
+		  }
+		| {
+				/**
+				 * Whether to automatically register the service worker, if it exists.
+				 * @default true
+				 */
+				register?: false;
+		  }
+	);
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.

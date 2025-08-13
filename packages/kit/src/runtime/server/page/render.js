@@ -478,7 +478,14 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			if (options.service_worker_options != null) {
+				const service_worker_options = { ...options.service_worker_options };
+				if (__SVELTEKIT_DEV__) {
+					service_worker_options.type = 'module';
+				}
+				opts = `, ${s(service_worker_options)}`;
+			}
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)

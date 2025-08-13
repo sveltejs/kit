@@ -37,6 +37,12 @@ const config = {
 				console.warn(message);
 			}
 		},
+		serviceWorker: {
+			register: true,
+			options: {
+				updateViaCache: 'imports'
+			}
+		},
 
 		version: {
 			name: 'TEST_VERSION'
