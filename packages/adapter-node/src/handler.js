@@ -182,7 +182,7 @@ function sequence(handlers) {
  * @returns
  */
 function get_origin(headers) {
-	const protocol = (protocol_header && headers[protocol_header]) || 'https';
+	const protocol = (protocol_header && headers[protocol_header]) ?? 'https';
 	const host = (host_header && headers[host_header]) ?? headers['host'];
 	const port = port_header && headers[port_header];
 
