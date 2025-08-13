@@ -420,26 +420,38 @@ export interface KitConfig {
 	};
 	/**
 	 * Where to find various files within your project.
+	 * @deprecated
 	 */
 	files?: {
 		/**
+		 * the location of your source code
+		 * @deprecated
+		 * @default "src"
+		 * @since 2.28
+		 */
+		src?: string;
+		/**
 		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 * @deprecated
 		 * @default "static"
 		 */
 		assets?: string;
 		hooks?: {
 			/**
 			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
 			/**
 			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks"
 			 * @since 2.3.0
 			 */
@@ -447,31 +459,37 @@ export interface KitConfig {
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 * @deprecated
 		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
 		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
+		 * @deprecated
 		 * @default "src/params"
 		 */
 		params?: string;
 		/**
 		 * the files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing))
+		 * @deprecated
 		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
 		 * the location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers))
+		 * @deprecated
 		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
 		 * the location of the template for HTML responses
+		 * @deprecated
 		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
 		 * the location of the template for fallback error responses
+		 * @deprecated
 		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
@@ -1029,12 +1047,15 @@ export interface NavigationEvent<
 /**
  * Information about the target of a specific navigation.
  */
-export interface NavigationTarget {
+export interface NavigationTarget<
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
+> {
 	/**
 	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 	 */
-	params: Record<string, string> | null;
+	params: Params | null;
 	/**
 	 * Info about the target route
 	 */
@@ -1042,7 +1063,7 @@ export interface NavigationTarget {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
-		id: string | null;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL that is navigated to
@@ -1052,8 +1073,8 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated/started
- * - `form`: The user submitted a `<form>` with a GET method
- * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+ * - `form`: The user submitted a `<form method="GET">`
+ * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1071,7 +1092,7 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1109,7 +1130,7 @@ export interface BeforeNavigate extends Navigation {
 export interface OnNavigate extends Navigation {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1128,7 +1149,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1574,6 +1595,8 @@ export type RemoteForm<Result> = {
 	for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 	/** The result of the form submission */
 	get result(): Result | undefined;
+	/** The number of pending submissions */
+	get pending(): number;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
@@ -1595,14 +1618,20 @@ export type RemoteForm<Result> = {
 			formaction: string;
 			onclick: (event: Event) => void;
 		};
+		/** The number of pending submissions */
+		get pending(): number;
 	};
 };
 
 /**
  * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  */
-export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+export type RemoteCommand<Input, Output> = {
+	(arg: Input): Promise<Awaited<Output>> & {
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	};
+	/** The number of pending command executions */
+	get pending(): number;
 };
 
 export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -1632,7 +1661,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Single-flight-mutations) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>

@@ -102,9 +102,10 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 		input[prefix + remote.hash] = remote_file;
 	}
 
-	const bundle = await vite.build({
+	const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (await vite.build({
 		configFile: false,
 		build: {
+			write: false,
 			ssr: true,
 			rollupOptions: {
 				external: (id) => {
@@ -114,11 +115,10 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 				input
 			}
 		}
-	});
+	}));
 
-	// @ts-expect-error TypeScript doesn't know what type `bundle` is
 	for (const chunk of bundle.output) {
-		if (chunk.name.startsWith(prefix)) {
+		if (chunk.type === 'chunk' && chunk.name.startsWith(prefix)) {
 			fs.writeFileSync(`${dir}/${chunk.fileName.slice(prefix.length)}`, chunk.code);
 		}
 	}

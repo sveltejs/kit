@@ -5,7 +5,14 @@ import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
+import {
+	app,
+	remote_responses,
+	started,
+	goto,
+	set_nearest_error_page,
+	invalidateAll
+} from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -27,6 +34,9 @@ export function form(id) {
 		/** @type {any} */
 		let result = $state(started ? undefined : remote_responses[action_id]);
 
+		/** @type {number} */
+		let pending_count = $state(0);
+
 		/**
 		 * @param {FormData} data
 		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
@@ -41,6 +51,9 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
+
+			// Increment pending count when submission starts
+			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
@@ -78,7 +91,11 @@ export function form(id) {
 					if (form_result.type === 'result') {
 						result = devalue.parse(form_result.result, app.decoders);
 
-						refresh_queries(form_result.refreshes, updates);
+						if (form_result.refreshes) {
+							refresh_queries(form_result.refreshes, updates);
+						} else {
+							void invalidateAll();
+						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
 						const invalidateAll = !refreshes && updates.length === 0;
@@ -94,6 +111,9 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
+					// Decrement pending count when submission completes
+					pending_count--;
+
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;
@@ -242,12 +262,19 @@ export function form(id) {
 			}
 		});
 
+		Object.defineProperty(button_props, 'pending', {
+			get: () => pending_count
+		});
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
 			result: {
 				get: () => result
+			},
+			pending: {
+				get: () => pending_count
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */

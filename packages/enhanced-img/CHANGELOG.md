@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.8.0
+### Minor Changes
+
+
+- breaking: upgrade to vite-imagetools 8 to auto-rotate images ([#14172](https://github.com/sveltejs/kit/pull/14172))
+
 ## 0.7.1
 ### Patch Changes
 

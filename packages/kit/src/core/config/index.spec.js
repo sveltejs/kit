@@ -80,6 +80,7 @@ const get_defaults = (prefix = '') => ({
 			remoteFunctions: false
 		},
 		files: {
+			src: join(prefix, 'src'),
 			assets: join(prefix, 'static'),
 			hooks: {
 				client: join(prefix, 'src/hooks.client'),
@@ -409,4 +410,16 @@ test('errors on loading config with incorrect default export', async () => {
 		message,
 		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 	);
+});
+
+test('uses src prefix for other kit.files options', async () => {
+	const cwd = join(__dirname, 'fixtures/custom-src');
+
+	const config = await load_config({ cwd });
+	remove_keys(config, ([, v]) => typeof v === 'function');
+
+	const defaults = get_defaults(cwd + '/');
+	defaults.kit.version.name = config.kit.version.name;
+
+	expect(config.kit.files.lib).toEqual(join(cwd, 'source/lib'));
 });

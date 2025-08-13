@@ -25,7 +25,7 @@ export default {
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files must be placed in the `lib` or `routes` directory.
+Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files must be placed in your `src` directory.
 
 ## query
 
@@ -503,9 +503,11 @@ Now simply call `addLike`, from (for example) an event handler:
 
 > [!NOTE] Commands cannot be called during render.
 
-### Single-flight mutations
+### Updating queries
 
-As with forms, any queries on the page (such as `getLikes(item.id)` in the example above) will automatically be refreshed following a successful command. But we can make things more efficient by telling SvelteKit which queries will be affected by the command, either inside the command itself...
+To update `getLikes(item.id)`, or any other query, we need to tell SvelteKit _which_ queries need to be refreshed (unlike `form`, which by default invalidates everything, to approximate the behaviour of a native form submission).
+
+We either do that inside the command itself...
 
 ```js
 /// file: likes.remote.js

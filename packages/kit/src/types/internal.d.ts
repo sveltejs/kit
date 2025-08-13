@@ -302,7 +302,7 @@ export type RemoteFunctionResponse =
 			type: 'result';
 			result: string;
 			/** devalue'd Record<string, any> */
-			refreshes: string;
+			refreshes: string | undefined;
 	  };
 
 /**
