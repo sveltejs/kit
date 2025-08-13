@@ -19,7 +19,7 @@ Just telling SvelteKit to emit spans won't get you far, though -- you need to ac
 
 To enable both of these features, add the following to your `svelte.config.js`:
 
-```diff  
+```js  
 /// file: svelte.config.js  
 export default {  
     kit: {  
