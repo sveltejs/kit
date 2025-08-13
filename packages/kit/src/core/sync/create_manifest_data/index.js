@@ -489,10 +489,11 @@ function create_remotes(config, cwd) {
 			if (extensions.some((ext) => file.endsWith(ext))) {
 				const posixified = posixify(path.relative(cwd, `${dir}/${file}`));
 
-			remotes.push({
-				hash: hash(posixified),
-				file: posixified
-			});
+				remotes.push({
+					hash: hash(posixified),
+					file: posixified
+				});
+			}
 		}
 	}
 
