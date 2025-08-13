@@ -144,6 +144,9 @@ importers:
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
+      '@netlify/types':
+        specifier: ^2.0.2
+        version: 2.0.2
       esbuild:
         specifier: ^0.25.4
         version: 0.25.6
@@ -2436,6 +2439,10 @@ packages:
   '@netlify/serverless-functions-api@2.1.3':
     resolution: {integrity: sha512-bNlN/hpND8xFQzpjyKxm6vJayD+bPBlOvs4lWihE7WULrphuH1UuFsoVE5386bNNGH8Rs1IH01AFsl7ALQgOlQ==}
     engines: {node: '>=18.0.0'}
+
+  '@netlify/types@2.0.2':
+    resolution: {integrity: sha512-6899BAqehToSAd3hoevqGaIkG0M9epPMLTi6byynNVIzqv2x+b9OtRXqK67G/gCX7XkrtLQ9Xm3QNJmaFNrSXA==}
+    engines: {node: ^18.14.0 || >=20}
 
   '@netlify/zip-it-and-ship-it@12.1.4':
     resolution: {integrity: sha512-/wM1c0iyym/7SlowbgqTuu/+tJS8CDDs4vLhSizKntFl3VOeDVX0kr9qriH9wA2hYstwGSuHsEgEAnKdMcDBOg==}
@@ -8099,6 +8106,8 @@ snapshots:
   '@netlify/serverless-functions-api@2.1.1': {}
 
   '@netlify/serverless-functions-api@2.1.3': {}
+
+  '@netlify/types@2.0.2': {}
 
   '@netlify/zip-it-and-ship-it@12.1.4(rollup@4.44.0)':
     dependencies:

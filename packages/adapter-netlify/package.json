@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
+		"@netlify/types": "^2.0.2",
 		"esbuild": "^0.25.4",
 		"set-cookie-parser": "^2.6.0"
 	},
