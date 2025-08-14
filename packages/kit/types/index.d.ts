@@ -453,7 +453,7 @@ declare module '@sveltejs/kit' {
 			 */
 			instrumentation?: {
 				/**
-				 * Enables `instrumentation.server.js` for tracing instrumentation.
+				 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
 				 * @default false
 				 * @since 2.31.0
 				 */
