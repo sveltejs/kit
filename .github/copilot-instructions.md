@@ -50,6 +50,10 @@ SvelteKit is a web application framework for building modern web applications wi
 4. `cd packages/kit && pnpm test:unit` - Run unit tests
 5. **For changes to @sveltejs/kit**: `cd packages/kit && pnpm prepublishOnly` - Generate types
 
+#### Add changeset once you're done
+
+Run `pnpm changeset` then follow the prompts. Use this after having finished the task. Most of the time this is a patch release for `@sveltejs/kit`. Use a short and descriptive message. Always prefix the message with either `fix`, `feat`, `breaking`, or `chore` (most likely `fix` since you're mostly working on bugfixes). Example: `fix: run load functions in order`. Use the same message as the title of your pull request.
+
 ### Manual Testing Scenarios
 **ALWAYS test these scenarios after making changes:**
 
