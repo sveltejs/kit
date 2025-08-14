@@ -425,7 +425,6 @@ export interface KitConfig {
 	files?: {
 		/**
 		 * the location of your source code
-		 * @deprecated
 		 * @default "src"
 		 * @since 2.28
 		 */
