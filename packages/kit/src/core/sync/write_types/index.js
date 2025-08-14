@@ -5,19 +5,8 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
-import { s } from '../../../utils/misc.js';
-import { get_route_segments } from '../../../utils/routing.js';
-
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
-};
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**
@@ -64,67 +53,6 @@ export function write_all_types(config, manifest_data) {
 			}
 		}
 	}
-
-	/** @type {Set<string>} */
-	const pathnames = new Set();
-
-	/** @type {string[]} */
-	const dynamic_routes = [];
-
-	/** @type {string[]} */
-	const layouts = [];
-
-	for (const route of manifest_data.routes) {
-		if (route.params.length > 0) {
-			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
-			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
-
-			dynamic_routes.push(route_type);
-
-			const pathname = remove_group_segments(route.id);
-			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
-		} else {
-			const pathname = remove_group_segments(route.id);
-			pathnames.add(s(pathname));
-		}
-
-		/** @type {Map<string, boolean>} */
-		const child_params = new Map(route.params.map((p) => [p.name, p.optional]));
-
-		for (const child of manifest_data.routes.filter((r) => r.id.startsWith(route.id))) {
-			for (const p of child.params) {
-				if (!child_params.has(p.name)) {
-					child_params.set(p.name, true); // always optional
-				}
-			}
-		}
-
-		const layout_params = Array.from(child_params)
-			.map(([name, optional]) => `${name}${optional ? '?:' : ':'} string`)
-			.join('; ');
-
-		const layout_type = `${s(route.id)}: ${layout_params.length > 0 ? `{ ${layout_params} }` : 'undefined'}`;
-		layouts.push(layout_type);
-	}
-
-	try {
-		fs.mkdirSync(types_dir, { recursive: true });
-	} catch {}
-
-	fs.writeFileSync(
-		`${types_dir}/index.d.ts`,
-		[
-			`type DynamicRoutes = {\n\t${dynamic_routes.join(';\n\t')}\n};`,
-			`type Layouts = {\n\t${layouts.join(';\n\t')}\n};`,
-			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
-			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
-			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
-			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
-			`export type Pathname = ${Array.from(pathnames).join(' | ')};`,
-			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
-			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
-		].join('\n\n')
-	);
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
