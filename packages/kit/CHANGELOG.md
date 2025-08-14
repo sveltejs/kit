@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.30.0
+### Minor Changes
+
+
+- feat: allow to specify options for the service worker in `svelte.config.js` ([#13578](https://github.com/sveltejs/kit/pull/13578))
+
+
+### Patch Changes
+
+
+- fix: ensure buttonProps.enhance works on buttons with nested text ([#14199](https://github.com/sveltejs/kit/pull/14199))
+
+
+- fix: pass validation issues specifically to avoid non-enumerable spreading error ([#14197](https://github.com/sveltejs/kit/pull/14197))
+
 ## 2.29.1
 ### Patch Changes
 
