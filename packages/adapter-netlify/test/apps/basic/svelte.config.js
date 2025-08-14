@@ -6,7 +6,7 @@ const config = {
 		adapter: adapter(),
 		experimental: {
 			instrumentation: {
-				serverFile: true
+				server: true
 			}
 		}
 	}
