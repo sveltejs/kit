@@ -120,6 +120,12 @@ const options = object(
 			}),
 
 			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				}),
+				instrumentation: object({
+					server: boolean(false)
+				}),
 				remoteFunctions: boolean(false)
 			}),
 

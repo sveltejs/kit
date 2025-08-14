@@ -50,7 +50,7 @@
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@types/node": "^18.19.119",
+		"@types/node": "catalog:",
 		"esbuild": "^0.25.4",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"

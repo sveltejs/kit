@@ -113,6 +113,12 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
+					entrypoint: worker_dest,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+				});
+			}
 
 			// _headers
 			if (existsSync('_headers')) {
@@ -184,7 +190,8 @@ export default function (options = {}) {
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 }

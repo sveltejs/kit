@@ -20,6 +20,26 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 /**
+ * @param {any} data
+ * @param {string} [location_description]
+ */
+export function validate_load_response(data, location_description) {
+	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+		throw new Error(
+			`a load function ${location_description} returned ${
+				typeof data !== 'object'
+					? `a ${typeof data}`
+					: data instanceof Response
+						? 'a Response object'
+						: Array.isArray(data)
+							? 'an array'
+							: 'a non-plain object'
+			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+		);
+	}
+}
+
+/**
  * Try to `devalue.stringify` the data object using the provided transport encoders.
  * @param {any} data
  * @param {Transport} transport

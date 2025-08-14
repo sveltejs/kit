@@ -1,3 +1,4 @@
+/** @import { BuildOptions } from 'esbuild' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -93,13 +94,18 @@ const plugin = function (defaults = {}) {
 				const dir = `${dirs.functions}/${name}.func`;
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
 					}
 				});
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
+						entrypoint: `${tmp}/index.js`,
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					});
+				}
 
 				write(
 					`${tmp}/manifest.js`,
@@ -136,9 +142,9 @@ const plugin = function (defaults = {}) {
 				);
 
 				try {
-					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
-						outfile: `${dirs.functions}/${name}.func/index.js`,
+					const outdir = `${dirs.functions}/${name}.func`;
+					/** @type {BuildOptions} */
+					const esbuild_config = {
 						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
 						// https://edge-runtime.vercel.app/features/polyfills
 						// TODO verify the latest ES version the edge runtime supports
@@ -168,10 +174,36 @@ const plugin = function (defaults = {}) {
 							'.eot': 'copy',
 							'.otf': 'copy'
 						}
+					};
+					const result = await esbuild.build({
+						entryPoints: [`${tmp}/edge.js`],
+						outfile: `${outdir}/index.js`,
+						...esbuild_config
 					});
 
-					if (result.warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(result.warnings, {
+					let instrumentation_result;
+					if (builder.hasServerInstrumentationFile()) {
+						instrumentation_result = await esbuild.build({
+							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
+							outfile: `${outdir}/instrumentation.server.js`,
+							...esbuild_config
+						});
+
+						builder.instrument({
+							entrypoint: `${outdir}/index.js`,
+							instrumentation: `${outdir}/instrumentation.server.js`,
+							module: {
+								generateText: generate_traced_edge_module
+							}
+						});
+					}
+
+					const warnings = instrumentation_result
+						? [...result.warnings, ...instrumentation_result.warnings]
+						: result.warnings;
+
+					if (warnings.length > 0) {
+						const formatted = await esbuild.formatMessages(warnings, {
 							kind: 'warning',
 							color: true
 						});
@@ -477,7 +509,8 @@ const plugin = function (defaults = {}) {
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 };
@@ -802,6 +835,25 @@ function is_prerendered(route) {
 		route.prerender === true ||
 		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
+}
+
+/**
+ * @param {{ instrumentation: string; start: string }} opts
+ */
+function generate_traced_edge_module({ instrumentation, start }) {
+	return `\
+import './${instrumentation}';
+const promise = import('./${start}');
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+export default async (req, res) => {
+	const { default: handler } = await promise;
+	return handler(req, res);
+}
+`;
 }
 
 export default plugin;

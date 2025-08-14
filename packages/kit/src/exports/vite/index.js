@@ -16,7 +16,13 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, normalize_id, stackless } from './utils.js';
+import {
+	error_for_missing_config,
+	get_config_aliases,
+	get_env,
+	normalize_id,
+	stackless
+} from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -332,7 +338,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.instrumentation.server),
 					__SVELTEKIT_PAYLOAD__: new_config.build.ssr
 						? '{}'
 						: `globalThis.__sveltekit_${version_hash}`
@@ -347,7 +354,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.instrumentation.server),
 					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
 				};
 
@@ -774,6 +782,25 @@ async function kit({ svelte_config }) {
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+
+					// ...and the server instrumentation file
+					const server_instrumentation = resolve_entry(
+						path.join(kit.files.src, 'instrumentation.server')
+					);
+					if (server_instrumentation) {
+						const { adapter } = kit;
+						if (adapter && !adapter.supports?.instrumentation?.()) {
+							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
+						}
+						if (!kit.experimental.instrumentation.server) {
+							error_for_missing_config(
+								'instrumentation.server.js',
+								'kit.experimental.instrumentation.server',
+								'true'
+							);
+						}
+						input['instrumentation.server'] = server_instrumentation;
+					}
 
 					// ...and every .remote file
 					for (const remote of manifest_data.remotes) {

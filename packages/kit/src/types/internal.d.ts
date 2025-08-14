@@ -30,6 +30,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { Span } from '@opentelemetry/api';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -566,6 +567,33 @@ export type RemoteInfo =
 			dynamic?: boolean;
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
+
+export type RecordSpan = <T>(options: {
+	name: string;
+	attributes: Record<string, any>;
+	fn: (current: Span) => Promise<T>;
+}) => Promise<T>;
+
+/**
+ * Internal state associated with the current `RequestEvent`,
+ * used for tracking things like remote function calls
+ */
+export interface RequestState {
+	prerendering: PrerenderOptions | undefined;
+	transport: ServerHooks['transport'];
+	handleValidationError: ServerHooks['handleValidationError'];
+	tracing: {
+		record_span: RecordSpan;
+	};
+	form_instances?: Map<any, any>;
+	remote_data?: Record<string, MaybePromise<any>>;
+	refreshes?: Record<string, any>;
+}
+
+export interface RequestStore {
+	event: RequestEvent;
+	state: RequestState;
+}
 
 export * from '../exports/index.js';
 export * from './private.js';

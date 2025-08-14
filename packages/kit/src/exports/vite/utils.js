@@ -4,6 +4,7 @@ import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
 	env_dynamic_private,
@@ -172,3 +173,46 @@ export function stackless(message) {
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
+
+/**
+ * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * returns:
+ *
+ * ```
+ * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ *
+ *\`\`\`js
+ *	kit:
+ *		experimental:
+ *			instrumentation:
+ *				server: true
+ *			}
+ *		}
+ *	}
+ *\`\`\`
+ *```
+ * @param {string} feature_name
+ * @param {string} path
+ * @param {string} value
+ * @returns {never}
+ */
+export function error_for_missing_config(feature_name, path, value) {
+	const hole = '__HOLE__';
+
+	const result = path.split('.').reduce((acc, part, i, parts) => {
+		const indent = '  '.repeat(i);
+		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
+
+		return acc.replace(hole, `${indent}${part}: ${rhs}`);
+	}, hole);
+
+	throw new Error(
+		dedent`\
+			To enable \`${feature_name}\`, add the following to your \`svelte.config.js\`:
+
+			\`\`\`js
+			${result}
+			\`\`\`
+		`
+	);
+}
