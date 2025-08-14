@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.2.16
+### Patch Changes
+
+
+- fix: handling of PROTOCOL_HEADER and HOST_HEADER env vars ([#14221](https://github.com/sveltejs/kit/pull/14221))
+
+- Updated dependencies [[`ea95533`](https://github.com/sveltejs/kit/commit/ea9553380a9f1b5f3b2fcf3bebd15f900c51d77c)]:
+  - @sveltejs/kit@2.30.1
+
 ## 5.2.15
 ### Patch Changes
 
