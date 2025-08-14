@@ -510,7 +510,10 @@ test('ignores things that look like lockfiles', () => {
 
 test('works with custom extensions', () => {
 	const { nodes, routes } = create('samples/custom-extension', {
-		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
+		extensions: ['.jazz', '.beebop', '.funk', '.svelte'],
+		kit: {
+			testExtensions: ['.rizz.jazz']
+		}
 	});
 
 	expect(nodes.map(simplify_node)).toEqual([
