@@ -38,6 +38,8 @@ export async function render_data(
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
+		/** @type {Set<number>} */
+		const parent_invalid = new Set();
 
 		let aborted = false;
 
@@ -73,6 +75,8 @@ export async function render_data(
 								if (parent) {
 									Object.assign(data, parent.data);
 								}
+
+								parent_invalid.add(j);
 							}
 							return data;
 						}
@@ -95,27 +99,35 @@ export async function render_data(
 		});
 
 		let length = promises.length;
-		const nodes = await Promise.all(
-			promises.map((p, i) =>
-				p.catch(async (error) => {
-					if (error instanceof Redirect) {
-						throw error;
-					}
 
-					// Math.min because array isn't guaranteed to resolve in order
-					length = Math.min(length, i + 1);
+		/**
+		 * @param {Promise<import('types').ServerDataSkippedNode | import('types').ServerDataNode | null>} p
+		 * @param {number} i
+		 */
+		const handle_load_error = (p, i) =>
+			p.catch(async (error) => {
+				if (error instanceof Redirect) {
+					throw error;
+				}
 
-					return /** @type {import('types').ServerErrorNode} */ ({
-						type: 'error',
-						error: await handle_error_and_jsonify(event, options, error),
-						status:
-							error instanceof HttpError || error instanceof SvelteKitError
-								? error.status
-								: undefined
-					});
-				})
-			)
-		);
+				// Math.min because array isn't guaranteed to resolve in order
+				length = Math.min(length, i + 1);
+
+				return /** @type {import('types').ServerErrorNode} */ ({
+					type: 'error',
+					error: await handle_error_and_jsonify(event, options, error),
+					status:
+						error instanceof HttpError || error instanceof SvelteKitError ? error.status : undefined
+				});
+			});
+
+		let nodes = await Promise.all(promises.map(handle_load_error));
+
+		// return updated layout data if `parent` is used
+		if (parent_invalid.size) {
+			parent_invalid.forEach((i) => (invalidated[i] = true));
+			nodes = await Promise.all(functions.map((fn) => fn()).map(handle_load_error));
+		}
 
 		const { data, chunks } = get_data_json(event, options, nodes);
 
