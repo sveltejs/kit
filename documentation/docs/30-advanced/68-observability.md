@@ -46,7 +46,7 @@ SvelteKit provides access to the `root` span and the `current` span on the reque
 async function authenticate() {
 	const event = getRequestEvent();
 	const user = await getAuthenticatedUser(event);
-	event.tracing.root.setAttribute({ userId: user.id });
+	event.tracing.root.setAttribute('userId', user.id);
 }
 ```
 
