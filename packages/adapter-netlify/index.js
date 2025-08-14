@@ -146,7 +146,8 @@ async function generate_edge_functions({ builder }) {
 	// Netlify will handle the optional trailing slash for us
 	const excluded = [
 		// Contains static files
-		`/${builder.getAppPath()}/*`,
+		`/${builder.getAppPath()}/immutable/*`,
+		`/${builder.getAppPath()}/version.json`,
 		...builder.prerendered.paths,
 		...Array.from(assets).flatMap((asset) => {
 			if (asset.endsWith('/index.html')) {
