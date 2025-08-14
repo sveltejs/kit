@@ -1,4 +1,6 @@
 import { DEV } from 'esm-env';
+import { json, text } from '@sveltejs/kit';
+import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -17,9 +19,7 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
-import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
@@ -33,7 +33,9 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { get_remote_id, handle_remote_call } from './remote.js';
 import { with_event } from '../app/server/event.js';
+import { create_event_state, EVENT_STATE } from './event-state.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -51,6 +53,8 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+let warned_on_devtools_json_request = false;
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -62,24 +66,35 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	if (options.csrf_check_origin) {
+	const is_route_resolution_request = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const remote_id = get_remote_id(url);
+
+	if (options.csrf_check_origin && request.headers.get('origin') !== url.origin) {
+		const opts = { status: 403 };
+
+		if (remote_id && request.method !== 'GET') {
+			return json(
+				{
+					message: 'Cross-site remote requests are forbidden'
+				},
+				opts
+			);
+		}
+
 		const forbidden =
 			is_form_content_type(request) &&
 			(request.method === 'POST' ||
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
-				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+				request.method === 'DELETE');
 
 		if (forbidden) {
-			const csrf_error = new HttpError(
-				403,
-				`Cross-site ${request.method} form submissions are forbidden`
-			);
+			const message = `Cross-site ${request.method} form submissions are forbidden`;
 			if (request.headers.get('accept') === 'application/json') {
-				return json(csrf_error.body, { status: csrf_error.status });
+				return json({ message }, opts);
 			}
-			return text(csrf_error.body.message, { status: csrf_error.status });
+			return text(message, opts);
 		}
 	}
 
@@ -90,14 +105,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
-	/**
-	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for path resolution, then return the route object as a JS file.
-	 */
-	const is_route_resolution_request = has_resolution_suffix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-
 	if (is_route_resolution_request) {
+		/**
+		 * If the request is for a route resolution, first modify the URL, then continue as normal
+		 * for path resolution, then return the route object as a JS file.
+		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
@@ -109,6 +121,9 @@ export async function respond(request, options, manifest, state) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
+	} else if (remote_id) {
+		url.pathname = base;
+		url.search = '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -121,6 +136,7 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
+		[EVENT_STATE]: create_event_state(state, options),
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
 		fetch: null,
@@ -162,7 +178,8 @@ export async function respond(request, options, manifest, state) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
+		isSubRequest: state.depth > 0,
+		isRemoteRequest: !!remote_id
 	};
 
 	event.fetch = create_fetch({
@@ -181,23 +198,25 @@ export async function respond(request, options, manifest, state) {
 		});
 	}
 
-	let resolved_path;
+	let resolved_path = url.pathname;
 
-	const prerendering_reroute_state = state.prerendering?.inside_reroute;
-	try {
-		// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
-		// which would end up in the wrong logic path if not disabled.
-		if (state.prerendering) state.prerendering.inside_reroute = true;
+	if (!remote_id) {
+		const prerendering_reroute_state = state.prerendering?.inside_reroute;
+		try {
+			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
+			// which would end up in the wrong logic path if not disabled.
+			if (state.prerendering) state.prerendering.inside_reroute = true;
 
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path =
-			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
-	} finally {
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path =
+				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		} finally {
+			if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+		}
 	}
 
 	try {
@@ -252,14 +271,14 @@ export async function respond(request, options, manifest, state) {
 		return get_public_env(request);
 	}
 
-	if (resolved_path.startsWith(`/${app_dir}`)) {
+	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !remote_id) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
@@ -288,7 +307,7 @@ export async function respond(request, options, manifest, state) {
 	let trailing_slash = 'never';
 
 	try {
-		/** @type {PageNodes|undefined} */
+		/** @type {PageNodes | undefined} */
 		const page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
@@ -474,6 +493,10 @@ export async function respond(request, options, manifest, state) {
 				});
 			}
 
+			if (remote_id) {
+				return await handle_remote_call(event, options, manifest, remote_id);
+			}
+
 			if (route) {
 				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
@@ -573,6 +596,21 @@ export async function respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
+				// causing console spam. If users want to serve this file they can install
+				// https://svelte.dev/docs/cli/devtools-json
+				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+					if (!warned_on_devtools_json_request) {
+						console.log(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
+						);
+
+						warned_on_devtools_json_request = true;
+					}
+
+					return new Response(undefined, { status: 404 });
+				}
+
 				return await respond_with_error({
 					event,
 					options,

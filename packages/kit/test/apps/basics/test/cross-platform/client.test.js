@@ -41,6 +41,11 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
+	test('sets focus for valid hash but invalid selector', async ({ page }) => {
+		await page.goto('/reset-focus#an:invalid+selector');
+		await expect(page.locator('button')).toBeFocused();
+	});
+
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
 
@@ -257,7 +262,7 @@ test.describe('Navigation lifecycle functions', () => {
 		);
 	});
 
-	test('afterNavigate properly removed', async ({ page, clicknav }) => {
+	test('onNavigate returned function is only called once', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
@@ -806,14 +811,31 @@ test.describe('Routing', () => {
 		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+	test('sequential focus navigation starting point is set correctly on navigation', async ({
 		page,
-		clicknav
+		browserName
+	}) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+		await page.goto('/routing/focus');
+		await page.locator('[href="/routing/focus/a#p"]').click();
+		await page.waitForURL('**/routing/focus/a#p');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+	});
+
+	test('back button returns to previous route when previous route was navigated to via hash anchor', async ({
+		page,
+		clicknav,
+		baseURL
 	}) => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="/routing/hashes/b"]');
+		expect(await page.textContent('h1')).toBe('b');
 
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
@@ -828,10 +850,13 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#hash-target"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="#replace-state"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
 
 		await page.goBack();
-		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {

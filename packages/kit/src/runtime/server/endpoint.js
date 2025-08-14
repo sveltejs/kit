@@ -1,7 +1,7 @@
+import { Redirect } from '@sveltejs/kit/internal';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { with_event } from '../app/server/event.js';
-import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
@@ -15,7 +15,7 @@ export async function render_endpoint(event, mod, state) {
 
 	let handler = mod[method] || mod.fallback;
 
-	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
+	if (method === 'HEAD' && !mod.HEAD && mod.GET) {
 		handler = mod.GET;
 	}
 

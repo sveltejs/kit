@@ -39,16 +39,15 @@ export class PageNodes {
 	}
 
 	/**
-	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
-	 * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
+	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
 	 * @param {Option} option
 	 * @returns {Value | undefined}
 	 */
 	#get_option(option) {
+		/** @typedef {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value */
+
 		return this.data.reduce((value, node) => {
-			return /** @type {Value} TypeScript's too dumb to understand this */ (
-				node?.universal?.[option] ?? node?.server?.[option] ?? value
-			);
+			return node?.universal?.[option] ?? node?.server?.[option] ?? value;
 		}, /** @type {Value | undefined} */ (undefined));
 	}
 
@@ -77,6 +76,7 @@ export class PageNodes {
 
 			current = {
 				...current,
+				// TODO: should we override the server config value with the universal value similar to other page options?
 				...node?.universal?.config,
 				...node?.server?.config
 			};

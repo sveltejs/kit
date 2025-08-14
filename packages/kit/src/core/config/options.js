@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import process from 'node:process';
 
 /** @typedef {import('./types.js').Validator} Validator */
@@ -120,19 +119,24 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			experimental: object({
+				remoteFunctions: boolean(false)
+			}),
+
 			files: object({
-				assets: string('static'),
+				src: deprecate(string('src')),
+				assets: deprecate(string('static')),
 				hooks: object({
-					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
+					client: deprecate(string(null)),
+					server: deprecate(string(null)),
+					universal: deprecate(string(null))
 				}),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html'))
+				lib: deprecate(string(null)),
+				params: deprecate(string(null)),
+				routes: deprecate(string(null)),
+				serviceWorker: deprecate(string(null)),
+				appTemplate: deprecate(string(null)),
+				errorTemplate: deprecate(string(null))
 			}),
 
 			inlineStyleThreshold: number(0),
@@ -267,6 +271,9 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, object({}, true)),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
@@ -282,6 +289,25 @@ const options = object(
 	},
 	true
 );
+
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(get_message(keypath));
+		}
+
+		return fn(input, keypath);
+	};
+}
 
 /**
  * @param {Record<string, Validator>} children

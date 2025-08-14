@@ -11,17 +11,19 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307 2345
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter({
 			// see below for options that can be set here
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Deployment configuration
@@ -72,7 +74,8 @@ You may set the `images` config to control how Vercel builds your images. See th
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter({
 			images: {
@@ -84,6 +87,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Incremental Static Regeneration
@@ -95,9 +100,9 @@ Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/increm
 To add ISR to a route, include the `isr` property in your `config` object:
 
 ```js
-// @errors: 2664
 import { BYPASS_TOKEN } from '$env/static/private';
 
+/** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	isr: {
 		expiration: 60,
@@ -146,7 +151,6 @@ A list of valid query parameters that contribute to the cache key. Other paramet
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
 ```js
-// @errors: 2305
 /// file: +layout.server.js
 import { VERCEL_COMMIT_REF } from '$env/static/private';
 
@@ -172,9 +176,9 @@ Since all of these variables are unchanged between build time and run time when 
 
 ## Skew protection
 
-When a new version of your app is deployed, assets belonging to the previous version may no longer be accessible. If a user is actively using your app when this happens, it can cause errors when they navigate — this is known as _version skew_. SvelteKit mitigates this by detecting errors resulting from version skew and causing a hard reload to get the latest version of the app, but this will cause any client-side state to be lost. (You can also proactively mitigate it by observing the [`updated`]($app-stores#updated) store value, which tells clients when a new version has been deployed.)
+When a new version of your app is deployed, assets belonging to the previous version may no longer be accessible. If a user is actively using your app when this happens, it can cause errors when they navigate — this is known as _version skew_. SvelteKit mitigates this by detecting errors resulting from version skew and causing a hard reload to get the latest version of the app, but this will cause any client-side state to be lost. (You can also proactively mitigate it by observing [`updated.current`]($app-state#updated) from `$app/state`, which tells clients when a new version has been deployed.)
 
-[Skew protection](https://vercel.com/docs/deployments/skew-protection) is a Vercel feature that routes client requests to their original deployment. When a user visits your app, a cookie is set with the deployment ID, and any subsequent requests will be routed to that deployment for as long as skew protection is active. When they reload the page, they will get the newest deployment. (The `updated` store is exempted from this behaviour, and so will continue to report new deployments.) To enable it, visit the Advanced section of your project settings on Vercel.
+[Skew protection](https://vercel.com/docs/deployments/skew-protection) is a Vercel feature that routes client requests to their original deployment. When a user visits your app, a cookie is set with the deployment ID, and any subsequent requests will be routed to that deployment for as long as skew protection is active. When they reload the page, they will get the newest deployment. (`updated.current` is exempted from this behaviour, and so will continue to report new deployments.) To enable it, visit the Advanced section of your project settings on Vercel.
 
 Cookie-based skew protection comes with one caveat: if a user has multiple versions of your app open in multiple tabs, requests from older versions will be routed to the newer one, meaning they will fall back to SvelteKit's built-in skew protection.
 
@@ -194,6 +198,6 @@ Projects created before a certain date may default to using an older Node versio
 
 You can't use `fs` in edge functions.
 
-You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. `read` does not work inside routes deployed as edge functions (this may change in future).
+You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It also works inside routes deployed as edge functions by fetching the file from the deployed public assets location.
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.

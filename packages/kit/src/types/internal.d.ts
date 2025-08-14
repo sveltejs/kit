@@ -20,7 +20,8 @@ import {
 	Adapter,
 	ServerInit,
 	ClientInit,
-	Transporter
+	Transport,
+	HandleValidationError
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -45,6 +46,7 @@ export interface ServerInternalModule {
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	get_hooks: () => Promise<Record<string, any>>;
 }
 
 export interface Asset {
@@ -88,7 +90,7 @@ export interface BuildData {
 		 */
 		css?: Array<string[] | undefined>;
 		/**
-		 * Contains the client route manifest in a form suitable for the server which is used for server side route resolution.
+		 * Contains the client route manifest in a form suitable for the server which is used for server-side route resolution.
 		 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
 		 * Only set in case of `router.resolution === 'server'`.
 		 */
@@ -149,15 +151,16 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
+	handleValidationError: HandleValidationError;
 	reroute: Reroute;
-	transport: Record<string, Transporter>;
+	transport: Transport;
 	init?: ServerInit;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	reroute: Reroute;
-	transport: Record<string, Transporter>;
+	transport: Transport;
 	init?: ClientInit;
 }
 
@@ -189,6 +192,10 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
+	remotes: Array<{
+		file: string;
+		hash: string;
+	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }
@@ -216,6 +223,11 @@ export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
+	/**
+	 * For each key the (possibly still pending) result of a prerendered remote function.
+	 * Used to deduplicate requests to the same remote function with the same arguments.
+	 */
+	remote_responses: Map<string, Promise<any>>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }
@@ -280,7 +292,18 @@ export type ServerNodesResponse = {
 	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 };
 
-export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
+export type RemoteFunctionResponse =
+	| (ServerRedirectNode & {
+			/** devalue'd Record<string, any> */
+			refreshes?: string;
+	  })
+	| ServerErrorNode
+	| {
+			type: 'result';
+			result: string;
+			/** devalue'd Record<string, any> */
+			refreshes: string | undefined;
+	  };
 
 /**
  * Signals a successful response of the server `load` function.
@@ -347,6 +370,8 @@ export interface ServerMetadata {
 		has_server_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
+	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
+	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {
@@ -401,7 +426,7 @@ export interface SSRNode {
 	universal_id?: string;
 	server_id?: string;
 
-	/** inlined styles. */
+	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
@@ -425,6 +450,7 @@ export interface SSROptions {
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
+	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
 			head: string;
@@ -445,6 +471,7 @@ export interface PageNodeIndexes {
 }
 
 export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
@@ -518,6 +545,27 @@ export type ValidatedConfig = Config & {
 export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
 	adapter?: Adapter;
 };
+
+export type RemoteInfo =
+	| {
+			type: 'query' | 'command';
+			id: string;
+			name: string;
+	  }
+	| {
+			type: 'form';
+			id: string;
+			name: string;
+			fn: (data: FormData) => Promise<any>;
+	  }
+	| {
+			type: 'prerender';
+			id: string;
+			name: string;
+			has_arg: boolean;
+			dynamic?: boolean;
+			inputs?: RemotePrerenderInputsGenerator;
+	  };
 
 export * from '../exports/index.js';
 export * from './private.js';
