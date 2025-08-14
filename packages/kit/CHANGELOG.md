@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.30.1
+### Patch Changes
+
+
+- chore: generate `$app/types` in a more Typescript-friendly way ([#14207](https://github.com/sveltejs/kit/pull/14207))
+
 ## 2.30.0
 ### Minor Changes
 
