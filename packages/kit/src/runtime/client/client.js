@@ -179,9 +179,9 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-// avoid referencing `__SVELTEKIT_PAYLOAD__` because it will be undefined unless this module was loaded by Vite
-export const remote_responses =
-	(typeof __SVELTEKIT_PAYLOAD__ !== 'undefined' ? __SVELTEKIT_PAYLOAD__.data : undefined) ?? {};
+// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__` because it will be `undefined`
+// when users import the exports from this module. It's only defined by the server when it renders the page.
+export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
