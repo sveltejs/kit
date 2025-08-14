@@ -113,10 +113,10 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
-			if (builder.hasServerTracingFile()) {
-				builder.trace({
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
 					entrypoint: worker_dest,
-					tracing: `${builder.getServerDirectory()}/tracing.server.js`
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 				});
 			}
 
@@ -191,7 +191,7 @@ export default function (options = {}) {
 
 				return true;
 			},
-			tracing: () => true
+			instrumentation: () => true
 		}
 	};
 }

@@ -339,7 +339,7 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.instrumentation.server),
 					__SVELTEKIT_PAYLOAD__: new_config.build.ssr
 						? '{}'
 						: `globalThis.__sveltekit_${version_hash}`
@@ -355,7 +355,7 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.instrumentation.server),
 					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
 				};
 
@@ -783,21 +783,23 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
-					// ...and the server tracing file
-					const server_tracing = resolve_entry(path.join(kit.files.src, 'tracing.server'));
-					if (server_tracing) {
+					// ...and the server instrumentation file
+					const server_instrumentation = resolve_entry(
+						path.join(kit.files.src, 'instrumentation.server')
+					);
+					if (server_instrumentation) {
 						const { adapter } = kit;
-						if (adapter && !adapter.supports?.tracing?.()) {
-							throw new Error(`${server_tracing} is unsupported in ${adapter.name}.`);
+						if (adapter && !adapter.supports?.instrumentation?.()) {
+							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
 						}
-						if (!kit.experimental.tracing.serverFile) {
+						if (!kit.experimental.instrumentation.server) {
 							error_for_missing_config(
-								'tracing.server.js',
-								'kit.experimental.tracing.serverFile',
+								'instrumentation.server.js',
+								'kit.experimental.instrumentation.server',
 								'true'
 							);
 						}
-						input['tracing.server'] = server_tracing;
+						input['instrumentation.server'] = server_instrumentation;
 					}
 
 					// ...and every .remote file

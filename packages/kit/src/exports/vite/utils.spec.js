@@ -55,16 +55,20 @@ test('error_for_missing_config - simple single level config', () => {
 
 test('error_for_missing_config - nested config', () => {
 	expect(() =>
-		error_for_missing_config('tracing.server.js', 'kit.experimental.tracing.serverFile', 'true')
+		error_for_missing_config(
+			'instrumentation.server.js',
+			'kit.experimental.instrumentation.server',
+			'true'
+		)
 	).toThrow(
 		dedent`
-			To enable \`tracing.server.js\`, add the following to your \`svelte.config.js\`:
+			To enable \`instrumentation.server.js\`, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			kit: {
 			  experimental: {
-			    tracing: {
-			      serverFile: true
+			    instrumentation: {
+			      server: true
 			    }
 			  }
 			}

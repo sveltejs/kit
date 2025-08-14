@@ -15,7 +15,7 @@ if (__SVELTEKIT_SERVER_TRACING_ENABLED__) {
 		})
 		.catch(() => {
 			throw new Error(
-				'Tracing is enabled (see `config.kit.experimental.tracing.server` in your svelte.config.js), but `@opentelemetry/api` is not available. Have you installed it?'
+				'Tracing is enabled (see `config.kit.experimental.instrumentation.server` in your svelte.config.js), but `@opentelemetry/api` is not available. Have you installed it?'
 			);
 		});
 }

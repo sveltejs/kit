@@ -236,21 +236,21 @@ export function create_builder({
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
-		hasServerTracingFile() {
-			return existsSync(`${config.kit.outDir}/output/server/tracing.server.js`);
+		hasServerInstrumentationFile() {
+			return existsSync(`${config.kit.outDir}/output/server/instrumentation.server.js`);
 		},
 
-		trace({
+		instrument({
 			entrypoint,
-			tracing,
+			instrumentation,
 			start = join(dirname(entrypoint), 'start.js'),
 			module = {
 				exports: ['default']
 			}
 		}) {
-			if (!existsSync(tracing)) {
+			if (!existsSync(instrumentation)) {
 				throw new Error(
-					`Tracing file ${tracing} not found. This is probably a bug in your adapter.`
+					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
 				);
 			}
 			if (!existsSync(entrypoint)) {
@@ -264,14 +264,17 @@ export function create_builder({
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
-			const relative_tracing = relative(dirname(entrypoint), tracing);
+			const relative_instrumentation = relative(dirname(entrypoint), instrumentation);
 			const relative_start = relative(dirname(entrypoint), start);
 
 			const facade =
 				'generateText' in module
-					? module.generateText({ tracing: relative_tracing, start: relative_start })
-					: create_tracing_facade({
-							tracing: relative_tracing,
+					? module.generateText({
+							instrumentation: relative_instrumentation,
+							start: relative_start
+						})
+					: create_instrumentation_facade({
+							instrumentation: relative_instrumentation,
 							start: relative_start,
 							exports: module.exports
 						});
@@ -306,17 +309,17 @@ async function compress_file(file, format = 'gz') {
 
 /**
  * Given a list of exports, generate a facade that:
- * - Imports the tracing file
+ * - Imports the instrumentation file
  * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
  * - Re-exports `exports` from the entrypoint
  *
  * `default` receives special treatment: It will be imported as `default` and exported with `export default`.
  *
- * @param {{ tracing: string; start: string; exports: string[] }} opts
+ * @param {{ instrumentation: string; start: string; exports: string[] }} opts
  * @returns {string}
  */
-function create_tracing_facade({ tracing, start, exports }) {
-	const import_tracing = `import './${tracing}';`;
+function create_instrumentation_facade({ instrumentation, start, exports }) {
+	const import_instrumentation = `import './${instrumentation}';`;
 
 	let alias_index = 0;
 	const aliases = new Map();
@@ -358,5 +361,5 @@ function create_tracing_facade({ tracing, start, exports }) {
 		.filter(Boolean)
 		.join('\n');
 
-	return `${import_tracing}\n${entrypoint_facade}`;
+	return `${import_instrumentation}\n${entrypoint_facade}`;
 }

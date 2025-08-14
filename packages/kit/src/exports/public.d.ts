@@ -53,11 +53,10 @@ export interface Adapter {
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 
 		/**
-		 * Test support for `tracing`. To pass, the adapter must support `tracing.server.js` and
-		 * also deploy to a platform that supports `@opentelemetry/api`.
+		 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
 		 * @since 2.31.0
 		 */
-		tracing?: () => boolean;
+		instrumentation?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -196,43 +195,43 @@ export interface Builder {
 	) => string[];
 
 	/**
-	 * Check if the server tracing file exists.
-	 * @returns true if the server tracing file exists, false otherwise
+	 * Check if the server instrumentation file exists.
+	 * @returns true if the server instrumentation file exists, false otherwise
 	 * @since 2.31.0
 	 */
-	hasServerTracingFile: () => boolean;
+	hasServerInstrumentationFile: () => boolean;
 
 	/**
-	 * Trace `entrypoint` with `tracing`.
+	 * Instrument `entrypoint` with `instrumentation`.
 	 *
 	 * Renames `entrypoint` to `start` and creates a new module at
-	 * `entrypoint` which imports `tracing` and then dynamically imports `start`. This allows
-	 * the module hooks necessary for tracing libraries to be loaded prior to any application code.
+	 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
+	 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 	 *
 	 * Caveats:
 	 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 	 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
-	 * - Use `hasServerTracingFile` to check if the user has a server tracing file; if they don't, you shouldn't do this.
+	 * - Use `hasServerInstrumentationFile` to check if the user has a server instrumentation file; if they don't, you shouldn't do this.
 	 *
 	 * @param options an object containing the following properties:
 	 * @param options.entrypoint the path to the entrypoint to trace.
-	 * @param options.tracing the path to the tracing file.
+	 * @param options.instrumentation the path to the instrumentation file.
 	 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
 	 * @param options.module configuration for the resulting entrypoint module.
 	 * @param options.module.exports
-	 * @param options.module.generateText a function that receives the relative paths to the tracing and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
+	 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
 	 * @since 2.31.0
 	 */
-	trace: (args: {
+	instrument: (args: {
 		entrypoint: string;
-		tracing: string;
+		instrumentation: string;
 		start?: string;
 		module?:
 			| {
 					exports: string[];
 			  }
 			| {
-					generateText: (args: { tracing: string; start: string }) => string;
+					generateText: (args: { instrumentation: string; start: string }) => string;
 			  };
 	}) => void;
 
@@ -460,7 +459,7 @@ export interface KitConfig {
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
 		/**
-		 * Options to enable server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 		 * @default { server: false, serverFile: false }
 		 * @since 2.31.0
 		 */
@@ -471,13 +470,18 @@ export interface KitConfig {
 			 * @since 2.31.0
 			 */
 			server?: boolean;
+		};
 
+		/**
+		 * @since 2.31.0
+		 */
+		instrumentation?: {
 			/**
-			 * Enables `tracing.server.js` for tracing instrumentation.
+			 * Enables `instrumentation.server.js` for tracing instrumentation.
 			 * @default false
 			 * @since 2.31.0
 			 */
-			serverFile?: boolean;
+			server?: boolean;
 		};
 
 		/**

@@ -501,12 +501,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const resolved_tracing = resolve_entry(
-					path.join(svelte_config.kit.files.src, 'tracing.server')
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
 				);
 
-				if (resolved_tracing) {
-					await vite.ssrLoadModule(resolved_tracing);
+				if (resolved_instrumentation) {
+					await vite.ssrLoadModule(resolved_instrumentation);
 				}
 
 				// we have to import `Server` before calling `set_assets`

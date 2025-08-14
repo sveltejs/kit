@@ -5,7 +5,6 @@ import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
-import '$lib/tracing-config';
 
 // @ts-ignore this doesn't exist in old Node
 Promise.withResolvers ??= () => {

@@ -6,4 +6,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add `tracing.server.ts` for tracing instrumentation and setup
+feat: add `instrumentation.server.ts` for tracing and observability setup

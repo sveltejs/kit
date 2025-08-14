@@ -5,7 +5,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		experimental: {
-			tracing: {
+			instrumentation: {
 				serverFile: true
 			}
 		}

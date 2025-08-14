@@ -100,10 +100,10 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				if (builder.hasServerTracingFile()) {
-					builder.trace({
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
 						entrypoint: `${tmp}/index.js`,
-						tracing: `${builder.getServerDirectory()}/tracing.server.js`
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
 
@@ -182,16 +182,16 @@ const plugin = function (defaults = {}) {
 					});
 
 					let instrumentation_result;
-					if (builder.hasServerTracingFile()) {
+					if (builder.hasServerInstrumentationFile()) {
 						instrumentation_result = await esbuild.build({
-							entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
-							outfile: `${outdir}/tracing.server.js`,
+							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
+							outfile: `${outdir}/instrumentation.server.js`,
 							...esbuild_config
 						});
 
-						builder.trace({
+						builder.instrument({
 							entrypoint: `${outdir}/index.js`,
-							tracing: `${outdir}/tracing.server.js`,
+							instrumentation: `${outdir}/instrumentation.server.js`,
 							module: {
 								generateText: generate_traced_edge_module
 							}
@@ -510,7 +510,7 @@ const plugin = function (defaults = {}) {
 
 				return true;
 			},
-			tracing: () => true
+			instrumentation: () => true
 		}
 	};
 };
@@ -838,11 +838,11 @@ function is_prerendered(route) {
 }
 
 /**
- * @param {{ tracing: string; start: string }} opts
+ * @param {{ instrumentation: string; start: string }} opts
  */
-function generate_traced_edge_module({ tracing, start }) {
+function generate_traced_edge_module({ instrumentation, start }) {
 	return `\
-import './${tracing}';
+import './${instrumentation}';
 const promise = import('./${start}');
 
 /**

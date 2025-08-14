@@ -108,7 +108,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				return true;
 			},
-			tracing: () => true
+			instrumentation: () => true
 		}
 	};
 }
@@ -202,18 +202,18 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerTracingFile() &&
+		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
-				entryPoints: [`${builder.getServerDirectory()}/tracing.server.js`],
-				outfile: '.netlify/edge/tracing.server.js',
+				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
+				outfile: '.netlify/edge/instrumentation.server.js',
 				...esbuild_config
 			})
 	]);
 
-	if (builder.hasServerTracingFile()) {
-		builder.trace({
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
 			entrypoint: '.netlify/edge-functions/render.js',
-			tracing: '.netlify/edge/tracing.server.js',
+			instrumentation: '.netlify/edge/instrumentation.server.js',
 			start: '.netlify/edge/start.js'
 		});
 	}
@@ -294,10 +294,10 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
-			if (builder.hasServerTracingFile()) {
-				builder.trace({
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
-					tracing: '.netlify/server/tracing.server.js',
+					instrumentation: '.netlify/server/instrumentation.server.js',
 					start: `.netlify/functions-start/${name}.start.mjs`,
 					module: {
 						exports: ['handler']
@@ -318,10 +318,10 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerTracingFile()) {
-			builder.trace({
+		if (builder.hasServerInstrumentationFile()) {
+			builder.instrument({
 				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
-				tracing: '.netlify/server/tracing.server.js',
+				instrumentation: '.netlify/server/instrumentation.server.js',
 				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
 				module: {
 					exports: ['handler']

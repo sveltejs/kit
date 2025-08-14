@@ -153,8 +153,8 @@ export default () => ({
 				'The read function imported from $app/server only works in certain environments'
 			);
 		},
-		tracing: () => {
-			supports_error('`tracing.server.js` only works in certain environments');
+		instrumentation: () => {
+			supports_error('`instrumentation.server.js` only works in certain environments');
 		}
 	}
 });

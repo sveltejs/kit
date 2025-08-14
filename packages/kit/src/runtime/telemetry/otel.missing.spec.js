@@ -11,6 +11,6 @@ vi.mock('@opentelemetry/api', () => {
 test('otel should throw an error when tracing is enabled but @opentelemetry/api is not available', async () => {
 	const { otel } = await import('./otel.js');
 	await expect(otel).rejects.toThrow(
-		'Tracing is enabled (see `config.kit.experimental.tracing.server` in your svelte.config.js), but `@opentelemetry/api` is not available. Have you installed it?'
+		'Tracing is enabled (see `config.kit.experimental.instrumentation.server` in your svelte.config.js), but `@opentelemetry/api` is not available. Have you installed it?'
 	);
 });

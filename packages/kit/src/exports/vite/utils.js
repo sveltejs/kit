@@ -175,16 +175,16 @@ export function stackless(message) {
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('tracing.server.js', 'kit.experimental.tracing.serverFile', true)`,
+ * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
  * returns:
  *
  * ```
- * To enable `tracing.server.js`, add the following to your `svelte.config.js`:
+ * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
  *
  *\`\`\`js
  *	kit:
  *		experimental:
- *			tracing:
+ *			instrumentation:
  *				server: true
  *			}
  *		}

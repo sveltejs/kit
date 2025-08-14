@@ -54,8 +54,8 @@ export default function (opts = {}) {
 				manifest: `${tmp}/manifest.js`
 			};
 
-			if (builder.hasServerTracingFile()) {
-				input['tracing.server'] = `${tmp}/tracing.server.js`;
+			if (builder.hasServerInstrumentationFile()) {
+				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
 			}
 
 			// we bundle the Vite output so that deployments only need
@@ -97,10 +97,10 @@ export default function (opts = {}) {
 				}
 			});
 
-			if (builder.hasServerTracingFile()) {
-				builder.trace({
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
 					entrypoint: `${out}/index.js`,
-					tracing: `${out}/server/tracing.server.js`,
+					instrumentation: `${out}/server/instrumentation.server.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}
@@ -110,7 +110,7 @@ export default function (opts = {}) {
 
 		supports: {
 			read: () => true,
-			tracing: () => true
+			instrumentation: () => true
 		}
 	};
 }

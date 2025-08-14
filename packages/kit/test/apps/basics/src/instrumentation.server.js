@@ -1,5 +1,5 @@
 /** @import {SpanExporter} from '@opentelemetry/sdk-trace-node' */
-/** @import {SpanData} from '../../../../types' */
+/** @import {SpanData} from '../../../types' */
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
 import fs from 'node:fs';
