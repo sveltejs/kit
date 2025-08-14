@@ -5,7 +5,15 @@ const config = {
 	kit: {
 		adapter: {
 			name: 'test-adapter',
-			adapt() {},
+			adapt(builder) {
+				builder.instrument({
+					entrypoint: `${builder.getServerDirectory()}/index.js`,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					module: {
+						exports: ['Server']
+					}
+				});
+			},
 			emulate() {
 				return {
 					platform({ config, prerender }) {
