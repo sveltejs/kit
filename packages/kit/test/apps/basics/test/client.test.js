@@ -1783,6 +1783,15 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#get-task')).toHaveText('override');
 	});
 
+	test('form.buttonProps.enhance works with nested elements (issue #14159)', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-nested', 'nested-test');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue
+		await page.click('#submit-btn-nested-span span');
+		await expect(page.locator('#form-result-2')).toHaveText('nested-test');
+	});
+
 	test('prerendered entries not called in prod', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
