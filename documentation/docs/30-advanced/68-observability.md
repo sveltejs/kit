@@ -37,6 +37,19 @@ export default {
 
 > [!NOTE] Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead. Before you go all-in on tracing, consider whether or not you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
 
+## Agumenting SvelteKit's builtin tracing
+
+SvelteKit provides access to the `root` span and the `current` span on the request event. The root span is the one associated with your root `handle` function, and the current span could be associated with `handle`, `load`, a form action, or a remote function, depending on the context. You can annotate these spans with any attributes you wish to record:
+
+```js
+/// file: $lib/authenticate.ts
+async function authenticate() {
+	const event = getRequestEvent();
+	const user = await getAuthenticatedUser(event);
+	event.tracing.root.setAttribute({ userId: user.id });
+}
+```
+
 ## Development quickstart
 
 To view your first trace, you'll need to set up a local collector. We'll use [Jaeger](https://www.jaegertracing.io/docs/getting-started/) in this example, as they provide an easy-to-use quickstart command. Once your collector is running locally:
