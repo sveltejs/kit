@@ -108,15 +108,11 @@ function generate_app_types(manifest_data) {
 /**
  * Writes non-ambient declarations to the output directory
  * @param {import('types').ValidatedKitConfig} config
- * @param {import('types').ManifestData} [manifest_data]
+ * @param {import('types').ManifestData} manifest_data
  */
 export function write_non_ambient(config, manifest_data) {
-	let content = template;
-
-	if (manifest_data) {
-		const app_types = generate_app_types(manifest_data);
-		content = [template, app_types].join('\n\n');
-	}
+	const app_types = generate_app_types(manifest_data);
+	const content = [template, app_types].join('\n\n');
 
 	write_if_changed(path.join(config.outDir, 'non-ambient.d.ts'), content);
 }
