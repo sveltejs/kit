@@ -78,6 +78,7 @@ export function sequence(...handlers) {
 	if (!length) return ({ event, resolve }) => resolve(event);
 
 	return ({ event, resolve }) => {
+		const { state } = get_request_store();
 		return apply_handle(0, event, {});
 
 		/**
@@ -87,15 +88,14 @@ export function sequence(...handlers) {
 		 * @returns {MaybePromise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
-			const store = get_request_store();
 			const handle = handlers[i];
 
-			return store.state.tracing.record_span({
+			return state.tracing.record_span({
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {
 					const traced_event = merge_tracing(event, current);
-					return await with_request_store({ event: traced_event, state: store.state }, () =>
+					return await with_request_store({ event: traced_event, state }, () =>
 						handle({
 							event: traced_event,
 							resolve: (event, options) => {
