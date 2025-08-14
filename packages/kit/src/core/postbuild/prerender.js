@@ -15,6 +15,7 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -44,10 +45,24 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
+	const server_root = join(config.outDir, 'output');
+
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	const private_env = filter_private_env(env, { public_prefix, private_prefix });
+	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+
+	internal.set_private_env(private_env);
+	internal.set_public_env(public_env);
+	internal.set_safe_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	/**
 	 * @template {{message: string}} T
@@ -97,9 +112,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
-
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
