@@ -15,8 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
-import { with_event } from '../../app/server/event.js';
-import { get_event_state } from '../event-state.js';
+import { with_request_store } from '@sveltejs/kit/internal';
 import { text_encoder } from '../../utils.js';
 
 // TODO rename this function/module
@@ -38,6 +37,7 @@ const updated = {
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
  * }} opts
@@ -52,6 +52,7 @@ export async function render_response({
 	status,
 	error = null,
 	event,
+	event_state,
 	resolve_opts,
 	action_result
 }) {
@@ -190,14 +191,18 @@ export async function render_response({
 			};
 
 			try {
-				rendered = with_event(event, () => options.root.render(props, render_opts));
+				rendered = with_request_store({ event, state: event_state }, () =>
+					options.root.render(props, render_opts)
+				);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = with_event(event, () => options.root.render(props, render_opts));
+				rendered = with_request_store({ event, state: event_state }, () =>
+					options.root.render(props, render_opts)
+				);
 			} finally {
 				paths.reset();
 			}
@@ -288,6 +293,7 @@ export async function render_response({
 
 	const { data, chunks } = get_data(
 		event,
+		event_state,
 		options,
 		branch.map((b) => b.server_data),
 		csp,
@@ -377,7 +383,7 @@ export async function render_response({
 						}`);
 		}
 
-		const { remote_data } = get_event_state(event);
+		const { remote_data } = event_state;
 
 		if (remote_data) {
 			/** @type {Record<string, any>} */
@@ -478,7 +484,14 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			if (options.service_worker_options != null) {
+				const service_worker_options = { ...options.service_worker_options };
+				if (__SVELTEKIT_DEV__) {
+					service_worker_options.type = 'module';
+				}
+				opts = `, ${s(service_worker_options)}`;
+			}
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -604,13 +617,14 @@ export async function render_response({
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {import('./csp.js').Csp} csp
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, options, nodes, csp, global) {
+function get_data(event, event_state, options, nodes, csp, global) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -626,7 +640,7 @@ function get_data(event, options, nodes, csp, global) {
 				.then(/** @param {any} data */ (data) => ({ data }))
 				.catch(
 					/** @param {any} error */ async (error) => ({
-						error: await handle_error_and_jsonify(event, options, error)
+						error: await handle_error_and_jsonify(event, event_state, options, error)
 					})
 				)
 				.then(
@@ -642,6 +656,7 @@ function get_data(event, options, nodes, csp, global) {
 						} catch {
 							error = await handle_error_and_jsonify(
 								event,
+								event_state,
 								options,
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 							);

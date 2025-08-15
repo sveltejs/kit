@@ -1,5 +1,53 @@
 # @sveltejs/kit
 
+## 2.30.1
+### Patch Changes
+
+
+- chore: generate `$app/types` in a more Typescript-friendly way ([#14207](https://github.com/sveltejs/kit/pull/14207))
+
+## 2.30.0
+### Minor Changes
+
+
+- feat: allow to specify options for the service worker in `svelte.config.js` ([#13578](https://github.com/sveltejs/kit/pull/13578))
+
+
+### Patch Changes
+
+
+- fix: ensure buttonProps.enhance works on buttons with nested text ([#14199](https://github.com/sveltejs/kit/pull/14199))
+
+
+- fix: pass validation issues specifically to avoid non-enumerable spreading error ([#14197](https://github.com/sveltejs/kit/pull/14197))
+
+## 2.29.1
+### Patch Changes
+
+
+- chore: allow remote functions in all of the src directory ([#14198](https://github.com/sveltejs/kit/pull/14198))
+
+## 2.29.0
+### Minor Changes
+
+
+- feat: add a `kit.files.src` option ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+### Patch Changes
+
+
+- fix: don't treat `$lib/server.ts` or `$lib/server_whatever.ts` as server-only modules, only `$lib/server/**` ([#14191](https://github.com/sveltejs/kit/pull/14191))
+
+
+- fix: make illegal server-only import errors actually useful ([#14155](https://github.com/sveltejs/kit/pull/14155))
+
+
+- chore: deprecate `config.kit.files` options ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+- fix: avoid warning if page options in a Svelte file belongs to a comment ([#14180](https://github.com/sveltejs/kit/pull/14180))
+
 ## 2.28.0
 ### Minor Changes
 

@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 5.2.16
+### Patch Changes
+
+
+- fix: handling of PROTOCOL_HEADER and HOST_HEADER env vars ([#14221](https://github.com/sveltejs/kit/pull/14221))
+
+- Updated dependencies [[`ea95533`](https://github.com/sveltejs/kit/commit/ea9553380a9f1b5f3b2fcf3bebd15f900c51d77c)]:
+  - @sveltejs/kit@2.30.1
+
+## 5.2.15
+### Patch Changes
+
+
+- fix: fallback to `host` header if header specified by `HOST_HEADER` is not in request headers ([#11154](https://github.com/sveltejs/kit/pull/11154))
+
+- Updated dependencies [[`6ab60e5`](https://github.com/sveltejs/kit/commit/6ab60e509f28e13dae9e15a4af340e92ec6fcdf3), [`bfdb564`](https://github.com/sveltejs/kit/commit/bfdb5643968f201ead51d890207b9c42e400a227), [`94b30c4`](https://github.com/sveltejs/kit/commit/94b30c468ce6f6d1fa0aa985d86ef9216cff83f2)]:
+  - @sveltejs/kit@2.30.0
+
 ## 5.2.14
 ### Patch Changes
 

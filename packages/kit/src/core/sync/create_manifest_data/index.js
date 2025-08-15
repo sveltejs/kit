@@ -481,18 +481,14 @@ function create_remotes(config, cwd) {
 	const remotes = [];
 
 	// TODO could files live in other directories, including node_modules?
-	for (const dir of [config.kit.files.lib, config.kit.files.routes]) {
-		if (!fs.existsSync(dir)) continue;
+	for (const file of walk(config.kit.files.src)) {
+		if (extensions.some((ext) => file.endsWith(ext))) {
+			const posixified = posixify(path.relative(cwd, `${config.kit.files.src}/${file}`));
 
-		for (const file of walk(dir)) {
-			if (extensions.some((ext) => file.endsWith(ext))) {
-				const posixified = posixify(path.relative(cwd, `${dir}/${file}`));
-
-				remotes.push({
-					hash: hash(posixified),
-					file: posixified
-				});
-			}
+			remotes.push({
+				hash: hash(posixified),
+				file: posixified
+			});
 		}
 	}
 
