@@ -1,12 +1,8 @@
 /** @import { RequestState } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import {
-	Redirect,
-	SvelteKitError,
-	merge_tracing,
-	with_request_store
-} from '@sveltejs/kit/internal';
+import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -423,7 +419,7 @@ export async function internal_respond(request, options, manifest, state) {
 								attributes: {
 									'http.route': event.route.id || 'unknown'
 								},
-								fn: async (resolve_span) => {
+								fn: (resolve_span) => {
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
 									return with_request_store(null, () =>
