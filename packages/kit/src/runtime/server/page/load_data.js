@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal';
+import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { record_span } from '../../telemetry/record_span.js';
 import { get_node_type } from '../utils.js';
 import { base64_encode, text_decoder } from '../../utils.js';
@@ -232,7 +232,7 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return with_request_store({ event: traced_event, state: event_state }, () =>
+			return await with_request_store({ event: traced_event, state: event_state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,

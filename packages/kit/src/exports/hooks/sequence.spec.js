@@ -14,7 +14,7 @@ const dummy_event = vi.hoisted(
 		})
 );
 
-vi.mock(import('@sveltejs/kit/internal'), async (actualPromise) => {
+vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();
 	return {
 		...actual,
