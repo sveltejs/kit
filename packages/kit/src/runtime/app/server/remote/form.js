@@ -1,6 +1,6 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
-import { get_request_store } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 import { run_remote_function } from './shared.js';
 
 /**

@@ -1,6 +1,10 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
 /** @import { MaybePromise } from 'types' */
-import { merge_tracing, get_request_store, with_request_store } from '@sveltejs/kit/internal';
+import {
+	merge_tracing,
+	get_request_store,
+	with_request_store
+} from '@sveltejs/kit/internal/server';
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.

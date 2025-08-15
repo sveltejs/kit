@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
-import { with_request_store } from '@sveltejs/kit/internal';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 
 // TODO rename this function/module

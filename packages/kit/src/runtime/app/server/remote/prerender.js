@@ -3,7 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
-import { get_request_store } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '__sveltekit/paths';
 import {

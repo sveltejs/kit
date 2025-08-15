@@ -2,7 +2,7 @@
 /** @import { ServerHooks, MaybePromise, RequestState } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { with_request_store, get_request_store } from '@sveltejs/kit/internal';
+import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 
 /**
