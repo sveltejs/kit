@@ -73,21 +73,9 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 
 <h1>Recent posts</h1>
 
-<svelte:boundary>
-	<ul>
-		{#each await getPosts() as { title, slug }}
-			<li><a href="/blog/{slug}">{title}</a></li>
-		{/each}
-	</ul>
-
-	{#snippet pending()}
-		<p>loading...</p>
-	{/snippet}
-
-	{#snippet failed()}
-		<p>oops!</p>
-	{/snippet}
-</svelte:boundary>
+{#each await getPosts() as { title, slug }}
+	<li><a href="/blog/{slug}">{title}</a></li>
+{/each}
 ```
 
 Until the promise resolves, the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked, and its `pending` snippet will be rendered. If it errors, the `failed` snippet will be rendered instead.
