@@ -95,6 +95,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"
 		},
+		"./internal/server": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/internal/server.js"
+		},
 		"./node": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/index.js"

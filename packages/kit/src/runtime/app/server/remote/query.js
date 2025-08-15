@@ -1,7 +1,7 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {

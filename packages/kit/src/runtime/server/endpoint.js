@@ -1,4 +1,5 @@
-import { Redirect, with_request_store } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
