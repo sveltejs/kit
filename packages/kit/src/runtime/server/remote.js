@@ -2,13 +2,8 @@
 /** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import {
-	HttpError,
-	Redirect,
-	SvelteKitError,
-	with_request_store,
-	merge_tracing
-} from '@sveltejs/kit/internal';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '__sveltekit/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { parse_remote_arg, stringify } from '../shared.js';
@@ -25,7 +20,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		attributes: {
 			'sveltekit.remote.call.id': id
 		},
-		fn: async (current) => {
+		fn: (current) => {
 			const traced_event = merge_tracing(event, current);
 			return with_request_store({ event: traced_event, state }, () =>
 				handle_remote_call_internal(traced_event, state, options, manifest, id)
@@ -192,7 +187,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 		attributes: {
 			'sveltekit.remote.form.post.id': id
 		},
-		fn: async (current) => {
+		fn: (current) => {
 			const traced_event = merge_tracing(event, current);
 			return with_request_store({ event: traced_event, state }, () =>
 				handle_remote_form_post_internal(traced_event, state, manifest, id)

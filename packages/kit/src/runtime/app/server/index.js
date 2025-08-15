@@ -73,6 +73,6 @@ export function read(asset) {
 	throw new Error(`Asset does not exist: ${file}`);
 }
 
-export { getRequestEvent } from '@sveltejs/kit/internal';
+export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
 export { query, prerender, command, form } from './remote/index.js';

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 5.3.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
 ## 5.2.16
 ### Patch Changes
 
