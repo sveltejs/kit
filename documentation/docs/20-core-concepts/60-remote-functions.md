@@ -73,9 +73,11 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 
 <h1>Recent posts</h1>
 
-{#each await getPosts() as { title, slug }}
-	<li><a href="/blog/{slug}">{title}</a></li>
-{/each}
+<ul>
+	{#each await getPosts() as { title, slug }}
+		<li><a href="/blog/{slug}">{title}</a></li>
+	{/each}
+</ul>
 ```
 
 Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
