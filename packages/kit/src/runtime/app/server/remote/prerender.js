@@ -7,7 +7,6 @@ import { get_request_store } from '@sveltejs/kit/internal';
 import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '__sveltekit/paths';
 import {
-	check_experimental,
 	create_validator,
 	get_response,
 	parse_remote_response,
@@ -65,8 +64,6 @@ import {
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function prerender(validate_or_fn, fn_or_options, maybe_options) {
-	check_experimental('prerender');
-
 	const maybe_fn = typeof fn_or_options === 'function' ? fn_or_options : undefined;
 
 	/** @type {typeof maybe_options} */

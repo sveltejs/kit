@@ -42,7 +42,7 @@ test('transform kit.alias to resolve.alias', () => {
 test('error_for_missing_config - simple single level config', () => {
 	expect(() => error_for_missing_config('feature', 'kit.adapter', 'true')).toThrow(
 		dedent`
-			To enable \`feature\`, add the following to your \`svelte.config.js\`:
+			To enable feature, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			kit: {
@@ -62,7 +62,7 @@ test('error_for_missing_config - nested config', () => {
 		)
 	).toThrow(
 		dedent`
-			To enable \`instrumentation.server.js\`, add the following to your \`svelte.config.js\`:
+			To enable instrumentation.server.js, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			kit: {
@@ -80,7 +80,7 @@ test('error_for_missing_config - nested config', () => {
 test('error_for_missing_config - deeply nested config', () => {
 	expect(() => error_for_missing_config('deep feature', 'a.b.c.d.e', '"value"')).toThrow(
 		dedent`
-			To enable \`deep feature\`, add the following to your \`svelte.config.js\`:
+			To enable deep feature, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			a: {
@@ -100,7 +100,7 @@ test('error_for_missing_config - deeply nested config', () => {
 test('error_for_missing_config - two level config', () => {
 	expect(() => error_for_missing_config('some feature', 'kit.someFeature', 'false')).toThrow(
 		dedent`
-			To enable \`some feature\`, add the following to your \`svelte.config.js\`:
+			To enable some feature, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			kit: {
@@ -116,7 +116,7 @@ test('error_for_missing_config - handles special characters in feature name', ()
 		error_for_missing_config('special-feature.js', 'kit.special', '{ enabled: true }')
 	).toThrow(
 		dedent`
-			To enable \`special-feature.js\`, add the following to your \`svelte.config.js\`:
+			To enable special-feature.js, add the following to your \`svelte.config.js\`:
 
 			\`\`\`js
 			kit: {

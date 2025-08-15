@@ -609,6 +609,7 @@ async function kit({ svelte_config }) {
 				const chain = [normalized];
 
 				let current = normalized;
+				let includes_remote_file = false;
 
 				while (true) {
 					const importers = import_map.get(current);
@@ -619,9 +620,11 @@ async function kit({ svelte_config }) {
 
 					chain.push((current = candidates[0]));
 
-					if (entrypoints.has(current)) {
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+						return current.endsWith(`.remote${ext}`);
+					});
 
+					if (entrypoints.has(current)) {
 						const pyramid = chain
 							.reverse()
 							.map((id, i) => {
@@ -629,6 +632,15 @@ async function kit({ svelte_config }) {
 							})
 							.join(' imports\n');
 
+						if (includes_remote_file) {
+							error_for_missing_config(
+								'remote functions',
+								'kit.experimental.remoteFunctions',
+								'true'
+							);
+						}
+
+						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
 						message += `\n\n${pyramid}`;
 						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
 
@@ -794,7 +806,7 @@ async function kit({ svelte_config }) {
 						}
 						if (!kit.experimental.instrumentation.server) {
 							error_for_missing_config(
-								'instrumentation.server.js',
+								'`instrumentation.server.js`',
 								'kit.experimental.instrumentation.server',
 								'true'
 							);
