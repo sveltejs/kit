@@ -43,6 +43,14 @@ SvelteKit provides access to the `root` span and the `current` span on the reque
 
 ```js
 /// file: $lib/authenticate.ts
+
+// @filename: ambient.d.ts
+declare module '$lib/auth-core' {
+	export function getAuthenticatedUser(): Promise<{ id: string }>
+}
+
+// @filename: index.js
+// ---cut---
 import { getRequestEvent } from '$app/server';
 import { getAuthenticatedUser } from '$lib/auth-core';
 
