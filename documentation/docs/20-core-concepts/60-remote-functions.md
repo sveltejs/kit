@@ -78,7 +78,7 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 {/each}
 ```
 
-Until the promise resolves, the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked, and its `pending` snippet will be rendered. If it errors, the `failed` snippet will be rendered instead.
+Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
 
 While using `await` is recommended, as an alternative the query also has `loading`, `error` and `current` properties:
 
