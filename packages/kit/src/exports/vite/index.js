@@ -558,9 +558,9 @@ async function kit({ svelte_config }) {
 		// are added to the module graph
 		enforce: 'pre',
 
-		async resolveId(id, importer) {
+		async resolveId(id, importer, options) {
 			if (importer && !importer.endsWith('index.html')) {
-				const resolved = await this.resolve(id, importer, { skipSelf: true });
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
 				if (resolved) {
 					const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
