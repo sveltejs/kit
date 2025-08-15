@@ -10,7 +10,7 @@ Remote functions are a tool for type-safe communication between client and serve
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
-This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `kit.experimental.remoteFunctions` option in your `svelte.config.js`:
+This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `kit.experimental.remoteFunctions` option in your `svelte.config.js` and optionally, the `compilerOptions.experimental.async` option to use `await`.
 
 ```js
 /// file: svelte.config.js
@@ -18,6 +18,11 @@ export default {
 	kit: {
 		experimental: {
 			+++remoteFunctions: true+++
+		}
+	},
+	compilerOptions: {
+		experimental: {
+			+++async: true+++
 		}
 	}
 };
@@ -68,14 +73,24 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 
 <h1>Recent posts</h1>
 
-<ul>
-	{#each await getPosts() as { title, slug }}
-		<li><a href="/blog/{slug}">{title}</a></li>
-	{/each}
-</ul>
+<svelte:boundary>
+	<ul>
+		{#each await getPosts() as { title, slug }}
+			<li><a href="/blog/{slug}">{title}</a></li>
+		{/each}
+	</ul>
+
+	{#snippet pending()}
+		<p>loading...</p>
+	{/snippet}
+
+	{#snippet failed()}
+		<p>oops!</p>
+	{/snippet}
+</svelte:boundary>
 ```
 
-Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
+Until the promise resolves, the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked, and its `pending` snippet will be rendered. If it errors, the `failed` snippet will be rendered instead.
 
 While using `await` is recommended, as an alternative the query also has `loading`, `error` and `current` properties:
 
@@ -86,6 +101,8 @@ While using `await` is recommended, as an alternative the query also has `loadin
 
 	const query = getPosts();
 </script>
+
+<h1>Recent posts</h1>
 
 {#if query.error}
 	<p>oops!</p>
