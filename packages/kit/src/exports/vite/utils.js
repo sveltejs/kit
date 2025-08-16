@@ -210,9 +210,7 @@ export function error_for_missing_config(feature_name, path, value) {
 		dedent`\
 			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			${result}
-			\`\`\`
 		`
 	);
 }

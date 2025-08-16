@@ -44,11 +44,9 @@ test('error_for_missing_config - simple single level config', () => {
 		dedent`
 			To enable feature, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			kit: {
 			  adapter: true
 			}
-			\`\`\`
 		`
 	);
 });
@@ -64,7 +62,6 @@ test('error_for_missing_config - nested config', () => {
 		dedent`
 			To enable instrumentation.server.js, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			kit: {
 			  experimental: {
 			    instrumentation: {
@@ -72,7 +69,6 @@ test('error_for_missing_config - nested config', () => {
 			    }
 			  }
 			}
-			\`\`\`
 		`
 	);
 });
@@ -82,7 +78,6 @@ test('error_for_missing_config - deeply nested config', () => {
 		dedent`
 			To enable deep feature, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			a: {
 			  b: {
 			    c: {
@@ -92,7 +87,6 @@ test('error_for_missing_config - deeply nested config', () => {
 			    }
 			  }
 			}
-			\`\`\`
 		`
 	);
 });
@@ -102,11 +96,9 @@ test('error_for_missing_config - two level config', () => {
 		dedent`
 			To enable some feature, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			kit: {
 			  someFeature: false
 			}
-			\`\`\`
 		`
 	);
 });
@@ -118,11 +110,9 @@ test('error_for_missing_config - handles special characters in feature name', ()
 		dedent`
 			To enable special-feature.js, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			kit: {
 			  special: { enabled: true }
 			}
-			\`\`\`
 		`
 	);
 });
