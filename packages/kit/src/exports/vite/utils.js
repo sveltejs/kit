@@ -206,13 +206,11 @@ export function error_for_missing_config(feature_name, path, value) {
 		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
 
-	throw new Error(
+	throw stackless(
 		dedent`\
-			To enable \`${feature_name}\`, add the following to your \`svelte.config.js\`:
+			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
 
-			\`\`\`js
 			${result}
-			\`\`\`
 		`
 	);
 }

@@ -1,7 +1,7 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { check_experimental, run_remote_function } from './shared.js';
+import { run_remote_function } from './shared.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -16,8 +16,6 @@ import { check_experimental, run_remote_function } from './shared.js';
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
 export function form(fn) {
-	check_experimental('form');
-
 	/**
 	 * @param {string | number | boolean} [key]
 	 */

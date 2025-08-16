@@ -2,7 +2,7 @@
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { check_experimental, create_validator, run_remote_function } from './shared.js';
+import { create_validator, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -51,8 +51,6 @@ import { check_experimental, create_validator, run_remote_function } from './sha
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {
-	check_experimental('command');
-
 	/** @type {(arg?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
 
