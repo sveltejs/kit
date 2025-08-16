@@ -71,9 +71,10 @@ To view your first trace, you'll need to set up a local collector. We'll use [Ja
   ```sh
   npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-oltp-proto import-in-the-middle
   ```
-- Create `src/instrumentation.server.ts` with the following:
+- Create `src/instrumentation.server.js` with the following:
 
 ```js
+/// file: src/instrumentation.server.js
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
