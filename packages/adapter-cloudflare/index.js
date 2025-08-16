@@ -322,6 +322,22 @@ function validate_wrangler_config(config_file = undefined) {
 		validate_worker_settings(wrangler_config);
 	}
 
+	const flags = wrangler_config?.compatibility_flags ?? [];
+
+	if (flags.includes('nodejs_compat') && flags.includes('nodejs_als')) {
+		const file = config_file
+			? path.relative(process.cwd(), config_file)
+			: 'your wrangler configuration';
+
+		throw new Error(
+			`\u001B\u001B[31m` +
+				`\nPlease add the "nodejs_als" compatibility flag to ${file}, as SvelteKit uses the AsyncLocalStorage API and your app may break in production without it.\n\n` +
+				`Alternatively, if you are using Node APIs in your app, you should add the "nodejs_compat" flag.\n\n` +
+				`For more information on compatibility flags see https://svelte.dev/docs/kit/adapter-cloudflare#Node-compatibility.\n` +
+				`\u001B[39m\u001B`
+		);
+	}
+
 	return wrangler_config;
 }
 
