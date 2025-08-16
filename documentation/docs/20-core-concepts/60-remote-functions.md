@@ -14,7 +14,6 @@ This feature is currently experimental, meaning it is likely to contain bugs and
 
 ```js
 /// file: svelte.config.js
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
