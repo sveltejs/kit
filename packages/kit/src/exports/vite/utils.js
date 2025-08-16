@@ -2,7 +2,7 @@ import path from 'node:path';
 import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
@@ -71,8 +71,8 @@ export function get_env(env_config, mode) {
 	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
-		public: filter_public_env(env, { public_prefix, private_prefix }),
-		private: filter_private_env(env, { public_prefix, private_prefix })
+		public: filter_env(env, public_prefix, private_prefix),
+		private: filter_env(env, private_prefix, public_prefix)
 	};
 }
 
