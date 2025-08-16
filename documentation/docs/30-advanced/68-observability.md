@@ -93,4 +93,4 @@ const sdk = new NodeSDK({
 sdk.start();
 ```
 
-Now, any server-side requests will begin generating traces which you can view in Jaeger's web console at [localhost:16686](http://localhost:16686).
+Now, server-side requests will begin generating traces, which you can view in Jaeger's web console at [localhost:16686](http://localhost:16686).
