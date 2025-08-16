@@ -17,6 +17,17 @@ const [kit_major, kit_minor] = VERSION.split('.');
  * } & toml.JsonMap} NetlifyConfig
  */
 
+/**
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
+ */
+
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -30,7 +41,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,
-
+		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -114,7 +125,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 }
 /**
  * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {Builder2_4_0} params.builder
  */
 async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -202,7 +213,7 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerInstrumentationFile() &&
+		builder.hasServerInstrumentationFile?.() &&
 			esbuild.build({
 				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 				outfile: '.netlify/edge/instrumentation.server.js',
@@ -210,8 +221,8 @@ async function generate_edge_functions({ builder }) {
 			})
 	]);
 
-	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument({
+	if (builder.hasServerInstrumentationFile?.()) {
+		builder.instrument?.({
 			entrypoint: '.netlify/edge-functions/render.js',
 			instrumentation: '.netlify/edge/instrumentation.server.js',
 			start: '.netlify/edge/start.js'
@@ -222,7 +233,7 @@ async function generate_edge_functions({ builder }) {
 }
 /**
  * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {Builder2_4_0} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
  */
@@ -294,8 +305,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
-			if (builder.hasServerInstrumentationFile()) {
-				builder.instrument({
+			if (builder.hasServerInstrumentationFile?.()) {
+				builder.instrument?.({
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
 					instrumentation: '.netlify/server/instrumentation.server.js',
 					start: `.netlify/functions-start/${name}.start.mjs`,
@@ -318,8 +329,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerInstrumentationFile()) {
-			builder.instrument({
+		if (builder.hasServerInstrumentationFile?.()) {
+			builder.instrument?.({
 				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
 				instrumentation: '.netlify/server/instrumentation.server.js',
 				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
@@ -356,8 +367,8 @@ function get_netlify_config() {
 }
 
 /**
- * @param {NetlifyConfig} netlify_config
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {NetlifyConfig | null} netlify_config
+ * @param {Builder2_4_0} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
