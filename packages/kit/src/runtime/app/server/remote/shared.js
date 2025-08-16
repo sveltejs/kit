@@ -74,15 +74,6 @@ export function get_response(id, arg, state, get_result) {
 	return ((state.remote_data ??= {})[cache_key] ??= get_result());
 }
 
-/** @param {string} feature */
-export function check_experimental(feature) {
-	if (!__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__) {
-		throw new Error(
-			`Cannot use \`${feature}\` from \`$app/server\` without the experimental flag set to true. Please set kit.experimental.remoteFunctions to \`true\` in your config.`
-		);
-	}
-}
-
 /**
  * @param {any} data
  * @param {ServerHooks['transport']} transport

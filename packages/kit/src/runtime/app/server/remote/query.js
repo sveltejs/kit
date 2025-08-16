@@ -4,12 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
-import {
-	check_experimental,
-	create_validator,
-	get_response,
-	run_remote_function
-} from './shared.js';
+import { create_validator, get_response, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -58,8 +53,6 @@ import {
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function query(validate_or_fn, maybe_fn) {
-	check_experimental('query');
-
 	/** @type {(arg?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
 
