@@ -185,7 +185,10 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-export const remote_responses = __SVELTEKIT_PAYLOAD__.data ?? {};
+// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
+// because it will be `undefined` when users import the exports from this module.
+// It's only defined when the server renders a page.
+export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
