@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 5.9.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
 ## 5.9.0
 ### Minor Changes
 

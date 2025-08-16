@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.31.1
+### Patch Changes
+
+
+- fix: pass options to resolve in resolveId hook ([#14223](https://github.com/sveltejs/kit/pull/14223))
+
 ## 2.31.0
 ### Minor Changes
 
