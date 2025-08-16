@@ -1,5 +1,5 @@
 ---
-title: Adapters
+title: Lr88aix add on
 ---
 
 Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
