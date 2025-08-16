@@ -1667,7 +1667,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		// only the calls in the template are done, not the one in the load function
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(3);
 	});
 
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
@@ -1813,7 +1813,7 @@ test.describe('remote functions', () => {
 
 		await page.click('#refresh-all');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(3);
+		expect(request_count).toBe(4);
 	});
 
 	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
@@ -1827,7 +1827,7 @@ test.describe('remote functions', () => {
 
 		await page.click('#refresh-remote-only');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(3);
 	});
 
 	test('command tracks pending state', async ({ page }) => {
@@ -1867,6 +1867,11 @@ test.describe('remote functions', () => {
 
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('external remote whitelisting works', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#external-allowed')).toHaveText('external success');
 	});
 
 	test('command pending state is tracked correctly', async ({ page }) => {

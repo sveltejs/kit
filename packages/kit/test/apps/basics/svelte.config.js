@@ -65,6 +65,9 @@ const config = {
 
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
+		},
+		remoteFunctions: {
+			allowedPaths: ['./external-remotes']
 		}
 	}
 };

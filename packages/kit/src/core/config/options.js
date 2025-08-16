@@ -270,6 +270,10 @@ const options = object(
 				})
 			}),
 
+			remoteFunctions: object({
+				allowedPaths: string_array([])
+			}),
+
 			router: object({
 				type: list(['pathname', 'hash']),
 				resolution: list(['client', 'server'])
