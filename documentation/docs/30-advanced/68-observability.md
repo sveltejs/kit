@@ -13,7 +13,7 @@ Sometimes, you may need to observe how your application is behaving in order to 
 - [Form actions](form-actions)
 - [Remote functions](remote-functions)
 
-Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported, provided that your deployment platform supports it and your adapter is aware of it.
+Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported, provided your deployment platform supports it and your adapter is aware of it.
 
 Both of these features are currently experimental, meaning they are likely to contain bugs and are subject to change without notice. You must opt in by adding the `kit.experimental.tracing.server` and `kit.experimental.instrumentation.server` option in your `svelte.config.js`:
 
