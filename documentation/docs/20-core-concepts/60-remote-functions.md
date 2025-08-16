@@ -14,13 +14,17 @@ This feature is currently experimental, meaning it is likely to contain bugs and
 
 ```js
 /// file: svelte.config.js
-export default {
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		experimental: {
 			+++remoteFunctions: true+++
 		}
 	}
 };
+
+export default config;
 ```
 
 ## Overview
