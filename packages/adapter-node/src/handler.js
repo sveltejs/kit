@@ -35,7 +35,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: process.env,
+	env: /** @type {Record<string, string>} */ (process.env),
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -44,22 +44,24 @@ await server.init({
  * @param {boolean} client
  */
 function serve(path, client = false) {
-	return (
-		fs.existsSync(path) &&
-		sirv(path, {
-			etag: true,
-			gzip: true,
-			brotli: true,
-			setHeaders:
-				client &&
-				((res, pathname) => {
-					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
-						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-					}
-				})
-		})
-	);
+	return fs.existsSync(path)
+		? sirv(path, {
+				etag: true,
+				gzip: true,
+				brotli: true,
+				setHeaders: client
+					? (res, pathname) => {
+							// only apply to build directory, not e.g. version.json
+							if (
+								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+								res.statusCode === 200
+							) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+						}
+					: undefined
+			})
+		: undefined;
 }
 
 // required because the static file server ignores trailing slashes
@@ -77,7 +79,7 @@ function serve_prerendered() {
 		}
 
 		if (prerendered.has(pathname)) {
-			return handler(req, res, next);
+			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
@@ -190,5 +192,6 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	[serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean)
+	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );

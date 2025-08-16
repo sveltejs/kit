@@ -100,7 +100,7 @@ export default {
 					cf: req.cf
 				},
 				getClientAddress() {
-					return req.headers.get('cf-connecting-ip');
+					return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
 				}
 			});
 		}

@@ -8,6 +8,17 @@ import esbuild from 'esbuild';
 import { get_pathname, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
+/**
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
+ */
+
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -48,7 +59,7 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name,
-
+		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -100,8 +111,8 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				if (builder.hasServerInstrumentationFile()) {
-					builder.instrument({
+				if (builder.hasServerInstrumentationFile?.()) {
+					builder.instrument?.({
 						entrypoint: `${tmp}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
@@ -182,14 +193,14 @@ const plugin = function (defaults = {}) {
 					});
 
 					let instrumentation_result;
-					if (builder.hasServerInstrumentationFile()) {
+					if (builder.hasServerInstrumentationFile?.()) {
 						instrumentation_result = await esbuild.build({
 							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 							outfile: `${outdir}/instrumentation.server.js`,
 							...esbuild_config
 						});
 
-						builder.instrument({
+						builder.instrument?.({
 							entrypoint: `${outdir}/index.js`,
 							instrumentation: `${outdir}/instrumentation.server.js`,
 							module: {
@@ -543,7 +554,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /**
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {import('./index.js').Config} config
  * @param {string} dir
  */
@@ -658,7 +669,7 @@ function static_vercel_config(builder, config, dir) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
@@ -780,7 +791,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 /**
  *
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {any} vercel_config
  */
 function validate_vercel_json(builder, vercel_config) {
