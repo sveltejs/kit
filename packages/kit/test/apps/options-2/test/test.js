@@ -55,6 +55,55 @@ test.describe('paths', () => {
 		await clicknav('[data-testid="link"]');
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
+
+	test('query remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'get count' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('prerender remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#prerendered')).toHaveText('');
+		await page.locator('button', { hasText: 'get prerendered' }).click();
+		await expect(page.locator('#prerendered')).toHaveText('yes');
+	});
+
+	test('command remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'reset' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('form remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('input').fill('1');
+		await page.locator('button', { hasText: 'submit' }).click();
+		await expect(page.locator('#count')).toHaveText('1');
+	});
 });
 
 test.describe('trailing slash', () => {
@@ -108,7 +157,7 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
+		expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
 		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 
@@ -120,6 +169,7 @@ test.describe('Service worker', () => {
 
 test.describe("bundleStrategy: 'single'", () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
+
 	test('loads a single js file and a single css file', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -134,5 +184,10 @@ test.describe("bundleStrategy: 'single'", () => {
 
 		expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
 		expect(requests.filter((req) => req.endsWith('.css')).length).toBe(1);
+	});
+
+	test('app.decoders is accessed only after app has been initialised', async ({ page }) => {
+		await page.goto('/basepath/deserialize');
+		await expect(page.locator('p')).toHaveText('Hello world!');
 	});
 });

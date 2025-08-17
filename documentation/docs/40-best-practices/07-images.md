@@ -27,15 +27,13 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 `@sveltejs/enhanced-img` is a plugin offered on top of Vite's built-in asset handling. It provides plug and play image processing that serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic `width` and `height` of the image to avoid layout shift, creates images of multiple sizes for various devices, and strips EXIF data for privacy. It will work in any Vite-based project including, but not limited to, SvelteKit projects.
 
 > [!NOTE] As a build plugin, `@sveltejs/enhanced-img` can only optimize files located on your machine during the build process. If you have an image located elsewhere (such as a path served from your database, CMS, or backend), please read about [loading images dynamically from a CDN](#Loading-images-dynamically-from-a-CDN).
->
-> **WARNING**: The `@sveltejs/enhanced-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
 ### Setup
 
 Install:
 
-```bash
-npm install --save-dev @sveltejs/enhanced-img
+```sh
+npm i -D @sveltejs/enhanced-img
 ```
 
 Adjust `vite.config.js`:
@@ -47,7 +45,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-		+++enhancedImages(),+++
+		+++enhancedImages(), // must come before the SvelteKit plugin+++
 		sveltekit()
 	]
 });
@@ -67,7 +65,7 @@ At build time, your `<enhanced:img>` tag will be replaced with an `<img>` wrappe
 
 You should provide your image at 2x resolution for HiDPI displays (a.k.a. retina displays). `<enhanced:img>` will automatically take care of serving smaller versions to smaller devices.
 
-If you wish to add styles to your `<enhanced:img>`, you should add a `class` and target that.
+> [!NOTE] if you wish to use a [tag name CSS selector](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Basic_selectors#type_selectors) in your `<style>` block you will need to write `enhanced\:img` to escape the colon in the tag name.
 
 ### Dynamically choosing an image
 

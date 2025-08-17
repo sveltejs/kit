@@ -1,5 +1,83 @@
 # @sveltejs/adapter-vercel
 
+## 5.9.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.9.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 5.8.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.8.1
+### Patch Changes
+
+
+- chore(deps): update dependency @vercel/nft to ^0.30.0 ([#14033](https://github.com/sveltejs/kit/pull/14033))
+
+## 5.8.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` in edge functions ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
+## 5.7.2
+### Patch Changes
+
+
+- chore(deps): upgrade to esbuild 0.25.4 ([#13770](https://github.com/sveltejs/kit/pull/13770))
+
+## 5.7.1
+### Patch Changes
+
+
+- chore(deps): upgrade esbuild to 0.25.2 ([#13716](https://github.com/sveltejs/kit/pull/13716))
+
+
+- fix: include the `edge-light` bundling condition when building edge functions ([#13720](https://github.com/sveltejs/kit/pull/13720))
+
+- Updated dependencies [[`c51fb554416e0c4a21655c1d79e834f69743d1d5`](https://github.com/sveltejs/kit/commit/c51fb554416e0c4a21655c1d79e834f69743d1d5)]:
+  - @sveltejs/kit@2.20.8
+
+## 5.7.0
+### Minor Changes
+
+
+- feat: create symlink functions for each route, for better observability ([#13679](https://github.com/sveltejs/kit/pull/13679))
+
+
+### Patch Changes
+
+- Updated dependencies [[`7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643`](https://github.com/sveltejs/kit/commit/7fd7bcb7142e7d0d2dd64174fa1a94d56a45d643)]:
+  - @sveltejs/kit@2.20.4
+
 ## 5.6.3
 ### Patch Changes
 

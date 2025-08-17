@@ -22,7 +22,7 @@ jobs:
   pkg-pr-new:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -34,7 +34,7 @@ jobs:
   lint-all:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -64,7 +64,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -74,6 +74,8 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -95,7 +97,7 @@ jobs:
       matrix:
         include:
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
           - node-version: 18
@@ -107,7 +109,7 @@ jobs:
             e2e-browser: 'webkit'
             mode: 'dev'
           - node-version: 18
-            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
           - node-version: 18
@@ -122,7 +124,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -156,7 +158,7 @@ jobs:
           - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
@@ -181,14 +183,19 @@ jobs:
           path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
   test-others:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.1.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{matrix.node-version}}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
+        env:
+          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts

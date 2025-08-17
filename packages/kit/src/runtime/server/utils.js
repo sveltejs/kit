@@ -1,8 +1,9 @@
 import { DEV } from 'esm-env';
-import { json, text } from '../../exports/index.js';
+import { json, text } from '@sveltejs/kit';
+import { HttpError } from '@sveltejs/kit/internal';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
@@ -66,13 +67,14 @@ export function static_error_page(options, status, message) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
-export async function handle_fatal_error(event, options, error) {
+export async function handle_fatal_error(event, state, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = get_status(error);
-	const body = await handle_error_and_jsonify(event, options, error);
+	const body = await handle_error_and_jsonify(event, state, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -91,11 +93,12 @@ export async function handle_fatal_error(event, options, error) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {Promise<App.Error>}
  */
-export async function handle_error_and_jsonify(event, options, error) {
+export async function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	}
@@ -107,7 +110,11 @@ export async function handle_error_and_jsonify(event, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (await options.hooks.handleError({ error, event, status, message })) ?? { message };
+	return (
+		(await with_request_store({ event, state }, () =>
+			options.hooks.handleError({ error, event, status, message })
+		)) ?? { message }
+	);
 }
 
 /**
@@ -128,7 +135,10 @@ export function redirect_response(status, location) {
  */
 export function clarify_devalue_error(event, error) {
 	if (error.path) {
-		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+		return (
+			`Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path}). ` +
+			`If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport.`
+		);
 	}
 
 	if (error.path === '') {
@@ -142,26 +152,26 @@ export function clarify_devalue_error(event, error) {
 /**
  * @param {import('types').ServerDataNode} node
  */
-export function stringify_uses(node) {
-	const uses = [];
+export function serialize_uses(node) {
+	const uses = {};
 
 	if (node.uses && node.uses.dependencies.size > 0) {
-		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+		uses.dependencies = Array.from(node.uses.dependencies);
 	}
 
 	if (node.uses && node.uses.search_params.size > 0) {
-		uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
+		uses.search_params = Array.from(node.uses.search_params);
 	}
 
 	if (node.uses && node.uses.params.size > 0) {
-		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+		uses.params = Array.from(node.uses.params);
 	}
 
-	if (node.uses?.parent) uses.push('"parent":1');
-	if (node.uses?.route) uses.push('"route":1');
-	if (node.uses?.url) uses.push('"url":1');
+	if (node.uses?.parent) uses.parent = 1;
+	if (node.uses?.route) uses.route = 1;
+	if (node.uses?.url) uses.url = 1;
 
-	return `"uses":{${uses.join(',')}}`;
+	return uses;
 }
 
 /**
@@ -174,4 +184,17 @@ export function has_prerendered_path(manifest, pathname) {
 		manifest._.prerendered_routes.has(pathname) ||
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
+}
+
+/**
+ * Returns the filename without the extension. e.g., `+page.server`, `+page`, etc.
+ * @param {string | undefined} node_id
+ * @returns {string}
+ */
+export function get_node_type(node_id) {
+	const parts = node_id?.split('/');
+	const filename = parts?.at(-1);
+	if (!filename) return 'unknown';
+	const dot_parts = filename.split('.');
+	return dot_parts.slice(0, -1).join('.');
 }
