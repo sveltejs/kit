@@ -363,16 +363,16 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							if (dependency) {
 								dependency.body = new Uint8Array(buffer);
 							}
-							push_fetched(b64_encode(buffer), true);
+							void push_fetched(base64_encode(buffer), true);
 						} else if (value) {
 							const newBuffer = new Uint8Array(buffer.length + value.length);
 							newBuffer.set(buffer, 0);
 							newBuffer.set(value, buffer.length);
 							buffer = newBuffer;
-							reader.read().then(buffer_to_fetched);
+							void reader.read().then(buffer_to_fetched);
 						}
 					}
-					reader.read().then(buffer_to_fetched);
+					void reader.read().then(buffer_to_fetched);
 					return (teed_body = b);
 				}
 
