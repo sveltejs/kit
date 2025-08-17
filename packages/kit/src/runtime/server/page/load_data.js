@@ -347,11 +347,14 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 				if (key === 'body') {
 					if (teed_body) return teed_body;
+
 					const body = response.body;
 					if (!body) return body;
+
 					const [a, b] = body.tee();
 					let buffer = new Uint8Array();
 					const reader = a.getReader();
+
 					/**
 					 * @param {{
 					 * 	done: boolean
@@ -363,15 +366,19 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							if (dependency) {
 								dependency.body = new Uint8Array(buffer);
 							}
+
 							void push_fetched(base64_encode(buffer), true);
 						} else if (value) {
 							const newBuffer = new Uint8Array(buffer.length + value.length);
+
 							newBuffer.set(buffer, 0);
 							newBuffer.set(value, buffer.length);
+
 							buffer = newBuffer;
 							void reader.read().then(buffer_to_fetched);
 						}
 					}
+
 					void reader.read().then(buffer_to_fetched);
 					return (teed_body = b);
 				}
