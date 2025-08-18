@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 5.10.0
+### Minor Changes
+
+
+- feat: use web standard `fetch` export ([#14251](https://github.com/sveltejs/kit/pull/14251))
+
+
+### Patch Changes
+
+- Updated dependencies [[`1d04a77`](https://github.com/sveltejs/kit/commit/1d04a7786725d2d8c412268c36722e55f841fdfe), [`5db4cd4`](https://github.com/sveltejs/kit/commit/5db4cd46489d72471a99a8677a9faf32324b9d7e)]:
+  - @sveltejs/kit@2.32.0
+
 ## 5.9.1
 ### Patch Changes
 
