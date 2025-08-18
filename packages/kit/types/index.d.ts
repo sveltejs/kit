@@ -731,7 +731,7 @@ declare module '@sveltejs/kit' {
 			 * @default "fail"
 			 * @since 2.16.0
 			 */
-			handleUnseenRoutes?: PrerenderMissingRoutesHandlerValue;
+			handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
 			/**
 			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 			 * @default "http://sveltekit-prerender"
@@ -2011,17 +2011,17 @@ declare module '@sveltejs/kit' {
 		(details: { generatedFromId: string; entry: string; matchedId: string; message: string }): void;
 	}
 
-	interface PrerenderEntryMissingRoutesHandler {
+	interface PrerenderUnseenRoutesHandler {
 		(details: { routes: string[]; message: string }): void;
 	}
 
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
-	type PrerenderMissingRoutesHandlerValue =
+	type PrerenderUnseenRoutesHandlerValue =
 		| 'fail'
 		| 'warn'
 		| 'ignore'
-		| PrerenderEntryMissingRoutesHandler;
+		| PrerenderUnseenRoutesHandler;
 	type PrerenderEntryGeneratorMismatchHandlerValue =
 		| 'fail'
 		| 'warn'

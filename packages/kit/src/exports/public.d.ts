@@ -12,7 +12,7 @@ import {
 	PrerenderEntryGeneratorMismatchHandlerValue,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
-	PrerenderMissingRoutesHandlerValue,
+	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
 	RouteSegment
@@ -755,7 +755,7 @@ export interface KitConfig {
 		 * @default "fail"
 		 * @since 2.16.0
 		 */
-		handleUnseenRoutes?: PrerenderMissingRoutesHandlerValue;
+		handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
 		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 		 * @default "http://sveltekit-prerender"
