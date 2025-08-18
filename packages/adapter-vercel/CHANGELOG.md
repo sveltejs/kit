@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 5.10.1
+### Patch Changes
+
+
+- chore: deprecate `runtime` config ([#14253](https://github.com/sveltejs/kit/pull/14253))
+
 ## 5.10.0
 ### Minor Changes
 
