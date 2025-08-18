@@ -15,10 +15,6 @@ await server.init({
 
 const DATA_SUFFIX = '/__data.json';
 
-/**
- * @param {import('http').IncomingMessage} req
- * @param {import('http').ServerResponse} res
- */
 export default {
 	/**
 	 * @param {Request} request
