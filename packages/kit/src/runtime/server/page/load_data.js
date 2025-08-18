@@ -311,6 +311,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 			}
 		}
 
+		/** @type {ReadableStream<Uint8Array>} */
+		let teed_body;
+
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
 				/**
@@ -340,6 +343,39 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						response,
 						is_b64
 					});
+				}
+
+				if (key === 'body') {
+					if (response.body === null) {
+						return null;
+					}
+
+					if (teed_body) {
+						return teed_body;
+					}
+
+					const [a, b] = response.body.tee();
+
+					void (async () => {
+						let result = new Uint8Array();
+
+						for await (const chunk of a) {
+							const combined = new Uint8Array(result.length + chunk.length);
+
+							combined.set(result, 0);
+							combined.set(chunk, result.length);
+
+							result = combined;
+						}
+
+						if (dependency) {
+							dependency.body = new Uint8Array(result);
+						}
+
+						void push_fetched(base64_encode(result), true);
+					})();
+
+					return (teed_body = b);
 				}
 
 				if (key === 'arrayBuffer') {
