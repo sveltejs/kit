@@ -38,7 +38,8 @@ The following example caches the built app and any files in `static` eagerly, an
 
 import { build, files, version } from '$service-worker';
 
-/** @typedef {ServiceWorkerGlobalScope} self */
+// This gives `self` the correct types
+const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (globalThis.self));
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
