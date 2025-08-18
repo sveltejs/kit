@@ -131,12 +131,21 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
+			let warned = false;
+
 			/**
 			 * @param {string} name
 			 * @param {import('./index.js').EdgeConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
+				if (!warned) {
+					warned = true;
+					builder.log.warn(
+						`The \`runtime: 'edge'\` option is deprecated, and will be removed in a future version of adapter-vercel`
+					);
+				}
+
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
