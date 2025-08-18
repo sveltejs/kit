@@ -241,11 +241,11 @@ const options = object(
 					}
 				),
 
-				handleNotPrerenderedRoutes: validate(
+				handleUnseenRoutes: validate(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleNotPrerenderedRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {

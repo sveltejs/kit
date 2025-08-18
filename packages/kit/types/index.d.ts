@@ -638,7 +638,7 @@ declare module '@sveltejs/kit' {
 			 * @default "fail"
 			 * @since 2.16.0
 			 */
-			handleNotPrerenderedRoutes?: PrerenderMissingRoutesHandlerValue;
+			handleUnseenRoutes?: PrerenderMissingRoutesHandlerValue;
 			/**
 			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 			 * @default "http://sveltekit-prerender"
@@ -1919,7 +1919,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -1941,13 +1941,13 @@ declare module '@sveltejs/kit' {
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit | undefined): Response;
+	export function json(data: any, init?: ResponseInit): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit | undefined): Response;
+	export function text(body: string, init?: ResponseInit): Response;
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -2224,7 +2224,7 @@ declare module '$app/navigation' {
 		keepFocus?: boolean | undefined;
 		invalidateAll?: boolean | undefined;
 		state?: App.PageState | undefined;
-	} | undefined): Promise<void>;
+	}): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
