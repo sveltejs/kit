@@ -30,7 +30,7 @@ export default {
 			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
 			pathname = pathname.replace(/\/+/g, '/');
 
-			url.pathname = pathname + url.pathname.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : '';
+			url.pathname = pathname + (url.pathname.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : '');
 			url.searchParams.delete('__pathname');
 
 			request = new Request(url, request);
