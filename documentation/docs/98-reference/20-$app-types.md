@@ -20,7 +20,7 @@ A union of all the filenames of assets contained in your `static` directory, plu
 <div class="ts-block">
 
 ```dts
-type Asset = '/favicon.png' | '/robots.txt' | `/${string}` & {};
+type Asset = '/favicon.png' | '/robots.txt' | (string & {});
 ```
 
 </div>
