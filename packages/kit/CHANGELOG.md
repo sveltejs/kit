@@ -1,5 +1,83 @@
 # @sveltejs/kit
 
+## 2.34.0
+### Minor Changes
+
+
+- feat: allow dynamic `env` access during prerender ([#14243](https://github.com/sveltejs/kit/pull/14243))
+
+
+### Patch Changes
+
+
+- fix: clone `fetch` responses so that headers are mutable ([#13942](https://github.com/sveltejs/kit/pull/13942))
+
+
+- fix: serialize server `load` data before passing to universal `load`, to handle mutations ([#14268](https://github.com/sveltejs/kit/pull/14268))
+
+
+- fix: allow `asset(...)` to be used with imported assets ([#14270](https://github.com/sveltejs/kit/pull/14270))
+
+## 2.33.1
+### Patch Changes
+
+
+- fix: make paths in .css assets relative ([#14262](https://github.com/sveltejs/kit/pull/14262))
+
+
+- fix: avoid copying SSR stylesheets to client assets ([#13069](https://github.com/sveltejs/kit/pull/13069))
+
+## 2.33.0
+### Minor Changes
+
+
+- feat: configure error reporting when routes marked as prerendable were not prerendered ([#11702](https://github.com/sveltejs/kit/pull/11702))
+
+
+### Patch Changes
+
+
+- fix: use correct flag for server tracing ([#14250](https://github.com/sveltejs/kit/pull/14250))
+
+
+- fix: correct type names for new `handleUnseenRoutes` option ([#14254](https://github.com/sveltejs/kit/pull/14254))
+
+
+- chore: Better docs and error message for missing `@opentelemetry/api` dependency ([#14250](https://github.com/sveltejs/kit/pull/14250))
+
+## 2.32.0
+### Minor Changes
+
+
+- feat: inline load fetch `response.body` stream data as base64 in page ([#11473](https://github.com/sveltejs/kit/pull/11473))
+
+
+### Patch Changes
+
+
+- fix: better error when `.remote.ts` files are used without the `experimental.remoteFunctions` flag ([#14225](https://github.com/sveltejs/kit/pull/14225))
+
+## 2.31.1
+### Patch Changes
+
+
+- fix: pass options to resolve in resolveId hook ([#14223](https://github.com/sveltejs/kit/pull/14223))
+
+## 2.31.0
+### Minor Changes
+
+
+- feat: OpenTelemetry tracing for `handle`, `sequence`, form actions, remote functions, and `load` functions running on the server ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+## 2.30.1
+### Patch Changes
+
+
+- chore: generate `$app/types` in a more Typescript-friendly way ([#14207](https://github.com/sveltejs/kit/pull/14207))
+
 ## 2.30.0
 ### Minor Changes
 

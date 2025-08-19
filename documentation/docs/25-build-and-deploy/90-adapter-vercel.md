@@ -30,29 +30,20 @@ export default config;
 
 To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
-For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
+For example you could deploy one specific route as an individual serverless function, separate from the rest of your app:
 
 ```js
 /// file: about/+page.js
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
-	runtime: 'edge'
-};
-```
-
-...and others as [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (note that by specifying `config` inside a layout, it applies to all child pages):
-
-```js
-/// file: admin/+layout.js
-/** @type {import('@sveltejs/adapter-vercel').Config} */
-export const config = {
-	runtime: 'nodejs22.x'
+	split: true
 };
 ```
 
 The following options apply to all functions:
 
 - `runtime`: `'edge'`, `'nodejs18.x'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
+  > [!NOTE] This option is deprecated and will be removed in a future version, at which point all your functions will use whichever Node version is specified in the project configuration on Vercel
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
@@ -63,6 +54,8 @@ And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
 - `maxDuration`: [maximum execution duration](https://vercel.com/docs/functions/runtimes#max-duration) of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below
+
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level.
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 
@@ -95,7 +88,7 @@ export default config;
 
 Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
-> Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
+> [!NOTE] Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
 
 To add ISR to a route, include the `isr` property in your `config` object:
 
@@ -112,7 +105,7 @@ export const config = {
 };
 ```
 
-> Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
+> [!NOTE] Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
 
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 
@@ -144,7 +137,7 @@ vercel env pull .env.development.local
 
 A list of valid query parameters that contribute to the cache key. Other parameters (such as utm tracking codes) will be ignored, ensuring that they do not result in content being re-generated unnecessarily. By default, query parameters are ignored.
 
-> Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
+> [!NOTE] Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
 
 ## Environment variables
 
@@ -201,3 +194,7 @@ You can't use `fs` in edge functions.
 You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It also works inside routes deployed as edge functions by fetching the file from the deployed public assets location.
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.
+
+### Deployment protection
+
+If using [`read`]($app-server#read) in an edge function, SvelteKit will `fetch` the file in question from your deployment. If you are using [Deployment Protection](https://vercel.com/docs/deployment-protection), you must also enable [Protection Bypass for Automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation) so that the request does not result in a [401 Unauthorized](https://http.dog/401) response.

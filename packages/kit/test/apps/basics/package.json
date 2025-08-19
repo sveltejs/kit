@@ -17,6 +17,9 @@
 		"test:server-side-route-resolution:build": "node test/setup.js && rm -rf test/errors.json && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test"
 	},
 	"devDependencies": {
+		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/sdk-node": "^0.203.0",
+		"@opentelemetry/sdk-trace-node": "^2.0.1",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "^5.35.5",

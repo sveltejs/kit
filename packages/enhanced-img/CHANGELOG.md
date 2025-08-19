@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.8.1
+### Patch Changes
+
+
+- fix(perf): correctly apply id filter from vite-plugin-svelte ([#14248](https://github.com/sveltejs/kit/pull/14248))
+
 ## 0.8.0
 ### Minor Changes
 

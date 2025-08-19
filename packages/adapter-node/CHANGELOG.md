@@ -1,5 +1,35 @@
 # @sveltejs/adapter-node
 
+## 5.3.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.3.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 5.2.16
+### Patch Changes
+
+
+- fix: handling of PROTOCOL_HEADER and HOST_HEADER env vars ([#14221](https://github.com/sveltejs/kit/pull/14221))
+
+- Updated dependencies [[`ea95533`](https://github.com/sveltejs/kit/commit/ea9553380a9f1b5f3b2fcf3bebd15f900c51d77c)]:
+  - @sveltejs/kit@2.30.1
+
 ## 5.2.15
 ### Patch Changes
 

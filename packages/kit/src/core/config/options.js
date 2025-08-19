@@ -120,6 +120,12 @@ const options = object(
 			}),
 
 			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				}),
+				instrumentation: object({
+					server: boolean(false)
+				}),
 				remoteFunctions: boolean(false)
 			}),
 
@@ -236,6 +242,20 @@ const options = object(
 						throw new Error(
 							message +
 								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleUnseenRoutes: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {

@@ -16,7 +16,13 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, normalize_id, stackless } from './utils.js';
+import {
+	error_for_missing_config,
+	get_config_aliases,
+	get_env,
+	normalize_id,
+	stackless
+} from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -332,7 +338,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_PAYLOAD__: new_config.build.ssr
 						? '{}'
 						: `globalThis.__sveltekit_${version_hash}`
@@ -347,7 +354,8 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: kit.router.resolution === 'client' ? 'true' : 'false',
+					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
 				};
 
@@ -550,9 +558,9 @@ async function kit({ svelte_config }) {
 		// are added to the module graph
 		enforce: 'pre',
 
-		async resolveId(id, importer) {
+		async resolveId(id, importer, options) {
 			if (importer && !importer.endsWith('index.html')) {
-				const resolved = await this.resolve(id, importer, { skipSelf: true });
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
 				if (resolved) {
 					const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
@@ -601,6 +609,7 @@ async function kit({ svelte_config }) {
 				const chain = [normalized];
 
 				let current = normalized;
+				let includes_remote_file = false;
 
 				while (true) {
 					const importers = import_map.get(current);
@@ -611,9 +620,11 @@ async function kit({ svelte_config }) {
 
 					chain.push((current = candidates[0]));
 
-					if (entrypoints.has(current)) {
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+						return current.endsWith(`.remote${ext}`);
+					});
 
+					if (entrypoints.has(current)) {
 						const pyramid = chain
 							.reverse()
 							.map((id, i) => {
@@ -621,6 +632,15 @@ async function kit({ svelte_config }) {
 							})
 							.join(' imports\n');
 
+						if (includes_remote_file) {
+							error_for_missing_config(
+								'remote functions',
+								'kit.experimental.remoteFunctions',
+								'true'
+							);
+						}
+
+						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
 						message += `\n\n${pyramid}`;
 						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
 
@@ -774,6 +794,25 @@ async function kit({ svelte_config }) {
 						const name = posixify(path.join('entries/matchers', key));
 						input[name] = path.resolve(file);
 					});
+
+					// ...and the server instrumentation file
+					const server_instrumentation = resolve_entry(
+						path.join(kit.files.src, 'instrumentation.server')
+					);
+					if (server_instrumentation) {
+						const { adapter } = kit;
+						if (adapter && !adapter.supports?.instrumentation?.()) {
+							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
+						}
+						if (!kit.experimental.instrumentation.server) {
+							error_for_missing_config(
+								'`instrumentation.server.js`',
+								'kit.experimental.instrumentation.server',
+								'true'
+							);
+						}
+						input['instrumentation.server'] = server_instrumentation;
+					}
 
 					// ...and every .remote file
 					for (const remote of manifest_data.remotes) {
@@ -1025,10 +1064,44 @@ async function kit({ svelte_config }) {
 					throw stackless(error.stack ?? error.message);
 				}
 
-				copy(
-					`${out}/server/${kit.appDir}/immutable/assets`,
-					`${out}/client/${kit.appDir}/immutable/assets`
+				// We use `build.ssrEmitAssets` so that asset URLs created from
+				// imports in server-only modules correspond to files in the build,
+				// but we don't want to copy over CSS imports as these are already
+				// accounted for in the client bundle. In most cases it would be
+				// a no-op, but for SSR builds `url(...)` paths are handled
+				// differently (relative for client, absolute for server)
+				// resulting in different hashes, and thus duplication
+				const ssr_stylesheets = new Set(
+					Object.values(server_manifest)
+						.map((chunk) => chunk.css ?? [])
+						.flat()
 				);
+
+				const assets_path = `${kit.appDir}/immutable/assets`;
+				const server_assets = `${out}/server/${assets_path}`;
+				const client_assets = `${out}/client/${assets_path}`;
+
+				if (fs.existsSync(server_assets)) {
+					for (const file of fs.readdirSync(server_assets)) {
+						const src = `${server_assets}/${file}`;
+						const dest = `${client_assets}/${file}`;
+
+						if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
+							continue;
+						}
+
+						if (file.endsWith('.css')) {
+							// make absolute paths in CSS relative, for portability
+							const content = fs
+								.readFileSync(src, 'utf-8')
+								.replaceAll(`${kit.paths.base}/${assets_path}`, '.');
+
+							fs.writeFileSync(src, content);
+						}
+
+						copy(src, dest);
+					}
+				}
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));

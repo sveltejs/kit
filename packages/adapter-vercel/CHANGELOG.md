@@ -1,5 +1,53 @@
 # @sveltejs/adapter-vercel
 
+## 5.10.2
+### Patch Changes
+
+
+- fix: ensure `read` works in an edge function that has deployment protection. Protection bypass automation must be enabled ([#14147](https://github.com/sveltejs/kit/pull/14147))
+
+- Updated dependencies [[`c8f7ac3`](https://github.com/sveltejs/kit/commit/c8f7ac38e9ae1763e7880a29b7f7df01df964a6d), [`107f767`](https://github.com/sveltejs/kit/commit/107f767e3a1a54187527defb29dce753c4f5fa3f)]:
+  - @sveltejs/kit@2.33.1
+
+## 5.10.1
+### Patch Changes
+
+
+- chore: deprecate `runtime` config ([#14253](https://github.com/sveltejs/kit/pull/14253))
+
+## 5.10.0
+### Minor Changes
+
+
+- feat: use web standard `fetch` export ([#14251](https://github.com/sveltejs/kit/pull/14251))
+
+
+### Patch Changes
+
+- Updated dependencies [[`1d04a77`](https://github.com/sveltejs/kit/commit/1d04a7786725d2d8c412268c36722e55f841fdfe), [`5db4cd4`](https://github.com/sveltejs/kit/commit/5db4cd46489d72471a99a8677a9faf32324b9d7e)]:
+  - @sveltejs/kit@2.32.0
+
+## 5.9.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.9.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
 ## 5.8.2
 ### Patch Changes
 
