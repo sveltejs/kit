@@ -775,3 +775,22 @@ test.describe('remote functions', () => {
 		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
 	});
 });
+
+test.describe('asset preload', () => {
+	if (!process.env.DEV) {
+		test('injects Link headers', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			expect(response.headers()['link']).toContain('rel="modulepreload"');
+			expect(response.headers()['link']).toContain('as="font"');
+		});
+
+		test('injects <link> tags on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+			const body = await response.text();
+
+			expect(body).toContain('rel="modulepreload"');
+			expect(body).toContain('as="font"');
+		});
+	}
+});
