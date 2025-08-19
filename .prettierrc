@@ -26,11 +26,13 @@
 				"**/.custom-out-dir/**",
 				"**/build/**",
 				"**/test-results/**",
+				"**/.wrangler/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
-				"packages/kit/src/core/postbuild/fixtures/**/*"
+				"packages/kit/src/core/postbuild/fixtures/**/*",
+				"packages/adapter-cloudflare/test/apps/workers/dist/**/*"
 			],
 			"options": {
 				"rangeEnd": 0

@@ -1,5 +1,26 @@
 # @sveltejs/adapter-auto
 
+## 6.1.0
+### Minor Changes
+
+
+- feat: add Deno as a supported package manager ([#14163](https://github.com/sveltejs/kit/pull/14163))
+
+
+### Patch Changes
+
+- Updated dependencies [[`ece3906`](https://github.com/sveltejs/kit/commit/ece3906e11ab0eeac3778abc4666f2145f98f22e), [`5ac9d27`](https://github.com/sveltejs/kit/commit/5ac9d2737263364c9b6e63b115b7aa9792bd1b3f), [`fed6331`](https://github.com/sveltejs/kit/commit/fed6331722a3ea47df9dd8ab01ba23f549fe5385), [`69f4e5f`](https://github.com/sveltejs/kit/commit/69f4e5feacfee429025e78b0e1e0a7b2e0639dc9), [`6b34122`](https://github.com/sveltejs/kit/commit/6b34122b4446da545d261ad96217016412b16510), [`9493537`](https://github.com/sveltejs/kit/commit/949353793a2d27e7cc44dddbdbcf40639b33a4b7), [`f67ba09`](https://github.com/sveltejs/kit/commit/f67ba09e43a598e20d7f8bba62bbc0547fd3f8b1)]:
+  - @sveltejs/kit@2.28.0
+
+## 6.0.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
 ## 6.0.1
 ### Patch Changes
 

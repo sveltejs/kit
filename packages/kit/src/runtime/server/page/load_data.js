@@ -1,20 +1,23 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
-import { validate_depends } from '../../shared.js';
-import { b64_encode } from '../../utils.js';
-import { with_event } from '../../app/server/event.js';
+import { validate_depends, validate_load_response } from '../../shared.js';
+import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { record_span } from '../../telemetry/record_span.js';
+import { get_node_type } from '../utils.js';
+import { base64_encode, text_decoder } from '../../utils.js';
 
 /**
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({ event, event_state, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -68,97 +71,111 @@ export async function load_server_data({ event, state, node, parent }) {
 
 	let done = false;
 
-	const result = await with_event(event, () =>
-		load.call(null, {
-			...event,
-			fetch: (info, init) => {
-				const url = new URL(info instanceof Request ? info.url : info, event.url);
+	const result = await record_span({
+		name: 'sveltekit.load',
+		attributes: {
+			'sveltekit.load.node_id': node.server_id || 'unknown',
+			'sveltekit.load.node_type': get_node_type(node.server_id),
+			'sveltekit.load.environment': 'server',
+			'http.route': event.route.id || 'unknown'
+		},
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
+			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
+				load.call(null, {
+					...traced_event,
+					fetch: (info, init) => {
+						const url = new URL(info instanceof Request ? info.url : info, event.url);
 
-				if (DEV && done && !uses.dependencies.has(url.href)) {
-					console.warn(
-						`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-					);
-				}
-
-				// Note: server fetches are not added to uses.depends due to security concerns
-				return event.fetch(info, init);
-			},
-			/** @param {string[]} deps */
-			depends: (...deps) => {
-				for (const dep of deps) {
-					const { href } = new URL(dep, event.url);
-
-					if (DEV) {
-						validate_depends(node.server_id || 'missing route ID', dep);
-
-						if (done && !uses.dependencies.has(href)) {
+						if (DEV && done && !uses.dependencies.has(url.href)) {
 							console.warn(
-								`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+								`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
 							);
 						}
-					}
 
-					uses.dependencies.add(href);
-				}
-			},
-			params: new Proxy(event.params, {
-				get: (target, key) => {
-					if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
-						console.warn(
-							`${node.server_id}: Accessing \`params.${String(
-								key
-							)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
-						);
-					}
+						// Note: server fetches are not added to uses.depends due to security concerns
+						return event.fetch(info, init);
+					},
+					/** @param {string[]} deps */
+					depends: (...deps) => {
+						for (const dep of deps) {
+							const { href } = new URL(dep, event.url);
 
-					if (is_tracking) {
-						uses.params.add(key);
-					}
-					return target[/** @type {string} */ (key)];
-				}
-			}),
-			parent: async () => {
-				if (DEV && done && !uses.parent) {
-					console.warn(
-						`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-					);
-				}
+							if (DEV) {
+								validate_depends(node.server_id || 'missing route ID', dep);
 
-				if (is_tracking) {
-					uses.parent = true;
-				}
-				return parent();
-			},
-			route: new Proxy(event.route, {
-				get: (target, key) => {
-					if (DEV && done && typeof key === 'string' && !uses.route) {
-						console.warn(
-							`${node.server_id}: Accessing \`route.${String(
-								key
-							)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-						);
-					}
+								if (done && !uses.dependencies.has(href)) {
+									console.warn(
+										`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+									);
+								}
+							}
 
-					if (is_tracking) {
-						uses.route = true;
+							uses.dependencies.add(href);
+						}
+					},
+					params: new Proxy(event.params, {
+						get: (target, key) => {
+							if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
+								console.warn(
+									`${node.server_id}: Accessing \`params.${String(
+										key
+									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+								);
+							}
+
+							if (is_tracking) {
+								uses.params.add(key);
+							}
+							return target[/** @type {string} */ (key)];
+						}
+					}),
+					parent: async () => {
+						if (DEV && done && !uses.parent) {
+							console.warn(
+								`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
+							);
+						}
+
+						if (is_tracking) {
+							uses.parent = true;
+						}
+						return parent();
+					},
+					route: new Proxy(event.route, {
+						get: (target, key) => {
+							if (DEV && done && typeof key === 'string' && !uses.route) {
+								console.warn(
+									`${node.server_id}: Accessing \`route.${String(
+										key
+									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+								);
+							}
+
+							if (is_tracking) {
+								uses.route = true;
+							}
+							return target[/** @type {'id'} */ (key)];
+						}
+					}),
+					url,
+					untrack(fn) {
+						is_tracking = false;
+						try {
+							return fn();
+						} finally {
+							is_tracking = true;
+						}
 					}
-					return target[/** @type {'id'} */ (key)];
-				}
-			}),
-			url,
-			untrack(fn) {
-				is_tracking = false;
-				try {
-					return fn();
-				} finally {
-					is_tracking = true;
-				}
-			}
-		})
-	);
+				})
+			);
+
+			return result;
+		}
+	});
 
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(result, node.server_id);
+		validate_load_response(result, `in ${node.server_id}`);
 	}
 
 	done = true;
@@ -175,6 +192,7 @@ export async function load_server_data({ event, state, node, parent }) {
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -187,6 +205,7 @@ export async function load_server_data({ event, state, node, parent }) {
  */
 export async function load_data({
 	event,
+	event_state,
 	fetched,
 	node,
 	parent,
@@ -197,24 +216,41 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.universal?.load) {
+	const load = node?.universal?.load;
+
+	if (!load) {
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
-		url: event.url,
-		params: event.params,
-		data: server_data_node?.data ?? null,
-		route: event.route,
-		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-		setHeaders: event.setHeaders,
-		depends: () => {},
-		parent,
-		untrack: (fn) => fn()
+	const result = await record_span({
+		name: 'sveltekit.load',
+		attributes: {
+			'sveltekit.load.node_id': node.universal_id || 'unknown',
+			'sveltekit.load.node_type': get_node_type(node.universal_id),
+			'sveltekit.load.environment': 'server',
+			'http.route': event.route.id || 'unknown'
+		},
+		fn: async (current) => {
+			const traced_event = merge_tracing(event, current);
+			return await with_request_store({ event: traced_event, state: event_state }, () =>
+				load.call(null, {
+					url: event.url,
+					params: event.params,
+					data: server_data_node?.data ?? null,
+					route: event.route,
+					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+					setHeaders: event.setHeaders,
+					depends: () => {},
+					parent,
+					untrack: (fn) => fn(),
+					tracing: traced_event.tracing
+				})
+			);
+		}
 	});
 
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(result, node.universal_id);
+		validate_load_response(result, `in ${node.universal_id}`);
 	}
 
 	return result ?? null;
@@ -275,6 +311,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 			}
 		}
 
+		/** @type {ReadableStream<Uint8Array>} */
+		let teed_body;
+
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
 				/**
@@ -306,16 +345,51 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					});
 				}
 
+				if (key === 'body') {
+					if (response.body === null) {
+						return null;
+					}
+
+					if (teed_body) {
+						return teed_body;
+					}
+
+					const [a, b] = response.body.tee();
+
+					void (async () => {
+						let result = new Uint8Array();
+
+						for await (const chunk of a) {
+							const combined = new Uint8Array(result.length + chunk.length);
+
+							combined.set(result, 0);
+							combined.set(chunk, result.length);
+
+							result = combined;
+						}
+
+						if (dependency) {
+							dependency.body = new Uint8Array(result);
+						}
+
+						void push_fetched(base64_encode(result), true);
+					})();
+
+					return (teed_body = b);
+				}
+
 				if (key === 'arrayBuffer') {
 					return async () => {
 						const buffer = await response.arrayBuffer();
 
+						const bytes = new Uint8Array(buffer);
+
 						if (dependency) {
-							dependency.body = new Uint8Array(buffer);
+							dependency.body = bytes;
 						}
 
 						if (buffer instanceof ArrayBuffer) {
-							await push_fetched(b64_encode(buffer), true);
+							await push_fetched(base64_encode(bytes), true);
 						}
 
 						return buffer;
@@ -388,33 +462,12 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 async function stream_to_string(stream) {
 	let result = '';
 	const reader = stream.getReader();
-	const decoder = new TextDecoder();
 	while (true) {
 		const { done, value } = await reader.read();
 		if (done) {
 			break;
 		}
-		result += decoder.decode(value);
+		result += text_decoder.decode(value);
 	}
 	return result;
-}
-
-/**
- * @param {any} data
- * @param {string} [id]
- */
-function validate_load_response(data, id) {
-	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-		throw new Error(
-			`a load function in ${id} returned ${
-				typeof data !== 'object'
-					? `a ${typeof data}`
-					: data instanceof Response
-						? 'a Response object'
-						: Array.isArray(data)
-							? 'an array'
-							: 'a non-plain object'
-			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-		);
-	}
 }

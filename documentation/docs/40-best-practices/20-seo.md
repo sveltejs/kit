@@ -14,7 +14,7 @@ While search engines have got better in recent years at indexing content that wa
 
 ### Performance
 
-Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). Read [the performance page](performance) for more details.
+Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, they make it easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). With just a few key actions like using SvelteKit's default [hybrid rendering](glossary#Hybrid-app) mode and [optimizing your images](images), you can greatly improve your site's speed. Read [the performance page](performance) for more details.
 
 ### Normalized URLs
 

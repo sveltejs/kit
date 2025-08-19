@@ -1,5 +1,5 @@
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
+import { createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 import process from 'node:process';
@@ -15,33 +15,31 @@ await server.init({
 
 const DATA_SUFFIX = '/__data.json';
 
-/**
- * @param {import('http').IncomingMessage} req
- * @param {import('http').ServerResponse} res
- */
-export default async (req, res) => {
-	if (req.url) {
-		const [path, search] = req.url.split('?');
-
-		const params = new URLSearchParams(search);
-		let pathname = params.get('__pathname');
+export default {
+	/**
+	 * @param {Request} request
+	 * @returns {Promise<Response>}
+	 */
+	fetch(request) {
+		// If this is an ISR request, the requested pathname is encoded
+		// as a search parameter, so we need to extract it
+		const url = new URL(request.url);
+		let pathname = url.searchParams.get('__pathname');
 
 		if (pathname) {
-			params.delete('__pathname');
 			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
 			pathname = pathname.replace(/\/+/g, '/');
-			req.url = `${pathname}${path.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : ''}?${params}`;
+
+			url.pathname = pathname + (url.pathname.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : '');
+			url.searchParams.delete('__pathname');
+
+			request = new Request(url, request);
 		}
-	}
 
-	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
-
-	setResponse(
-		res,
-		await server.respond(request, {
+		return server.respond(request, {
 			getClientAddress() {
 				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
 			}
-		})
-	);
+		});
+	}
 };

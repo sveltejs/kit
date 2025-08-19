@@ -1,11 +1,11 @@
 import { escape_html } from '../../../utils/escape.js';
-import { base64, sha256 } from './crypto.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const quoted = new Set([
