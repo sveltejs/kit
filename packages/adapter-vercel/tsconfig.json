@@ -5,6 +5,7 @@
 		"strict": true,
 		"noEmit": true,
 		"noImplicitAny": true,
+		"strictNullChecks": true,
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
@@ -13,5 +14,6 @@
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
-	}
+	},
+	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }

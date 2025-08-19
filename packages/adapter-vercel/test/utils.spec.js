@@ -124,9 +124,9 @@ test('pattern_to_src for route with optional parameter in the middle', () => {
 });
 
 test('pattern_to_src for route with rest parameter', () => {
-	run_pattern_to_src_test('/foo/[...bar]', '^/foo(/.*)?/?');
+	run_pattern_to_src_test('/foo/[...bar]', '^/foo(/[^]*)?/?');
 });
 
 test('pattern_to_src for route with rest parameter in the middle', () => {
-	run_pattern_to_src_test('/foo/[...bar]/baz', '^/foo(/.*)?/baz/?');
+	run_pattern_to_src_test('/foo/[...bar]/baz', '^/foo(/[^]*)?/baz/?');
 });

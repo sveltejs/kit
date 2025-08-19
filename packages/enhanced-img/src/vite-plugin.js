@@ -1,8 +1,6 @@
 /** @import { AST } from 'svelte/compiler' */
-
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { loadSvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
@@ -27,25 +25,30 @@ export function image_plugin(imagetools_plugin) {
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
-	/** @type {Partial<import('@sveltejs/vite-plugin-svelte').SvelteConfig | undefined>} */
-	let svelte_config;
+	const name = 'vite-plugin-enhanced-img-markup';
 
-	return {
-		name: 'vite-plugin-enhanced-img-markup',
-		enforce: 'pre',
-		async configResolved(config) {
+	/** @type {import('vite').Plugin<void>} */
+	const plugin = {
+		name,
+		configResolved(config) {
 			vite_config = config;
-			svelte_config = await loadSvelteConfig();
-			if (!svelte_config) throw new Error('Could not load Svelte config file');
+			const svelteConfigPlugin = config.plugins.find((p) => p.name === 'vite-plugin-svelte:config');
+			if (!svelteConfigPlugin) {
+				throw new Error(
+					'@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed'
+				);
+			}
+			// @ts-expect-error plugin.transform is defined below before configResolved is called
+			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter.id;
 		},
-		async transform(content, filename) {
-			const plugin_context = this;
-			const extensions = svelte_config?.extensions || ['.svelte'];
-			if (extensions.some((ext) => filename.endsWith(ext))) {
-				if (!content.includes('<enhanced:img')) {
-					return;
-				}
+		transform: {
+			order: 'pre', // puts it before vite-plugin-svelte:compile
+			filter: {
+				code: /<enhanced:img/ // code filter must match in addition to the id filter set in configResolved hook above
+			},
 
+			async handler(content, filename) {
+				const plugin_context = this;
 				const s = new MagicString(content);
 				const ast = parse(content, { filename, modern: true });
 
@@ -184,11 +187,12 @@ export function image_plugin(imagetools_plugin) {
 
 				return {
 					code: s.toString(),
-					map: s.generateMap()
+					map: s.generateMap({ hires: 'boundary' })
 				};
 			}
 		}
 	};
+	return plugin;
 }
 
 /**
@@ -312,7 +316,7 @@ function stringToNumber(param) {
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(content, node, image) {
-	/** @type {import('../types/internal.js').Attribute[]} attributes */
+	/** @type {import('../types/internal.js').Attribute[]} */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
 		(attribute) => 'name' in attribute && attribute.name === 'sizes'
