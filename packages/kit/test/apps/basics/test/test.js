@@ -1560,6 +1560,13 @@ test.describe('Serialization', () => {
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 	});
+
+	test('works with streaming', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!'})).toBeVisible();
+	});
 });
 
 test.describe('getRequestEvent', () => {
