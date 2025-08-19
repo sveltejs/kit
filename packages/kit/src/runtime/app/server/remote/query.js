@@ -104,3 +104,129 @@ export function query(validate_or_fn, maybe_fn) {
 
 	return wrapper;
 }
+
+/**
+ * Creates a batch query function that collects multiple calls and executes them in a single request
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(args: Input[]) => MaybePromise<Output[]>} fn
+ * @returns {RemoteQueryFunction<Input, Output>}
+ * @since 2.27
+ */
+/**
+ * Creates a batch query function that collects multiple calls and executes them in a single request
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+ *
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} schema
+ * @param {(args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<Output[]>} fn
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @since 2.27
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(args?: Input[]) => MaybePromise<Output[]>} [maybe_fn]
+ * @returns {RemoteQueryFunction<Input, Output>}
+ * @since 2.27
+ */
+/*@__NO_SIDE_EFFECTS__*/
+function batch(validate_or_fn, maybe_fn) {
+	/** @type {(args?: Input[]) => Output[]} */
+	const fn = maybe_fn ?? validate_or_fn;
+
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/** @type {RemoteInfo} */
+	const __ = { type: 'query.batch', id: '', name: '' };
+
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
+	let batching = { args: [], resolvers: [], timeoutId: null };
+
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	const wrapper = (arg) => {
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query.batch '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+			);
+		}
+
+		const { event, state } = get_request_store();
+
+		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
+		const promise = get_response(__.id, arg, state, () => {
+			// Collect all the calls to the same query in the same macrotask,
+			// then execute them as one backend request.
+			return new Promise((resolve, reject) => {
+				batching.args.push(arg);
+				batching.resolvers.push({ resolve, reject });
+
+				if (batching.timeoutId) {
+					clearTimeout(batching.timeoutId);
+				}
+
+				batching.timeoutId = setTimeout(async () => {
+					const batched = batching;
+					batching = { args: [], resolvers: [], timeoutId: null };
+
+					try {
+						const results = await run_remote_function(
+							event,
+							state,
+							false,
+							batched.args,
+							(array) => Promise.all(array.map(validate)),
+							fn
+						);
+						for (let i = 0; i < batched.resolvers.length; i++) {
+							batched.resolvers[i].resolve(results[i]);
+						}
+					} catch (error) {
+						for (const resolver of batched.resolvers) {
+							resolver.reject(error);
+						}
+					}
+				}, 0);
+			});
+		});
+
+		promise.catch(() => {});
+
+		promise.refresh = async () => {
+			const { state } = get_request_store();
+			const refreshes = state.refreshes;
+
+			if (!refreshes) {
+				throw new Error(
+					`Cannot call refresh on query.batch '${__.name}' because it is not executed in the context of a command/form remote function`
+				);
+			}
+
+			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
+			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
+		};
+
+		promise.withOverride = () => {
+			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+		};
+
+		return /** @type {RemoteQuery<Output>} */ (promise);
+	};
+
+	Object.defineProperty(wrapper, '__', { value: __ });
+
+	return wrapper;
+}
+
+// Add batch as a property to the query function
+Object.defineProperty(query, 'batch', { value: batch, enumerable: true });

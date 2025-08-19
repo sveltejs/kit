@@ -1917,4 +1917,19 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
 		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
 	});
+
+	// TODO once we have async SSR adjust the test and move this into test.js
+	test('query.batch works', async ({ page }) => {
+		await page.goto('/remote/batch');
+
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1);
+	});
 });

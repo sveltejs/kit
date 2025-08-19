@@ -2899,6 +2899,24 @@ declare module '$app/server' {
 	 * @since 2.27
 	 */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	export namespace query {
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.27
+		 */
+		function batch<Input, Output>(validate: "unchecked", fn: (args: Input[]) => MaybePromise<Output[]>): RemoteQueryFunction<Input, Output>;
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.27
+		 */
+		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<Output[]>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

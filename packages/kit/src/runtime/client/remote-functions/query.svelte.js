@@ -1,8 +1,11 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '__sveltekit/paths';
-import { remote_responses, started } from '../client.js';
+import { app, goto, remote_responses, started } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
+import * as devalue from 'devalue';
+import { HttpError, Redirect } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
@@ -24,6 +27,78 @@ export function query(id) {
 		});
 	});
 }
+
+/**
+ * @param {string} id
+ * @returns {(arg: any) => Query<any>}
+ */
+function batch(id) {
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
+	let batching = { args: [], resolvers: [], timeoutId: null };
+
+	return create_remote_function(id, (cache_key, payload) => {
+		return new Query(cache_key, () => {
+			// Collect all the calls to the same query in the same macrotask,
+			// then execute them as one backend request.
+			return new Promise((resolve, reject) => {
+				batching.args.push(payload);
+				batching.resolvers.push({ resolve, reject });
+
+				if (batching.timeoutId) {
+					clearTimeout(batching.timeoutId);
+				}
+
+				batching.timeoutId = setTimeout(async () => {
+					const batched = batching;
+					batching = { args: [], resolvers: [], timeoutId: null };
+
+					try {
+						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
+							method: 'POST',
+							body: JSON.stringify({
+								payloads: batched.args
+							}),
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						});
+
+						if (!response.ok) {
+							throw new Error('Failed to execute batch query');
+						}
+
+						const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+						if (result.type === 'error') {
+							throw new HttpError(result.status ?? 500, result.error);
+						}
+
+						if (result.type === 'redirect') {
+							// TODO double-check this
+							await goto(result.location);
+							await new Promise((r) => setTimeout(r, 100));
+							throw new Redirect(307, result.location);
+						}
+
+						const results = devalue.parse(result.result, app.decoders);
+
+						// Resolve individual queries
+						for (let i = 0; i < batched.resolvers.length; i++) {
+							batched.resolvers[i].resolve(results[i]);
+						}
+					} catch (error) {
+						// Reject all queries in the batch
+						for (const resolver of batched.resolvers) {
+							resolver.reject(error);
+						}
+					}
+				}, 0); // Wait one macrotask
+			});
+		});
+	});
+}
+
+// Add batch as a property to the query function
+Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 
 /**
  * @template T

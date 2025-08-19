@@ -172,6 +172,47 @@ Any query can be updated via its `refresh` method:
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to refresh the query.
 
+## query.batch
+
+`query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem where you have many calls to the same resource and it's more efficient to do one invocation with an array of arguments of the collected calls instead of doing one invocation per call.
+
+```js
+/// file: src/routes/blog/data.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
+import * as v from 'valibot';
+import { query } from '$app/server';
+import * as db from '$lib/server/database';
+
+export const getPost = query.batch(v.string(), async (slugs) => {
+	const posts = await db.sql`
+		SELECT * FROM post
+		WHERE slug = ANY(${slugs})
+	`;
+	return posts;
+});
+```
+
+```svelte
+<script>
+	import { getPost } from './batch.remote.js';
+
+	let { posts } = $props();
+</script>
+
+<h1>All my posts</h1>
+
+<ul>
+	{#each posts as post}
+		<li>{await getPost(post.id).summary}</li>
+	{/each}
+</ul>
+```
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...

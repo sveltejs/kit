@@ -548,7 +548,7 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 
 export type RemoteInfo =
 	| {
-			type: 'query' | 'command';
+			type: 'query' | 'query.batch' | 'command';
 			id: string;
 			name: string;
 	  }

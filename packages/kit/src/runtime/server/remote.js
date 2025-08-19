@@ -60,6 +60,23 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	let form_client_refreshes;
 
 	try {
+		if (info.type === 'query.batch' && event.request.method === 'POST') {
+			/** @type {{   payloads: string[] }} */
+			const { payloads } = await event.request.json();
+
+			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
+			const results = await with_request_store({ event, state }, () =>
+				Promise.all(args.map((arg) => fn(arg)))
+			);
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(results, transport)
+				})
+			);
+		}
+
 		if (info.type === 'form') {
 			if (!is_form_content_type(event.request)) {
 				throw new SvelteKitError(
