@@ -1,4 +1,3 @@
-// @ts-ignore
 import { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 
 /**

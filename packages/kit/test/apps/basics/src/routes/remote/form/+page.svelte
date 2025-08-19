@@ -1,10 +1,14 @@
 <script>
-	import { get_task, task_one, task_two } from './form.remote.js';
+	import { get_task, task_one, task_two, resolve_deferreds } from './form.remote.js';
 	const current_task = get_task();
 </script>
 
 <!-- TODO use await here once async lands -->
 <p id="get-task">{#await current_task then task}{task}{/await}</p>
+
+<!-- Test pending state for forms -->
+<p id="form-pending">Form pending: {task_one.pending}</p>
+<p id="form-button-pending">Button pending: {task_two.buttonProps.pending}</p>
 
 <form {...task_one}>
 	<input id="input-task" name="task" />
@@ -48,8 +52,31 @@
 	>
 </form>
 
+<!-- Test case for button with nested elements (issue #14159) -->
+<form
+	{...task_one.enhance(async ({ data, submit }) => {
+		const task = data.get('task');
+		await submit();
+	})}
+>
+	<input id="input-task-nested" name="task" />
+	<button
+		id="submit-btn-nested-span"
+		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
+			const task = data.get('task');
+			await submit();
+		})}
+	>
+		<span>Task Two (nested span)</span>
+	</button>
+</form>
+
 <p id="form-result-1">{task_one.result}</p>
 <p id="form-result-2">{task_two.result}</p>
+
+<form {...resolve_deferreds}>
+	<button id="resolve-deferreds" type="submit">Resolve Deferreds</button>
+</form>
 
 {#each ['foo', 'bar'] as item}
 	<form {...task_one.for(item)}>

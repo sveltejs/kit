@@ -1,5 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
+import { base64_decode, base64_encode, text_decoder } from './utils.js';
 
 /**
  * @param {string} route_id
@@ -17,6 +18,26 @@ export function validate_depends(route_id, dep) {
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
+
+/**
+ * @param {any} data
+ * @param {string} [location_description]
+ */
+export function validate_load_response(data, location_description) {
+	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+		throw new Error(
+			`a load function ${location_description} returned ${
+				typeof data !== 'object'
+					? `a ${typeof data}`
+					: data instanceof Response
+						? 'a Response object'
+						: Array.isArray(data)
+							? 'an array'
+							: 'a non-plain object'
+			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+		);
+	}
+}
 
 /**
  * Try to `devalue.stringify` the data object using the provided transport encoders.
@@ -41,12 +62,8 @@ export function stringify_remote_arg(value, transport) {
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
 	const json_string = stringify(value, transport);
 
-	// Convert to UTF-8 bytes, then base64 - handles all Unicode properly (btoa would fail on exotic characters)
-	const utf8_bytes = new TextEncoder().encode(json_string);
-	return btoa(String.fromCharCode(...utf8_bytes))
-		.replace(/=/g, '')
-		.replace(/\+/g, '-')
-		.replace(/\//g, '_');
+	const bytes = new TextEncoder().encode(json_string);
+	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
 /**
@@ -57,13 +74,12 @@ export function stringify_remote_arg(value, transport) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
+	const json_string = text_decoder.decode(
+		// no need to add back `=` characters, atob can handle it
+		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
+	);
 
-	// We don't need to add back the `=`-padding because atob can handle it
-	const base64_restored = string.replace(/-/g, '+').replace(/_/g, '/');
-	const binary_string = atob(base64_restored);
-	const utf8_bytes = new Uint8Array([...binary_string].map((char) => char.charCodeAt(0)));
-	const json_string = new TextDecoder().decode(utf8_bytes);
+	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
 
 	return devalue.parse(json_string, decoders);
 }
