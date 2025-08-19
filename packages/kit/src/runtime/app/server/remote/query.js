@@ -116,7 +116,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {'unchecked'} validate
  * @param {(args: Input[]) => MaybePromise<Output[]>} fn
  * @returns {RemoteQueryFunction<Input, Output>}
- * @since 2.27
+ * @since 2.35
  */
 /**
  * Creates a batch query function that collects multiple calls and executes them in a single request
@@ -129,7 +129,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {Schema} schema
  * @param {(args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<Output[]>} fn
  * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
- * @since 2.27
+ * @since 2.35
  */
 /**
  * @template Input
@@ -137,7 +137,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @param {any} validate_or_fn
  * @param {(args?: Input[]) => MaybePromise<Output[]>} [maybe_fn]
  * @returns {RemoteQueryFunction<Input, Output>}
- * @since 2.27
+ * @since 2.35
  */
 /*@__NO_SIDE_EFFECTS__*/
 function batch(validate_or_fn, maybe_fn) {
