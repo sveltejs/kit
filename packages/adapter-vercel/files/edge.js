@@ -30,10 +30,17 @@ const initialized = server.init({
 			headers: read_headers
 		});
 
-		// TODO: if the user hasn't enabled protection bypass for automation we should probably tell them to do so but only if deployment protection is enabled
-
 		if (!response.ok) {
-			throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+			if (response.status === 401) {
+				throw new Error(
+					`Please enable Protection Bypass for Automation: https://svelte.dev/docs/kit/adapter-vercel#Troubleshooting-Deployment-protection`
+				);
+			}
+
+			// belt and braces — not sure how we could end up here
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
 		}
 
 		return response.body;
