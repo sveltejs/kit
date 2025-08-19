@@ -1,3 +1,4 @@
+/** @import { BuildOptions } from 'esbuild' */
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -5,6 +6,9 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
+import { VERSION } from '@sveltejs/kit';
+
+const [kit_major, kit_minor] = VERSION.split('.');
 
 /**
  * @typedef {{
@@ -14,19 +18,14 @@ import toml from '@iarna/toml';
  */
 
 /**
- * @typedef {{
- *	 functions: Array<
- *		 | {
- *				 function: string;
- *				 path: string;
- *		   }
- *		 | {
- *				 function: string;
- *				 pattern: string;
- *		   }
- *	 >;
- *	 version: 1;
- *	 }} HandlerManifest
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
  */
 
 const name = '@sveltejs/adapter-netlify';
@@ -42,12 +41,24 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,
-
+		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
 					'@sveltejs/adapter-netlify >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
 						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+				throw new Error(
+					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+				);
+			}
+
+			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+				throw new Error(
+					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
 				);
 			}
 
@@ -98,22 +109,23 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		},
 
 		supports: {
-			// reading from the filesystem only works in serverless functions
 			read: ({ route }) => {
-				if (edge) {
+				// TODO bump peer dep in next adapter major to simplify this
+				if (edge && kit_major === '2' && kit_minor < '25') {
 					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions and SvelteKit < 2.25.0`
 					);
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 }
 /**
  * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {Builder2_4_0} params.builder
  */
 async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -121,23 +133,6 @@ async function generate_edge_functions({ builder }) {
 	builder.mkdirp(tmp);
 
 	builder.mkdirp('.netlify/edge-functions');
-
-	// Don't match the static directory
-	const pattern = '^/.*$';
-
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				pattern
-			}
-		],
-		version: 1
-	};
 
 	builder.log.minor('Generating Edge Function...');
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
@@ -153,16 +148,48 @@ async function generate_edge_functions({ builder }) {
 		relativePath
 	});
 
-	writeFileSync(
-		`${tmp}/manifest.js`,
-		`export const manifest = ${manifest};\n\nexport const prerendered = new Set(${JSON.stringify(
-			builder.prerendered.paths
-		)});\n`
-	);
+	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
-	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+	/** @type {{ assets: Set<string> }} */
+	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
+	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
+
+	const path = '/*';
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
+	const excluded = [
+		// Contains static files
+		`/${builder.getAppPath()}/immutable/*`,
+		`/${builder.getAppPath()}/version.json`,
+		...builder.prerendered.paths,
+		...Array.from(assets).flatMap((asset) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [
+					`${builder.config.kit.paths.base}/${asset}`,
+					`${builder.config.kit.paths.base}/${dir}`
+				];
+			}
+			return `${builder.config.kit.paths.base}/${asset}`;
+		}),
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
+	];
+
+	/** @type {import('@netlify/edge-functions').Manifest} */
+	const edge_manifest = {
+		functions: [
+			{
+				function: 'render',
+				path,
+				excludedPath: /** @type {`/${string}`[]} */ (excluded)
+			}
+		],
+		version: 1
+	};
+
+	/** @type {BuildOptions} */
+	const esbuild_config = {
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -180,13 +207,34 @@ async function generate_edge_functions({ builder }) {
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
 		external: builtinModules.map((id) => `node:${id}`),
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
-	});
+	};
+	await Promise.all([
+		esbuild.build({
+			entryPoints: [`${tmp}/entry.js`],
+			outfile: '.netlify/edge-functions/render.js',
+			...esbuild_config
+		}),
+		builder.hasServerInstrumentationFile?.() &&
+			esbuild.build({
+				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
+				outfile: '.netlify/edge/instrumentation.server.js',
+				...esbuild_config
+			})
+	]);
+
+	if (builder.hasServerInstrumentationFile?.()) {
+		builder.instrument?.({
+			entrypoint: '.netlify/edge-functions/render.js',
+			instrumentation: '.netlify/edge/instrumentation.server.js',
+			start: '.netlify/edge/start.js'
+		});
+	}
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
 /**
  * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {Builder2_4_0} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
  */
@@ -201,7 +249,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
 
-	builder.copy(`${files}/esm`, '.netlify', { replace });
+	builder.copy(files, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
 	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
@@ -258,6 +306,16 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
+			if (builder.hasServerInstrumentationFile?.()) {
+				builder.instrument?.({
+					entrypoint: `.netlify/functions-internal/${name}.mjs`,
+					instrumentation: '.netlify/server/instrumentation.server.js',
+					start: `.netlify/functions-start/${name}.start.mjs`,
+					module: {
+						exports: ['handler']
+					}
+				});
+			}
 
 			const redirect = `/.netlify/functions/${name} 200`;
 			redirects.push(`${pattern} ${redirect}`);
@@ -272,6 +330,17 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
+		if (builder.hasServerInstrumentationFile?.()) {
+			builder.instrument?.({
+				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
+				instrumentation: '.netlify/server/instrumentation.server.js',
+				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
+				module: {
+					exports: ['handler']
+				}
+			});
+		}
+
 		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
 	}
 
@@ -279,12 +348,12 @@ function generate_lambda_functions({ builder, publish, split }) {
 	// so that generated redirects are appended to custom redirects
 	// rather than replaced by them
 	builder.log.minor('Writing redirects...');
-	const redirect_file = join(publish, '_redirects');
+	const redirects_file = join(publish, '_redirects');
 	if (existsSync('_redirects')) {
-		builder.copy('_redirects', redirect_file);
+		builder.copy('_redirects', redirects_file);
 	}
-	builder.mkdirp(dirname(redirect_file));
-	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
+	builder.mkdirp(dirname(redirects_file));
+	appendFileSync(redirects_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {
@@ -299,8 +368,8 @@ function get_netlify_config() {
 }
 
 /**
- * @param {NetlifyConfig} netlify_config
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {NetlifyConfig | null} netlify_config
+ * @param {Builder2_4_0} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {

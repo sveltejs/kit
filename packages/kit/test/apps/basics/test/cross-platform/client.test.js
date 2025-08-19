@@ -41,6 +41,11 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
+	test('sets focus for valid hash but invalid selector', async ({ page }) => {
+		await page.goto('/reset-focus#an:invalid+selector');
+		await expect(page.locator('button')).toBeFocused();
+	});
+
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
 
@@ -256,6 +261,14 @@ test.describe('Navigation lifecycle functions', () => {
 			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
+
+	test('onNavigate returned function is only called once', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate-properly-removed/b');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
+		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
+
+		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -283,13 +296,12 @@ test.describe('Scrolling', () => {
 	test('url-supplied non-ascii anchor works on navigation to page after manual scroll', async ({
 		page,
 		in_view,
-		clicknav
+		clicknav,
+		scroll_to
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#non-ascii-anchor');
-		await page.evaluate(() => {
-			window.scrollTo(0, 50);
-		});
+		await scroll_to(0, 50);
 		await page.locator('#non-ascii-anchor').click();
 		expect(await in_view('#go-to-encöded')).toBe(true);
 	});
@@ -359,7 +371,8 @@ test.describe('Scrolling', () => {
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
 		page,
-		clicknav
+		clicknav,
+		scroll_to
 	}) => {
 		await page.goto('/scroll/cross-document/a');
 
@@ -368,7 +381,7 @@ test.describe('Scrolling', () => {
 		if (!rect) throw new Error('Could not determine bounding box');
 
 		const target_scroll_y = rect.y + rect.height - height;
-		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
+		await scroll_to(0, target_scroll_y);
 
 		await page.locator('[href="/scroll/cross-document/b"]').click();
 		expect(await page.textContent('h1')).toBe('b');
@@ -441,7 +454,8 @@ test.describe('Scrolling', () => {
 	test('scroll positions are recovered on reloading the page', async ({
 		page,
 		app,
-		browserName
+		browserName,
+		scroll_to
 	}) => {
 		// No idea why the workaround below works only in dev mode
 		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
@@ -451,9 +465,9 @@ test.describe('Scrolling', () => {
 		}
 
 		await page.goto('/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 		await app.goto('/anchor/anchor');
-		await page.evaluate(() => window.scrollTo(0, 1000));
+		await scroll_to(0, 1000);
 
 		await page.reload();
 		if (browserName === 'firefox') {
@@ -461,10 +475,11 @@ test.describe('Scrolling', () => {
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack();
 		}
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await page.waitForFunction(() => window.scrollY === 1000);
 
+		const waiter = page.waitForFunction(() => window.scrollY === 1000);
 		await page.goBack();
-		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+		await waiter;
 	});
 
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
@@ -474,26 +489,32 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 
-	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+	test('clicking # or #top takes you to the top of the current page', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/top');
 
 		for (const href of ['#', '#top']) {
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-			await page.evaluate(() => window.scrollTo(0, 1000));
+			await scroll_to(0, 1000);
 			await page.click(`a[href="${href}"]`);
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 		}
 	});
 
-	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+	test('Scroll position is correct after going back from a shallow route', async ({
+		page,
+		scroll_to
+	}) => {
 		await page.goto('/scroll/push-state');
 		await page.locator('#subpage-link').click();
 		await page.locator('#back-button').click();
 
-		await page.evaluate(() => window.scrollTo(0, 9999));
+		await scroll_to(0, 9999);
 
 		const scroll = await page.evaluate(() => window.scrollY);
 		expect(scroll).toBeGreaterThan(0);
@@ -515,6 +536,24 @@ test.describe('CSS', () => {
 		await clicknav('[href="/css/other"]');
 
 		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
+	});
+
+	test('dynamically imported components lazily load CSS', async ({ page, get_computed_style }) => {
+		const requests = [];
+		page.on('request', (request) => {
+			const url = request.url();
+			if (url.includes('Dynamic') && url.endsWith('.css')) {
+				requests.push(url);
+			}
+		});
+
+		await page.goto('/css/dynamic');
+		expect(requests.length).toBe(0);
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
+		expect(await get_computed_style('p', 'color')).toBe('rgb(0, 0, 255)');
+		expect(requests.length).toBe(1);
 	});
 });
 
@@ -585,7 +624,40 @@ test.describe.serial('Errors', () => {
 });
 
 test.describe('Prefetching', () => {
-	test('prefetches programmatically', async ({ baseURL, page, app }) => {
+	test('prefetches code programmatically', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		await app.preloadCode('/routing/b');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.js')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => /\/_app\/immutable\/nodes\/.*?.js$/.test(req)).length).toBe(
+				1
+			);
+		}
+
+		if (process.env.DEV) {
+			try {
+				await app.preloadCode('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch(
+					'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
+				);
+			}
+		}
+	});
+
+	test('prefetches data programmatically', async ({ baseURL, page, app }) => {
 		await page.goto('/routing/a');
 
 		/** @type {string[]} */
@@ -694,20 +766,20 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('b');
 	});
 
-	test('$page.url.hash is correctly set on page load', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore#target');
+	test('page.url.hash is correctly set on page load', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('$page.url.hash is correctly set on navigation', async ({ page }) => {
-		await page.goto('/routing/hashes/pagestore');
+	test('page.url.hash is correctly set on navigation', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestate');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');
 		await page.locator('[href="#target"]').click();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.locator('[href="/routing/hashes/pagestore"]').click();
+		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
@@ -739,14 +811,31 @@ test.describe('Routing', () => {
 		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+	test('sequential focus navigation starting point is set correctly on navigation', async ({
 		page,
-		clicknav
+		browserName
+	}) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+		await page.goto('/routing/focus');
+		await page.locator('[href="/routing/focus/a#p"]').click();
+		await page.waitForURL('**/routing/focus/a#p');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+	});
+
+	test('back button returns to previous route when previous route was navigated to via hash anchor', async ({
+		page,
+		clicknav,
+		baseURL
 	}) => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="/routing/hashes/b"]');
+		expect(await page.textContent('h1')).toBe('b');
 
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
@@ -761,10 +850,13 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#hash-target"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="#replace-state"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
 
 		await page.goBack();
-		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
@@ -814,7 +906,8 @@ test.describe('Routing', () => {
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
 
-		expect(requests).toEqual([]);
+		// Filter out server-side route resolution request
+		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');

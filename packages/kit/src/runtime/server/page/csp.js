@@ -1,11 +1,11 @@
 import { escape_html } from '../../../utils/escape.js';
-import { base64, sha256 } from './crypto.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const quoted = new Set([
@@ -181,10 +181,6 @@ class BaseProvider {
 
 		/** @type {`nonce-${string}` | `sha256-${string}`} */
 		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
-
-		if (this.#style_src_needs_csp) {
-			this.#style_src.push(source);
-		}
 
 		if (this.#style_src_needs_csp) {
 			this.#style_src.push(source);

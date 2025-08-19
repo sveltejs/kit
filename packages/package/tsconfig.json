@@ -7,12 +7,7 @@
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		"allowSyntheticDefaultImports": true,
-		"paths": {
-			// internal use only
-			"types": ["./types/index"]
-		}
+		"allowSyntheticDefaultImports": true
 	},
-	"include": ["*.js", "src/**/*", "test/index.js", "types/**/*"],
-	"exclude": ["test/fixtures/**/*"]
+	"include": ["*.js", "src/**/*", "test/index.spec.js"]
 }

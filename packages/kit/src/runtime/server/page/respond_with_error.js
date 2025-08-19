@@ -1,9 +1,9 @@
+import { Redirect } from '@sveltejs/kit/internal';
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
-import { get_option } from '../../../utils/options.js';
-import { Redirect } from '../../control.js';
 import { get_status } from '../../../utils/error.js';
+import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -12,6 +12,7 @@ import { get_status } from '../../../utils/error.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
@@ -22,6 +23,7 @@ import { get_status } from '../../../utils/error.js';
  */
 export async function respond_with_error({
 	event,
+	event_state,
 	options,
 	manifest,
 	state,
@@ -40,14 +42,16 @@ export async function respond_with_error({
 	try {
 		const branch = [];
 		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
-		const ssr = get_option([default_layout], 'ssr') ?? true;
-		const csr = get_option([default_layout], 'csr') ?? true;
+		const nodes = new PageNodes([default_layout]);
+		const ssr = nodes.ssr();
+		const csr = nodes.csr();
 
 		if (ssr) {
 			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,
+				event_state,
 				state,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -58,6 +62,7 @@ export async function respond_with_error({
 
 			const data = await load_data({
 				event,
+				event_state,
 				fetched,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -91,10 +96,11 @@ export async function respond_with_error({
 				csr
 			},
 			status,
-			error: await handle_error_and_jsonify(event, options, error),
+			error: await handle_error_and_jsonify(event, event_state, options, error),
 			branch,
 			fetched,
 			event,
+			event_state,
 			resolve_opts
 		});
 	} catch (e) {
@@ -107,7 +113,7 @@ export async function respond_with_error({
 		return static_error_page(
 			options,
 			get_status(e),
-			(await handle_error_and_jsonify(event, options, e)).message
+			(await handle_error_and_jsonify(event, event_state, options, e)).message
 		);
 	}
 }

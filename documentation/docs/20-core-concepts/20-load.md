@@ -24,7 +24,7 @@ export function load({ params }) {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 
@@ -33,7 +33,14 @@ export function load({ params }) {
 ```
 
 > [!LEGACY]
-> In Svelte 4, you'd use `export let data` instead
+> Before version 2.16.0, the props of a page and layout had to be typed individually:
+> ```js
+> /// file: +page.svelte
+> /** @type {{ data: import('./$types').PageData }} */
+> let { data } = $props();
+> ```
+>
+> In Svelte 4, you'd use `export let data` instead.
 
 Thanks to the generated `$types` module, we get full type safety.
 
@@ -88,7 +95,7 @@ export async function load() {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
-	/** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+	/** @type {import('./$types').LayoutProps} */
 	let { data, children } = $props();
 </script>
 
@@ -111,19 +118,27 @@ export async function load() {
 </aside>
 ```
 
+> [!LEGACY]
+> `LayoutProps` was added in 2.16.0. In earlier versions, properties had to be typed individually:
+> ```js
+> /// file: +layout.svelte
+> /** @type {{ data: import('./$types').LayoutData, children: Snippet }} */
+> let { data, children } = $props();
+> ```
+
 Data returned from layout `load` functions is available to child `+layout.svelte` components and the `+page.svelte` component as well as the layout that it 'belongs' to.
 
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
 <script>
-	+++import { page } from '$app/stores';+++
+	+++import { page } from '$app/state';+++
 
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 +++	// we can access `data.posts` because it's returned from
 	// the parent layout `load` function
-	let index = $derived(data.posts.findIndex(post => post.slug === $page.params.slug));
+	let index = $derived(data.posts.findIndex(post => post.slug === page.params.slug));
 	let next = $derived(data.posts[index + 1]);+++
 </script>
 
@@ -137,24 +152,28 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 > [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
 
-## $page.data
+## page.data
 
 The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
 
-In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
+In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `page.data`:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<title>{$page.data.title}</title>
+	<title>{page.data.title}</title>
 </svelte:head>
 ```
 
-Type information for `$page.data` is provided by `App.PageData`.
+Type information for `page.data` is provided by `App.PageData`.
+
+> [!LEGACY]
+> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
+> It provides a `page` store with the same interface that you can subscribe to, e.g. `$page.data.title`.
 
 ## Universal vs server
 
@@ -169,7 +188,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 Server `load` functions _always_ run on the server.
 
-By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#Making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
+By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#Making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server-side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
 
 If a route contains both universal and server `load` functions, the server `load` runs first.
 
@@ -187,7 +206,7 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers.
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers. If you need to serialize/deserialize custom types, use [transport hooks](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport).
 
 ### When to use which
 
@@ -368,7 +387,7 @@ export async function load({ parent }) {
 ```svelte
 <!--- file: src/routes/abc/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 
@@ -507,7 +526,7 @@ This is useful for creating skeleton loading states, for example:
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 </script>
 
@@ -648,7 +667,7 @@ export async function load({ fetch, depends }) {
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
 
-	/** @type {{ data: import('./$types').PageData }} */
+	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	function rerunLoadFunction() {
@@ -693,6 +712,74 @@ To prevent data waterfalls and preserve layout `load` caches:
 - Use auth guards directly in `+page.server.js` `load` functions for route specific protection
 
 Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
+
+## Using `getRequestEvent`
+
+When running server `load` functions, the `event` object passed to the function as an argument can also be retrieved with [`getRequestEvent`]($app-server#getRequestEvent). This allows shared logic (such as authentication guards) to access information about the current request without it needing to be passed around.
+
+For example, you might have a function that requires users to be logged in, and redirects them to `/login` if not:
+
+```js
+/// file: src/lib/server/auth.js
+// @filename: ambient.d.ts
+interface User {
+	name: string;
+}
+
+declare namespace App {
+	interface Locals {
+		user?: User;
+	}
+}
+
+// @filename: index.ts
+// ---cut---
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
+export function requireLogin() {
+	const { locals, url } = getRequestEvent();
+
+	// assume `locals.user` is populated in `handle`
+	if (!locals.user) {
+		const redirectTo = url.pathname + url.search;
+		const params = new URLSearchParams({ redirectTo });
+
+		redirect(307, `/login?${params}`);
+	}
+
+	return locals.user;
+}
+```
+
+Now, you can call `requireLogin` in any `load` function (or [form action](form-actions), for example) to guarantee that the user is logged in:
+
+```js
+/// file: +page.server.js
+// @filename: ambient.d.ts
+
+declare module '$lib/server/auth' {
+	interface User {
+		name: string;
+	}
+
+	export function requireLogin(): User;
+}
+
+// @filename: index.ts
+// ---cut---
+import { requireLogin } from '$lib/server/auth';
+
+export function load() {
+	const user = requireLogin();
+
+	// `user` is guaranteed to be a user object here, because otherwise
+	// `requireLogin` would throw a redirect and we wouldn't get here
+	return {
+		message: `hello ${user.name}!`
+	};
+}
+```
 
 ## Further reading
 

@@ -1,9 +1,19 @@
+import process from 'node:process';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		adapter: {
 			name: 'test-adapter',
-			adapt() {},
+			adapt(builder) {
+				builder.instrument({
+					entrypoint: `${builder.getServerDirectory()}/index.js`,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					module: {
+						exports: ['Server']
+					}
+				});
+			},
 			emulate() {
 				return {
 					platform({ config, prerender }) {
@@ -12,7 +22,18 @@ const config = {
 				};
 			},
 			supports: {
-				read: () => true
+				read: () => true,
+				instrumentation: () => true
+			}
+		},
+
+		experimental: {
+			remoteFunctions: true,
+			tracing: {
+				server: true
+			},
+			instrumentation: {
+				server: true
 			}
 		},
 
@@ -23,11 +44,27 @@ const config = {
 				'/routing/prerendered/trailing-slash/never',
 				'/routing/prerendered/trailing-slash/ignore'
 			],
-			handleHttpError: 'warn'
+			handleHttpError: ({ path, message }) => {
+				if (path.includes('/reroute/async')) {
+					throw new Error('shouldnt error on ' + path);
+				}
+
+				console.warn(message);
+			}
+		},
+		serviceWorker: {
+			register: true,
+			options: {
+				updateViaCache: 'imports'
+			}
 		},
 
 		version: {
 			name: 'TEST_VERSION'
+		},
+
+		router: {
+			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
 		}
 	}
 };
