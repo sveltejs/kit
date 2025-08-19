@@ -1064,10 +1064,24 @@ async function kit({ svelte_config }) {
 					throw stackless(error.stack ?? error.message);
 				}
 
-				copy(
-					`${out}/server/${kit.appDir}/immutable/assets`,
-					`${out}/client/${kit.appDir}/immutable/assets`
+				// We use `build.ssrEmitAssets` so that asset URLs created from
+				// imports in server-only modules correspond to files in the build,
+				// but we don't want to copy over CSS imports as these are already
+				// accounted for in the client bundle. In most cases it would be
+				// a no-op, but for SSR builds `url(...)` paths are handled
+				// differently (relative for client, absolute for server)
+				// resulting in different hashes, and thus duplication
+				const ssr_stylesheets = new Set(
+					Object.values(server_manifest)
+						.map((chunk) => chunk.css ?? [])
+						.flat()
 				);
+
+				const assets_path = `${kit.appDir}/immutable/assets`;
+
+				copy(`${out}/server/${assets_path}`, `${out}/client/${assets_path}`, {
+					filter: (basename) => !ssr_stylesheets.has(`${assets_path}/${basename}`)
+				});
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
