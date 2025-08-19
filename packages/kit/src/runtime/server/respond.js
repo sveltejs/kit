@@ -682,14 +682,10 @@ export async function internal_respond(request, options, manifest, state) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			const fetchResponse = await fetch(request);
+			const response = await fetch(request);
 
-			// the headers for the response needs to be mutable so that cookies can be added
-			return new Response(fetchResponse.body, {
-				status: fetchResponse.status,
-				statusText: fetchResponse.statusText,
-				headers: new Headers(fetchResponse.headers)
-			});
+			// clone the response so that headers are mutable (https://github.com/sveltejs/kit/issues/13857)
+			return new Response(response.body, response);
 		} catch (e) {
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
