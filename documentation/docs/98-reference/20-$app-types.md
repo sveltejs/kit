@@ -15,7 +15,7 @@ import type { RouteId, RouteParams, LayoutParams } from '$app/types';
 
 ## Asset
 
-A union of all the filenames of assets contained in your `static` directory, plus a `/${string}` wildcard for asset paths generated from `import` declarations.
+A union of all the filenames of assets contained in your `static` directory, plus a `string` wildcard for asset paths generated from `import` declarations.
 
 <div class="ts-block">
 
