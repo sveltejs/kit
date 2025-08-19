@@ -776,21 +776,42 @@ test.describe('remote functions', () => {
 	});
 });
 
-test.describe('asset preload', () => {
+test.describe.only('asset preload', () => {
 	if (!process.env.DEV) {
 		test('injects Link headers', async ({ request }) => {
 			const response = await request.get('/asset-preload');
 
-			expect(response.headers()['link']).toContain('rel="modulepreload"');
-			expect(response.headers()['link']).toContain('as="font"');
+			const header = response.headers()['link'];
+
+			expect(header).toContain('rel="modulepreload"');
+			expect(header).toContain('as="font"');
+		});
+
+		test('does not inject Link headers on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const header = response.headers()['link'];
+
+			expect(header).not.toContain('rel="modulepreload"');
+			expect(header).not.toContain('as="font"');
 		});
 
 		test('injects <link> tags on prerendered pages', async ({ request }) => {
 			const response = await request.get('/asset-preload/prerendered');
+
 			const body = await response.text();
 
 			expect(body).toContain('rel="modulepreload"');
 			expect(body).toContain('as="font"');
+		});
+
+		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const body = await response.text();
+
+			expect(body).not.toContain('rel="modulepreload"');
+			expect(body).not.toContain('as="font"');
 		});
 	}
 });
