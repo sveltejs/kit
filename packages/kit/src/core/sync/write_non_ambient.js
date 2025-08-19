@@ -101,7 +101,7 @@ function generate_app_types(manifest_data) {
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPathname(): ${Array.from(pathnames).join(' | ')};`,
 		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Pathname\']>}`;',
-		`\t\tAsset(): ${assets.concat('/${string} & {}').join(' | ')};`,
+		`\t\tAsset(): ${assets.concat('`/${string}` & {}').join(' | ')};`,
 		'\t}',
 		'}'
 	].join('\n');
