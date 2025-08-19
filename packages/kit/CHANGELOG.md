@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.34.0
+### Minor Changes
+
+
+- feat: allow dynamic `env` access during prerender ([#14243](https://github.com/sveltejs/kit/pull/14243))
+
+
+### Patch Changes
+
+
+- fix: clone `fetch` responses so that headers are mutable ([#13942](https://github.com/sveltejs/kit/pull/13942))
+
+
+- fix: serialize server `load` data before passing to universal `load`, to handle mutations ([#14268](https://github.com/sveltejs/kit/pull/14268))
+
+
+- fix: allow `asset(...)` to be used with imported assets ([#14270](https://github.com/sveltejs/kit/pull/14270))
+
 ## 2.33.1
 ### Patch Changes
 
