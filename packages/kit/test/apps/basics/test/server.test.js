@@ -776,7 +776,7 @@ test.describe('remote functions', () => {
 	});
 });
 
-test.describe.only('asset preload', () => {
+test.describe('asset preload', () => {
 	if (!process.env.DEV) {
 		test('injects Link headers', async ({ request }) => {
 			const response = await request.get('/asset-preload');
