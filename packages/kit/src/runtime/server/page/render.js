@@ -9,7 +9,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
-import { public_env, safe_public_env } from '../../shared-server.js';
+import { public_env } from '../../shared-server.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
@@ -558,7 +558,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: safe_public_env
+		env: public_env
 	});
 
 	// TODO flush chunks as early as we can

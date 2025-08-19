@@ -5,7 +5,7 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -56,11 +56,10 @@ async function analyse({
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_private_env(env, { public_prefix, private_prefix });
-	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+	const private_env = filter_env(env, private_prefix, public_prefix);
+	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
