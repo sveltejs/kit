@@ -91,6 +91,8 @@ function generate_app_types(manifest_data) {
 		layouts.push(layout_type);
 	}
 
+	const assets = manifest_data.assets.map((asset) => s('/' + asset.file));
+
 	return [
 		'declare module "$app/types" {',
 		'\texport interface AppTypes {',
@@ -99,7 +101,7 @@ function generate_app_types(manifest_data) {
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPathname(): ${Array.from(pathnames).join(' | ')};`,
 		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Pathname\']>}`;',
-		`\t\tAsset(): ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`,
+		`\t\tAsset(): ${assets.concat('string & {}').join(' | ')};`,
 		'\t}',
 		'}'
 	].join('\n');

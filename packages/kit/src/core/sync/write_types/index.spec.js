@@ -46,7 +46,7 @@ test('Creates correct $types', { timeout: 60000 }, () => {
 			execSync('pnpm testtypes', { cwd: path.join(cwd, dir) });
 		} catch (e) {
 			console.error(/** @type {any} */ (e).stdout.toString());
-			throw new Error('Type tests failed');
+			throw new Error(`${dir} type tests failed`);
 		}
 	}
 });
