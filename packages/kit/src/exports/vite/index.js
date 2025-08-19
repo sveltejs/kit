@@ -1083,19 +1083,23 @@ async function kit({ svelte_config }) {
 
 				if (fs.existsSync(server_assets)) {
 					for (const file of fs.readdirSync(server_assets)) {
-						if (fs.existsSync(`${client_assets}/${file}`)) continue;
-						if (ssr_stylesheets.has(`${assets_path}/${file}`)) continue;
+						const src = `${server_assets}/${file}`;
+						const dest = `${client_assets}/${file}`;
+
+						if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
+							continue;
+						}
 
 						if (file.endsWith('.css')) {
 							// make absolute paths in CSS relative, for portability
 							const content = fs
-								.readFileSync(`${server_assets}/${file}`, 'utf-8')
+								.readFileSync(src, 'utf-8')
 								.replaceAll(`${kit.paths.base}/${assets_path}`, '.');
 
-							fs.writeFileSync(`${client_assets}/${file}`, content);
-						} else {
-							fs.copyFileSync(`${server_assets}/${file}`, `${client_assets}/${file}`);
+							fs.writeFileSync(src, content);
 						}
+
+						fs.copyFileSync(src, dest);
 					}
 				}
 
