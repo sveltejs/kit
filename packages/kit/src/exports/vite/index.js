@@ -1078,10 +1078,26 @@ async function kit({ svelte_config }) {
 				);
 
 				const assets_path = `${kit.appDir}/immutable/assets`;
+				const server_assets = `${out}/server/${assets_path}`;
+				const client_assets = `${out}/client/${assets_path}`;
 
-				copy(`${out}/server/${assets_path}`, `${out}/client/${assets_path}`, {
-					filter: (basename) => !ssr_stylesheets.has(`${assets_path}/${basename}`)
-				});
+				if (fs.existsSync(server_assets)) {
+					for (const file of fs.readdirSync(server_assets)) {
+						if (fs.existsSync(`${client_assets}/${file}`)) continue;
+						if (ssr_stylesheets.has(`${assets_path}/${file}`)) continue;
+
+						if (file.endsWith('.css')) {
+							// make absolute paths in CSS relative, for portability
+							const content = fs
+								.readFileSync(`${server_assets}/${file}`, 'utf-8')
+								.replaceAll(`${kit.paths.base}/${assets_path}`, '.');
+
+							fs.writeFileSync(`${client_assets}/${file}`, content);
+						} else {
+							fs.copyFileSync(`${server_assets}/${file}`, `${client_assets}/${file}`);
+						}
+					}
+				}
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
