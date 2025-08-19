@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.33.1
+### Patch Changes
+
+
+- fix: make paths in .css assets relative ([#14262](https://github.com/sveltejs/kit/pull/14262))
+
+
+- fix: avoid copying SSR stylesheets to client assets ([#13069](https://github.com/sveltejs/kit/pull/13069))
+
 ## 2.33.0
 ### Minor Changes
 

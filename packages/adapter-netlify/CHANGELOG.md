@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 5.2.2
+### Patch Changes
+
+
+- fix: include remote functions when deploying to Netlify edge functions ([#14214](https://github.com/sveltejs/kit/pull/14214))
+
+- Updated dependencies [[`c8f7ac3`](https://github.com/sveltejs/kit/commit/c8f7ac38e9ae1763e7880a29b7f7df01df964a6d), [`107f767`](https://github.com/sveltejs/kit/commit/107f767e3a1a54187527defb29dce753c4f5fa3f)]:
+  - @sveltejs/kit@2.33.1
+
 ## 5.2.1
 ### Patch Changes
 
