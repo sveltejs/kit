@@ -6,6 +6,7 @@ import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server
 import { record_span } from '../../telemetry/record_span.js';
 import { clarify_devalue_error, get_node_type } from '../utils.js';
 import { base64_encode, text_decoder } from '../../utils.js';
+import { NULL_BODY_STATUS } from '../constants.js';
 
 /**
  * Calls the user's server `load` function.
@@ -345,7 +346,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
 				/**
-				 * @param {string} body
+				 * @param {string | undefined} body
 				 * @param {boolean} is_b64
 				 */
 				async function push_fetched(body, is_b64) {
@@ -427,6 +428,11 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				async function text() {
 					const body = await response.text();
 
+					if (body === '' && NULL_BODY_STATUS.includes(response.status)) {
+						await push_fetched(undefined, false);
+						return undefined;
+					}
+
 					if (!body || typeof body === 'string') {
 						await push_fetched(body, false);
 					}
@@ -444,7 +450,8 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 				if (key === 'json') {
 					return async () => {
-						return JSON.parse(await text());
+						const body = await text();
+						return body ? JSON.parse(body) : undefined;
 					};
 				}
 

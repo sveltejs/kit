@@ -599,6 +599,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
 		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
 	});
+
+	test('event.fetch handles response without body', async ({ page }) => {
+		await page.goto('/load/fetch-no-body');
+		expect(await page.textContent('h1')).toBe('ok: true');
+	});
 });
 
 test.describe('Nested layouts', () => {
