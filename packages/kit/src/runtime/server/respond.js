@@ -682,7 +682,10 @@ export async function internal_respond(request, options, manifest, state) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			return await fetch(request);
+			const response = await fetch(request);
+
+			// clone the response so that headers are mutable (https://github.com/sveltejs/kit/issues/13857)
+			return new Response(response.body, response);
 		} catch (e) {
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
