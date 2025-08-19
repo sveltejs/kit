@@ -2905,7 +2905,7 @@ declare module '$app/server' {
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
 		 *
-		 * @since 2.27
+		 * @since 2.35
 		 */
 		function batch<Input, Output>(validate: "unchecked", fn: (args: Input[]) => MaybePromise<Output[]>): RemoteQueryFunction<Input, Output>;
 		/**
@@ -2913,7 +2913,7 @@ declare module '$app/server' {
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
 		 *
-		 * @since 2.27
+		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<Output[]>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
