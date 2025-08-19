@@ -1,20 +1,10 @@
 import { respond } from './respond.js';
-import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
+import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { prerendering } from '__sveltekit/environment';
+import { filter_env } from '../../utils/env.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
-
-/** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
-const prerender_env_handler = {
-	get({ type }, prop) {
-		throw new Error(
-			`Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`
-		);
-	}
-};
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -36,10 +26,7 @@ export class Server {
 	}
 
 	/**
-	 * @param {{
-	 *   env: Record<string, string>;
-	 *   read?: (file: string) => ReadableStream;
-	 * }} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
 	 */
 	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
@@ -47,24 +34,47 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const prefixes = {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
-		};
+		const { env_public_prefix, env_private_prefix } = this.#options;
 
-		const private_env = filter_private_env(env, prefixes);
-		const public_env = filter_public_env(env, prefixes);
-
-		set_private_env(
-			prerendering ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env
-		);
-		set_public_env(
-			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
-		);
-		set_safe_public_env(public_env);
+		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
+		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
 
 		if (read) {
-			set_read_implementation(read);
+			// Wrap the read function to handle MaybePromise<ReadableStream>
+			// and ensure the public API stays synchronous
+			/** @param {string} file */
+			const wrapped_read = (file) => {
+				const result = read(file);
+				if (result instanceof ReadableStream) {
+					return result;
+				} else {
+					return new ReadableStream({
+						async start(controller) {
+							try {
+								const stream = await Promise.resolve(result);
+								if (!stream) {
+									controller.close();
+									return;
+								}
+
+								const reader = stream.getReader();
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									controller.enqueue(value);
+								}
+
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						}
+					});
+				}
+			};
+
+			set_read_implementation(wrapped_read);
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,
@@ -80,6 +90,12 @@ export class Server {
 						(({ status, error }) =>
 							console.error((status === 404 && /** @type {Error} */ (error)?.message) || error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					handleValidationError:
+						module.handleValidationError ||
+						(({ issues }) => {
+							console.error('Remote function schema validation failed:', issues);
+							return { message: 'Bad Request' };
+						}),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
 				};
@@ -93,14 +109,17 @@ export class Server {
 				if (module.init) {
 					await module.init();
 				}
-			} catch (error) {
+			} catch (e) {
 				if (DEV) {
 					this.#options.hooks = {
 						handle: () => {
-							throw error;
+							throw e;
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
+						handleValidationError: () => {
+							return { message: 'Bad Request' };
+						},
 						reroute: () => {},
 						transport: {}
 					};
@@ -109,7 +128,7 @@ export class Server {
 						decoders: {}
 					});
 				} else {
-					throw error;
+					throw e;
 				}
 			}
 		})());

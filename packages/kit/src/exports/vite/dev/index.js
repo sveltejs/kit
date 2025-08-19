@@ -266,6 +266,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					};
 				}),
 				prerendered_routes: new Set(),
+				remotes: Object.fromEntries(
+					manifest_data.remotes.map((remote) => [
+						remote.hash,
+						() => vite.ssrLoadModule(remote.file)
+					])
+				),
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
@@ -331,6 +337,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
@@ -397,7 +404,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		// changing the svelte config requires restarting the dev server
 		// the config is only read on start and passed on to vite-plugin-svelte
 		// which needs up-to-date values to operate correctly
-		if (path.basename(file) === 'svelte.config.js') {
+		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;
 			await vite.restart();
@@ -492,6 +499,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					}
 
 					return;
+				}
+
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+
+				if (resolved_instrumentation) {
+					await vite.ssrLoadModule(resolved_instrumentation);
 				}
 
 				// we have to import `Server` before calling `set_assets`
