@@ -2770,7 +2770,7 @@ declare module '$app/paths' {
 	 * 	import { asset } from '$app/paths';
 	 * </script>
 	 *
-	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * <img alt="a potato" src={asset('/potato.jpg')} />
 	 * ```
 	 * @since 2.26
 	 */
