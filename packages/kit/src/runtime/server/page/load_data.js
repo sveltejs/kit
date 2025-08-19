@@ -428,11 +428,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				async function text() {
 					const body = await response.text();
 
-					if (
-						NULL_BODY_STATUS.includes(response.status) &&
-						typeof body === 'string' &&
-						body === ''
-					) {
+					if (body === '' && NULL_BODY_STATUS.includes(response.status)) {
 						await push_fetched(undefined, false);
 						return undefined;
 					}
