@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "5.1.0",
+	"version": "5.2.2",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -12,7 +12,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
@@ -55,7 +55,7 @@
 		"@rollup/plugin-node-resolve": "^16.0.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
+		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",

@@ -33,7 +33,7 @@ export function deserialize(result) {
 
 	if (parsed.data) {
 		// the decoders should never be initialised at the top-level because `app`
-		// will not initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		// will not be initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
 		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
 

@@ -5,6 +5,17 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 
+/**
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
+ */
+
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
@@ -13,7 +24,7 @@ export default function (opts = {}) {
 
 	return {
 		name: '@sveltejs/adapter-node',
-
+		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
@@ -48,14 +59,21 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			/** @type {Record<string, string>} */
+			const input = {
+				index: `${tmp}/index.js`,
+				manifest: `${tmp}/manifest.js`
+			};
+
+			if (builder.hasServerInstrumentationFile?.()) {
+				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+			}
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
 			const bundle = await rollup({
-				input: {
-					index: `${tmp}/index.js`,
-					manifest: `${tmp}/manifest.js`
-				},
+				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
@@ -89,10 +107,21 @@ export default function (opts = {}) {
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+
+			if (builder.hasServerInstrumentationFile?.()) {
+				builder.instrument?.({
+					entrypoint: `${out}/index.js`,
+					instrumentation: `${out}/server/instrumentation.server.js`,
+					module: {
+						exports: ['path', 'host', 'port', 'server']
+					}
+				});
+			}
 		},
 
 		supports: {
-			read: () => true
+			read: () => true,
+			instrumentation: () => true
 		}
 	};
 }

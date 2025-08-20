@@ -55,6 +55,55 @@ test.describe('paths', () => {
 		await clicknav('[data-testid="link"]');
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
+
+	test('query remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'get count' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('prerender remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#prerendered')).toHaveText('');
+		await page.locator('button', { hasText: 'get prerendered' }).click();
+		await expect(page.locator('#prerendered')).toHaveText('yes');
+	});
+
+	test('command remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('button', { hasText: 'reset' }).click();
+		await expect(page.locator('#count')).toHaveText('0');
+	});
+
+	test('form remote function from client accounts for base path', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath/remote');
+		await expect(page.locator('#count')).toHaveText('');
+		await page.locator('input').fill('1');
+		await page.locator('button', { hasText: 'submit' }).click();
+		await expect(page.locator('#count')).toHaveText('1');
+	});
 });
 
 test.describe('trailing slash', () => {
@@ -140,5 +189,10 @@ test.describe("bundleStrategy: 'single'", () => {
 	test('app.decoders is accessed only after app has been initialised', async ({ page }) => {
 		await page.goto('/basepath/deserialize');
 		await expect(page.locator('p')).toHaveText('Hello world!');
+	});
+
+	test('serialization works with streaming', async ({ page }) => {
+		await page.goto('/basepath/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
 	});
 });

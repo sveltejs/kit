@@ -39,7 +39,7 @@ export function image_plugin(imagetools_plugin) {
 				);
 			}
 			// @ts-expect-error plugin.transform is defined below before configResolved is called
-			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter;
+			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter.id;
 		},
 		transform: {
 			order: 'pre', // puts it before vite-plugin-svelte:compile
@@ -316,7 +316,7 @@ function stringToNumber(param) {
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(content, node, image) {
-	/** @type {import('../types/internal.js').Attribute[]} attributes */
+	/** @type {import('../types/internal.js').Attribute[]} */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
 		(attribute) => 'name' in attribute && attribute.name === 'sizes'
