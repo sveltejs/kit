@@ -1565,7 +1565,7 @@ test.describe('Serialization', () => {
 		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
 
 		await page.goto('/serialization-stream');
-		await expect(page.locator('h1', { hasText: 'It works!'})).toBeVisible();
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
 	});
 });
 
