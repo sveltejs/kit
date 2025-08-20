@@ -297,9 +297,7 @@ export async function render_response({
 		options,
 		branch.map((b) => b.server_data),
 		csp,
-		global,
-		client,
-		prefixed
+		global
 	);
 
 	if (page_config.ssr && page_config.csr) {
@@ -368,15 +366,22 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
-			let prelude = `const [data, error] = fn();`;
+			let app_declaration = '';
 
-			if (client.app) {
-				prelude = `const app = await import(${s(prefixed(client.app))})
-							const [data, error] = fn(app);`;
-			} else {
-				prelude = `const { app } = await import(${s(prefixed(client.start))})
-							const [data, error] = fn(app);`;
+			if (Object.keys(options.hooks.transport).length > 0) {
+				if (client.inline) {
+					app_declaration = `const app = __sveltekit_${options.version_hash}.app.app;`;
+				} else if (client.app) {
+					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+				} else {
+					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
+				}
 			}
+
+			const prelude = app_declaration
+				? `${app_declaration}
+							const [data, error] = fn(app);`
+				: `const [data, error] = fn();`;
 
 			// When resolving, the id might not yet be available due to the data
 			// be evaluated upon init of kit, so we use a timeout to retry
@@ -636,17 +641,13 @@ export async function render_response({
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {import('./csp.js').Csp} csp
  * @param {string} global
- * @param {NonNullable<import('types').BuildData["client"]>} client
- * @param {(path: string) => string} prefixed
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, event_state, options, nodes, csp, global, client, prefixed) {
+function get_data(event, event_state, options, nodes, csp, global) {
 	let promise_id = 1;
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
-
-	const app = client.inline ? `__sveltekit_${options.version_hash}.app.app` : 'app';
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -670,7 +671,7 @@ function get_data(event, event_state, options, nodes, csp, global, client, prefi
 
 						let str;
 						try {
-							str = devalue.uneval([data], replacer);
+							str = devalue.uneval(error ? [, error] : [data], replacer);
 						} catch {
 							error = await handle_error_and_jsonify(
 								event,
@@ -695,7 +696,7 @@ function get_data(event, event_state, options, nodes, csp, global, client, prefi
 			for (const key in options.hooks.transport) {
 				const encoded = options.hooks.transport[key].encode(thing);
 				if (encoded) {
-					return `${app}.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 				}
 			}
 		}
