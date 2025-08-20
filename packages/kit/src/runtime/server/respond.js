@@ -74,19 +74,14 @@ export async function internal_respond(request, options, manifest, state) {
 	const is_data_request = has_data_suffix(url.pathname);
 	const remote_id = get_remote_id(url);
 
-	if (options.csrf_check_origin) {
-		const request_origin = request.headers.get('origin');
-		const opts = { status: 403 };
+	const request_origin = request.headers.get('origin');
 
-		if (remote_id && request.method !== 'GET') {
-			return json(
-				{
-					message: 'Cross-site remote requests are forbidden'
-				},
-				opts
-			);
+	if (remote_id) {
+		if (request.method !== 'GET' && request_origin !== url.origin) {
+			const message = 'Cross-site remote requests are forbidden';
+			return json({ message }, { status: 403 });
 		}
-
+	} else if (options.csrf_check_origin) {
 		const forbidden =
 			is_form_content_type(request) &&
 			(request.method === 'POST' ||
@@ -98,9 +93,12 @@ export async function internal_respond(request, options, manifest, state) {
 
 		if (forbidden) {
 			const message = `Cross-site ${request.method} form submissions are forbidden`;
+			const opts = { status: 403 };
+
 			if (request.headers.get('accept') === 'application/json') {
 				return json({ message }, opts);
 			}
+
 			return text(message, opts);
 		}
 	}
