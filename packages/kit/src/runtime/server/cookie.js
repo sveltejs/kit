@@ -39,7 +39,7 @@ function validate_options(options) {
  * @returns {string}
  */
 function generate_cookie_key(domain, path, name) {
-	return `${domain || ''}${path}?${name}`;
+	return `${domain || ''}${path}?${encodeURIComponent(name)}`;
 }
 
 /**
