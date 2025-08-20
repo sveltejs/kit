@@ -6,6 +6,9 @@
 
 <h1>Welcome to SvelteKit</h1>
 
+<p><a href="images">images</a></p>
+<p><a href="force-error">force error</a></p>
+
 <h2>Todos</h2>
 
 <h3>todo via JS</h3>

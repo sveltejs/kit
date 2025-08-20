@@ -188,6 +188,59 @@ export function has_prerendered_path(manifest, pathname) {
 }
 
 /**
+ * Formats the error into a nice message with sanitized stack trace
+ * @param {number} status
+ * @param {Error} error
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ */
+export function format_server_error(status, error, event) {
+	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m\n`;
+
+	if (status === 404) {
+		return formatted_text + error.message;
+	}
+
+	return formatted_text + (DEV ? clean_up_stack_trace(error) : error.stack);
+}
+
+/**
+ * In dev, tidy up stack traces by making paths relative to the current project directory
+ * @param {string} file
+ */
+let relative = (file) => file;
+
+if (DEV) {
+	try {
+		const path = await import('node:path');
+		const process = await import('node:process');
+
+		relative = (file) => path.relative(process.cwd(), file);
+	} catch {
+		// do nothing
+	}
+}
+
+/**
+ * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
+ * @param {Error} error
+ */
+export function clean_up_stack_trace(error) {
+	const stack_trace = (error.stack?.split('\n') ?? []).map((line) => {
+		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
+	});
+
+	// progressive enhancement for people who haven't configured kit.files.src to something else
+	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
+
+	if (last_line_from_src_code === -1) {
+		// default to the whole stack trace
+		return error.stack;
+	}
+
+	return stack_trace.slice(0, last_line_from_src_code + 1).join('\n');
+}
+
+/**
  * Returns the filename without the extension. e.g., `+page.server`, `+page`, etc.
  * @param {string | undefined} node_id
  * @returns {string}
