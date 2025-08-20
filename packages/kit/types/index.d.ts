@@ -402,6 +402,7 @@ declare module '@sveltejs/kit' {
 			 *
 			 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 			 * @default true
+			 * @deprecated Use `trustedOrigins: ['*']` instead
 			 */
 			checkOrigin?: boolean;
 			/**
