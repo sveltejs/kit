@@ -72,8 +72,18 @@ export async function render_response({
 	const stylesheets = new Set(client.stylesheets);
 	const fonts = new Set(client.fonts);
 
-	/** @type {Set<string>} */
-	const link_header_preloads = new Set();
+	/**
+	 * The value of the Link header that is added to the response when not prerendering
+	 * @type {Set<string>}
+	 */
+	const link_headers = new Set();
+
+	/**
+	 * `<link>` tags that are added to prerendered responses
+	 * (note that stylesheets are always added, prerendered or not)
+	 * @type {Set<string>}
+	 */
+	const link_tags = new Set();
 
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
@@ -264,8 +274,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (resolve_opts.preload({ type: 'css', path })) {
-				const preload_atts = ['rel="preload"', 'as="style"'];
-				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
 
@@ -277,15 +286,12 @@ export async function render_response({
 
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
-			const attributes = [
-				'rel="preload"',
-				'as="font"',
-				`type="font/${ext}"`,
-				`href="${path}"`,
-				'crossorigin'
-			];
 
-			head += `\n\t\t<link ${attributes.join(' ')}>`;
+			link_tags.add(`<link rel="preload" as="font" type="font/${ext}" href="${path}" crossorigin>`);
+
+			link_headers.add(
+				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
+			);
 		}
 	}
 
@@ -322,13 +328,20 @@ export async function render_response({
 
 			for (const path of included_modulepreloads) {
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+
 				if (options.preload_strategy !== 'modulepreload') {
 					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-				} else if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				} else {
+					link_tags.add(`<link rel="modulepreload" href="${path}">`);
 				}
 			}
+		}
+
+		if (state.prerendering && link_tags.size > 0) {
+			head += Array.from(link_tags)
+				.map((tag) => `\n\t\t${tag}`)
+				.join('');
 		}
 
 		// prerender a `/path/to/page/__route.js` module
@@ -545,8 +558,8 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_header_preloads.size) {
-			headers.set('link', Array.from(link_header_preloads).join(', '));
+		if (link_headers.size) {
+			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
 

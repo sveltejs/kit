@@ -1233,3 +1233,41 @@ test.describe('remote functions', () => {
 		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
 	});
 });
+
+test.describe('asset preload', () => {
+	if (!process.env.DEV) {
+		test('injects Link headers', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const header = response.headers()['link'];
+
+			expect(header).toContain('rel="modulepreload"');
+			expect(header).toContain('as="font"');
+		});
+
+		test('does not inject Link headers on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const header = response.headers()['link'];
+			expect(header).toBeUndefined();
+		});
+
+		test('injects <link> tags on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const body = await response.text();
+
+			expect(body).toContain('rel="modulepreload"');
+			expect(body).toContain('as="font"');
+		});
+
+		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const body = await response.text();
+
+			expect(body).not.toContain('rel="modulepreload"');
+			expect(body).not.toContain('as="font"');
+		});
+	}
+});
