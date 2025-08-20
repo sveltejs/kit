@@ -791,9 +791,7 @@ test.describe('asset preload', () => {
 			const response = await request.get('/asset-preload/prerendered');
 
 			const header = response.headers()['link'];
-
-			expect(header).not.toContain('rel="modulepreload"');
-			expect(header).not.toContain('as="font"');
+			expect(header).toBeUndefined();
 		});
 
 		test('injects <link> tags on prerendered pages', async ({ request }) => {
