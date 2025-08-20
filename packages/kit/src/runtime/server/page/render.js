@@ -675,11 +675,11 @@ function get_data(event, event_state, options, nodes, csp, global, client, prefi
 						if (!client.inline && str.includes("app.decode('")) {
 							if (client.app) {
 								push(
-									`<script${nonce}>import(${prefixed(client.app)}).then((app)=>{${code}})</script>\n`
+									`<script${nonce}>import(${s(prefixed(client.app))}).then((app)=>{${code}})</script>\n`
 								);
 							} else {
 								push(
-									`<script${nonce}>import(${prefixed(client.start)}).then(({app})=>{${code}})</script>\n`
+									`<script${nonce}>import(${s(prefixed(client.start))}).then(({app})=>{${code}})</script>\n`
 								);
 							}
 						} else {
