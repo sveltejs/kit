@@ -14,7 +14,9 @@ export default [
 			'**/test-results',
 			'**/build',
 			'**/.custom-out-dir',
-			'packages/adapter-*/files'
+			'packages/adapter-*/files',
+			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
+			'packages/package/test/fixtures/typescript-svelte-config/expected'
 		]
 	},
 	{
@@ -31,6 +33,7 @@ export default [
 		},
 		ignores: [
 			'packages/adapter-cloudflare/test/apps/**/*',
+			'packages/adapter-netlify/test/apps/**/*',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',
@@ -41,7 +44,8 @@ export default [
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
 			'packages/package/test/errors/**/*',
-			'packages/package/test/fixtures/**/*'
+			'packages/package/test/fixtures/**/*',
+			'packages/test-redirect-importer/index.js'
 		]
 	}
 ];

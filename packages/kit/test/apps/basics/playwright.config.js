@@ -1,12 +1,15 @@
 import process from 'node:process';
 import { config } from '../../utils.js';
+import { defineConfig } from '@playwright/test';
 
-export default {
+export default defineConfig({
 	...config,
 	webServer: {
-		command: process.env.DEV
-			? `cross-env PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=${process.env.ROUTER_RESOLUTION ?? 'client'} pnpm dev`
-			: `cross-env PUBLIC_PRERENDERING=true ROUTER_RESOLUTION=${process.env.ROUTER_RESOLUTION ?? 'client'} pnpm build && pnpm preview`,
-		port: process.env.DEV ? 5173 : 4173
+		command: process.env.DEV ? `pnpm dev` : `pnpm build && pnpm preview`,
+		port: process.env.DEV ? 5173 : 4173,
+		env: {
+			PUBLIC_PRERENDERING: 'false',
+			ROUTER_RESOLUTION: process.env.ROUTER_RESOLUTION ?? 'client'
+		}
 	}
-};
+});

@@ -220,7 +220,8 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope) (500 Internal Error)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
+					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
 			);
 		});
 	}
@@ -1071,17 +1072,21 @@ test.describe('$app/server', () => {
 
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
+		const styles = await page.textContent('[data-testid="styles"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
 
 		// the emoji is there to check that base64 decoding works correctly
-		expect(auto.trim()).toBe('Imported without ?url 😎');
-		expect(url.trim()).toBe('Imported with ?url 😎');
-		expect(local_glob.trim()).toBe('Imported with ?url via glob 😎');
-		expect(external_glob.trim()).toBe(
+		expect(auto?.trim()).toBe('Imported without ?url 😎');
+		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob?.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
+
+		// check that paths in .css files are relative
+		expect(styles).toContain('url(.');
 	});
 });

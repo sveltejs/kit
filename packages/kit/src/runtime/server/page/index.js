@@ -1,8 +1,8 @@
-import { text } from '../../../exports/index.js';
+import { text } from '@sveltejs/kit';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../pathname.js';
-import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
+import { get_remote_action, handle_remote_form_post } from '../remote.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
@@ -24,6 +25,7 @@ const MAX_DEPTH = 10;
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -32,7 +34,16 @@ const MAX_DEPTH = 10;
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, page, options, manifest, state, nodes, resolve_opts) {
+export async function render_page(
+	event,
+	event_state,
+	page,
+	options,
+	manifest,
+	state,
+	nodes,
+	resolve_opts
+) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -42,7 +53,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
-		return handle_action_json_request(event, options, node?.server);
+		return handle_action_json_request(event, event_state, options, node?.server);
 	}
 
 	try {
@@ -54,9 +65,15 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
-			// for action requests, first call handler in +page.server.js
-			// (this also determines status code)
-			action_result = await handle_action_request(event, leaf_node.server);
+			const remote_id = get_remote_action(event.url);
+			if (remote_id) {
+				action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
+			} else {
+				// for action requests, first call handler in +page.server.js
+				// (this also determines status code)
+				action_result = await handle_action_request(event, event_state, leaf_node.server);
+			}
+
 			if (action_result?.type === 'redirect') {
 				return redirect_response(action_result.status, action_result.location);
 			}
@@ -126,6 +143,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				status,
 				error: null,
 				event,
+				event_state,
 				options,
 				manifest,
 				state,
@@ -156,6 +174,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 					return await load_server_data({
 						event,
+						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -182,6 +201,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				try {
 					return await load_data({
 						event,
+						event_state,
 						fetched,
 						node,
 						parent: async () => {
@@ -236,7 +256,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 					}
 
 					const status = get_status(err);
-					const error = await handle_error_and_jsonify(event, options, err);
+					const error = await handle_error_and_jsonify(event, event_state, options, err);
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -251,6 +271,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 							return await render_response({
 								event,
+								event_state,
 								options,
 								manifest,
 								state,
@@ -286,6 +307,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			// ndjson format
 			let { data, chunks } = get_data_json(
 				event,
+				event_state,
 				options,
 				branch.map((node) => node?.server_data)
 			);
@@ -304,6 +326,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 		return await render_response({
 			event,
+			event_state,
 			options,
 			manifest,
 			state,
@@ -323,6 +346,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
+			event_state,
 			options,
 			manifest,
 			state,

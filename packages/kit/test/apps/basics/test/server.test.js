@@ -1,7 +1,11 @@
+/** @import { ReadableSpan } from '@opentelemetry/sdk-trace-node' */
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -735,4 +739,535 @@ test.describe('$app/forms', () => {
 		const response = await request.get('/serialization-form/server-deserialize');
 		expect(await response.json()).toEqual({ data: 'It works!' });
 	});
+});
+
+const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
+
+test.describe('$app/environment', () => {
+	test('treeshakes dev check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
+			'utf-8'
+		);
+		// check that import { dev } from '$app/environment' is treeshaken
+		expect(code).not.toContain('dev');
+	});
+
+	test('treeshakes browser check', async () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+
+		const code = fs.readFileSync(
+			path.join(
+				root,
+				'.svelte-kit/output/server/entries/pages/treeshaking/browser/_page.svelte.js'
+			),
+			'utf-8'
+		);
+		// check that import { browser } from '$app/environment' is treeshaken
+		expect(code).not.toContain('browser');
+	});
+});
+
+test.describe('tracing', () => {
+	// Helper function to find the resolve.root span deep in the handle.child chain
+	/**
+	 * @param {ReadableSpan} span
+	 * @returns {ReadableSpan | null}
+	 */
+	function find_resolve_root_span(span) {
+		if (span.name === 'sveltekit.resolve') {
+			return span;
+		}
+		for (const child of span.children || []) {
+			const found = find_resolve_root_span(child);
+			if (found) return found;
+		}
+		return null;
+	}
+
+	function rand() {
+		// node 18 doesn't have crypto.randomUUID() and we run tests in node 18
+		return Math.random().toString(36).substring(2, 15);
+	}
+
+	test('correct spans are created for a regular navigation', async ({ page, read_traces }) => {
+		const test_id = rand();
+		await page.goto(`/tracing/one/two/three/four/five?test_id=${test_id}`);
+		const traces = read_traces(test_id);
+		expect(traces.length).toBeGreaterThan(0);
+
+		const trace = traces[0];
+		const trace_id = trace.trace_id;
+
+		// Verify root span structure
+		expect(trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/one/two/three/[...four]',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/one/two/three/four/five?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the resolve.root span
+		const resolve_root_span = find_resolve_root_span(trace);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/one/two/three/[...four]',
+				'http.response.status_code': 200,
+				'http.response.body.size': expect.stringMatching(/^\d+$/)
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: [
+				{
+					name: 'sveltekit.load',
+					status: { code: 0 },
+					start_time: [expect.any(Number), expect.any(Number)],
+					end_time: [expect.any(Number), expect.any(Number)],
+					attributes: {
+						'sveltekit.load.node_id': 'src/routes/+layout.server.js',
+						'sveltekit.load.node_type': '+layout.server',
+						'sveltekit.load.environment': 'server',
+						'http.route': '/tracing/one/two/three/[...four]'
+					},
+					links: [],
+					trace_id,
+					span_id: expect.any(String),
+					parent_span_id: expect.any(String),
+					children: []
+				},
+				{
+					name: 'sveltekit.load',
+					status: { code: 0 },
+					start_time: [expect.any(Number), expect.any(Number)],
+					end_time: [expect.any(Number), expect.any(Number)],
+					attributes: {
+						'sveltekit.load.node_id': 'src/routes/+layout.js',
+						'sveltekit.load.node_type': '+layout',
+						'sveltekit.load.environment': 'server',
+						'http.route': '/tracing/one/two/three/[...four]'
+					},
+					links: [],
+					trace_id,
+					span_id: expect.any(String),
+					parent_span_id: expect.any(String),
+					children: []
+				}
+			]
+		});
+	});
+
+	test('correct spans are created for HttpError', async ({ page, read_traces }) => {
+		const test_id = rand();
+		const response = await page.goto(`/tracing/http-error?test_id=${test_id}`);
+		expect(response?.status()).toBe(500);
+
+		const traces = read_traces(test_id);
+		const trace_id = traces[0].trace_id;
+		const trace = traces[0];
+
+		// Verify root span structure
+		expect(trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/http-error',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/http-error?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the resolve.root span
+		const resolve_root_span = find_resolve_root_span(trace);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/http-error',
+				'http.response.status_code': 500,
+				'http.response.body.size': expect.stringMatching(/^\d+$/)
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.load',
+					status: { code: 2, message: 'Internal server error from tracing test' },
+					attributes: expect.objectContaining({
+						'sveltekit.load.node_id': 'src/routes/tracing/http-error/+page.server.js',
+						'sveltekit.load.result.type': 'known_error',
+						'sveltekit.load.result.status': 500,
+						'sveltekit.load.result.message': 'Internal server error from tracing test'
+					})
+				})
+			])
+		});
+	});
+
+	test('correct spans are created for Redirect', async ({ page, read_traces }) => {
+		const test_id = rand();
+		const response = await page.goto(`/tracing/redirect?test_id=${test_id}`);
+		expect(response?.status()).toBe(200);
+
+		const traces = read_traces(test_id);
+		expect(traces).toHaveLength(2);
+		const redirect_trace_id = traces[0].trace_id;
+		const destination_trace_id = traces[1].trace_id;
+
+		const redirect_trace = traces[0];
+		const destination_trace = traces[1];
+
+		// Verify redirect trace root span structure
+		expect(redirect_trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/redirect',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/redirect?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id: redirect_trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the redirect resolve.root span
+		const redirect_resolve_root_span = find_resolve_root_span(redirect_trace);
+		expect(redirect_resolve_root_span).not.toBeNull();
+		expect(redirect_resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/redirect',
+				'http.response.status_code': 307,
+				'http.response.body.size': expect.stringMatching(/^\d+$|^unknown$/)
+			},
+			links: [],
+			trace_id: redirect_trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.load',
+					status: { code: 0 },
+					attributes: expect.objectContaining({
+						'sveltekit.load.node_id': 'src/routes/tracing/redirect/+page.server.js',
+						'sveltekit.load.result.type': 'redirect',
+						'sveltekit.load.result.status': 307,
+						'sveltekit.load.result.location': `/tracing/one/two/three/four/five?test_id=${test_id}`
+					})
+				})
+			])
+		});
+
+		// Verify destination trace root span structure
+		expect(destination_trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/one/two/three/[...four]',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/one/two/three/four/five?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id: destination_trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the destination resolve.root span
+		const destination_resolve_root_span = find_resolve_root_span(destination_trace);
+		expect(destination_resolve_root_span).not.toBeNull();
+		expect(destination_resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/one/two/three/[...four]',
+				'http.response.status_code': 200,
+				'http.response.body.size': expect.stringMatching(/^\d+$/)
+			},
+			links: [],
+			trace_id: destination_trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: [
+				{
+					name: 'sveltekit.load',
+					status: { code: 0 },
+					start_time: [expect.any(Number), expect.any(Number)],
+					end_time: [expect.any(Number), expect.any(Number)],
+					attributes: {
+						'sveltekit.load.node_id': 'src/routes/+layout.server.js',
+						'sveltekit.load.node_type': '+layout.server',
+						'sveltekit.load.environment': 'server',
+						'http.route': '/tracing/one/two/three/[...four]'
+					},
+					links: [],
+					trace_id: destination_trace_id,
+					span_id: expect.any(String),
+					parent_span_id: expect.any(String),
+					children: []
+				},
+				{
+					name: 'sveltekit.load',
+					status: { code: 0 },
+					start_time: [expect.any(Number), expect.any(Number)],
+					end_time: [expect.any(Number), expect.any(Number)],
+					attributes: {
+						'sveltekit.load.node_id': 'src/routes/+layout.js',
+						'sveltekit.load.node_type': '+layout',
+						'sveltekit.load.environment': 'server',
+						'http.route': '/tracing/one/two/three/[...four]'
+					},
+					links: [],
+					trace_id: destination_trace_id,
+					span_id: expect.any(String),
+					parent_span_id: expect.any(String),
+					children: []
+				}
+			]
+		});
+	});
+
+	test('correct spans are created for regular Error', async ({ page, read_traces }) => {
+		const test_id = rand();
+		const response = await page.goto(`/tracing/regular-error?test_id=${test_id}`);
+		expect(response?.status()).toBe(500);
+
+		const traces = read_traces(test_id);
+		const trace_id = traces[0].trace_id;
+		const trace = traces[0];
+
+		// Verify root span structure
+		expect(trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/regular-error',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/regular-error?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the resolve.root span
+		const resolve_root_span = find_resolve_root_span(trace);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/regular-error',
+				'http.response.status_code': 500,
+				'http.response.body.size': expect.stringMatching(/^\d+$/)
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.load',
+					status: { code: 2, message: 'Regular error from tracing test' },
+					attributes: expect.objectContaining({
+						'sveltekit.load.node_id': 'src/routes/tracing/regular-error/+page.server.js',
+						'sveltekit.load.result.type': 'unknown_error'
+					})
+				})
+			])
+		});
+	});
+
+	test('correct spans are created for non-error object', async ({ page, read_traces }) => {
+		const test_id = rand();
+		const response = await page.goto(`/tracing/non-error-object?test_id=${test_id}`);
+		expect(response?.status()).toBe(500);
+
+		const traces = read_traces(test_id);
+		const trace_id = traces[0].trace_id;
+		const trace = traces[0];
+
+		// Verify root span structure
+		expect(trace).toEqual({
+			name: 'sveltekit.handle.root',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/non-error-object',
+				'http.method': 'GET',
+				'http.url': expect.stringContaining(`/tracing/non-error-object?test_id=${test_id}`),
+				'sveltekit.is_data_request': false,
+				'sveltekit.is_sub_request': false,
+				test_id
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.handle.sequenced.set_tracing_test_id',
+					attributes: {}
+				})
+			])
+		});
+
+		// Find and verify the resolve.root span
+		const resolve_root_span = find_resolve_root_span(trace);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span).toEqual({
+			name: 'sveltekit.resolve',
+			status: { code: 0 },
+			start_time: [expect.any(Number), expect.any(Number)],
+			end_time: [expect.any(Number), expect.any(Number)],
+			attributes: {
+				'http.route': '/tracing/non-error-object',
+				'http.response.status_code': 500,
+				'http.response.body.size': expect.stringMatching(/^\d+$/)
+			},
+			links: [],
+			trace_id,
+			span_id: expect.any(String),
+			parent_span_id: expect.any(String),
+			children: expect.arrayContaining([
+				expect.objectContaining({
+					name: 'sveltekit.load',
+					status: { code: 2 },
+					attributes: expect.objectContaining({
+						'sveltekit.load.node_id': 'src/routes/tracing/non-error-object/+page.server.js',
+						'sveltekit.load.result.type': 'unknown_error'
+					})
+				})
+			])
+		});
+	});
+});
+
+test.describe('remote functions', () => {
+	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
+		test.skip(!!process.env.DEV, 'skip when in dev mode');
+		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
+	});
+});
+
+test.describe('asset preload', () => {
+	if (!process.env.DEV) {
+		test('injects Link headers', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const header = response.headers()['link'];
+
+			expect(header).toContain('rel="modulepreload"');
+			expect(header).toContain('as="font"');
+		});
+
+		test('does not inject Link headers on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const header = response.headers()['link'];
+			expect(header).toBeUndefined();
+		});
+
+		test('injects <link> tags on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const body = await response.text();
+
+			expect(body).toContain('rel="modulepreload"');
+			expect(body).toContain('as="font"');
+		});
+
+		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const body = await response.text();
+
+			expect(body).not.toContain('rel="modulepreload"');
+			expect(body).not.toContain('as="font"');
+		});
+	}
 });
