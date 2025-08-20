@@ -69,7 +69,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		csrf: {
 			checkOrigin: true,
-			allowedOrigins: []
+			trustedOrigins: []
 		},
 		embedded: false,
 		env: {

@@ -100,7 +100,7 @@ test.describe('CSRF', () => {
 	});
 
 	test('Allows requests from allowed origins', async ({ baseURL }) => {
-		// Test with trusted.example.com which is in allowedOrigins
+		// Test with trusted.example.com which is in trustedOrigins
 		const res1 = await fetch(`${baseURL}/csrf`, {
 			method: 'POST',
 			headers: {
@@ -111,7 +111,7 @@ test.describe('CSRF', () => {
 		expect(res1.status).toBe(200);
 		expect(await res1.text()).toBe('ok');
 
-		// Test with payment-gateway.test which is also in allowedOrigins
+		// Test with payment-gateway.test which is also in trustedOrigins
 		const res2 = await fetch(`${baseURL}/csrf`, {
 			method: 'POST',
 			headers: {
@@ -124,7 +124,7 @@ test.describe('CSRF', () => {
 	});
 
 	test('Blocks requests from non-allowed origins', async ({ baseURL }) => {
-		// Test with origin not in allowedOrigins list
+		// Test with origin not in trustedOrigins list
 		const res1 = await fetch(`${baseURL}/csrf`, {
 			method: 'POST',
 			headers: {

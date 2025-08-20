@@ -89,7 +89,7 @@ export async function internal_respond(request, options, manifest, state) {
 				request.method === 'PATCH' ||
 				request.method === 'DELETE') &&
 			request_origin !== url.origin &&
-			(!request_origin || !options.csrf_allowed_origins.includes(request_origin));
+			(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
 
 		if (forbidden) {
 			const message = `Cross-site ${request.method} form submissions are forbidden`;

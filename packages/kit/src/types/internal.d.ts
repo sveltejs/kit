@@ -442,7 +442,7 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
-	csrf_allowed_origins: string[];
+	csrf_trusted_origins: string[];
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
