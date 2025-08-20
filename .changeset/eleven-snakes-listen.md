@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-chore: update link to Workers Sites section
+chore: update error message link to the Workers Sites migration guide
