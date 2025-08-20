@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.36.0
+### Minor Changes
+
+
+- feat: add `csrf.trustedOrigins` configuration ([#14021](https://github.com/sveltejs/kit/pull/14021))
+
+
+### Patch Changes
+
+
+- fix: correctly decode custom types streamed from a server load function ([#14261](https://github.com/sveltejs/kit/pull/14261))
+
+
+- fix: add trailing slash pathname when generating typed routes ([#14065](https://github.com/sveltejs/kit/pull/14065))
+
 ## 2.35.0
 ### Minor Changes
 
