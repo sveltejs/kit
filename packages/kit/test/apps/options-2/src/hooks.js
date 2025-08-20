@@ -1,4 +1,4 @@
-import { Foo } from "$lib";
+import { Foo } from '$lib';
 
 /** @type {import("@sveltejs/kit").Transport} */
 export const transport = {
