@@ -5,6 +5,14 @@ import { manifest } from 'MANIFEST';
 
 const server = new Server(manifest);
 
+/** @type {HeadersInit | undefined} */
+let read_headers;
+if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+	read_headers = {
+		'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+	};
+}
+
 /**
  * We don't know the origin until we receive a request, but
  * that's guaranteed to happen before we call `read`
@@ -15,10 +23,26 @@ let origin;
 const initialized = server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
 	read: async (file) => {
-		const response = await fetch(`${origin}/${file}`);
+		const url = `${origin}/${file}`;
+		const response = await fetch(url, {
+			// we need to add a bypass header if the user has deployment protection enabled
+			// see https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+			headers: read_headers
+		});
+
 		if (!response.ok) {
-			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+			if (response.status === 401) {
+				throw new Error(
+					`Please enable Protection Bypass for Automation: https://svelte.dev/docs/kit/adapter-vercel#Troubleshooting-Deployment-protection`
+				);
+			}
+
+			// belt and braces — not sure how we could end up here
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
 		}
+
 		return response.body;
 	}
 });

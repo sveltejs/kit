@@ -1,12 +1,18 @@
 /** @import { RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, started, goto, set_nearest_error_page } from '../client.js';
-import { create_remote_cache_key } from '../../shared.js';
+import {
+	app,
+	remote_responses,
+	started,
+	goto,
+	set_nearest_error_page,
+	invalidateAll
+} from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -26,9 +32,10 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state(
-			!started ? (remote_responses[create_remote_cache_key(action, '')] ?? undefined) : undefined
-		);
+		let result = $state(started ? undefined : remote_responses[action_id]);
+
+		/** @type {number} */
+		let pending_count = $state(0);
 
 		/**
 		 * @param {FormData} data
@@ -44,6 +51,9 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
+
+			// Increment pending count when submission starts
+			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
@@ -64,7 +74,7 @@ export function form(id) {
 						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
 
-					const response = await fetch(`/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
 						body: data
 					});
@@ -81,7 +91,11 @@ export function form(id) {
 					if (form_result.type === 'result') {
 						result = devalue.parse(form_result.result, app.decoders);
 
-						refresh_queries(form_result.refreshes, updates);
+						if (form_result.refreshes) {
+							refresh_queries(form_result.refreshes, updates);
+						} else {
+							void invalidateAll();
+						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
 						const invalidateAll = !refreshes && updates.length === 0;
@@ -97,6 +111,9 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
+					// Decrement pending count when submission completes
+					pending_count--;
+
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;
@@ -199,7 +216,7 @@ export function form(id) {
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return async (event) => {
-				const target = /** @type {HTMLButtonElement} */ (event.target);
+				const target = /** @type {HTMLButtonElement} */ (event.currentTarget);
 				const form = target.form;
 				if (!form) return;
 
@@ -245,12 +262,19 @@ export function form(id) {
 			}
 		});
 
+		Object.defineProperty(button_props, 'pending', {
+			get: () => pending_count
+		});
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
 			result: {
 				get: () => result
+			},
+			pending: {
+				get: () => pending_count
 			},
 			enhance: {
 				/** @type {RemoteForm<any>['enhance']} */

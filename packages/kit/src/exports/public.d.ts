@@ -12,19 +12,20 @@ import {
 	PrerenderEntryGeneratorMismatchHandlerValue,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
+	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
-	// @ts-ignore
 } from '$app/types';
+import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -50,6 +51,12 @@ export interface Adapter {
 		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
+
+		/**
+		 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
+		 * @since 2.31.0
+		 */
+		instrumentation?: () => boolean;
 	};
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -186,6 +193,47 @@ export interface Builder {
 			replace?: Record<string, string>;
 		}
 	) => string[];
+
+	/**
+	 * Check if the server instrumentation file exists.
+	 * @returns true if the server instrumentation file exists, false otherwise
+	 * @since 2.31.0
+	 */
+	hasServerInstrumentationFile: () => boolean;
+
+	/**
+	 * Instrument `entrypoint` with `instrumentation`.
+	 *
+	 * Renames `entrypoint` to `start` and creates a new module at
+	 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
+	 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
+	 *
+	 * Caveats:
+	 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
+	 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
+	 * - Use `hasServerInstrumentationFile` to check if the user has a server instrumentation file; if they don't, you shouldn't do this.
+	 *
+	 * @param options an object containing the following properties:
+	 * @param options.entrypoint the path to the entrypoint to trace.
+	 * @param options.instrumentation the path to the instrumentation file.
+	 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+	 * @param options.module configuration for the resulting entrypoint module.
+	 * @param options.module.exports
+	 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
+	 * @since 2.31.0
+	 */
+	instrument: (args: {
+		entrypoint: string;
+		instrumentation: string;
+		start?: string;
+		module?:
+			| {
+					exports: string[];
+			  }
+			| {
+					generateText: (args: { instrumentation: string; start: string }) => string;
+			  };
+	}) => void;
 
 	/**
 	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
@@ -408,10 +456,34 @@ export interface KitConfig {
 		 */
 		privatePrefix?: string;
 	};
-	/**
-	 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
-	 */
+	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
+		/**
+		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+		 * @default { server: false, serverFile: false }
+		 * @since 2.31.0
+		 */
+		tracing?: {
+			/**
+			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+			 * @default false
+			 * @since 2.31.0
+			 */
+			server?: boolean;
+		};
+
+		/**
+		 * @since 2.31.0
+		 */
+		instrumentation?: {
+			/**
+			 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
+			 * @default false
+			 * @since 2.31.0
+			 */
+			server?: boolean;
+		};
+
 		/**
 		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
@@ -420,26 +492,38 @@ export interface KitConfig {
 	};
 	/**
 	 * Where to find various files within your project.
+	 * @deprecated
 	 */
 	files?: {
 		/**
+		 * the location of your source code
+		 * @deprecated
+		 * @default "src"
+		 * @since 2.28
+		 */
+		src?: string;
+		/**
 		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 * @deprecated
 		 * @default "static"
 		 */
 		assets?: string;
 		hooks?: {
 			/**
 			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
 			/**
 			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks"
 			 * @since 2.3.0
 			 */
@@ -447,31 +531,37 @@ export interface KitConfig {
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 * @deprecated
 		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
 		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
+		 * @deprecated
 		 * @default "src/params"
 		 */
 		params?: string;
 		/**
 		 * the files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing))
+		 * @deprecated
 		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
 		 * the location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers))
+		 * @deprecated
 		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
 		 * the location of the template for HTML responses
+		 * @deprecated
 		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
 		 * the location of the template for fallback error responses
+		 * @deprecated
 		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
@@ -652,6 +742,21 @@ export interface KitConfig {
 		 */
 		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 		/**
+		 * How to respond when a route is marked as prerenderable but has not been prerendered.
+		 *
+		 * - `'fail'` — fail the build
+		 * - `'ignore'` - silently ignore the failure and continue
+		 * - `'warn'` — continue, but print a warning
+		 * - `(details) => void` — a custom error handler that takes a `details` object with a `routes` property which contains all routes that haven't been prerendered. If you `throw` from this function, the build will fail
+		 *
+		 * The default behavior is to fail the build. This may be undesirable when you know that some of your routes may never be reached under certain
+		 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
+		 *
+		 * @default "fail"
+		 * @since 2.16.0
+		 */
+		handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
+		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 		 * @default "http://sveltekit-prerender"
 		 */
@@ -693,20 +798,37 @@ export interface KitConfig {
 	};
 	serviceWorker?: {
 		/**
-		 * Whether to automatically register the service worker, if it exists.
-		 * @default true
-		 */
-		register?: boolean;
-		/**
 		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
 		 * @default (filename) => !/\.DS_Store/.test(filename)
 		 */
-		files?(filepath: string): boolean;
-	};
+		files?: (file: string) => boolean;
+	} & (
+		| {
+				/**
+				 * Whether to automatically register the service worker, if it exists.
+				 * @default true
+				 */
+				register: true;
+				/**
+				 * Options for serviceWorker.register("...", options);
+				 */
+				options?: RegistrationOptions;
+		  }
+		| {
+				/**
+				 * Whether to automatically register the service worker, if it exists.
+				 * @default true
+				 */
+				register?: false;
+		  }
+	);
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
+		 *
+		 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+		 *
 		 * @default (config) => config
 		 * @since 1.3.0
 		 */
@@ -992,6 +1114,19 @@ export interface LoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
+	 * @since 2.31.0
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current `load` function. */
+		current: Span;
+	};
 }
 
 export interface NavigationEvent<
@@ -1020,12 +1155,15 @@ export interface NavigationEvent<
 /**
  * Information about the target of a specific navigation.
  */
-export interface NavigationTarget {
+export interface NavigationTarget<
+	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+	RouteId extends AppRouteId | null = AppRouteId | null
+> {
 	/**
 	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
 	 */
-	params: Record<string, string> | null;
+	params: Params | null;
 	/**
 	 * Info about the target route
 	 */
@@ -1033,7 +1171,7 @@ export interface NavigationTarget {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 */
-		id: string | null;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL that is navigated to
@@ -1043,8 +1181,8 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated/started
- * - `form`: The user submitted a `<form>` with a GET method
- * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+ * - `form`: The user submitted a `<form method="GET">`
+ * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1062,7 +1200,7 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1100,7 +1238,7 @@ export interface BeforeNavigate extends Navigation {
 export interface OnNavigate extends Navigation {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1119,7 +1257,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form>`
+	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1267,6 +1405,20 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.31.0
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		current: Span;
+	};
+
 	/**
 	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
@@ -1430,6 +1582,19 @@ export interface ServerLoadEvent<
 	 * ```
 	 */
 	untrack: <T>(fn: () => T) => T;
+
+	/**
+	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+	 * @since 2.31.0
+	 */
+	tracing: {
+		/** Whether tracing is enabled. */
+		enabled: boolean;
+		/** The root span for the request. This span is named `sveltekit.handle.root`. */
+		root: Span;
+		/** The span associated with the current server `load` function. */
+		current: Span;
+	};
 }
 
 /**
@@ -1565,6 +1730,8 @@ export type RemoteForm<Result> = {
 	for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
 	/** The result of the form submission */
 	get result(): Result | undefined;
+	/** The number of pending submissions */
+	get pending(): number;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
@@ -1586,14 +1753,20 @@ export type RemoteForm<Result> = {
 			formaction: string;
 			onclick: (event: Event) => void;
 		};
+		/** The number of pending submissions */
+		get pending(): number;
 	};
 };
 
 /**
  * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  */
-export type RemoteCommand<Input, Output> = (arg: Input) => Promise<Awaited<Output>> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+export type RemoteCommand<Input, Output> = {
+	(arg: Input): Promise<Awaited<Output>> & {
+		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	};
+	/** The number of pending command executions */
+	get pending(): number;
 };
 
 export type RemoteResource<T> = Promise<Awaited<T>> & {
@@ -1623,7 +1796,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Single-flight-mutations) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>

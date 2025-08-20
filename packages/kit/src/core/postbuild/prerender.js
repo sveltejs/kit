@@ -125,6 +125,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	installPolyfills();
 
+	const server = new Server(manifest);
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
+
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
@@ -157,6 +163,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
 			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+		}
+	);
+
+	const handle_not_prerendered_route = normalise_error_handler(
+		log,
+		config.prerender.handleUnseenRoutes,
+		({ routes }) => {
+			const list = routes.map((id) => `  - ${id}`).join('\n');
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
 		}
 	);
 
@@ -241,6 +256,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				// stuff we just wrote
 				const filepath = saved.get(file);
 				if (filepath) return readFileSync(filepath);
+
+				// Static assets emitted during build
+				if (file.startsWith(config.appDir)) {
+					return readFileSync(`${out}/server/${file}`);
+				}
 
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
@@ -489,12 +509,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	log.info('Prerendering');
 
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
-
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
@@ -557,11 +571,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	if (not_prerendered.length > 0) {
-		const list = not_prerendered.map((id) => `  - ${id}`).join('\n');
-
-		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://svelte.dev/docs/kit/page-options#prerender-troubleshooting for info on how to solve this`
-		);
+		handle_not_prerendered_route({ routes: not_prerendered });
 	}
 
 	return { prerendered, prerender_map };

@@ -1,8 +1,7 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
-import { getRequestEvent } from '../event.js';
-import { check_experimental, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
+import { get_request_store } from '@sveltejs/kit/internal/server';
+import { run_remote_function } from './shared.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -17,8 +16,6 @@ import { get_event_state } from '../../../server/event-state.js';
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
 export function form(fn) {
-	check_experimental('form');
-
 	/**
 	 * @param {string | number | boolean} [key]
 	 */
@@ -57,17 +54,16 @@ export function form(fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
-				const event = getRequestEvent();
-				const state = get_event_state(event);
+				const { event, state } = get_request_store();
 
 				state.refreshes ??= {};
 
-				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+				const result = await run_remote_function(event, state, true, form_data, (d) => d, fn);
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					state.form_result = [key, result];
+					(state.remote_data ??= {})[__.id] = result;
 				}
 
 				return result;
@@ -89,19 +85,29 @@ export function form(fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { form_result } = get_event_state(getRequestEvent());
-					return form_result && form_result[0] === key ? form_result[1] : undefined;
+					const { remote_data } = get_request_store().state;
+					return remote_data?.[__.id];
 				} catch {
 					return undefined;
 				}
 			}
 		});
 
+		// On the server, pending is always 0
+		Object.defineProperty(instance, 'pending', {
+			get: () => 0
+		});
+
+		// On the server, buttonProps.pending is always 0
+		Object.defineProperty(button_props, 'pending', {
+			get: () => 0
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
-					const state = get_event_state(getRequestEvent());
+					const { state } = get_request_store();
 					let instance = (state.form_instances ??= new Map()).get(key);
 
 					if (!instance) {

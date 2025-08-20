@@ -1072,6 +1072,7 @@ test.describe('$app/server', () => {
 
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
+		const styles = await page.textContent('[data-testid="styles"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
@@ -1084,5 +1085,8 @@ test.describe('$app/server', () => {
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
+
+		// check that paths in .css files are relative
+		expect(styles).toContain('url(.');
 	});
 });

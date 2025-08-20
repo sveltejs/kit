@@ -6,6 +6,16 @@ import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 
+// @ts-ignore this doesn't exist in old Node
+Promise.withResolvers ??= () => {
+	const d = {};
+	d.promise = new Promise((resolve, reject) => {
+		d.resolve = resolve;
+		d.reject = reject;
+	});
+	return d;
+};
+
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively
@@ -54,6 +64,14 @@ export const handleValidationError = ({ issues }) => {
 };
 
 export const handle = sequence(
+	// eslint-disable-next-line prefer-arrow-callback -- this needs a name for tests
+	function set_tracing_test_id({ event, resolve }) {
+		const test_id = !building && event.url.searchParams.get('test_id');
+		if (test_id) {
+			event.tracing.root.setAttribute('test_id', test_id);
+		}
+		return resolve(event);
+	},
 	({ event, resolve }) => {
 		event.locals.key = event.route.id;
 		event.locals.params = event.params;

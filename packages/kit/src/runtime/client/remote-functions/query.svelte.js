@@ -1,5 +1,5 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
-import { app_dir } from '__sveltekit/paths';
+import { app_dir, base } from '__sveltekit/paths';
 import { remote_responses, started } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
@@ -18,7 +18,7 @@ export function query(id) {
 				}
 			}
 
-			const url = `/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			return await remote_request(url);
 		});

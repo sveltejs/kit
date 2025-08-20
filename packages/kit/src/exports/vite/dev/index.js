@@ -501,6 +501,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+
+				if (resolved_instrumentation) {
+					await vite.ssrLoadModule(resolved_instrumentation);
+				}
+
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
