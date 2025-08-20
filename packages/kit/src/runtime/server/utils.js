@@ -193,7 +193,7 @@ export function has_prerendered_path(manifest, pathname) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function format_server_error(status, error, event) {
-	const formatted_text = `\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m\n`;
+	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m\n`;
 
 	if (status === 404) {
 		return formatted_text + error.message;
