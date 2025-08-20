@@ -13,3 +13,5 @@ import * as app from '__sveltekit/manifest';
 export function start(element, options) {
 	void kit.start(app, element, options);
 }
+
+export { app };

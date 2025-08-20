@@ -379,9 +379,28 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			let app_declaration = '';
+
+			if (Object.keys(options.hooks.transport).length > 0) {
+				if (client.inline) {
+					app_declaration = `const app = __sveltekit_${options.version_hash}.app.app;`;
+				} else if (client.app) {
+					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+				} else {
+					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
+				}
+			}
+
+			const prelude = app_declaration
+				? `${app_declaration}
+							const [data, error] = fn(app);`
+				: `const [data, error] = fn();`;
+
 			// When resolving, the id might not yet be available due to the data
 			// be evaluated upon init of kit, so we use a timeout to retry
-			properties.push(`resolve: ({ id, data, error }) => {
+			properties.push(`resolve: async (id, fn) => {
+							${prelude}
+
 							const try_to_resolve = () => {
 								if (!deferred.has(id)) {
 									setTimeout(try_to_resolve, 0);
@@ -665,7 +684,7 @@ function get_data(event, event_state, options, nodes, csp, global) {
 
 						let str;
 						try {
-							str = devalue.uneval({ id, data, error }, replacer);
+							str = devalue.uneval(error ? [, error] : [data], replacer);
 						} catch {
 							error = await handle_error_and_jsonify(
 								event,
@@ -674,11 +693,13 @@ function get_data(event, event_state, options, nodes, csp, global) {
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 							);
 							data = undefined;
-							str = devalue.uneval({ id, data, error }, replacer);
+							str = devalue.uneval([, error], replacer);
 						}
 
 						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
+						push(
+							`<script${nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`
+						);
 						if (count === 0) done();
 					}
 				);

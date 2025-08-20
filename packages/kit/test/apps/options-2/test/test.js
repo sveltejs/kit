@@ -190,4 +190,9 @@ test.describe("bundleStrategy: 'single'", () => {
 		await page.goto('/basepath/deserialize');
 		await expect(page.locator('p')).toHaveText('Hello world!');
 	});
+
+	test('serialization works with streaming', async ({ page }) => {
+		await page.goto('/basepath/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
+	});
 });
