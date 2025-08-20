@@ -368,9 +368,21 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			let prelude = `const [data, error] = fn();`;
+
+			if (client.app) {
+				prelude = `const app = await import(${s(prefixed(client.app))})
+							const [data, error] = fn(app);`;
+			} else {
+				prelude = `const { app } = await import(${s(prefixed(client.start))})
+							const [data, error] = fn(app);`;
+			}
+
 			// When resolving, the id might not yet be available due to the data
 			// be evaluated upon init of kit, so we use a timeout to retry
-			properties.push(`resolve: ({ id, data, error }) => {
+			properties.push(`resolve: async (id, fn) => {
+							${prelude}
+
 							const try_to_resolve = () => {
 								if (!deferred.has(id)) {
 									setTimeout(try_to_resolve, 0);
@@ -658,7 +670,7 @@ function get_data(event, event_state, options, nodes, csp, global, client, prefi
 
 						let str;
 						try {
-							str = devalue.uneval({ id, data, error }, replacer);
+							str = devalue.uneval([data], replacer);
 						} catch {
 							error = await handle_error_and_jsonify(
 								event,
@@ -667,24 +679,13 @@ function get_data(event, event_state, options, nodes, csp, global, client, prefi
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 							);
 							data = undefined;
-							str = devalue.uneval({ id, data, error }, replacer);
+							str = devalue.uneval([null, error], replacer);
 						}
 
 						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						const code = `${global}.resolve(${str})`;
-						if (!client.inline && str.includes("app.decode('")) {
-							if (client.app) {
-								push(
-									`<script${nonce}>import(${s(prefixed(client.app))}).then((app)=>{${code}})</script>\n`
-								);
-							} else {
-								push(
-									`<script${nonce}>import(${s(prefixed(client.start))}).then(({app})=>{${code}})</script>\n`
-								);
-							}
-						} else {
-							push(`<script${nonce}>${code}</script>\n`);
-						}
+						push(
+							`<script${nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`
+						);
 						if (count === 0) done();
 					}
 				);
