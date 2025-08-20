@@ -88,7 +88,7 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 
 SvelteKit will discover pages to prerender automatically, by starting at _entry points_ and crawling them. By default, all your non-dynamic routes are considered entry points — for example, if you have these routes...
 
-```bash
+```sh
 /             # non-dynamic
 /blog         # non-dynamic
 /blog/[slug]  # dynamic, because of `[slug]`

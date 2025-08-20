@@ -2,8 +2,9 @@ import path from 'node:path';
 import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
 	env_dynamic_private,
@@ -70,8 +71,8 @@ export function get_env(env_config, mode) {
 	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
-		public: filter_public_env(env, { public_prefix, private_prefix }),
-		private: filter_private_env(env, { public_prefix, private_prefix })
+		public: filter_env(env, public_prefix, private_prefix),
+		private: filter_env(env, private_prefix, public_prefix)
 	};
 }
 
@@ -113,6 +114,8 @@ export function not_found(req, res, base) {
 	}
 }
 
+const query_pattern = /\?.*$/s;
+
 /**
  * Removes cwd/lib path from the start of the id
  * @param {string} id
@@ -120,6 +123,8 @@ export function not_found(req, res, base) {
  * @param {string} cwd
  */
 export function normalize_id(id, lib, cwd) {
+	id = id.replace(query_pattern, '');
+
 	if (id.startsWith(lib)) {
 		id = id.replace(lib, '$lib');
 	}
@@ -155,4 +160,57 @@ export function normalize_id(id, lib, cwd) {
 	return posixify(id);
 }
 
+/**
+ * For times when you need to throw an error, but without
+ * displaying a useless stack trace (since the developer
+ * can't do anything useful with it)
+ * @param {string} message
+ */
+export function stackless(message) {
+	const error = new Error(message);
+	error.stack = '';
+	return error;
+}
+
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
+
+/**
+ * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * returns:
+ *
+ * ```
+ * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ *
+ *\`\`\`js
+ *	kit:
+ *		experimental:
+ *			instrumentation:
+ *				server: true
+ *			}
+ *		}
+ *	}
+ *\`\`\`
+ *```
+ * @param {string} feature_name
+ * @param {string} path
+ * @param {string} value
+ * @returns {never}
+ */
+export function error_for_missing_config(feature_name, path, value) {
+	const hole = '__HOLE__';
+
+	const result = path.split('.').reduce((acc, part, i, parts) => {
+		const indent = '  '.repeat(i);
+		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
+
+		return acc.replace(hole, `${indent}${part}: ${rhs}`);
+	}, hole);
+
+	throw stackless(
+		dedent`\
+			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
+
+			${result}
+		`
+	);
+}

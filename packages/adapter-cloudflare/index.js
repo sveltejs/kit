@@ -1,17 +1,30 @@
 import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
+
+/**
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_0_0
+ */
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name,
+		/** @param {Builder2_0_0} builder */
 		async adapt(builder) {
 			if (existsSync('_routes.json')) {
 				throw new Error(
@@ -32,6 +45,7 @@ export default function (options = {}) {
 			}
 
 			const wrangler_config = validate_wrangler_config(options.config);
+
 			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -48,7 +62,12 @@ export default function (options = {}) {
 					worker_dest = wrangler_config.main;
 				}
 				if (wrangler_config.assets?.directory) {
-					dest = wrangler_config.assets.directory;
+					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
+					// `main` and `pages_build_output_dir` so we need to do it ourselves here
+					const parent_dir = wrangler_config.configPath
+						? path.dirname(path.resolve(wrangler_config.configPath))
+						: process.cwd();
+					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
 				}
 				if (wrangler_config.assets?.binding) {
 					assets_binding = wrangler_config.assets.binding;
@@ -106,6 +125,12 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
+			if (builder.hasServerInstrumentationFile?.()) {
+				builder.instrument?.({
+					entrypoint: worker_dest,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+				});
+			}
 
 			// _headers
 			if (existsSync('_headers')) {
@@ -177,18 +202,21 @@ export default function (options = {}) {
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 }
 
 /**
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_0_0} builder
  * @param {string[]} assets
  * @param {import('./index.js').AdapterOptions['routes']} routes
  * @returns {import('./index.js').RoutesJSONSpec}
  */
-function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
+function get_routes_json(builder, assets, routes) {
+	let { include = ['/*'], exclude = ['<all>'] } = routes || {};
+
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
 		throw new Error('routes.include and routes.exclude must be arrays');
 	}
@@ -283,7 +311,7 @@ _redirects
 }
 
 /**
- * @param {string} config_file
+ * @param {string | undefined} config_file
  * @returns {import('wrangler').Unstable_Config}
  */
 function validate_wrangler_config(config_file = undefined) {

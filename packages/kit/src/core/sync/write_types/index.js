@@ -5,19 +5,8 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
-import { s } from '../../../utils/misc.js';
-import { get_route_segments } from '../../../utils/routing.js';
-
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
-};
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**

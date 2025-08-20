@@ -41,7 +41,10 @@ async function do_build(options, analyse_code) {
 		await process_file(input, temp, file, options.config.preprocess, alias, tsconfig, analyse_code);
 	}
 
-	rimraf(output);
+	if (!options.preserve_output) {
+		rimraf(output);
+	}
+
 	mkdirp(output);
 	copy(temp, output);
 
@@ -173,6 +176,7 @@ export async function watch(options) {
 function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
 	const output = path.resolve(options.cwd, options.output);
+	const preserve_output = options.preserve_output;
 	const temp = path.resolve(
 		options.cwd,
 		options.config.kit?.outDir ?? '.svelte-kit',
@@ -189,6 +193,7 @@ function normalize_options(options) {
 	return {
 		input,
 		output,
+		preserve_output,
 		temp,
 		extensions,
 		alias,

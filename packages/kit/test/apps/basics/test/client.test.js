@@ -42,6 +42,7 @@ test.describe('Endpoints', () => {
 
 test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
+		test.slow();
 		await page.goto('/load/change-detection/one/a');
 		expect(await page.textContent('h1')).toBe('layout loads: 1');
 		expect(await page.textContent('h2')).toBe('x: a: 1');
@@ -236,6 +237,11 @@ test.describe('Load', () => {
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
+	});
+
+	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
+		await page.goto('/load/fetch-same-url');
+		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
@@ -1642,5 +1648,273 @@ test.describe('routing', () => {
 		await page.click('a[href="/routing"]');
 		await expect(page.locator('h1')).toHaveText('Great success!');
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
+	});
+});
+
+// have to run in serial because commands mutate in-memory data on the server
+test.describe('remote functions', () => {
+	test.describe.configure({ mode: 'default' });
+	test.afterEach(async ({ page }) => {
+		if (page.url().endsWith('/remote')) {
+			await page.click('#reset-btn');
+		}
+	});
+
+	test('hydrated data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		// only the calls in the template are done, not the one in the load function
+		expect(request_count).toBe(2);
+	});
+
+	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-btn');
+		await expect(page.locator('#command-result')).toHaveText('2');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // 1 for the command, no refreshes
+	});
+
+	test('command returns correct sum and does client-initiated single flight mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('3');
+		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does server-initiated single flight mutation', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('4');
+		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		page.click('#multiply-override-refresh-btn');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await expect(page.locator('#command-result')).toHaveText('5');
+		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('form.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-one');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-1')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-one');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
+	});
+
+	test('form.buttonProps.enhance works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-enhance', 'abort');
+		await page.click('#submit-btn-enhance-two');
+		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
+		await expect(page.locator('#form-result-2')).toHaveText('');
+
+		await page.fill('#input-task-enhance', 'hi');
+		await page.click('#submit-btn-enhance-two');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+
+		await page.fill('#input-task-enhance', 'error');
+		await page.click('#submit-btn-enhance-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
+	});
+
+	test('form.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.buttonProps.enhance with override works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-override', 'override');
+		page.click('#submit-btn-override-one');
+		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
+		await expect(page.locator('#form-result-1')).toHaveText('override');
+		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.buttonProps.enhance works with nested elements (issue #14159)', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-nested', 'nested-test');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue
+		await page.click('#submit-btn-nested-span span');
+		await expect(page.locator('#form-result-2')).toHaveText('nested-test');
+	});
+
+	test('prerendered entries not called in prod', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+		await page.goto('/remote/prerender');
+
+		await page.click('#fetch-prerendered');
+		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
+
+		await page.click('#fetch-not-prerendered');
+		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
+	});
+
+	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-all');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(3);
+	});
+
+	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#refresh-remote-only');
+		await page.waitForTimeout(100); // allow things to rerun
+		expect(request_count).toBe(2);
+	});
+
+	test('command tracks pending state', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initial pending should be 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and pending to go back to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
+	test('validation works', async ({ page }) => {
+		await page.goto('/remote/validation');
+		await expect(page.locator('p')).toHaveText('pending');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button:nth-of-type(1)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(2)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(3)');
+		await expect(page.locator('p')).toHaveText('success');
+
+		await page.click('button:nth-of-type(4)');
+		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('command pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote');
+
+		// Initially no pending commands
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+
+		// Start a slow command - this will hang until we resolve it
+		await page.click('#command-deferred-btn');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
+
+		// Resolve the deferred command
+		await page.click('#resolve-deferreds');
+
+		// Wait for the command to complete and verify results
+		await expect(page.locator('#command-result')).toHaveText('7');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
+	});
+
+	test('form pending state is tracked correctly', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		// Initially no pending forms
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
+
+		// Fill form with slow operation
+		await page.fill('#input-task', 'deferred');
+
+		// Submit form - this will hang until we resolve it
+		await page.click('#submit-btn-one');
+
+		// Check that pending has incremented to 1
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 1');
+
+		// Resolve the deferred form submission
+		await page.click('#resolve-deferreds');
+
+		// Wait for form submission to complete and verify results
+		await expect(page.locator('#get-task')).toHaveText('deferred');
+
+		// Verify pending count returns to 0
+		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
+		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
 	});
 });
