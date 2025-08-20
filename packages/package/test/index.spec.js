@@ -343,7 +343,6 @@ test('validates package (all ok 2)', () => {
 
 	expect(warnings.length).toEqual(0);
 });
-<<<<<<< HEAD:packages/package/test/index.js
 
 test('create package with preserved output', async () => {
 	const output = join(__dirname, 'fixtures', 'preserve-output', 'dist');
@@ -354,5 +353,3 @@ test('create package with preserved output', async () => {
 });
 
 test.run();
-=======
->>>>>>> main:packages/package/test/index.spec.js
