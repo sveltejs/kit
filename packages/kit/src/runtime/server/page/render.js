@@ -297,7 +297,9 @@ export async function render_response({
 		options,
 		branch.map((b) => b.server_data),
 		csp,
-		global
+		global,
+		client,
+		prefixed
 	);
 
 	if (page_config.ssr && page_config.csr) {
@@ -622,13 +624,17 @@ export async function render_response({
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {import('./csp.js').Csp} csp
  * @param {string} global
+ * @param {NonNullable<import('types').BuildData["client"]>} client
+ * @param {(path: string) => string} prefixed
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, event_state, options, nodes, csp, global) {
+function get_data(event, event_state, options, nodes, csp, global, client, prefixed) {
 	let promise_id = 1;
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
+
+	const app = client.inline ? `__sveltekit_${options.version_hash}.app.app` : 'app';
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -665,7 +671,20 @@ function get_data(event, event_state, options, nodes, csp, global) {
 						}
 
 						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
+						const code = `${global}.resolve(${str})`;
+						if (!client.inline && str.includes("app.decode('")) {
+							if (client.app) {
+								push(
+									`<script${nonce}>import(${prefixed(client.app)}).then((app)=>{${code}})</script>\n`
+								);
+							} else {
+								push(
+									`<script${nonce}>import(${prefixed(client.start)}).then(({app})=>{${code}})</script>\n`
+								);
+							}
+						} else {
+							push(`<script${nonce}>${code}</script>\n`);
+						}
 						if (count === 0) done();
 					}
 				);
@@ -675,7 +694,7 @@ function get_data(event, event_state, options, nodes, csp, global) {
 			for (const key in options.hooks.transport) {
 				const encoded = options.hooks.transport[key].encode(thing);
 				if (encoded) {
-					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					return `${app}.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 				}
 			}
 		}
