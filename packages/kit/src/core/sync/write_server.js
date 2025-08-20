@@ -1,6 +1,6 @@
 import path from 'node:path';
 import process from 'node:process';
-import { hash } from '../../runtime/hash.js';
+import { hash } from '../../utils/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
@@ -32,7 +32,7 @@ import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
-import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
+import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -46,6 +46,7 @@ export const options = {
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},
+	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
@@ -67,8 +68,9 @@ export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let handleValidationError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	${server_hooks ? `({ handle, handleFetch, handleError, handleValidationError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
@@ -78,13 +80,14 @@ export async function get_hooks() {
 		handle,
 		handleFetch,
 		handleError,
+		handleValidationError,
 		init,
 		reroute,
 		transport
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation, set_safe_public_env };
+export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

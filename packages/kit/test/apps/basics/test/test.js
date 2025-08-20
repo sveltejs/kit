@@ -318,6 +318,28 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('fetches using a body stream serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-body-stream-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+			const post_payload =
+				'{"status":200,"statusText":"","headers":{},"body":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"]'
+			);
+			const post_script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"][data-hash="16h3sp1"]'
+			);
+
+			expect(script_content).toBe(payload);
+			expect(post_script_content).toBe(post_payload);
+		}
+	});
+
 	test('json string is returned', async ({ page }) => {
 		await page.goto('/load/relay');
 		expect(await page.textContent('h1')).toBe('42');
@@ -576,6 +598,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
 		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
 		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
+	});
+
+	test('event.fetch handles response without body', async ({ page }) => {
+		await page.goto('/load/fetch-no-body');
+		expect(await page.textContent('h1')).toBe('ok: true');
 	});
 });
 
@@ -1554,5 +1581,106 @@ test.describe('getRequestEvent', () => {
 
 		await page.goto('/get-request-event/with-error');
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
+	});
+});
+
+test.describe('remote functions', () => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		}
+	});
+
+	test('form works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'hi');
+		await page.click('#submit-btn-one');
+		await expect(page.locator('#form-result-1')).toHaveText('hi');
+	});
+
+	test('form error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Expected error"'
+		);
+	});
+
+	test('form redirect works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'redirect');
+		await page.click('#submit-btn-one');
+		expect(await page.textContent('#echo-result')).toBe('Hello world');
+	});
+
+	test('form.buttonProps works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'hi');
+		await page.click('#submit-btn-two');
+		await expect(page.locator('#form-result-2')).toHaveText('hi');
+	});
+
+	test('form.buttonProps error works', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task', 'error');
+		await page.click('#submit-btn-two');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+		);
+	});
+
+	test('form.for(...) scopes form submission', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.click('#submit-btn-item-foo');
+		await expect(page.locator('#form-result-foo')).toHaveText('foo');
+		await expect(page.locator('#form-result-bar')).toHaveText('');
+		await expect(page.locator('#form-result-1')).toHaveText('');
+	});
+
+	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/whole-page"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/functions-only"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+	});
+});
+
+test.describe('params prop', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop');
+
+		await clicknav('[href="/params-prop/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
+
+test.describe('service worker option', () => {
+	test('pass the options to the service worker', async ({ page }) => {
+		await page.goto('/');
+		const content = await page.content();
+		const matching = content.match(/navigator\.serviceWorker\.register\(.+?, (?<options>{.+?})\)/);
+		let options = {};
+		if (matching && matching.groups) {
+			options = JSON.parse(matching.groups.options);
+		}
+		if (process.env.DEV) {
+			expect(options).toMatchObject({
+				type: 'module',
+				updateViaCache: 'imports'
+			});
+		} else {
+			expect(options).toMatchObject({
+				updateViaCache: 'imports'
+			});
+		}
 	});
 });

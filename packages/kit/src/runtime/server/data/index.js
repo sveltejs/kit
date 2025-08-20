@@ -1,17 +1,17 @@
-import { HttpError, SvelteKitError, Redirect } from '../../control.js';
+import { text } from '@sveltejs/kit';
+import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
-import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
-
-const encoder = new TextEncoder();
+import { text_encoder } from '../../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -22,6 +22,7 @@ const encoder = new TextEncoder();
  */
 export async function render_data(
 	event,
+	event_state,
 	route,
 	options,
 	manifest,
@@ -61,6 +62,7 @@ export async function render_data(
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,
+						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -108,7 +110,7 @@ export async function render_data(
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: await handle_error_and_jsonify(event, options, error),
+						error: await handle_error_and_jsonify(event, event_state, options, error),
 						status:
 							error instanceof HttpError || error instanceof SvelteKitError
 								? error.status
@@ -118,7 +120,7 @@ export async function render_data(
 			)
 		);
 
-		const { data, chunks } = get_data_json(event, options, nodes);
+		const { data, chunks } = get_data_json(event, event_state, options, nodes);
 
 		if (!chunks) {
 			// use a normal JSON response where possible, so we get `content-length`
@@ -129,9 +131,9 @@ export async function render_data(
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					controller.enqueue(encoder.encode(data));
+					controller.enqueue(text_encoder.encode(data));
 					for await (const chunk of chunks) {
-						controller.enqueue(encoder.encode(chunk));
+						controller.enqueue(text_encoder.encode(chunk));
 					}
 					controller.close();
 				},
@@ -153,7 +155,7 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			return json_response(await handle_error_and_jsonify(event, options, error), 500);
+			return json_response(await handle_error_and_jsonify(event, event_state, options, error), 500);
 		}
 	}
 }
@@ -176,21 +178,24 @@ function json_response(json, status = 200) {
  * @param {Redirect} redirect
  */
 export function redirect_json_response(redirect) {
-	return json_response({
-		type: 'redirect',
-		location: redirect.location
-	});
+	return json_response(
+		/** @type {import('types').ServerRedirectNode} */ ({
+			type: 'redirect',
+			location: redirect.location
+		})
+	);
 }
 
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
  *  @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-export function get_data_json(event, options, nodes) {
+export function get_data_json(event, event_state, options, nodes) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -213,7 +218,7 @@ export function get_data_json(event, options, nodes) {
 					.catch(
 						/** @param {any} e */ async (e) => {
 							key = 'error';
-							return handle_error_and_jsonify(event, options, /** @type {any} */ (e));
+							return handle_error_and_jsonify(event, event_state, options, /** @type {any} */ (e));
 						}
 					)
 					.then(
@@ -225,6 +230,7 @@ export function get_data_json(event, options, nodes) {
 							} catch {
 								const error = await handle_error_and_jsonify(
 									event,
+									event_state,
 									options,
 									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 								);

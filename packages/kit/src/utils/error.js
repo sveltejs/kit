@@ -1,4 +1,4 @@
-import { HttpError, SvelteKitError } from '../runtime/control.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * @param {unknown} err
@@ -18,7 +18,7 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../runtime/control.js').Redirect | HttpError | SvelteKitError | Error} */ (
+	return /** @type {import('../exports/internal/index.js').Redirect | HttpError | SvelteKitError | Error} */ (
 		error
 	);
 }

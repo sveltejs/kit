@@ -13,6 +13,9 @@ const config = {
 		},
 		output: {
 			bundleStrategy: 'single'
+		},
+		experimental: {
+			remoteFunctions: true
 		}
 	}
 };
