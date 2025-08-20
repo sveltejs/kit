@@ -435,6 +435,8 @@ export interface KitConfig {
 		 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
 		 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
 		 *
+		 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
+		 *
 		 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
 		 * @default []
 		 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']

@@ -406,10 +406,12 @@ declare module '@sveltejs/kit' {
 			 */
 			checkOrigin?: boolean;
 			/**
-			 * An array of origins that are allowed to make cross-origin form submissions to your app, even when `checkOrigin` is `true`.
+			 * An array of origins that are allowed to make cross-origin form submissions to your app.
 			 *
 			 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
 			 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
+			 *
+			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
 			 *
 			 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
 			 * @default []
