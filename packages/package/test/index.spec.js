@@ -351,5 +351,3 @@ test('create package with preserved output', async () => {
 	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');
 	await test_make_package('preserve-output', { preserve_output: true });
 });
-
-test.run();
