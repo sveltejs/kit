@@ -432,7 +432,7 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set(key, /** @type {string} */ (value));
 												}
 
-												add_cookies_to_headers(response.headers, Object.values(new_cookies));
+												add_cookies_to_headers(response.headers, new_cookies.values());
 
 												if (state.prerendering && event.route.id !== null) {
 													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -507,7 +507,7 @@ export async function internal_respond(request, options, manifest, state) {
 				: route?.page && is_action_json_request(event)
 					? action_json_redirect(e)
 					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(new_cookies));
+			add_cookies_to_headers(response.headers, new_cookies.values());
 			return response;
 		}
 		return await handle_fatal_error(event, event_state, options, e);
