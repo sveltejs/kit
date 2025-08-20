@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.2
+### Patch Changes
+
+
+- chore: update error message link to the Workers Sites migration guide ([#14237](https://github.com/sveltejs/kit/pull/14237))
+
+- Updated dependencies [[`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`0bf6185`](https://github.com/sveltejs/kit/commit/0bf6185748d7b777fa8b8d37cef331be92ecedde), [`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c)]:
+  - @sveltejs/kit@2.34.1
+
 ## 7.2.1
 ### Patch Changes
 

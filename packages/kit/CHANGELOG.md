@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.34.1
+### Patch Changes
+
+
+- fix: support multiple cookies with the same name across different paths and domains ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: add link header when preloading font ([#14200](https://github.com/sveltejs/kit/pull/14200))
+
+
+- fix: `cookies.get(...)` returns `undefined` for a just-deleted cookie ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: load env before prerender ([`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c))
+
 ## 2.34.0
 ### Minor Changes
 
