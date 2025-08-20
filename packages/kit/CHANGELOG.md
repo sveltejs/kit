@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.35.0
+### Minor Changes
+
+
+- feat: better server-side error logging ([#13990](https://github.com/sveltejs/kit/pull/13990))
+
+
+### Patch Changes
+
+
+- fix: ensure static error page is loaded correctly for custom user errors ([#13952](https://github.com/sveltejs/kit/pull/13952))
+
 ## 2.34.1
 ### Patch Changes
 
