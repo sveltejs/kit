@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-feat: add CSRF allowedOrigins bypass list
+feat: add `csrf.trustedOrigins` configuration
