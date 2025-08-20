@@ -680,7 +680,7 @@ function get_data(event, event_state, options, nodes, csp, global) {
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 							);
 							data = undefined;
-							str = devalue.uneval([null, error], replacer);
+							str = devalue.uneval([, error], replacer);
 						}
 
 						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
