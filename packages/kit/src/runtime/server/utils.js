@@ -199,18 +199,37 @@ export function format_server_error(status, error, event) {
 		return formatted_text + error.message;
 	}
 
-	return formatted_text + clean_up_stack_trace(error);
+	return formatted_text + (DEV ? clean_up_stack_trace(error) : error.stack);
 }
 
-const route_file_regex = /\+(page|layout|server)/;
+/**
+ * In dev, tidy up stack traces by making paths relative to the current project directory
+ * @param {string} file
+ */
+let relative = (file) => file;
+
+if (DEV) {
+	try {
+		const path = await import('node:path');
+		const process = await import('node:process');
+
+		relative = (file) => path.relative(process.cwd(), file);
+	} catch {
+		// do nothing
+	}
+}
 
 /**
  * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
  * @param {Error} error
  */
 export function clean_up_stack_trace(error) {
-	const stack_trace = error.stack?.split('\n') ?? [];
-	const last_line_from_src_code = stack_trace.findLastIndex((line) => route_file_regex.test(line));
+	const stack_trace = (error.stack?.split('\n') ?? []).map((line) => {
+		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
+	});
+
+	// progressive enhancement for people who haven't configured kit.files.src to something else
+	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
 
 	if (last_line_from_src_code === -1) {
 		// default to the whole stack trace
