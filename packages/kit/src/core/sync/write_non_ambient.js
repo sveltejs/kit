@@ -66,10 +66,21 @@ function generate_app_types(manifest_data) {
 			dynamic_routes.push(route_type);
 
 			const pathname = remove_group_segments(route.id);
-			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
+			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
+			pathnames.add(`\`${replaced_pathname}\` & {}`);
+
+			if (pathname !== '/') {
+				// Support trailing slash
+				pathnames.add(`\`${replaced_pathname + '/'}\` & {}`);
+			}
 		} else {
 			const pathname = remove_group_segments(route.id);
 			pathnames.add(s(pathname));
+
+			if (pathname !== '/') {
+				// Support trailing slash
+				pathnames.add(s(pathname + '/'));
+			}
 		}
 
 		/** @type {Map<string, boolean>} */
