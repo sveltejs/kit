@@ -3,6 +3,7 @@
  * @param {string} key
  * @param {(value: string) => any} parse
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function get(key, parse = JSON.parse) {
 	try {
 		return parse(sessionStorage[key]);

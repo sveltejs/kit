@@ -47,15 +47,18 @@ export const add = (a, b) => a + b;
 ...SvelteKit will error:
 
 ```
-Cannot import $lib/server/secrets.js into public-facing code:
-- src/routes/+page.svelte
-	- src/routes/utils.js
-		- $lib/server/secrets.js
+Cannot import $lib/server/secrets.ts into code that runs in the browser, as this could leak sensitive information.
+
+ src/routes/+page.svelte imports
+  src/routes/utils.js imports
+   $lib/server/secrets.ts
+
+If you're only using the import as a type, change it to `import type`.
 ```
 
 Even though the public-facing code — `src/routes/+page.svelte` — only uses the `add` export and not the secret `atlantisCoordinates` export, the secret code could end up in JavaScript that the browser downloads, and so the import chain is considered unsafe.
 
-This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``, with one small caveat: during development, if there are two or more dynamic imports between the public-facing code and the server-only module, the illegal import will not be detected the first time the code is loaded.
+This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``.
 
 > [!NOTE] Unit testing frameworks like Vitest do not distinguish between server-only and public-facing code. For this reason, illegal import detection is disabled when running tests, as determined by `process.env.TEST === 'true'`.
 

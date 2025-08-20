@@ -1,5 +1,257 @@
 # @sveltejs/kit
 
+## 2.34.1
+### Patch Changes
+
+
+- fix: support multiple cookies with the same name across different paths and domains ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: add link header when preloading font ([#14200](https://github.com/sveltejs/kit/pull/14200))
+
+
+- fix: `cookies.get(...)` returns `undefined` for a just-deleted cookie ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: load env before prerender ([`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c))
+
+## 2.34.0
+### Minor Changes
+
+
+- feat: allow dynamic `env` access during prerender ([#14243](https://github.com/sveltejs/kit/pull/14243))
+
+
+### Patch Changes
+
+
+- fix: clone `fetch` responses so that headers are mutable ([#13942](https://github.com/sveltejs/kit/pull/13942))
+
+
+- fix: serialize server `load` data before passing to universal `load`, to handle mutations ([#14268](https://github.com/sveltejs/kit/pull/14268))
+
+
+- fix: allow `asset(...)` to be used with imported assets ([#14270](https://github.com/sveltejs/kit/pull/14270))
+
+## 2.33.1
+### Patch Changes
+
+
+- fix: make paths in .css assets relative ([#14262](https://github.com/sveltejs/kit/pull/14262))
+
+
+- fix: avoid copying SSR stylesheets to client assets ([#13069](https://github.com/sveltejs/kit/pull/13069))
+
+## 2.33.0
+### Minor Changes
+
+
+- feat: configure error reporting when routes marked as prerendable were not prerendered ([#11702](https://github.com/sveltejs/kit/pull/11702))
+
+
+### Patch Changes
+
+
+- fix: use correct flag for server tracing ([#14250](https://github.com/sveltejs/kit/pull/14250))
+
+
+- fix: correct type names for new `handleUnseenRoutes` option ([#14254](https://github.com/sveltejs/kit/pull/14254))
+
+
+- chore: Better docs and error message for missing `@opentelemetry/api` dependency ([#14250](https://github.com/sveltejs/kit/pull/14250))
+
+## 2.32.0
+### Minor Changes
+
+
+- feat: inline load fetch `response.body` stream data as base64 in page ([#11473](https://github.com/sveltejs/kit/pull/11473))
+
+
+### Patch Changes
+
+
+- fix: better error when `.remote.ts` files are used without the `experimental.remoteFunctions` flag ([#14225](https://github.com/sveltejs/kit/pull/14225))
+
+## 2.31.1
+### Patch Changes
+
+
+- fix: pass options to resolve in resolveId hook ([#14223](https://github.com/sveltejs/kit/pull/14223))
+
+## 2.31.0
+### Minor Changes
+
+
+- feat: OpenTelemetry tracing for `handle`, `sequence`, form actions, remote functions, and `load` functions running on the server ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+## 2.30.1
+### Patch Changes
+
+
+- chore: generate `$app/types` in a more Typescript-friendly way ([#14207](https://github.com/sveltejs/kit/pull/14207))
+
+## 2.30.0
+### Minor Changes
+
+
+- feat: allow to specify options for the service worker in `svelte.config.js` ([#13578](https://github.com/sveltejs/kit/pull/13578))
+
+
+### Patch Changes
+
+
+- fix: ensure buttonProps.enhance works on buttons with nested text ([#14199](https://github.com/sveltejs/kit/pull/14199))
+
+
+- fix: pass validation issues specifically to avoid non-enumerable spreading error ([#14197](https://github.com/sveltejs/kit/pull/14197))
+
+## 2.29.1
+### Patch Changes
+
+
+- chore: allow remote functions in all of the src directory ([#14198](https://github.com/sveltejs/kit/pull/14198))
+
+## 2.29.0
+### Minor Changes
+
+
+- feat: add a `kit.files.src` option ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+### Patch Changes
+
+
+- fix: don't treat `$lib/server.ts` or `$lib/server_whatever.ts` as server-only modules, only `$lib/server/**` ([#14191](https://github.com/sveltejs/kit/pull/14191))
+
+
+- fix: make illegal server-only import errors actually useful ([#14155](https://github.com/sveltejs/kit/pull/14155))
+
+
+- chore: deprecate `config.kit.files` options ([#14152](https://github.com/sveltejs/kit/pull/14152))
+
+
+- fix: avoid warning if page options in a Svelte file belongs to a comment ([#14180](https://github.com/sveltejs/kit/pull/14180))
+
+## 2.28.0
+### Minor Changes
+
+
+- feat: add `RouteId` and `RouteParams` to NavigationTarget interface ([#14167](https://github.com/sveltejs/kit/pull/14167))
+
+
+- feat: add `pending` property to forms and commands ([#14137](https://github.com/sveltejs/kit/pull/14137))
+
+
+### Patch Changes
+
+
+- fix: `fetch` imported assets during prerender ([#12201](https://github.com/sveltejs/kit/pull/12201))
+
+
+- chore: refactor redundant base64 encoding/decoding functions ([#14160](https://github.com/sveltejs/kit/pull/14160))
+
+
+- fix: use correct cache result when fetching same url multiple times ([#12355](https://github.com/sveltejs/kit/pull/12355))
+
+
+- fix: don't refresh queries automatically when running commands ([#14170](https://github.com/sveltejs/kit/pull/14170))
+
+
+- fix: avoid writing remote function bundle to disk when treeshaking prerendered queries ([#14161](https://github.com/sveltejs/kit/pull/14161))
+
+## 2.27.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 2.27.2
+### Patch Changes
+
+
+- fix: ensure `form()` remote functions work when the app is configured to a single output ([#14127](https://github.com/sveltejs/kit/pull/14127))
+
+
+- fix: use the configured base path when calling remote functions from the client ([#14106](https://github.com/sveltejs/kit/pull/14106))
+
+## 2.27.1
+### Patch Changes
+
+
+- fix: correctly type remote function input parameters from a schema ([#14098](https://github.com/sveltejs/kit/pull/14098))
+
+
+- fix: match URL-encoded newlines in rest route params ([#14102](https://github.com/sveltejs/kit/pull/14102))
+
+
+- fix: correctly spell server-side in error messages ([#14101](https://github.com/sveltejs/kit/pull/14101))
+
+## 2.27.0
+### Minor Changes
+
+
+- feat: remote functions ([#13986](https://github.com/sveltejs/kit/pull/13986))
+
+## 2.26.1
+### Patch Changes
+
+
+- fix: posixify internal app server path ([#14049](https://github.com/sveltejs/kit/pull/14049))
+
+
+- fix: ignore route groups when generating typed routes ([#14050](https://github.com/sveltejs/kit/pull/14050))
+
+## 2.26.0
+### Minor Changes
+
+
+- feat: better type-safety for `page.route.id`, `page.params`, `page.url.pathname` and various other places ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: `resolve(...)` and `asset(...)` helpers for resolving paths ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+
+- feat: Add `$app/types` module with `Asset`, `RouteId`, `Pathname`, `ResolvedPathname` `RouteParams<T>` and `LayoutParams<T>` ([#13864](https://github.com/sveltejs/kit/pull/13864))
+
+## 2.25.2
+### Patch Changes
+
+
+- fix: correctly set URL when navigating during an ongoing navigation ([#14004](https://github.com/sveltejs/kit/pull/14004))
+
+## 2.25.1
+### Patch Changes
+
+
+- fix: add missing params property ([#14012](https://github.com/sveltejs/kit/pull/14012))
+
+## 2.25.0
+### Minor Changes
+
+
+- feat: support asynchronous `read` implementations from adapters ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: log when no Svelte config file has been found to avoid confusion ([#14001](https://github.com/sveltejs/kit/pull/14001))
+
+## 2.24.0
+### Minor Changes
+
+
+- feat: typed `params` prop for page/layout components ([#13999](https://github.com/sveltejs/kit/pull/13999))
+
+
+### Patch Changes
+
+
+- fix: treeshake internal `storage.get` helper ([#13998](https://github.com/sveltejs/kit/pull/13998))
+
 ## 2.23.0
 ### Minor Changes
 
