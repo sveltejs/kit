@@ -87,7 +87,7 @@ export function get_cookies(request, url) {
 				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
 
 			if (best_match) {
-				return best_match.maxAge === 0 ? undefined : best_match.value;
+				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
 			const req_cookies = parse(header, { decode: opts?.decode });
