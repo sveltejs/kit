@@ -68,7 +68,8 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		csrf: {
-			checkOrigin: true
+			checkOrigin: true,
+			trustedOrigins: []
 		},
 		embedded: false,
 		env: {

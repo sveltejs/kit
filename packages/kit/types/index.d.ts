@@ -404,6 +404,17 @@ declare module '@sveltejs/kit' {
 			 * @default true
 			 */
 			checkOrigin?: boolean;
+			/**
+			 * An array of origins that are allowed to make cross-origin form submissions to your app, even when `checkOrigin` is `true`.
+			 *
+			 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
+			 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
+			 *
+			 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 * @default []
+			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 */
+			trustedOrigins?: string[];
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
