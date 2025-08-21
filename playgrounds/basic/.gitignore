@@ -3,3 +3,5 @@
 /.svelte-kit/
 /dist/
 /build
+/src/lib
+/src/routes
