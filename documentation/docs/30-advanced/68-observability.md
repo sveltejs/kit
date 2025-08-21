@@ -69,7 +69,7 @@ To view your first trace, you'll need to set up a local collector. We'll use [Ja
 - Turn on the experimental flags mentioned earlier in your `svelte.config.js` file
 - Use your package manager to install the dependencies you'll need:
   ```sh
-  npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-oltp-proto import-in-the-middle
+  npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto import-in-the-middle
   ```
 - Create `src/instrumentation.server.js` with the following:
 
