@@ -17,6 +17,7 @@ export function validate_remote_functions(module, file) {
 			type !== 'command' &&
 			type !== 'query' &&
 			type !== 'query.batch' &&
+			type !== 'query.stream' &&
 			type !== 'prerender'
 		) {
 			throw new Error(

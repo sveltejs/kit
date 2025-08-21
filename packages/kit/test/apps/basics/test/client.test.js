@@ -1932,4 +1932,33 @@ test.describe('remote functions', () => {
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(1);
 	});
+
+	test('query.stream works', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/stream');
+
+		await expect(page.locator('#time-promise')).toHaveText('0');
+		await expect(page.locator('#time-resource')).toHaveText('0');
+		await expect(page.locator('#time-stream')).toHaveText('[0]');
+
+		expect(request_count).toBe(1); // deduplicated time() stream
+
+		await page.click('button');
+		await expect(page.locator('#time-promise')).toHaveText('1');
+		await expect(page.locator('#time-resource')).toHaveText('1');
+		await expect(page.locator('#time-stream')).toHaveText('[0, 1]');
+
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(2); // just the next() command
+
+		await page.click('button');
+		await expect(page.locator('#time-promise')).toHaveText('1');
+		await expect(page.locator('#time-resource')).toHaveText('1');
+		await expect(page.locator('#time-stream')).toHaveText('[0, 1]');
+
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(3); // just the next() command
+	});
 });

@@ -1,4 +1,4 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQueryFunction, RemoteQueryStreamFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '__sveltekit/paths';
 import { app, goto, remote_responses, started } from '../client.js';
@@ -97,8 +97,218 @@ function batch(id) {
 	});
 }
 
-// Add batch as a property to the query function
+/**
+ * @param {string} id
+ * @returns {RemoteQueryStreamFunction<any, any>}
+ */
+function stream(id) {
+	return create_remote_function(id, (_, payload) => {
+		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+		return new QueryStream(url);
+	});
+}
+
+/**
+ * Query stream class that implements both Promise and AsyncIterable interfaces
+ * @template T
+ * @implements {Partial<Promise<T>>}
+ */
+class QueryStream {
+	/**
+	 * The promise next() and then/catch/finally methods return. Is reset after each message from the EventSource.
+	 * @type {Promise<any>}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#promise;
+
+	/**
+	 * The resolve function for the promise.
+	 * @type {(value: any) => void}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#resolve;
+
+	/**
+	 * The reject function for the promise.
+	 * @type {(error?: any) => void}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#reject;
+
+	/** @type {any} */
+	#current = $state.raw();
+
+	/** @type {boolean} */
+	#ready = $state(false);
+
+	/** @type {any} */
+	#error = $state();
+
+	/** @type {EventSource | undefined} */
+	#source;
+
+	/**
+	 * How many active async iterators are using this stream.
+	 * If there are no active iterators, the EventSource is closed if it's unused.
+	 * @type {number} */
+	#count = 0;
+
+	/**
+	 * The URL of the EventSource.
+	 * @type {string}
+	 */
+	#url;
+
+	/**
+	 * Becomes `true` when our query map deletes this stream, which means there's no reactive listener to it anymore.
+	 * @type {boolean}
+	 */
+	#unused = false;
+
+	/**
+	 * @param {string} url
+	 */
+	constructor(url) {
+		this.#url = url;
+		this.#next();
+	}
+
+	#create_promise() {
+		this.#reject?.(); // in case there's a dangling listener
+		this.#promise = new Promise((resolve, reject) => {
+			this.#resolve = resolve;
+			this.#reject = reject;
+		});
+	}
+
+	#next() {
+		if (this.#source && this.#source.readyState !== EventSource.CLOSED) return;
+
+		this.#create_promise();
+		this.#source = new EventSource(this.#url);
+
+		const source = this.#source;
+
+		/** @param {MessageEvent} event */
+		const onMessage = (event) => {
+			this.#ready = true;
+			this.#error = undefined;
+
+			const message = event.data;
+
+			if (message === '[DONE]') {
+				source.close();
+				this.#resolve({ done: true, value: undefined });
+				return;
+			}
+
+			const parsed = devalue.parse(message, app.decoders);
+			if (parsed && typeof parsed === 'object' && parsed.type === 'error') {
+				source.close();
+				this.#reject((this.#error = new HttpError(parsed.status ?? 500, parsed.error)));
+				return;
+			}
+
+			this.#current = parsed;
+			this.#resolve({ done: false, value: parsed });
+			this.#create_promise();
+		};
+
+		/** @param {Event} error */
+		const onError = (error) => {
+			this.#error = error;
+			this.#reject(error);
+		};
+
+		this.#source.addEventListener('message', onMessage);
+		this.#source.addEventListener('error', onError);
+	}
+
+	get then() {
+		this.#current;
+
+		/**
+		 * @param {any} resolve
+		 * @param {any} reject
+		 */
+		return (resolve, reject) => {
+			// On first call we return the promise. In all other cases we don't want any delay and return the current value.
+			// The getter will self-invalidate when the next message is received.
+			if (!this.#ready) {
+				return this.#promise.then((v) => v.value).then(resolve, reject);
+			} else {
+				if (this.#error) {
+					return reject(this.#error);
+				} else {
+					return resolve(this.#current);
+				}
+			}
+		};
+	}
+
+	get catch() {
+		this.#current;
+
+		return (/** @type {any} */ reject) => {
+			return this.then(undefined, reject);
+		};
+	}
+
+	get finally() {
+		this.#current;
+
+		return (/** @type {any} */ fn) => {
+			return this.then(
+				() => fn(),
+				() => fn()
+			);
+		};
+	}
+
+	get current() {
+		return this.#current;
+	}
+
+	get ready() {
+		return this.#ready;
+	}
+
+	get error() {
+		return this.#error;
+	}
+
+	_dispose() {
+		this.#unused = true;
+		if (this.#count === 0) {
+			this.#source?.close();
+		}
+	}
+
+	[Symbol.asyncIterator]() {
+		// Restart the stream in case it was closed previously.
+		// Can happen if this is iterated over from a non-reactive context.
+		this.#next();
+		this.#count++;
+		const that = this;
+
+		return {
+			next() {
+				return that.#promise;
+			},
+			return() {
+				that.#count--;
+				if (that.#count === 0 && that.#unused) {
+					that.#source?.close();
+				}
+				return Promise.resolve({ done: true, value: undefined });
+			}
+		};
+	}
+}
+
+// Add batch and stream as properties to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'stream', { value: stream, enumerable: true });
 
 /**
  * @template T

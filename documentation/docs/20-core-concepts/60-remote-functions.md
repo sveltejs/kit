@@ -213,6 +213,72 @@ export const getPost = query.batch(v.string(), async (slugs) => {
 </ul>
 ```
 
+## query.stream
+
+`query.stream` allows you to stream continuous data from the server to the client.
+
+```js
+/// file: src/routes/time.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
+import { query } from '$app/server';
+
+export const time = query.stream(async function* () {
+	while (true) {
+		yield new Date();
+		await new Promise(r => setTimeout(r, 1000))
+	}
+});
+```
+
+You can consume the stream like a promise or via the `current` property. In both cases, if it's used in a reactive context, it will automatically update to the latest version upon retrieving new data.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { time } from './time.remote.js';
+</script>
+
+<p>{await time()}</p>
+<p>{time().current}</p>
+```
+
+Apart from that you can iterate over it like any other async iterable, including using `for await (...)`.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { time } from './time.remote.js';
+
+	let times = $state([]);
+
+	async function stream() {
+		times = []
+		let count = 0;
+
+		for await (const entry of time()) {
+			times.push(time);
+			count++;
+			if (count >= 5) {
+				break;
+			}
+		}
+	})
+</script>
+
+<button onclick={stream}>stream for five seconds</button>
+
+{#each times as time}
+	<span>{time}</time>
+{/each}
+```
+
+Stream requests to the same resource with the same payload are deduplicated, i.e. you cannot start the same stream multiple times in parallel and it to start from the beginning each time.
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...

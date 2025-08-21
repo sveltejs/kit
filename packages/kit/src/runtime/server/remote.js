@@ -121,6 +121,69 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
+		if (info.type === 'query.stream') {
+			const payload = /** @type {string} */ (
+				new URL(event.request.url).searchParams.get('payload')
+			);
+
+			const generator = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
+
+			// Return a Server-Sent Events stream
+			let cancelled = false;
+
+			return new Response(
+				new ReadableStream({
+					async start(controller) {
+						const encoder = new TextEncoder();
+
+						try {
+							for await (const value of generator) {
+								if (cancelled) break;
+								const serialized = stringify(value, transport);
+								const chunk = `data: ${serialized}\n\n`;
+								controller.enqueue(encoder.encode(chunk));
+							}
+
+							// Send end marker
+							controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+							controller.close();
+						} catch (error) {
+							console.error(error);
+							// Send error and close
+							const errorData = await handle_error_and_jsonify(event, state, options, error);
+							const serialized = stringify(
+								{
+									type: 'error',
+									error: errorData,
+									status:
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500
+								},
+								transport
+							);
+							const chunk = `data: ${serialized}\n\n`;
+							controller.enqueue(encoder.encode(chunk));
+							controller.close();
+						}
+					},
+
+					cancel() {
+						cancelled = true;
+					}
+				}),
+				{
+					headers: {
+						'content-type': 'text/event-stream',
+						'cache-control': 'private, no-store',
+						connection: 'keep-alive'
+					}
+				}
+			);
+		}
+
 		const payload =
 			info.type === 'prerender'
 				? prerender_args

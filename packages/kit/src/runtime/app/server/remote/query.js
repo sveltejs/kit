@@ -1,4 +1,4 @@
-/** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQuery, RemoteQueryFunction, RemoteQueryStream, RemoteQueryStreamFunction } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -228,5 +228,120 @@ function batch(validate_or_fn, maybe_fn) {
 	return wrapper;
 }
 
-// Add batch as a property to the query function
+/**
+ * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+ *
+ * @template Output
+ * @overload
+ * @param {() => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>} fn
+ * @returns {RemoteQueryStreamFunction<void, Output>}
+ * @since 2.36
+ */
+/**
+ * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>} fn
+ * @returns {RemoteQueryStreamFunction<Input, Output>}
+ * @since 2.36
+ */
+/**
+ * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+ *
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} schema
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>} fn
+ * @returns {RemoteQueryStreamFunction<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @since 2.36
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(arg?: Input) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>} [maybe_fn]
+ * @returns {RemoteQueryStreamFunction<Input, Output>}
+ * @since 2.36
+ */
+/*@__NO_SIDE_EFFECTS__*/
+function stream(validate_or_fn, maybe_fn) {
+	/** @type {(arg?: Input) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>} */
+	const fn = maybe_fn ?? validate_or_fn;
+
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/** @type {RemoteInfo} */
+	const __ = { type: 'query.stream', id: '', name: '' };
+
+	/** @type {RemoteQueryStreamFunction<Input, Output> & { __: RemoteInfo }} */
+	const wrapper = (/** @type {Input} */ arg) => {
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query.stream '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+			);
+		}
+
+		const { event, state } = get_request_store();
+
+		/** @type {IteratorResult<Output> | undefined} */
+		let first_value;
+
+		const promise = (async () => {
+			// We only care about the generator when doing a remote request
+			if (event.isRemoteRequest) return;
+
+			const generator = await run_remote_function(event, state, false, arg, validate, fn);
+			first_value = await generator.next();
+			await generator.return();
+			return first_value.done ? undefined : first_value.value;
+		})();
+
+		// Catch promise to avoid unhandled rejection
+		promise.catch(() => {});
+
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
+		Object.assign(promise, {
+			async *[Symbol.asyncIterator]() {
+				if (event.isRemoteRequest) {
+					const generator = await run_remote_function(event, state, false, arg, validate, fn);
+					yield* generator;
+				} else {
+					// TODO how would we subscribe to the stream on the server while deduplicating calls and knowing when to stop?
+					throw new Error(
+						'Cannot iterate over a stream on the server. This restriction may be lifted in a future version.'
+					);
+				}
+			},
+			get error() {
+				return undefined;
+			},
+			get ready() {
+				return !!first_value;
+			},
+			get current() {
+				return first_value?.value;
+			}
+		});
+
+		return /** @type {RemoteQueryStream<Output>} */ (promise);
+	};
+
+	Object.defineProperty(wrapper, '__', { value: __ });
+
+	return wrapper;
+}
+
+// Add batch and stream as properties to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'stream', { value: stream, enumerable: true });
