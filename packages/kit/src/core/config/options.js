@@ -112,7 +112,7 @@ const options = object(
 				checkOrigin: deprecate(
 					boolean(true),
 					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins: ['*']\`. It will be removed in a future version`
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
 				),
 				trustedOrigins: string_array([])
 			}),
