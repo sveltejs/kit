@@ -402,13 +402,16 @@ declare module '@sveltejs/kit' {
 			 *
 			 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 			 * @default true
+			 * @deprecated Use `trustedOrigins: ['*']` instead
 			 */
 			checkOrigin?: boolean;
 			/**
-			 * An array of origins that are allowed to make cross-origin form submissions to your app, even when `checkOrigin` is `true`.
+			 * An array of origins that are allowed to make cross-origin form submissions to your app.
 			 *
 			 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
 			 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
+			 *
+			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
 			 *
 			 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
 			 * @default []

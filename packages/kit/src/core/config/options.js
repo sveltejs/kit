@@ -1,4 +1,5 @@
 import process from 'node:process';
+import colors from 'kleur';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -108,7 +109,11 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: boolean(true),
+				checkOrigin: deprecate(
+					boolean(true),
+					(keypath) =>
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				),
 				trustedOrigins: string_array([])
 			}),
 
@@ -323,7 +328,7 @@ function deprecate(
 ) {
 	return (input, keypath) => {
 		if (input !== undefined) {
-			console.warn(get_message(keypath));
+			console.warn(colors.bold().yellow(get_message(keypath)));
 		}
 
 		return fn(input, keypath);
