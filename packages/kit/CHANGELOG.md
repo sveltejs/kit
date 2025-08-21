@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.36.1
+### Patch Changes
+
+
+- fix: ensure importing from `$app/navigation` works in test files ([#14195](https://github.com/sveltejs/kit/pull/14195))
+
 ## 2.36.0
 ### Minor Changes
 
