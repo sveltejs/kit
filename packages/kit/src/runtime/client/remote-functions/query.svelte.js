@@ -216,8 +216,8 @@ class QueryStream {
 				return;
 			}
 
-			this.#current = parsed;
-			this.#resolve({ done: false, value: parsed });
+			this.#current = parsed.value;
+			this.#resolve({ done: false, value: parsed.value });
 			this.#create_promise();
 		};
 

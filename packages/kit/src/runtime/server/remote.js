@@ -144,29 +144,32 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				fn(parse_remote_arg(payload, transport))
 			);
 
-			// Return a Server-Sent Events stream
+			// Return a Server-Sent Events stream using the pull method to consume the async iterator
 			let cancelled = false;
+			const encoder = new TextEncoder();
+			const iterator = generator[Symbol.asyncIterator]();
 
 			return new Response(
 				new ReadableStream({
-					async start(controller) {
-						const encoder = new TextEncoder();
-
+					async pull(controller) {
 						try {
-							for await (const value of generator) {
-								if (cancelled) break;
-								const serialized = stringify(value, transport);
-								const chunk = `data: ${serialized}\n\n`;
-								controller.enqueue(encoder.encode(chunk));
-							}
+							const { value, done } = await iterator.next();
+							if (cancelled) return;
 
-							// Send end marker
-							controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-							controller.close();
+							if (done) {
+								// Send end marker
+								controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+								controller.close();
+								return;
+							}
+							const serialized = stringify({ type: 'data', value }, transport);
+							const chunk = `data: ${serialized}\n\n`;
+							controller.enqueue(encoder.encode(chunk));
 						} catch (error) {
-							console.error(error);
-							// Send error and close
 							const errorData = await handle_error_and_jsonify(event, state, options, error);
+
+							if (cancelled) return;
+
 							const serialized = stringify(
 								{
 									type: 'error',
@@ -186,13 +189,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 					cancel() {
 						cancelled = true;
+						if (iterator.return) {
+							iterator.return();
+						}
 					}
 				}),
 				{
 					headers: {
 						'content-type': 'text/event-stream',
-						'cache-control': 'private, no-store',
-						connection: 'keep-alive'
+						'cache-control': 'private, no-store'
 					}
 				}
 			);
