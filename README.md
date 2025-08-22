@@ -1,6 +1,6 @@
 [![Chat](https://img.shields.io/discord/457912077277855764?label=chat&logo=discord)](https://svelte.dev/chat)
 
-# SvelteKit
+# SvelteKit.
 
 Web development, streamlined. Read the [documentation](https://svelte.dev/docs/kit) to get started.
 
