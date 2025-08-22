@@ -11,7 +11,6 @@ import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
-import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
@@ -168,14 +167,12 @@ async function analyse({
 	// analyse remotes
 	for (const remote of manifest_data.remotes) {
 		const loader = manifest._.remotes[remote.hash];
-		const module = (await loader()).default;
-
-		validate_remote_functions(module, remote.file);
+		const { default: functions } = await loader();
 
 		const exports = new Map();
 
-		for (const name in module) {
-			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+		for (const name in functions) {
+			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
 			const type = info.type;
 
 			exports.set(name, {

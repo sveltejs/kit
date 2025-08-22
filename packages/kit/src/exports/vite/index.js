@@ -731,32 +731,25 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
-				// in dev, add metadata to remote functions by self-importing
-				if (dev_server) {
-					return (
-						code +
-						dedent`
-							import * as $$_self_$$ from './${path.basename(id)}';
-							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
+				code += dedent`
+					import * as $$_self_$$ from './${path.basename(id)}';
+					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
-							$$_validate_$$($$_self_$$, ${s(file)});
+					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
-							for (const [name, fn] of Object.entries($$_self_$$)) {
-								fn.__.id = ${s(remote.hash)} + '/' + name;
-								fn.__.name = name;
-							}
-						`
-					);
+					for (const [name, fn] of Object.entries($$_self_$$)) {
+						fn.__.id = ${s(remote.hash)} + '/' + name;
+						fn.__.name = name;
+					}
+				`;
+
+				if (!dev_server) {
+					// in prod, prevent the functions from being treeshaken. This will
+					// be replaced with an `export default` in the `writeBundle` hook
+					code += `$$_export_$$($$_self_$$);`;
 				}
 
-				// in prod, return as-is, and augment the build result instead
-				return (
-					code +
-					dedent`
-						import * as $$_self_$$ from './${path.basename(id)}';
-						$$_export_$$($$_self_$$);
-					`
-				);
+				return code;
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
@@ -1040,18 +1033,13 @@ async function kit({ svelte_config }) {
 					// TODO this is kinda messy, but was the quickest way to see something working
 					manifest_data.remotes = remotes;
 
-					try {
-						fs.mkdirSync(`${out}/server/remote`);
-					} catch {}
-
 					for (const remote of remotes) {
 						const chunk = bundle[`chunks/remote-${remote.hash}.js`];
 						if (chunk.type !== 'chunk') continue;
 
 						const transformed = chunk.code.replace(
 							'$$_export_$$($$_self_$$)',
-							() =>
-								`for (const [name, fn] of Object.entries($$_self_$$)) { fn.__.id = '${remote.hash}/' + name; fn.__.name = name; }; export default $$_self_$$;`
+							() => `export default $$_self_$$;`
 						);
 
 						fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
