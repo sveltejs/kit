@@ -791,6 +791,18 @@ async function kit({ svelte_config }) {
 			return {
 				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
+		},
+
+		writeBundle() {
+			for (const remote of remotes) {
+				const file = `${out}/server/chunks/remote-${remote.hash}.js`;
+				const code = fs.readFileSync(file, 'utf-8');
+
+				fs.writeFileSync(
+					file,
+					code.replace('$$_export_$$($$_self_$$)', () => `export default $$_self_$$;`)
+				);
+			}
 		}
 	};
 
@@ -1026,18 +1038,6 @@ async function kit({ svelte_config }) {
 			sequential: true,
 			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
-
-				if (kit.experimental.remoteFunctions) {
-					for (const remote of remotes) {
-						const file = `${out}/server/chunks/remote-${remote.hash}.js`;
-						const code = fs.readFileSync(file, 'utf-8');
-
-						fs.writeFileSync(
-							file,
-							code.replace('$$_export_$$($$_self_$$)', () => `export default $$_self_$$;`)
-						);
-					}
-				}
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -1346,6 +1346,7 @@ async function kit({ svelte_config }) {
 							prerendered,
 							prerender_map,
 							log,
+							remotes,
 							vite_config
 						);
 					} else {
