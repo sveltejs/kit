@@ -1036,12 +1036,6 @@ async function kit({ svelte_config }) {
 			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
 
-				/**
-				 * A name -> export map for every remote chunk
-				 * @type {Map<string, Map<string, string>>}
-				 */
-				const remote_chunks = new Map();
-
 				if (kit.experimental.remoteFunctions) {
 					// TODO this is kinda messy, but was the quickest way to see something working
 					manifest_data.remotes = remotes;
@@ -1053,11 +1047,6 @@ async function kit({ svelte_config }) {
 					for (const remote of remotes) {
 						const chunk = bundle[`chunks/remote-${remote.hash}.js`];
 						if (chunk.type !== 'chunk') continue;
-
-						/** @type {Map<string, string>} */
-						const chunk_exports = new Map();
-
-						remote_chunks.set(remote.hash, chunk_exports);
 
 						const transformed = chunk.code.replace(
 							'$$_export_$$($$_self_$$)',
