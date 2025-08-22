@@ -1,32 +1,14 @@
 /** @import { RequestState } from 'types' */
-import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '__sveltekit/paths';
-import { is_endpoint_request, render_endpoint } from './endpoint.js';
-import { render_page } from './page/index.js';
-import { render_response } from './page/render.js';
-import { respond_with_error } from './page/respond_with_error.js';
-import { is_form_content_type } from '../../utils/http.js';
-import {
-	handle_fatal_error,
-	has_prerendered_path,
-	method_not_allowed,
-	redirect_response
-} from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
-import { exec } from '../../utils/routing.js';
-import { redirect_json_response, render_data } from './data/index.js';
-import { add_cookies_to_headers, get_cookies } from './cookie.js';
-import { create_fetch } from './fetch.js';
-import { PageNodes } from '../../utils/page_nodes.js';
+import { app_dir, base } from '__sveltekit/paths';
+import { DEV } from 'esm-env';
 import { validate_server_exports } from '../../utils/exports.js';
-import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
-import { get_public_env } from './env_module.js';
-import { resolve_route } from './page/server_routing.js';
-import { validateHeaders } from './validate-headers.js';
+import { is_form_content_type } from '../../utils/http.js';
+import { PageNodes } from '../../utils/page_nodes.js';
+import { exec } from '../../utils/routing.js';
+import { decode_params, decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -35,9 +17,28 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { get_remote_id, handle_remote_call } from './remote.js';
-import { record_span } from '../telemetry/record_span.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { otel } from '../telemetry/otel.js';
+import { record_span } from '../telemetry/record_span.js';
+import { add_cookies_to_headers, get_cookies } from './cookie.js';
+import { redirect_json_response, render_data } from './data/index.js';
+import { is_endpoint_request, render_endpoint } from './endpoint.js';
+import { get_public_env } from './env_module.js';
+import { create_fetch } from './fetch.js';
+import { action_json_redirect, is_action_json_request } from './page/actions.js';
+import { server_data_serializer } from './page/data_serializer.js';
+import { render_page } from './page/index.js';
+import { render_response } from './page/render.js';
+import { respond_with_error } from './page/respond_with_error.js';
+import { resolve_route } from './page/server_routing.js';
+import { get_remote_id, handle_remote_call } from './remote.js';
+import {
+	handle_fatal_error,
+	has_prerendered_path,
+	method_not_allowed,
+	redirect_response
+} from './utils.js';
+import { validateHeaders } from './validate-headers.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 /* global __SVELTEKIT_DEV__ */
@@ -541,7 +542,8 @@ export async function internal_respond(request, options, manifest, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					resolve_opts
+					resolve_opts,
+					data_serializer: server_data_serializer(event, event_state, options)
 				});
 			}
 

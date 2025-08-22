@@ -1,13 +1,14 @@
 import { text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import * as devalue from 'devalue';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
+import { create_async_iterator } from '../../../utils/streaming.js';
+import { normalize_path } from '../../../utils/url.js';
+import { text_encoder } from '../../utils.js';
+import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
-import { normalize_path } from '../../../utils/url.js';
-import * as devalue from 'devalue';
-import { create_async_iterator } from '../../../utils/streaming.js';
-import { text_encoder } from '../../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -120,7 +121,9 @@ export async function render_data(
 			)
 		);
 
-		const { data, chunks } = get_data_json(event, event_state, options, nodes);
+		const data_serializer = server_data_serializer_json(event, event_state, options);
+		for (let i = 0; i < nodes.length; i++) data_serializer.serialize(i, nodes[i]);
+		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {
 			// use a normal JSON response where possible, so we get `content-length`

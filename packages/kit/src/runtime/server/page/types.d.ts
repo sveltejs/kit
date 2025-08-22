@@ -1,5 +1,12 @@
 import { CookieSerializeOptions } from 'cookie';
-import { SSRNode, CspDirectives, ServerDataNode } from 'types';
+import {
+	CspDirectives,
+	ServerDataNode,
+	SSRNode,
+	type ServerDataSkippedNode,
+	type ServerErrorNode
+} from 'types';
+import type { Csp } from './csp.js';
 
 export interface Fetched {
 	url: string;
@@ -34,3 +41,16 @@ export interface Cookie {
 	value: string;
 	options: CookieSerializeOptions & { path: string };
 }
+
+export type ServerDataSerializer = {
+	serialize(i: number, node: ServerDataNode | null): void;
+	get_data(csp: Csp, global: string): { data: string; chunks: AsyncIterable<string> | null };
+};
+
+export type ServerDataSerializerJson = {
+	serialize(
+		i: number,
+		node: ServerDataSkippedNode | ServerDataNode | ServerErrorNode | null | undefined
+	): void;
+	get_data(): { data: string; chunks: AsyncIterable<string> | null };
+};
