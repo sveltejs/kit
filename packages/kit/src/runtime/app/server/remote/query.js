@@ -147,8 +147,24 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
-	const __ = { type: 'query_batch', id: '', name: '' };
+	/** @type {RemoteInfo & { type: 'query_batch' }} */
+	const __ = {
+		type: 'query_batch',
+		id: '',
+		name: '',
+		run: (args) => {
+			const { event, state } = get_request_store();
+
+			return run_remote_function(
+				event,
+				state,
+				false,
+				args,
+				(array) => Promise.all(array.map(validate)),
+				fn
+			);
+		}
+	};
 
 	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
 	let batching = { args: [], resolvers: [] };
@@ -170,6 +186,8 @@ function batch(validate_or_fn, maybe_fn) {
 			return new Promise((resolve, reject) => {
 				batching.args.push(arg);
 				batching.resolvers.push({ resolve, reject });
+
+				if (batching.args.length > 1) return;
 
 				setTimeout(async () => {
 					const batched = batching;

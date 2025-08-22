@@ -548,12 +548,19 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 
 export type RemoteInfo =
 	| {
+			type: 'query' | 'command';
+			id: string;
+			name: string;
+	  }
+	| {
 			/**
 			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
 			 */
-			type: 'query' | 'query_batch' | 'command';
+			type: 'query_batch';
 			id: string;
 			name: string;
+			/** Direct access to the function without batching etc logic, for remote functions called from the client */
+			run: (args: any[]) => Promise<any>;
 	  }
 	| {
 			type: 'form';

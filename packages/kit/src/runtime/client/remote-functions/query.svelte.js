@@ -51,6 +51,8 @@ export function query_batch(id) {
 				batching.args.push(payload);
 				batching.resolvers.push({ resolve, reject });
 
+				if (batching.args.length > 1) return;
+
 				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
 				// and flushes could reveal more queries that should be batched.
 				setTimeout(async () => {
