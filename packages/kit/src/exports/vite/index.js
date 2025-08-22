@@ -41,7 +41,6 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { build_remotes, treeshake_prerendered_remotes } from './build/build_remote.js';
 import { should_ignore } from './static_analysis/utils.js';
 
 const cwd = process.cwd();
@@ -753,6 +752,7 @@ async function kit({ svelte_config }) {
 					);
 				}
 
+				// in prod, return as-is, and augment the build result instead
 				return (
 					code +
 					dedent`
@@ -760,10 +760,6 @@ async function kit({ svelte_config }) {
 						$$_export_$$($$_self_$$);
 					`
 				);
-
-				// in prod, return as-is, and augment the build result instead.
-				// this allows us to treeshake non-dynamic `prerender` functions
-				return;
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
@@ -1066,83 +1062,15 @@ async function kit({ svelte_config }) {
 
 						remote_chunks.set(remote.hash, chunk_exports);
 
-						/** @type {string[]} */
-						const exports = [];
-
-						/** @type {string[]} */
-						const re_exports = [];
-
-						/** @type {Map<string, string>} */
-						const existing_exports = new Map();
-
-						const match = /export {([^}]+)};\n$/.exec(chunk.code);
-
-						if (match) {
-							for (const specifier of match[1].trim().split(',')) {
-								const [local, exported = local] = specifier.trim().split(' as ');
-								existing_exports.set(local, exported);
-							}
-						}
-
-						// this bit is a smidge hacky. we need to reconstruct the original exports
-						// from the injected `const $$_self_$$` declaration
-						let transformed = chunk.code.replace(
-							/const \$\$_self_\$\$ = [^]+?{([^]+?)}, Symbol\.toStringTag/,
-							(_, self) => {
-								// the self-import will look like a series of `get foo() { return foo }`
-								const names = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
-								const values = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
-
-								for (let i = 0; i < names.length; i += 1) {
-									const name = names[i];
-									const value = values[i];
-
-									exports.push(value === name ? name : `${name}: ${value}`);
-
-									// const existing_export = existing_exports.get(value);
-
-									// if (existing_export) {
-									// 	re_exports.push(
-									// 		existing_export === name ? name : `${existing_export} as ${name}`
-									// 	);
-
-									// 	exports.push(value === name ? name : `${name}: ${value}`);
-
-									// 	chunk_exports.set(name, existing_export);
-									// } else {
-									// 	exports.push(value === name ? name : `${name}: ${value}`);
-									// 	re_exports.push(name);
-
-									// 	chunk_exports.set(name, value);
-									// }
-								}
-
-								return '// ' + _.replaceAll('\n', '\n// ');
-							}
-						);
-
-						if (transformed === chunk.code) {
-							throw new Error('An impossible situation occurred (no self-import was found)');
-						}
-
-						transformed = transformed.replace(
+						const transformed = chunk.code.replace(
 							'$$_export_$$($$_self_$$)',
-							`const $$_functions_$$ = { ${exports.join(', ')} }; for (const [name, fn] of Object.entries($$_functions_$$)) { fn.__.id = '${remote.hash}/' + name; fn.__.name = name; }; export default $$_functions_$$;`
+							() =>
+								`for (const [name, fn] of Object.entries($$_self_$$)) { fn.__.id = '${remote.hash}/' + name; fn.__.name = name; }; export default $$_self_$$;`
 						);
 
 						fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
-
-						// fs.writeFileSync(
-						// 	`${out}/server/remote/${remote.hash}.js`,
-						// 	`export { ${re_exports.join(', ')} } from '../chunks/remote-${remote.hash}.js';`
-						// );
-
-						// console.log(remote.hash, chunk_exports);
 					}
 				}
-
-				// ...make sure remote exports have their IDs assigned...
-				build_remotes(out, manifest_data, remote_chunks);
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -1404,9 +1332,6 @@ async function kit({ svelte_config }) {
 						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
 					})};\n`
 				);
-
-				// remove prerendered remote functions
-				await treeshake_prerendered_remotes(out, manifest_data, metadata, remote_chunks);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {
