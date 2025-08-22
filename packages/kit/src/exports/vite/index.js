@@ -685,7 +685,7 @@ async function kit({ svelte_config }) {
 					}
 
 					// Check if this is a *.remote.ts file
-					if (id.endsWith('.remote.ts')) {
+					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
 						const relative = posixify(path.relative(cwd, id));
 
 						return `remote-${hash(relative)}`;
