@@ -60,14 +60,20 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	let form_client_refreshes;
 
 	try {
-		if (info.type === 'query.batch' && event.request.method === 'POST') {
-			/** @type {{   payloads: string[] }} */
+		if (info.type === 'query_batch') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
+			/** @type {{ payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
 			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
-			const results = await with_request_store({ event, state }, () =>
-				Promise.all(args.map((arg) => fn(arg)))
-			);
+			const results = await with_request_store({ event, state }, () => info.run(args));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -78,11 +84,19 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		if (info.type === 'form') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`form\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
 			if (!is_form_content_type(event.request)) {
 				throw new SvelteKitError(
 					415,
 					'Unsupported Media Type',
-					`Form actions expect form-encoded data — received ${event.request.headers.get(
+					`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
 						'content-type'
 					)}`
 				);

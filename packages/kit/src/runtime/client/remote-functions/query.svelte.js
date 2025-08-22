@@ -32,25 +32,32 @@ export function query(id) {
  * @param {string} id
  * @returns {(arg: any) => Query<any>}
  */
-function batch(id) {
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
-	let batching = { args: [], resolvers: [], timeoutId: null };
+export function query_batch(id) {
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
+	let batching = { args: [], resolvers: [] };
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
+
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
 				batching.args.push(payload);
 				batching.resolvers.push({ resolve, reject });
 
-				if (batching.timeoutId) {
-					clearTimeout(batching.timeoutId);
-				}
+				if (batching.args.length > 1) return;
 
-				batching.timeoutId = setTimeout(async () => {
+				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
+				// and flushes could reveal more queries that should be batched.
+				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [], timeoutId: null };
+					batching = { args: [], resolvers: [] };
 
 					try {
 						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
@@ -91,7 +98,7 @@ function batch(id) {
 							resolver.reject(error);
 						}
 					}
-				}, 0); // Wait one macrotask
+				}, 0);
 			});
 		});
 	});
@@ -306,8 +313,6 @@ class QueryStream {
 	}
 }
 
-// Add batch and stream as properties to the query function
-Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 Object.defineProperty(query, 'stream', { value: stream, enumerable: true });
 
 /**

@@ -147,11 +147,49 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
-	const __ = { type: 'query.batch', id: '', name: '' };
+	/**
+	 * @param {any[]} input
+	 * @param {any} output
+	 */
+	function validate_output(input, output) {
+		if (!Array.isArray(output)) {
+			throw new Error(
+				`Batch query '${__.name}' returned a result of type ${typeof output}. It must return an array of the same length as the input array`
+			);
+		}
 
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
-	let batching = { args: [], resolvers: [], timeoutId: null };
+		if (input.length !== output.length) {
+			throw new Error(
+				`Batch query '${__.name}' was called with ${input.length} arguments, but returned ${output.length} results. Make sure to return an array of the same length as the input array`
+			);
+		}
+	}
+
+	/** @type {RemoteInfo & { type: 'query_batch' }} */
+	const __ = {
+		type: 'query_batch',
+		id: '',
+		name: '',
+		run: async (args) => {
+			const { event, state } = get_request_store();
+
+			const results = await run_remote_function(
+				event,
+				state,
+				false,
+				args,
+				(array) => Promise.all(array.map(validate)),
+				fn
+			);
+
+			validate_output(args, results);
+
+			return results;
+		}
+	};
+
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
+	let batching = { args: [], resolvers: [] };
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
@@ -171,13 +209,11 @@ function batch(validate_or_fn, maybe_fn) {
 				batching.args.push(arg);
 				batching.resolvers.push({ resolve, reject });
 
-				if (batching.timeoutId) {
-					clearTimeout(batching.timeoutId);
-				}
+				if (batching.args.length > 1) return;
 
-				batching.timeoutId = setTimeout(async () => {
+				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [], timeoutId: null };
+					batching = { args: [], resolvers: [] };
 
 					try {
 						const results = await run_remote_function(
@@ -188,6 +224,9 @@ function batch(validate_or_fn, maybe_fn) {
 							(array) => Promise.all(array.map(validate)),
 							fn
 						);
+
+						validate_output(batched.args, results);
+
 						for (let i = 0; i < batched.resolvers.length; i++) {
 							batched.resolvers[i].resolve(results[i]);
 						}

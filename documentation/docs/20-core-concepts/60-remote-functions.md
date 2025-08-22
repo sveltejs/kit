@@ -176,6 +176,8 @@ Any query can be updated via its `refresh` method:
 
 `query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem where you have many calls to the same resource and it's more efficient to do one invocation with an array of arguments of the collected calls instead of doing one invocation per call.
 
+Individual calls to the same `query.batch` function are put into an array, and the remote function is invoked with the collected calls that happened within one macrotask. You must return an array of the same length, with each output entry being at the same array position as its corresponding input. SvelteKit will then split this array back up and resolve the individual calls with their results.
+
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
