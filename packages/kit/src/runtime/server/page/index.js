@@ -200,7 +200,7 @@ export async function render_page(
 				}
 			});
 
-			promise.then((server_data) => {
+			void promise.then((server_data) => {
 				data_serializer.serialize(i, server_data);
 				data_serializer_json?.serialize(i, server_data);
 			});
