@@ -186,6 +186,7 @@ class QueryStream {
 			this.#resolve = resolve;
 			this.#reject = reject;
 		});
+		this.#promise.catch(() => {}); // don't let unhandled rejections bubble up
 	}
 
 	#next() {
@@ -244,10 +245,13 @@ class QueryStream {
 			if (!this.#ready) {
 				return this.#promise.then((v) => v.value).then(resolve, reject);
 			} else {
+				// We return/reject right away instead of waiting on the promise,
+				// else we would end up in a constant pending state since the next
+				// promise is created right after the previous one is resolved.
 				if (this.#error) {
-					return reject(this.#error);
+					return Promise.reject(this.#error).then(undefined, reject);
 				} else {
-					return resolve(this.#current);
+					return Promise.resolve(this.#current).then(resolve);
 				}
 			}
 		};
@@ -288,6 +292,7 @@ class QueryStream {
 		this.#unused = true;
 		if (this.#count === 0) {
 			this.#source?.close();
+			this.#reject?.();
 		}
 	}
 
