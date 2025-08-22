@@ -147,15 +147,33 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
+	/**
+	 * @param {any[]} input
+	 * @param {any} output
+	 */
+	function validate_output(input, output) {
+		if (!Array.isArray(output)) {
+			throw new Error(
+				`Batch query '${__.name}' returned a result of type ${typeof output}. It must return an array of the same length as the input array`
+			);
+		}
+
+		if (input.length !== output.length) {
+			throw new Error(
+				`Batch query '${__.name}' was called with ${input.length} arguments, but returned ${output.length} results. Make sure to return an array of the same length as the input array`
+			);
+		}
+	}
+
 	/** @type {RemoteInfo & { type: 'query_batch' }} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
 		name: '',
-		run: (args) => {
+		run: async (args) => {
 			const { event, state } = get_request_store();
 
-			return run_remote_function(
+			const results = await run_remote_function(
 				event,
 				state,
 				false,
@@ -163,6 +181,10 @@ function batch(validate_or_fn, maybe_fn) {
 				(array) => Promise.all(array.map(validate)),
 				fn
 			);
+
+			validate_output(args, results);
+
+			return results;
 		}
 	};
 
@@ -202,6 +224,9 @@ function batch(validate_or_fn, maybe_fn) {
 							(array) => Promise.all(array.map(validate)),
 							fn
 						);
+
+						validate_output(batched.args, results);
+
 						for (let i = 0; i < batched.resolvers.length; i++) {
 							batched.resolvers[i].resolve(results[i]);
 						}
