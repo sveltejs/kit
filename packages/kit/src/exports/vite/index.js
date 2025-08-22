@@ -1050,23 +1050,41 @@ async function kit({ svelte_config }) {
 							/** @type {string[]} */
 							const re_exports = [];
 
+							/** @type {Map<string, string>} */
+							const existing_exports = new Map();
+
+							const match = /export {([^}]+)};\n$/.exec(chunk.code);
+
+							if (match) {
+								for (const specifier of match[1].trim().split(',')) {
+									const [local, exported = local] = specifier.trim().split(' as ');
+									existing_exports.set(local, exported);
+								}
+							}
+
 							// this bit is a smidge hacky. we need to reconstruct the original exports
 							// from the injected `const $$_self_$$` declaration
 							let transformed = chunk.code.replace(
 								/const \$\$_self_\$\$ = [^]+?{([^]+?)}, Symbol\.toStringTag/,
 								(_, self) => {
 									// the self-import will look like a series of `get foo() { return foo }`
-									const getters = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
-									const returns = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
+									const names = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
+									const values = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
 
-									for (let i = 0; i < getters.length; i += 1) {
-										const exported = getters[i];
-										const local = returns[i];
+									for (let i = 0; i < names.length; i += 1) {
+										const name = names[i];
+										const value = values[i];
 
-										// TODO do we need to guard against conflicts with the chunk's existing exports?
-										exports.push(local === exported ? local : `${local} as ${exported}`);
+										const existing_export = existing_exports.get(value);
 
-										re_exports.push(exported);
+										if (existing_export) {
+											re_exports.push(
+												existing_export === name ? name : `${existing_export} as ${name}`
+											);
+										} else {
+											exports.push(value === name ? name : `${value} as ${name}`);
+											re_exports.push(name);
+										}
 									}
 
 									return '// ' + _.replaceAll('\n', '\n// ');
@@ -1079,7 +1097,7 @@ async function kit({ svelte_config }) {
 
 							transformed = transformed.replace(
 								'$$_export_$$($$_self_$$)',
-								`export { ${exports.join(', ')} };`
+								`export { ${exports.join(', ')} }`
 							);
 
 							fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
