@@ -281,6 +281,8 @@ Apart from that you can iterate over it like any other async iterable, including
 
 Stream requests to the same resource with the same payload are deduplicated, i.e. you cannot start the same stream multiple times in parallel and it to start from the beginning each time.
 
+> [!NOTE] Be careful when using `query.stream` in combination with service workers. Specifically, make sure to never pass the promise of a `ReadableStream` (which `query.stream` uses) to `event.respondWith(...)`, as the promise never settles.
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
