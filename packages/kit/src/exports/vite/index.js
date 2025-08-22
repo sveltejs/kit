@@ -656,9 +656,67 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite').ViteDevServer} */
 	let dev_server;
 
+	/** @type {Array<{ hash: string, file: string }>} */
+	const remotes = [];
+
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
+
+		config(config) {
+			// Ensure build.rollupOptions.output exists
+			config.build ??= {};
+			config.build.rollupOptions ??= {};
+			config.build.rollupOptions.output ??= {};
+
+			if (Array.isArray(config.build.rollupOptions.output)) {
+				// TODO I have no idea how this could occur
+				throw new Error('rollupOptions.output cannot be an array');
+			}
+
+			// Set up manualChunks to isolate *.remote.ts files
+			const { manualChunks } = config.build.rollupOptions.output;
+
+			config.build.rollupOptions.output = {
+				...config.build.rollupOptions.output,
+				manualChunks(id, meta) {
+					if (id === `${runtime_directory}/app/server/index.js`) {
+						return 'app-server';
+					}
+
+					// Check if this is a *.remote.ts file
+					if (id.endsWith('.remote.ts')) {
+						const relative = posixify(path.relative(cwd, id));
+
+						const remote = {
+							hash: hash(relative),
+							file: relative
+						};
+
+						remotes.push(remote);
+
+						return `remote-${remote.hash}`;
+					}
+
+					// If there was an existing manualChunks function, call it
+					if (typeof manualChunks === 'function') {
+						return manualChunks(id, meta);
+					}
+
+					// If manualChunks is an object, check if this module matches any patterns
+					if (manualChunks) {
+						for (const name in manualChunks) {
+							const patterns = manualChunks[name];
+
+							// TODO is `id.includes(pattern)` correct?
+							if (patterns.some((pattern) => id.includes(pattern))) {
+								return name;
+							}
+						}
+					}
+				}
+			};
+		},
 
 		configureServer(_dev_server) {
 			dev_server = _dev_server;
@@ -812,11 +870,6 @@ async function kit({ svelte_config }) {
 							);
 						}
 						input['instrumentation.server'] = server_instrumentation;
-					}
-
-					// ...and every .remote file
-					for (const remote of manifest_data.remotes) {
-						input[`remote/${remote.hash}`] = path.resolve(remote.file);
 					}
 				} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					input['bundle'] = `${runtime_directory}/client/bundle.js`;
@@ -977,6 +1030,58 @@ async function kit({ svelte_config }) {
 			sequential: true,
 			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
+
+				if (kit.experimental.remoteFunctions) {
+					for (const key in bundle) {
+						if (key.startsWith('chunks/remote-')) {
+							const chunk = bundle[key];
+							if (chunk.type !== 'chunk') continue;
+
+							const entries = Object.entries(chunk.modules).filter(([id]) =>
+								svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))
+							);
+
+							if (entries.length !== 1) {
+								// this is impossible — the `manualChunks` step means that every remote file
+								// will be in its own chunk. but just to be safe, throw an error
+								throw new Error('An impossible situation occurred');
+							}
+
+							const entry = entries[0][1];
+
+							// this bit is a smidge hacky. we need to reconstruct the original exports
+							// by finding the `export` declaration and seeing how things were renamed.
+							// hopefully the way in which chunks are rendered doesn't change
+							const match = /export {([^}]+)};\n/.exec(chunk.code);
+
+							if (!match) {
+								throw new Error('An impossible situation occurred');
+							}
+
+							const re_exports = [];
+
+							for (const specifier of match[1].trim().split(',')) {
+								const [local, exported = local] = specifier.trim().split(' as ');
+
+								if (entry.renderedExports.includes(local)) {
+									re_exports.push(local === exported ? local : `${exported} as ${local}`);
+								}
+							}
+
+							try {
+								fs.mkdirSync(`${out}/server/remote`);
+							} catch {}
+
+							fs.writeFileSync(
+								`${out}/server/remote/${key.slice('chunks/remote-'.length)}`,
+								`export { ${re_exports.join(', ')} } from '../${key}';`
+							);
+						}
+					}
+
+					// TODO this is kinda messy, but was the quickest way to see something working
+					manifest_data.remotes = remotes;
+				}
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
