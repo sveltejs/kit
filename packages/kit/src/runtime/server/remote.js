@@ -135,7 +135,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (info.type === 'query.stream') {
+		if (info.type === 'query_stream') {
 			const payload = /** @type {string} */ (
 				new URL(event.request.url).searchParams.get('payload')
 			);

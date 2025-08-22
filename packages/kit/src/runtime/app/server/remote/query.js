@@ -321,7 +321,7 @@ function stream(validate_or_fn, maybe_fn) {
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/** @type {RemoteInfo} */
-	const __ = { type: 'query.stream', id: '', name: '' };
+	const __ = { type: 'query_stream', id: '', name: '' };
 
 	/** @type {RemoteQueryStreamFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (/** @type {Input} */ arg) => {

@@ -108,7 +108,7 @@ export function query_batch(id) {
  * @param {string} id
  * @returns {RemoteQueryStreamFunction<any, any>}
  */
-function stream(id) {
+export function query_stream(id) {
 	return create_remote_function(id, (_, payload) => {
 		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 		return new QueryStream(url);
@@ -312,8 +312,6 @@ class QueryStream {
 		};
 	}
 }
-
-Object.defineProperty(query, 'stream', { value: stream, enumerable: true });
 
 /**
  * @template T
