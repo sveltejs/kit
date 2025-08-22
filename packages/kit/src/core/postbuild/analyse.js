@@ -1,3 +1,4 @@
+/** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
@@ -24,6 +25,7 @@ export default forked(import.meta.url, analyse);
  *   env: Record<string, string>;
  *   out: string;
  *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
+ *   remotes: RemoteChunk[];
  * }} opts
  */
 async function analyse({
@@ -34,7 +36,8 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config
+	output_config,
+	remotes
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -165,7 +168,7 @@ async function analyse({
 	}
 
 	// analyse remotes
-	for (const remote of manifest_data.remotes) {
+	for (const remote of remotes) {
 		const loader = manifest._.remotes[remote.hash];
 		const { default: functions } = await loader();
 

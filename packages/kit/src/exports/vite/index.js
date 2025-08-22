@@ -1030,19 +1030,14 @@ async function kit({ svelte_config }) {
 				if (secondary_build_started) return; // only run this once
 
 				if (kit.experimental.remoteFunctions) {
-					// TODO this is kinda messy, but was the quickest way to see something working
-					manifest_data.remotes = remotes;
-
 					for (const remote of remotes) {
-						const chunk = bundle[`chunks/remote-${remote.hash}.js`];
-						if (chunk.type !== 'chunk') continue;
+						const file = `${out}/server/chunks/remote-${remote.hash}.js`;
+						const code = fs.readFileSync(file, 'utf-8');
 
-						const transformed = chunk.code.replace(
-							'$$_export_$$($$_self_$$)',
-							() => `export default $$_self_$$;`
+						fs.writeFileSync(
+							file,
+							code.replace('$$_export_$$($$_self_$$)', () => `export default $$_self_$$;`)
 						);
-
-						fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
 					}
 				}
 
@@ -1070,7 +1065,8 @@ async function kit({ svelte_config }) {
 						build_data,
 						prerendered: [],
 						relative_path: '.',
-						routes: manifest_data.routes
+						routes: manifest_data.routes,
+						remotes
 					})};\n`
 				);
 
@@ -1084,7 +1080,8 @@ async function kit({ svelte_config }) {
 					tracked_features,
 					env: { ...env.private, ...env.public },
 					out,
-					output_config: svelte_config.output
+					output_config: svelte_config.output,
+					remotes
 				});
 
 				remote_exports = metadata.remotes;
@@ -1269,7 +1266,8 @@ async function kit({ svelte_config }) {
 						build_data,
 						prerendered: [],
 						relative_path: '.',
-						routes: manifest_data.routes
+						routes: manifest_data.routes,
+						remotes
 					})};\n`
 				);
 
@@ -1303,7 +1301,8 @@ async function kit({ svelte_config }) {
 						build_data,
 						prerendered: prerendered.paths,
 						relative_path: '.',
-						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
+						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true),
+						remotes
 					})};\n`
 				);
 

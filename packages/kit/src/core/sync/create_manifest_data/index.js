@@ -41,7 +41,6 @@ export default function create_manifest_data({
 		hooks,
 		matchers,
 		nodes,
-		remotes: [],
 		routes
 	};
 }
