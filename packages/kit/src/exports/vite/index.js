@@ -739,15 +739,12 @@ async function kit({ svelte_config }) {
 							import * as $$_self_$$ from './${path.basename(id)}';
 							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
 
-							// $$_validate_$$($$_self_$$, ${s(file)});
+							$$_validate_$$($$_self_$$, ${s(file)});
 
 							for (const [name, fn] of Object.entries($$_self_$$)) {
-								if (name === 'default') continue;
 								fn.__.id = ${s(remote.hash)} + '/' + name;
 								fn.__.name = name;
 							}
-
-							export default $$_self_$$;
 						`
 					);
 				}
