@@ -105,6 +105,7 @@
 					}
 
 					try {
+						// @ts-expect-error
 						await validated_batch_query_with_validation(123);
 						status = 'error';
 					} catch (e) {

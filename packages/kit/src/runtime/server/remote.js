@@ -69,7 +69,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				);
 			}
 
-			/** @type {{   payloads: string[] }} */
+			/** @type {{ payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
 			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
