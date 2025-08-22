@@ -148,7 +148,7 @@ function batch(validate_or_fn, maybe_fn) {
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/** @type {RemoteInfo} */
-	const __ = { type: 'query.batch', id: '', name: '' };
+	const __ = { type: 'query_batch', id: '', name: '' };
 
 	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
 	let batching = { args: [], resolvers: [], timeoutId: null };

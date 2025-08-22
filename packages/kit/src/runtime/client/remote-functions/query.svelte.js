@@ -32,7 +32,7 @@ export function query(id) {
  * @param {string} id
  * @returns {(arg: any) => Query<any>}
  */
-function batch(id) {
+export function query_batch(id) {
 	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
 	let batching = { args: [], resolvers: [], timeoutId: null };
 
@@ -96,9 +96,6 @@ function batch(id) {
 		});
 	});
 }
-
-// Add batch as a property to the query function
-Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 
 /**
  * @template T

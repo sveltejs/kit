@@ -60,7 +60,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	let form_client_refreshes;
 
 	try {
-		if (info.type === 'query.batch' && event.request.method === 'POST') {
+		if (info.type === 'query_batch' && event.request.method === 'POST') {
 			/** @type {{   payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
