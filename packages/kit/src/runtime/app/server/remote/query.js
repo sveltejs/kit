@@ -150,8 +150,8 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {RemoteInfo} */
 	const __ = { type: 'query_batch', id: '', name: '' };
 
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
-	let batching = { args: [], resolvers: [], timeoutId: null };
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
+	let batching = { args: [], resolvers: [] };
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
@@ -171,13 +171,9 @@ function batch(validate_or_fn, maybe_fn) {
 				batching.args.push(arg);
 				batching.resolvers.push({ resolve, reject });
 
-				if (batching.timeoutId) {
-					clearTimeout(batching.timeoutId);
-				}
-
-				batching.timeoutId = setTimeout(async () => {
+				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [], timeoutId: null };
+					batching = { args: [], resolvers: [] };
 
 					try {
 						const results = await run_remote_function(

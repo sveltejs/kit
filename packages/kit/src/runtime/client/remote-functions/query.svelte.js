@@ -33,8 +33,8 @@ export function query(id) {
  * @returns {(arg: any) => Query<any>}
  */
 export function query_batch(id) {
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}>, timeoutId: any }} */
-	let batching = { args: [], resolvers: [], timeoutId: null };
+	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
+	let batching = { args: [], resolvers: [] };
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
@@ -51,13 +51,11 @@ export function query_batch(id) {
 				batching.args.push(payload);
 				batching.resolvers.push({ resolve, reject });
 
-				if (batching.timeoutId) {
-					clearTimeout(batching.timeoutId);
-				}
-
-				batching.timeoutId = setTimeout(async () => {
+				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
+				// and flushes could reveal more queries that should be batched.
+				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [], timeoutId: null };
+					batching = { args: [], resolvers: [] };
 
 					try {
 						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
@@ -98,7 +96,7 @@ export function query_batch(id) {
 							resolver.reject(error);
 						}
 					}
-				}, 0); // Wait one macrotask
+				}, 0);
 			});
 		});
 	});
