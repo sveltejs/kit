@@ -38,6 +38,13 @@ export function query_batch(id) {
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
+			if (!started) {
+				const result = remote_responses[cache_key];
+				if (result) {
+					return result;
+				}
+			}
+
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
