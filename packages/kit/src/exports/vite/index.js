@@ -688,14 +688,7 @@ async function kit({ svelte_config }) {
 					if (id.endsWith('.remote.ts')) {
 						const relative = posixify(path.relative(cwd, id));
 
-						const remote = {
-							hash: hash(relative),
-							file: relative
-						};
-
-						remotes.push(remote);
-
-						return `remote-${remote.hash}`;
+						return `remote-${hash(relative)}`;
 					}
 
 					// If there was an existing manualChunks function, call it
@@ -728,7 +721,13 @@ async function kit({ svelte_config }) {
 			}
 
 			const file = posixify(path.relative(cwd, id));
-			const hashed = hash(file);
+
+			const remote = {
+				hash: hash(file),
+				file
+			};
+
+			remotes.push(remote);
 
 			if (opts?.ssr) {
 				// in dev, add metadata to remote functions by self-importing
@@ -742,7 +741,7 @@ async function kit({ svelte_config }) {
 							$$_validate_$$($$_self_$$, ${s(file)});
 
 							for (const [name, fn] of Object.entries($$_self_$$)) {
-								fn.__.id = ${s(hashed)} + '/' + name;
+								fn.__.id = ${s(remote.hash)} + '/' + name;
 								fn.__.name = name;
 							}
 						`
@@ -757,7 +756,7 @@ async function kit({ svelte_config }) {
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
 			/** @type {Map<string, import('types').RemoteInfo['type']>} */
-			const remotes = new Map();
+			const map = new Map();
 
 			// in dev, load the server module here (which will result in this hook
 			// being called again with `opts.ssr === true` if the module isn't
@@ -768,7 +767,7 @@ async function kit({ svelte_config }) {
 				for (const [name, value] of Object.entries(module)) {
 					const type = value?.__?.type;
 					if (type) {
-						remotes.set(name, type);
+						map.set(name, type);
 					}
 				}
 			}
@@ -776,20 +775,20 @@ async function kit({ svelte_config }) {
 			// in prod, we already built and analysed the server code before
 			// building the client code, so `remote_exports` is populated
 			else if (remote_exports) {
-				const exports = remote_exports.get(hashed);
+				const exports = remote_exports.get(remote.hash);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
-					remotes.set(name, value.type);
+					map.set(name, value.type);
 				}
 			}
 
 			let namespace = '__remote';
 			let uid = 1;
-			while (remotes.has(namespace)) namespace = `__remote${uid++}`;
+			while (map.has(namespace)) namespace = `__remote${uid++}`;
 
-			const exports = Array.from(remotes).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${hashed}/${name}');`;
+			const exports = Array.from(map).map(([name, type]) => {
+				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
 			});
 
 			return {
@@ -972,7 +971,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			return await dev(vite, vite_config, svelte_config, () => remotes);
 		},
 
 		/**
