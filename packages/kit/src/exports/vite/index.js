@@ -1039,82 +1039,80 @@ async function kit({ svelte_config }) {
 				if (secondary_build_started) return; // only run this once
 
 				if (kit.experimental.remoteFunctions) {
-					for (const key in bundle) {
-						if (key.startsWith('chunks/remote-')) {
-							const chunk = bundle[key];
-							if (chunk.type !== 'chunk') continue;
-
-							/** @type {string[]} */
-							const exports = [];
-
-							/** @type {string[]} */
-							const re_exports = [];
-
-							/** @type {Map<string, string>} */
-							const existing_exports = new Map();
-
-							const match = /export {([^}]+)};\n$/.exec(chunk.code);
-
-							if (match) {
-								for (const specifier of match[1].trim().split(',')) {
-									const [local, exported = local] = specifier.trim().split(' as ');
-									existing_exports.set(local, exported);
-								}
-							}
-
-							// this bit is a smidge hacky. we need to reconstruct the original exports
-							// from the injected `const $$_self_$$` declaration
-							let transformed = chunk.code.replace(
-								/const \$\$_self_\$\$ = [^]+?{([^]+?)}, Symbol\.toStringTag/,
-								(_, self) => {
-									// the self-import will look like a series of `get foo() { return foo }`
-									const names = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
-									const values = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
-
-									for (let i = 0; i < names.length; i += 1) {
-										const name = names[i];
-										const value = values[i];
-
-										const existing_export = existing_exports.get(value);
-
-										if (existing_export) {
-											re_exports.push(
-												existing_export === name ? name : `${existing_export} as ${name}`
-											);
-										} else {
-											exports.push(value === name ? name : `${value} as ${name}`);
-											re_exports.push(name);
-										}
-									}
-
-									return '// ' + _.replaceAll('\n', '\n// ');
-								}
-							);
-
-							if (transformed === chunk.code) {
-								throw new Error('An impossible situation occurred (no self-import was found)');
-							}
-
-							transformed = transformed.replace(
-								'$$_export_$$($$_self_$$)',
-								`export { ${exports.join(', ')} }`
-							);
-
-							fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
-
-							try {
-								fs.mkdirSync(`${out}/server/remote`);
-							} catch {}
-
-							fs.writeFileSync(
-								`${out}/server/remote/${key.slice('chunks/remote-'.length)}`,
-								`export { ${re_exports.join(', ')} } from '../${key}';`
-							);
-						}
-					}
-
 					// TODO this is kinda messy, but was the quickest way to see something working
 					manifest_data.remotes = remotes;
+
+					for (const remote of remotes) {
+						const chunk = bundle[`chunks/remote-${remote.hash}.js`];
+						if (chunk.type !== 'chunk') continue;
+
+						/** @type {string[]} */
+						const exports = [];
+
+						/** @type {string[]} */
+						const re_exports = [];
+
+						/** @type {Map<string, string>} */
+						const existing_exports = new Map();
+
+						const match = /export {([^}]+)};\n$/.exec(chunk.code);
+
+						if (match) {
+							for (const specifier of match[1].trim().split(',')) {
+								const [local, exported = local] = specifier.trim().split(' as ');
+								existing_exports.set(local, exported);
+							}
+						}
+
+						// this bit is a smidge hacky. we need to reconstruct the original exports
+						// from the injected `const $$_self_$$` declaration
+						let transformed = chunk.code.replace(
+							/const \$\$_self_\$\$ = [^]+?{([^]+?)}, Symbol\.toStringTag/,
+							(_, self) => {
+								// the self-import will look like a series of `get foo() { return foo }`
+								const names = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
+								const values = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
+
+								for (let i = 0; i < names.length; i += 1) {
+									const name = names[i];
+									const value = values[i];
+
+									const existing_export = existing_exports.get(value);
+
+									if (existing_export) {
+										re_exports.push(
+											existing_export === name ? name : `${existing_export} as ${name}`
+										);
+									} else {
+										exports.push(value === name ? name : `${value} as ${name}`);
+										re_exports.push(name);
+									}
+								}
+
+								return '// ' + _.replaceAll('\n', '\n// ');
+							}
+						);
+
+						if (transformed === chunk.code) {
+							throw new Error('An impossible situation occurred (no self-import was found)');
+						}
+
+						transformed = transformed.replace(
+							'$$_export_$$($$_self_$$)',
+							`export { ${exports.join(', ')} }`
+						);
+
+						fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
+
+						try {
+							fs.mkdirSync(`${out}/server/remote`);
+						} catch {}
+
+						fs.writeFileSync(
+							`${out}/server/remote/${remote.hash}.js`,
+							`export { ${re_exports.join(', ')} } from '../chunks/remote-${remote.hash}.js';`
+						);
+					}
 				}
 
 				const verbose = vite_config.logLevel === 'info';
