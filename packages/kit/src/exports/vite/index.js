@@ -748,6 +748,14 @@ async function kit({ svelte_config }) {
 					);
 				}
 
+				return (
+					code +
+					dedent`
+						import * as $$_self_$$ from './${path.basename(id)}';
+						$$_export_$$($$_self_$$);
+					`
+				);
+
 				// in prod, return as-is, and augment the build result instead.
 				// this allows us to treeshake non-dynamic `prerender` functions
 				return;
@@ -1036,36 +1044,45 @@ async function kit({ svelte_config }) {
 							const chunk = bundle[key];
 							if (chunk.type !== 'chunk') continue;
 
-							const entries = Object.entries(chunk.modules).filter(([id]) =>
-								svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))
-							);
+							/** @type {string[]} */
+							const exports = [];
 
-							if (entries.length !== 1) {
-								// this is impossible — the `manualChunks` step means that every remote file
-								// will be in its own chunk. but just to be safe, throw an error
-								throw new Error('An impossible situation occurred');
-							}
-
-							const entry = entries[0][1];
-
-							// this bit is a smidge hacky. we need to reconstruct the original exports
-							// by finding the `export` declaration and seeing how things were renamed.
-							// hopefully the way in which chunks are rendered doesn't change
-							const match = /export {([^}]+)};\n/.exec(chunk.code);
-
-							if (!match) {
-								throw new Error('An impossible situation occurred');
-							}
-
+							/** @type {string[]} */
 							const re_exports = [];
 
-							for (const specifier of match[1].trim().split(',')) {
-								const [local, exported = local] = specifier.trim().split(' as ');
+							// this bit is a smidge hacky. we need to reconstruct the original exports
+							// from the injected `const $$_self_$$` declaration
+							let transformed = chunk.code.replace(
+								/const \$\$_self_\$\$ = [^]+?{([^]+?)}, Symbol\.toStringTag/,
+								(_, self) => {
+									// the self-import will look like a series of `get foo() { return foo }`
+									const getters = Array.from(self.matchAll(/get (\w+)/g)).map((m) => m[1]);
+									const returns = Array.from(self.matchAll(/return (\w+)/g)).map((m) => m[1]);
 
-								if (entry.renderedExports.includes(local)) {
-									re_exports.push(local === exported ? local : `${exported} as ${local}`);
+									for (let i = 0; i < getters.length; i += 1) {
+										const exported = getters[i];
+										const local = returns[i];
+
+										// TODO do we need to guard against conflicts with the chunk's existing exports?
+										exports.push(local === exported ? local : `${local} as ${exported}`);
+
+										re_exports.push(exported);
+									}
+
+									return '// ' + _.replaceAll('\n', '\n// ');
 								}
+							);
+
+							if (transformed === chunk.code) {
+								throw new Error('An impossible situation occurred (no self-import was found)');
 							}
+
+							transformed = transformed.replace(
+								'$$_export_$$($$_self_$$)',
+								`export { ${exports.join(', ')} };`
+							);
+
+							fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
 
 							try {
 								fs.mkdirSync(`${out}/server/remote`);
