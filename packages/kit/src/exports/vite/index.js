@@ -45,8 +45,6 @@ import { should_ignore } from './static_analysis/utils.js';
 
 const cwd = process.cwd();
 
-Error.stackTraceLimit = Infinity;
-
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
