@@ -12,27 +12,39 @@ import { import_peer } from '../../../utils/import.js';
  * later, which wouldn't work if we do a self-import and iterate over all exports (since we're reading them then).
  * @param {string} out
  * @param {ManifestData} manifest_data
+ * @param {Map<string, Map<string, string>>} chunks
  */
-export function build_remotes(out, manifest_data) {
+export function build_remotes(out, manifest_data, chunks) {
 	const dir = `${out}/server/remote`;
 
 	for (const remote of manifest_data.remotes) {
 		const entry = `${dir}/${remote.hash}.js`;
-		const tmp = `${remote.hash}.tmp.js`;
+		// const tmp = `${remote.hash}.tmp.js`;
 
-		fs.renameSync(entry, `${dir}/${tmp}`);
+		const chunk_exports = /** @type {Map<string, string>} */ (chunks.get(remote.hash));
+
+		// const imports = Array.from(chunk_exports).map(([name, exported]) => name === exported ? name : `${exported} as ${name}`);
+		// const exports = Array.from(chunk_exports.keys());
+
+		// // fs.renameSync(entry, `${dir}/${tmp}`);
+		// fs.writeFileSync(
+		// 	entry,
+		// 	dedent`
+		// 		import { ${imports.join(', ')} } from '../chunks/remote-${remote.hash}.js';
+
+		// 		for (const [name, fn] of Object.entries({ ${exports.join(', ')} })) {
+		// 			fn.__.id = '${remote.hash}/' + name;
+		// 			fn.__.name = name;
+		// 		}
+
+		// 		export { ${exports.join(', ')} };
+		// 	`
+		// );
+
+		// fs.renameSync(entry, `${dir}/${tmp}`);
 		fs.writeFileSync(
 			entry,
-			dedent`
-				import * as $$_self_$$ from './${tmp}';
-
-				for (const [name, fn] of Object.entries($$_self_$$)) {
-					fn.__.id = '${remote.hash}/' + name;
-					fn.__.name = name;
-				}
-
-				export * from './${tmp}';
-			`
+			`export { default } from '../chunks/remote-${remote.hash}.js';`
 		);
 	}
 }
@@ -47,8 +59,10 @@ export function build_remotes(out, manifest_data) {
  * @param {string} out
  * @param {ManifestData} manifest_data
  * @param {ServerMetadata} metadata
+ * @param {Map<string, Map<string, string>>} chunks
  */
-export async function treeshake_prerendered_remotes(out, manifest_data, metadata) {
+export async function treeshake_prerendered_remotes(out, manifest_data, metadata, chunks) {
+	return;
 	if (manifest_data.remotes.length === 0) {
 		return;
 	}
@@ -80,12 +94,19 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 			(value.dynamic ? dynamic : prerendered).push(name);
 		}
 
+		const chunk_exports = /** @type {Map<string, string>} */ (chunks.get(remote.hash));
+
+		const imports = dynamic.map((name) => {
+			const exported = chunk_exports.get(name);
+			return exported === name ? name : `${exported} as ${name}`;
+		});
+
 		const remote_file = posixify(`${dir}/${remote.hash}.js`);
 
 		fs.writeFileSync(
 			remote_file,
 			dedent`
-				import { ${dynamic.join(', ')} } from './${remote.hash}.tmp.js';
+				import { ${imports.join(', ')} } from '../chunks/remote-${remote.hash}.js';
 				import { prerender } from '../${path.basename(remote_entry)}';
 
 				${prerendered.map((name) => `export const ${name} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`).join('\n')}
@@ -124,6 +145,6 @@ export async function treeshake_prerendered_remotes(out, manifest_data, metadata
 	}
 
 	for (const remote of manifest_data.remotes) {
-		fs.unlinkSync(`${dir}/${remote.hash}.tmp.js`);
+		// fs.unlinkSync(`${dir}/${remote.hash}.tmp.js`);
 	}
 }

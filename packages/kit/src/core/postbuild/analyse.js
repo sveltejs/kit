@@ -168,7 +168,7 @@ async function analyse({
 	// analyse remotes
 	for (const remote of manifest_data.remotes) {
 		const loader = manifest._.remotes[remote.hash];
-		const module = await loader();
+		const module = (await loader()).default;
 
 		validate_remote_functions(module, remote.file);
 

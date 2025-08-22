@@ -46,6 +46,8 @@ import { should_ignore } from './static_analysis/utils.js';
 
 const cwd = process.cwd();
 
+Error.stackTraceLimit = Infinity;
+
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
@@ -738,12 +740,15 @@ async function kit({ svelte_config }) {
 							import * as $$_self_$$ from './${path.basename(id)}';
 							import { validate_remote_functions as $$_validate_$$ } from '@sveltejs/kit/internal';
 
-							$$_validate_$$($$_self_$$, ${s(file)});
+							// $$_validate_$$($$_self_$$, ${s(file)});
 
 							for (const [name, fn] of Object.entries($$_self_$$)) {
+								if (name === 'default') continue;
 								fn.__.id = ${s(remote.hash)} + '/' + name;
 								fn.__.name = name;
 							}
+
+							export default $$_self_$$;
 						`
 					);
 				}
@@ -1038,13 +1043,28 @@ async function kit({ svelte_config }) {
 			async handler(_options, bundle) {
 				if (secondary_build_started) return; // only run this once
 
+				/**
+				 * A name -> export map for every remote chunk
+				 * @type {Map<string, Map<string, string>>}
+				 */
+				const remote_chunks = new Map();
+
 				if (kit.experimental.remoteFunctions) {
 					// TODO this is kinda messy, but was the quickest way to see something working
 					manifest_data.remotes = remotes;
 
+					try {
+						fs.mkdirSync(`${out}/server/remote`);
+					} catch {}
+
 					for (const remote of remotes) {
 						const chunk = bundle[`chunks/remote-${remote.hash}.js`];
 						if (chunk.type !== 'chunk') continue;
+
+						/** @type {Map<string, string>} */
+						const chunk_exports = new Map();
+
+						remote_chunks.set(remote.hash, chunk_exports);
 
 						/** @type {string[]} */
 						const exports = [];
@@ -1077,16 +1097,24 @@ async function kit({ svelte_config }) {
 									const name = names[i];
 									const value = values[i];
 
-									const existing_export = existing_exports.get(value);
+									exports.push(value === name ? name : `${name}: ${value}`);
 
-									if (existing_export) {
-										re_exports.push(
-											existing_export === name ? name : `${existing_export} as ${name}`
-										);
-									} else {
-										exports.push(value === name ? name : `${value} as ${name}`);
-										re_exports.push(name);
-									}
+									// const existing_export = existing_exports.get(value);
+
+									// if (existing_export) {
+									// 	re_exports.push(
+									// 		existing_export === name ? name : `${existing_export} as ${name}`
+									// 	);
+
+									// 	exports.push(value === name ? name : `${name}: ${value}`);
+
+									// 	chunk_exports.set(name, existing_export);
+									// } else {
+									// 	exports.push(value === name ? name : `${name}: ${value}`);
+									// 	re_exports.push(name);
+
+									// 	chunk_exports.set(name, value);
+									// }
 								}
 
 								return '// ' + _.replaceAll('\n', '\n// ');
@@ -1099,21 +1127,22 @@ async function kit({ svelte_config }) {
 
 						transformed = transformed.replace(
 							'$$_export_$$($$_self_$$)',
-							`export { ${exports.join(', ')} }`
+							`const $$_functions_$$ = { ${exports.join(', ')} }; for (const [name, fn] of Object.entries($$_functions_$$)) { fn.__.id = '${remote.hash}/' + name; fn.__.name = name; }; export default $$_functions_$$;`
 						);
 
 						fs.writeFileSync(`${out}/server/${chunk.fileName}`, transformed);
 
-						try {
-							fs.mkdirSync(`${out}/server/remote`);
-						} catch {}
+						// fs.writeFileSync(
+						// 	`${out}/server/remote/${remote.hash}.js`,
+						// 	`export { ${re_exports.join(', ')} } from '../chunks/remote-${remote.hash}.js';`
+						// );
 
-						fs.writeFileSync(
-							`${out}/server/remote/${remote.hash}.js`,
-							`export { ${re_exports.join(', ')} } from '../chunks/remote-${remote.hash}.js';`
-						);
+						// console.log(remote.hash, chunk_exports);
 					}
 				}
+
+				// ...make sure remote exports have their IDs assigned...
+				build_remotes(out, manifest_data, remote_chunks);
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -1355,9 +1384,6 @@ async function kit({ svelte_config }) {
 					static_exports
 				);
 
-				// ...make sure remote exports have their IDs assigned...
-				build_remotes(out, manifest_data);
-
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
 					hash: kit.router.type === 'hash',
@@ -1380,7 +1406,7 @@ async function kit({ svelte_config }) {
 				);
 
 				// remove prerendered remote functions
-				await treeshake_prerendered_remotes(out, manifest_data, metadata);
+				await treeshake_prerendered_remotes(out, manifest_data, metadata, remote_chunks);
 
 				if (service_worker_entry_file) {
 					if (kit.paths.assets) {
