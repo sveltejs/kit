@@ -45,6 +45,7 @@ export interface Cookie {
 export type ServerDataSerializer = {
 	serialize(i: number, node: ServerDataNode | null): void;
 	get_data(csp: Csp): { data: string; chunks: AsyncIterable<string> | null };
+	discard(): void;
 };
 
 export type ServerDataSerializerJson = {

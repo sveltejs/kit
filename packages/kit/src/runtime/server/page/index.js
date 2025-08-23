@@ -281,6 +281,9 @@ export async function render_page(
 							const layouts = compact(branch.slice(0, j + 1));
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
 
+							// prevent memory leak by resolving the `nonce` promise of the unused data_serializer
+							data_serializer.discard()
+
 							return await render_response({
 								event,
 								event_state,

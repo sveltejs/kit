@@ -106,6 +106,10 @@ export function server_data_serializer(event, event_state, options) {
 				data: `[${strings.join(',')}]`,
 				chunks: promise_id > 1 ? iterator : null
 			};
+		},
+
+		discard() {
+			set_nonce('');
 		}
 	};
 }
