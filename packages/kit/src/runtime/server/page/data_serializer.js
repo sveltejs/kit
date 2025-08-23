@@ -1,6 +1,11 @@
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
+import {
+	clarify_devalue_error,
+	get_global_name,
+	handle_error_and_jsonify,
+	serialize_uses
+} from '../utils.js';
 
 /**
  * If the serialized data contains promises, `chunks` will be an
@@ -15,13 +20,11 @@ export function server_data_serializer(event, event_state, options) {
 	let count = 0;
 
 	const { iterator, push, done } = create_async_iterator();
-	const global_placeholder = `__GLOBAL__${Math.random().toString(36).slice(2)}__`;
+	const global = get_global_name(options);
 
-	/** @type {(info: { global: string; nonce: string; }) => void} */
-	let set_info;
-	const info = /** @type {Promise<{ global: string; nonce: string }>} */ new Promise(
-		(r) => (set_info = r)
-	);
+	/** @type {(nonce: string) => void} */
+	let set_nonce;
+	const nonce = /** @type {Promise<string>} */ new Promise((r) => (set_nonce = r));
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -57,15 +60,14 @@ export function server_data_serializer(event, event_state, options) {
 							str = devalue.uneval([, error], replacer);
 						}
 
-						const { nonce, global } = await info;
 						push(
-							`<script${nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`
+							`<script${await nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`
 						);
 						if (count === 0) done();
 					}
 				);
 
-			return `${global_placeholder}.defer(${id})`;
+			return `${global}.defer(${id})`;
 		} else {
 			for (const key in options.hooks.transport) {
 				const encoded = options.hooks.transport[key].encode(thing);
@@ -98,10 +100,10 @@ export function server_data_serializer(event, event_state, options) {
 			}
 		},
 
-		get_data(csp, global) {
-			set_info({ global, nonce: csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '' });
+		get_data(csp) {
+			set_nonce(csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '');
 			return {
-				data: `[${strings.join(',').replaceAll(global_placeholder, global)}]`,
+				data: `[${strings.join(',')}]`,
 				chunks: count > 0 ? iterator : null
 			};
 		}

@@ -11,6 +11,7 @@ import { SCHEME } from '../../../utils/url.js';
 import { add_resolution_suffix } from '../../pathname.js';
 import { public_env } from '../../shared-server.js';
 import { text_encoder } from '../../utils.js';
+import { get_global_name } from '../utils.js';
 import { uneval_action_response } from './actions.js';
 import { Csp } from './csp.js';
 import { serialize_data } from './serialize_data.js';
@@ -295,9 +296,8 @@ export async function render_response({
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
-
-	const { data, chunks } = data_serializer.get_data(csp, global);
+	const global = get_global_name(options);
+	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
