@@ -104,7 +104,7 @@ export function server_data_serializer(event, event_state, options) {
 			set_nonce(csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '');
 			return {
 				data: `[${strings.join(',')}]`,
-				chunks: count > 0 ? iterator : null
+				chunks: promise_id > 1 ? iterator : null
 			};
 		}
 	};
@@ -203,7 +203,7 @@ export function server_data_serializer_json(event, event_state, options) {
 		get_data() {
 			return {
 				data: `{"type":"data","nodes":[${strings.join(',')}]}\n`,
-				chunks: count > 0 ? iterator : null
+				chunks: promise_id > 1 ? iterator : null
 			};
 		}
 	};
