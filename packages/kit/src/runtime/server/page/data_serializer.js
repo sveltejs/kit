@@ -189,9 +189,10 @@ export function server_data_serializer_json(event, event_state, options) {
 					return;
 				}
 
-				return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
-					serialize_uses(node)
-				)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
+				strings[i] =
+					`{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
+						serialize_uses(node)
+					)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 			} catch (e) {
 				// @ts-expect-error
 				e.path = 'data' + e.path;
