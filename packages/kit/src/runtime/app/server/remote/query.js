@@ -114,7 +114,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(args: Input[]) => MaybePromise<Output[]>} fn
+ * @param {(args: Input[]) => MaybePromise<(arg: Input, idx: number) => Output>} fn
  * @returns {RemoteQueryFunction<Input, Output>}
  * @since 2.35
  */
@@ -127,7 +127,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {Schema} schema
- * @param {(args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<Output[]>} fn
+ * @param {(args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>} fn
  * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.35
  */
@@ -135,45 +135,27 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(args?: Input[]) => MaybePromise<Output[]>} [maybe_fn]
+ * @param {(args?: Input[]) => MaybePromise<(arg: Input, idx: number) => Output>} [maybe_fn]
  * @returns {RemoteQueryFunction<Input, Output>}
  * @since 2.35
  */
 /*@__NO_SIDE_EFFECTS__*/
 function batch(validate_or_fn, maybe_fn) {
-	/** @type {(args?: Input[]) => Output[]} */
+	/** @type {(args?: Input[]) => (arg: Input, idx: number) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
-
-	/**
-	 * @param {any[]} input
-	 * @param {any} output
-	 */
-	function validate_output(input, output) {
-		if (!Array.isArray(output)) {
-			throw new Error(
-				`Batch query '${__.name}' returned a result of type ${typeof output}. It must return an array of the same length as the input array`
-			);
-		}
-
-		if (input.length !== output.length) {
-			throw new Error(
-				`Batch query '${__.name}' was called with ${input.length} arguments, but returned ${output.length} results. Make sure to return an array of the same length as the input array`
-			);
-		}
-	}
 
 	/** @type {RemoteInfo & { type: 'query_batch' }} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
 		name: '',
-		run: async (args) => {
+		run: (args) => {
 			const { event, state } = get_request_store();
 
-			const results = await run_remote_function(
+			return run_remote_function(
 				event,
 				state,
 				false,
@@ -181,10 +163,6 @@ function batch(validate_or_fn, maybe_fn) {
 				(array) => Promise.all(array.map(validate)),
 				fn
 			);
-
-			validate_output(args, results);
-
-			return results;
 		}
 	};
 
@@ -216,7 +194,7 @@ function batch(validate_or_fn, maybe_fn) {
 					batching = { args: [], resolvers: [] };
 
 					try {
-						const results = await run_remote_function(
+						const get_result = await run_remote_function(
 							event,
 							state,
 							false,
@@ -225,10 +203,8 @@ function batch(validate_or_fn, maybe_fn) {
 							fn
 						);
 
-						validate_output(batched.args, results);
-
 						for (let i = 0; i < batched.resolvers.length; i++) {
-							batched.resolvers[i].resolve(results[i]);
+							batched.resolvers[i].resolve(get_result(batched.args[i], i));
 						}
 					} catch (error) {
 						for (const resolver of batched.resolvers) {

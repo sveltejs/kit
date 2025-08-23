@@ -8,5 +8,6 @@ const mock_data = [
 ];
 
 export const get_todo = query.batch('unchecked', (ids) => {
-	return ids.map((id) => mock_data.find((todo) => todo.id === id));
+	const results = ids.map((id) => mock_data.find((todo) => todo.id === id));
+	return (id) => results.find((todo) => todo?.id === id);
 });
