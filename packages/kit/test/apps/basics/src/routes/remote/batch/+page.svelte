@@ -7,12 +7,12 @@
 <h1>Query Batch Test</h1>
 
 <ul>
-	{#each todoIds as id}
+	{#each todoIds as id, idx}
 		<li>
 			{#await get_todo(id)}
 				<span>Loading todo {id}...</span>
 			{:then todo}
-				<span id="batch-result-{id}">{todo.title}</span>
+				<span id="batch-result-{idx}">{todo.title}</span>
 			{:catch error}
 				<span>Error loading todo {id}: {error.message}</span>
 			{/await}
