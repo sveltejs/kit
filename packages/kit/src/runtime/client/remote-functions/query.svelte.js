@@ -33,7 +33,7 @@ export function query(id) {
  * @returns {(arg: any) => Query<any>}
  */
 export function query_batch(id) {
-	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
 	let batching = new Map();
 
 	return create_remote_function(id, (cache_key, payload) => {

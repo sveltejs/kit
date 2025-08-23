@@ -36,10 +36,12 @@ export const validated_command_with_arg = command(schema, (...arg) =>
 	typeof arg[0] === 'string' && arg.length === 1 ? 'success' : 'failure'
 );
 
-export const validated_batch_query_no_validation = query.batch('unchecked', (items) =>
-	items.map((item) => (item === 'valid' ? 'success' : 'failure'))
+export const validated_batch_query_no_validation = query.batch(
+	'unchecked',
+	(_) => (item) => (item === 'valid' ? 'success' : 'failure')
 );
 
-export const validated_batch_query_with_validation = query.batch(schema, (items) =>
-	items.map((item) => (typeof item === 'string' ? 'success' : 'failure'))
+export const validated_batch_query_with_validation = query.batch(
+	schema,
+	(_) => (item) => (typeof item === 'string' ? 'success' : 'failure')
 );
