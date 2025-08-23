@@ -282,7 +282,7 @@ export async function render_page(
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
 
 							// prevent memory leak by resolving the `nonce` promise of the unused data_serializer
-							data_serializer.discard()
+							data_serializer.discard();
 
 							return await render_response({
 								event,
