@@ -184,6 +184,7 @@ function batch(validate_or_fn, maybe_fn) {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
+				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
 				batching.args.push(arg);
 				batching.resolvers.push({ resolve, reject });
 
