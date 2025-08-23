@@ -663,6 +663,11 @@ async function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote',
 
 		config(config) {
+			if (!config.build?.ssr) {
+				// only set manualChunks for the SSR build
+				return;
+			}
+
 			// Ensure build.rollupOptions.output exists
 			config.build ??= {};
 			config.build.rollupOptions ??= {};
