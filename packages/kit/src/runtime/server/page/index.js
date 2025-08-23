@@ -171,7 +171,7 @@ export async function render_page(
 				throw load_error;
 			}
 
-			const promise = Promise.resolve().then(async () => {
+			return Promise.resolve().then(async () => {
 				try {
 					if (node === leaf_node && action_result?.type === 'error') {
 						// we wait until here to throw the error so that we can use
@@ -204,8 +204,6 @@ export async function render_page(
 					throw load_error;
 				}
 			});
-
-			return promise;
 		});
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
