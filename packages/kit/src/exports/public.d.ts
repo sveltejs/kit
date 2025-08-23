@@ -1805,7 +1805,8 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
 	 * On the client, this function will update the value of the query without re-fetching it.
 	 *
-	 * On the server, this throws an error.
+	 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
+	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
 	 */
 	set(value: T): void;
 	/**

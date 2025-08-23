@@ -5,7 +5,8 @@
 		add,
 		get_count,
 		set_count,
-		set_count_server,
+		set_count_server_refresh,
+		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
 
@@ -33,7 +34,7 @@
 	<p id="command-pending">Command pending: {set_count.pending}</p>
 {/if}
 
-<button onclick={() => set_count_server(0)} id="reset-btn">reset</button>
+<button onclick={() => set_count_server_refresh(0)} id="reset-btn">reset</button>
 
 <button onclick={() => count.refresh()} id="refresh-btn">Refresh</button>
 
@@ -57,7 +58,7 @@
 </button>
 <button
 	onclick={async () => {
-		command_result = await set_count_server(4);
+		command_result = await set_count_server_refresh(4);
 	}}
 	id="multiply-server-refresh-btn"
 >
@@ -81,6 +82,14 @@
 	id="command-deferred-btn"
 >
 	command (deferred)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_set(8);
+	}}
+	id="multiply-server-set-btn"
+>
+	command (query server set)
 </button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>

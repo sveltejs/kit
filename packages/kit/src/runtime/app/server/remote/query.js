@@ -72,15 +72,32 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
+		const abort_controller = new AbortController();
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, state, () =>
-			run_remote_function(event, state, false, arg, validate, fn)
+		const promise = get_response(
+			__.id,
+			arg,
+			state,
+			() => run_remote_function(event, state, false, arg, validate, fn),
+			abort_controller.signal
 		);
 
 		promise.catch(() => {});
 
-		promise.set = () => {
-			throw new Error(`Cannot call '${__.name}.set()' on the server`);
+		/** @param {Output} value */
+		promise.set = (value) => {
+			abort_controller.abort();
+			const { state } = get_request_store();
+			const refreshes = state.refreshes;
+
+			if (!refreshes) {
+				throw new Error(
+					`Cannot call set on query '${__.name}' because it is not executed in the context of a command/form remote function`
+				);
+			}
+
+			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
+			refreshes[cache_key] = value;
 		};
 
 		promise.refresh = async () => {
@@ -98,6 +115,7 @@ export function query(validate_or_fn, maybe_fn) {
 		};
 
 		promise.withOverride = () => {
+			abort_controller.abort();
 			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
 		};
 
