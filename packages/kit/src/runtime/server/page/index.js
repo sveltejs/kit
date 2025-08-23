@@ -164,6 +164,9 @@ export async function render_page(
 				? server_data_serializer_json(event, event_state, options)
 				: null;
 
+		/** @type {Error | null} */
+		let serialization_error;
+
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
 		const server_promises = nodes.data.map((node, i) => {
 			if (load_error) {
@@ -201,8 +204,13 @@ export async function render_page(
 			});
 
 			void promise.then((server_data) => {
-				data_serializer.serialize(i, server_data);
-				data_serializer_json?.serialize(i, server_data);
+				if (serialization_error) return;
+				try {
+					data_serializer.serialize(i, server_data);
+					data_serializer_json?.serialize(i, server_data);
+				} catch (e) {
+					serialization_error = /** @type {Error} */ (e);
+				}
 			});
 
 			return promise;
@@ -239,7 +247,7 @@ export async function render_page(
 
 		// if we don't do this, rejections will be unhandled
 		for (const p of server_promises) p.catch(() => {});
-		for (const p of load_promises) p.catch(() => {});
+		for (const p of load_promises) p.catch(() => { });
 
 		for (let i = 0; i < nodes.data.length; i += 1) {
 			const node = nodes.data[i];
@@ -248,6 +256,9 @@ export async function render_page(
 				try {
 					const server_data = await server_promises[i];
 					const data = await load_promises[i];
+
+					// @ts-ignore ts(2454) it is not used before being assigned
+					if (serialization_error) throw serialization_error;
 
 					branch.push({ node, server_data, data });
 				} catch (e) {
