@@ -194,13 +194,13 @@ export function has_prerendered_path(manifest, pathname) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function format_server_error(status, error, event) {
-	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m\n`;
+	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m`;
 
 	if (status === 404) {
-		return formatted_text + error.message;
+		return formatted_text;
 	}
 
-	return formatted_text + (DEV ? clean_up_stack_trace(error) : error.stack);
+	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
 }
 
 /**
