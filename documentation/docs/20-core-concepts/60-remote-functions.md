@@ -174,12 +174,12 @@ Any query can be updated via its `refresh` method:
 
 ## query.batch
 
-`query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem where you have many calls to the same resource and it's more efficient to do one invocation with an array of arguments of the collected calls instead of doing one invocation per call.
+`query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem: rather than each query resulting in a separate database call (for example), simultaneous queries are grouped together.
 
-Individual calls to the same `query.batch` function are put into an array, and the remote function is invoked with the collected calls that happened within one macrotask. You must return an array of the same length, with each output entry being at the same array position as its corresponding input. SvelteKit will then split this array back up and resolve the individual calls with their results.
+On the server, the callback receives an array of the arguments the function was called with. It must return a function of the form `(input: Input, index: number) => Output`. SvelteKit will then call this with each of the input arguments to resolve the individual calls with their results.
 
 ```js
-/// file: src/routes/blog/data.remote.js
+/// file: weather.remote.js
 // @filename: ambient.d.ts
 declare module '$lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
@@ -190,29 +190,40 @@ import * as v from 'valibot';
 import { query } from '$app/server';
 import * as db from '$lib/server/database';
 
-export const getPost = query.batch(v.string(), async (slugs) => {
-	const posts = await db.sql`
-		SELECT * FROM post
-		WHERE slug = ANY(${slugs})
+export const getWeather = query.batch(v.string(), async (cities) => {
+	const weather = await db.sql`
+		SELECT * FROM weather
+		WHERE city = ANY(${cities})
 	`;
-	return posts;
+	const weatherMap = new Map(weather.map(w => [w.city, w]));
+
+	return (city) => weatherMap.get(city);
 });
 ```
 
 ```svelte
+<!--- file: Weather.svelte --->
 <script>
-	import { getPost } from './batch.remote.js';
+	import CityWeather from './CityWeather.svelte';
+	import { getWeather } from './weather.remote.js';
 
-	let { posts } = $props();
+	let { cities } = $props();
+	let limit = $state(5);
 </script>
 
-<h1>All my posts</h1>
+<h2>Weather</h2>
 
-<ul>
-	{#each posts as post}
-		<li>{await getPost(post.id).summary}</li>
-	{/each}
-</ul>
+{#each cities.slice(0, limit) as city}
+	<h3>{city.name}</h3>
+	<CityWeather weather={await getWeather(city.id)} />
+{/each}
+
+<button
+	onclick={() => limit +=5}
+	disabled={limit >= cities.length}
+>
+	Load more
+</button>
 ```
 
 ## query.stream

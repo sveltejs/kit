@@ -8,5 +8,10 @@ const mock_data = [
 ];
 
 export const get_todo = query.batch('unchecked', (ids) => {
-	return ids.map((id) => mock_data.find((todo) => todo.id === id));
+	if (ids.length !== 2) {
+		throw new Error(`Expected 2 IDs (deduplicated), got ${JSON.stringify(ids)}`);
+	}
+
+	const results = ids.map((id) => mock_data.find((todo) => todo.id === id));
+	return (id) => results.find((todo) => todo?.id === id);
 });

@@ -33,8 +33,8 @@ export function query(id) {
  * @returns {(arg: any) => Query<any>}
  */
 export function query_batch(id) {
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
-	let batching = { args: [], resolvers: [] };
+	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
+	let batching = new Map();
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
@@ -48,22 +48,25 @@ export function query_batch(id) {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
-				batching.args.push(payload);
-				batching.resolvers.push({ resolve, reject });
+				// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
+				// is invoked multiple times with the same payload, so we need to deduplicate here
+				const entry = batching.get(payload) ?? [];
+				entry.push({ resolve, reject });
+				batching.set(payload, entry);
 
-				if (batching.args.length > 1) return;
+				if (batching.size > 1) return;
 
 				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
 				// and flushes could reveal more queries that should be batched.
 				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [] };
+					batching = new Map();
 
 					try {
 						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 							method: 'POST',
 							body: JSON.stringify({
-								payloads: batched.args
+								payloads: Array.from(batched.keys())
 							}),
 							headers: {
 								'Content-Type': 'application/json'
@@ -89,13 +92,21 @@ export function query_batch(id) {
 						const results = devalue.parse(result.result, app.decoders);
 
 						// Resolve individual queries
-						for (let i = 0; i < batched.resolvers.length; i++) {
-							batched.resolvers[i].resolve(results[i]);
+						// Maps guarantee insertion order so we can do it like this
+						let i = 0;
+
+						for (const resolvers of batched.values()) {
+							for (const { resolve } of resolvers) {
+								resolve(results[i]);
+							}
+							i++;
 						}
 					} catch (error) {
 						// Reject all queries in the batch
-						for (const resolver of batched.resolvers) {
-							resolver.reject(error);
+						for (const resolver of batched.values()) {
+							for (const { reject } of resolver) {
+								reject(error);
+							}
 						}
 					}
 				}, 0);
