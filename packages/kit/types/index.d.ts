@@ -1798,7 +1798,7 @@ declare module '@sveltejs/kit' {
 		 *   await submit().updates(
 		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
 		 *   );
-		 * }}>
+		 * })s}>
 		 *   <input type="text" name="text" />
 		 *   <button type="submit">Add Todo</button>
 		 * </form>
