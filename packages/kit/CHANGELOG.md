@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.36.2
+### Patch Changes
+
+
+- chore: make config deprecation warnings more visible ([#14281](https://github.com/sveltejs/kit/pull/14281))
+
+
+- chore: remove redundant Not Found error message ([#14289](https://github.com/sveltejs/kit/pull/14289))
+
+
+- chore: deprecate `csrf.checkOrigin` in favour of `csrf.trustedOrigins: ['*']` ([#14281](https://github.com/sveltejs/kit/pull/14281))
+
 ## 2.36.1
 ### Patch Changes
 
