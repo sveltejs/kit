@@ -164,9 +164,6 @@ export async function render_page(
 				? server_data_serializer_json(event, event_state, options)
 				: null;
 
-		/** @type {Error | null} */
-		let serialization_error;
-
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
 		const server_promises = nodes.data.map((node, i) => {
 			if (load_error) {
@@ -182,7 +179,7 @@ export async function render_page(
 						throw action_result.error;
 					}
 
-					return await load_server_data({
+					const server_data = await load_server_data({
 						event,
 						event_state,
 						state,
@@ -197,19 +194,14 @@ export async function render_page(
 							return data;
 						}
 					});
+
+					data_serializer.serialize(i, server_data);
+					data_serializer_json?.serialize(i, server_data);
+
+					return server_data;
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
 					throw load_error;
-				}
-			});
-
-			void promise.then((server_data) => {
-				if (serialization_error) return;
-				try {
-					data_serializer.serialize(i, server_data);
-					data_serializer_json?.serialize(i, server_data);
-				} catch (e) {
-					serialization_error = /** @type {Error} */ (e);
 				}
 			});
 
@@ -256,9 +248,6 @@ export async function render_page(
 				try {
 					const server_data = await server_promises[i];
 					const data = await load_promises[i];
-
-					// @ts-ignore ts(2454) it is not used before being assigned
-					if (serialization_error) throw serialization_error;
 
 					branch.push({ node, server_data, data });
 				} catch (e) {
