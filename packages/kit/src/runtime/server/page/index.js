@@ -247,7 +247,7 @@ export async function render_page(
 
 		// if we don't do this, rejections will be unhandled
 		for (const p of server_promises) p.catch(() => {});
-		for (const p of load_promises) p.catch(() => { });
+		for (const p of load_promises) p.catch(() => {});
 
 		for (let i = 0; i < nodes.data.length; i += 1) {
 			const node = nodes.data[i];
