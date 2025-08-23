@@ -1,7 +1,7 @@
 <script>
 	import { get_todo } from './batch.remote.js';
 
-	const todoIds = ['1', '2'];
+	const todoIds = ['1', '2', '1'];
 </script>
 
 <h1>Query Batch Test</h1>
