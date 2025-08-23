@@ -1925,6 +1925,7 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
 		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#batch-result-3')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-4')).toHaveText('Error loading todo error: Not found');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

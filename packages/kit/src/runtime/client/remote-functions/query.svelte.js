@@ -96,8 +96,12 @@ export function query_batch(id) {
 						let i = 0;
 
 						for (const resolvers of batched.values()) {
-							for (const { resolve } of resolvers) {
-								resolve(results[i]);
+							for (const { resolve, reject } of resolvers) {
+								if (results[i].type === 'error') {
+									reject(new HttpError(results[i].status, results[i].error));
+								} else {
+									resolve(results[i].data);
+								}
 							}
 							i++;
 						}

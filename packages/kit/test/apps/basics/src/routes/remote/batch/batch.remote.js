@@ -1,17 +1,15 @@
 import { query } from '$app/server';
-
-const mock_data = [
-	{ id: '1', title: 'Buy groceries' },
-	{ id: '2', title: 'Walk the dog' },
-	{ id: '3', title: 'Write code' },
-	{ id: '4', title: 'Read book' }
-];
+import { error } from '@sveltejs/kit';
 
 export const get_todo = query.batch('unchecked', (ids) => {
-	if (ids.length !== 2) {
-		throw new Error(`Expected 2 IDs (deduplicated), got ${JSON.stringify(ids)}`);
+	if (JSON.stringify(ids) !== JSON.stringify(['1', '2', 'error'])) {
+		throw new Error(`Expected 3 IDs (deduplicated), got ${JSON.stringify(ids)}`);
 	}
 
-	const results = ids.map((id) => mock_data.find((todo) => todo.id === id));
-	return (id) => results.find((todo) => todo?.id === id);
+	return (id) =>
+		id === '1'
+			? { id: '1', title: 'Buy groceries' }
+			: id === '2'
+				? { id: '2', title: 'Walk the dog' }
+				: error(404, { message: 'Not found' });
 });

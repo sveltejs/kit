@@ -218,12 +218,11 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 	<CityWeather weather={await getWeather(city.id)} />
 {/each}
 
-<button
-	onclick={() => limit +=5}
-	disabled={limit >= cities.length}
->
-	Load more
-</button>
+{#if cities.length > limit}
+	<button onclick={() => limit += 5}>
+		Load more
+	</button>
+{/if}
 ```
 
 ## query.stream
