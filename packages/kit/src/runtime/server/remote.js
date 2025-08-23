@@ -74,7 +74,20 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
 			const get_result = await with_request_store({ event, state }, () => info.run(args));
-			const results = args.map((arg, i) => get_result(arg, i));
+			const results = await Promise.all(
+				args.map(async (arg, i) => {
+					try {
+						return { type: 'result', data: get_result(arg, i) };
+					} catch (error) {
+						return {
+							type: 'error',
+							error: await handle_error_and_jsonify(event, state, options, error),
+							status:
+								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+						};
+					}
+				})
+			);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({

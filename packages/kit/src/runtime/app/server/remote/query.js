@@ -205,7 +205,11 @@ function batch(validate_or_fn, maybe_fn) {
 						);
 
 						for (let i = 0; i < batched.resolvers.length; i++) {
-							batched.resolvers[i].resolve(get_result(batched.args[i], i));
+							try {
+								batched.resolvers[i].resolve(get_result(batched.args[i], i));
+							} catch (error) {
+								batched.resolvers[i].reject(error);
+							}
 						}
 					} catch (error) {
 						for (const resolver of batched.resolvers) {
