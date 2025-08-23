@@ -12,7 +12,7 @@
 			{#await get_todo(id)}
 				<span>Loading todo {id}...</span>
 			{:then todo}
-				<span id="batch-result-{idx}">{todo.title}</span>
+				<span id="batch-result-{idx + 1}">{todo.title}</span>
 			{:catch error}
 				<span>Error loading todo {id}: {error.message}</span>
 			{/await}
