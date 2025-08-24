@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
-feat: add expose query.set() method to override the value of a remote query function
+fix: add type definitions for `query.set()` method to override the value of a remote query function
