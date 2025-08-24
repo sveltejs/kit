@@ -1234,6 +1234,11 @@ export interface Navigation {
 	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
 	 */
 	complete: Promise<void>;
+	/**
+	 * Represents value of hasUAVisualTransition of PopStateEvent if navigation type is popstate, 
+	 * otherwise undefined
+	 */
+	hasUAVisualTransition?: boolean;
 }
 
 /**
