@@ -71,14 +71,8 @@ export function create_validator(validate_or_fn, maybe_fn) {
  */
 export async function get_response(id, arg, state, get_result, signal) {
 	if (signal) {
-		await /** @type {Promise<void>} */ (
-			new Promise((resolve, reject) => {
-				setTimeout(() => {
-					if (signal.aborted) reject(new DOMException('The operation was aborted.', 'AbortError'));
-					resolve();
-				}, 0);
-			})
-		);
+		await new Promise((r) => setTimeout(r, 0));
+		if (signal.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
 	}
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
 
