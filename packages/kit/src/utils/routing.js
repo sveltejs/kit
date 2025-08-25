@@ -240,6 +240,8 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  */
 export function resolve_route(id, params) {
 	const segments = get_route_segments(id);
+	const has_id_trailing_slash = id != '/' && id.endsWith('/');
+
 	return (
 		'/' +
 		segments
@@ -262,7 +264,8 @@ export function resolve_route(id, params) {
 				})
 			)
 			.filter(Boolean)
-			.join('/')
+			.join('/') +
+		(has_id_trailing_slash ? '/' : '')
 	);
 }
 

@@ -279,9 +279,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one/two'
 		},
 		{
+			route: '/blog/[one]/[two]/',
+			params: { one: 'one', two: 'two' },
+			expected: '/blog/one/two/'
+		},
+		{
 			route: '/blog/[one=matcher]/[...two]',
 			params: { one: 'one', two: 'two/three' },
 			expected: '/blog/one/two/three'
+		},
+		{
+			route: '/blog/[one=matcher]/[...two]/',
+			params: { one: 'one', two: 'two/three' },
+			expected: '/blog/one/two/three/'
 		},
 		{
 			route: '/blog/[one=matcher]/[[two]]',
@@ -289,9 +299,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one'
 		},
 		{
+			route: '/blog/[one=matcher]/[[two]]/',
+			params: { one: 'one' },
+			expected: '/blog/one/'
+		},
+		{
 			route: '/blog/[one]/[two]-and-[three]',
 			params: { one: 'one', two: '2', three: '3' },
 			expected: '/blog/one/2-and-3'
+		},
+		{
+			route: '/blog/[one]/[two]-and-[three]/',
+			params: { one: 'one', two: '2', three: '3' },
+			expected: '/blog/one/2-and-3/'
 		},
 		{
 			route: '/blog/[...one]',
@@ -299,9 +319,19 @@ describe('resolve_route', () => {
 			expected: '/blog'
 		},
 		{
+			route: '/blog/[...one]/',
+			params: { one: '' },
+			expected: '/blog/'
+		},
+		{
 			route: '/blog/[one]/[...two]-not-three',
 			params: { one: 'one', two: 'two/2' },
 			expected: '/blog/one/two/2-not-three'
+		},
+		{
+			route: '/blog/[one]/[...two]-not-three/',
+			params: { one: 'one', two: 'two/2' },
+			expected: '/blog/one/two/2-not-three/'
 		}
 	];
 
