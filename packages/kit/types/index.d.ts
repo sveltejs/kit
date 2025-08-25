@@ -1211,7 +1211,7 @@ declare module '@sveltejs/kit' {
 		 */
 		complete: Promise<void>;
 		/**
-		 * Represents value of hasUAVisualTransition of PopStateEvent if navigation type is popstate, 
+		 * Represents value of hasUAVisualTransition of PopStateEvent if navigation type is popstate,
 		 * otherwise undefined
 		 */
 		hasUAVisualTransition?: boolean;
