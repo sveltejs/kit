@@ -1823,6 +1823,16 @@ export interface RemoteQueryOverride {
 }
 
 /**
+ * The return value of a remote `query.stream` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-stream) for full documentation.
+ */
+export type RemoteQueryStream<T> = RemoteResource<T> & AsyncIterable<Awaited<T>>;
+
+/**
+ * The return value of a remote `query.stream` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-stream) for full documentation.
+ */
+export type RemoteQueryStreamFunction<Input, Output> = (arg: Input) => RemoteQueryStream<Output>;
+
+/**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  */
 export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
