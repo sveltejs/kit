@@ -21,12 +21,13 @@ const initialized = server.init({
 	// @ts-expect-error env contains environment variables and bindings
 	env,
 	read: async (file) => {
-		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
-			`${origin}/${file}`
-		);
+		const url = `${origin}/${file}`;
+		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(url);
+
 		if (!response.ok) {
-			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+			throw new Error(`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`);
 		}
+
 		return response.body;
 	}
 });
