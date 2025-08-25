@@ -24,8 +24,7 @@ The following example caches the built app and files in `static` on first reques
 
 ```js
 /// file: src/service-worker.js
-// Disables access to DOM typings like `HTMLElement` which are not available
-// inside a service worker and instantiates the correct globals
+// Disables access to DOM typings and instantiates the correct globals
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
@@ -50,36 +49,35 @@ const ASSETS = [
 ];
 
 self.addEventListener('activate', (event) => {
-	// Remove previous cached data from disk
-	async function deleteOldCaches() {
-		for (const key of await caches.keys()) {
-			if (key !== CACHE) await caches.delete(key);
-		}
-	}
-
-	event.waitUntil(deleteOldCaches());
+	event.waitUntil(
+		(async () => {
+			for (const key of await caches.keys()) {
+				// Remove previous cached data from disk
+				if (key !== CACHE) await caches.delete(key);
+			}
+		})()
+	);
 });
 
 self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
 
-	async function respond() {
-		const url = new URL(event.request.url);
+	const url = new URL(event.request.url);
+	if (!ASSETS.includes(url.pathname)) return;
 
-		// `build`/`files` can always be served from the cache
-		if (!ASSETS.includes(url.pathname)) return fetch(url);
+	event.respondWith(
+		(async () => {
+			// `build`/`files` can always be served from the cache
+			const cache = await caches.open(CACHE);
+			const cached = await cache.match(url.pathname);
+			if (cached) return cached;
 
-		const cache = await caches.open(CACHE);
-		const cached = await cache.match(url.pathname);
-		if (cached) return cached;
-
-		const response = await fetch(event.request);
-		if (response.ok) await cache.put(event.request, response.clone());
-		return response;
-	}
-
-	event.respondWith(respond());
+			const response = await fetch(event.request);
+			if (response.ok) await cache.put(event.request, response.clone());
+			return response;
+		})()
+	);
 });
 ```
 
