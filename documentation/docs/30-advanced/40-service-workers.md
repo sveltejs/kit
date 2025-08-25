@@ -48,6 +48,17 @@ const ASSETS = new Set([
 	...files  // everything in `static`
 ]);
 
+self.addEventListener('install', (event) => {
+	event.waitUntil(
+		(async () => {
+			const cache = await caches.open(CACHE);
+			// Cache assets on service worker installation.
+			// e.g. For offline PWA, cache all ASSETS here.
+			await cache.addAll([]);
+		})()
+	);
+});
+
 self.addEventListener('activate', (event) => {
 	event.waitUntil(
 		(async () => {
