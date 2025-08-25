@@ -15,7 +15,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		fs: {
-			allow: [path.resolve('../../../src')]
+			allow: [path.resolve('../../../src'), path.resolve('external-remotes')]
 		}
 	},
 	test: {
