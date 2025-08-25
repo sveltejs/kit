@@ -40,7 +40,6 @@ import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-/* global __SVELTEKIT_DEV__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -167,7 +166,7 @@ export async function internal_respond(request, options, manifest, state) {
 		request,
 		route: { id: null },
 		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
+			if (DEV) {
 				validateHeaders(new_headers);
 			}
 

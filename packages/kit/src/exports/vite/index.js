@@ -335,7 +335,6 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
 					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
-					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
@@ -351,7 +350,6 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
