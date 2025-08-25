@@ -43,10 +43,10 @@ const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (gl
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
-const ASSETS = [
+const ASSETS = new Set([
 	...build, // the app itself
 	...files  // everything in `static`
-];
+]);
 
 self.addEventListener('activate', (event) => {
 	event.waitUntil(
@@ -64,7 +64,7 @@ self.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
 
 	const url = new URL(event.request.url);
-	if (!ASSETS.includes(url.pathname)) return;
+	if (!ASSETS.has(url.pathname)) return;
 
 	event.respondWith(
 		(async () => {
