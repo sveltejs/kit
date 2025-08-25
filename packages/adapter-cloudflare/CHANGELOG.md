@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
 ## 7.2.2
 ### Patch Changes
 
