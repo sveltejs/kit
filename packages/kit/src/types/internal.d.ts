@@ -192,12 +192,13 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: Array<{
-		file: string;
-		hash: string;
-	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
+}
+
+export interface RemoteChunk {
+	hash: string;
+	file: string;
 }
 
 export interface PageNode {

@@ -1,3 +1,4 @@
+/** @import { RemoteChunk } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import * as mime from 'mrmime';
@@ -18,9 +19,10 @@ import { uneval } from 'devalue';
  *   prerendered: string[];
  *   relative_path: string;
  *   routes: import('types').RouteData[];
+ *   remotes: RemoteChunk[];
  * }} opts
  */
-export function generate_manifest({ build_data, prerendered, relative_path, routes }) {
+export function generate_manifest({ build_data, prerendered, relative_path, routes, remotes }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -101,7 +103,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					${(node_paths).map(loader).join(',\n')}
 				],
 				remotes: {
-					${build_data.manifest_data.remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, remote.file).chunk.file))}`).join(',\n')}
+					${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, `chunks/remote-${remote.hash}.js`))}`).join(',\n')}
 				},
 				routes: [
 					${routes.map(route => {
