@@ -20,12 +20,11 @@ if ('serviceWorker' in navigator) {
 
 Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
-The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
+The following example caches the built app and files in `static` on first request, and deletes them on a version update.
 
 ```js
 /// file: src/service-worker.js
-// Disables access to DOM typings like `HTMLElement` which are not available
-// inside a service worker and instantiates the correct globals
+// Disables access to DOM typings and instantiates the correct globals
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
@@ -44,79 +43,52 @@ const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (gl
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
-const ASSETS = [
+const ASSETS = new Set([
 	...build, // the app itself
 	...files  // everything in `static`
-];
+]);
 
 self.addEventListener('install', (event) => {
-	// Create a new cache and add all files to it
-	async function addFilesToCache() {
-		const cache = await caches.open(CACHE);
-		await cache.addAll(ASSETS);
-	}
-
-	event.waitUntil(addFilesToCache());
+	event.waitUntil(
+		(async () => {
+			const cache = await caches.open(CACHE);
+			// Cache assets on service worker installation.
+			// e.g. For offline PWA, cache all ASSETS here.
+			await cache.addAll([]);
+		})()
+	);
 });
 
 self.addEventListener('activate', (event) => {
-	// Remove previous cached data from disk
-	async function deleteOldCaches() {
-		for (const key of await caches.keys()) {
-			if (key !== CACHE) await caches.delete(key);
-		}
-	}
-
-	event.waitUntil(deleteOldCaches());
+	event.waitUntil(
+		(async () => {
+			for (const key of await caches.keys()) {
+				// Remove previous cached data from disk
+				if (key !== CACHE) await caches.delete(key);
+			}
+		})()
+	);
 });
 
 self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
 
-	async function respond() {
-		const url = new URL(event.request.url);
-		const cache = await caches.open(CACHE);
+	const url = new URL(event.request.url);
+	if (!ASSETS.has(url.pathname)) return;
 
-		// `build`/`files` can always be served from the cache
-		if (ASSETS.includes(url.pathname)) {
-			const response = await cache.match(url.pathname);
+	event.respondWith(
+		(async () => {
+			// `build`/`files` can always be served from the cache
+			const cache = await caches.open(CACHE);
+			const cached = await cache.match(url.pathname);
+			if (cached) return cached;
 
-			if (response) {
-				return response;
-			}
-		}
-
-		// for everything else, try the network first, but
-		// fall back to the cache if we're offline
-		try {
 			const response = await fetch(event.request);
-
-			// if we're offline, fetch can return a value that is not a Response
-			// instead of throwing - and we can't pass this non-Response to respondWith
-			if (!(response instanceof Response)) {
-				throw new Error('invalid response from fetch');
-			}
-
-			if (response.status === 200) {
-				cache.put(event.request, response.clone());
-			}
-
+			if (response.ok) await cache.put(event.request, response.clone());
 			return response;
-		} catch (err) {
-			const response = await cache.match(event.request);
-
-			if (response) {
-				return response;
-			}
-
-			// if there's no cache, then just error out
-			// as there is nothing we can do to respond to this request
-			throw err;
-		}
-	}
-
-	event.respondWith(respond());
+		})()
+	);
 });
 ```
 
