@@ -4,9 +4,6 @@ import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 
 installPolyfills();
 
-// @ts-expect-error
-globalThis.__SVELTEKIT_DEV__ = false;
-
 const domains = {
 	positive: [
 		['localhost'],
@@ -166,9 +163,6 @@ test('serialized cookie header should be url-encoded', () => {
 });
 
 test('warns if cookie exceeds 4,129 bytes', () => {
-	// @ts-expect-error
-	globalThis.__SVELTEKIT_DEV__ = true;
-
 	try {
 		const { cookies } = cookies_setup();
 		cookies.set('a', 'a'.repeat(4097), { path: '/' });
@@ -176,9 +170,6 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 		const error = /** @type {Error} */ (e);
 
 		assert.equal(error.message, 'Cookie "a" is too large, and will be discarded by the browser');
-	} finally {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = false;
 	}
 });
 

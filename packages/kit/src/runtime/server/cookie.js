@@ -2,6 +2,7 @@ import { parse, serialize } from 'cookie';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';
+import { DEV } from 'esm-env';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -96,7 +97,7 @@ export function get_cookies(request, url) {
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
 			// since we don't know which path they were set at)
-			if (__SVELTEKIT_DEV__ && !cookie) {
+			if (DEV && !cookie) {
 				const paths = Array.from(cookie_paths[name] ?? []).filter((path) => {
 					// we only care about paths that are _more_ specific than the current path
 					return path_matches(path, url.pathname) && path !== url.pathname;
@@ -252,7 +253,7 @@ export function get_cookies(request, url) {
 		const cookie = { name, value, options: { ...options, path } };
 		new_cookies.set(cookie_key, cookie);
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			const serialized = serialize(name, value, cookie.options);
 			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);

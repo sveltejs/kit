@@ -1,5 +1,5 @@
 import { webcrypto } from 'node:crypto';
-import { assert, beforeAll, test } from 'vitest';
+import { assert, test } from 'vitest';
 import { Csp } from './csp.js';
 
 // TODO: remove after bumping peer dependency to require Node 20
@@ -7,11 +7,6 @@ if (!globalThis.crypto) {
 	// @ts-expect-error
 	globalThis.crypto = webcrypto;
 }
-
-beforeAll(() => {
-	// @ts-expect-error
-	globalThis.__SVELTEKIT_DEV__ = false;
-});
 
 test('generates blank CSP header', () => {
 	const csp = new Csp(
@@ -287,9 +282,6 @@ test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessa
 });
 
 test('adds unsafe-inline styles in dev', () => {
-	// @ts-expect-error
-	globalThis.__SVELTEKIT_DEV__ = true;
-
 	const csp = new Csp(
 		{
 			mode: 'hash',
@@ -325,9 +317,6 @@ test('adds unsafe-inline styles in dev', () => {
 
 test.skip('removes strict-dynamic in dev', () => {
 	['default-src', 'script-src'].forEach((name) => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
-
 		const csp = new Csp(
 			{
 				mode: 'hash',

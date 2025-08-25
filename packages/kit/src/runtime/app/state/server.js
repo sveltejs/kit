@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { getContext } from 'svelte';
 
 function context() {
@@ -16,31 +17,30 @@ function context_dev(name) {
 	}
 }
 
-// TODO we're using DEV in some places and __SVELTEKIT_DEV__ in others - why? Can we consolidate?
 export const page = {
 	get data() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.data') : context()).page.data;
+		return (DEV ? context_dev('page.data') : context()).page.data;
 	},
 	get error() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.error') : context()).page.error;
+		return (DEV ? context_dev('page.error') : context()).page.error;
 	},
 	get form() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.form') : context()).page.form;
+		return (DEV ? context_dev('page.form') : context()).page.form;
 	},
 	get params() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.params') : context()).page.params;
+		return (DEV ? context_dev('page.params') : context()).page.params;
 	},
 	get route() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.route') : context()).page.route;
+		return (DEV ? context_dev('page.route') : context()).page.route;
 	},
 	get state() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.state') : context()).page.state;
+		return (DEV ? context_dev('page.state') : context()).page.state;
 	},
 	get status() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.status') : context()).page.status;
+		return (DEV ? context_dev('page.status') : context()).page.status;
 	},
 	get url() {
-		return (__SVELTEKIT_DEV__ ? context_dev('page.url') : context()).page.url;
+		return (DEV ? context_dev('page.url') : context()).page.url;
 	}
 };
 
