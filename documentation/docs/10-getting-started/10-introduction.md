@@ -2,7 +2,7 @@
 title: Introduction.
 ---
 
-## Before we begi
+## Before we begin
 
 > [!NOTE] If you're new to Svelte or SvelteKit we recommend checking out the [interactive tutorial](/tutorial/kit).
 >
