@@ -1402,15 +1402,20 @@ function get_page_key(url) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
+ *   hasUAVisualTransition?: boolean;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta }) {
+function _before_navigate({ url, type, intent, delta, hasUAVisualTransition }) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
+	}
+
+	if (hasUAVisualTransition !== undefined) {
+		nav.navigation.hasUAVisualTransition = hasUAVisualTransition;
 	}
 
 	const cancellable = {
@@ -1437,6 +1442,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
+ *     hasUAVisualTransition?: boolean;
  *   };
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
@@ -1468,7 +1474,13 @@ async function navigate({
 	const nav =
 		type === 'enter'
 			? create_navigation(current, intent, url, type)
-			: _before_navigate({ url, type, delta: popped?.delta, intent });
+			: _before_navigate({
+					url,
+					type,
+					delta: popped?.delta,
+					intent,
+					hasUAVisualTransition: popped?.hasUAVisualTransition
+				});
 
 	if (!nav) {
 		block();
@@ -2523,6 +2535,7 @@ function _start_router() {
 			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
+			const hasUAVisualTransition = event.hasUAVisualTransition;
 
 			if (shallow) {
 				// We don't need to navigate, we just need to update scroll and/or state.
@@ -2550,7 +2563,8 @@ function _start_router() {
 				popped: {
 					state,
 					scroll,
-					delta
+					delta,
+					hasUAVisualTransition
 				},
 				accept: () => {
 					current_history_index = history_index;
