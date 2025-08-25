@@ -37,6 +37,8 @@
 
 <button onclick={() => count.refresh()} id="refresh-btn">Refresh</button>
 
+<button onclick={() => count.set(999)} id="set-btn">Set</button>
+
 <button
 	onclick={async () => {
 		command_result = await set_count({ c: 2 });

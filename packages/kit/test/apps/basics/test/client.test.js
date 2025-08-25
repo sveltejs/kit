@@ -1660,6 +1660,16 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.set works', async ({ page }) => {
+		await page.goto('/remote');
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#set-btn');
+		await expect(page.locator('#count-result')).toHaveText('999 / 999 (false)');
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
