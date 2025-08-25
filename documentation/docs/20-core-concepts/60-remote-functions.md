@@ -289,7 +289,23 @@ Apart from that you can iterate over it like any other async iterable, including
 {/each}
 ```
 
-Stream requests to the same resource with the same payload are deduplicated, i.e. you cannot start the same stream multiple times in parallel and it to start from the beginning each time.
+Unlike other `query` methods, stream requests to the same resource with the same payload are _not_ deduplicated. That means you can start the same stream multiple times in parallel and it will start from the beginning each time.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { oneToTen } from './count.remote.js';
+
+	const stream = oneToTen();
+</script>
+
+<!-- these are one single ReadableStream request since they share the same stream instance -->
+{#await stream()}
+{#await stream()}
+
+<!-- this is a separate instance and will create a new ReadableStream request to the backend -->
+{await oneToTen()}
+```
 
 > [!NOTE] Be careful when using `query.stream` in combination with service workers. Specifically, make sure to never pass the promise of a `ReadableStream` (which `query.stream` uses) to `event.respondWith(...)`, as the promise never settles.
 

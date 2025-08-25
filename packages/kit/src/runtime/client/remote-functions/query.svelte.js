@@ -6,6 +6,7 @@ import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { stringify_remote_arg } from '../../shared.js';
 
 /**
  * @param {string} id
@@ -124,10 +125,11 @@ export function query_batch(id) {
  * @returns {RemoteQueryStreamFunction<any, any>}
  */
 export function query_stream(id) {
-	return create_remote_function(id, (_, payload) => {
-		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	// @ts-expect-error [Symbol.toStringTag] missing
+	return (payload) => {
+		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${stringify_remote_arg(payload, app.hooks.transport)}` : ''}`;
 		return new QueryStream(url);
-	});
+	};
 }
 
 /**
@@ -247,7 +249,7 @@ class QueryStream {
 		this.#source.addEventListener('error', onError);
 	}
 
-	get then() {
+	#then = $derived.by(() => {
 		this.#current;
 
 		/**
@@ -270,6 +272,10 @@ class QueryStream {
 				}
 			}
 		};
+	});
+
+	get then() {
+		return this.#then;
 	}
 
 	get catch() {
