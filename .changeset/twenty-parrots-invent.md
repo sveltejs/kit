@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: `csrf` option ignored by `command` and `form` remote functions
+fix: false positive `csrf` error in remote functions
