@@ -37,7 +37,6 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-
 describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	test('warns if cookie exceeds 4,129 bytes', () => {
 		try {
