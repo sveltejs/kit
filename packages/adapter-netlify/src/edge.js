@@ -18,7 +18,9 @@ const initialized = server.init({
 		const response = await fetch(url);
 
 		if (!response.ok) {
-			throw new Error(`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`);
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
 		}
 
 		return response.body;
