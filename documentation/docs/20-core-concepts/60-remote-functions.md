@@ -195,9 +195,9 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 		SELECT * FROM weather
 		WHERE city = ANY(${cities})
 	`;
-	const weatherMap = new Map(weather.map(w => [w.city, w]));
+	const lookup = new Map(weather.map(w => [w.city, w]));
 
-	return (city) => weatherMap.get(city);
+	return (city) => lookup.get(city);
 });
 ```
 
