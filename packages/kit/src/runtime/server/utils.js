@@ -104,7 +104,7 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 		return { message: 'Unknown Error', ...error.body };
 	}
 
-	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+	if (DEV && typeof error == 'object') {
 		fix_stack_trace(error);
 	}
 
