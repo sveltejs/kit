@@ -24,7 +24,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@vitest/browser": "^3.2.4",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.2",
 		"svelte-check": "^4.1.1",
 		"test-redirect-importer": "workspace:*",
 		"typescript": "^5.5.4",

@@ -29,7 +29,7 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.3.0",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.2",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.0",
 		"vite": "catalog:"
