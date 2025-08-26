@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { webcrypto } from 'node:crypto';
 import { assert, test, describe } from 'vitest';
 import { Csp } from './csp.js';
