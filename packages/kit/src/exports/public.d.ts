@@ -1203,7 +1203,7 @@ export interface NavigationTarget<
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-export interface Navigation {
+export interface Navigation<navigationType extends NavigationType = NavigationType> {
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1220,7 +1220,7 @@ export interface Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Exclude<NavigationType, 'enter'>;
+	type: Exclude<navigationType, 'enter'>;
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
@@ -1228,17 +1228,17 @@ export interface Navigation {
 	/**
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
-	delta?: number;
+	delta?: navigationType extends 'popstate' ? number : undefined;
 	/**
 	 * A promise that resolves once the navigation is complete, and rejects if the navigation
 	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
 	 */
 	complete: Promise<void>;
 	/**
-	 * Represents value of hasUAVisualTransition of PopStateEvent if navigation type is popstate,
+	 * Represents value of event object of PopStateEvent if navigation type is popstate,
 	 * otherwise undefined
 	 */
-	hasUAVisualTransition?: boolean;
+	event?: navigationType extends 'popstate' ? PopStateEvent : undefined;
 }
 
 /**

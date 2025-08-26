@@ -1402,10 +1402,10 @@ function get_page_key(url) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
- *   hasUAVisualTransition?: boolean;
+ *   popStateEvent?: PopStateEvent;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, hasUAVisualTransition }) {
+function _before_navigate({ url, type, intent, delta, popStateEvent }) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type);
@@ -1414,8 +1414,8 @@ function _before_navigate({ url, type, intent, delta, hasUAVisualTransition }) {
 		nav.navigation.delta = delta;
 	}
 
-	if (hasUAVisualTransition !== undefined) {
-		nav.navigation.hasUAVisualTransition = hasUAVisualTransition;
+	if (event !== undefined) {
+		nav.navigation.event = popStateEvent;
 	}
 
 	const cancellable = {
@@ -1442,7 +1442,7 @@ function _before_navigate({ url, type, intent, delta, hasUAVisualTransition }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
- *     hasUAVisualTransition?: boolean;
+ *     popStateEvent?: PopStateEvent;
  *   };
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
@@ -1479,7 +1479,7 @@ async function navigate({
 					type,
 					delta: popped?.delta,
 					intent,
-					hasUAVisualTransition: popped?.hasUAVisualTransition
+					popStateEvent: popped?.popStateEvent
 				});
 
 	if (!nav) {
@@ -2535,7 +2535,6 @@ function _start_router() {
 			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
-			const hasUAVisualTransition = event.hasUAVisualTransition;
 
 			if (shallow) {
 				// We don't need to navigate, we just need to update scroll and/or state.
@@ -2564,7 +2563,7 @@ function _start_router() {
 					state,
 					scroll,
 					delta,
-					hasUAVisualTransition
+					popStateEvent: event
 				},
 				accept: () => {
 					current_history_index = history_index;

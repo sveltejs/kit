@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: export hasUAVisualTransition of PopStateEvent
+feat: export event of PopStateEvent for navigation handler
