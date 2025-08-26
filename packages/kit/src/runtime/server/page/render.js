@@ -183,7 +183,7 @@ export async function render_response({
 			])
 		};
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
@@ -256,7 +256,7 @@ export async function render_response({
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
+		const attributes = DEV ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 		csp.add_style(style);
@@ -509,10 +509,10 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = DEV ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };
-				if (__SVELTEKIT_DEV__) {
+				if (DEV) {
 					service_worker_options.type = 'module';
 				}
 				opts = `, ${s(service_worker_options)}`;

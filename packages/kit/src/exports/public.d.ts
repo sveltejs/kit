@@ -1822,7 +1822,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 *   await submit().updates(
 	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
 	 *   );
-	 * }}>
+	 * })}>
 	 *   <input type="text" name="text" />
 	 *   <button type="submit">Add Todo</button>
 	 * </form>
