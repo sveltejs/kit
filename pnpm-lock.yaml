@@ -730,13 +730,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.35.5)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@5.38.2)(vite@6.3.5(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
-        specifier: ^5.35.5
-        version: 5.35.5
+        specifier: ^5.38.2
+        version: 5.38.2
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.35.5)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.2)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -13029,18 +13029,6 @@ snapshots:
       supports-color: 7.2.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
-
-  svelte-check@4.1.1(picomatch@4.0.3)(svelte@5.35.5)(typescript@5.8.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
-      chokidar: 4.0.3
-      fdir: 6.4.6(picomatch@4.0.3)
-      picocolors: 1.1.1
-      sade: 1.8.1
-      svelte: 5.35.5
-      typescript: 5.8.3
-    transitivePeerDependencies:
-      - picomatch
 
   svelte-check@4.1.1(picomatch@4.0.3)(svelte@5.38.2)(typescript@5.8.3):
     dependencies:
