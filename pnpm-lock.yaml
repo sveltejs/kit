@@ -428,8 +428,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       devalue:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^5.3.2
+        version: 5.3.2
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
@@ -4077,8 +4077,8 @@ packages:
     peerDependencies:
       typescript: ^5.4.4
 
-  devalue@5.1.0:
-    resolution: {integrity: sha512-N1MxQrdI1KmHTVfiGzEi6J2rEtrGZU1f2CELFpqjqlBwl/KgQDjPpszqySb4W3+w3YWwjt2++OExkh2r6O2VPA==}
+  devalue@5.3.2:
+    resolution: {integrity: sha512-UDsjUbpQn9kvm68slnrs+mfxwFkIflOhkanmyabZ8zOYk8SMEIbJ3TK+88g70hSIeytu4y18f0z/hYHMTrXIWw==}
 
   diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
@@ -10267,7 +10267,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  devalue@5.1.0: {}
+  devalue@5.3.2: {}
 
   diff@4.0.2: {}
 
