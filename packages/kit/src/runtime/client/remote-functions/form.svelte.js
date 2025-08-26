@@ -210,7 +210,7 @@ export function form(id) {
 			};
 		};
 
-		instance.onsubmit = form_onsubmit(({ submit }) => submit());
+		instance.onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
 
 		/** @param {Parameters<RemoteForm<any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -247,7 +247,7 @@ export function form(id) {
 			type: 'submit',
 			formmethod: 'POST',
 			formaction: action,
-			onclick: form_action_onclick(({ submit }) => submit())
+			onclick: form_action_onclick(({ submit, form }) => submit().then(() => form.reset()))
 		};
 
 		Object.defineProperty(button_props, 'enhance', {
