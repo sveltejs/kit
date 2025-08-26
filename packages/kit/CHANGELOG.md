@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.36.3
+### Patch Changes
+
+
+- fix: bump devalue ([#14323](https://github.com/sveltejs/kit/pull/14323))
+
+
+- chore: consolidate dev checks to use `esm-env` instead of a `__SVELTEKIT_DEV__` global ([#14308](https://github.com/sveltejs/kit/pull/14308))
+
+
+- fix: reset form inputs by default when using remote form functions ([#14322](https://github.com/sveltejs/kit/pull/14322))
+
 ## 2.36.2
 ### Patch Changes
 
