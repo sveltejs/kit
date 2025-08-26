@@ -10,7 +10,7 @@ function context_dev(name) {
 		return context();
 	} catch {
 		throw new Error(
-			`Can only read '${name}' on the server during rendering (not in e.g. \`load\` functions), as it is bound to the current request via component context. This prevents state from leaking between users.` +
+			`Can only read '${name}' on the server during rendering (not in e.g. \`load\` functions), as it is bound to the current request via component context. This prevents state from leaking between users. ` +
 				'For more information, see https://svelte.dev/docs/kit/state-management#avoid-shared-state-on-the-server'
 		);
 	}

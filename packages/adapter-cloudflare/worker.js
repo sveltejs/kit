@@ -101,3 +101,8 @@ export async function handleRequest(request, env, ctx) {
 	pragma = res.headers.get('cache-control') || '';
 	return pragma && res.status < 400 ? Cache.save(request, res, ctx) : res;
 }
+
+// Without this, server file changes will invalidate the entire server module graph
+if (import.meta.hot) {
+	import.meta.hot.accept();
+}
