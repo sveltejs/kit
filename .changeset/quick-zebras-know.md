@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: query.set() can be called on the server
+feat: allow query.set() to be called on the server

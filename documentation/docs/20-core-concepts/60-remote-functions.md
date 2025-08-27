@@ -174,23 +174,23 @@ Alternatively, if you need to update its value manually, you can use the `set` m
 
 ```svelte
 <script>
-	import { getPosts } from './data.remote';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		const ws = new WebSocket('/ws');
-		ws.addEventListener('message', (ev) => {
-			const message = JSON.parse(ev.data);
-			if (message.type === 'new-post') {
-				getPosts().set([
-					message.post,
-					...getPosts().current,
-				]);
-			}
-		});
-		return () => ws.close();
-	});
+	import { getTodos, addTodo } from './todo.remote';
+	import Todo from './Todo.svelte';
 </script>
+
+<form {...addTodo.enhance(async ({ submit }) => {
+	await submit();
+	// Take advantage of the fact that the form already returns the new todo,
+	// which means we don't need to refresh the whole todo list.
+	getTodos().set(addTodo.result.todo);
+})}>
+	<input name="todo">
+	<button>add todo</button>
+</form>
+
+{#each await getTodos() as todo}
+	<Todo {todo} />
+{/each}
 ```
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
