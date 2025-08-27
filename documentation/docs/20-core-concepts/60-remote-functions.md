@@ -182,7 +182,7 @@ Alternatively, if you need to update its value manually, you can use the `set` m
 	await submit();
 	// Take advantage of the fact that the form already returns the new todo,
 	// which means we don't need to refresh the whole todo list.
-	getTodos().set(addTodo.result.todo);
+	getTodos().set([...getTodos().current, addTodo.result.todo]);
 })}>
 	<input name="todo">
 	<button>add todo</button>
