@@ -1803,6 +1803,12 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 
 export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
+	 * On the client, this function will update the value of the query without re-fetching it.
+	 *
+	 * On the server, this throws an error.
+	 */
+	set(value: T): void;
+	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *
 	 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.

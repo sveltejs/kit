@@ -79,6 +79,10 @@ export function query(validate_or_fn, maybe_fn) {
 
 		promise.catch(() => {});
 
+		promise.set = () => {
+			throw new Error(`Cannot call '${__.name}.set()' on the server`);
+		};
+
 		promise.refresh = async () => {
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
