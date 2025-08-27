@@ -62,4 +62,4 @@ export class ActionFailure {
 	}
 }
 
-export { validate_remote_functions } from './remote-functions.js';
+export { init_remote_functions } from './remote-functions.js';
