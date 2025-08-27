@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.36.2",
+	"version": "2.36.3",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -23,7 +23,7 @@
 		"@types/cookie": "^0.6.0",
 		"acorn": "^8.14.1",
 		"cookie": "^0.6.0",
-		"devalue": "^5.1.0",
+		"devalue": "^5.3.2",
 		"esm-env": "^1.2.2",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
@@ -41,7 +41,7 @@
 		"@types/set-cookie-parser": "^2.4.7",
 		"dts-buddy": "^0.6.2",
 		"rollup": "^4.14.2",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.5",
 		"svelte-preprocess": "^6.0.0",
 		"typescript": "^5.3.3",
 		"vite": "catalog:",
@@ -80,7 +80,9 @@
 		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
-		"test:unit": "vitest --config kit.vitest.config.js run",
+		"test:unit:dev": "vitest --config kit.vitest.config.js run",
+		"test:unit:prod": "NODE_ENV=production vitest --config kit.vitest.config.js run csp.spec.js cookie.spec.js",
+		"test:unit": "pnpm test:unit:dev && pnpm test:unit:prod",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"

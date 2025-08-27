@@ -1605,6 +1605,7 @@ test.describe('remote functions', () => {
 		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-one');
 		await expect(page.locator('#form-result-1')).toHaveText('hi');
+		await expect(page.locator('#input-task')).toHaveValue('');
 	});
 
 	test('form error works', async ({ page }) => {

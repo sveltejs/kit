@@ -176,7 +176,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		}
 	});
 
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		validate_load_response(result, `in ${node.server_id}`);
 	}
 
@@ -278,7 +278,7 @@ export async function load_data({
 		}
 	});
 
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		validate_load_response(result, `in ${node.universal_id}`);
 	}
 

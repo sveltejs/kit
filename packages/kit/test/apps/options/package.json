@@ -18,7 +18,7 @@
 		"@fontsource/libre-barcode-128-text": "^5.1.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.5",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
