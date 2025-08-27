@@ -108,14 +108,15 @@ export function form(fn) {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
 					const { state } = get_request_store();
-					let instance = (state.form_instances ??= new Map()).get(key);
+					const cache_key = __.id + '|' + JSON.stringify(key);
+					let instance = (state.form_instances ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(key, instance);
+						state.form_instances.set(cache_key, instance);
 					}
 
 					return instance;

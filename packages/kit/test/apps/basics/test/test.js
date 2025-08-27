@@ -1640,12 +1640,17 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form.for(...) scopes form submission', async ({ page }) => {
+	test('form.for(...) scopes form submission', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 		await page.click('#submit-btn-item-foo');
 		await expect(page.locator('#form-result-foo')).toHaveText('foo');
 		await expect(page.locator('#form-result-bar')).toHaveText('');
 		await expect(page.locator('#form-result-1')).toHaveText('');
+
+		await page.click('#submit-btn-item-2-foo');
+		await expect(page.locator('#form-result-2-foo')).toHaveText('foo2');
+		await expect(page.locator('#form-result-foo')).toHaveText(javaScriptEnabled ? 'foo' : '');
+		await expect(page.locator('#form-result-2')).toHaveText('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
