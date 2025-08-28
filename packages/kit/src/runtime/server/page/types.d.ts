@@ -43,13 +43,13 @@ export interface Cookie {
 }
 
 export type ServerDataSerializer = {
-	serialize(i: number, node: ServerDataNode | null): void;
+	add_node(i: number, node: ServerDataNode | null): void;
 	get_data(csp: Csp): { data: string; chunks: AsyncIterable<string> | null };
 	discard(): void;
 };
 
 export type ServerDataSerializerJson = {
-	serialize(
+	add_node(
 		i: number,
 		node: ServerDataSkippedNode | ServerDataNode | ServerErrorNode | null | undefined
 	): void;

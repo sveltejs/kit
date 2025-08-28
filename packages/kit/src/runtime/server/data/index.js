@@ -122,7 +122,7 @@ export async function render_data(
 		);
 
 		const data_serializer = server_data_serializer_json(event, event_state, options);
-		for (let i = 0; i < nodes.length; i++) data_serializer.serialize(i, nodes[i]);
+		for (let i = 0; i < nodes.length; i++) data_serializer.add_node(i, nodes[i]);
 		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {

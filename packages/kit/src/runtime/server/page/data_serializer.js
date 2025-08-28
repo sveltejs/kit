@@ -81,7 +81,7 @@ export function server_data_serializer(event, event_state, options) {
 	const strings = /** @type {string[]} */ ([]);
 
 	return {
-		serialize(i, node) {
+		add_node(i, node) {
 			try {
 				if (!node) {
 					strings[i] = 'null';
@@ -181,7 +181,7 @@ export function server_data_serializer_json(event, event_state, options) {
 	const strings = /** @type {string[]} */ ([]);
 
 	return {
-		serialize(i, node) {
+		add_node(i, node) {
 			try {
 				if (!node) {
 					strings[i] = 'null';

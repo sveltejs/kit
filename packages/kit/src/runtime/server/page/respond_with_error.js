@@ -61,7 +61,7 @@ export async function respond_with_error({
 			});
 
 			const server_data = await server_data_promise;
-			data_serializer.serialize(0, server_data);
+			data_serializer.add_node(0, server_data);
 
 			const data = await load_data({
 				event,

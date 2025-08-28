@@ -195,8 +195,8 @@ export async function render_page(
 						}
 					});
 
-					data_serializer.serialize(i, server_data);
-					data_serializer_json?.serialize(i, server_data);
+					data_serializer.add_node(i, server_data);
+					data_serializer_json?.add_node(i, server_data);
 
 					return server_data;
 				} catch (e) {
