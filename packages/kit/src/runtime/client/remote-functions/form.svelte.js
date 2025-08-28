@@ -9,7 +9,7 @@ import {
 	app,
 	remote_responses,
 	started,
-	goto,
+	_goto,
 	set_nearest_error_page,
 	invalidateAll
 } from '../client.js';
@@ -102,7 +102,8 @@ export function form(id) {
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
-						void goto(form_result.location, { invalidateAll });
+						// Use internal version to allow redirects to external URLs
+						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
 						result = undefined;
 						throw new HttpError(500, form_result.error);
