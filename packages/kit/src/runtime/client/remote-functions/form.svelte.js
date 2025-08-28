@@ -82,7 +82,6 @@ export function form(id) {
 					if (!response.ok) {
 						// We only end up here in case of a network error or if the server has an internal error
 						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						result = undefined;
 						throw new Error('Failed to execute remote function');
 					}
 
@@ -109,6 +108,7 @@ export function form(id) {
 						throw new HttpError(500, form_result.error);
 					}
 				} catch (e) {
+					result = undefined;
 					release_overrides(updates);
 					throw e;
 				} finally {
