@@ -160,7 +160,7 @@ export const getPost = query(v.string(), async (slug) => {
 
 Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
 
-### Updating queries
+### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
 
@@ -168,29 +168,6 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 <button onclick={() => getPosts().refresh()}>
 	Check for new posts
 </button>
-```
-
-Alternatively, if you need to update its value manually, you can use the `set` method:
-
-```svelte
-<script>
-	import { getTodos, addTodo } from './todo.remote';
-	import Todo from './Todo.svelte';
-</script>
-
-<form {...addTodo.enhance(async ({ submit }) => {
-	await submit();
-	// Take advantage of the fact that the form already returns the new todo,
-	// which means we don't need to refresh the whole todo list.
-	getTodos().set(addTodo.result.todo);
-})}>
-	<input name="todo">
-	<button>add todo</button>
-</form>
-
-{#each await getTodos() as todo}
-	<Todo {todo} />
-{/each}
 ```
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
