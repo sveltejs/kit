@@ -92,17 +92,19 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			const refresh = promise.then((value) => {
+			const internal = promise.then((value) => {
 				refreshes[cache_key] = {
 					value,
 					resolved: true,
 					promise: null
 				};
+				return /** @type {[string, any]} */ ([cache_key, value]);
 			});
+			const refresh = internal.then(() => {});
 			refreshes[cache_key] = {
 				resolved: false,
 				value: undefined,
-				promise: refresh
+				promise: internal
 			};
 			return refresh;
 		};

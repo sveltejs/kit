@@ -592,7 +592,7 @@ export interface RequestState {
 		| {
 				value: undefined;
 				resolved: false;
-				promise: Promise<void>;
+				promise: Promise<[string, any]>;
 		  }
 		| {
 				value: any;
