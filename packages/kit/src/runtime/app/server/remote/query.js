@@ -83,7 +83,7 @@ export function query(validate_or_fn, maybe_fn) {
 			throw new Error(`Cannot call '${__.name}.set()' on the server`);
 		};
 
-		promise.refresh = async () => {
+		promise.refresh = () => {
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
 
@@ -94,7 +94,10 @@ export function query(validate_or_fn, maybe_fn) {
 			}
 
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
+			refreshes[cache_key] = promise;
+
+			// TODO we could probably just return promise here, but would need to update the types
+			return promise.then(() => {});
 		};
 
 		promise.withOverride = () => {
