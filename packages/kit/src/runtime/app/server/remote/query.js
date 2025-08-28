@@ -83,18 +83,28 @@ export function query(validate_or_fn, maybe_fn) {
 			throw new Error(`Cannot call '${__.name}.set()' on the server`);
 		};
 
-		promise.refresh = async () => {
+		promise.refresh = () => {
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
-
 			if (!refreshes) {
 				throw new Error(
 					`Cannot call refresh on query '${__.name}' because it is not executed in the context of a command/form remote function`
 				);
 			}
-
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
+			const refresh = promise.then((value) => {
+				refreshes[cache_key] = {
+					value,
+					resolved: true,
+					promise: null
+				}
+			});
+			refreshes[cache_key] = {
+				resolved: false,
+				value: undefined,
+				promise: refresh
+			}
+			return refresh;
 		};
 
 		promise.withOverride = () => {

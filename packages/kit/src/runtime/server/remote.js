@@ -149,8 +149,24 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
+		const resolved_refreshes = /** @type {Record<string, any>} */ ({});
+		/** @type {Array<Promise<[string, any]>>} */
+		const pending = [];
+		for (const key in state.refreshes) {
+			const entry = state.refreshes[key];
+			if (entry.resolved) {
+				resolved_refreshes[key] = entry.value;
+				continue;
+			}
+			pending.push(entry.promise.then(() => {
+				return [key, entry.value];
+			}));
+		}
 		const refreshes = {
-			...state.refreshes,
+			...resolved_refreshes,
+			...Object.fromEntries(
+				await Promise.all(pending)
+			),
 			...Object.fromEntries(
 				await Promise.all(
 					client_refreshes.map(async (key) => {

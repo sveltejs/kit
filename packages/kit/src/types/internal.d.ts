@@ -587,7 +587,15 @@ export interface RequestState {
 	};
 	form_instances?: Map<any, any>;
 	remote_data?: Record<string, MaybePromise<any>>;
-	refreshes?: Record<string, any>;
+	refreshes?: Record<string, {
+		value: undefined;
+		resolved: false;
+		promise: Promise<void>;
+	} | {
+		value: any;
+		resolved: true;
+		promise: null;
+	}>;
 }
 
 export interface RequestStore {
