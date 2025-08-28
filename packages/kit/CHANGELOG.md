@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.37.0
+### Minor Changes
+
+
+- feat: automatically resolve `query.refresh()` promises on the server ([#14332](https://github.com/sveltejs/kit/pull/14332))
+
+
+- feat: allow query.set() to be called on the server ([#14304](https://github.com/sveltejs/kit/pull/14304))
+
+
+### Patch Changes
+
+
+- fix: disable CSRF checks in dev ([#14335](https://github.com/sveltejs/kit/pull/14335))
+
+
+- fix: allow redirects to external URLs from within form functions ([#14329](https://github.com/sveltejs/kit/pull/14329))
+
+
+- fix: add type definitions for `query.set()` method to override the value of a remote query function ([#14303](https://github.com/sveltejs/kit/pull/14303))
+
+
+- fix: ensure uniqueness of `form.for(...)` across form functions ([#14327](https://github.com/sveltejs/kit/pull/14327))
+
 ## 2.36.3
 ### Patch Changes
 
