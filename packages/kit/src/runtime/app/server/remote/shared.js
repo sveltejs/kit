@@ -66,16 +66,14 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
- * @param {AbortSignal | undefined=} signal
  * @returns {Promise<T>}
  */
-export async function get_response(id, arg, state, get_result, signal) {
-	if (signal) {
-		await new Promise((r) => setTimeout(r, 0));
-		if (signal.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
-	}
-	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
+export async function get_response(id, arg, state, get_result) {
+	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// eslint-disable-next-line @typescript-eslint/await-thenable
+	await 0;
 
+	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
 	return ((state.remote_data ??= {})[cache_key] ??= get_result());
 }
 
