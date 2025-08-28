@@ -92,7 +92,7 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			return (refreshes[cache_key] = /** @type {Promise<any>} */ (promise));
+			return (refreshes[cache_key] = promise.then(() => {}));
 		};
 
 		promise.withOverride = () => {
