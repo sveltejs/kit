@@ -3,10 +3,10 @@ import {
 	CspDirectives,
 	ServerDataNode,
 	SSRNode,
-	type ServerDataSkippedNode,
-	type ServerErrorNode
+	ServerDataSkippedNode,
+	ServerErrorNode
 } from 'types';
-import type { Csp } from './csp.js';
+import { Csp } from './csp.js';
 
 export interface Fetched {
 	url: string;
