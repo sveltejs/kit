@@ -149,46 +149,34 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const resolved_refreshes = /** @type {Record<string, any>} */ ({});
-		/** @type {Array<Promise<[string, any]>>} */
-		const pending = [];
-		for (const key in state.refreshes) {
-			const entry = state.refreshes[key];
-			if (entry.resolved) {
-				resolved_refreshes[key] = entry.value;
-				continue;
-			}
-			pending.push(entry.promise);
+		for (const key of client_refreshes) {
+			if (state.refreshes?.[key] !== undefined) continue;
+
+			const [hash, name, payload] = key.split('/');
+			const loader = manifest._.remotes[hash];
+
+			// TODO what do we do in this case? erroring after the mutation has happened is not great
+			if (!loader) error(400, 'Bad Request');
+
+			const module = await loader();
+			const fn = module[name];
+
+			if (!fn) error(400, 'Bad Request');
+
+			(state.refreshes ??= {})[key] = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
 		}
-		const refreshes = {
-			...resolved_refreshes,
-			...Object.fromEntries(await Promise.all(pending)),
-			...Object.fromEntries(
-				await Promise.all(
-					client_refreshes.map(async (key) => {
-						const [hash, name, payload] = key.split('/');
-						const loader = manifest._.remotes[hash];
 
-						// TODO what do we do in this case? erroring after the mutation has happened is not great
-						if (!loader) error(400, 'Bad Request');
+		if (state.refreshes === undefined) return undefined;
 
-						const module = await loader();
-						const fn = module[name];
-
-						if (!fn) error(400, 'Bad Request');
-
-						return [
-							key,
-							await with_request_store({ event, state }, () =>
-								fn(parse_remote_arg(payload, transport))
-							)
-						];
-					})
-				)
+		const refreshes = Object.fromEntries(
+			await Promise.all(
+				Object.entries(state.refreshes).map(async ([key, promise]) => [key, await promise])
 			)
-		};
+		);
 
-		return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined;
+		return stringify(refreshes, transport);
 	}
 }
 
