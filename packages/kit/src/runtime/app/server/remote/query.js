@@ -97,13 +97,13 @@ export function query(validate_or_fn, maybe_fn) {
 					value,
 					resolved: true,
 					promise: null
-				}
+				};
 			});
 			refreshes[cache_key] = {
 				resolved: false,
 				value: undefined,
 				promise: refresh
-			}
+			};
 			return refresh;
 		};
 

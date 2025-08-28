@@ -158,15 +158,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				resolved_refreshes[key] = entry.value;
 				continue;
 			}
-			pending.push(entry.promise.then(() => {
-				return [key, entry.value];
-			}));
+			pending.push(
+				entry.promise.then(() => {
+					return [key, entry.value];
+				})
+			);
 		}
 		const refreshes = {
 			...resolved_refreshes,
-			...Object.fromEntries(
-				await Promise.all(pending)
-			),
+			...Object.fromEntries(await Promise.all(pending)),
 			...Object.fromEntries(
 				await Promise.all(
 					client_refreshes.map(async (key) => {
