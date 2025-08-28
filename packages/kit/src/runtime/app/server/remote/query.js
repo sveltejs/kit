@@ -97,7 +97,7 @@ export function query(validate_or_fn, maybe_fn) {
 			}
 
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = value;
+			refreshes[cache_key] = Promise.resolve(value);
 		};
 
 		promise.refresh = () => {
