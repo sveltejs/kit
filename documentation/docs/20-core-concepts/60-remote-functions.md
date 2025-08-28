@@ -160,7 +160,7 @@ export const getPost = query(v.string(), async (slug) => {
 
 Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
 
-### Updating queries
+### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
 
@@ -168,29 +168,6 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 <button onclick={() => getPosts().refresh()}>
 	Check for new posts
 </button>
-```
-
-Alternatively, if you need to update its value manually, you can use the `set` method:
-
-```svelte
-<script>
-	import { getPosts } from './data.remote';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		const ws = new WebSocket('/ws');
-		ws.addEventListener('message', (ev) => {
-			const message = JSON.parse(ev.data);
-			if (message.type === 'new-post') {
-				getPosts().set([
-					message.post,
-					...getPosts().current,
-				]);
-			}
-		});
-		return () => ws.close();
-	});
-</script>
 ```
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
@@ -293,6 +270,9 @@ import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form } from '$app/server';
 const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
 // ---cut---
 export const getPosts = query(async () => { /* ... */ });
 
@@ -307,6 +287,15 @@ export const createPost = form(async (data) => {
 
 	// Redirect to the newly created page
 	redirect(303, `/blog/${slug}`);
+});
+
+export const updatePost = form(async (data) => {
+	// form logic goes here...
+	const result = externalApi.update(post);
+
+	// The API already gives us the updated post,
+	// no need to refresh it, we can set it directly
+	+++await getPost(post.id).set(result);+++
 });
 ```
 
@@ -564,6 +553,9 @@ export const addLike = command(v.string(), async (id) => {
 	`;
 
 	+++getLikes(id).refresh();+++
+	// Just like within form functions you can also do
+	// getLikes(id).set(...)
+	// in case you have the result already
 });
 ```
 
