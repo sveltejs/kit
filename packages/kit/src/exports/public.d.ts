@@ -437,7 +437,9 @@ export interface KitConfig {
 		 *
 		 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
 		 *
-		 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+		 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+		 *
+		 * CSRF checks only apply in production, not in local development.
 		 * @default []
 		 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
 		 */
@@ -1802,6 +1804,13 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 	);
 
 export type RemoteQuery<T> = RemoteResource<T> & {
+	/**
+	 * On the client, this function will update the value of the query without re-fetching it.
+	 *
+	 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
+	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+	 */
+	set(value: T): void;
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *

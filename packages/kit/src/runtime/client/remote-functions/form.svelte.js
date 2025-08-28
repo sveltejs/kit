@@ -9,7 +9,7 @@ import {
 	app,
 	remote_responses,
 	started,
-	goto,
+	_goto,
 	set_nearest_error_page,
 	invalidateAll
 } from '../client.js';
@@ -82,7 +82,6 @@ export function form(id) {
 					if (!response.ok) {
 						// We only end up here in case of a network error or if the server has an internal error
 						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						result = undefined;
 						throw new Error('Failed to execute remote function');
 					}
 
@@ -102,12 +101,14 @@ export function form(id) {
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
-						void goto(form_result.location, { invalidateAll });
+						// Use internal version to allow redirects to external URLs
+						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
 						result = undefined;
 						throw new HttpError(500, form_result.error);
 					}
 				} catch (e) {
+					result = undefined;
 					release_overrides(updates);
 					throw e;
 				} finally {
@@ -210,7 +211,7 @@ export function form(id) {
 			};
 		};
 
-		instance.onsubmit = form_onsubmit(({ submit }) => submit());
+		instance.onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
 
 		/** @param {Parameters<RemoteForm<any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -247,7 +248,7 @@ export function form(id) {
 			type: 'submit',
 			formmethod: 'POST',
 			formaction: action,
-			onclick: form_action_onclick(({ submit }) => submit())
+			onclick: form_action_onclick(({ submit, form }) => submit().then(() => form.reset()))
 		};
 
 		Object.defineProperty(button_props, 'enhance', {
