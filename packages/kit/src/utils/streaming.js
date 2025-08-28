@@ -16,9 +16,10 @@ function defer() {
 
 /**
  * Create an async iterator and a function to push values into it
+ * @template T
  * @returns {{
- *   iterator: AsyncIterable<any>;
- *   add: (promise: Promise<any>) => void;
+ *   iterate: (transform?: (input: T) => T) => AsyncIterable<T>;
+ *   add: (promise: Promise<T>) => void;
  * }}
  */
 export function create_async_iterator() {
@@ -27,16 +28,23 @@ export function create_async_iterator() {
 	const deferred = [defer()];
 
 	return {
-		iterator: {
-			[Symbol.asyncIterator]() {
-				return {
-					next: async () => {
-						const next = await deferred[0].promise;
-						if (!next.done) deferred.shift();
-						return next;
-					}
-				};
-			}
+		iterate: (transform = (x) => x) => {
+			return {
+				[Symbol.asyncIterator]() {
+					return {
+						next: async () => {
+							const next = await deferred[0].promise;
+
+							if (!next.done) {
+								deferred.shift();
+								return { value: transform(next.value), done: false };
+							}
+
+							return next;
+						}
+					};
+				}
+			};
 		},
 		add: (promise) => {
 			count += 1;

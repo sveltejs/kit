@@ -18,12 +18,8 @@ import {
 export function server_data_serializer(event, event_state, options) {
 	let promise_id = 1;
 
-	const { iterator, add } = create_async_iterator();
+	const iterator = create_async_iterator();
 	const global = get_global_name(options);
-
-	/** @type {(nonce: string) => void} */
-	let set_nonce;
-	const nonce = /** @type {Promise<string>} */ new Promise((r) => (set_nonce = r));
 
 	/** @param {any} thing */
 	function replacer(thing) {
@@ -56,11 +52,11 @@ export function server_data_serializer(event, event_state, options) {
 							str = devalue.uneval([, error], replacer);
 						}
 
-						return `<script${await nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`;
+						return `${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})`;
 					}
 				);
 
-			add(promise);
+			iterator.add(promise);
 
 			return `${global}.defer(${id})`;
 		} else {
@@ -96,15 +92,13 @@ export function server_data_serializer(event, event_state, options) {
 		},
 
 		get_data(csp) {
-			set_nonce(csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '');
+			const open = `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>`;
+			const close = `</script>\n`;
+
 			return {
 				data: `[${strings.join(',')}]`,
-				chunks: promise_id > 1 ? iterator : null
+				chunks: promise_id > 1 ? iterator.iterate((str) => open + str + close) : null
 			};
-		},
-
-		discard() {
-			set_nonce('');
 		}
 	};
 }
@@ -120,7 +114,7 @@ export function server_data_serializer(event, event_state, options) {
 export function server_data_serializer_json(event, event_state, options) {
 	let promise_id = 1;
 
-	const { iterator, add } = create_async_iterator();
+	const iterator = create_async_iterator();
 
 	const reducers = {
 		...Object.fromEntries(
@@ -166,7 +160,7 @@ export function server_data_serializer_json(event, event_state, options) {
 					}
 				);
 
-			add(promise);
+			iterator.add(promise);
 
 			return id;
 		}
@@ -201,7 +195,7 @@ export function server_data_serializer_json(event, event_state, options) {
 		get_data() {
 			return {
 				data: `{"type":"data","nodes":[${strings.join(',')}]}\n`,
-				chunks: promise_id > 1 ? iterator : null
+				chunks: promise_id > 1 ? iterator.iterate() : null
 			};
 		}
 	};
