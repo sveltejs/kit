@@ -149,8 +149,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
+		const refreshes = /** @type {Record<string, Promise<any>>} */ (state.refreshes);
+
 		for (const key of client_refreshes) {
-			if (state.refreshes?.[key] !== undefined) continue;
+			if (refreshes[key] !== undefined) continue;
 
 			const [hash, name, payload] = key.split('/');
 			const loader = manifest._.remotes[hash];
@@ -163,20 +165,23 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 			if (!fn) error(400, 'Bad Request');
 
-			(state.refreshes ??= {})[key] = with_request_store({ event, state }, () =>
+			refreshes[key] = with_request_store({ event, state }, () =>
 				fn(parse_remote_arg(payload, transport))
 			);
 		}
 
-		if (state.refreshes === undefined) return undefined;
+		if (Object.keys(refreshes).length === 0) {
+			return undefined;
+		}
 
-		const refreshes = Object.fromEntries(
-			await Promise.all(
-				Object.entries(state.refreshes).map(async ([key, promise]) => [key, await promise])
-			)
+		return stringify(
+			Object.fromEntries(
+				await Promise.all(
+					Object.entries(refreshes).map(async ([key, promise]) => [key, await promise])
+				)
+			),
+			transport
 		);
-
-		return stringify(refreshes, transport);
 	}
 }
 
