@@ -440,7 +440,7 @@ function persist_state() {
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
-async function _goto(url, options, redirect_count, nav_token) {
+export async function _goto(url, options, redirect_count, nav_token) {
 	/** @type {string[]} */
 	let query_keys;
 	const result = await navigate({

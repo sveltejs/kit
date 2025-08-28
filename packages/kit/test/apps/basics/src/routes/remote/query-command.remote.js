@@ -30,9 +30,9 @@ export const resolve_deferreds = command(() => {
 	deferreds.length = 0;
 });
 
-export const set_count_server_refresh = command('unchecked', async (c) => {
+export const set_count_server_refresh = command('unchecked', (c) => {
 	count = c;
-	await get_count().refresh();
+	get_count().refresh();
 	return c;
 });
 
