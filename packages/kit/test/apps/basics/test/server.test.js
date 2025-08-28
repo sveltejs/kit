@@ -61,6 +61,10 @@ test.describe('Cookies', () => {
 });
 
 test.describe('CSRF', () => {
+	if (process.env.DEV) {
+		return;
+	}
+
 	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
 		const content_types = [
 			'application/x-www-form-urlencoded',

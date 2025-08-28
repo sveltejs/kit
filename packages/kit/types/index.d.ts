@@ -413,7 +413,9 @@ declare module '@sveltejs/kit' {
 			 *
 			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
 			 *
-			 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 *
+			 * CSRF checks only apply in production, not in local development.
 			 * @default []
 			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
 			 */
