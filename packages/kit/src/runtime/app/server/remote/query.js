@@ -72,21 +72,15 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const abort_controller = new AbortController();
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(
-			__.id,
-			arg,
-			state,
-			() => run_remote_function(event, state, false, arg, validate, fn),
-			abort_controller.signal
+		const promise = get_response(__.id, arg, state, () =>
+			run_remote_function(event, state, false, arg, validate, fn)
 		);
 
 		promise.catch(() => {});
 
 		/** @param {Output} value */
 		promise.set = (value) => {
-			abort_controller.abort();
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
 
@@ -97,7 +91,7 @@ export function query(validate_or_fn, maybe_fn) {
 			}
 
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = Promise.resolve(value);
+			refreshes[cache_key] = (state.remote_data ??= {})[cache_key] = Promise.resolve(value);
 		};
 
 		promise.refresh = () => {
@@ -118,7 +112,6 @@ export function query(validate_or_fn, maybe_fn) {
 		};
 
 		promise.withOverride = () => {
-			abort_controller.abort();
 			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
 		};
 
