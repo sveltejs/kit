@@ -155,13 +155,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			if (refreshes[key] !== undefined) continue;
 
 			const [hash, name, payload] = key.split('/');
+
 			const loader = manifest._.remotes[hash];
-
-			// TODO what do we do in this case? erroring after the mutation has happened is not great
-			if (!loader) error(400, 'Bad Request');
-
-			const module = await loader();
-			const fn = module[name];
+			const fn = (await loader?.())?.[name];
 
 			if (!fn) error(400, 'Bad Request');
 
