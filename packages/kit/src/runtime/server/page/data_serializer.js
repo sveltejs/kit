@@ -17,9 +17,8 @@ import {
  */
 export function server_data_serializer(event, event_state, options) {
 	let promise_id = 1;
-	let count = 0;
 
-	const { iterator, push, done } = create_async_iterator();
+	const { iterator, add } = create_async_iterator();
 	const global = get_global_name(options);
 
 	/** @type {(nonce: string) => void} */
@@ -30,9 +29,8 @@ export function server_data_serializer(event, event_state, options) {
 	function replacer(thing) {
 		if (typeof thing?.then === 'function') {
 			const id = promise_id++;
-			count += 1;
 
-			thing
+			const promise = thing
 				.then(/** @param {any} data */ (data) => ({ data }))
 				.catch(
 					/** @param {any} error */ async (error) => ({
@@ -44,8 +42,6 @@ export function server_data_serializer(event, event_state, options) {
 					 * @param {{data: any; error: any}} result
 					 */
 					async ({ data, error }) => {
-						count -= 1;
-
 						let str;
 						try {
 							str = devalue.uneval(error ? [, error] : [data], replacer);
@@ -60,12 +56,11 @@ export function server_data_serializer(event, event_state, options) {
 							str = devalue.uneval([, error], replacer);
 						}
 
-						push(
-							`<script${await nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`
-						);
-						if (count === 0) done();
+						return `<script${await nonce}>${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})</script>\n`;
 					}
 				);
+
+			add(promise);
 
 			return `${global}.defer(${id})`;
 		} else {
@@ -124,9 +119,8 @@ export function server_data_serializer(event, event_state, options) {
  */
 export function server_data_serializer_json(event, event_state, options) {
 	let promise_id = 1;
-	let count = 0;
 
-	const { iterator, push, done } = create_async_iterator();
+	const { iterator, add } = create_async_iterator();
 
 	const reducers = {
 		...Object.fromEntries(
@@ -134,47 +128,47 @@ export function server_data_serializer_json(event, event_state, options) {
 		),
 		/** @param {any} thing */
 		Promise: (thing) => {
-			if (typeof thing?.then === 'function') {
-				const id = promise_id++;
-				count += 1;
-
-				/** @type {'data' | 'error'} */
-				let key = 'data';
-
-				thing
-					.catch(
-						/** @param {any} e */ async (e) => {
-							key = 'error';
-							return handle_error_and_jsonify(event, event_state, options, /** @type {any} */ (e));
-						}
-					)
-					.then(
-						/** @param {any} value */
-						async (value) => {
-							let str;
-							try {
-								str = devalue.stringify(value, reducers);
-							} catch {
-								const error = await handle_error_and_jsonify(
-									event,
-									event_state,
-									options,
-									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
-								);
-
-								key = 'error';
-								str = devalue.stringify(error, reducers);
-							}
-
-							count -= 1;
-
-							push(`{"type":"chunk","id":${id},"${key}":${str}}\n`);
-							if (count === 0) done();
-						}
-					);
-
-				return id;
+			if (typeof thing?.then !== 'function') {
+				return;
 			}
+
+			const id = promise_id++;
+
+			/** @type {'data' | 'error'} */
+			let key = 'data';
+
+			const promise = thing
+				.catch(
+					/** @param {any} e */ async (e) => {
+						key = 'error';
+						return handle_error_and_jsonify(event, event_state, options, /** @type {any} */ (e));
+					}
+				)
+				.then(
+					/** @param {any} value */
+					async (value) => {
+						let str;
+						try {
+							str = devalue.stringify(value, reducers);
+						} catch {
+							const error = await handle_error_and_jsonify(
+								event,
+								event_state,
+								options,
+								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+							);
+
+							key = 'error';
+							str = devalue.stringify(error, reducers);
+						}
+
+						return `{"type":"chunk","id":${id},"${key}":${str}}\n`;
+					}
+				);
+
+			add(promise);
+
+			return id;
 		}
 	};
 

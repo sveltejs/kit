@@ -18,11 +18,12 @@ function defer() {
  * Create an async iterator and a function to push values into it
  * @returns {{
  *   iterator: AsyncIterable<any>;
- *   push: (value: any) => void;
- *   done: () => void;
+ *   add: (promise: Promise<any>) => void;
  * }}
  */
 export function create_async_iterator() {
+	let count = 0;
+
 	const deferred = [defer()];
 
 	return {
@@ -37,15 +38,20 @@ export function create_async_iterator() {
 				};
 			}
 		},
-		push: (value) => {
-			deferred[deferred.length - 1].fulfil({
-				value,
-				done: false
+		add: (promise) => {
+			count += 1;
+
+			void promise.then((value) => {
+				deferred[deferred.length - 1].fulfil({
+					value,
+					done: false
+				});
+				deferred.push(defer());
+
+				if (--count === 0) {
+					deferred[deferred.length - 1].fulfil({ done: true });
+				}
 			});
-			deferred.push(defer());
-		},
-		done: () => {
-			deferred[deferred.length - 1].fulfil({ done: true });
 		}
 	};
 }

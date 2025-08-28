@@ -2,14 +2,13 @@ import { expect, test } from 'vitest';
 import { create_async_iterator } from './streaming.js';
 
 test('works with fast consecutive promise resolutions', async () => {
-	const iterator = create_async_iterator();
+	const { iterator, add } = create_async_iterator();
 
-	void Promise.resolve(1).then((n) => iterator.push(n));
-	void Promise.resolve(2).then((n) => iterator.push(n));
-	void Promise.resolve().then(() => iterator.done());
+	add(Promise.resolve(1));
+	add(Promise.resolve(2));
 
 	const actual = [];
-	for await (const value of iterator.iterator) {
+	for await (const value of iterator) {
 		actual.push(value);
 	}
 
