@@ -86,11 +86,13 @@ export function query(validate_or_fn, maybe_fn) {
 		promise.refresh = () => {
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
+
 			if (!refreshes) {
 				throw new Error(
 					`Cannot call refresh on query '${__.name}' because it is not executed in the context of a command/form remote function`
 				);
 			}
+
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
 			return (refreshes[cache_key] = promise.then(() => {}));
 		};
