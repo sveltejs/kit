@@ -3008,8 +3008,8 @@ function create_navigation(current, intent, url, type) {
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(() => {});
 
-	/** @type {Omit<import('@sveltejs/kit').Navigation, 'type'> & { type: T }} */
-	const navigation = {
+	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
+	const navigation = /** @type {any} */ ({
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
@@ -3023,7 +3023,7 @@ function create_navigation(current, intent, url, type) {
 		willUnload: !intent,
 		type,
 		complete
-	};
+	});
 
 	return {
 		navigation,

@@ -1203,7 +1203,7 @@ export interface NavigationTarget<
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-export interface Navigation<navigationType extends NavigationType = NavigationType> {
+export interface NavigationBase {
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1213,6 +1213,18 @@ export interface Navigation<navigationType extends NavigationType = NavigationTy
 	 */
 	to: NavigationTarget | null;
 	/**
+	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+	 */
+	willUnload: boolean;
+	/**
+	 * A promise that resolves once the navigation is complete, and rejects if the navigation
+	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+	 */
+	complete: Promise<void>;
+}
+
+export interface NavigationEnter extends NavigationBase {
+	/**
 	 * The type of navigation:
 	 * - `form`: The user submitted a `<form method="GET">`
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
@@ -1220,41 +1232,101 @@ export interface Navigation<navigationType extends NavigationType = NavigationTy
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Exclude<navigationType, 'enter'>;
-	/**
-	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
-	 */
-	willUnload: boolean;
+	type: 'enter';
+
 	/**
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
-	delta?: navigationType extends 'popstate' ? number : undefined;
+	delta?: undefined;
+
 	/**
-	 * A promise that resolves once the navigation is complete, and rejects if the navigation
-	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+	 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
 	 */
-	complete: Promise<void>;
-	/**
-	 * Represents value of event object of PopStateEvent if navigation type is popstate,
-	 * otherwise undefined
-	 */
-	event?: navigationType extends 'popstate' ? PopStateEvent : undefined;
+	event?: undefined;
 }
+
+export interface NavigationExternal extends NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Exclude<NavigationType, 'enter' | 'popstate' | 'link'>;
+
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
+	delta?: undefined;
+
+	/**
+	 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
+	 */
+	event?: undefined;
+}
+
+export interface NavigationPopState extends NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: 'popstate';
+
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
+	delta: number;
+
+	/**
+	 * Dispatched `PopStateEvent` object when the user navigates back or forward.
+	 */
+	event: PopStateEvent;
+}
+
+export interface NavigationLink extends NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: 'link';
+
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
+	delta?: undefined;
+
+	/**
+	 * Dispatched `PointerEvent` object when the user clicks link element.
+	 */
+	event: PointerEvent;
+}
+
+export type Navigation = NavigationExternal | NavigationPopState | NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
  */
-export interface BeforeNavigate extends Navigation {
+export type BeforeNavigate = Navigation & {
 	/**
 	 * Call this to prevent the navigation from starting.
 	 */
 	cancel: () => void;
-}
+};
 
 /**
  * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
  */
-export interface OnNavigate extends Navigation {
+export type OnNavigate = Navigation & {
 	/**
 	 * The type of navigation:
 	 * - `form`: The user submitted a `<form method="GET">`
@@ -1267,12 +1339,12 @@ export interface OnNavigate extends Navigation {
 	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
-}
+};
 
 /**
  * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
  */
-export interface AfterNavigate extends Omit<Navigation, 'type'> {
+export type AfterNavigate = (Navigation | NavigationEnter) & {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
@@ -1286,7 +1358,7 @@ export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
-}
+};
 
 /**
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
