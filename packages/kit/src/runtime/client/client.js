@@ -1402,10 +1402,10 @@ function get_page_key(url) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
- *   popStateEvent?: PopStateEvent;
+ *   event?: PopStateEvent | MouseEvent;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, popStateEvent }) {
+function _before_navigate({ url, type, intent, delta, event }) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type);
@@ -1414,8 +1414,8 @@ function _before_navigate({ url, type, intent, delta, popStateEvent }) {
 		nav.navigation.delta = delta;
 	}
 
-	if (popStateEvent !== undefined) {
-		nav.navigation.event = popStateEvent;
+	if (event !== undefined) {
+		nav.navigation.event = event;
 	}
 
 	const cancellable = {
@@ -1452,6 +1452,7 @@ function _before_navigate({ url, type, intent, delta, popStateEvent }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
+ *   mouseEvent?: MouseEvent
  * }} opts
  */
 async function navigate({
@@ -1465,7 +1466,8 @@ async function navigate({
 	redirect_count = 0,
 	nav_token = {},
 	accept = noop,
-	block = noop
+	block = noop,
+	mouseEvent
 }) {
 	const prev_token = token;
 	token = nav_token;
@@ -1479,7 +1481,7 @@ async function navigate({
 					type,
 					delta: popped?.delta,
 					intent,
-					popStateEvent: popped?.popStateEvent
+					event: popped?.popStateEvent || mouseEvent
 				});
 
 	if (!nav) {
@@ -2393,7 +2395,7 @@ function _start_router() {
 
 		// Ignore the following but fire beforeNavigate
 		if (external || (options.reload && (!same_pathname || !hash))) {
-			if (_before_navigate({ url, type: 'link' })) {
+			if (_before_navigate({ url, type: 'link', event })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
 				is_navigating = true;
@@ -2462,7 +2464,8 @@ function _start_router() {
 			url,
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
-			replace_state: options.replace_state ?? url.href === location.href
+			replace_state: options.replace_state ?? url.href === location.href,
+			mouseEvent: event
 		});
 	});
 

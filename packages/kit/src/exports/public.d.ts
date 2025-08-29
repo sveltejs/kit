@@ -1306,9 +1306,9 @@ export interface NavigationLink extends NavigationBase {
 	delta?: undefined;
 
 	/**
-	 * Dispatched `PointerEvent` object when the user clicks link element.
+	 * Dispatched `MouseEvent` object when the user clicks link element.
 	 */
-	event: PointerEvent;
+	event: MouseEvent;
 }
 
 export type Navigation = NavigationExternal | NavigationPopState | NavigationLink;
