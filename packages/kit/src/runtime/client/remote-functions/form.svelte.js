@@ -32,7 +32,7 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state(started ? undefined : remote_responses[action_id]);
+		let result = $state.raw(started ? undefined : remote_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
