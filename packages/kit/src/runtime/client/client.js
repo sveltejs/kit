@@ -1402,15 +1402,20 @@ function get_page_key(url) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
+ *   event?: PopStateEvent | MouseEvent;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta }) {
+function _before_navigate({ url, type, intent, delta, event }) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
+	}
+
+	if (event !== undefined) {
+		nav.navigation.event = event;
 	}
 
 	const cancellable = {
@@ -1437,6 +1442,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
+ *     popStateEvent?: PopStateEvent;
  *   };
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
@@ -1446,6 +1452,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
+ *   mouseEvent?: MouseEvent
  * }} opts
  */
 async function navigate({
@@ -1459,7 +1466,8 @@ async function navigate({
 	redirect_count = 0,
 	nav_token = {},
 	accept = noop,
-	block = noop
+	block = noop,
+	mouseEvent
 }) {
 	const prev_token = token;
 	token = nav_token;
@@ -1468,7 +1476,13 @@ async function navigate({
 	const nav =
 		type === 'enter'
 			? create_navigation(current, intent, url, type)
-			: _before_navigate({ url, type, delta: popped?.delta, intent });
+			: _before_navigate({
+					url,
+					type,
+					delta: popped?.delta,
+					intent,
+					event: popped?.popStateEvent || mouseEvent
+				});
 
 	if (!nav) {
 		block();
@@ -2381,7 +2395,7 @@ function _start_router() {
 
 		// Ignore the following but fire beforeNavigate
 		if (external || (options.reload && (!same_pathname || !hash))) {
-			if (_before_navigate({ url, type: 'link' })) {
+			if (_before_navigate({ url, type: 'link', event })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
 				is_navigating = true;
@@ -2450,7 +2464,8 @@ function _start_router() {
 			url,
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
-			replace_state: options.replace_state ?? url.href === location.href
+			replace_state: options.replace_state ?? url.href === location.href,
+			mouseEvent: event
 		});
 	});
 
@@ -2550,7 +2565,8 @@ function _start_router() {
 				popped: {
 					state,
 					scroll,
-					delta
+					delta,
+					popStateEvent: event
 				},
 				accept: () => {
 					current_history_index = history_index;
@@ -2995,8 +3011,8 @@ function create_navigation(current, intent, url, type) {
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(() => {});
 
-	/** @type {Omit<import('@sveltejs/kit').Navigation, 'type'> & { type: T }} */
-	const navigation = {
+	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
+	const navigation = /** @type {any} */ ({
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
@@ -3010,7 +3026,7 @@ function create_navigation(current, intent, url, type) {
 		willUnload: !intent,
 		type,
 		complete
-	};
+	});
 
 	return {
 		navigation,
