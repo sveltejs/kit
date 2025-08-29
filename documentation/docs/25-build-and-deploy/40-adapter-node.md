@@ -269,3 +269,47 @@ app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
 ```
+
+## Aborted requests
+
+The adapter will fire an `abort` event when the incoming request is cancelled before completion. You can access the [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) via `event.request.signal`.  
+  
+A pretty typical example of using the `signal` property:
+
+```js
+/// file: src/routes/api/object/[slug]/+server.js
+/** @type {import('./$types').RequestHandler} */
+export async function GET({ request, params }) {
+    const stream = await s3.getObject("bucket", params.slug, {
+        signal: request.signal
+    }) ;
+
+    return new Response(stream);
+}
+```
+  
+Another example, this time using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events):
+
+```js
+/// file: src/routes/api/sse/+server.js
+/** @type {import('./$types').RequestHandler} */
+export function GET({ request }) {
+    const stream = new ReadableStream({
+        start(controller) {
+            const interval = setInterval(() => {
+                controller.enqueue("data: Hello, world!\n\n\n");
+            }, 1000);
+
+            request.signal.onabort = () => {
+                clearInterval(interval);
+            };
+        }
+    });
+
+    return new Response(stream, {
+        headers: {
+            "Content-Type": "text/event-stream",
+        }
+    });
+}
+```
