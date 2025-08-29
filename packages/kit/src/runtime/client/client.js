@@ -1414,7 +1414,7 @@ function _before_navigate({ url, type, intent, delta, popStateEvent }) {
 		nav.navigation.delta = delta;
 	}
 
-	if (event !== undefined) {
+	if (popStateEvent !== undefined) {
 		nav.navigation.event = popStateEvent;
 	}
 
