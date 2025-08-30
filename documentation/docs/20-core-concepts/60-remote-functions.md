@@ -300,8 +300,8 @@ Unlike other `query` methods, stream requests to the same resource with the same
 </script>
 
 <!-- these are one single ReadableStream request since they share the same stream instance -->
-{#await stream()}
-{#await stream()}
+{#await stream}
+{#await stream}
 
 <!-- this is a separate instance and will create a new ReadableStream request to the backend -->
 {await oneToTen()}
