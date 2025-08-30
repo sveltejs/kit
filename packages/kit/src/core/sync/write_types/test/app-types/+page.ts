@@ -26,9 +26,12 @@ declare let pathname: Pathname;
 pathname = '/nope';
 pathname = '/foo';
 pathname = '/foo/1/2';
+pathname = '/foo/';
+pathname = '/foo/1/2/';
 
 // Test layout groups
 pathname = '/path-a';
+pathname = '/path-a/';
 // @ts-expect-error layout group names are NOT part of the pathname type
 pathname = '/(group)/path-a';
 

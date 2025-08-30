@@ -61,6 +61,10 @@ test.describe('Cookies', () => {
 });
 
 test.describe('CSRF', () => {
+	if (process.env.DEV) {
+		return;
+	}
+
 	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
 		const content_types = [
 			'application/x-www-form-urlencoded',
@@ -84,6 +88,127 @@ test.describe('CSRF', () => {
 				);
 			}
 		}
+	});
+
+	test('Allows requests from same origin', async ({ baseURL }) => {
+		const url = new URL(baseURL);
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: url.origin
+			}
+		});
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe('ok');
+	});
+
+	test('Allows requests from allowed origins', async ({ baseURL }) => {
+		// Test with trusted.example.com which is in trustedOrigins
+		const res1 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://trusted.example.com'
+			}
+		});
+		expect(res1.status).toBe(200);
+		expect(await res1.text()).toBe('ok');
+
+		// Test with payment-gateway.test which is also in trustedOrigins
+		const res2 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://payment-gateway.test'
+			}
+		});
+		expect(res2.status).toBe(200);
+		expect(await res2.text()).toBe('ok');
+	});
+
+	test('Blocks requests from non-allowed origins', async ({ baseURL }) => {
+		// Test with origin not in trustedOrigins list
+		const res1 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://malicious-site.com'
+			}
+		});
+		expect(res1.status).toBe(403);
+		expect(await res1.text()).toBe('Cross-site POST form submissions are forbidden');
+
+		// Test with similar but not exact origin
+		const res2 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://trusted.example.com.evil.com'
+			}
+		});
+		expect(res2.status).toBe(403);
+		expect(await res2.text()).toBe('Cross-site POST form submissions are forbidden');
+
+		// Test subdomain attack (should be blocked)
+		const res3 = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://evil.trusted.example.com'
+			}
+		});
+		expect(res3.status).toBe(403);
+		expect(await res3.text()).toBe('Cross-site POST form submissions are forbidden');
+	});
+
+	test('Allows GET requests regardless of origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'GET',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://any-origin.com'
+			}
+		});
+		expect(res.status).toBe(200);
+	});
+
+	test('Allows non-form content types regardless of origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				origin: 'https://any-origin.com'
+			}
+		});
+		expect(res.status).toBe(200);
+	});
+
+	test('Allows all protected HTTP methods from allowed origins', async ({ baseURL }) => {
+		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+		for (const method of methods) {
+			const res = await fetch(`${baseURL}/csrf`, {
+				method,
+				headers: {
+					'content-type': 'application/x-www-form-urlencoded',
+					origin: 'https://trusted.example.com'
+				}
+			});
+			expect(res.status, `Method ${method} should be allowed from trusted origin`).toBe(200);
+			expect(await res.text(), `Method ${method} should return ok`).toBe('ok');
+		}
+	});
+
+	test('Handles undefined origin correctly', async ({ baseURL }) => {
+		// Some requests may have null origin (e.g., from certain mobile apps)
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded'
+			}
+		});
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
 	});
 });
 
@@ -1232,4 +1357,42 @@ test.describe('remote functions', () => {
 		test.skip(!!process.env.DEV, 'skip when in dev mode');
 		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
 	});
+});
+
+test.describe('asset preload', () => {
+	if (!process.env.DEV) {
+		test('injects Link headers', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const header = response.headers()['link'];
+
+			expect(header).toContain('rel="modulepreload"');
+			expect(header).toContain('as="font"');
+		});
+
+		test('does not inject Link headers on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const header = response.headers()['link'];
+			expect(header).toBeUndefined();
+		});
+
+		test('injects <link> tags on prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload/prerendered');
+
+			const body = await response.text();
+
+			expect(body).toContain('rel="modulepreload"');
+			expect(body).toContain('as="font"');
+		});
+
+		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+			const response = await request.get('/asset-preload');
+
+			const body = await response.text();
+
+			expect(body).not.toContain('rel="modulepreload"');
+			expect(body).not.toContain('as="font"');
+		});
+	}
 });

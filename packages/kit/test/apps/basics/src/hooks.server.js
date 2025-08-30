@@ -192,7 +192,10 @@ export const handle = sequence(
 			e.locals.message = 'hello from hooks.server.js';
 		}
 
-		return resolve(event);
+		return resolve(event, {
+			// needed for asset-preload tests
+			preload: () => true
+		});
 	}
 );
 

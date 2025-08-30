@@ -162,7 +162,7 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 ### Refreshing queries
 
-Any query can be updated via its `refresh` method:
+Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
 
 ```svelte
 <button onclick={() => getPosts().refresh()}>
@@ -170,7 +170,7 @@ Any query can be updated via its `refresh` method:
 </button>
 ```
 
-> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to refresh the query.
+> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
 
 ## query.batch
 
@@ -323,6 +323,9 @@ import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form } from '$app/server';
 const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
 // ---cut---
 export const getPosts = query(async () => { /* ... */ });
 
@@ -337,6 +340,15 @@ export const createPost = form(async (data) => {
 
 	// Redirect to the newly created page
 	redirect(303, `/blog/${slug}`);
+});
+
+export const updatePost = form(async (data) => {
+	// form logic goes here...
+	const result = externalApi.update(post);
+
+	// The API already gives us the updated post,
+	// no need to refresh it, we can set it directly
+	+++await getPost(post.id).set(result);+++
 });
 ```
 
@@ -594,6 +606,9 @@ export const addLike = command(v.string(), async (id) => {
 	`;
 
 	+++getLikes(id).refresh();+++
+	// Just like within form functions you can also do
+	// getLikes(id).set(...)
+	// in case you have the result already
 });
 ```
 

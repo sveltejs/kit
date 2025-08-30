@@ -57,7 +57,7 @@ export async function handle_action_json_request(event, event_state, options, se
 	try {
 		const data = await call_action(event, event_state, actions);
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			validate_action_return(data);
 		}
 
@@ -176,7 +176,7 @@ export async function handle_action_request(event, event_state, server) {
 	try {
 		const data = await call_action(event, event_state, actions);
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			validate_action_return(data);
 		}
 

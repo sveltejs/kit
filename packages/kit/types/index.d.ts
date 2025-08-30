@@ -402,8 +402,24 @@ declare module '@sveltejs/kit' {
 			 *
 			 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 			 * @default true
+			 * @deprecated Use `trustedOrigins: ['*']` instead
 			 */
 			checkOrigin?: boolean;
+			/**
+			 * An array of origins that are allowed to make cross-origin form submissions to your app.
+			 *
+			 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
+			 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
+			 *
+			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
+			 *
+			 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 *
+			 * CSRF checks only apply in production, not in local development.
+			 * @default []
+			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 */
+			trustedOrigins?: string[];
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
@@ -1765,6 +1781,13 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
+		 * On the client, this function will update the value of the query without re-fetching it.
+		 *
+		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
+		 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+		 */
+		set(value: T): void;
+		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
@@ -1784,7 +1807,7 @@ declare module '@sveltejs/kit' {
 		 *   await submit().updates(
 		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
 		 *   );
-		 * }}>
+		 * })}>
 		 *   <input type="text" name="text" />
 		 *   <button type="submit">Add Todo</button>
 		 * </form>
@@ -3091,7 +3114,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
 	 */
 	export const files: string[];
 	/**

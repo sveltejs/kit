@@ -442,6 +442,7 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
+	csrf_trusted_origins: string[];
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
@@ -596,7 +597,7 @@ export interface RequestState {
 	};
 	form_instances?: Map<any, any>;
 	remote_data?: Record<string, MaybePromise<any>>;
-	refreshes?: Record<string, any>;
+	refreshes?: Record<string, Promise<any>>;
 }
 
 export interface RequestStore {

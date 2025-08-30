@@ -125,6 +125,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	installPolyfills();
 
+	const server = new Server(manifest);
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
+
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
@@ -502,12 +508,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	log.info('Prerendering');
-
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {

@@ -20,7 +20,7 @@ export const task_one = form(async (form_data) => {
 	task = /** @type {string} */ (form_data.get('task'));
 
 	if (task === 'error') {
-		error(500, { message: 'Expected error' });
+		error(400, { message: 'Expected error' });
 	}
 	if (task === 'redirect') {
 		redirect(303, '/remote');

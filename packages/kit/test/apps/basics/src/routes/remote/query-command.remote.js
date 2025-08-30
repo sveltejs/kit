@@ -6,7 +6,11 @@ export const add = query('unchecked', ({ a, b }) => a + b);
 let count = 0;
 const deferreds = [];
 
-export const get_count = query(() => count);
+let get_count_called = false;
+export const get_count = query(() => {
+	get_count_called = true;
+	return count;
+});
 
 export const set_count = command('unchecked', async ({ c, slow = false, deferred = false }) => {
 	if (deferred) {
@@ -26,8 +30,19 @@ export const resolve_deferreds = command(() => {
 	deferreds.length = 0;
 });
 
-export const set_count_server = command('unchecked', async (c) => {
+export const set_count_server_refresh = command('unchecked', (c) => {
 	count = c;
-	await get_count().refresh();
+	get_count().refresh();
+	return c;
+});
+
+export const set_count_server_set = command('unchecked', async (c) => {
+	get_count_called = false;
+	count = c;
+	get_count().set(c);
+	await new Promise((resolve) => setTimeout(resolve, 100));
+	if (get_count_called) {
+		throw new Error('get_count should not have been called');
+	}
 	return c;
 });

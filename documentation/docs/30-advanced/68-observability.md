@@ -3,7 +3,7 @@ title: Observability
 ---
 
 <blockquote class="since note">
-	<p>Available since 2.29</p>
+	<p>Available since 2.31</p>
 </blockquote>
 
 Sometimes, you may need to observe how your application is behaving in order to improve performance or find the root cause of a pesky bug. To help with this, SvelteKit can emit server-side [OpenTelemetry](https://opentelemetry.io) spans for the following:
@@ -69,7 +69,7 @@ To view your first trace, you'll need to set up a local collector. We'll use [Ja
 - Turn on the experimental flags mentioned earlier in your `svelte.config.js` file
 - Use your package manager to install the dependencies you'll need:
   ```sh
-  npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-oltp-proto import-in-the-middle
+  npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto import-in-the-middle
   ```
 - Create `src/instrumentation.server.js` with the following:
 
