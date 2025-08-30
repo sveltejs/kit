@@ -1612,6 +1612,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
 		await page.click('#submit-btn-one');
+		expect(await page.textContent('h1')).toBe('400');
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Expected error"'
 		);
@@ -1635,6 +1636,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
 		await page.click('#submit-btn-two');
+		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
 		);

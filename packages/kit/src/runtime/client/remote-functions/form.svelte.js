@@ -105,7 +105,7 @@ export function form(id) {
 						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
 						result = undefined;
-						throw new HttpError(500, form_result.error);
+						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {
 					result = undefined;
