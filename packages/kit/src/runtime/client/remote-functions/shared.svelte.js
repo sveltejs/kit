@@ -59,6 +59,7 @@ export function create_remote_function(id, create) {
 						entry.count--;
 						void tick().then(() => {
 							if (!entry.count && entry === query_map.get(cache_key)) {
+								entry.resource._dispose?.();
 								query_map.delete(cache_key);
 							}
 						});
@@ -93,6 +94,7 @@ export function create_remote_function(id, create) {
 							entry === query_map.get(cache_key)
 						) {
 							// If no one is tracking this resource anymore, we can delete it from the cache
+							resource._dispose?.();
 							query_map.delete(cache_key);
 						}
 					});
@@ -100,6 +102,7 @@ export function create_remote_function(id, create) {
 				.catch(() => {
 					// error delete the resource from the cache
 					// TODO is that correct?
+					resource._dispose?.();
 					query_map.delete(cache_key);
 				});
 		}
