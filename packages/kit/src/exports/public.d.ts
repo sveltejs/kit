@@ -1205,38 +1205,73 @@ export interface NavigationTarget<
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-export interface Navigation {
-	/**
-	 * Where navigation was triggered from
-	 */
-	from: NavigationTarget | null;
-	/**
-	 * Where navigation is going to/has gone to
-	 */
-	to: NavigationTarget | null;
-	/**
-	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
-	type: Exclude<NavigationType, 'enter'>;
-	/**
-	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
-	 */
-	willUnload: boolean;
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: number;
-	/**
-	 * A promise that resolves once the navigation is complete, and rejects if the navigation
-	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
-	 */
-	complete: Promise<void>;
-}
+export type Navigation = 
+	| {
+		/**
+		 * Where navigation was triggered from
+		 */
+		from: NavigationTarget | null;
+		/**
+		 * Where navigation is going to/has gone to
+		 */
+		to: NavigationTarget | null;
+		/**
+		 * The type of navigation: Navigation was triggered by back/forward navigation
+		 */
+		type: 'popstate';
+		/**
+		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+		 */
+		willUnload: boolean;
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta: number;
+		/**
+		 * The PopStateEvent that triggered this navigation
+		 */
+		event: PopStateEvent;
+		/**
+		 * A promise that resolves once the navigation is complete, and rejects if the navigation
+		 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+		 */
+		complete: Promise<void>;
+	}
+	| {
+		/**
+		 * Where navigation was triggered from
+		 */
+		from: NavigationTarget | null;
+		/**
+		 * Where navigation is going to/has gone to
+		 */
+		to: NavigationTarget | null;
+		/**
+		 * The type of navigation:
+		 * - `form`: The user submitted a `<form method="GET">`
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 * - `link`: Navigation was triggered by a link click
+		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+		 */
+		type: Exclude<NavigationType, 'enter' | 'popstate'>;
+		/**
+		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+		 */
+		willUnload: boolean;
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta?: number;
+		/**
+		 * The Event that triggered this navigation
+		 */
+		event: Event;
+		/**
+		 * A promise that resolves once the navigation is complete, and rejects if the navigation
+		 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+		 */
+		complete: Promise<void>;
+	};
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
