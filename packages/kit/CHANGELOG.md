@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.37.1
+### Patch Changes
+
+
+- fix: serialize server `load` data before passing to universal `load`, to handle mutations and promises ([#14298](https://github.com/sveltejs/kit/pull/14298))
+
+
+- fix: resolve_route prevent dropping a trailing slash of id ([#14294](https://github.com/sveltejs/kit/pull/14294))
+
+
+- fix: assign correct status code to form submission error on the client ([#14345](https://github.com/sveltejs/kit/pull/14345))
+
+
+- fix: un-proxy `form.result` ([#14346](https://github.com/sveltejs/kit/pull/14346))
+
 ## 2.37.0
 ### Minor Changes
 
