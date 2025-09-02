@@ -64,7 +64,14 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (!event.isRemoteRequest && !state.is_endpoint_request) {
+		if (
+			state.endpoint_request &&
+			!['POST', 'PUT', 'PATCH', 'DELETE'].includes(state.endpoint_request)
+		) {
+			throw new Error(
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${state.endpoint_request} endpoint`
+			);
+		} else if (!event.isRemoteRequest) {
 			throw new Error(
 				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
 			);
