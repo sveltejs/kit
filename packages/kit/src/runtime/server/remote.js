@@ -124,11 +124,13 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			return json({
-				type: 'redirect',
-				location: error.location,
-				refreshes: await serialize_refreshes(form_client_refreshes ?? [])
-			});
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'redirect',
+					location: error.location,
+					refreshes: await serialize_refreshes(form_client_refreshes ?? [])
+				})
+			);
 		}
 
 		return json(
