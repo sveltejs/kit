@@ -22,7 +22,7 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.29.5",
+		"@changesets/cli": "^2.29.6",
 		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "^8.2.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
