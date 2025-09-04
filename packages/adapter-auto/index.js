@@ -179,7 +179,7 @@ export default () => ({
 					'The publish function imported from $app/server only works in environments that support WebSockets'
 				);
 			}
-    },
+		},
 		instrumentation: () => {
 			supports_error('`instrumentation.server.js` only works in certain environments');
 		}

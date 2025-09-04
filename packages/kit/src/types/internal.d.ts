@@ -20,7 +20,7 @@ import {
 	ServerInit,
 	ClientInit,
 	Transporter,
-	Socket
+	Socket,
 	Transport,
 	HandleValidationError
 } from '@sveltejs/kit';

@@ -16,7 +16,7 @@ export async function render_endpoint(event, event_state, mod, state) {
 	if (DEV && mod.socket) {
 		__SVELTEKIT_TRACK__('websockets');
 	}
-  
+
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	// if we've ended up here, it means the request does not have both the

@@ -51,7 +51,7 @@ export interface Adapter {
 		 * @param details.config The merged route config
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
-    
+
 		webSockets?: {
 			/**
 			 * Test support for the `socket` export from a `+server.js` file.

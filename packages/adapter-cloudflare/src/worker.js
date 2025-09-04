@@ -55,11 +55,11 @@ export default {
 	 * @returns {Promise<Response>}
 	 */
 	async fetch(req, env, context) {
-    if (!origin) {
+		if (!origin) {
 			origin = new URL(req.url).origin;
 			await initialized;
 		}
-    
+
 		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
 			platform: {
 				env,

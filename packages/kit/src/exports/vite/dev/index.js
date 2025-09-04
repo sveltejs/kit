@@ -632,7 +632,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 					return;
 				}
-        
+
 				const resolved_instrumentation = resolve_entry(
 					path.join(svelte_config.kit.files.src, 'instrumentation.server')
 				);

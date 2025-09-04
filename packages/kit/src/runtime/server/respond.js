@@ -472,7 +472,9 @@ export async function internal_respond(request, options, manifest, state, upgrad
 															});
 															result =
 																(await node.socket.upgrade(
-																	/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (event)
+																	/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
+																		event
+																	)
 																)) ?? undefined;
 														}
 														const upgrade_response =

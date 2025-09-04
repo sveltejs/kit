@@ -56,8 +56,8 @@ if (server.resolveWebSocketHooks) {
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
 	read: (file) => createReadableStream(`${asset_dir}/${file}`),
-  peers: ws?.peers,
-	publish: ws?.publish,
+	peers: ws?.peers,
+	publish: ws?.publish
 });
 
 /**
