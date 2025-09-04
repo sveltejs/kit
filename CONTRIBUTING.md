@@ -4,13 +4,13 @@
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
 
-```bash
+```sh
 npm i -g pnpm
 ```
 
 `pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and install the dependencies with:
 
-```bash
+```sh
 git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
@@ -69,7 +69,7 @@ Issues with the [**soon**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+i
 
 ## Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
+Run `pnpm test:kit` to run the tests from the `packages/kit` directory. You can also run `pnpm test:others` to run tests from all packages __except__ the `packages/kit` directory. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
 
 You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
 
@@ -124,7 +124,7 @@ There are a few guidelines we follow:
 
 To use the git hooks in the repo, which will save you from waiting for CI to tell you that you forgot to lint, run this:
 
-```bash
+```sh
 git config core.hookspath .githooks
 ```
 
@@ -142,6 +142,6 @@ The [Changesets GitHub action](https://github.com/changesets/action#with-publish
 
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
-```bash
+```sh
 npm publish --access=public
 ```

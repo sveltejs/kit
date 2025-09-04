@@ -51,6 +51,9 @@ export default function (options) {
 					// multiple WebSockets, return `false` if it can't.
 					// Or throw a descriptive error describing how to configure the deployment
 				}
+			tracing: () => {
+				// Return `true` if this adapter supports loading `tracing.server.js`.
+				// Return `false if it can't, or throw a descriptive error.
 			}
 		}
 	};

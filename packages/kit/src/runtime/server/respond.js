@@ -1,4 +1,8 @@
+/** @import { RequestState } from 'types' */
 import { DEV } from 'esm-env';
+import { json, text } from '@sveltejs/kit';
+import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -17,9 +21,7 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { validate_server_exports } from '../../utils/exports.js';
-import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
@@ -33,10 +35,12 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
-import { with_event } from '../app/server/event.js';
+import { server_data_serializer } from './page/data_serializer.js';
+import { get_remote_id, handle_remote_call } from './remote.js';
+import { record_span } from '../telemetry/record_span.js';
+import { otel } from '../telemetry/otel.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-/* global __SVELTEKIT_DEV__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -51,96 +55,67 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-/**
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
- */
-export async function respond(request, options, manifest, state) {
-	return handle_request(request, options, manifest, state);
-}
+let warned_on_devtools_json_request = false;
+
+export const respond = propagate_context(internal_respond);
 
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {Promise<import('@sveltejs/kit').Socket>}
+ * @returns {Promise<Required<import('@sveltejs/kit').Socket>>}
  */
 export async function resolve_websocket_hooks(request, options, manifest, state) {
-	const result = await handle_request(request, options, manifest, state, true);
+	const result = await internal_respond(request, options, manifest, state, true);
 
 	if (result instanceof Response) {
-		// if the result is a Response instead of WebSocket hooks, it means
-		// we should reject the upgrade
 		return {
 			upgrade: () => {
-				// we have to throw the Response to reject the upgrade
 				throw result;
 			}
 		};
 	}
 
-	return result;
+	return /** @type {Required<import('@sveltejs/kit').Socket>} */ (result);
 }
 
-// we need the type overload so that TypeScript knows the return value
-// can only be a Response if the upgrade param was omitted
-/**
- * @overload
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
- */
-/**
- * @overload
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @param {boolean} upgrade
- * @returns {Promise<Response | Required<import('@sveltejs/kit').Socket>>}
- */
-/**
- * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
- * @param {boolean=} upgrade
- * @returns {Promise<Response | Required<import('@sveltejs/kit').Socket>>}
- */
-async function handle_request(request, options, manifest, state, upgrade) {
+export async function internal_respond(request, options, manifest, state, upgrade = false) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	/**
-	 * @param {HttpError} error
-	 * @returns {Response}
-	 */
-	function text_or_json(error) {
-		if (request.headers.get('accept') === 'application/json') {
-			return json(error.body, { status: error.status });
-		}
-		return text(error.body.message, { status: error.status });
-	}
+	const is_route_resolution_request = has_resolution_suffix(url.pathname);
+	const is_data_request = has_data_suffix(url.pathname);
+	const remote_id = get_remote_id(url);
 
-	if (options.csrf_check_origin) {
-		const forbidden =
-			is_form_content_type(request) &&
-			(request.method === 'POST' ||
-				request.method === 'PUT' ||
-				request.method === 'PATCH' ||
-				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+	if (!DEV) {
+		const request_origin = request.headers.get('origin');
 
-		if (forbidden) {
-			return text_or_json(
-				new HttpError(403, `Cross-site ${request.method} form submissions are forbidden`)
-			);
+		if (remote_id) {
+			if (request.method !== 'GET' && request_origin !== url.origin) {
+				const message = 'Cross-site remote requests are forbidden';
+				return json({ message }, { status: 403 });
+			}
+		} else if (options.csrf_check_origin) {
+			const forbidden =
+				is_form_content_type(request) &&
+				(request.method === 'POST' ||
+					request.method === 'PUT' ||
+					request.method === 'PATCH' ||
+					request.method === 'DELETE') &&
+				request_origin !== url.origin &&
+				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
+
+			if (forbidden) {
+				const message = `Cross-site ${request.method} form submissions are forbidden`;
+				const opts = { status: 403 };
+
+				if (request.headers.get('accept') === 'application/json') {
+					return json({ message }, opts);
+				}
+
+				return text(message, opts);
+			}
 		}
 	}
 
@@ -151,14 +126,11 @@ async function handle_request(request, options, manifest, state, upgrade) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
-	/**
-	 * If the request is for a route resolution, first modify the URL, then continue as normal
-	 * for path resolution, then return the route object as a JS file.
-	 */
-	const is_route_resolution_request = has_resolution_suffix(url.pathname);
-	const is_data_request = has_data_suffix(url.pathname);
-
 	if (is_route_resolution_request) {
+		/**
+		 * If the request is for a route resolution, first modify the URL, then continue as normal
+		 * for path resolution, then return the route object as a JS file.
+		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
 	} else if (is_data_request) {
 		url.pathname =
@@ -170,6 +142,9 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			?.split('')
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
+	} else if (remote_id) {
+		url.pathname = base;
+		url.search = '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -179,6 +154,16 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		request,
 		url
 	);
+
+	/** @type {RequestState} */
+	const event_state = {
+		prerendering: state.prerendering,
+		transport: options.hooks.transport,
+		handleValidationError: options.hooks.handleValidationError,
+		tracing: {
+			record_span
+		}
+	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
@@ -198,7 +183,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		request,
 		route: { id: null },
 		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
+			if (DEV) {
 				validateHeaders(new_headers);
 			}
 
@@ -223,7 +208,8 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		},
 		url,
 		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0
+		isSubRequest: state.depth > 0,
+		isRemoteRequest: !!remote_id
 	};
 
 	event.fetch = create_fetch({
@@ -242,23 +228,25 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		});
 	}
 
-	let resolved_path;
+	let resolved_path = url.pathname;
 
-	const prerendering_reroute_state = state.prerendering?.inside_reroute;
-	try {
-		// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
-		// which would end up in the wrong logic path if not disabled.
-		if (state.prerendering) state.prerendering.inside_reroute = true;
+	if (!remote_id) {
+		const prerendering_reroute_state = state.prerendering?.inside_reroute;
+		try {
+			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
+			// which would end up in the wrong logic path if not disabled.
+			if (state.prerendering) state.prerendering.inside_reroute = true;
 
-		// reroute could alter the given URL, so we pass a copy
-		resolved_path =
-			(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
-	} catch {
-		return text('Internal Server Error', {
-			status: 500
-		});
-	} finally {
-		if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+			// reroute could alter the given URL, so we pass a copy
+			resolved_path =
+				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+		} catch {
+			return text('Internal Server Error', {
+				status: 500
+			});
+		} finally {
+			if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
+		}
 	}
 
 	try {
@@ -313,14 +301,14 @@ async function handle_request(request, options, manifest, state, upgrade) {
 		return get_public_env(request);
 	}
 
-	if (resolved_path.startsWith(`/${app_dir}`)) {
+	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
 		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
 		const headers = new Headers();
 		headers.set('cache-control', 'public, max-age=0, must-revalidate');
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !remote_id) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
@@ -356,17 +344,17 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				: route?.page && is_action_json_request(event)
 					? action_json_redirect(e)
 					: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, Object.values(new_cookies));
+			add_cookies_to_headers(response.headers, new_cookies.values());
 			return response;
 		}
-		return await handle_fatal_error(event, options, e);
+		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/** @type {import('types').TrailingSlash} */
 	let trailing_slash = 'never';
 
 	try {
-		/** @type {PageNodes|undefined} */
+		/** @type {PageNodes | undefined} */
 		const page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
@@ -438,106 +426,94 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			disable_search(url);
 		}
 
-		/**
-		 * @param {(event: import('@sveltejs/kit').RequestEvent, page_nodes: PageNodes | undefined, opts?: import('@sveltejs/kit').ResolveOptions) => Promise<Response>} resolve
-		 * @returns {Promise<Response>}
-		 */
-		const handle_hook = async (resolve) => {
-			return await with_event(event, () => {
-				return options.hooks.handle({
-					event,
-					resolve: (event, opts) => {
-						// counter-intuitively, we need to clear the event, so that it's not
-						// e.g. accessible when loading modules needed to handle the request
-						return with_event(null, () => {
-							return resolve(event, page_nodes, opts).then((response) => {
-								event.cookies.set = () => {
-									throw new Error(
-										'Cannot use `cookies.set(...)` after the response has been generated'
-									);
-								};
-
-								event.setHeaders = () => {
-									throw new Error(
-										'Cannot use `setHeaders(...)` after the response has been generated'
-									);
-								};
-
-								// add headers/cookies here, rather than inside `resolve`, so that we
-								// can do it once for all responses instead of once per `return`
-								for (const key in headers) {
-									const value = headers[key];
-									response.headers.set(key, /** @type {string} */ (value));
-								}
-
-								add_cookies_to_headers(response.headers, Object.values(new_cookies));
-
-								if (state.prerendering && event.route.id !== null) {
-									response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-								}
-
-								return response;
-							});
-						});
-					}
-				});
-			});
-		};
-
+		// WebSocket upgrade branch (keeps tracing/request-store semantics)
 		const node = upgrade && route?.endpoint ? await route.endpoint() : undefined;
 		if (node?.socket) {
-			if (DEV) {
-				__SVELTEKIT_TRACK__('websockets');
-			}
-
 			return {
 				upgrade: async ({ context }) => {
 					/** @type {Response} */
 					let response;
-
 					try {
-						response = await handle_hook(async (event) => {
-							/** @type {Response} */
-							let upgrade_response;
+						response = await record_span({
+							name: 'sveltekit.handle.root',
+							attributes: {
+								'http.route': event.route.id || 'unknown',
+								'http.method': event.request.method,
+								'http.url': event.url.href,
+								'sveltekit.is_data_request': is_data_request,
+								'sveltekit.is_sub_request': event.isSubRequest
+							},
+							fn: async (root_span) => {
+								const traced_event = {
+									...event,
+									tracing: {
+										enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+										root: root_span,
+										current: root_span
+									}
+								};
+								return await with_request_store({ event: traced_event, state: event_state }, () =>
+									options.hooks.handle({
+										event: traced_event,
+										resolve: (event) => {
+											return record_span({
+												name: 'sveltekit.resolve',
+												attributes: {
+													'http.route': event.route.id || 'unknown'
+												},
+												fn: (resolve_span) => {
+													return with_request_store(null, async () => {
+														/** @type {Response | ResponseInit | undefined} */
+														let result;
+														if (node.socket?.upgrade) {
+															Object.defineProperty(event, 'context', {
+																enumerable: true,
+																value: context
+															});
+															result =
+																(await node.socket.upgrade(
+																	/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (event)
+																)) ?? undefined;
+														}
+														const upgrade_response =
+															result instanceof Response ? result : new Response(undefined, result);
 
-							try {
-								/** @type {Response | ResponseInit | undefined} */
-								let result;
+														upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
 
-								if (node.socket?.upgrade) {
-									Object.defineProperty(event, 'context', {
-										enumerable: true,
-										value: context
-									});
-									result =
-										(await node.socket.upgrade(
-											/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (event)
-										)) ?? undefined;
-								}
+														// mirror normal resolve merging behavior
+														for (const key in headers) {
+															const value = headers[key];
+															upgrade_response.headers.set(key, /** @type {string} */ (value));
+														}
+														add_cookies_to_headers(upgrade_response.headers, new_cookies.values());
 
-								upgrade_response =
-									result instanceof Response ? result : new Response(undefined, result);
-								upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
-							} catch (e) {
-								if (e instanceof HttpError) {
-									upgrade_response = text_or_json(e);
-								} else if (e instanceof Response) {
-									// crossws allows throwing a Response to abort the upgrade
-									upgrade_response = e;
-								} else {
-									throw e;
-								}
+														if (state.prerendering && event.route.id !== null) {
+															upgrade_response.headers.set(
+																'x-sveltekit-routeid',
+																encodeURI(event.route.id)
+															);
+														}
+
+														resolve_span.setAttributes({
+															'http.response.status_code': upgrade_response.status,
+															'http.response.body.size':
+																upgrade_response.headers.get('content-length') || 'unknown'
+														});
+
+														return upgrade_response;
+													});
+												}
+											});
+										}
+									})
+								);
 							}
-
-							return upgrade_response;
 						});
 					} catch (e) {
 						return await redirect_or_fatal_error(e);
 					}
 
-					// if the x-sveltekit-upgrade header is missing we know we should
-					// abort the upgrade request because it means a different response
-					// has been thrown from the upgrade hook or returned from the handle hook
+					// if not upgraded, abort the upgrade with the returned response
 					if (!response.headers.has('x-sveltekit-upgrade')) {
 						throw response;
 					}
@@ -548,7 +524,6 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				 * @param {import('crossws').Peer} peer The Peer object before we modify it.
 				 */
 				open: async (peer) => {
-					// `peer.request` is a getter with no setter so this is the only way to override it
 					Object.defineProperty(peer, 'request', {
 						configurable: true,
 						enumerable: true,
@@ -560,34 +535,96 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					try {
 						await node.socket?.open?.(/** @type {import('@sveltejs/kit').Peer} */ (peer));
 					} catch (e) {
-						await handle_fatal_error(event, options, e);
+						await handle_fatal_error(event, event_state, options, e);
 					}
 				},
 				message: async (peer, message) => {
 					try {
 						await node.socket?.message?.(peer, message);
 					} catch (e) {
-						await handle_fatal_error(event, options, e);
+						await handle_fatal_error(event, event_state, options, e);
 					}
 				},
 				close: async (peer, close_event) => {
 					try {
 						await node.socket?.close?.(peer, close_event);
 					} catch (e) {
-						await handle_fatal_error(event, options, e);
+						await handle_fatal_error(event, event_state, options, e);
 					}
 				},
 				error: async (peer, error) => {
 					try {
 						await node.socket?.error?.(peer, error);
 					} catch (e) {
-						await handle_fatal_error(event, options, e);
+						await handle_fatal_error(event, event_state, options, e);
 					}
 				}
 			};
 		}
 
-		const response = await handle_hook(resolve);
+		const response = await record_span({
+			name: 'sveltekit.handle.root',
+			attributes: {
+				'http.route': event.route.id || 'unknown',
+				'http.method': event.request.method,
+				'http.url': event.url.href,
+				'sveltekit.is_data_request': is_data_request,
+				'sveltekit.is_sub_request': event.isSubRequest
+			},
+			fn: async (root_span) => {
+				const traced_event = {
+					...event,
+					tracing: {
+						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+						root: root_span,
+						current: root_span
+					}
+				};
+				return await with_request_store({ event: traced_event, state: event_state }, () =>
+					options.hooks.handle({
+						event: traced_event,
+						resolve: (event, opts) => {
+							return record_span({
+								name: 'sveltekit.resolve',
+								attributes: {
+									'http.route': event.route.id || 'unknown'
+								},
+								fn: (resolve_span) => {
+									// counter-intuitively, we need to clear the event, so that it's not
+									// e.g. accessible when loading modules needed to handle the request
+									return with_request_store(null, () =>
+										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
+											(response) => {
+												// add headers/cookies here, rather than inside `resolve`, so that we
+												// can do it once for all responses instead of once per `return`
+												for (const key in headers) {
+													const value = headers[key];
+													response.headers.set(key, /** @type {string} */ (value));
+												}
+
+												add_cookies_to_headers(response.headers, new_cookies.values());
+
+												if (state.prerendering && event.route.id !== null) {
+													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+												}
+
+												resolve_span.setAttributes({
+													'http.response.status_code': response.status,
+													'http.response.body.size':
+														response.headers.get('content-length') || 'unknown'
+												});
+
+												return response;
+											}
+										)
+									);
+								}
+							});
+						}
+					})
+				);
+			}
+		});
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
@@ -634,7 +671,16 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 		return response;
 	} catch (e) {
-		return await redirect_or_fatal_error(e);
+		if (e instanceof Redirect) {
+			const response = is_data_request
+				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, new_cookies.values());
+			return response;
+		}
+		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/**
@@ -655,6 +701,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
+					event_state,
 					options,
 					manifest,
 					state,
@@ -663,8 +710,13 @@ async function handle_request(request, options, manifest, state, upgrade) {
 					error: null,
 					branch: [],
 					fetched: [],
-					resolve_opts
+					resolve_opts,
+					data_serializer: server_data_serializer(event, event_state, options)
 				});
+			}
+
+			if (remote_id) {
+				return await handle_remote_call(event, event_state, options, manifest, remote_id);
 			}
 
 			if (route) {
@@ -676,6 +728,7 @@ async function handle_request(request, options, manifest, state, upgrade) {
 				if (is_data_request) {
 					response = await render_data(
 						event,
+						event_state,
 						route,
 						options,
 						manifest,
@@ -684,13 +737,14 @@ async function handle_request(request, options, manifest, state, upgrade) {
 						trailing_slash
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					response = await render_endpoint(event, event_state, await route.endpoint(), state);
 				} else if (route.page) {
 					if (!page_nodes) {
 						throw new Error('page_nodes not found. This should never happen');
 					} else if (page_methods.has(method)) {
 						response = await render_page(
 							event,
+							event_state,
 							route.page,
 							options,
 							manifest,
@@ -766,8 +820,24 @@ async function handle_request(request, options, manifest, state, upgrade) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
+				// causing console spam. If users want to serve this file they can install
+				// https://svelte.dev/docs/cli/devtools-json
+				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+					if (!warned_on_devtools_json_request) {
+						console.log(
+							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
+						);
+					}
+
+					warned_on_devtools_json_request = true;
+
+					return new Response(undefined, { status: 404 });
+				}
+
 				return await respond_with_error({
 					event,
+					event_state,
 					options,
 					manifest,
 					state,
@@ -783,13 +853,24 @@ async function handle_request(request, options, manifest, state, upgrade) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			return await fetch(request);
+			const response = await fetch(request);
+
+			// clone the response so that headers are mutable (https://github.com/sveltejs/kit/issues/13857)
+			return new Response(response.body, response);
 		} catch (e) {
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, options, e);
+			return await handle_fatal_error(event, event_state, options, e);
+		} finally {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
 		}
 	}
 }
@@ -804,4 +885,26 @@ export function load_page_nodes(page, manifest) {
 		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
 		manifest._.nodes[page.leaf]()
 	]);
+}
+
+/**
+ * It's likely that, in a distributed system, there are spans starting outside the SvelteKit server -- eg.
+ * started on the frontend client, or in a service that calls the SvelteKit server. There are standardized
+ * ways to represent this context in HTTP headers, so we can extract that context and run our tracing inside of it
+ * so that when our traces are exported, they are associated with the correct parent context.
+ * @param {typeof internal_respond} fn
+ * @returns {typeof internal_respond}
+ */
+function propagate_context(fn) {
+	return async (req, ...rest) => {
+		if (otel === null) {
+			return fn(req, ...rest);
+		}
+
+		const { propagation, context } = await otel;
+		const c = propagation.extract(context.active(), Object.fromEntries(req.headers));
+		return context.with(c, async () => {
+			return await fn(req, ...rest);
+		});
+	};
 }

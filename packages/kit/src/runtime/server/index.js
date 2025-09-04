@@ -4,6 +4,9 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
+import { filter_env } from '../../utils/env.js';
+import { format_server_error } from './utils.js';
+import { set_app } from './app.js';
 import {
 	set_read_implementation,
 	set_manifest,
@@ -48,24 +51,47 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const prefixes = {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
-		};
+		const { env_public_prefix, env_private_prefix } = this.#options;
 
-		const private_env = filter_private_env(env, prefixes);
-		const public_env = filter_public_env(env, prefixes);
-
-		set_private_env(
-			prerendering ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env
-		);
-		set_public_env(
-			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
-		);
-		set_safe_public_env(public_env);
+		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
+		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
 
 		if (read) {
-			set_read_implementation(read);
+			// Wrap the read function to handle MaybePromise<ReadableStream>
+			// and ensure the public API stays synchronous
+			/** @param {string} file */
+			const wrapped_read = (file) => {
+				const result = read(file);
+				if (result instanceof ReadableStream) {
+					return result;
+				} else {
+					return new ReadableStream({
+						async start(controller) {
+							try {
+								const stream = await Promise.resolve(result);
+								if (!stream) {
+									controller.close();
+									return;
+								}
+
+								const reader = stream.getReader();
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									controller.enqueue(value);
+								}
+
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						}
+					});
+				}
+			};
+
+			set_read_implementation(wrapped_read);
 		}
 
 		if (peers) {
@@ -84,28 +110,56 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError: module.handleError || (({ error }) => console.error(error)),
+					handleError:
+						module.handleError ||
+						(({ status, error, event }) => {
+							const error_message = format_server_error(
+								status,
+								/** @type {Error} */ (error),
+								event
+							);
+							console.error(error_message);
+						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					handleValidationError:
+						module.handleValidationError ||
+						(({ issues }) => {
+							console.error('Remote function schema validation failed:', issues);
+							return { message: 'Bad Request' };
+						}),
 					reroute: module.reroute || (() => {}),
 					transport: module.transport || {}
 				};
 
+				set_app({
+					decoders: module.transport
+						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
+						: {}
+				});
+
 				if (module.init) {
 					await module.init();
 				}
-			} catch (error) {
+			} catch (e) {
 				if (DEV) {
 					this.#options.hooks = {
 						handle: () => {
-							throw error;
+							throw e;
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
+						handleValidationError: () => {
+							return { message: 'Bad Request' };
+						},
 						reroute: () => {},
 						transport: {}
 					};
+
+					set_app({
+						decoders: {}
+					});
 				} else {
-					throw error;
+					throw e;
 				}
 			}
 		})());

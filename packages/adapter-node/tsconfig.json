@@ -4,6 +4,7 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
+		"strictNullChecks": true,
 		"allowSyntheticDefaultImports": true,
 		"target": "es2022",
 		"module": "node16",

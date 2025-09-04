@@ -5,7 +5,15 @@ const config = {
 	kit: {
 		adapter: {
 			name: 'test-adapter',
-			adapt() {},
+			adapt(builder) {
+				builder.instrument({
+					entrypoint: `${builder.getServerDirectory()}/index.js`,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					module: {
+						exports: ['Server']
+					}
+				});
+			},
 			emulate() {
 				return {
 					platform({ config, prerender }) {
@@ -19,8 +27,24 @@ const config = {
 					socket: () => true,
 					getPeers: () => true,
 					publish: () => true
-				}
+				},
+				instrumentation: () => true
 			}
+		},
+
+		experimental: {
+			remoteFunctions: true,
+			tracing: {
+				server: true
+			},
+			instrumentation: {
+				server: true
+			}
+		},
+
+		csrf: {
+			checkOrigin: true,
+			trustedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
 		},
 
 		prerender: {
@@ -38,10 +62,17 @@ const config = {
 				console.warn(message);
 			}
 		},
+		serviceWorker: {
+			register: true,
+			options: {
+				updateViaCache: 'imports'
+			}
+		},
 
 		version: {
 			name: 'TEST_VERSION'
 		},
+
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
 		}

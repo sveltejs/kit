@@ -59,7 +59,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 		assets.push(build_data.service_worker);
 	}
 
-	// In case of server side route resolution, we need to include all matchers. Prerendered routes are not part
+	// In case of server-side route resolution, we need to include all matchers. Prerendered routes are not part
 	// of the server manifest, and they could reference matchers that then would not be included.
 	const matchers = new Set(
 		build_data.client?.nodes ? Object.keys(build_data.manifest_data.matchers) : undefined
@@ -100,6 +100,9 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 				nodes: [
 					${(node_paths).map(loader).join(',\n')}
 				],
+				remotes: {
+					${build_data.manifest_data.remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, remote.file).chunk.file))}`).join(',\n')}
+				},
 				routes: [
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;

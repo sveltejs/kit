@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form } = $props();
+	const { form } = $props();
 </script>
 
 <form method="POST" use:enhance>

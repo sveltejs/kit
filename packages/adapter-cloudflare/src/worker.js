@@ -1,5 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
+import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
 import crossws from 'crossws/adapters/cloudflare';
 
@@ -20,15 +21,45 @@ if (server.resolveWebSocketHooks) {
 		resolve: (req) => resolve_websocket_hooks(req)
 	});
 }
+/**
+ * We don't know the origin until we receive a request, but
+ * that's guaranteed to happen before we call `read`
+ * @type {string}
+ */
+let origin;
+
+const initialized = server.init({
+	// @ts-expect-error env contains environment variables and bindings
+	env,
+	read: async (file) => {
+		const url = `${origin}/${file}`;
+		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
+			url
+		);
+
+		if (!response.ok) {
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
+		}
+
+		return response.body;
+	}
+});
 
 export default {
 	/**
 	 * @param {Request} req
 	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
-	 * @param {ExecutionContext} context
+	 * @param {ExecutionContext} ctx
 	 * @returns {Promise<Response>}
 	 */
 	async fetch(req, env, context) {
+    if (!origin) {
+			origin = new URL(req.url).origin;
+			await initialized;
+		}
+    
 		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
 			platform: {
 				env,
@@ -106,16 +137,25 @@ export default {
 			});
 		} else {
 			// dynamically-generated pages
-			res = await server.respond(
-				req,
-				// @ts-ignore wtf is Cloudflare doing to these types
-				options
-			);
+			res = await server.respond(req, {
+				platform: {
+					env,
+					ctx,
+					context: ctx, // deprecated in favor of ctx
+					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
+					caches,
+					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
+					cf: req.cf
+				},
+				getClientAddress() {
+					return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
+				}
+			});
 		}
 
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers
 		pragma = res.headers.get('cache-control') || '';
-		return pragma && res.status < 400 ? Cache.save(req, res, context) : res;
+		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
 	}
 };
