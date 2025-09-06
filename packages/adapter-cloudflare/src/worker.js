@@ -2,6 +2,7 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
+import crossws from 'crossws/adapters/cloudflare';
 
 const server = new Server(manifest);
 
@@ -10,6 +11,16 @@ const app_path = `/${manifest.appPath}`;
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
 
+/** @type {import('crossws').ResolveHooks} */
+let resolve_websocket_hooks;
+/** @type {import('crossws/adapters/cloudflare').CloudflareAdapter} */
+let ws;
+
+if (server.resolveWebSocketHooks) {
+	ws = crossws({
+		resolve: (req) => resolve_websocket_hooks(req)
+	});
+}
 /**
  * We don't know the origin until we receive a request, but
  * that's guaranteed to happen before we call `read`
@@ -43,10 +54,42 @@ export default {
 	 * @param {ExecutionContext} ctx
 	 * @returns {Promise<Response>}
 	 */
-	async fetch(req, env, ctx) {
+	async fetch(req, env, context) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
 			await initialized;
+		}
+
+		const options = /** @satisfies {Parameters<typeof server.respond>[1]} */ ({
+			platform: {
+				env,
+				context,
+				// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
+				caches,
+				// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
+				cf: req.cf
+			},
+			getClientAddress() {
+				return req.headers.get('cf-connecting-ip');
+			}
+		});
+
+		await server.init({
+			// @ts-expect-error env contains environment variables and bindings
+			env,
+			peers: ws?.peers,
+			publish: ws?.publish
+		});
+
+		if (req.headers.get('upgrade') === 'websocket' && ws) {
+			const hooks = await server.resolveWebSocketHooks(
+				req,
+				// @ts-ignore
+				options
+			);
+			resolve_websocket_hooks = () => hooks;
+			// @ts-ignore wtf is Cloudflare doing to these types
+			return ws.handleUpgrade(req, env, context);
 		}
 
 		// skip cache if "cache-control: no-cache" in request

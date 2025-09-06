@@ -83,7 +83,8 @@ const valid_server_exports = new Set([
 	'prerender',
 	'trailingSlash',
 	'config',
-	'entries'
+	'entries',
+	'socket'
 ]);
 
 export const validate_layout_exports = validator(valid_layout_exports);

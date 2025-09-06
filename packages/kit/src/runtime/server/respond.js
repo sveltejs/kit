@@ -64,9 +64,23 @@ export const respond = propagate_context(internal_respond);
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
- * @returns {Promise<Response>}
+ * @returns {Promise<Required<import('@sveltejs/kit').Socket>>}
  */
-export async function internal_respond(request, options, manifest, state) {
+export async function resolve_websocket_hooks(request, options, manifest, state) {
+	const result = await internal_respond(request, options, manifest, state, true);
+
+	if (result instanceof Response) {
+		return {
+			upgrade: () => {
+				throw result;
+			}
+		};
+	}
+
+	return /** @type {Required<import('@sveltejs/kit').Socket>} */ (result);
+}
+
+export async function internal_respond(request, options, manifest, state, upgrade = false) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -319,6 +333,23 @@ export async function internal_respond(request, options, manifest, state) {
 		preload: default_preload
 	};
 
+	/**
+	 * @param {unknown} e
+	 * @returns {Promise<Response>}
+	 */
+	async function redirect_or_fatal_error(e) {
+		if (e instanceof Redirect) {
+			const response = is_data_request
+				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, new_cookies.values());
+			return response;
+		}
+		return await handle_fatal_error(event, event_state, options, e);
+	}
+
 	/** @type {import('types').TrailingSlash} */
 	let trailing_slash = 'never';
 
@@ -393,6 +424,144 @@ export async function internal_respond(request, options, manifest, state) {
 
 		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
 			disable_search(url);
+		}
+
+		// WebSocket upgrade branch (keeps tracing/request-store semantics)
+		const node = upgrade && route?.endpoint ? await route.endpoint() : undefined;
+		if (node?.socket) {
+			return {
+				upgrade: async ({ context }) => {
+					/** @type {Response} */
+					let response;
+					try {
+						response = await record_span({
+							name: 'sveltekit.handle.root',
+							attributes: {
+								'http.route': event.route.id || 'unknown',
+								'http.method': event.request.method,
+								'http.url': event.url.href,
+								'sveltekit.is_data_request': is_data_request,
+								'sveltekit.is_sub_request': event.isSubRequest
+							},
+							fn: async (root_span) => {
+								const traced_event = {
+									...event,
+									tracing: {
+										enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+										root: root_span,
+										current: root_span
+									}
+								};
+								return await with_request_store({ event: traced_event, state: event_state }, () =>
+									options.hooks.handle({
+										event: traced_event,
+										resolve: (event) => {
+											return record_span({
+												name: 'sveltekit.resolve',
+												attributes: {
+													'http.route': event.route.id || 'unknown'
+												},
+												fn: (resolve_span) => {
+													return with_request_store(null, async () => {
+														/** @type {Response | ResponseInit | undefined} */
+														let result;
+														if (node.socket?.upgrade) {
+															Object.defineProperty(event, 'context', {
+																enumerable: true,
+																value: context
+															});
+															result =
+																(await node.socket.upgrade(
+																	/** @type {import('@sveltejs/kit').RequestEvent & { context: {} }} */ (
+																		event
+																	)
+																)) ?? undefined;
+														}
+														const upgrade_response =
+															result instanceof Response ? result : new Response(undefined, result);
+
+														upgrade_response.headers.set('x-sveltekit-upgrade', 'true');
+
+														// mirror normal resolve merging behavior
+														for (const key in headers) {
+															const value = headers[key];
+															upgrade_response.headers.set(key, /** @type {string} */ (value));
+														}
+														add_cookies_to_headers(upgrade_response.headers, new_cookies.values());
+
+														if (state.prerendering && event.route.id !== null) {
+															upgrade_response.headers.set(
+																'x-sveltekit-routeid',
+																encodeURI(event.route.id)
+															);
+														}
+
+														resolve_span.setAttributes({
+															'http.response.status_code': upgrade_response.status,
+															'http.response.body.size':
+																upgrade_response.headers.get('content-length') || 'unknown'
+														});
+
+														return upgrade_response;
+													});
+												}
+											});
+										}
+									})
+								);
+							}
+						});
+					} catch (e) {
+						return await redirect_or_fatal_error(e);
+					}
+
+					// if not upgraded, abort the upgrade with the returned response
+					if (!response.headers.has('x-sveltekit-upgrade')) {
+						throw response;
+					}
+
+					return response;
+				},
+				/**
+				 * @param {import('crossws').Peer} peer The Peer object before we modify it.
+				 */
+				open: async (peer) => {
+					Object.defineProperty(peer, 'request', {
+						configurable: true,
+						enumerable: true,
+						get() {
+							return event.request;
+						}
+					});
+					/** @type {import('@sveltejs/kit').Peer} */ (peer).event = event;
+					try {
+						await node.socket?.open?.(/** @type {import('@sveltejs/kit').Peer} */ (peer));
+					} catch (e) {
+						await handle_fatal_error(event, event_state, options, e);
+					}
+				},
+				message: async (peer, message) => {
+					try {
+						await node.socket?.message?.(peer, message);
+					} catch (e) {
+						await handle_fatal_error(event, event_state, options, e);
+					}
+				},
+				close: async (peer, close_event) => {
+					try {
+						await node.socket?.close?.(peer, close_event);
+					} catch (e) {
+						await handle_fatal_error(event, event_state, options, e);
+					}
+				},
+				error: async (peer, error) => {
+					try {
+						await node.socket?.error?.(peer, error);
+					} catch (e) {
+						await handle_fatal_error(event, event_state, options, e);
+					}
+				}
+			};
 		}
 
 		const response = await record_span({
@@ -661,9 +830,9 @@ export async function internal_respond(request, options, manifest, state) {
 						console.log(
 							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
 						);
-
-						warned_on_devtools_json_request = true;
 					}
+
+					warned_on_devtools_json_request = true;
 
 					return new Response(undefined, { status: 404 });
 				}

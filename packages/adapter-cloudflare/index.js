@@ -20,6 +20,8 @@ const [kit_major, kit_minor] = VERSION.split('.');
  * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_0_0
  */
 
+const name = '@sveltejs/adapter-cloudflare';
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
@@ -193,6 +195,16 @@ export default function (options = {}) {
 			};
 		},
 		supports: {
+			webSockets: {
+				socket: () => true,
+				getPeers: () => true,
+				publish: ({ route }) => {
+					// TODO: allow WebSocket integration with Durable Objects using crossws/adapters/cloudflare-durable
+					throw new Error(
+						`${name}: Cannot use \`publish\` from \`$app/server\` in route \`${route.id}\` because Cloudflare Workers cannot coordinate among multiple WebSocket connections without Durable Objects`
+					);
+				}
+			},
 			read: ({ route }) => {
 				// TODO bump peer dep in next adapter major to simplify this
 				if (kit_major === '2' && kit_minor < '25') {

@@ -33,19 +33,23 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
 		"@polka/url": "^1.0.0-next.28",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
+		"crossws": "^0.3.4",
 		"polka": "^1.0.0-next.28",
 		"sirv": "^3.0.0",
 		"typescript": "^5.3.3",
