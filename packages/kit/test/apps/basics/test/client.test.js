@@ -1754,6 +1754,16 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
+	test('query/command inside endpoint works', async ({ page }) => {
+		await page.goto('/remote/server-endpoint');
+
+		await page.getByRole('button', { name: 'get' }).click();
+		await expect(page.locator('p')).toHaveText('get');
+
+		await page.getByRole('button', { name: 'post' }).click();
+		await expect(page.locator('p')).toHaveText('post');
+	});
+
 	test('form.enhance works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task-enhance', 'abort');
