@@ -1682,10 +1682,36 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
+	// Helper type to convert union to intersection
+	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+		? I
+		: never;
+
+	// Main flattening type that handles objects, arrays, and primitives
+	type FlattenObject<T, Prefix extends string = ''> = T extends readonly unknown[]
+		? T extends ReadonlyArray<infer U>
+			? Prefix extends ''
+				? { [K in `[${number}]`]: U }
+				: { [K in `${Prefix}[${number}]`]: U }
+			: never
+		: T extends object
+			? {
+					[K in keyof T]: FlattenObject<
+						T[K],
+						Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+					>;
+				}[keyof T]
+			: Prefix extends ''
+				? never
+				: { [P in Prefix]: T };
+
+	// Convert the union of objects to a single intersected object
+	type Flatten<T> = UnionToIntersection<FlattenObject<T>>;
+
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Result> = {
+	export type RemoteForm<Input, Output> = {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
@@ -1719,11 +1745,15 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
+		for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** The result of the form submission */
-		get result(): Result | undefined;
+		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
+		/** The submitted values (TODO values should be string | File | null) */
+		input?: Flatten<Input>;
+		/** Validation issues (TODO values should be Issue[]) */
+		issues?: Flatten<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -2864,7 +2894,23 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
+	export function form<Output>(fn: () => Output): RemoteForm<void, Output>;
+	/**
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function form<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteForm<Input, Output>;
+	/**
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function form<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
