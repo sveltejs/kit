@@ -139,7 +139,7 @@ Setting the `sideEffects` field in `package.json` can help the bundler to be mor
 }
 ```
 
-> If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
+> [!NOTE] If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
 
 If your package has files with side effects, you can specify them in an array:
 
