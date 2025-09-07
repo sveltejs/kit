@@ -16,15 +16,17 @@ const inputs = [
 ];
 
 const buffer = globalThis.Buffer;
-beforeEach(() => {
-	// @ts-expect-error
-	delete globalThis.Buffer;
-});
-afterEach(() => {
-	globalThis.Buffer = buffer;
-});
 
 describe('base64_encode', () => {
+	beforeEach(() => {
+		// @ts-expect-error
+		delete globalThis.Buffer;
+	});
+
+	afterEach(() => {
+		globalThis.Buffer = buffer;
+	});
+
 	test.each(inputs)('%s', (input) => {
 		const expected = buffer.from(input).toString('base64');
 
@@ -34,6 +36,15 @@ describe('base64_encode', () => {
 });
 
 describe('base64_decode', () => {
+	beforeEach(() => {
+		// @ts-expect-error
+		delete globalThis.Buffer;
+	});
+
+	afterEach(() => {
+		globalThis.Buffer = buffer;
+	});
+
 	test.each(inputs)('%s', (input) => {
 		const encoded = buffer.from(input).toString('base64');
 
