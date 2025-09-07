@@ -1688,22 +1688,19 @@ declare module '@sveltejs/kit' {
 		: never;
 
 	// Main flattening type that handles objects, arrays, and primitives
-	type FlattenObject<T, Prefix extends string = ''> = T extends readonly unknown[]
-		? T extends ReadonlyArray<infer U>
-			? Prefix extends ''
-				? { [K in `[${number}]`]: U }
-				: { [K in `${Prefix}[${number}]`]: U }
-			: never
-		: T extends object
-			? {
-					[K in keyof T]: FlattenObject<
-						T[K],
-						Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-					>;
-				}[keyof T]
-			: Prefix extends ''
-				? never
-				: { [P in Prefix]: T };
+	type FlattenObject<T, Prefix extends string = ''> =
+		T extends ReadonlyArray<infer U>
+			? { [K in Prefix extends '' ? `[${number}]` : `${Prefix}[${number}]`]: U }
+			: T extends File
+				? { [P in Prefix]: T }
+				: T extends object
+					? {
+							[K in keyof T]: FlattenObject<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T]
+					: { [P in Prefix]: T };
 
 	// Convert the union of objects to a single intersected object
 	type Flatten<T> = UnionToIntersection<FlattenObject<T>>;
