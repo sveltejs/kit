@@ -1,5 +1,6 @@
 import { form, query } from '$app/server';
 import { error, redirect } from '@sveltejs/kit';
+import * as v from 'valibot';
 
 let task;
 const deferreds = [];
@@ -16,7 +17,7 @@ export const resolve_deferreds = form(async () => {
 	return 'resolved';
 });
 
-export const task_one = form('unchecked', async (data) => {
+export const task_one = form(v.object({ task: v.string() }), async (data) => {
 	task = data.task;
 
 	if (task === 'error') {
@@ -36,7 +37,7 @@ export const task_one = form('unchecked', async (data) => {
 	return task;
 });
 
-export const task_two = form('unchecked', async (data) => {
+export const task_two = form(v.object({ task: v.string() }), async (data) => {
 	task = data.task;
 
 	if (task === 'error') {
