@@ -16,7 +16,9 @@ export const resolve_deferreds = form(async () => {
 	return 'resolved';
 });
 
-export const task_one = form('unchecked', async ({ task }) => {
+export const task_one = form('unchecked', async (data) => {
+	task = data.task;
+
 	if (task === 'error') {
 		error(400, { message: 'Expected error' });
 	}
@@ -34,7 +36,9 @@ export const task_one = form('unchecked', async ({ task }) => {
 	return task;
 });
 
-export const task_two = form('unchecked', async ({ task }) => {
+export const task_two = form('unchecked', async (data) => {
+	task = data.task;
+
 	if (task === 'error') {
 		throw new Error('Unexpected error');
 	}
