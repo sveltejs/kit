@@ -97,7 +97,7 @@ export function form(validate_or_fn, maybe_fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
-				const object = convert_formdata(form_data);
+				const object = maybe_fn ? convert_formdata(form_data) : undefined;
 				const { event, state } = get_request_store();
 
 				state.refreshes ??= {};
