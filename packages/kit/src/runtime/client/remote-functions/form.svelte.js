@@ -19,11 +19,12 @@ import { refresh_queries, release_overrides } from './shared.svelte.js';
 /**
  * Client-version of the `form` function from `$app/server`.
  * @template T
+ * @template U
  * @param {string} id
- * @returns {RemoteForm<T>}
+ * @returns {RemoteForm<T, U>}
  */
 export function form(id) {
-	/** @type {Map<any, { count: number, instance: RemoteForm<T> }>} */
+	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -134,7 +135,7 @@ export function form(id) {
 			return promise;
 		}
 
-		/** @type {RemoteForm<T>} */
+		/** @type {RemoteForm<T, U>} */
 		const instance = {};
 
 		instance.method = 'POST';
@@ -170,7 +171,7 @@ export function form(id) {
 			return form_data;
 		}
 
-		/** @param {Parameters<RemoteForm<any>['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
 			return async (event) => {
@@ -213,7 +214,7 @@ export function form(id) {
 
 		instance.onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
 
-		/** @param {Parameters<RemoteForm<any>['buttonProps']['enhance']>[0]} callback */
+		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
 			/** @param {Event} event */
 			return async (event) => {
@@ -242,7 +243,7 @@ export function form(id) {
 			};
 		};
 
-		/** @type {RemoteForm<any>['buttonProps']} */
+		/** @type {RemoteForm<any, any>['buttonProps']} */
 		// @ts-expect-error we gotta set enhance as a non-enumerable property
 		const button_props = {
 			type: 'submit',
@@ -252,7 +253,7 @@ export function form(id) {
 		};
 
 		Object.defineProperty(button_props, 'enhance', {
-			/** @type {RemoteForm<any>['buttonProps']['enhance']} */
+			/** @type {RemoteForm<any, any>['buttonProps']['enhance']} */
 			value: (callback) => {
 				return {
 					type: 'submit',
@@ -278,7 +279,7 @@ export function form(id) {
 				get: () => pending_count
 			},
 			enhance: {
-				/** @type {RemoteForm<any>['enhance']} */
+				/** @type {RemoteForm<any, any>['enhance']} */
 				value: (callback) => {
 					return {
 						method: 'POST',
@@ -295,7 +296,7 @@ export function form(id) {
 	const instance = create_instance();
 
 	Object.defineProperty(instance, 'for', {
-		/** @type {RemoteForm<any>['for']} */
+		/** @type {RemoteForm<any, any>['for']} */
 		value: (key) => {
 			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
 
