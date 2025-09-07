@@ -209,7 +209,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.[name]);
+	let form = /** @type {RemoteForm<any, any>} */ (module?.[name]);
 
 	if (!form) {
 		event.setHeaders({
