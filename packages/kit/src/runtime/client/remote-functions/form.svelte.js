@@ -34,7 +34,7 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string> | undefined} */
+		/** @type {Record<string, string | string[]> | undefined} */
 		let input = $state(undefined);
 
 		/** @type {Record<string, StandardSchemaV1.Issue[]> | undefined} */
@@ -222,8 +222,20 @@ export function form(id) {
 			};
 		};
 
+		let attached = false;
+
 		instance[createAttachmentKey()] = (form) => {
-			// TODO enforce 1:1 relationship between <form> and function
+			if (attached) {
+				let message = `A form object can only be attached to a single \`<form>\` element`;
+				if (!key) {
+					const name = id.split('/').pop();
+					message += `. To create multiple instances, use \`${name}.for(key)\``;
+				}
+
+				throw new Error(message);
+			}
+
+			attached = true;
 
 			const onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
 			form.addEventListener('submit', onsubmit);
@@ -240,9 +252,18 @@ export function form(id) {
 				if (is_array) name = name.slice(0, -2);
 
 				(input ??= {})[name] = is_array
-					? Array.from(document.querySelectorAll(`[name="${name}[]"]`), (element) => element.value)
+					? Array.from(
+							document.querySelectorAll(`[name="${name}[]"]`),
+							(element) =>
+								/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (element)
+									.value
+						)
 					: element.value;
 			});
+
+			return () => {
+				attached = false;
+			};
 		};
 
 		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
