@@ -1717,7 +1717,9 @@ type FlattenInput<T, Prefix extends string> =
 	IsAny<T> extends true
 		? { [key: string]: string }
 		: T extends Array<infer U>
-			? FlattenInput<U, `${Prefix}[${number}]`>
+			? U extends string | File
+				? { [P in Prefix]: string[] }
+				: FlattenInput<U, `${Prefix}[${number}]`>
 			: T extends File
 				? { [P in Prefix]: string }
 				: T extends object
@@ -1766,7 +1768,7 @@ export type RemoteForm<Input extends FormInput, Output> = {
 	enhance(
 		callback: (opts: {
 			form: HTMLFormElement;
-			data: FormData;
+			data: Input;
 			submit: () => Promise<void> & {
 				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 			};
@@ -1809,7 +1811,7 @@ export type RemoteForm<Input extends FormInput, Output> = {
 		enhance(
 			callback: (opts: {
 				form: HTMLFormElement;
-				data: FormData;
+				data: Input;
 				submit: () => Promise<void> & {
 					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 				};

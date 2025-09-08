@@ -1693,7 +1693,9 @@ declare module '@sveltejs/kit' {
 		IsAny<T> extends true
 			? { [key: string]: string }
 			: T extends Array<infer U>
-				? FlattenInput<U, `${Prefix}[${number}]`>
+				? U extends string | File
+					? { [P in Prefix]: string[] }
+					: FlattenInput<U, `${Prefix}[${number}]`>
 				: T extends File
 					? { [P in Prefix]: string }
 					: T extends object
@@ -1732,16 +1734,17 @@ declare module '@sveltejs/kit' {
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends FormInput, Output> = {
+		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
+		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
-		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
 		onsubmit: (event: SubmitEvent) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
 			callback: (opts: {
 				form: HTMLFormElement;
-				data: FormData;
+				data: Input;
 				submit: () => Promise<void> & {
 					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 				};
@@ -1784,11 +1787,11 @@ declare module '@sveltejs/kit' {
 			enhance(
 				callback: (opts: {
 					form: HTMLFormElement;
-					data: FormData;
+					data: Input;
 					submit: () => Promise<void> & {
 						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 					};
-				}) => void
+				}) => void | Promise<void>
 			): {
 				type: 'submit';
 				formmethod: 'POST';

@@ -17,6 +17,7 @@ import {
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
+import { convert_formdata } from '../../utils.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -210,7 +211,7 @@ export function form(id) {
 				try {
 					await callback({
 						form,
-						data,
+						data: convert_formdata(data),
 						submit: () => submit(data)
 					});
 				} catch (e) {
