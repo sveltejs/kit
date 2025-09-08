@@ -84,7 +84,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(/** @type {string[]} */ (form_client_refreshes))
+					refreshes: data.issues
+						? {}
+						: await serialize_refreshes(/** @type {string[]} */ (form_client_refreshes))
 				})
 			);
 		}

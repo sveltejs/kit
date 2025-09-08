@@ -1,8 +1,8 @@
 /** @import { FormInput, RemoteForm } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_validator, run_remote_function } from './shared.js';
+import { run_remote_function } from './shared.js';
 import { convert_formdata } from '../../../utils.js';
 
 /**
@@ -21,11 +21,11 @@ import { convert_formdata } from '../../../utils.js';
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
- * @template Input
+ * @template {FormInput} Input
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input) => Output} fn
+ * @param {(data: Input) => Output} fn
  * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
@@ -38,7 +38,7 @@ import { convert_formdata } from '../../../utils.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>) => Output} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -46,18 +46,18 @@ import { convert_formdata } from '../../../utils.js';
  * @template {FormInput} Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(arg?: Input) => Output} [maybe_fn]
+ * @param {(data?: Input) => Output} [maybe_fn]
  * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
 export function form(validate_or_fn, maybe_fn) {
-	/** @type {(arg?: Input) => Output} */
+	/** @type {(data?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
 
-	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	/** @type {StandardSchemaV1 | null} */
+	const schema = !maybe_fn || validate_or_fn === 'unchecked' ? null : validate_or_fn;
 
 	/**
 	 * @param {string | number | boolean} [key]
@@ -98,19 +98,60 @@ export function form(validate_or_fn, maybe_fn) {
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
 				const object = maybe_fn ? convert_formdata(form_data) : undefined;
+
+				/** @type {{ input?: Record<string, string>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
+				const output = {};
+
 				const { event, state } = get_request_store();
+				const issues = (await schema?.['~standard'].validate(object))?.issues;
 
-				state.refreshes ??= {};
+				if (issues !== undefined) {
+					/** @type {Record<string, string | string[]>} */
+					output.input = {};
 
-				const result = await run_remote_function(event, state, true, object, validate, fn);
+					output.issues = { $: [] };
+
+					for (let key of form_data.keys()) {
+						const is_array = key.endsWith('[]');
+						const values = /** @type {string[]} */ (form_data.getAll(key)); // TODO what about File?
+
+						if (is_array) key = key.slice(0, -2);
+
+						output.input[key] = is_array ? values : values[0];
+					}
+
+					for (const issue of issues) {
+						output.issues.$.push(issue);
+
+						let path = '';
+
+						if (issue.path !== undefined) {
+							for (const segment of issue.path) {
+								const key = typeof segment === 'object' ? segment.key : segment;
+
+								if (typeof key === 'number') {
+									path += `[${key}]`;
+								} else if (typeof key === 'string') {
+									path += path === '' ? key : '.' + key;
+								}
+
+								(output.issues[path] ??= []).push(issue);
+							}
+						}
+					}
+				} else {
+					state.refreshes ??= {};
+
+					output.result = await run_remote_function(event, state, true, object, (d) => d, fn);
+				}
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					(state.remote_data ??= {})[__.id] = result;
+					(state.remote_data ??= {})[__.id] = output;
 				}
 
-				return result;
+				return output;
 			}
 		};
 
@@ -126,16 +167,18 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		Object.defineProperty(instance, 'result', {
-			get() {
-				try {
-					const { remote_data } = get_request_store().state;
-					return remote_data?.[__.id];
-				} catch {
-					return undefined;
+		for (const property of ['input', 'issues', 'result']) {
+			Object.defineProperty(instance, property, {
+				get() {
+					try {
+						const { remote_data } = get_request_store().state;
+						return remote_data?.[__.id]?.[property];
+					} catch {
+						return undefined;
+					}
 				}
-			}
-		});
+			});
+		}
 
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {

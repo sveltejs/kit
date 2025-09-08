@@ -1,4 +1,5 @@
-/** @import { RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+/** @import { FormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '__sveltekit/paths';
@@ -15,10 +16,11 @@ import {
 } from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { createAttachmentKey } from 'svelte/attachments';
 
 /**
  * Client-version of the `form` function from `$app/server`.
- * @template T
+ * @template {FormInput} T
  * @template U
  * @param {string} id
  * @returns {RemoteForm<T, U>}
@@ -31,6 +33,12 @@ export function form(id) {
 	function create_instance(key) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
+
+		/** @type {Record<string, string> | undefined} */
+		let input = $state(undefined);
+
+		/** @type {Record<string, StandardSchemaV1.Issue[]> | undefined} */
+		let issues = $state.raw(undefined);
 
 		/** @type {any} */
 		let result = $state.raw(started ? undefined : remote_responses[action_id]);
@@ -89,9 +97,11 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						result = devalue.parse(form_result.result, app.decoders);
+						({ input, issues, result } = devalue.parse(form_result.result, app.decoders));
 
-						if (form_result.refreshes) {
+						if (issues) {
+							// do nothing
+						} else if (form_result.refreshes) {
 							refresh_queries(form_result.refreshes, updates);
 						} else {
 							void invalidateAll();
@@ -212,7 +222,10 @@ export function form(id) {
 			};
 		};
 
-		instance.onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
+		instance[createAttachmentKey()] = (form) => {
+			const onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
+			form.addEventListener('submit', onsubmit);
+		};
 
 		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -271,6 +284,15 @@ export function form(id) {
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
+			},
+			input: {
+				get: () => input,
+				set: (v) => {
+					input = v;
+				}
+			},
+			issues: {
+				get: () => issues
 			},
 			result: {
 				get: () => result

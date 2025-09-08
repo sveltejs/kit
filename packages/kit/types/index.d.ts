@@ -1745,7 +1745,7 @@ declare module '@sveltejs/kit' {
 				submit: () => Promise<void> & {
 					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 				};
-			}) => void
+			}) => void | Promise<void>
 		): {
 			method: 'POST';
 			action: string;
@@ -2922,7 +2922,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends FormInput, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteForm<Input, Output>;
+	export function form<Input extends FormInput, Output>(validate: "unchecked", fn: (data: Input) => Output): RemoteForm<Input, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -2930,7 +2930,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<FormInput, Record<string, any>>, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<FormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
