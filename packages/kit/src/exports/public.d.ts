@@ -1718,33 +1718,44 @@ type FlattenInput<T, Prefix extends string> =
 		? { [key: string]: string }
 		: T extends Array<infer U>
 			? FlattenInput<U, `${Prefix}[${number}]`>
-			: T extends object
-				? {
-						[K in keyof T]: FlattenInput<
-							T[K],
-							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-						>;
-					}[keyof T]
-				: { [P in Prefix]: string };
+			: T extends File
+				? { [P in Prefix]: string }
+				: T extends object
+					? {
+							[K in keyof T]: FlattenInput<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T]
+					: { [P in Prefix]: string };
 
 type FlattenIssues<T, Prefix extends string> =
 	IsAny<T> extends true
 		? { [key: string]: StandardSchemaV1.Issue[] }
 		: T extends Array<infer U>
-			? FlattenIssues<U, `${Prefix}[${number}]`>
-			: T extends object
-				? {
-						[K in keyof T]: FlattenIssues<
-							T[K],
-							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-						>;
-					}[keyof T] & { [P in Prefix]: StandardSchemaV1.Issue[] }
-				: { [P in Prefix]: StandardSchemaV1.Issue[] };
+			? { [P in Prefix | `${Prefix}[${number}]`]: StandardSchemaV1.Issue[] } & FlattenIssues<
+					U,
+					`${Prefix}[${number}]`
+				>
+			: T extends File
+				? { [P in Prefix]: StandardSchemaV1.Issue[] }
+				: T extends object
+					? {
+							[K in keyof T]: FlattenIssues<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T]
+					: { [P in Prefix]: StandardSchemaV1.Issue[] };
+
+export interface FormInput {
+	[key: string]: FormDataEntryValue | FormDataEntryValue[] | FormInput | FormInput[];
+}
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteForm<Input, Output> = {
+export type RemoteForm<Input extends FormInput, Output> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
