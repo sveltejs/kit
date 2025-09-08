@@ -1725,17 +1725,13 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** The submitted values */
-		input:
-			| null
-			| {
-					[key in keyof Input]: Input[key] extends any[] ? string[] : string;
-			  };
+		input?: {
+			[key in keyof Input]: Input[key] extends any[] ? string[] : string;
+		};
 		/** Validation issues */
-		issues:
-			| null
-			| {
-					[key in keyof Input]: StandardSchemaV1.Issue[];
-			  };
+		issues?: {
+			[key in keyof Input]: StandardSchemaV1.Issue[];
+		};
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -2892,7 +2888,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<Record<string, FormDataEntryValue>, Record<string, any>>, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
