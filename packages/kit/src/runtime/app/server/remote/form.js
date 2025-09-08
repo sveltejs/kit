@@ -67,7 +67,6 @@ export function form(validate_or_fn, maybe_fn) {
 		const instance = {};
 
 		instance.method = 'POST';
-		instance.onsubmit = () => {};
 
 		Object.defineProperty(instance, 'enhance', {
 			value: () => {
@@ -186,6 +185,11 @@ export function form(validate_or_fn, maybe_fn) {
 		// On the server, buttonProps.pending is always 0
 		Object.defineProperty(button_props, 'pending', {
 			get: () => 0
+		});
+
+		Object.defineProperty(instance, 'preflight', {
+			// preflight is a noop on the server
+			value: () => {}
 		});
 
 		if (key == undefined) {

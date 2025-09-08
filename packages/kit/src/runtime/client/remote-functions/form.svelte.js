@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { FormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
+/** @import { FormInput, RemoteForm, RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { MaybePromise, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -46,6 +46,9 @@ export function form(id) {
 
 		/** @type {number} */
 		let pending_count = $state(0);
+
+		/** @type {StandardSchemaV1 | undefined} */
+		let preflight_schema = undefined;
 
 		/**
 		 * @param {FormData} data
@@ -206,13 +209,19 @@ export function form(id) {
 
 				event.preventDefault();
 
-				const data = create_form_data(form, event.submitter);
+				const form_data = create_form_data(form, event.submitter);
+				const data = convert_formdata(form_data);
+
+				if (preflight_schema) {
+					// TODO populate `issues`
+					// const validation = preflight_schema['~standard'].validate(data);
+				}
 
 				try {
 					await callback({
 						form,
-						data: convert_formdata(data),
-						submit: () => submit(data)
+						data,
+						submit: () => submit(form_data)
 					});
 				} catch (e) {
 					const error =
@@ -225,47 +234,53 @@ export function form(id) {
 
 		let attached = false;
 
-		instance[createAttachmentKey()] = (form) => {
-			if (attached) {
-				let message = `A form object can only be attached to a single \`<form>\` element`;
-				if (!key) {
-					const name = id.split('/').pop();
-					message += `. To create multiple instances, use \`${name}.for(key)\``;
+		/** @param {(event: SubmitEvent) => void} onsubmit */
+		function create_attachment(onsubmit) {
+			return (/** @type {HTMLFormElement} */ form) => {
+				if (attached) {
+					let message = `A form object can only be attached to a single \`<form>\` element`;
+					if (!key) {
+						const name = id.split('/').pop();
+						message += `. To create multiple instances, use \`${name}.for(key)\``;
+					}
+
+					throw new Error(message);
 				}
 
-				throw new Error(message);
-			}
+				attached = true;
 
-			attached = true;
+				form.addEventListener('submit', onsubmit);
 
-			const onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
-			form.addEventListener('submit', onsubmit);
+				form.addEventListener('input', (e) => {
+					const element =
+						/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (e.target);
 
-			form.addEventListener('input', (e) => {
-				const element = /** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (
-					e.target
-				);
+					let name = element.name;
+					if (!name) return;
 
-				let name = element.name;
-				if (!name) return;
+					const is_array = name.endsWith('[]');
+					if (is_array) name = name.slice(0, -2);
 
-				const is_array = name.endsWith('[]');
-				if (is_array) name = name.slice(0, -2);
+					(input ??= {})[name] = is_array
+						? Array.from(
+								document.querySelectorAll(`[name="${name}[]"]`),
+								(element) =>
+									/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (
+										element
+									).value
+							)
+						: element.value;
+				});
 
-				(input ??= {})[name] = is_array
-					? Array.from(
-							document.querySelectorAll(`[name="${name}[]"]`),
-							(element) =>
-								/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (element)
-									.value
-						)
-					: element.value;
-			});
-
-			return () => {
-				attached = false;
+				return () => {
+					attached = false;
+				};
 			};
-		};
+		}
+
+		instance[createAttachmentKey()] = create_attachment(
+			form_onsubmit(({ submit, form }) => submit().then(() => form.reset()))
+		);
 
 		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
 		const form_action_onclick = (callback) => {
@@ -340,13 +355,20 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
+			preflight: {
+				/** @type {RemoteForm<any, any>['preflight']} */
+				value: (schema) => {
+					preflight_schema = schema;
+					return instance;
+				}
+			},
 			enhance: {
 				/** @type {RemoteForm<any, any>['enhance']} */
 				value: (callback) => {
 					return {
 						method: 'POST',
 						action,
-						onsubmit: form_onsubmit(callback)
+						[createAttachmentKey()]: create_attachment(form_onsubmit(callback))
 					};
 				}
 			}
@@ -397,4 +419,12 @@ export function form(id) {
  */
 function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
+/**
+ *
+ * @param {*} callback
+ */
+function create_attachment(callback) {
+	return (/** @type {HTMLFormElement} */ form) => {};
 }

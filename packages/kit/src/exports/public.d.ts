@@ -1776,7 +1776,7 @@ export type RemoteForm<Input extends FormInput, Output> = {
 	): {
 		method: 'POST';
 		action: string;
-		onsubmit: (event: SubmitEvent) => void;
+		[attachment: symbol]: (node: HTMLFormElement) => void;
 	};
 	/**
 	 * Create an instance of the form for the given key.
@@ -1793,6 +1793,8 @@ export type RemoteForm<Input extends FormInput, Output> = {
 	 * ```
 	 */
 	for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
+	/** Preflight checks */
+	preflight(schema: StandardSchemaV1<Input, Output>): RemoteForm<Input, Output>;
 	/** The result of the form submission */
 	get result(): Output | undefined;
 	/** The number of pending submissions */

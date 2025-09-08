@@ -18,8 +18,7 @@
 
 <form
 	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
-		if (task === 'abort') return;
+		if (data.task === 'abort') return;
 		await submit();
 	})}
 >
@@ -28,8 +27,7 @@
 	<button
 		id="submit-btn-enhance-two"
 		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
-			if (task === 'abort') return;
+			if (data.task === 'abort') return;
 			await submit();
 		})}>Task Two (enhanced)</button
 	>
@@ -37,8 +35,7 @@
 
 <form
 	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
-		await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
+		await submit().updates(current_task.withOverride(() => data.task + ' (overridden)'));
 	})}
 >
 	<input id="input-task-override" name="task" />
@@ -46,8 +43,7 @@
 	<button
 		id="submit-btn-override-two"
 		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
-			await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
+			await submit().updates(current_task.withOverride(() => data.task + ' (overridden)'));
 		})}>Task Two (with override)</button
 	>
 </form>
@@ -55,7 +51,7 @@
 <!-- Test case for button with nested elements (issue #14159) -->
 <form
 	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
+		data.task;
 		await submit();
 	})}
 >
@@ -63,7 +59,7 @@
 	<button
 		id="submit-btn-nested-span"
 		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
+			data.task;
 			await submit();
 		})}
 	>
