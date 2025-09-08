@@ -82,8 +82,35 @@ export function convert_formdata(data) {
 			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
 		}
 
-		result[key] = is_array ? values : values[0];
+		deep_set(result, split_path(key), is_array ? values : values[0]);
 	}
 
 	return result;
+}
+
+const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
+
+/**
+ * @param {string} path
+ */
+export function split_path(path) {
+	if (!path_regex.test(path)) {
+		throw new Error(`Invalid path ${path}`);
+	}
+
+	return path.split(/\.|\[|\]/).filter(Boolean);
+}
+
+/**
+ * @param {Record<string, any>} object
+ * @param {string[]} keys
+ * @param {any} value
+ */
+export function deep_set(object, keys, value) {
+	for (let i = 0; i < keys.length - 1; i += 1) {
+		const key = keys[i];
+		object = object[key] ??= /^\d+$/.test(keys[i + 1]) ? [] : {};
+	}
+
+	object[keys[keys.length - 1]] = value;
 }

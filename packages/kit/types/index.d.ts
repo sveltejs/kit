@@ -1682,6 +1682,41 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
+	type IsAny<T> = 0 extends 1 & T ? true : false;
+
+	// Helper type to convert union to intersection
+	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+		? I
+		: never;
+
+	type FlattenInput<T, Prefix extends string> =
+		IsAny<T> extends true
+			? { [key: string]: string }
+			: T extends Array<infer U>
+				? FlattenInput<U, `${Prefix}[${number}]`>
+				: T extends object
+					? {
+							[K in keyof T]: FlattenInput<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T]
+					: { [P in Prefix]: string };
+
+	type FlattenIssues<T, Prefix extends string> =
+		IsAny<T> extends true
+			? { [key: string]: StandardSchemaV1.Issue[] }
+			: T extends Array<infer U>
+				? FlattenIssues<U, `${Prefix}[${number}]`>
+				: T extends object
+					? {
+							[K in keyof T]: FlattenIssues<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T] & { [P in Prefix]: StandardSchemaV1.Issue[] }
+					: { [P in Prefix]: StandardSchemaV1.Issue[] };
+
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
@@ -1725,13 +1760,9 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** The submitted values */
-		input?: {
-			[key in keyof Input]: Input[key] extends any[] ? string[] : string;
-		};
+		input: null | UnionToIntersection<FlattenInput<Input, ''>>;
 		/** Validation issues */
-		issues?: {
-			[key in keyof Input]: StandardSchemaV1.Issue[];
-		};
+		issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
