@@ -34,7 +34,7 @@ import { convert_formdata } from '../../../utils.js';
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
- * @template {StandardSchemaV1<Record<string, FormDataEntryValue>, Record<string, any>>} Schema
+ * @template {StandardSchemaV1<Record<string, FormDataEntryValue | FormDataEntryValue[]>, Record<string, any>>} Schema
  * @template Output
  * @overload
  * @param {Schema} validate

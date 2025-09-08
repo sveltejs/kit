@@ -2888,7 +2888,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<Record<string, FormDataEntryValue>, Record<string, any>>, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<Record<string, FormDataEntryValue | FormDataEntryValue[]>, Record<string, any>>, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
