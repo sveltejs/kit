@@ -223,8 +223,26 @@ export function form(id) {
 		};
 
 		instance[createAttachmentKey()] = (form) => {
+			// TODO enforce 1:1 relationship between <form> and function
+
 			const onsubmit = form_onsubmit(({ submit, form }) => submit().then(() => form.reset()));
 			form.addEventListener('submit', onsubmit);
+
+			form.addEventListener('input', (e) => {
+				const element = /** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (
+					e.target
+				);
+
+				let name = element.name;
+				if (!name) return;
+
+				const is_array = name.endsWith('[]');
+				if (is_array) name = name.slice(0, -2);
+
+				(input ??= {})[name] = is_array
+					? Array.from(document.querySelectorAll(`[name="${name}[]"]`), (element) => element.value)
+					: element.value;
+			});
 		};
 
 		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
