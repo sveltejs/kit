@@ -358,7 +358,7 @@ export function form(id) {
 	const instance = create_instance();
 
 	Object.defineProperty(instance, 'for', {
-		/** @type {RemoteForm<any, any>['for']} */
+		/** @type {RemoteForm<T, U>['for']} */
 		value: (key) => {
 			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
 

@@ -99,16 +99,14 @@ export function form(validate_or_fn, maybe_fn) {
 			fn: async (form_data) => {
 				const object = maybe_fn ? convert_formdata(form_data) : undefined;
 
-				/** @type {{ input?: Record<string, string>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
+				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
 				const output = {};
 
 				const { event, state } = get_request_store();
 				const issues = (await schema?.['~standard'].validate(object))?.issues;
 
 				if (issues !== undefined) {
-					/** @type {Record<string, string | string[]>} */
 					output.input = {};
-
 					output.issues = { $: [] };
 
 					for (let key of form_data.keys()) {
