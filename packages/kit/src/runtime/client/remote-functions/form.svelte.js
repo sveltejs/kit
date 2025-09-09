@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { FormInput, RemoteForm, RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteFunctionResponse } from 'types' */
+/** @import { FormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
