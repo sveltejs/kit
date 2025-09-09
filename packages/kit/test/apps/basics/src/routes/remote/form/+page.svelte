@@ -56,10 +56,7 @@
 <form
 	data-enhanced
 	{...enhanced.enhance(async ({ data, submit }) => {
-		console.group('enhanced');
-		console.log(data);
 		await submit().updates(get_message().withOverride((message) => message + ' (override)'));
-		console.groupEnd();
 	})}
 >
 	{#if enhanced.issues.message}
