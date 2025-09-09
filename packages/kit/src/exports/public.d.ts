@@ -1757,7 +1757,7 @@ export interface FormInput {
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteForm<Input extends FormInput, Output> = {
+export type RemoteForm<Input extends FormInput | void, Output> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 	[attachment: symbol]: (node: HTMLFormElement) => void;
 	method: 'POST';
