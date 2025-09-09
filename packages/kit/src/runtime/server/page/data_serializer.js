@@ -70,8 +70,13 @@ export function server_data_serializer(event, event_state, options) {
 	}
 
 	const strings = /** @type {string[]} */ ([]);
+	let max_nodes = -1;
 
 	return {
+		set_max_nodes(i) {
+			max_nodes = i;
+		},
+
 		add_node(i, node) {
 			try {
 				if (!node) {
@@ -94,6 +99,10 @@ export function server_data_serializer(event, event_state, options) {
 		get_data(csp) {
 			const open = `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>`;
 			const close = `</script>\n`;
+
+			if (max_nodes > -1) {
+				strings.length = max_nodes;
+			}
 
 			return {
 				data: `[${strings.join(',')}]`,
