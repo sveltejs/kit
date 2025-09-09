@@ -9,6 +9,7 @@
 
 <slot />
 
+<div id="root-layout">{data.rootlayout}</div>
 <footer>{data.foo.bar}</footer>
 
 <style>

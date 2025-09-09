@@ -324,6 +324,7 @@ test.describe('Errors', () => {
 	test('server-side error from load() is an Error', async ({ page }) => {
 		const response = await page.goto('/errors/load-error-server');
 
+		expect(await page.textContent('#root-layout')).toBe('rootlayout');
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Not found"'
