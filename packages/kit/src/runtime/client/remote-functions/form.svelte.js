@@ -35,11 +35,11 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string | string[]> | undefined} */
-		let input = $state(undefined);
+		/** @type {Record<string, string | string[]>} */
+		let input = $state({});
 
-		/** @type {Record<string, StandardSchemaV1.Issue[]> | undefined} */
-		let issues = $state.raw(undefined);
+		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+		let issues = $state.raw({});
 
 		/** @type {any} */
 		let result = $state.raw(started ? undefined : remote_responses[action_id]);
@@ -101,9 +101,9 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({ input, issues, result } = devalue.parse(form_result.result, app.decoders));
+						({ input = {}, issues = {}, result } = devalue.parse(form_result.result, app.decoders));
 
-						if (issues) {
+						if (issues.$) {
 							// do nothing
 						} else if (form_result.refreshes) {
 							refresh_queries(form_result.refreshes, updates);
@@ -419,12 +419,4 @@ export function form(id) {
  */
 function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
-}
-
-/**
- *
- * @param {*} callback
- */
-function create_attachment(callback) {
-	return (/** @type {HTMLFormElement} */ form) => {};
 }

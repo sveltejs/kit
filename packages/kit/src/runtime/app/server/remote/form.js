@@ -164,18 +164,29 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		for (const property of ['input', 'issues', 'result']) {
+		for (const property of ['input', 'issues']) {
 			Object.defineProperty(instance, property, {
 				get() {
 					try {
 						const { remote_data } = get_request_store().state;
-						return remote_data?.[__.id]?.[property];
+						return remote_data?.[__.id]?.[property] ?? {};
 					} catch {
 						return undefined;
 					}
 				}
 			});
 		}
+
+		Object.defineProperty(instance, 'result', {
+			get() {
+				try {
+					const { remote_data } = get_request_store().state;
+					return remote_data?.[__.id]?.result;
+				} catch {
+					return undefined;
+				}
+			}
+		});
 
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {

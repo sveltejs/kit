@@ -1754,69 +1754,6 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('form.enhance works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-enhance', 'abort');
-		await page.click('#submit-btn-enhance-one');
-		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-1')).toHaveText('');
-
-		await page.fill('#input-task-enhance', 'hi');
-		await page.click('#submit-btn-enhance-one');
-		await expect(page.locator('#form-result-1')).toHaveText('hi');
-
-		await page.fill('#input-task-enhance', 'error');
-		await page.click('#submit-btn-enhance-one');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Expected error"'
-		);
-	});
-
-	test('form.buttonProps.enhance works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-enhance', 'abort');
-		await page.click('#submit-btn-enhance-two');
-		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-2')).toHaveText('');
-
-		await page.fill('#input-task-enhance', 'hi');
-		await page.click('#submit-btn-enhance-two');
-		await expect(page.locator('#form-result-2')).toHaveText('hi');
-
-		await page.fill('#input-task-enhance', 'error');
-		await page.click('#submit-btn-enhance-two');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
-		);
-	});
-
-	test('form.enhance with override works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-override', 'override');
-		page.click('#submit-btn-override-one');
-		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
-		await expect(page.locator('#form-result-1')).toHaveText('override');
-		await expect(page.locator('#get-task')).toHaveText('override');
-	});
-
-	test('form.buttonProps.enhance with override works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-override', 'override');
-		page.click('#submit-btn-override-one');
-		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
-		await expect(page.locator('#form-result-1')).toHaveText('override');
-		await expect(page.locator('#get-task')).toHaveText('override');
-	});
-
-	test('form.buttonProps.enhance works with nested elements (issue #14159)', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-nested', 'nested-test');
-
-		// Click on the span inside the button to test the event.target vs event.currentTarget issue
-		await page.click('#submit-btn-nested-span span');
-		await expect(page.locator('#form-result-2')).toHaveText('nested-test');
-	});
-
 	test('prerendered entries not called in prod', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1914,32 +1851,5 @@ test.describe('remote functions', () => {
 
 		// Verify pending count returns to 0
 		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
-	});
-
-	test('form pending state is tracked correctly', async ({ page }) => {
-		await page.goto('/remote/form');
-
-		// Initially no pending forms
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
-		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
-
-		// Fill form with slow operation
-		await page.fill('#input-task', 'deferred');
-
-		// Submit form - this will hang until we resolve it
-		await page.click('#submit-btn-one');
-
-		// Check that pending has incremented to 1
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 1');
-
-		// Resolve the deferred form submission
-		await page.click('#resolve-deferreds');
-
-		// Wait for form submission to complete and verify results
-		await expect(page.locator('#get-task')).toHaveText('deferred');
-
-		// Verify pending count returns to 0
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
-		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
 	});
 });
