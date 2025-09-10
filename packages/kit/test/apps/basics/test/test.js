@@ -356,6 +356,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
 				JSON.stringify({
+					rootlayout: 'rootlayout',
 					foo: { bar: 'Custom layout' },
 					message: 'original + new',
 					x: 'a',
@@ -370,6 +371,7 @@ test.describe('Load', () => {
 				expect(await page.textContent('h1')).toBe('message: original + new');
 				expect(await page.textContent('pre')).toBe(
 					JSON.stringify({
+						rootlayout: 'rootlayout',
 						foo: { bar: 'Custom layout' },
 						message: 'original + new',
 						x: 'd',
@@ -776,23 +778,23 @@ test.describe('$app/stores', () => {
 		const foo = { bar: 'Custom layout' };
 
 		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
+			JSON.stringify({ rootlayout: 'rootlayout', foo, name: 'SvelteKit', value: 456, page: 'www' })
 		);
 
 		await clicknav('a[href="/store/data/zzz"]');
 		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
+			JSON.stringify({ rootlayout: 'rootlayout', foo, name: 'SvelteKit', value: 456, page: 'zzz' })
 		);
 
 		await clicknav('a[href="/store/data/xxx"]');
 		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+			JSON.stringify({ rootlayout: 'rootlayout', foo, name: 'SvelteKit', value: 123 })
 		);
 		expect(await page.textContent('#store-error')).toBe('Params = xxx');
 
 		await clicknav('a[href="/store/data/yyy"]');
 		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+			JSON.stringify({ rootlayout: 'rootlayout', foo, name: 'SvelteKit', value: 123 })
 		);
 		expect(await page.textContent('#store-error')).toBe('Params = yyy');
 	});
@@ -803,7 +805,12 @@ test.describe('$app/stores', () => {
 		javaScriptEnabled
 	}) => {
 		await page.goto('/store/data/foo?reset=true');
-		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
+		const stuff1 = {
+			foo: { bar: 'Custom layout' },
+			name: 'SvelteKit',
+			rootlayout: 'rootlayout',
+			value: 123
+		};
 		const stuff2 = { ...stuff1, foo: true, number: 2 };
 		const stuff3 = { ...stuff2 };
 		await page.goto('/store/data/www');
@@ -900,23 +907,23 @@ test.describe('$app/state', () => {
 		const foo = { bar: 'Custom layout' };
 
 		expect(await page.textContent('#state-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
+			'{"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"name":"SvelteKit","value":456,"page":"www"}'
 		);
 
 		await clicknav('a[href="/state/data/zzz"]');
 		expect(await page.textContent('#state-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
+			'{"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"name":"SvelteKit","value":456,"page":"zzz"}'
 		);
 
 		await clicknav('a[href="/state/data/xxx"]');
 		expect(await page.textContent('#state-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+			'{"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123}'
 		);
 		expect(await page.textContent('#state-error')).toBe('Params = xxx');
 
 		await clicknav('a[href="/state/data/yyy"]');
 		expect(await page.textContent('#state-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+			'{"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123}'
 		);
 		expect(await page.textContent('#state-error')).toBe('Params = yyy');
 	});
@@ -927,7 +934,12 @@ test.describe('$app/state', () => {
 		javaScriptEnabled
 	}) => {
 		await page.goto('/state/data/foo?reset=true');
-		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
+		const stuff1 = {
+			foo: { bar: 'Custom layout' },
+			name: 'SvelteKit',
+			rootlayout: 'rootlayout',
+			value: 123
+		};
 		const stuff2 = { ...stuff1, foo: true, number: 2 };
 		const stuff3 = { ...stuff2 };
 		await page.goto('/state/data/www');

@@ -190,26 +190,26 @@ test.describe('Shadowed pages', () => {
 	test('Parent data is present', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/parent');
 		await expect(page.locator('h2')).toHaveText(
-			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+			'Layout data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout"}'
 		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 
 		await clicknav('[href="/shadowed/parent?test"]');
 		await expect(page.locator('h2')).toHaveText(
-			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+			'Layout data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout"}'
 		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 
 		await clicknav('[href="/shadowed/parent/sub"]');
 		await expect(page.locator('h2')).toHaveText(
-			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+			'Layout data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout"}'
 		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"layout":"layout","sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 	});
 
