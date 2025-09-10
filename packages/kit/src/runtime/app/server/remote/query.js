@@ -79,7 +79,22 @@ export function query(validate_or_fn, maybe_fn) {
 
 		promise.catch(() => {});
 
-		promise.refresh = async () => {
+		/** @param {Output} value */
+		promise.set = (value) => {
+			const { state } = get_request_store();
+			const refreshes = state.refreshes;
+
+			if (!refreshes) {
+				throw new Error(
+					`Cannot call set on query '${__.name}' because it is not executed in the context of a command/form remote function`
+				);
+			}
+
+			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
+			refreshes[cache_key] = (state.remote_data ??= {})[cache_key] = Promise.resolve(value);
+		};
+
+		promise.refresh = () => {
 			const { state } = get_request_store();
 			const refreshes = state.refreshes;
 
@@ -90,7 +105,10 @@ export function query(validate_or_fn, maybe_fn) {
 			}
 
 			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
+			refreshes[cache_key] = promise;
+
+			// TODO we could probably just return promise here, but would need to update the types
+			return promise.then(() => {});
 		};
 
 		promise.withOverride = () => {

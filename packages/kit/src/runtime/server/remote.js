@@ -262,34 +262,35 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const refreshes = {
-			...state.refreshes,
-			...Object.fromEntries(
+		const refreshes = /** @type {Record<string, Promise<any>>} */ (state.refreshes);
+
+		for (const key of client_refreshes) {
+			if (refreshes[key] !== undefined) continue;
+
+			const [hash, name, payload] = key.split('/');
+
+			const loader = manifest._.remotes[hash];
+			const fn = (await loader?.())?.[name];
+
+			if (!fn) error(400, 'Bad Request');
+
+			refreshes[key] = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
+		}
+
+		if (Object.keys(refreshes).length === 0) {
+			return undefined;
+		}
+
+		return stringify(
+			Object.fromEntries(
 				await Promise.all(
-					client_refreshes.map(async (key) => {
-						const [hash, name, payload] = key.split('/');
-						const loader = manifest._.remotes[hash];
-
-						// TODO what do we do in this case? erroring after the mutation has happened is not great
-						if (!loader) error(400, 'Bad Request');
-
-						const module = await loader();
-						const fn = module[name];
-
-						if (!fn) error(400, 'Bad Request');
-
-						return [
-							key,
-							await with_request_store({ event, state }, () =>
-								fn(parse_remote_arg(payload, transport))
-							)
-						];
-					})
+					Object.entries(refreshes).map(async ([key, promise]) => [key, await promise])
 				)
-			)
-		};
-
-		return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined;
+			),
+			transport
+		);
 	}
 }
 

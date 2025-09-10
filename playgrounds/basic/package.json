@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && npm run package",
+		"build": "vite build",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepare": "svelte-kit sync",
@@ -29,7 +29,7 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.3.0",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.5",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.0",
 		"vite": "catalog:"

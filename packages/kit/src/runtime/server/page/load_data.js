@@ -1,12 +1,11 @@
 import { DEV } from 'esm-env';
-import * as devalue from 'devalue';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { record_span } from '../../telemetry/record_span.js';
-import { clarify_devalue_error, get_node_type } from '../utils.js';
 import { base64_encode, text_decoder } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
+import { get_node_type } from '../utils.js';
 
 /**
  * Calls the user's server `load` function.
@@ -176,7 +175,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		}
 	});
 
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		validate_load_response(result, `in ${node.server_id}`);
 	}
 
@@ -234,38 +233,11 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return await with_request_store({ event: traced_event, state: event_state }, () => {
-				/** @type {Record<string, any> | null} */
-				let data = null;
-
-				return load.call(null, {
+			return await with_request_store({ event: traced_event, state: event_state }, () =>
+				load.call(null, {
 					url: event.url,
 					params: event.params,
-					get data() {
-						if (data === null && server_data_node?.data != null) {
-							/** @type {Record<string, (value: any) => any>} */
-							const reducers = {};
-
-							/** @type {Record<string, (value: any) => any>} */
-							const revivers = {};
-
-							for (const key in event_state.transport) {
-								reducers[key] = event_state.transport[key].encode;
-								revivers[key] = event_state.transport[key].decode;
-							}
-
-							// run it through devalue so that the developer can't accidentally mutate it
-							try {
-								data = devalue.parse(devalue.stringify(server_data_node.data, reducers), revivers);
-							} catch (e) {
-								// @ts-expect-error
-								e.path = e.path.slice(1);
-								throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
-							}
-						}
-
-						return data;
-					},
+					data: server_data_node?.data ?? null,
 					route: event.route,
 					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 					setHeaders: event.setHeaders,
@@ -273,12 +245,12 @@ export async function load_data({
 					parent,
 					untrack: (fn) => fn(),
 					tracing: traced_event.tracing
-				});
-			});
+				})
+			);
 		}
 	});
 
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		validate_load_response(result, `in ${node.universal_id}`);
 	}
 

@@ -47,7 +47,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"polka": "^1.0.0-next.28",
-		"sirv": "^3.0.0",
+		"sirv": "^3.0.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},

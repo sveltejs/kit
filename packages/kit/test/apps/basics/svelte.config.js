@@ -37,6 +37,11 @@ const config = {
 			}
 		},
 
+		csrf: {
+			checkOrigin: true,
+			trustedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
+		},
+
 		prerender: {
 			entries: [
 				'*',

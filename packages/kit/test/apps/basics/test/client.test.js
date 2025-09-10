@@ -1660,6 +1660,17 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.set works', async ({ page }) => {
+		await page.goto('/remote');
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#set-btn');
+		await expect(page.locator('#count-result')).toHaveText('999 / 999 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1700,7 +1711,7 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('command does server-initiated single flight mutation', async ({ page }) => {
+	test('command does server-initiated single flight mutation (refresh)', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
@@ -1710,6 +1721,20 @@ test.describe('remote functions', () => {
 		await page.click('#multiply-server-refresh-btn');
 		await expect(page.locator('#command-result')).toHaveText('4');
 		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-set-btn');
+		await expect(page.locator('#command-result')).toHaveText('8');
+		await expect(page.locator('#count-result')).toHaveText('8 / 8 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});

@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.0
+### Minor Changes
+
+
+- feat: add `--preserve-output` flag to prevent deletion of the output directory before packaging ([#13055](https://github.com/sveltejs/kit/pull/13055))
+
 ## 2.4.1
 ### Patch Changes
 

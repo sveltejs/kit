@@ -1565,6 +1565,13 @@ test.describe('Serialization', () => {
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 	});
+
+	test('works with streaming', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
+	});
 });
 
 test.describe('getRequestEvent', () => {
@@ -1598,12 +1605,14 @@ test.describe('remote functions', () => {
 		await page.fill('#input-task', 'hi');
 		await page.click('#submit-btn-one');
 		await expect(page.locator('#form-result-1')).toHaveText('hi');
+		await expect(page.locator('#input-task')).toHaveValue('');
 	});
 
 	test('form error works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
 		await page.click('#submit-btn-one');
+		expect(await page.textContent('h1')).toBe('400');
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Expected error"'
 		);
@@ -1627,17 +1636,23 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'error');
 		await page.click('#submit-btn-two');
+		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
 		);
 	});
 
-	test('form.for(...) scopes form submission', async ({ page }) => {
+	test('form.for(...) scopes form submission', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 		await page.click('#submit-btn-item-foo');
 		await expect(page.locator('#form-result-foo')).toHaveText('foo');
 		await expect(page.locator('#form-result-bar')).toHaveText('');
 		await expect(page.locator('#form-result-1')).toHaveText('');
+
+		await page.click('#submit-btn-item-2-foo');
+		await expect(page.locator('#form-result-2-foo')).toHaveText('foo2');
+		await expect(page.locator('#form-result-foo')).toHaveText(javaScriptEnabled ? 'foo' : '');
+		await expect(page.locator('#form-result-2')).toHaveText('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {

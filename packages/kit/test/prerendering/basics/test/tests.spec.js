@@ -240,7 +240,7 @@ test('prerenders a page in a (group)', () => {
 
 test('injects relative service worker', () => {
 	const content = read('index.html');
-	expect(content).toMatch("navigator.serviceWorker.register('./service-worker.js')");
+	expect(content).toMatch("navigator.serviceWorker.register('./service-worker.js'");
 });
 
 test('define service worker variables', () => {

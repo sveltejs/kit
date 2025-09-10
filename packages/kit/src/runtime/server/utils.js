@@ -45,6 +45,13 @@ export function allowed_methods(mod) {
 }
 
 /**
+ * @param {import('types').SSROptions} options
+ */
+export function get_global_name(options) {
+	return DEV ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
+}
+
+/**
  * Return as a response that renders the error.html
  *
  * @param {import('types').SSROptions} options
@@ -100,10 +107,11 @@ export async function handle_fatal_error(event, state, options, error) {
  */
 export async function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
-		return error.body;
+		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
+		return { message: 'Unknown Error', ...error.body };
 	}
 
-	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+	if (DEV && typeof error == 'object') {
 		fix_stack_trace(error);
 	}
 
@@ -184,6 +192,59 @@ export function has_prerendered_path(manifest, pathname) {
 		manifest._.prerendered_routes.has(pathname) ||
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
+}
+
+/**
+ * Formats the error into a nice message with sanitized stack trace
+ * @param {number} status
+ * @param {Error} error
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ */
+export function format_server_error(status, error, event) {
+	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m`;
+
+	if (status === 404) {
+		return formatted_text;
+	}
+
+	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
+}
+
+/**
+ * In dev, tidy up stack traces by making paths relative to the current project directory
+ * @param {string} file
+ */
+let relative = (file) => file;
+
+if (DEV) {
+	try {
+		const path = await import('node:path');
+		const process = await import('node:process');
+
+		relative = (file) => path.relative(process.cwd(), file);
+	} catch {
+		// do nothing
+	}
+}
+
+/**
+ * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
+ * @param {Error} error
+ */
+export function clean_up_stack_trace(error) {
+	const stack_trace = (error.stack?.split('\n') ?? []).map((line) => {
+		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
+	});
+
+	// progressive enhancement for people who haven't configured kit.files.src to something else
+	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
+
+	if (last_line_from_src_code === -1) {
+		// default to the whole stack trace
+		return error.stack;
+	}
+
+	return stack_trace.slice(0, last_line_from_src_code + 1).join('\n');
 }
 
 /**

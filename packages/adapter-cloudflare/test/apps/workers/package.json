@@ -15,7 +15,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"server-side-dep": "file:server-side-dep",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.5",
 		"vite": "catalog:",
 		"wrangler": "^4.14.3"
 	},

@@ -1,5 +1,116 @@
 # @sveltejs/kit
 
+## 2.37.1
+### Patch Changes
+
+
+- fix: serialize server `load` data before passing to universal `load`, to handle mutations and promises ([#14298](https://github.com/sveltejs/kit/pull/14298))
+
+
+- fix: resolve_route prevent dropping a trailing slash of id ([#14294](https://github.com/sveltejs/kit/pull/14294))
+
+
+- fix: assign correct status code to form submission error on the client ([#14345](https://github.com/sveltejs/kit/pull/14345))
+
+
+- fix: un-proxy `form.result` ([#14346](https://github.com/sveltejs/kit/pull/14346))
+
+## 2.37.0
+### Minor Changes
+
+
+- feat: automatically resolve `query.refresh()` promises on the server ([#14332](https://github.com/sveltejs/kit/pull/14332))
+
+
+- feat: allow query.set() to be called on the server ([#14304](https://github.com/sveltejs/kit/pull/14304))
+
+
+### Patch Changes
+
+
+- fix: disable CSRF checks in dev ([#14335](https://github.com/sveltejs/kit/pull/14335))
+
+
+- fix: allow redirects to external URLs from within form functions ([#14329](https://github.com/sveltejs/kit/pull/14329))
+
+
+- fix: add type definitions for `query.set()` method to override the value of a remote query function ([#14303](https://github.com/sveltejs/kit/pull/14303))
+
+
+- fix: ensure uniqueness of `form.for(...)` across form functions ([#14327](https://github.com/sveltejs/kit/pull/14327))
+
+## 2.36.3
+### Patch Changes
+
+
+- fix: bump devalue ([#14323](https://github.com/sveltejs/kit/pull/14323))
+
+
+- chore: consolidate dev checks to use `esm-env` instead of a `__SVELTEKIT_DEV__` global ([#14308](https://github.com/sveltejs/kit/pull/14308))
+
+
+- fix: reset form inputs by default when using remote form functions ([#14322](https://github.com/sveltejs/kit/pull/14322))
+
+## 2.36.2
+### Patch Changes
+
+
+- chore: make config deprecation warnings more visible ([#14281](https://github.com/sveltejs/kit/pull/14281))
+
+
+- chore: remove redundant Not Found error message ([#14289](https://github.com/sveltejs/kit/pull/14289))
+
+
+- chore: deprecate `csrf.checkOrigin` in favour of `csrf.trustedOrigins: ['*']` ([#14281](https://github.com/sveltejs/kit/pull/14281))
+
+## 2.36.1
+### Patch Changes
+
+
+- fix: ensure importing from `$app/navigation` works in test files ([#14195](https://github.com/sveltejs/kit/pull/14195))
+
+## 2.36.0
+### Minor Changes
+
+
+- feat: add `csrf.trustedOrigins` configuration ([#14021](https://github.com/sveltejs/kit/pull/14021))
+
+
+### Patch Changes
+
+
+- fix: correctly decode custom types streamed from a server load function ([#14261](https://github.com/sveltejs/kit/pull/14261))
+
+
+- fix: add trailing slash pathname when generating typed routes ([#14065](https://github.com/sveltejs/kit/pull/14065))
+
+## 2.35.0
+### Minor Changes
+
+
+- feat: better server-side error logging ([#13990](https://github.com/sveltejs/kit/pull/13990))
+
+
+### Patch Changes
+
+
+- fix: ensure static error page is loaded correctly for custom user errors ([#13952](https://github.com/sveltejs/kit/pull/13952))
+
+## 2.34.1
+### Patch Changes
+
+
+- fix: support multiple cookies with the same name across different paths and domains ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: add link header when preloading font ([#14200](https://github.com/sveltejs/kit/pull/14200))
+
+
+- fix: `cookies.get(...)` returns `undefined` for a just-deleted cookie ([`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20))
+
+
+- fix: load env before prerender ([`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c))
+
 ## 2.34.0
 ### Minor Changes
 
