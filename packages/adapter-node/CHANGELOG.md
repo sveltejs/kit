@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.3.2
+### Patch Changes
+
+
+- fix: bump bundled sirv version to 3.0.2 ([#14385](https://github.com/sveltejs/kit/pull/14385))
+
+- Updated dependencies [[`e6c3171`](https://github.com/sveltejs/kit/commit/e6c317150d330413a7691c1b00dc94ce121fdb89)]:
+  - @sveltejs/kit@2.38.0
+
 ## 5.3.1
 ### Patch Changes
 
