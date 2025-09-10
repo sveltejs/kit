@@ -1605,6 +1605,30 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query redirects on page load (query in common layout)', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
+	});
+
+	test('query redirects on page load (query on page)', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
 	test('form works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'hi');
