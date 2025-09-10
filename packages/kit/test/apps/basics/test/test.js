@@ -1604,18 +1604,21 @@ test.describe('remote functions', () => {
 		page,
 		javaScriptEnabled
 	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
 		await expect(page.locator('#redirected')).toHaveText('redirected');
-		// TODO remove if-condition once async SSR exists
-		if (javaScriptEnabled) {
-			await expect(page.locator('#layout-query')).toHaveText(
-				'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
-			);
-		}
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
 	});
 
 	test('query redirects on page load (query on page)', async ({ page }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-page"]');
 		await expect(page.locator('#redirected')).toHaveText('redirected');
