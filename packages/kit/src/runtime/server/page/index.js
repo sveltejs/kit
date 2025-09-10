@@ -195,8 +195,10 @@ export async function render_page(
 						}
 					});
 
-					data_serializer.add_node(i, server_data);
-					data_serializer_json?.add_node(i, server_data);
+					if (node) {
+						data_serializer.add_node(i, server_data);
+						data_serializer_json?.add_node(i, server_data);
+					}
 
 					return server_data;
 				} catch (e) {
@@ -348,7 +350,8 @@ export async function render_page(
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
 			fetched,
-			data_serializer
+			data_serializer:
+				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully
