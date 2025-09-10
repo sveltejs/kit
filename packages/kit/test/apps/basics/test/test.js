@@ -246,6 +246,11 @@ test.describe('Load', () => {
 		);
 	});
 
+	test('Server data serialization removes empty nodes', async ({ page }) => {
+		await page.goto('/load/serialization-empty-node');
+		expect(await page.textContent('h1')).toBe('42');
+	});
+
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requests = [];
