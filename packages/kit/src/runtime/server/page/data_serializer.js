@@ -17,60 +17,67 @@ import {
  */
 export function server_data_serializer(event, event_state, options) {
 	let promise_id = 1;
+	let max_nodes = -1;
 
 	const iterator = create_async_iterator();
 	const global = get_global_name(options);
 
-	/** @param {any} thing */
-	function replacer(thing) {
-		if (typeof thing?.then === 'function') {
-			const id = promise_id++;
+	/** @param {number} index */
+	function get_replacer(index) {
+		/** @param {any} thing */
+		return function replacer(thing) {
+			if (typeof thing?.then === 'function') {
+				const id = promise_id++;
 
-			const promise = thing
-				.then(/** @param {any} data */ (data) => ({ data }))
-				.catch(
-					/** @param {any} error */ async (error) => ({
-						error: await handle_error_and_jsonify(event, event_state, options, error)
-					})
-				)
-				.then(
-					/**
-					 * @param {{data: any; error: any}} result
-					 */
-					async ({ data, error }) => {
-						let str;
-						try {
-							str = devalue.uneval(error ? [, error] : [data], replacer);
-						} catch {
-							error = await handle_error_and_jsonify(
-								event,
-								event_state,
-								options,
-								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
-							);
-							data = undefined;
-							str = devalue.uneval([, error], replacer);
+				const promise = thing
+					.then(/** @param {any} data */ (data) => ({ data }))
+					.catch(
+						/** @param {any} error */ async (error) => ({
+							error: await handle_error_and_jsonify(event, event_state, options, error)
+						})
+					)
+					.then(
+						/**
+						 * @param {{data: any; error: any}} result
+						 */
+						async ({ data, error }) => {
+							let str;
+							try {
+								str = devalue.uneval(error ? [, error] : [data], replacer);
+							} catch {
+								error = await handle_error_and_jsonify(
+									event,
+									event_state,
+									options,
+									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+								);
+								data = undefined;
+								str = devalue.uneval([, error], replacer);
+							}
+
+							if (index >= max_nodes) {
+								return '';
+							}
+
+							return `${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})`;
 						}
+					);
 
-						return `${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})`;
+				iterator.add(promise);
+
+				return `${global}.defer(${id})`;
+			} else {
+				for (const key in options.hooks.transport) {
+					const encoded = options.hooks.transport[key].encode(thing);
+					if (encoded) {
+						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 					}
-				);
-
-			iterator.add(promise);
-
-			return `${global}.defer(${id})`;
-		} else {
-			for (const key in options.hooks.transport) {
-				const encoded = options.hooks.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 				}
 			}
-		}
+		};
 	}
 
 	const strings = /** @type {string[]} */ ([]);
-	let max_nodes = -1;
 
 	return {
 		set_max_nodes(i) {
@@ -88,7 +95,7 @@ export function server_data_serializer(event, event_state, options) {
 				const payload = { type: 'data', data: node.data, uses: serialize_uses(node) };
 				if (node.slash) payload.slash = node.slash;
 
-				strings[i] = devalue.uneval(payload, replacer);
+				strings[i] = devalue.uneval(payload, get_replacer(i));
 			} catch (e) {
 				// @ts-expect-error
 				e.path = e.path.slice(1);
