@@ -55,7 +55,7 @@ export function server_data_serializer(event, event_state, options) {
 								str = devalue.uneval([, error], replacer);
 							}
 
-							if (index >= max_nodes) {
+							if (max_nodes > -1 && index >= max_nodes) {
 								return '';
 							}
 
