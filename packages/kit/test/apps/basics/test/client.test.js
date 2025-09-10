@@ -102,17 +102,14 @@ test.describe('Load', () => {
 	}) => {
 		await page.goto('/load/server-data-reuse/with-server-load');
 		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ rootlayout: 'rootlayout', foo: { bar: 'Custom layout' }, server: true })
+			JSON.stringify({ foo: { bar: 'Custom layout' }, server: true })
 		);
 		await app.goto('/load/server-data-reuse/no-load');
-		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ rootlayout: 'rootlayout', foo: { bar: 'Custom layout' } })
-		);
+		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 
 		await page.goto('/load/server-data-reuse/with-changing-parent/with-server-load');
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({
-				rootlayout: 'rootlayout',
 				foo: { bar: 'Custom layout' },
 				title: '/load/server-data-reuse/with-changing-parent/with-server-load',
 				server: true
@@ -121,7 +118,6 @@ test.describe('Load', () => {
 		await app.goto('/load/server-data-reuse/with-changing-parent/no-load');
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({
-				rootlayout: 'rootlayout',
 				foo: { bar: 'Custom layout' },
 				title: '/load/server-data-reuse/with-changing-parent/no-load'
 			})
