@@ -225,59 +225,6 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 {/if}
 ```
 
-## query.batch
-
-`query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem: rather than each query resulting in a separate database call (for example), simultaneous queries are grouped together.
-
-On the server, the callback receives an array of the arguments the function was called with. It must return a function of the form `(input: Input, index: number) => Output`. SvelteKit will then call this with each of the input arguments to resolve the individual calls with their results.
-
-```js
-/// file: weather.remote.js
-// @filename: ambient.d.ts
-declare module '$lib/server/database' {
-	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
-}
-// @filename: index.js
-// ---cut---
-import * as v from 'valibot';
-import { query } from '$app/server';
-import * as db from '$lib/server/database';
-
-export const getWeather = query.batch(v.string(), async (cities) => {
-	const weather = await db.sql`
-		SELECT * FROM weather
-		WHERE city = ANY(${cities})
-	`;
-	const weatherMap = new Map(weather.map(w => [w.city, w]));
-
-	return (city) => weatherMap.get(city);
-});
-```
-
-```svelte
-<!--- file: Weather.svelte --->
-<script>
-	import CityWeather from './CityWeather.svelte';
-	import { getWeather } from './weather.remote.js';
-
-	let { cities } = $props();
-	let limit = $state(5);
-</script>
-
-<h2>Weather</h2>
-
-{#each cities.slice(0, limit) as city}
-	<h3>{city.name}</h3>
-	<CityWeather weather={await getWeather(city.id)} />
-{/each}
-
-{#if cities.length > limit}
-	<button onclick={() => limit += 5}>
-		Load more
-	</button>
-{/if}
-```
-
 ## query.stream
 
 `query.stream` allows you to stream continuous data from the server to the client.
