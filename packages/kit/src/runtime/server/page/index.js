@@ -197,8 +197,9 @@ export async function render_page(
 
 					if (node) {
 						data_serializer.add_node(i, server_data);
-						data_serializer_json?.add_node(i, server_data);
 					}
+					
+					data_serializer_json?.add_node(i, server_data);
 
 					return server_data;
 				} catch (e) {
