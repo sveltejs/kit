@@ -246,7 +246,7 @@ test.describe('Load', () => {
 		);
 	});
 
-	test.only('Server data serialization removes empty nodes', async ({ page }) => {
+	test('Server data serialization removes empty nodes', async ({ page }) => {
 		await page.goto('/load/serialization-empty-node');
 		expect(await page.textContent('h1')).toBe('42');
 	});
