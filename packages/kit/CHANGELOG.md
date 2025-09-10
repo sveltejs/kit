@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.38.0
+### Minor Changes
+
+
+- feat: add new remote function `query.batch` ([#14272](https://github.com/sveltejs/kit/pull/14272))
+
 ## 2.37.1
 ### Patch Changes
 

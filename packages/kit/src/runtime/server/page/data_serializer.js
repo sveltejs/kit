@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import {
 	clarify_devalue_error,
@@ -107,7 +108,7 @@ export function server_data_serializer(event, event_state, options) {
 			const close = `</script>\n`;
 
 			return {
-				data: `[${(max_nodes > -1 ? strings.slice(0, max_nodes) : strings).join(',')}]`,
+				data: `[${compact(max_nodes > -1 ? strings.slice(0, max_nodes) : strings).join(',')}]`,
 				chunks:
 					promise_id > 1
 						? iterator.iterate(({ index, str }) => {
