@@ -55,11 +55,10 @@ export function server_data_serializer(event, event_state, options) {
 								str = devalue.uneval([, error], replacer);
 							}
 
-							if (max_nodes > -1 && index >= max_nodes) {
-								return '';
-							}
-
-							return `${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})`;
+							return {
+								index,
+								str: `${global}.resolve(${id}, ${str.includes('app.decode') ? `(app) => ${str}` : `() => ${str}`})`
+							};
 						}
 					);
 
@@ -107,13 +106,18 @@ export function server_data_serializer(event, event_state, options) {
 			const open = `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>`;
 			const close = `</script>\n`;
 
-			if (max_nodes > -1) {
-				strings.length = max_nodes;
-			}
-
 			return {
-				data: `[${strings.join(',')}]`,
-				chunks: promise_id > 1 ? iterator.iterate((str) => open + str + close) : null
+				data: `[${(max_nodes > -1 ? strings.slice(0, max_nodes) : strings).join(',')}]`,
+				chunks:
+					promise_id > 1
+						? iterator.iterate(({ index, str }) => {
+								if (max_nodes > -1 && index >= max_nodes) {
+									return '';
+								}
+
+								return open + str + close;
+							})
+						: null
 			};
 		}
 	};
