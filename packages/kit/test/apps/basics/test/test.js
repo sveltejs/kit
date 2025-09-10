@@ -1615,7 +1615,7 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('query redirects on page load (query on page)', async ({ page }) => {
+	test('query redirects on page load (query on page)', async ({ page, javaScriptEnabled }) => {
 		// TODO remove once async SSR exists
 		if (!javaScriptEnabled) return;
 
