@@ -904,8 +904,6 @@ test.describe('$app/state', () => {
 	test('page state contains data', async ({ page, clicknav }) => {
 		await page.goto('/state/data/www');
 
-		const foo = { bar: 'Custom layout' };
-
 		expect(await page.textContent('#state-data')).toBe(
 			'{"rootlayout":"rootlayout","foo":{"bar":"Custom layout"},"name":"SvelteKit","value":456,"page":"www"}'
 		);
