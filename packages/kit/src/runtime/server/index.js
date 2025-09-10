@@ -1,11 +1,27 @@
-import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
+import { respond, resolve_websocket_hooks } from './respond.js';
+import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { prerendering } from '__sveltekit/environment';
 import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
+import {
+	set_read_implementation,
+	set_manifest,
+	set_peers,
+	set_publish_implementation
+} from '__sveltekit/server';
+
+/** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
+const prerender_env_handler = {
+	get({ type }, prop) {
+		throw new Error(
+			`Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`
+		);
+	}
+};
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -29,7 +45,7 @@ export class Server {
 	/**
 	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
 	 */
-	async init({ env, read }) {
+	async init({ env, read, peers, publish }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -76,6 +92,14 @@ export class Server {
 			};
 
 			set_read_implementation(wrapped_read);
+		}
+
+		if (peers) {
+			set_peers(peers);
+		}
+
+		if (publish) {
+			set_publish_implementation(publish);
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,
@@ -147,6 +171,18 @@ export class Server {
 	 */
 	async respond(request, options) {
 		return respond(request, this.#options, this.#manifest, {
+			...options,
+			error: false,
+			depth: 0
+		});
+	}
+
+	/**
+	 * @param {Request} request
+	 * @param {import('types').RequestOptions} options
+	 */
+	resolveWebSocketHooks(request, options) {
+		return resolve_websocket_hooks(request, this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0

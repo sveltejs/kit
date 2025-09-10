@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { parse_as_bytes } from '../utils.js';
+import { parse_as_bytes } from './utils.js';
 
 describe('parse_as_bytes', () => {
 	test('parses correctly', () => {

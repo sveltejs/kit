@@ -44,6 +44,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
+		"crossws": "^0.3.4",
 		"@cloudflare/workers-types": "^4.20250507.0",
 		"worktop": "0.8.0-next.18"
 	},

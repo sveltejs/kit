@@ -527,12 +527,24 @@ async function kit({ svelte_config }) {
 
 						export let manifest = null;
 
+						export let peers = null;
+
+						export let publish_implementation = null;
+
 						export function set_read_implementation(fn) {
 							read_implementation = fn;
 						}
 
 						export function set_manifest(_) {
 							manifest = _;
+						}
+
+						export function set_peers(_) {
+							peers = _;
+						}
+
+						export function set_publish_implementation(fn) {
+							publish_implementation = fn;
 						}
 					`;
 				}

@@ -10,6 +10,11 @@ test('worker', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
+test('WebSockets work', async ({ page }) => {
+	await page.goto('/ws');
+	await expect(page.locator('p')).toContainText('connected');
+});
+
 test('ctx', async ({ request }) => {
 	const res = await request.get('/ctx');
 	expect(await res.text()).toBe('ctx works');
