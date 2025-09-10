@@ -413,7 +413,9 @@ declare module '@sveltejs/kit' {
 			 *
 			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
 			 *
-			 * **Warning**: Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 *
+			 * CSRF checks only apply in production, not in local development.
 			 * @default []
 			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
 			 */
@@ -1779,6 +1781,13 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
+		 * On the client, this function will update the value of the query without re-fetching it.
+		 *
+		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
+		 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+		 */
+		set(value: T): void;
+		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
@@ -1798,7 +1807,7 @@ declare module '@sveltejs/kit' {
 		 *   await submit().updates(
 		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
 		 *   );
-		 * }}>
+		 * })}>
 		 *   <input type="text" name="text" />
 		 *   <button type="submit">Add Todo</button>
 		 * </form>
@@ -2909,6 +2918,24 @@ declare module '$app/server' {
 	 * @since 2.27
 	 */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	export namespace query {
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.35
+		 */
+		function batch<Input, Output>(validate: "unchecked", fn: (args: Input[]) => MaybePromise<(arg: Input, idx: number) => Output>): RemoteQueryFunction<Input, Output>;
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.35
+		 */
+		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
@@ -3083,7 +3110,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
 	 */
 	export const files: string[];
 	/**

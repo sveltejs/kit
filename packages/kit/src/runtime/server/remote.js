@@ -60,12 +60,57 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	let form_client_refreshes;
 
 	try {
+		if (info.type === 'query_batch') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
+			/** @type {{ payloads: string[] }} */
+			const { payloads } = await event.request.json();
+
+			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
+			const get_result = await with_request_store({ event, state }, () => info.run(args));
+			const results = await Promise.all(
+				args.map(async (arg, i) => {
+					try {
+						return { type: 'result', data: get_result(arg, i) };
+					} catch (error) {
+						return {
+							type: 'error',
+							error: await handle_error_and_jsonify(event, state, options, error),
+							status:
+								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+						};
+					}
+				})
+			);
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(results, transport)
+				})
+			);
+		}
+
 		if (info.type === 'form') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`form\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
 			if (!is_form_content_type(event.request)) {
 				throw new SvelteKitError(
 					415,
 					'Unsupported Media Type',
-					`Form actions expect form-encoded data — received ${event.request.headers.get(
+					`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
 						'content-type'
 					)}`
 				);
@@ -149,34 +194,35 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const refreshes = {
-			...state.refreshes,
-			...Object.fromEntries(
+		const refreshes = /** @type {Record<string, Promise<any>>} */ (state.refreshes);
+
+		for (const key of client_refreshes) {
+			if (refreshes[key] !== undefined) continue;
+
+			const [hash, name, payload] = key.split('/');
+
+			const loader = manifest._.remotes[hash];
+			const fn = (await loader?.())?.default?.[name];
+
+			if (!fn) error(400, 'Bad Request');
+
+			refreshes[key] = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
+		}
+
+		if (Object.keys(refreshes).length === 0) {
+			return undefined;
+		}
+
+		return stringify(
+			Object.fromEntries(
 				await Promise.all(
-					client_refreshes.map(async (key) => {
-						const [hash, name, payload] = key.split('/');
-						const loader = manifest._.remotes[hash];
-
-						// TODO what do we do in this case? erroring after the mutation has happened is not great
-						if (!loader) error(400, 'Bad Request');
-
-						const module = await loader();
-						const fn = module.default[name];
-
-						if (!fn) error(400, 'Bad Request');
-
-						return [
-							key,
-							await with_request_store({ event, state }, () =>
-								fn(parse_remote_arg(payload, transport))
-							)
-						];
-					})
+					Object.entries(refreshes).map(async ([key, promise]) => [key, await promise])
 				)
-			)
-		};
-
-		return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined;
+			),
+			transport
+		);
 	}
 }
 

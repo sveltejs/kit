@@ -4,6 +4,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { get_status } from '../../../utils/error.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
+import { server_data_serializer } from './data_serializer.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -45,6 +46,7 @@ export async function respond_with_error({
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
+		const data_serializer = server_data_serializer(event, event_state, options);
 
 		if (ssr) {
 			state.error = true;
@@ -59,6 +61,7 @@ export async function respond_with_error({
 			});
 
 			const server_data = await server_data_promise;
+			data_serializer.add_node(0, server_data);
 
 			const data = await load_data({
 				event,
@@ -101,7 +104,8 @@ export async function respond_with_error({
 			fetched,
 			event,
 			event_state,
-			resolve_opts
+			resolve_opts,
+			data_serializer
 		});
 	} catch (e) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,

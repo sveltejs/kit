@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 5.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails from an edge function ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
 ## 5.2.2
 ### Patch Changes
 

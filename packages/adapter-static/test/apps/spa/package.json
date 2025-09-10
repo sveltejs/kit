@@ -13,7 +13,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"sirv-cli": "^3.0.0",
-		"svelte": "^5.35.5",
+		"svelte": "^5.38.5",
 		"vite": "catalog:"
 	},
 	"type": "module"

@@ -35,12 +35,12 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
+import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-/* global __SVELTEKIT_DEV__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -74,32 +74,34 @@ export async function internal_respond(request, options, manifest, state) {
 	const is_data_request = has_data_suffix(url.pathname);
 	const remote_id = get_remote_id(url);
 
-	const request_origin = request.headers.get('origin');
+	if (!DEV) {
+		const request_origin = request.headers.get('origin');
 
-	if (remote_id) {
-		if (request.method !== 'GET' && request_origin !== url.origin) {
-			const message = 'Cross-site remote requests are forbidden';
-			return json({ message }, { status: 403 });
-		}
-	} else if (options.csrf_check_origin) {
-		const forbidden =
-			is_form_content_type(request) &&
-			(request.method === 'POST' ||
-				request.method === 'PUT' ||
-				request.method === 'PATCH' ||
-				request.method === 'DELETE') &&
-			request_origin !== url.origin &&
-			(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
-
-		if (forbidden) {
-			const message = `Cross-site ${request.method} form submissions are forbidden`;
-			const opts = { status: 403 };
-
-			if (request.headers.get('accept') === 'application/json') {
-				return json({ message }, opts);
+		if (remote_id) {
+			if (request.method !== 'GET' && request_origin !== url.origin) {
+				const message = 'Cross-site remote requests are forbidden';
+				return json({ message }, { status: 403 });
 			}
+		} else if (options.csrf_check_origin) {
+			const forbidden =
+				is_form_content_type(request) &&
+				(request.method === 'POST' ||
+					request.method === 'PUT' ||
+					request.method === 'PATCH' ||
+					request.method === 'DELETE') &&
+				request_origin !== url.origin &&
+				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
 
-			return text(message, opts);
+			if (forbidden) {
+				const message = `Cross-site ${request.method} form submissions are forbidden`;
+				const opts = { status: 403 };
+
+				if (request.headers.get('accept') === 'application/json') {
+					return json({ message }, opts);
+				}
+
+				return text(message, opts);
+			}
 		}
 	}
 
@@ -167,7 +169,7 @@ export async function internal_respond(request, options, manifest, state) {
 		request,
 		route: { id: null },
 		setHeaders: (new_headers) => {
-			if (__SVELTEKIT_DEV__) {
+			if (DEV) {
 				validateHeaders(new_headers);
 			}
 
@@ -541,7 +543,8 @@ export async function internal_respond(request, options, manifest, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					resolve_opts
+					resolve_opts,
+					data_serializer: server_data_serializer(event, event_state, options)
 				});
 			}
 

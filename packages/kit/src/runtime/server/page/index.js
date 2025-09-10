@@ -10,10 +10,10 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
+import { server_data_serializer, server_data_serializer_json } from './data_serializer.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
 import { get_remote_action, handle_remote_form_post } from '../remote.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
@@ -147,7 +147,8 @@ export async function render_page(
 				options,
 				manifest,
 				state,
-				resolve_opts
+				resolve_opts,
+				data_serializer: server_data_serializer(event, event_state, options)
 			});
 		}
 
@@ -156,6 +157,12 @@ export async function render_page(
 
 		/** @type {Error | null} */
 		let load_error = null;
+
+		const data_serializer = server_data_serializer(event, event_state, options);
+		const data_serializer_json =
+			state.prerendering && should_prerender_data
+				? server_data_serializer_json(event, event_state, options)
+				: null;
 
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
 		const server_promises = nodes.data.map((node, i) => {
@@ -172,7 +179,7 @@ export async function render_page(
 						throw action_result.error;
 					}
 
-					return await load_server_data({
+					const server_data = await load_server_data({
 						event,
 						event_state,
 						state,
@@ -187,6 +194,11 @@ export async function render_page(
 							return data;
 						}
 					});
+
+					data_serializer.add_node(i, server_data);
+					data_serializer_json?.add_node(i, server_data);
+
+					return server_data;
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
 					throw load_error;
@@ -287,7 +299,8 @@ export async function render_page(
 									data: null,
 									server_data: null
 								}),
-								fetched
+								fetched,
+								data_serializer: server_data_serializer(event, event_state, options)
 							});
 						}
 					}
@@ -303,14 +316,9 @@ export async function render_page(
 			}
 		}
 
-		if (state.prerendering && should_prerender_data) {
+		if (state.prerendering && data_serializer_json) {
 			// ndjson format
-			let { data, chunks } = get_data_json(
-				event,
-				event_state,
-				options,
-				branch.map((node) => node?.server_data)
-			);
+			let { data, chunks } = data_serializer_json.get_data();
 
 			if (chunks) {
 				for await (const chunk of chunks) {
@@ -339,7 +347,8 @@ export async function render_page(
 			error: null,
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
-			fetched
+			fetched,
+			data_serializer
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully
