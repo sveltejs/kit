@@ -117,8 +117,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			const form_data = await event.request.formData();
-			form_client_refreshes = JSON.parse(
-				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
+			form_client_refreshes = /** @type {string[]} */ (
+				JSON.parse(/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]')
 			);
 			form_data.delete('sveltekit:remote_refreshes');
 
@@ -129,7 +129,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(/** @type {string[]} */ (form_client_refreshes))
+					refreshes: await serialize_refreshes(form_client_refreshes)
 				})
 			);
 		}
@@ -194,7 +194,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const refreshes = /** @type {Record<string, Promise<any>>} */ (state.refreshes);
+		const refreshes = state.refreshes ?? {};
 
 		for (const key of client_refreshes) {
 			if (refreshes[key] !== undefined) continue;

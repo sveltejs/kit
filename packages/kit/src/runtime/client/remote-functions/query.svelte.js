@@ -83,9 +83,7 @@ export function query_batch(id) {
 						}
 
 						if (result.type === 'redirect') {
-							// TODO double-check this
 							await goto(result.location);
-							await new Promise((r) => setTimeout(r, 100));
 							throw new Redirect(307, result.location);
 						}
 

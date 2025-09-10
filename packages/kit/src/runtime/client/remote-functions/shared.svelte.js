@@ -21,13 +21,7 @@ export async function remote_request(url) {
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'redirect') {
-		// resource_cache.delete(cache_key);
-		// version++;
-		// await goto(result.location);
-		// /** @type {Query<any>} */ (resource).refresh();
-		// TODO double-check this
 		await goto(result.location);
-		await new Promise((r) => setTimeout(r, 100));
 		throw new Redirect(307, result.location);
 	}
 

@@ -1600,6 +1600,27 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query redirects on page load (query in common layout)', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		// TODO remove if-condition once async SSR exists
+		if (javaScriptEnabled) {
+			await expect(page.locator('#layout-query')).toHaveText(
+				'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+			);
+		}
+	});
+
+	test('query redirects on page load (query on page)', async ({ page }) => {
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
 	test('form works', async ({ page }) => {
 		await page.goto('/remote/form');
 		await page.fill('#input-task', 'hi');
