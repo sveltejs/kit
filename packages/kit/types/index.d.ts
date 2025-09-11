@@ -2123,10 +2123,6 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
-		remotes: Array<{
-			file: string;
-			hash: string;
-		}>;
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}

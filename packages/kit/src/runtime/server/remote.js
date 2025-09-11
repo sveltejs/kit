@@ -43,7 +43,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	if (!remotes[hash]) error(404);
 
 	const module = await remotes[hash]();
-	const fn = module[name];
+	const fn = module.default[name];
 
 	if (!fn) error(404);
 
@@ -176,13 +176,19 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			});
 		}
 
+		const status =
+			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: await handle_error_and_jsonify(event, state, options, error),
-				status: error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+				status
 			}),
 			{
+				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
+				// Errors at runtime will be passed to the client and are handled there
+				status: state.prerendering ? status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -202,7 +208,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const [hash, name, payload] = key.split('/');
 
 			const loader = manifest._.remotes[hash];
-			const fn = (await loader?.())?.[name];
+			const fn = (await loader?.())?.default?.[name];
 
 			if (!fn) error(400, 'Bad Request');
 
@@ -254,7 +260,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.[name]);
+	let form = /** @type {RemoteForm<any>} */ (module?.default[name]);
 
 	if (!form) {
 		event.setHeaders({
