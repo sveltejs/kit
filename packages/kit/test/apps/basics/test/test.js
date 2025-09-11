@@ -246,6 +246,11 @@ test.describe('Load', () => {
 		);
 	});
 
+	test('Server data serialization removes empty nodes', async ({ page }) => {
+		await page.goto('/load/serialization-empty-node');
+		expect(await page.textContent('h1')).toBe('42');
+	});
+
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -1598,6 +1603,30 @@ test.describe('remote functions', () => {
 		if (javaScriptEnabled) {
 			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		}
+	});
+
+	test('query redirects on page load (query in common layout)', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
+	});
+
+	test('query redirects on page load (query on page)', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
 	test('form works', async ({ page }) => {

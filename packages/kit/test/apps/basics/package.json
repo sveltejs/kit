@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"@opentelemetry/api": "^1.9.0",
-		"@opentelemetry/sdk-node": "^0.203.0",
+		"@opentelemetry/sdk-node": "^0.205.0",
 		"@opentelemetry/sdk-trace-node": "^2.0.1",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
