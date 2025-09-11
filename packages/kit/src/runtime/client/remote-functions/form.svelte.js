@@ -51,6 +51,33 @@ export function form(id) {
 		let preflight_schema = undefined;
 
 		/**
+		 * @param {HTMLFormElement} form
+		 * @param {FormData} form_data
+		 * @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback
+		 */
+		async function handle_submit(form, form_data, callback) {
+			const data = convert_formdata(form_data);
+
+			const validated = await preflight_schema?.['~standard'].validate(data);
+
+			if (validated?.issues) {
+				// TODO populate `issues`
+			}
+
+			try {
+				await callback({
+					form,
+					data,
+					submit: () => submit(form_data)
+				});
+			} catch (e) {
+				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
+				const status = e instanceof HttpError ? e.status : 500;
+				void set_nearest_error_page(error, status);
+			}
+		}
+
+		/**
 		 * @param {FormData} data
 		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
 		 */
@@ -155,36 +182,6 @@ export function form(id) {
 		instance.method = 'POST';
 		instance.action = action;
 
-		/**
-		 * @param {HTMLFormElement} form_element
-		 * @param {HTMLElement | null} submitter
-		 */
-		function create_form_data(form_element, submitter) {
-			const form_data = new FormData(form_element);
-
-			if (DEV) {
-				const enctype = submitter?.hasAttribute('formenctype')
-					? /** @type {HTMLButtonElement | HTMLInputElement} */ (submitter).formEnctype
-					: clone(form_element).enctype;
-				if (enctype !== 'multipart/form-data') {
-					for (const value of form_data.values()) {
-						if (value instanceof File) {
-							throw new Error(
-								'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-							);
-						}
-					}
-				}
-			}
-
-			const submitter_name = submitter?.getAttribute('name');
-			if (submitter_name) {
-				form_data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-			}
-
-			return form_data;
-		}
-
 		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
 		const form_onsubmit = (callback) => {
 			/** @param {SubmitEvent} event */
@@ -209,26 +206,13 @@ export function form(id) {
 
 				event.preventDefault();
 
-				const form_data = create_form_data(form, event.submitter);
-				const data = convert_formdata(form_data);
+				const form_data = new FormData(form);
 
-				if (preflight_schema) {
-					// TODO populate `issues`
-					// const validation = preflight_schema['~standard'].validate(data);
+				if (DEV) {
+					validate_form_data(form_data, clone(form).enctype);
 				}
 
-				try {
-					await callback({
-						form,
-						data,
-						submit: () => submit(form_data)
-					});
-				} catch (e) {
-					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
-				}
+				await handle_submit(form, form_data, callback);
 			};
 		};
 
@@ -294,20 +278,21 @@ export function form(id) {
 				event.stopPropagation();
 				event.preventDefault();
 
-				const data = create_form_data(form, target);
+				const form_data = new FormData(form);
 
-				try {
-					await callback({
-						form,
-						data,
-						submit: () => submit(data)
-					});
-				} catch (e) {
-					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+				if (DEV) {
+					const enctype = target.hasAttribute('formenctype')
+						? target.formEnctype
+						: clone(form).enctype;
+
+					validate_form_data(form_data, enctype);
 				}
+
+				if (target.name) {
+					form_data.append(target.name, target?.getAttribute('value') ?? '');
+				}
+
+				await handle_submit(form, form_data, callback);
 			};
 		};
 
@@ -419,4 +404,20 @@ export function form(id) {
  */
 function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
+/**
+ * @param {FormData} form_data
+ * @param {string} enctype
+ */
+function validate_form_data(form_data, enctype) {
+	if (enctype !== 'multipart/form-data') {
+		for (const value of form_data.values()) {
+			if (value instanceof File) {
+				throw new Error(
+					'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
+				);
+			}
+		}
+	}
 }
