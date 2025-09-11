@@ -3,7 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { run_remote_function } from './shared.js';
-import { convert_formdata } from '../../../utils.js';
+import { convert_formdata, flatten_issues } from '../../../utils.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -105,8 +105,8 @@ export function form(validate_or_fn, maybe_fn) {
 				const validated = await schema?.['~standard'].validate(data);
 
 				if (validated?.issues !== undefined) {
+					output.issues = flatten_issues(validated.issues);
 					output.input = {};
-					output.issues = { $: [] };
 
 					for (let key of form_data.keys()) {
 						const is_array = key.endsWith('[]');
@@ -115,26 +115,6 @@ export function form(validate_or_fn, maybe_fn) {
 						if (is_array) key = key.slice(0, -2);
 
 						output.input[key] = is_array ? values : values[0];
-					}
-
-					for (const issue of validated.issues) {
-						output.issues.$.push(issue);
-
-						let path = '';
-
-						if (issue.path !== undefined) {
-							for (const segment of issue.path) {
-								const key = typeof segment === 'object' ? segment.key : segment;
-
-								if (typeof key === 'number') {
-									path += `[${key}]`;
-								} else if (typeof key === 'string') {
-									path += path === '' ? key : '.' + key;
-								}
-
-								(output.issues[path] ??= []).push(issue);
-							}
-						}
 					}
 				} else {
 					if (validated !== undefined) {

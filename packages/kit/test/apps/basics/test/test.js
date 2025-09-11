@@ -1777,6 +1777,29 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 	});
 
+	test('form preflight works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight');
+
+		for (const enhanced of [true, false]) {
+			const input = page.locator(enhanced ? '[data-enhanced] input' : '[data-default] input');
+			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
+
+			await input.fill('21');
+			await button.click();
+			await page.getByText('too big').waitFor();
+
+			await input.fill('9');
+			await button.click();
+			await page.getByText('too small').waitFor();
+
+			await input.fill('15');
+			await button.click();
+			await expect(page.getByText('number.current')).toHaveText('number.current: 15');
+		}
+	});
+
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');

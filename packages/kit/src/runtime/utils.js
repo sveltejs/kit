@@ -1,3 +1,4 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { BROWSER } from 'esm-env';
 
 export const text_encoder = new TextEncoder();
@@ -113,4 +114,34 @@ export function deep_set(object, keys, value) {
 	}
 
 	object[keys[keys.length - 1]] = value;
+}
+
+/**
+ * @param {readonly StandardSchemaV1.Issue[]} issues
+ */
+export function flatten_issues(issues) {
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const result = { $: [] };
+
+	for (const issue of issues) {
+		result.$.push(issue);
+
+		let path = '';
+
+		if (issue.path !== undefined) {
+			for (const segment of issue.path) {
+				const key = typeof segment === 'object' ? segment.key : segment;
+
+				if (typeof key === 'number') {
+					path += `[${key}]`;
+				} else if (typeof key === 'string') {
+					path += path === '' ? key : '.' + key;
+				}
+
+				(result[path] ??= []).push(issue);
+			}
+		}
+	}
+
+	return result;
 }

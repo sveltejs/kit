@@ -17,7 +17,7 @@ import {
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
-import { convert_formdata } from '../../utils.js';
+import { convert_formdata, flatten_issues } from '../../utils.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -61,7 +61,8 @@ export function form(id) {
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				// TODO populate `issues`
+				issues = flatten_issues(validated.issues);
+				return;
 			}
 
 			try {
