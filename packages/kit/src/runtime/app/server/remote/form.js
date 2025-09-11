@@ -204,7 +204,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'preflight', {
 			// preflight is a noop on the server
-			value: () => {}
+			value: () => instance
 		});
 
 		if (key == undefined) {
