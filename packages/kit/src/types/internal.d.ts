@@ -588,7 +588,7 @@ export interface RequestState {
 	form_instances?: Map<any, any>;
 	remote_data?: Record<string, MaybePromise<any>>;
 	refreshes?: Record<string, Promise<any>>;
-	endpoint_request?: HttpMethod;
+	is_endpoint_request?: boolean;
 }
 
 export interface RequestStore {

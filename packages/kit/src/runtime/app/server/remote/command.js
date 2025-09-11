@@ -64,10 +64,10 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (state.endpoint_request) {
-			if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(state.endpoint_request)) {
+		if (state.is_endpoint_request) {
+			if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(event.request.method)) {
 				throw new Error(
-					`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${state.endpoint_request} endpoint`
+					`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
 				);
 			}
 		} else if (!event.isRemoteRequest) {
