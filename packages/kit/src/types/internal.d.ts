@@ -192,12 +192,13 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: Array<{
-		file: string;
-		hash: string;
-	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
+}
+
+export interface RemoteChunk {
+	hash: string;
+	file: string;
 }
 
 export interface PageNode {
@@ -554,6 +555,16 @@ export type RemoteInfo =
 			name: string;
 	  }
 	| {
+			/**
+			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
+			 */
+			type: 'query_batch';
+			id: string;
+			name: string;
+			/** Direct access to the function without batching etc logic, for remote functions called from the client */
+			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+	  }
+	| {
 			type: 'form';
 			id: string;
 			name: string;
@@ -588,6 +599,7 @@ export interface RequestState {
 	form_instances?: Map<any, any>;
 	remote_data?: Record<string, MaybePromise<any>>;
 	refreshes?: Record<string, Promise<any>>;
+	is_endpoint_request?: boolean;
 }
 
 export interface RequestStore {
