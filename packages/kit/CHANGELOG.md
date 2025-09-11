@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.38.1
+### Patch Changes
+
+
+- fix: enable redirects from queries ([#14400](https://github.com/sveltejs/kit/pull/14400))
+
+
+- fix: remove empty nodes from serialized server load data ([#14404](https://github.com/sveltejs/kit/pull/14404))
+
+
+- fix: allow commands from within endpoints ([#14343](https://github.com/sveltejs/kit/pull/14343))
+
 ## 2.38.0
 ### Minor Changes
 
