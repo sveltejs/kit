@@ -187,6 +187,12 @@ export function form(validate_or_fn, maybe_fn) {
 			value: () => instance
 		});
 
+		Object.defineProperty(instance, 'validate', {
+			value: () => {
+				throw new Error('Cannot call validate() on the server');
+			}
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any, any>['for']} */

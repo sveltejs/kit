@@ -1795,6 +1795,8 @@ export type RemoteForm<Input extends FormInput | void, Output> = {
 	for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
 	/** Preflight checks */
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
+	/** Validate the form contents programmatically */
+	validate(options?: { includeUntouched?: boolean }): Promise<void>;
 	/** The result of the form submission */
 	get result(): Output | undefined;
 	/** The number of pending submissions */

@@ -50,6 +50,9 @@ export function form(id) {
 		/** @type {StandardSchemaV1 | undefined} */
 		let preflight_schema = undefined;
 
+		/** @type {HTMLFormElement | null} */
+		let element = null;
+
 		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
@@ -217,12 +220,10 @@ export function form(id) {
 			};
 		};
 
-		let attached = false;
-
 		/** @param {(event: SubmitEvent) => void} onsubmit */
 		function create_attachment(onsubmit) {
 			return (/** @type {HTMLFormElement} */ form) => {
-				if (attached) {
+				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
 					if (!key) {
 						const name = id.split('/').pop();
@@ -232,7 +233,7 @@ export function form(id) {
 					throw new Error(message);
 				}
 
-				attached = true;
+				element = form;
 
 				form.addEventListener('submit', onsubmit);
 
@@ -258,7 +259,7 @@ export function form(id) {
 				});
 
 				return () => {
-					attached = false;
+					element = null;
 				};
 			};
 		}
@@ -346,6 +347,17 @@ export function form(id) {
 				value: (schema) => {
 					preflight_schema = schema;
 					return instance;
+				}
+			},
+			validate: {
+				/** @type {RemoteForm<any, any>['validate']} */
+				value: async ({ includeUntouched = false } = {}) => {
+					if (!element) return;
+
+					const form_data = new FormData(element);
+					const data = convert_formdata(form_data);
+
+					// TODO make validation request
 				}
 			},
 			enhance: {
