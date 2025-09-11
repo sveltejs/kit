@@ -1,7 +1,7 @@
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
 /** @import { RouteDefinition } from '@sveltejs/kit' */
-/** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger } from 'types' */
+/** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import colors from 'kleur';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
@@ -32,6 +32,7 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
+ *   remotes: RemoteChunk[]
  * }} opts
  * @returns {Builder}
  */
@@ -43,7 +44,8 @@ export function create_builder({
 	prerendered,
 	prerender_map,
 	log,
-	vite_config
+	vite_config,
+	remotes
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -145,7 +147,8 @@ export function create_builder({
 								build_data,
 								prerendered: [],
 								relative_path: relativePath,
-								routes: Array.from(filtered)
+								routes: Array.from(filtered),
+								remotes
 							})
 					});
 				}
@@ -195,7 +198,8 @@ export function create_builder({
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true)
+					: route_data.filter((route) => prerender_map.get(route.id) !== true),
+				remotes
 			});
 		},
 

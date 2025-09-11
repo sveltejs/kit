@@ -43,7 +43,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	if (!remotes[hash]) error(404);
 
 	const module = await remotes[hash]();
-	const fn = module[name];
+	const fn = module.default[name];
 
 	if (!fn) error(404);
 
@@ -202,7 +202,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const [hash, name, payload] = key.split('/');
 
 			const loader = manifest._.remotes[hash];
-			const fn = (await loader?.())?.[name];
+			const fn = (await loader?.())?.default?.[name];
 
 			if (!fn) error(400, 'Bad Request');
 
@@ -254,7 +254,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.[name]);
+	let form = /** @type {RemoteForm<any>} */ (module?.default[name]);
 
 	if (!form) {
 		event.setHeaders({
