@@ -1554,7 +1554,7 @@ test.describe('Serialization', () => {
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 
