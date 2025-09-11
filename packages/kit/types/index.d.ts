@@ -1770,7 +1770,7 @@ declare module '@sveltejs/kit' {
 		 */
 		for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** Preflight checks */
-		preflight(schema: StandardSchemaV1<Input, Output>): RemoteForm<Input, Output>;
+		preflight(schema: StandardSchemaV1<Input>): RemoteForm<Input, Output>;
 		/** The result of the form submission */
 		get result(): Output | undefined;
 		/** The number of pending submissions */
@@ -2923,7 +2923,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends FormInput, Output>(validate: "unchecked", fn: (data: Input) => Output): RemoteForm<Input, Output>;
+	export function form<Input extends FormInput, Output>(validate: "unchecked", fn: (data: Input) => MaybePromise<Output>): RemoteForm<Input, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -2931,7 +2931,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<FormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<FormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
