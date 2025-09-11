@@ -96,15 +96,15 @@ export function form(validate_or_fn, maybe_fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
-				const object = maybe_fn ? convert_formdata(form_data) : undefined;
+				let data = maybe_fn ? convert_formdata(form_data) : undefined;
 
 				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
 				const output = {};
 
 				const { event, state } = get_request_store();
-				const issues = (await schema?.['~standard'].validate(object))?.issues;
+				const validated = await schema?.['~standard'].validate(data);
 
-				if (issues !== undefined) {
+				if (validated?.issues !== undefined) {
 					output.input = {};
 					output.issues = { $: [] };
 
@@ -117,7 +117,7 @@ export function form(validate_or_fn, maybe_fn) {
 						output.input[key] = is_array ? values : values[0];
 					}
 
-					for (const issue of issues) {
+					for (const issue of validated.issues) {
 						output.issues.$.push(issue);
 
 						let path = '';
@@ -137,9 +137,13 @@ export function form(validate_or_fn, maybe_fn) {
 						}
 					}
 				} else {
+					if (validated !== undefined) {
+						data = validated.value;
+					}
+
 					state.refreshes ??= {};
 
-					output.result = await run_remote_function(event, state, true, object, (d) => d, fn);
+					output.result = await run_remote_function(event, state, true, data, (d) => d, fn);
 				}
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
