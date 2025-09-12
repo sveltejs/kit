@@ -1264,6 +1264,23 @@ export interface NavigationExternal extends NavigationBase {
 	delta?: undefined;
 }
 
+export interface NavigationFormSubmit extends NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: 'form';
+
+	/**
+	 * The `SubmitEvent` that caused the navigation
+	 */
+	event: SubmitEvent;
+}
+
 export interface NavigationPopState extends NavigationBase {
 	/**
 	 * The type of navigation:
@@ -1281,7 +1298,7 @@ export interface NavigationPopState extends NavigationBase {
 	delta: number;
 
 	/**
-	 * Dispatched `PopStateEvent` object when the user navigates back or forward.
+	 * The `PopStateEvent` that caused the navigation
 	 */
 	event: PopStateEvent;
 }
@@ -1303,12 +1320,16 @@ export interface NavigationLink extends NavigationBase {
 	delta?: undefined;
 
 	/**
-	 * Dispatched `PointerEvent` object when the user clicks link element.
+	 * The `PointerEvent` that caused the navigation
 	 */
 	event: PointerEvent;
 }
 
-export type Navigation = NavigationExternal | NavigationPopState | NavigationLink;
+export type Navigation =
+	| NavigationExternal
+	| NavigationFormSubmit
+	| NavigationPopState
+	| NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.

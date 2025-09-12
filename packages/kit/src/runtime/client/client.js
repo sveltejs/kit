@@ -1415,6 +1415,7 @@ function _before_navigate({ url, type, intent, delta, event }) {
 	}
 
 	if (event !== undefined) {
+		// @ts-ignore
 		nav.navigation.event = event;
 	}
 
@@ -1442,7 +1443,6 @@ function _before_navigate({ url, type, intent, delta, event }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
- *     popStateEvent?: PopStateEvent;
  *   };
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
@@ -1452,7 +1452,7 @@ function _before_navigate({ url, type, intent, delta, event }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
- *   mouseEvent?: MouseEvent
+ *   event?: Event
  * }} opts
  */
 async function navigate({
@@ -1467,7 +1467,7 @@ async function navigate({
 	nav_token = {},
 	accept = noop,
 	block = noop,
-	mouseEvent
+	event
 }) {
 	const prev_token = token;
 	token = nav_token;
@@ -1481,7 +1481,8 @@ async function navigate({
 					type,
 					delta: popped?.delta,
 					intent,
-					event: popped?.popStateEvent || mouseEvent
+					// @ts-ignore
+					event
 				});
 
 	if (!nav) {
@@ -2465,7 +2466,7 @@ function _start_router() {
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
 			replace_state: options.replace_state ?? url.href === location.href,
-			mouseEvent: event
+			event
 		});
 	});
 
@@ -2516,7 +2517,8 @@ function _start_router() {
 			url,
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
-			replace_state: options.replace_state ?? url.href === location.href
+			replace_state: options.replace_state ?? url.href === location.href,
+			event
 		});
 	});
 
@@ -2565,8 +2567,7 @@ function _start_router() {
 				popped: {
 					state,
 					scroll,
-					delta,
-					popStateEvent: event
+					delta
 				},
 				accept: () => {
 					current_history_index = history_index;
@@ -2575,7 +2576,8 @@ function _start_router() {
 				block: () => {
 					history.go(-delta);
 				},
-				nav_token: token
+				nav_token: token,
+				event
 			});
 		} else {
 			// since popstate event is also emitted when an anchor referencing the same
