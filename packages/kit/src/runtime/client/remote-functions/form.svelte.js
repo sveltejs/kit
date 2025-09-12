@@ -380,7 +380,7 @@ export function form(id) {
 						const result = await response.json();
 
 						if (result.type === 'result') {
-							let array = /** @type {StandardSchemaV1.Issue[]} */ (
+							array = /** @type {StandardSchemaV1.Issue[]} */ (
 								devalue.parse(result.result, app.decoders)
 							);
 						}

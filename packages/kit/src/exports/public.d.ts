@@ -1763,7 +1763,6 @@ export type RemoteForm<Input extends FormInput | void, Output> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
-	onsubmit: (event: SubmitEvent) => void;
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
 	enhance(
 		callback: (opts: {

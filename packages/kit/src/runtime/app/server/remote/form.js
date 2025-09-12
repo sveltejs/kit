@@ -70,7 +70,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'enhance', {
 			value: () => {
-				return { action: instance.action, method: instance.method, onsubmit: instance.onsubmit };
+				return { action: instance.action, method: instance.method };
 			}
 		});
 
