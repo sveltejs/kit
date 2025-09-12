@@ -281,6 +281,8 @@ export async function render_page(
 							let j = i;
 							while (!branch[j]) j -= 1;
 
+							data_serializer.set_max_nodes(j + 1);
+
 							const layouts = compact(branch.slice(0, j + 1));
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
 
@@ -303,7 +305,7 @@ export async function render_page(
 									server_data: null
 								}),
 								fetched,
-								data_serializer: server_data_serializer(event, event_state, options)
+								data_serializer
 							});
 						}
 					}
