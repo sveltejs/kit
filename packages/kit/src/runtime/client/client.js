@@ -1,56 +1,56 @@
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { base } from '__sveltekit/paths';
-import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
-import { writable } from 'svelte/store';
-import { compact } from '../../utils/array.js';
-import { get_message, get_status } from '../../utils/error.js';
-import { validate_page_exports } from '../../utils/exports.js';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+const { onMount, tick } = svelte;
+// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
+const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
 	decode_pathname,
+	strip_hash,
 	make_trackable,
-	normalize_path,
-	strip_hash
+	normalize_path
 } from '../../utils/url.js';
-import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import { parse, parse_server_route } from './parse.js';
+import * as storage from './session-storage.js';
+import {
+	find_anchor,
+	resolve_url,
+	get_link_info,
+	get_router_options,
+	is_external_url,
+	origin,
+	scroll_state,
+	notifiable_store,
+	create_updated_store,
+	load_css
+} from './utils.js';
+import { base } from '__sveltekit/paths';
+import * as devalue from 'devalue';
+import {
+	HISTORY_INDEX,
+	NAVIGATION_INDEX,
+	PRELOAD_PRIORITIES,
+	SCROLL_KEY,
+	STATES_KEY,
+	SNAPSHOT_KEY,
+	PAGE_URL_KEY
+} from './constants.js';
+import { validate_page_exports } from '../../utils/exports.js';
+import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
+import { get_message, get_status } from '../../utils/error.js';
+import { writable } from 'svelte/store';
+import { page, update, navigating } from './state.svelte.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { text_decoder } from '../utils.js';
-import {
-	HISTORY_INDEX,
-	NAVIGATION_INDEX,
-	PAGE_URL_KEY,
-	PRELOAD_PRIORITIES,
-	SCROLL_KEY,
-	SNAPSHOT_KEY,
-	STATES_KEY
-} from './constants.js';
-import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse, parse_server_route } from './parse.js';
-import * as storage from './session-storage.js';
-import { navigating, page, update } from './state.svelte.js';
-import {
-	create_updated_store,
-	find_anchor,
-	get_link_info,
-	get_router_options,
-	is_external_url,
-	load_css,
-	notifiable_store,
-	origin,
-	resolve_url,
-	scroll_state
-} from './utils.js';
-const { onMount, tick } = svelte;
-// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
-const untrack = svelte.untrack ?? ((value) => value());
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
