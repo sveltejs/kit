@@ -443,6 +443,13 @@ function persist_state() {
 export async function _goto(url, options, redirect_count, nav_token) {
 	/** @type {string[]} */
 	let query_keys;
+
+	// Clear preload cache when invalidateAll is true to ensure fresh data
+	// after form submissions or explicit invalidations
+	if (options.invalidateAll) {
+		load_cache = null;
+	}
+
 	const result = await navigate({
 		type: 'goto',
 		url: resolve_url(url),
