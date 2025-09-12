@@ -803,7 +803,8 @@ async function kit({ svelte_config }) {
 
 				fs.writeFileSync(
 					file,
-					code.replace('$$_export_$$($$_self_$$)', () => `export default $$_self_$$;`)
+					// build process might have minified/adjusted the $$_self_$$ variable, but not the fake global $$_export_$$ function
+					code.replace(/\$\$_export_\$\$\((.+?)\)/, (_, name) => `export default ${name};`)
 				);
 			}
 		}
