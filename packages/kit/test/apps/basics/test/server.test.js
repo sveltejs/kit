@@ -861,7 +861,7 @@ test.describe('getRequestEvent', () => {
 
 test.describe('$app/forms', () => {
 	test('deserialize works on the server', async ({ request }) => {
-		const response = await request.get('/serialization-form/server-deserialize');
+		const response = await request.get('/serialization-form-non-enhanced/server-deserialize');
 		expect(await response.json()).toEqual({ data: 'It works!' });
 	});
 });

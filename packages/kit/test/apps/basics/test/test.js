@@ -1554,7 +1554,7 @@ test.describe('Serialization', () => {
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-non-enhanced');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 
@@ -1566,8 +1566,12 @@ test.describe('Serialization', () => {
 	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
 		page
 	}) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-enhanced');
 		await page.click('button');
+		await expect(page.locator('h1')).toHaveText('It works!');
+
+		// Test navigating to the basic page works as intended
+		await page.locator('a').first().click();
 		await expect(page.locator('h1')).toHaveText('It works!');
 	});
 
