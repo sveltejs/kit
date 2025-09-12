@@ -1230,7 +1230,7 @@ declare module '@sveltejs/kit' {
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
-		type: Exclude<NavigationType, 'enter' | 'popstate' | 'link'>;
+		type: Exclude<NavigationType, 'enter' | 'popstate' | 'link' | 'form'>;
 
 		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
 		// (would possibly be a breaking change to do it prior to that)
