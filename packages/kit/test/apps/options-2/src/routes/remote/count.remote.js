@@ -1,5 +1,6 @@
 import { building, dev } from '$app/environment';
 import { command, form, prerender, query } from '$app/server';
+import * as v from 'valibot';
 
 let count = 0;
 
@@ -21,7 +22,6 @@ export const prerendered = prerender(() => {
 	return 'yes';
 });
 
-export const set_count_form = form(async (form_data) => {
-	const c = /** @type {string} */ (form_data.get('count'));
-	return (count = parseInt(c));
+export const set_count_form = form(v.object({ count: v.string() }), async (data) => {
+	return (count = parseInt(data.count));
 });

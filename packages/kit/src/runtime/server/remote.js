@@ -129,7 +129,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(form_client_refreshes)
+					refreshes: data.issues ? {} : await serialize_refreshes(form_client_refreshes)
 				})
 			);
 		}
@@ -262,7 +262,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.default[name]);
+	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
 
 	if (!form) {
 		event.setHeaders({
