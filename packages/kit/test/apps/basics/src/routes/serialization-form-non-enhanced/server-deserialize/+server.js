@@ -1,7 +1,7 @@
 import { deserialize } from '$app/forms';
 
 export async function GET({ fetch }) {
-	const response = await fetch('/serialization-form', {
+	const response = await fetch('/serialization-form-non-enhanced', {
 		method: 'POST',
 		body: new FormData(),
 		headers: {
