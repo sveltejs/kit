@@ -269,6 +269,29 @@ test.describe('Navigation lifecycle functions', () => {
 
 		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
 	});
+
+	test('navigation.event is populated', async ({ page, clicknav }) => {
+		const logs = [];
+
+		await page.goto('/navigation-lifecycle/before-navigate/event/a');
+
+		page.on('console', (message) => {
+			logs.push(message.text());
+		});
+
+		await clicknav('[href="/navigation-lifecycle/before-navigate/event/b"]');
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
+		]);
+
+		await page.goBack();
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
+			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
+		]);
+	});
 });
 
 test.describe('Scrolling', () => {
