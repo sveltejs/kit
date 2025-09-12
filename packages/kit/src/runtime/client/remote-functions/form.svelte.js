@@ -53,6 +53,9 @@ export function form(id) {
 		/** @type {HTMLFormElement | null} */
 		let element = null;
 
+		/** @type {Record<string, boolean>} */
+		let touched = {};
+
 		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
@@ -108,13 +111,6 @@ export function form(id) {
 					await Promise.resolve();
 
 					if (updates.length > 0) {
-						if (DEV) {
-							if (data.get('sveltekit:remote_refreshes')) {
-								throw new Error(
-									'The FormData key `sveltekit:remote_refreshes` is reserved for internal use and should not be set manually'
-								);
-							}
-						}
 						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
 					}
 
@@ -235,6 +231,8 @@ export function form(id) {
 
 				element = form;
 
+				touched = {};
+
 				form.addEventListener('submit', onsubmit);
 
 				form.addEventListener('input', (e) => {
@@ -246,6 +244,8 @@ export function form(id) {
 
 					const is_array = name.endsWith('[]');
 					if (is_array) name = name.slice(0, -2);
+
+					touched[name] = true;
 
 					(input ??= {})[name] = is_array
 						? Array.from(
@@ -323,6 +323,8 @@ export function form(id) {
 			get: () => pending_count
 		});
 
+		let validate_id = 0;
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
@@ -354,10 +356,61 @@ export function form(id) {
 				value: async ({ includeUntouched = false } = {}) => {
 					if (!element) return;
 
-					const form_data = new FormData(element);
-					const data = convert_formdata(form_data);
+					const id = ++validate_id;
 
-					// TODO make validation request
+					const form_data = new FormData(element);
+
+					/** @type {readonly StandardSchemaV1.Issue[]} */
+					let array = [];
+
+					const validated = await preflight_schema?.['~standard'].validate(
+						convert_formdata(form_data)
+					);
+
+					if (validated?.issues) {
+						array = validated.issues;
+					} else {
+						form_data.set('sveltekit:validate_only', 'true');
+
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+							method: 'POST',
+							body: form_data
+						});
+
+						const result = await response.json();
+
+						if (result.type === 'result') {
+							let array = /** @type {StandardSchemaV1.Issue[]} */ (
+								devalue.parse(result.result, app.decoders)
+							);
+						}
+					}
+
+					if (!includeUntouched) {
+						array = array.filter((issue) => {
+							if (issue.path !== undefined) {
+								let path = '';
+
+								for (const segment of issue.path) {
+									const key = typeof segment === 'object' ? segment.key : segment;
+
+									if (typeof key === 'number') {
+										path += `[${key}]`;
+									} else if (typeof key === 'string') {
+										path += path === '' ? key : '.' + key;
+									}
+								}
+
+								return touched[path];
+							}
+						});
+					}
+
+					issues = flatten_issues(array);
+
+					if (validate_id !== id) {
+						return;
+					}
 				}
 			},
 			enhance: {
@@ -424,6 +477,14 @@ function clone(element) {
  * @param {string} enctype
  */
 function validate_form_data(form_data, enctype) {
+	for (const key of form_data.keys()) {
+		if (key.startsWith('sveltekit:')) {
+			throw new Error(
+				'FormData keys starting with `sveltekit:` are reserved for internal use and should not be set manually'
+			);
+		}
+	}
+
 	if (enctype !== 'multipart/form-data') {
 		for (const value of form_data.values()) {
 			if (value instanceof File) {

@@ -96,6 +96,9 @@ export function form(validate_or_fn, maybe_fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
+				const validate_only = form_data.get('sveltekit:validate_only') === 'true';
+				form_data.delete('sveltekit:validate_only');
+
 				let data = maybe_fn ? convert_formdata(form_data) : undefined;
 
 				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
@@ -103,6 +106,10 @@ export function form(validate_or_fn, maybe_fn) {
 
 				const { event, state } = get_request_store();
 				const validated = await schema?.['~standard'].validate(data);
+
+				if (validate_only) {
+					return validated?.issues ?? [];
+				}
 
 				if (validated?.issues !== undefined) {
 					output.issues = flatten_issues(validated.issues);

@@ -1800,6 +1800,26 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form validate works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const foo = page.locator('input[name="foo"]');
+		const bar = page.locator('input[name="bar"]');
+
+		await foo.fill('a');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await bar.fill('g');
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected ("d" | "e") but received "g"'
+		);
+
+		await bar.fill('d');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+	});
+
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');
