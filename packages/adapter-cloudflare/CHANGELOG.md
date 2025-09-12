@@ -1,5 +1,86 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
+## 7.2.2
+### Patch Changes
+
+
+- chore: update error message link to the Workers Sites migration guide ([#14237](https://github.com/sveltejs/kit/pull/14237))
+
+- Updated dependencies [[`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`0bf6185`](https://github.com/sveltejs/kit/commit/0bf6185748d7b777fa8b8d37cef331be92ecedde), [`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c)]:
+  - @sveltejs/kit@2.34.1
+
+## 7.2.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 7.2.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 7.1.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 7.1.2
+### Patch Changes
+
+
+- fix: resolve the absolute path of the Wrangler config setting `assets.directory` in case the config file is in a different directory than the root project ([#14036](https://github.com/sveltejs/kit/pull/14036))
+
+- Updated dependencies [[`793ae28`](https://github.com/sveltejs/kit/commit/793ae28a339ca33b7e27f14158b1726bfeedd729)]:
+  - @sveltejs/kit@2.27.0
+
+## 7.1.1
+### Patch Changes
+
+
+- fix: support assets-only workers in wrangler validation ([#14019](https://github.com/sveltejs/kit/pull/14019))
+
+- Updated dependencies [[`fda0165`](https://github.com/sveltejs/kit/commit/fda0165804011d221bb196a26565eea3e08b9d42)]:
+  - @sveltejs/kit@2.25.2
+
+## 7.1.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+
+- fix: include missing utils file ([#14009](https://github.com/sveltejs/kit/pull/14009))
+
+
+- fix: correctly warn users when assets key is missing ([#13844](https://github.com/sveltejs/kit/pull/13844))
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
 ## 7.0.5
 ### Patch Changes
 

@@ -67,6 +67,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		.filter((f) => fs.existsSync(f));
 
 	if (config_files.length === 0) {
+		console.log(
+			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
+		);
 		return process_config({}, { cwd });
 	}
 	const config_file = config_files[0];
@@ -123,6 +126,17 @@ export function validate_config(config) {
 	}
 
 	const validated = options(config, 'config');
+	const files = validated.kit.files;
+
+	files.hooks.client ??= path.join(files.src, 'hooks.client');
+	files.hooks.server ??= path.join(files.src, 'hooks.server');
+	files.hooks.universal ??= path.join(files.src, 'hooks');
+	files.lib ??= path.join(files.src, 'lib');
+	files.params ??= path.join(files.src, 'params');
+	files.routes ??= path.join(files.src, 'routes');
+	files.serviceWorker ??= path.join(files.src, 'service-worker');
+	files.appTemplate ??= path.join(files.src, 'app.html');
+	files.errorTemplate ??= path.join(files.src, 'error.html');
 
 	if (validated.kit.router.resolution === 'server') {
 		if (validated.kit.router.type === 'hash') {

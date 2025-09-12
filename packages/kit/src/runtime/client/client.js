@@ -1,52 +1,58 @@
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { base } from '__sveltekit/paths';
+import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-const { onMount, tick } = svelte;
-// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
-const untrack = svelte.untrack ?? ((value) => value());
+import { writable } from 'svelte/store';
+import { compact } from '../../utils/array.js';
+import { get_message, get_status } from '../../utils/error.js';
+import { validate_page_exports } from '../../utils/exports.js';
 import {
 	decode_params,
 	decode_pathname,
-	strip_hash,
 	make_trackable,
-	normalize_path
+	normalize_path,
+	strip_hash
 } from '../../utils/url.js';
-import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse, parse_server_route } from './parse.js';
-import * as storage from './session-storage.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import {
-	find_anchor,
-	resolve_url,
-	get_link_info,
-	get_router_options,
-	is_external_url,
-	origin,
-	scroll_state,
-	notifiable_store,
-	create_updated_store,
-	load_css
-} from './utils.js';
-import { base } from '__sveltekit/paths';
-import * as devalue from 'devalue';
+	INVALIDATED_PARAM,
+	TRAILING_SLASH_PARAM,
+	validate_depends,
+	validate_load_response
+} from '../shared.js';
+import { noop_span } from '../telemetry/noop.js';
+import { text_decoder } from '../utils.js';
 import {
 	HISTORY_INDEX,
 	NAVIGATION_INDEX,
+	PAGE_URL_KEY,
 	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
-	STATES_KEY,
 	SNAPSHOT_KEY,
-	PAGE_URL_KEY
+	STATES_KEY
 } from './constants.js';
-import { validate_page_exports } from '../../utils/exports.js';
-import { compact } from '../../utils/array.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
-import { get_message, get_status } from '../../utils/error.js';
-import { writable } from 'svelte/store';
-import { page, update, navigating } from './state.svelte.js';
-import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import { parse, parse_server_route } from './parse.js';
+import * as storage from './session-storage.js';
+import { navigating, page, update } from './state.svelte.js';
+import {
+	create_updated_store,
+	find_anchor,
+	get_link_info,
+	get_router_options,
+	is_external_url,
+	load_css,
+	notifiable_store,
+	origin,
+	resolve_url,
+	scroll_state
+} from './utils.js';
+const { onMount, tick } = svelte;
+// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
+const untrack = svelte.untrack ?? ((value) => value());
 
 export { load_css };
-
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
@@ -180,8 +186,15 @@ let default_error_loader;
 let container;
 /** @type {HTMLElement} */
 let target;
+
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
+
+/** @type {Record<string, any>} */
+// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
+// because it will be `undefined` when users import the exports from this module.
+// It's only defined when the server renders a page.
+export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -231,7 +244,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-let started = false;
+export let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -262,7 +275,13 @@ let token;
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
-let pending_invalidate;
+export let pending_invalidate;
+
+/**
+ * @type {Map<string, {count: number, resource: any}>}
+ * A map of id -> query info with all queries that currently exist in the app.
+ */
+export const query_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -345,11 +364,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-/**
- * @param {Object} [opts] Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
- */
-async function _invalidate(opts = {}) {
+async function _invalidate(include_load_functions = true, reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -366,25 +381,36 @@ async function _invalidate(opts = {}) {
 	// at which point the invalidation should take over and "win".
 	load_cache = null;
 
-	const navigation_result = intent && (await load_route(intent));
-	if (!navigation_result || nav_token !== token) return;
-
-	if (navigation_result.type === 'redirect') {
-		return _goto(
-			new URL(navigation_result.location, current.url).href,
-			{ replaceState: opts.replaceState },
-			1,
-			nav_token
-		);
+	// Rerun queries
+	if (force_invalidation) {
+		query_map.forEach(({ resource }) => {
+			resource.refresh?.();
+		});
 	}
 
-	if (navigation_result.props.page) {
-		Object.assign(page, navigation_result.props.page);
+	if (include_load_functions) {
+		const prev_state = page.state;
+		const navigation_result = intent && (await load_route(intent));
+		if (!navigation_result || nav_token !== token) return;
+
+		if (navigation_result.type === 'redirect') {
+			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		}
+
+		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
+		if (!reset_page_state) {
+			navigation_result.props.page.state = prev_state;
+		}
+		update(navigation_result.props.page);
+		current = navigation_result.state;
+		reset_invalidation();
+		root.$set(navigation_result.props);
+	} else {
+		reset_invalidation();
 	}
-	current = navigation_result.state;
-	reset_invalidation();
-	root.$set(navigation_result.props);
-	update(navigation_result.props.page);
+
+	// Don't use allSettled yet because it's too new
+	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
 }
 
 function reset_invalidation() {
@@ -420,8 +446,10 @@ function persist_state() {
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
-async function _goto(url, options, redirect_count, nav_token) {
-	return navigate({
+export async function _goto(url, options, redirect_count, nav_token) {
+	/** @type {string[]} */
+	let query_keys;
+	const result = await navigate({
 		type: 'goto',
 		url: resolve_url(url),
 		keepfocus: options.keepFocus,
@@ -433,6 +461,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
+				query_keys = [...query_map.keys()];
 			}
 
 			if (options.invalidate) {
@@ -440,6 +469,22 @@ async function _goto(url, options, redirect_count, nav_token) {
 			}
 		}
 	});
+	if (options.invalidateAll) {
+		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
+		// when a query in a layout that still exists after page change is refreshed earlier than this
+		void svelte
+			.tick()
+			.then(svelte.tick)
+			.then(() => {
+				query_map.forEach(({ resource }, key) => {
+					// Only refresh those that already existed on the old page
+					if (query_keys?.includes(key)) {
+						resource.refresh?.();
+					}
+				});
+			});
+	}
+	return result;
 }
 
 /** @param {import('./types.js').NavigationIntent} intent */
@@ -552,8 +597,7 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 	}
 
 	url.pathname = normalize_path(url.pathname, slash);
-
-	// eslint-disable-next-line
+	// eslint-disable-next-line no-self-assign
 	url.search = url.search; // turn `/?` into `/`
 
 	/** @type {import('./types.js').NavigationFinished} */
@@ -686,6 +730,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 		/** @type {import('@sveltejs/kit').LoadEvent} */
 		const load_input = {
+			tracing: { enabled: false, root: noop_span, current: noop_span },
 			route: new Proxy(route, {
 				get: (target, key) => {
 					if (is_tracking) {
@@ -778,19 +823,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			try {
 				lock_fetch();
 				data = (await node.universal.load.call(null, load_input)) ?? null;
-				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-					throw new Error(
-						`a load function related to route '${route.id}' returned ${
-							typeof data !== 'object'
-								? `a ${typeof data}`
-								: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-										? 'an array'
-										: 'a non-plain object'
-						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-					);
-				}
+				validate_load_response(data, `related to route '${route.id}'`);
 			} finally {
 				unlock_fetch();
 			}
@@ -1585,13 +1618,6 @@ async function navigate({
 	navigation_result.props.page.state = state;
 
 	if (started) {
-		current = navigation_result.state;
-
-		// reset url before updating page store
-		if (navigation_result.props.page) {
-			navigation_result.props.page.url = url;
-		}
-
 		const after_navigate = (
 			await Promise.all(
 				Array.from(on_navigate_callbacks, (fn) =>
@@ -1612,6 +1638,13 @@ async function navigate({
 			after_navigate.forEach((fn) => {
 				after_navigate_callbacks.add(fn);
 			});
+		}
+
+		current = navigation_result.state;
+
+		// reset url before updating page store
+		if (navigation_result.props.page) {
+			navigation_result.props.page.url = url;
 		}
 
 		root.$set(navigation_result.props);
@@ -2018,7 +2051,22 @@ export function invalidateAll(opts = {}) {
 	}
 
 	force_invalidation = true;
-	return _invalidate(opts);
+	return _invalidate();
+}
+
+/**
+ * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+ * Returns a `Promise` that resolves when the page is subsequently updated.
+ * @param {{ includeLoadFunctions?: boolean }} [options]
+ * @returns {Promise<void>}
+ */
+export function refreshAll({ includeLoadFunctions = true } = {}) {
+	if (!BROWSER) {
+		throw new Error('Cannot call refreshAll() on the server');
+	}
+
+	force_invalidation = true;
+	return _invalidate(includeLoadFunctions, false);
 }
 
 /**
@@ -2202,29 +2250,7 @@ export async function applyAction(result) {
 	}
 
 	if (result.type === 'error') {
-		const url = new URL(location.href);
-
-		const { branch, route } = current;
-		if (!route) return;
-
-		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
-		if (error_load) {
-			const navigation_result = get_navigation_result_from_branch({
-				url,
-				params: current.params,
-				branch: branch.slice(0, error_load.idx).concat(error_load.node),
-				status: result.status ?? 500,
-				error: result.error,
-				route
-			});
-
-			current = navigation_result.state;
-
-			root.$set(navigation_result.props);
-			update(navigation_result.props.page);
-
-			void tick().then(() => reset_focus(current.url));
-		}
+		await set_nearest_error_page(result.error, result.status);
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
@@ -2246,6 +2272,36 @@ export async function applyAction(result) {
 		if (result.type === 'success') {
 			reset_focus(page.url);
 		}
+	}
+}
+
+/**
+ * @param {App.Error} error
+ * @param {number} status
+ */
+export async function set_nearest_error_page(error, status = 500) {
+	const url = new URL(location.href);
+
+	const { branch, route } = current;
+	if (!route) return;
+
+	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
+	if (error_load) {
+		const navigation_result = get_navigation_result_from_branch({
+			url,
+			params: current.params,
+			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			status,
+			error,
+			route
+		});
+
+		current = navigation_result.state;
+
+		root.$set(navigation_result.props);
+		update(navigation_result.props.page);
+
+		void tick().then(() => reset_focus(current.url));
 	}
 }
 
@@ -2742,7 +2798,6 @@ async function load_data(url, invalid) {
 		 */
 		const deferreds = new Map();
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
-		const decoder = new TextDecoder();
 
 		/**
 		 * @param {any} data
@@ -2765,7 +2820,7 @@ async function load_data(url, invalid) {
 			const { done, value } = await reader.read();
 			if (done && !text) break;
 
-			text += !value && text ? '\n' : decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
+			text += !value && text ? '\n' : text_decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
 
 			while (true) {
 				const split = text.indexOf('\n');

@@ -4,6 +4,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { get_status } from '../../../utils/error.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
+import { server_data_serializer } from './data_serializer.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -12,6 +13,7 @@ import { PageNodes } from '../../../utils/page_nodes.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
@@ -22,6 +24,7 @@ import { PageNodes } from '../../../utils/page_nodes.js';
  */
 export async function respond_with_error({
 	event,
+	event_state,
 	options,
 	manifest,
 	state,
@@ -43,12 +46,14 @@ export async function respond_with_error({
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
+		const data_serializer = server_data_serializer(event, event_state, options);
 
 		if (ssr) {
 			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,
+				event_state,
 				state,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -56,9 +61,11 @@ export async function respond_with_error({
 			});
 
 			const server_data = await server_data_promise;
+			data_serializer.add_node(0, server_data);
 
 			const data = await load_data({
 				event,
+				event_state,
 				fetched,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -92,11 +99,13 @@ export async function respond_with_error({
 				csr
 			},
 			status,
-			error: await handle_error_and_jsonify(event, options, error),
+			error: await handle_error_and_jsonify(event, event_state, options, error),
 			branch,
 			fetched,
 			event,
-			resolve_opts
+			event_state,
+			resolve_opts,
+			data_serializer
 		});
 	} catch (e) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
@@ -108,7 +117,7 @@ export async function respond_with_error({
 		return static_error_page(
 			options,
 			get_status(e),
-			(await handle_error_and_jsonify(event, options, e)).message
+			(await handle_error_and_jsonify(event, event_state, options, e)).message
 		);
 	}
 }

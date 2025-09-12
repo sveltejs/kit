@@ -5,12 +5,13 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
+import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
@@ -55,11 +56,10 @@ async function analyse({
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_private_env(env, { public_prefix, private_prefix });
-	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+	const private_env = filter_env(env, private_prefix, public_prefix);
+	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
@@ -82,7 +82,8 @@ async function analyse({
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
@@ -162,6 +163,28 @@ async function analyse({
 			entries:
 				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
+	}
+
+	// analyse remotes
+	for (const remote of manifest_data.remotes) {
+		const loader = manifest._.remotes[remote.hash];
+		const module = await loader();
+
+		validate_remote_functions(module, remote.file);
+
+		const exports = new Map();
+
+		for (const name in module) {
+			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+			const type = info.type;
+
+			exports.set(name, {
+				type,
+				dynamic: type !== 'prerender' || info.dynamic
+			});
+		}
+
+		metadata.remotes.set(remote.hash, exports);
 	}
 
 	return { metadata, static_exports };
