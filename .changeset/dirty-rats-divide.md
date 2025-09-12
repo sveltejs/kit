@@ -1,6 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
-fix: respect `replaceState` when using `goto` results in a redirect or an external navigation
-minor: add `replaceState` option to `invalidate` and `invalidateAll` methods
+fix: respect `replaceState`/`keepFocus`/`noScroll` when a navigation results in a redirect
