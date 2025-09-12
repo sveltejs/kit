@@ -2677,18 +2677,12 @@ declare module '$app/navigation' {
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
 	 * @param resource The invalidated URL
-	 * @param {Object} opts Options related to the invalidation
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean), opts?: {
-		replaceState?: boolean | undefined;
-	}): Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
-	 * @param {Object} opts Options related to the invalidation
 	 * */
-	export function invalidateAll(opts?: {
-		replaceState?: boolean | undefined;
-	}): Promise<void>;
+	export function invalidateAll(): Promise<void>;
 	/**
 	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
 	 * Returns a `Promise` that resolves when the page is subsequently updated.
