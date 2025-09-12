@@ -2013,18 +2013,16 @@ export function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
- * @param {Object} opts Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
-export function invalidate(resource, opts = {}) {
+export function invalidate(resource) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate(opts);
+	return _invalidate();
 }
 
 /**
@@ -2041,11 +2039,9 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
- * @param {Object} opts Options related to the invalidation
- * @param {boolean} [opts.replaceState]  If `true`, will replace the current `history` entry rather than creating a new one with `pushState` in case of a redirection
  * @returns {Promise<void>}
  */
-export function invalidateAll(opts = {}) {
+export function invalidateAll() {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidateAll() on the server');
 	}
