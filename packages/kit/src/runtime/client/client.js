@@ -149,11 +149,10 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
- * @param {Object} [opts] Options related to the navigation
- * @param {boolean} [opts.replace_state] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+ * @param {boolean} [replace] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  */
-function native_navigation(url, opts = {}) {
-	if (opts.replace_state) {
+function native_navigation(url, replace = false) {
+	if (replace) {
 		location.replace(url.href);
 	} else {
 		location.href = url.href;
@@ -1155,7 +1154,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status, false);
+					return await server_fallback(url, { id: route.id }, error, status);
 				}
 			}
 		} else {
@@ -1525,7 +1524,7 @@ async function navigate({
 					replace_state
 				);
 			} else {
-				return await native_navigation(url, { replace_state });
+				return await native_navigation(url, replace_state);
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1583,7 +1582,7 @@ async function navigate({
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url, { replace_state });
+			await native_navigation(url, replace_state);
 		}
 	}
 
@@ -1748,7 +1747,7 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url, { replace_state });
+	return await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
