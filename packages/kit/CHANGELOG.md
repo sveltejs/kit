@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.39.0
+### Minor Changes
+
+
+- feat: lazy discovery of remote functions ([#14293](https://github.com/sveltejs/kit/pull/14293))
+
+
+### Patch Changes
+
+
+- fix: layout load data not serialized on error page ([#14395](https://github.com/sveltejs/kit/pull/14395))
+
+
+- fix: fail prerendering when remote function fails ([#14365](https://github.com/sveltejs/kit/pull/14365))
+
+
+- fix: treat handle hook redirect as part of remote function call as json redirect ([#14362](https://github.com/sveltejs/kit/pull/14362))
+
 ## 2.38.1
 ### Patch Changes
 
