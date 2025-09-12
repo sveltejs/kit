@@ -1554,26 +1554,30 @@ async function navigate({
 
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
-		if (redirect_count >= 20) {
-			navigation_result = await load_root_error_page({
-				status: 500,
-				error: await handle_error(new Error('Redirect loop'), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				url,
-				route: { id: null }
-			});
-		} else {
-			await _goto(
-				new URL(navigation_result.location, url).href,
-				{ replaceState: replace_state },
-				redirect_count + 1,
+		if (redirect_count < 19) {
+			return navigate({
+				type,
+				url: new URL(navigation_result.location, url),
+				popped,
+				keepfocus,
+				noscroll,
+				replace_state,
+				state,
+				redirect_count: redirect_count + 1,
 				nav_token
-			);
-			return false;
+			});
 		}
+
+		navigation_result = await load_root_error_page({
+			status: 500,
+			error: await handle_error(new Error('Redirect loop'), {
+				url,
+				params: {},
+				route: { id: null }
+			}),
+			url,
+			route: { id: null }
+		});
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
