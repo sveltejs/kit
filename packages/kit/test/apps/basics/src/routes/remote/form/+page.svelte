@@ -52,6 +52,25 @@
 	>
 </form>
 
+<!-- Test case for button with nested elements (issue #14159) -->
+<form
+	{...task_one.enhance(async ({ data, submit }) => {
+		const task = data.get('task');
+		await submit();
+	})}
+>
+	<input id="input-task-nested" name="task" />
+	<button
+		id="submit-btn-nested-span"
+		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
+			const task = data.get('task');
+			await submit();
+		})}
+	>
+		<span>Task Two (nested span)</span>
+	</button>
+</form>
+
 <p id="form-result-1">{task_one.result}</p>
 <p id="form-result-2">{task_two.result}</p>
 
@@ -66,3 +85,9 @@
 		<button id="submit-btn-item-{item}">Task One for {item}</button>
 	</form>
 {/each}
+
+<form {...task_two.for('foo')}>
+	<span id="form-result-2-foo">{task_two.for('foo').result}</span>
+	<input name="task" value="foo2" />
+	<button id="submit-btn-item-2-foo">Task Two for foo</button>
+</form>

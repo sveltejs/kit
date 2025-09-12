@@ -10,9 +10,12 @@ Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob
 // svelte.config.js
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
   preprocess: [vitePreprocess()]
 };
+
+export default config;
 ```
 
 You will also need to use a preprocessor if you're using TypeScript with Svelte 4. TypeScript is supported natively in Svelte 5 if you're using only the type syntax. To use more complex TypeScript syntax in Svelte 5, you will need still need a preprocessor and can use `vitePreprocess({ script: true })`.

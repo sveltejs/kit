@@ -14,5 +14,6 @@ packages:
 catalog:
   '@playwright/test': '^1.51.1'
   '@sveltejs/vite-plugin-svelte': '^6.0.0-next.3'
-  'vitest': '^3.2.3'
+  '@types/node': '^18.19.119'
+  'vitest': '^3.2.4'
   'vite': '^6.3.5'

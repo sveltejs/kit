@@ -3,17 +3,15 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
-import { getRequestEvent } from '../event.js';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '__sveltekit/paths';
 import {
-	check_experimental,
 	create_validator,
 	get_response,
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -66,8 +64,6 @@ import { get_event_state } from '../../../server/event-state.js';
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function prerender(validate_or_fn, fn_or_options, maybe_options) {
-	check_experimental('prerender');
-
 	const maybe_fn = typeof fn_or_options === 'function' ? fn_or_options : undefined;
 
 	/** @type {typeof maybe_options} */
@@ -93,15 +89,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	const wrapper = (arg) => {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
-			const event = getRequestEvent();
-			const state = get_event_state(event);
+			const { event, state } = get_request_store();
 			const payload = stringify_remote_arg(arg, state.transport);
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(id, arg, event, async () => {
+					return await get_response(id, arg, state, async () => {
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
 						const response = await fetch(new URL(url, event.url.origin).href);
@@ -130,8 +125,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = get_response(id, arg, event, () =>
-				run_remote_function(event, false, arg, validate, fn)
+			const promise = get_response(id, arg, state, () =>
+				run_remote_function(event, state, false, arg, validate, fn)
 			);
 
 			if (state.prerendering) {

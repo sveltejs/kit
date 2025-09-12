@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { Span } from '@opentelemetry/api';
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -27,6 +28,12 @@ declare module '@sveltejs/kit' {
 			 * @param details.config The merged route config
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
+
+			/**
+			 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
+			 * @since 2.31.0
+			 */
+			instrumentation?: () => boolean;
 		};
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
@@ -163,6 +170,46 @@ declare module '@sveltejs/kit' {
 				replace?: Record<string, string>;
 			}
 		) => string[];
+
+		/**
+		 * Check if the server instrumentation file exists.
+		 * @returns true if the server instrumentation file exists, false otherwise
+		 * @since 2.31.0
+		 */
+		hasServerInstrumentationFile: () => boolean;
+
+		/**
+		 * Instrument `entrypoint` with `instrumentation`.
+		 *
+		 * Renames `entrypoint` to `start` and creates a new module at
+		 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
+		 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
+		 *
+		 * Caveats:
+		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
+		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
+		 * - Use `hasServerInstrumentationFile` to check if the user has a server instrumentation file; if they don't, you shouldn't do this.
+		 *
+		 * @param options an object containing the following properties:
+		 * @param options.entrypoint the path to the entrypoint to trace.
+		 * @param options.instrumentation the path to the instrumentation file.
+		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+		 * @param options.module configuration for the resulting entrypoint module.
+		 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
+		 * @since 2.31.0
+		 */
+		instrument: (args: {
+			entrypoint: string;
+			instrumentation: string;
+			start?: string;
+			module?:
+				| {
+						exports: string[];
+				  }
+				| {
+						generateText: (args: { instrumentation: string; start: string }) => string;
+				  };
+		}) => void;
 
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
@@ -355,8 +402,24 @@ declare module '@sveltejs/kit' {
 			 *
 			 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 			 * @default true
+			 * @deprecated Use `trustedOrigins: ['*']` instead
 			 */
 			checkOrigin?: boolean;
+			/**
+			 * An array of origins that are allowed to make cross-origin form submissions to your app.
+			 *
+			 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
+			 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
+			 *
+			 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
+			 *
+			 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
+			 *
+			 * CSRF checks only apply in production, not in local development.
+			 * @default []
+			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 */
+			trustedOrigins?: string[];
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
@@ -385,10 +448,34 @@ declare module '@sveltejs/kit' {
 			 */
 			privatePrefix?: string;
 		};
-		/**
-		 * Experimental features which are exempt from semantic versioning. These features may be changed or removed at any time.
-		 */
+		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 		experimental?: {
+			/**
+			 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+			 * @default { server: false, serverFile: false }
+			 * @since 2.31.0
+			 */
+			tracing?: {
+				/**
+				 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
+				 * @default false
+				 * @since 2.31.0
+				 */
+				server?: boolean;
+			};
+
+			/**
+			 * @since 2.31.0
+			 */
+			instrumentation?: {
+				/**
+				 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
+				 * @default false
+				 * @since 2.31.0
+				 */
+				server?: boolean;
+			};
+
 			/**
 			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 			 * @default false
@@ -647,6 +734,21 @@ declare module '@sveltejs/kit' {
 			 */
 			handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 			/**
+			 * How to respond when a route is marked as prerenderable but has not been prerendered.
+			 *
+			 * - `'fail'` — fail the build
+			 * - `'ignore'` - silently ignore the failure and continue
+			 * - `'warn'` — continue, but print a warning
+			 * - `(details) => void` — a custom error handler that takes a `details` object with a `routes` property which contains all routes that haven't been prerendered. If you `throw` from this function, the build will fail
+			 *
+			 * The default behavior is to fail the build. This may be undesirable when you know that some of your routes may never be reached under certain
+			 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
+			 *
+			 * @default "fail"
+			 * @since 2.16.0
+			 */
+			handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
+			/**
 			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 			 * @default "http://sveltekit-prerender"
 			 */
@@ -688,16 +790,30 @@ declare module '@sveltejs/kit' {
 		};
 		serviceWorker?: {
 			/**
-			 * Whether to automatically register the service worker, if it exists.
-			 * @default true
-			 */
-			register?: boolean;
-			/**
 			 * Determine which files in your `static` directory will be available in `$service-worker.files`.
 			 * @default (filename) => !/\.DS_Store/.test(filename)
 			 */
-			files?(filepath: string): boolean;
-		};
+			files?: (file: string) => boolean;
+		} & (
+			| {
+					/**
+					 * Whether to automatically register the service worker, if it exists.
+					 * @default true
+					 */
+					register: true;
+					/**
+					 * Options for serviceWorker.register("...", options);
+					 */
+					options?: RegistrationOptions;
+			  }
+			| {
+					/**
+					 * Whether to automatically register the service worker, if it exists.
+					 * @default true
+					 */
+					register?: false;
+			  }
+		);
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -990,6 +1106,19 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled or the function is being run in the browser, these spans will do nothing.
+		 * @since 2.31.0
+		 */
+		tracing: {
+			/** Whether tracing is enabled. */
+			enabled: boolean;
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			root: Span;
+			/** The span associated with the current `load` function. */
+			current: Span;
+		};
 	}
 
 	export interface NavigationEvent<
@@ -1268,6 +1397,20 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 * @since 2.31.0
+		 */
+		tracing: {
+			/** Whether tracing is enabled. */
+			enabled: boolean;
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			root: Span;
+			/** The span associated with the current `handle` hook, `load` function, or form action. */
+			current: Span;
+		};
+
 		/**
 		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
@@ -1431,6 +1574,19 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		untrack: <T>(fn: () => T) => T;
+
+		/**
+		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
+		 * @since 2.31.0
+		 */
+		tracing: {
+			/** Whether tracing is enabled. */
+			enabled: boolean;
+			/** The root span for the request. This span is named `sveltekit.handle.root`. */
+			root: Span;
+			/** The span associated with the current server `load` function. */
+			current: Span;
+		};
 	}
 
 	/**
@@ -1625,6 +1781,13 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
+		 * On the client, this function will update the value of the query without re-fetching it.
+		 *
+		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
+		 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+		 */
+		set(value: T): void;
+		/**
 		 * On the client, this function will re-fetch the query from the server.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
@@ -1644,7 +1807,7 @@ declare module '@sveltejs/kit' {
 		 *   await submit().updates(
 		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
 		 *   );
-		 * }}>
+		 * })}>
 		 *   <input type="text" name="text" />
 		 *   <button type="submit">Add Todo</button>
 		 * </form>
@@ -1871,8 +2034,17 @@ declare module '@sveltejs/kit' {
 		(details: { generatedFromId: string; entry: string; matchedId: string; message: string }): void;
 	}
 
+	interface PrerenderUnseenRoutesHandler {
+		(details: { routes: string[]; message: string }): void;
+	}
+
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
+	type PrerenderUnseenRoutesHandlerValue =
+		| 'fail'
+		| 'warn'
+		| 'ignore'
+		| PrerenderUnseenRoutesHandler;
 	type PrerenderEntryGeneratorMismatchHandlerValue =
 		| 'fail'
 		| 'warn'
@@ -1951,10 +2123,6 @@ declare module '@sveltejs/kit' {
 			universal: string | null;
 		};
 		nodes: PageNode[];
-		remotes: Array<{
-			file: string;
-			hash: string;
-		}>;
 		routes: RouteData[];
 		matchers: Record<string, string>;
 	}
@@ -2246,6 +2414,7 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/hooks' {
+	import type { Handle } from '@sveltejs/kit';
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
@@ -2316,7 +2485,7 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import("@sveltejs/kit").Handle[]): import("@sveltejs/kit").Handle;
+	export function sequence(...handlers: Handle[]): Handle;
 
 	export {};
 }
@@ -2620,7 +2789,7 @@ declare module '$app/paths' {
 	 * 	import { asset } from '$app/paths';
 	 * </script>
 	 *
-	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * <img alt="a potato" src={asset('/potato.jpg')} />
 	 * ```
 	 * @since 2.26
 	 */
@@ -2657,6 +2826,7 @@ declare module '$app/server' {
 	 *
 	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
 	 * @since 2.20.0
+	 *
 	 * */
 	export function getRequestEvent(): RequestEvent;
 	/**
@@ -2748,6 +2918,24 @@ declare module '$app/server' {
 	 * @since 2.27
 	 */
 	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	export namespace query {
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.35
+		 */
+		function batch<Input, Output>(validate: "unchecked", fn: (args: Input[]) => MaybePromise<(arg: Input, idx: number) => Output>): RemoteQueryFunction<Input, Output>;
+		/**
+		 * Creates a batch query function that collects multiple calls and executes them in a single request
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
+		 *
+		 * @since 2.35
+		 */
+		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
@@ -2922,7 +3110,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
 	 */
 	export const files: string[];
 	/**
@@ -2934,6 +3122,60 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
+}
+
+/**
+ * This module contains generated types for the routes in your app.
+ */
+declare module '$app/types' {
+	/**
+	 * Interface for all generated app types. This gets extended via declaration merging. DO NOT USE THIS INTERFACE DIRECTLY.
+	 */
+	export interface AppTypes {
+		// These are all functions so that we can leverage function overloads to get the correct type.
+		// Using the return types directly would error with a "not the same type" error.
+		// https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces
+		RouteId(): string;
+		RouteParams(): Record<string, Record<string, string>>;
+		LayoutParams(): Record<string, Record<string, string>>;
+		Pathname(): string;
+		ResolvedPathname(): string;
+		Asset(): string;
+	}
+
+	/**
+	 * A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
+	 */
+	export type RouteId = ReturnType<AppTypes['RouteId']>;
+
+	/**
+	 * A utility for getting the parameters associated with a given route.
+	 */
+	export type RouteParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['RouteParams']>
+		? ReturnType<AppTypes['RouteParams']>[T]
+		: Record<string, never>;
+
+	/**
+	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 */
+	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
+		? ReturnType<AppTypes['LayoutParams']>[T]
+		: Record<string, never>;
+
+	/**
+	 * A union of all valid pathnames in your app.
+	 */
+	export type Pathname = ReturnType<AppTypes['Pathname']>;
+
+	/**
+	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.
+	 */
+	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
+
+	/**
+	 * A union of all the filenames of assets contained in your `static` directory.
+	 */
+	export type Asset = ReturnType<AppTypes['Asset']>;
 }
 
 //# sourceMappingURL=index.d.ts.map

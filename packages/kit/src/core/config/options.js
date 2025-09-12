@@ -1,4 +1,5 @@
 import process from 'node:process';
+import colors from 'kleur';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -108,7 +109,12 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: boolean(true)
+				checkOrigin: deprecate(
+					boolean(true),
+					(keypath) =>
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				),
+				trustedOrigins: string_array([])
 			}),
 
 			embedded: boolean(false),
@@ -120,6 +126,12 @@ const options = object(
 			}),
 
 			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				}),
+				instrumentation: object({
+					server: boolean(false)
+				}),
 				remoteFunctions: boolean(false)
 			}),
 
@@ -245,6 +257,20 @@ const options = object(
 					}
 				),
 
+				handleUnseenRoutes: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -271,6 +297,9 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, object({}, true)),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
@@ -299,7 +328,7 @@ function deprecate(
 ) {
 	return (input, keypath) => {
 		if (input !== undefined) {
-			console.warn(get_message(keypath));
+			console.warn(colors.bold().yellow(get_message(keypath)));
 		}
 
 		return fn(input, keypath);

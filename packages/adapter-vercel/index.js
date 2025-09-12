@@ -1,3 +1,4 @@
+/** @import { BuildOptions } from 'esbuild' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -6,6 +7,17 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
+
+/**
+ * @template T
+ * @template {keyof T} K
+ * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
+ */
+
+/**
+ * We use a custom `Builder` type here to support the minimum version of SvelteKit.
+ * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
+ */
 
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
@@ -47,7 +59,7 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name,
-
+		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -93,13 +105,18 @@ const plugin = function (defaults = {}) {
 				const dir = `${dirs.functions}/${name}.func`;
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
 					}
 				});
+				if (builder.hasServerInstrumentationFile?.()) {
+					builder.instrument?.({
+						entrypoint: `${tmp}/index.js`,
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					});
+				}
 
 				write(
 					`${tmp}/manifest.js`,
@@ -114,12 +131,21 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
+			let warned = false;
+
 			/**
 			 * @param {string} name
 			 * @param {import('./index.js').EdgeConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
+				if (!warned) {
+					warned = true;
+					builder.log.warn(
+						`The \`runtime: 'edge'\` option is deprecated, and will be removed in a future version of adapter-vercel`
+					);
+				}
+
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
@@ -136,9 +162,9 @@ const plugin = function (defaults = {}) {
 				);
 
 				try {
-					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
-						outfile: `${dirs.functions}/${name}.func/index.js`,
+					const outdir = `${dirs.functions}/${name}.func`;
+					/** @type {BuildOptions} */
+					const esbuild_config = {
 						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
 						// https://edge-runtime.vercel.app/features/polyfills
 						// TODO verify the latest ES version the edge runtime supports
@@ -168,10 +194,36 @@ const plugin = function (defaults = {}) {
 							'.eot': 'copy',
 							'.otf': 'copy'
 						}
+					};
+					const result = await esbuild.build({
+						entryPoints: [`${tmp}/edge.js`],
+						outfile: `${outdir}/index.js`,
+						...esbuild_config
 					});
 
-					if (result.warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(result.warnings, {
+					let instrumentation_result;
+					if (builder.hasServerInstrumentationFile?.()) {
+						instrumentation_result = await esbuild.build({
+							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
+							outfile: `${outdir}/instrumentation.server.js`,
+							...esbuild_config
+						});
+
+						builder.instrument?.({
+							entrypoint: `${outdir}/index.js`,
+							instrumentation: `${outdir}/instrumentation.server.js`,
+							module: {
+								generateText: generate_traced_edge_module
+							}
+						});
+					}
+
+					const warnings = instrumentation_result
+						? [...result.warnings, ...instrumentation_result.warnings]
+						: result.warnings;
+
+					if (warnings.length > 0) {
+						const formatted = await esbuild.formatMessages(warnings, {
 							kind: 'warning',
 							color: true
 						});
@@ -477,7 +529,8 @@ const plugin = function (defaults = {}) {
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 };
@@ -510,7 +563,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /**
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {import('./index.js').Config} config
  * @param {string} dir
  */
@@ -625,7 +678,7 @@ function static_vercel_config(builder, config, dir) {
 }
 
 /**
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
@@ -747,7 +800,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 /**
  *
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_4_0} builder
  * @param {any} vercel_config
  */
 function validate_vercel_json(builder, vercel_config) {
@@ -802,6 +855,25 @@ function is_prerendered(route) {
 		route.prerender === true ||
 		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
+}
+
+/**
+ * @param {{ instrumentation: string; start: string }} opts
+ */
+function generate_traced_edge_module({ instrumentation, start }) {
+	return `\
+import './${instrumentation}';
+const promise = import('./${start}');
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+export default async (req, res) => {
+	const { default: handler } = await promise;
+	return handler(req, res);
+}
+`;
 }
 
 export default plugin;

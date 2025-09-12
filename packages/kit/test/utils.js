@@ -1,3 +1,4 @@
+/** @import {SpanData, SpanTree} from './types' */
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -145,6 +146,24 @@ export const test = base.extend({
 	},
 
 	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
+	read_traces: async ({}, use) => {
+		/** @param {string} test_id */
+		function read_traces(test_id) {
+			const raw = fs.readFileSync('test/spans.jsonl', 'utf8').split('\n').filter(Boolean);
+			const traces = /** @type {SpanData[]} */ (raw.map((line) => JSON.parse(line)));
+
+			return traces
+				.filter((t) => t.parent_span_id === undefined && t.attributes.test_id === test_id)
+				.map((root_trace) => {
+					const child_traces = traces.filter((span) => span.trace_id === root_trace.trace_id);
+					return build_span_tree(root_trace, child_traces);
+				});
+		}
+
+		await use(read_traces);
+	},
+
+	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	start_server: async ({}, use) => {
 		/**
 		 * @type {http.Server}
@@ -287,3 +306,16 @@ export const config = defineConfig({
 	testDir: 'test',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
 });
+
+/**
+ * @param {SpanData} current_span
+ * @param {SpanData[]} child_spans
+ * @returns {SpanTree}
+ */
+function build_span_tree(current_span, child_spans) {
+	const children = child_spans.filter((span) => span.parent_span_id === current_span.span_id);
+	return {
+		...current_span,
+		children: children.map((child) => build_span_tree(child, child_spans))
+	};
+}

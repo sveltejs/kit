@@ -30,6 +30,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { Span } from '@opentelemetry/api';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -43,7 +44,6 @@ export interface ServerInternalModule {
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 	get_hooks: () => Promise<Record<string, any>>;
@@ -192,12 +192,13 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: Array<{
-		file: string;
-		hash: string;
-	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
+}
+
+export interface RemoteChunk {
+	hash: string;
+	file: string;
 }
 
 export interface PageNode {
@@ -442,6 +443,7 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
+	csrf_trusted_origins: string[];
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
@@ -450,6 +452,7 @@ export interface SSROptions {
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
+	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
 			head: string;
@@ -552,6 +555,16 @@ export type RemoteInfo =
 			name: string;
 	  }
 	| {
+			/**
+			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
+			 */
+			type: 'query_batch';
+			id: string;
+			name: string;
+			/** Direct access to the function without batching etc logic, for remote functions called from the client */
+			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+	  }
+	| {
 			type: 'form';
 			id: string;
 			name: string;
@@ -565,6 +578,34 @@ export type RemoteInfo =
 			dynamic?: boolean;
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
+
+export type RecordSpan = <T>(options: {
+	name: string;
+	attributes: Record<string, any>;
+	fn: (current: Span) => Promise<T>;
+}) => Promise<T>;
+
+/**
+ * Internal state associated with the current `RequestEvent`,
+ * used for tracking things like remote function calls
+ */
+export interface RequestState {
+	prerendering: PrerenderOptions | undefined;
+	transport: ServerHooks['transport'];
+	handleValidationError: ServerHooks['handleValidationError'];
+	tracing: {
+		record_span: RecordSpan;
+	};
+	form_instances?: Map<any, any>;
+	remote_data?: Record<string, MaybePromise<any>>;
+	refreshes?: Record<string, Promise<any>>;
+	is_endpoint_request?: boolean;
+}
+
+export interface RequestStore {
+	event: RequestEvent;
+	state: RequestState;
+}
 
 export * from '../exports/index.js';
 export * from './private.js';

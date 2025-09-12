@@ -208,8 +208,17 @@ export interface PrerenderEntryGeneratorMismatchHandler {
 	(details: { generatedFromId: string; entry: string; matchedId: string; message: string }): void;
 }
 
+export interface PrerenderUnseenRoutesHandler {
+	(details: { routes: string[]; message: string }): void;
+}
+
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
+export type PrerenderUnseenRoutesHandlerValue =
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderUnseenRoutesHandler;
 export type PrerenderEntryGeneratorMismatchHandlerValue =
 	| 'fail'
 	| 'warn'

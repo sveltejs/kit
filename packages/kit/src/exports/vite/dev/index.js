@@ -29,9 +29,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -266,12 +267,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					};
 				}),
 				prerendered_routes: new Set(),
-				remotes: Object.fromEntries(
-					manifest_data.remotes.map((remote) => [
-						remote.hash,
-						() => vite.ssrLoadModule(remote.file)
-					])
-				),
+				get remotes() {
+					return Object.fromEntries(
+						get_remotes().map((remote) => [
+							remote.hash,
+							() => vite.ssrLoadModule(remote.file).then((module) => ({ default: module }))
+						])
+					);
+				},
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
@@ -499,6 +502,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					}
 
 					return;
+				}
+
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+
+				if (resolved_instrumentation) {
+					await vite.ssrLoadModule(resolved_instrumentation);
 				}
 
 				// we have to import `Server` before calling `set_assets`

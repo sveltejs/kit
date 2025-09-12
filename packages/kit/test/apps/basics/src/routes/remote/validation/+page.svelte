@@ -6,7 +6,9 @@
 		validated_prerendered_query_no_args,
 		validated_prerendered_query_with_arg,
 		validated_command_no_args,
-		validated_command_with_arg
+		validated_command_with_arg,
+		validated_batch_query_no_validation,
+		validated_batch_query_with_validation
 	} from './validation.remote.js';
 
 	function validate_result(result) {
@@ -31,6 +33,9 @@
 			validate_result(await validated_query_with_arg('valid'));
 			validate_result(await validated_prerendered_query_with_arg('valid'));
 			validate_result(await validated_command_with_arg('valid'));
+
+			validate_result(await validated_batch_query_no_validation('valid'));
+			validate_result(await validated_batch_query_with_validation('valid'));
 
 			status = 'success';
 		} catch (e) {
@@ -98,7 +103,18 @@
 						status = 'wrong error message';
 						return;
 					}
-					status = 'success';
+
+					try {
+						// @ts-expect-error
+						await validated_batch_query_with_validation(123);
+						status = 'error';
+					} catch (e) {
+						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+							status = 'wrong error message';
+							return;
+						}
+						status = 'success';
+					}
 				}
 			}
 		}
@@ -117,6 +133,8 @@
 			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
+			// @ts-expect-error
+			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
 
 			status = 'success';
 		} catch (e) {

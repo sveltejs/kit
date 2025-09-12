@@ -64,6 +64,14 @@ export const handleValidationError = ({ issues }) => {
 };
 
 export const handle = sequence(
+	// eslint-disable-next-line prefer-arrow-callback -- this needs a name for tests
+	function set_tracing_test_id({ event, resolve }) {
+		const test_id = !building && event.url.searchParams.get('test_id');
+		if (test_id) {
+			event.tracing.root.setAttribute('test_id', test_id);
+		}
+		return resolve(event);
+	},
 	({ event, resolve }) => {
 		event.locals.key = event.route.id;
 		event.locals.params = event.params;
@@ -184,7 +192,10 @@ export const handle = sequence(
 			e.locals.message = 'hello from hooks.server.js';
 		}
 
-		return resolve(event);
+		return resolve(event, {
+			// needed for asset-preload tests
+			preload: () => true
+		});
 	}
 );
 

@@ -1,10 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { getRequestEvent, with_event } from '../event.js';
+import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
-import { EVENT_STATE, get_event_state } from '../../../server/event-state.js';
 
 /**
  * @param {any} validate_or_fn
@@ -30,8 +29,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 	if ('~standard' in validate_or_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
-			const event = getRequestEvent();
-			const state = get_event_state(event);
+			const { event, state } = get_request_store();
 			const validate = validate_or_fn['~standard'].validate;
 
 			const result = await validate(arg);
@@ -41,7 +39,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 				error(
 					400,
 					await state.handleValidationError({
-						...result,
+						issues: result.issues,
 						event
 					})
 				);
@@ -66,24 +64,17 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @template {MaybePromise<any>} T
  * @param {string} id
  * @param {any} arg
- * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export function get_response(id, arg, event, get_result) {
-	const state = get_event_state(event);
+export async function get_response(id, arg, state, get_result) {
+	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// eslint-disable-next-line @typescript-eslint/await-thenable
+	await 0;
+
 	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
-
 	return ((state.remote_data ??= {})[cache_key] ??= get_result());
-}
-
-/** @param {string} feature */
-export function check_experimental(feature) {
-	if (!__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__) {
-		throw new Error(
-			`Cannot use \`${feature}\` from \`$app/server\` without the experimental flag set to true. Please set kit.experimental.remoteFunctions to \`true\` in your config.`
-		);
-	}
 }
 
 /**
@@ -104,17 +95,16 @@ export function parse_remote_response(data, transport) {
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {boolean} allow_cookies
  * @param {any} arg
  * @param {(arg: any) => any} validate
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, allow_cookies, arg, validate, fn) {
+export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
 	/** @type {RequestEvent} */
 	const cleansed = {
 		...event,
-		// @ts-expect-error this isn't part of the public `RequestEvent` type
-		[EVENT_STATE]: event[EVENT_STATE],
 		setHeaders: () => {
 			throw new Error('setHeaders is not allowed in remote functions');
 		},
@@ -148,6 +138,6 @@ export async function run_remote_function(event, allow_cookies, arg, validate, f
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_event(cleansed, () => validate(arg));
-	return with_event(cleansed, () => fn(validated));
+	const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
+	return with_request_store({ event: cleansed, state }, () => fn(validated));
 }

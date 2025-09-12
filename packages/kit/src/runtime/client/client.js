@@ -39,11 +39,17 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
+import {
+	INVALIDATED_PARAM,
+	TRAILING_SLASH_PARAM,
+	validate_depends,
+	validate_load_response
+} from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import { noop_span } from '../telemetry/noop.js';
 import { text_decoder } from '../utils.js';
 
 export { load_css };
@@ -179,7 +185,10 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-export const remote_responses = __SVELTEKIT_PAYLOAD__.data ?? {};
+// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
+// because it will be `undefined` when users import the exports from this module.
+// It's only defined when the server renders a page.
+export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -431,7 +440,7 @@ function persist_state() {
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
-async function _goto(url, options, redirect_count, nav_token) {
+export async function _goto(url, options, redirect_count, nav_token) {
 	/** @type {string[]} */
 	let query_keys;
 	const result = await navigate({
@@ -715,6 +724,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 		/** @type {import('@sveltejs/kit').LoadEvent} */
 		const load_input = {
+			tracing: { enabled: false, root: noop_span, current: noop_span },
 			route: new Proxy(route, {
 				get: (target, key) => {
 					if (is_tracking) {
@@ -807,19 +817,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			try {
 				lock_fetch();
 				data = (await node.universal.load.call(null, load_input)) ?? null;
-				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-					throw new Error(
-						`a load function related to route '${route.id}' returned ${
-							typeof data !== 'object'
-								? `a ${typeof data}`
-								: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-										? 'an array'
-										: 'a non-plain object'
-						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-					);
-				}
+				validate_load_response(data, `related to route '${route.id}'`);
 			} finally {
 				unlock_fetch();
 			}

@@ -1660,6 +1660,17 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.set works', async ({ page }) => {
+		await page.goto('/remote');
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#set-btn');
+		await expect(page.locator('#count-result')).toHaveText('999 / 999 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -1700,7 +1711,7 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('command does server-initiated single flight mutation', async ({ page }) => {
+	test('command does server-initiated single flight mutation (refresh)', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
@@ -1710,6 +1721,20 @@ test.describe('remote functions', () => {
 		await page.click('#multiply-server-refresh-btn');
 		await expect(page.locator('#command-result')).toHaveText('4');
 		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-set-btn');
+		await expect(page.locator('#command-result')).toHaveText('8');
+		await expect(page.locator('#count-result')).toHaveText('8 / 8 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
@@ -1727,6 +1752,16 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('query/command inside endpoint works', async ({ page }) => {
+		await page.goto('/remote/server-endpoint');
+
+		await page.getByRole('button', { name: 'get' }).click();
+		await expect(page.locator('p')).toHaveText('get');
+
+		await page.getByRole('button', { name: 'post' }).click();
+		await expect(page.locator('p')).toHaveText('post');
 	});
 
 	test('form.enhance works', async ({ page }) => {
@@ -1781,6 +1816,15 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
 		await expect(page.locator('#form-result-1')).toHaveText('override');
 		await expect(page.locator('#get-task')).toHaveText('override');
+	});
+
+	test('form.buttonProps.enhance works with nested elements (issue #14159)', async ({ page }) => {
+		await page.goto('/remote/form');
+		await page.fill('#input-task-nested', 'nested-test');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue
+		await page.click('#submit-btn-nested-span span');
+		await expect(page.locator('#form-result-2')).toHaveText('nested-test');
 	});
 
 	test('prerendered entries not called in prod', async ({ page }) => {
@@ -1907,5 +1951,22 @@ test.describe('remote functions', () => {
 		// Verify pending count returns to 0
 		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
 		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
+	});
+
+	// TODO once we have async SSR adjust the test and move this into test.js
+	test('query.batch works', async ({ page }) => {
+		await page.goto('/remote/batch');
+
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#batch-result-3')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-4')).toHaveText('Error loading todo error: Not found');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('button');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1);
 	});
 });

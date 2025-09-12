@@ -1,8 +1,7 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
-import { getRequestEvent } from '../event.js';
-import { check_experimental, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
+import { get_request_store } from '@sveltejs/kit/internal/server';
+import { run_remote_function } from './shared.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -17,8 +16,6 @@ import { get_event_state } from '../../../server/event-state.js';
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
 export function form(fn) {
-	check_experimental('form');
-
 	/**
 	 * @param {string | number | boolean} [key]
 	 */
@@ -57,12 +54,11 @@ export function form(fn) {
 			id: '',
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
-				const event = getRequestEvent();
-				const state = get_event_state(event);
+				const { event, state } = get_request_store();
 
 				state.refreshes ??= {};
 
-				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+				const result = await run_remote_function(event, state, true, form_data, (d) => d, fn);
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
@@ -89,7 +85,7 @@ export function form(fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { remote_data } = get_event_state(getRequestEvent());
+					const { remote_data } = get_request_store().state;
 					return remote_data?.[__.id];
 				} catch {
 					return undefined;
@@ -111,15 +107,16 @@ export function form(fn) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any>['for']} */
 				value: (key) => {
-					const state = get_event_state(getRequestEvent());
-					let instance = (state.form_instances ??= new Map()).get(key);
+					const { state } = get_request_store();
+					const cache_key = __.id + '|' + JSON.stringify(key);
+					let instance = (state.form_instances ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(key, instance);
+						state.form_instances.set(cache_key, instance);
 					}
 
 					return instance;

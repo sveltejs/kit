@@ -1,32 +1,49 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse, RemoteInfo, SSROptions } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '__sveltekit/paths';
-import { with_event } from '../app/server/event.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { get_event_state } from './event-state.js';
+import { record_span } from '../telemetry/record_span.js';
+
+/** @type {typeof handle_remote_call_internal} */
+export async function handle_remote_call(event, state, options, manifest, id) {
+	return record_span({
+		name: 'sveltekit.remote.call',
+		attributes: {
+			'sveltekit.remote.call.id': id
+		},
+		fn: (current) => {
+			const traced_event = merge_tracing(event, current);
+			return with_request_store({ event: traced_event, state }, () =>
+				handle_remote_call_internal(traced_event, state, options, manifest, id)
+			);
+		}
+	});
+}
 
 /**
  * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {SSROptions} options
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-export async function handle_remote_call(event, options, manifest, id) {
+async function handle_remote_call_internal(event, state, options, manifest, id) {
 	const [hash, name, prerender_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) error(404);
 
 	const module = await remotes[hash]();
-	const fn = module[name];
+	const fn = module.default[name];
 
 	if (!fn) error(404);
 
@@ -34,35 +51,85 @@ export async function handle_remote_call(event, options, manifest, id) {
 	const info = fn.__;
 	const transport = options.hooks.transport;
 
+	event.tracing.current.setAttributes({
+		'sveltekit.remote.call.type': info.type,
+		'sveltekit.remote.call.name': info.name
+	});
+
 	/** @type {string[] | undefined} */
 	let form_client_refreshes;
 
 	try {
+		if (info.type === 'query_batch') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
+			/** @type {{ payloads: string[] }} */
+			const { payloads } = await event.request.json();
+
+			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
+			const get_result = await with_request_store({ event, state }, () => info.run(args));
+			const results = await Promise.all(
+				args.map(async (arg, i) => {
+					try {
+						return { type: 'result', data: get_result(arg, i) };
+					} catch (error) {
+						return {
+							type: 'error',
+							error: await handle_error_and_jsonify(event, state, options, error),
+							status:
+								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+						};
+					}
+				})
+			);
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(results, transport)
+				})
+			);
+		}
+
 		if (info.type === 'form') {
+			if (event.request.method !== 'POST') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`form\` functions must be invoked via POST request, not ${event.request.method}`
+				);
+			}
+
 			if (!is_form_content_type(event.request)) {
 				throw new SvelteKitError(
 					415,
 					'Unsupported Media Type',
-					`Form actions expect form-encoded data — received ${event.request.headers.get(
+					`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
 						'content-type'
 					)}`
 				);
 			}
 
 			const form_data = await event.request.formData();
-			form_client_refreshes = JSON.parse(
-				/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]'
+			form_client_refreshes = /** @type {string[]} */ (
+				JSON.parse(/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]')
 			);
 			form_data.delete('sveltekit:remote_refreshes');
 
 			const fn = info.fn;
-			const data = await with_event(event, () => fn(form_data));
+			const data = await with_request_store({ event, state }, () => fn(form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(/** @type {string[]} */ (form_client_refreshes))
+					refreshes: await serialize_refreshes(form_client_refreshes)
 				})
 			);
 		}
@@ -71,7 +138,7 @@ export async function handle_remote_call(event, options, manifest, id) {
 			/** @type {{ payload: string, refreshes: string[] }} */
 			const { payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
-			const data = await with_event(event, () => fn(arg));
+			const data = await with_request_store({ event, state }, () => fn(arg));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -90,7 +157,9 @@ export async function handle_remote_call(event, options, manifest, id) {
 						new URL(event.request.url).searchParams.get('payload')
 					);
 
-		const data = await with_event(event, () => fn(parse_remote_arg(payload, transport)));
+		const data = await with_request_store({ event, state }, () =>
+			fn(parse_remote_arg(payload, transport))
+		);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -100,20 +169,28 @@ export async function handle_remote_call(event, options, manifest, id) {
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			return json({
-				type: 'redirect',
-				location: error.location,
-				refreshes: await serialize_refreshes(form_client_refreshes ?? [])
-			});
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'redirect',
+					location: error.location,
+					refreshes: await serialize_refreshes(form_client_refreshes ?? [])
+				})
+			);
 		}
+
+		const status =
+			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, error),
-				status: error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+				error: await handle_error_and_jsonify(event, state, options, error),
+				status
 			}),
 			{
+				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
+				// Errors at runtime will be passed to the client and are handled there
+				status: state.prerendering ? status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -125,44 +202,67 @@ export async function handle_remote_call(event, options, manifest, id) {
 	 * @param {string[]} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const refreshes = {
-			...get_event_state(event).refreshes,
-			...Object.fromEntries(
+		const refreshes = state.refreshes ?? {};
+
+		for (const key of client_refreshes) {
+			if (refreshes[key] !== undefined) continue;
+
+			const [hash, name, payload] = key.split('/');
+
+			const loader = manifest._.remotes[hash];
+			const fn = (await loader?.())?.default?.[name];
+
+			if (!fn) error(400, 'Bad Request');
+
+			refreshes[key] = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
+		}
+
+		if (Object.keys(refreshes).length === 0) {
+			return undefined;
+		}
+
+		return stringify(
+			Object.fromEntries(
 				await Promise.all(
-					client_refreshes.map(async (key) => {
-						const [hash, name, payload] = key.split('/');
-						const loader = manifest._.remotes[hash];
-
-						// TODO what do we do in this case? erroring after the mutation has happened is not great
-						if (!loader) error(400, 'Bad Request');
-
-						const module = await loader();
-						const fn = module[name];
-
-						if (!fn) error(400, 'Bad Request');
-
-						return [key, await with_event(event, () => fn(parse_remote_arg(payload, transport)))];
-					})
+					Object.entries(refreshes).map(async ([key, promise]) => [key, await promise])
 				)
-			)
-		};
-
-		return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : undefined;
+			),
+			transport
+		);
 	}
+}
+
+/** @type {typeof handle_remote_form_post_internal} */
+export async function handle_remote_form_post(event, state, manifest, id) {
+	return record_span({
+		name: 'sveltekit.remote.form.post',
+		attributes: {
+			'sveltekit.remote.form.post.id': id
+		},
+		fn: (current) => {
+			const traced_event = merge_tracing(event, current);
+			return with_request_store({ event: traced_event, state }, () =>
+				handle_remote_form_post_internal(traced_event, state, manifest, id)
+			);
+		}
+	});
 }
 
 /**
  * @param {RequestEvent} event
+ * @param {RequestState} state
  * @param {SSRManifest} manifest
  * @param {string} id
  * @returns {Promise<ActionResult>}
  */
-export async function handle_remote_form_post(event, manifest, id) {
+async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const [hash, name, action_id] = id.split('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.[name]);
+	let form = /** @type {RemoteForm<any>} */ (module?.default[name]);
 
 	if (!form) {
 		event.setHeaders({
@@ -182,14 +282,14 @@ export async function handle_remote_form_post(event, manifest, id) {
 
 	if (action_id) {
 		// @ts-expect-error
-		form = with_event(event, () => form.for(JSON.parse(action_id)));
+		form = with_request_store({ event, state }, () => form.for(JSON.parse(action_id)));
 	}
 
 	try {
 		const form_data = await event.request.formData();
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
 
-		await with_event(event, () => fn(form_data));
+		await with_request_store({ event, state }, () => fn(form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.

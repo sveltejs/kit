@@ -10,17 +10,25 @@ Remote functions are a tool for type-safe communication between client and serve
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
-This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `kit.experimental.remoteFunctions` option in your `svelte.config.js`:
+This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `kit.experimental.remoteFunctions` option in your `svelte.config.js` and optionally, the `compilerOptions.experimental.async` option to use `await` in components:
 
 ```js
 /// file: svelte.config.js
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		experimental: {
 			+++remoteFunctions: true+++
 		}
+	},
+	compilerOptions: {
+		experimental: {
+			+++async: true+++
+		}
 	}
 };
+
+export default config;
 ```
 
 ## Overview
@@ -87,6 +95,8 @@ While using `await` is recommended, as an alternative the query also has `loadin
 	const query = getPosts();
 </script>
 
+<h1>Recent posts</h1>
+
 {#if query.error}
 	<p>oops!</p>
 {:else if query.loading}
@@ -152,7 +162,7 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 ### Refreshing queries
 
-Any query can be updated via its `refresh` method:
+Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
 
 ```svelte
 <button onclick={() => getPosts().refresh()}>
@@ -160,7 +170,60 @@ Any query can be updated via its `refresh` method:
 </button>
 ```
 
-> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to refresh the query.
+> [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
+
+## query.batch
+
+`query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem: rather than each query resulting in a separate database call (for example), simultaneous queries are grouped together.
+
+On the server, the callback receives an array of the arguments the function was called with. It must return a function of the form `(input: Input, index: number) => Output`. SvelteKit will then call this with each of the input arguments to resolve the individual calls with their results.
+
+```js
+/// file: weather.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
+import * as v from 'valibot';
+import { query } from '$app/server';
+import * as db from '$lib/server/database';
+
+export const getWeather = query.batch(v.string(), async (cities) => {
+	const weather = await db.sql`
+		SELECT * FROM weather
+		WHERE city = ANY(${cities})
+	`;
+	const lookup = new Map(weather.map(w => [w.city, w]));
+
+	return (city) => lookup.get(city);
+});
+```
+
+```svelte
+<!--- file: Weather.svelte --->
+<script>
+	import CityWeather from './CityWeather.svelte';
+	import { getWeather } from './weather.remote.js';
+
+	let { cities } = $props();
+	let limit = $state(5);
+</script>
+
+<h2>Weather</h2>
+
+{#each cities.slice(0, limit) as city}
+	<h3>{city.name}</h3>
+	<CityWeather weather={await getWeather(city.id)} />
+{/each}
+
+{#if cities.length > limit}
+	<button onclick={() => limit += 5}>
+		Load more
+	</button>
+{/if}
+```
 
 ## form
 
@@ -260,6 +323,9 @@ import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form } from '$app/server';
 const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
 // ---cut---
 export const getPosts = query(async () => { /* ... */ });
 
@@ -274,6 +340,15 @@ export const createPost = form(async (data) => {
 
 	// Redirect to the newly created page
 	redirect(303, `/blog/${slug}`);
+});
+
+export const updatePost = form(async (data) => {
+	// form logic goes here...
+	const result = externalApi.update(post);
+
+	// The API already gives us the updated post,
+	// no need to refresh it, we can set it directly
+	+++await getPost(post.id).set(result);+++
 });
 ```
 
@@ -408,7 +483,7 @@ The override will be applied immediately, and released when the submission compl
 
 By default, submitting a form will send a request to the URL indicated by the `<form>` element's [`action`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form#attributes_for_form_submission) attribute, which in the case of a remote function is a property on the form object generated by SvelteKit.
 
-It's possible for a `<button>` inside the `<form>` to send the request to a _different_ URL, using the [`formaction`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#formaction) attribute. For example, you might have a single form that allows you to login or register depending on which button was clicked.
+It's possible for a `<button>` inside the `<form>` to send the request to a _different_ URL, using the [`formaction`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#formaction) attribute. For example, you might have a single form that allows you to log in or register depending on which button was clicked.
 
 This attribute exists on the `buttonProps` property of a form object:
 
@@ -442,7 +517,7 @@ The `command` function, like `form`, allows you to write data to the server. Unl
 
 > [!NOTE] Prefer `form` where possible, since it gracefully degrades if JavaScript is disabled or fails to load.
 
-As with `query`, if the function accepts an argument it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `command`.
+As with `query`, if the function accepts an argument, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `command`.
 
 ```ts
 /// file: likes.remote.js
@@ -531,6 +606,9 @@ export const addLike = command(v.string(), async (id) => {
 	`;
 
 	+++getLikes(id).refresh();+++
+	// Just like within form functions you can also do
+	// getLikes(id).set(...)
+	// in case you have the result already
 });
 ```
 
@@ -717,7 +795,7 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 
 ## Using `getRequestEvent`
 
-Inside `query`, `form` and `command` you can use [`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
+Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
 
 ```ts
 /// file: user.remote.ts
@@ -746,4 +824,4 @@ Note that some properties of `RequestEvent` are different inside remote function
 
 ## Redirects
 
-Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)

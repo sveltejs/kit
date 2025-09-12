@@ -16,7 +16,9 @@ export default [
 			'**/.custom-out-dir',
 			'packages/adapter-*/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
-			'packages/package/test/fixtures/typescript-svelte-config/expected'
+			'packages/package/test/fixtures/typescript-svelte-config/expected',
+			'packages/package/test/errors/**/*',
+			'packages/package/test/fixtures/**/*'
 		]
 	},
 	{
@@ -43,8 +45,6 @@ export default [
 			'packages/kit/test/apps/**/*',
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
-			'packages/package/test/errors/**/*',
-			'packages/package/test/fixtures/**/*',
 			'packages/test-redirect-importer/index.js'
 		]
 	}

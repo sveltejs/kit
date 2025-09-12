@@ -1,5 +1,41 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
+## 7.2.2
+### Patch Changes
+
+
+- chore: update error message link to the Workers Sites migration guide ([#14237](https://github.com/sveltejs/kit/pull/14237))
+
+- Updated dependencies [[`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`0bf6185`](https://github.com/sveltejs/kit/commit/0bf6185748d7b777fa8b8d37cef331be92ecedde), [`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c)]:
+  - @sveltejs/kit@2.34.1
+
+## 7.2.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 7.2.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
 ## 7.1.3
 ### Patch Changes
 

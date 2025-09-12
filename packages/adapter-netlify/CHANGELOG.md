@@ -1,5 +1,41 @@
 # @sveltejs/adapter-netlify
 
+## 5.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails from an edge function ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
+## 5.2.2
+### Patch Changes
+
+
+- fix: include remote functions when deploying to Netlify edge functions ([#14214](https://github.com/sveltejs/kit/pull/14214))
+
+- Updated dependencies [[`c8f7ac3`](https://github.com/sveltejs/kit/commit/c8f7ac38e9ae1763e7880a29b7f7df01df964a6d), [`107f767`](https://github.com/sveltejs/kit/commit/107f767e3a1a54187527defb29dce753c4f5fa3f)]:
+  - @sveltejs/kit@2.33.1
+
+## 5.2.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.2.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
 ## 5.1.1
 ### Patch Changes
 

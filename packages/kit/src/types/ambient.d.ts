@@ -66,7 +66,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
 	 */
 	export const files: string[];
 	/**
@@ -78,4 +78,58 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
+}
+
+/**
+ * This module contains generated types for the routes in your app.
+ */
+declare module '$app/types' {
+	/**
+	 * Interface for all generated app types. This gets extended via declaration merging. DO NOT USE THIS INTERFACE DIRECTLY.
+	 */
+	export interface AppTypes {
+		// These are all functions so that we can leverage function overloads to get the correct type.
+		// Using the return types directly would error with a "not the same type" error.
+		// https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces
+		RouteId(): string;
+		RouteParams(): Record<string, Record<string, string>>;
+		LayoutParams(): Record<string, Record<string, string>>;
+		Pathname(): string;
+		ResolvedPathname(): string;
+		Asset(): string;
+	}
+
+	/**
+	 * A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
+	 */
+	export type RouteId = ReturnType<AppTypes['RouteId']>;
+
+	/**
+	 * A utility for getting the parameters associated with a given route.
+	 */
+	export type RouteParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['RouteParams']>
+		? ReturnType<AppTypes['RouteParams']>[T]
+		: Record<string, never>;
+
+	/**
+	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 */
+	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
+		? ReturnType<AppTypes['LayoutParams']>[T]
+		: Record<string, never>;
+
+	/**
+	 * A union of all valid pathnames in your app.
+	 */
+	export type Pathname = ReturnType<AppTypes['Pathname']>;
+
+	/**
+	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.
+	 */
+	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
+
+	/**
+	 * A union of all the filenames of assets contained in your `static` directory.
+	 */
+	export type Asset = ReturnType<AppTypes['Asset']>;
 }

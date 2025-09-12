@@ -1,9 +1,8 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent } from '../event.js';
-import { check_experimental, create_validator, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
+import { get_request_store } from '@sveltejs/kit/internal/server';
+import { create_validator, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -52,8 +51,6 @@ import { get_event_state } from '../../../server/event-state.js';
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {
-	check_experimental('command');
-
 	/** @type {(arg?: Input) => Output} */
 	const fn = maybe_fn ?? validate_or_fn;
 
@@ -65,17 +62,23 @@ export function command(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
-		const event = getRequestEvent();
+		const { event, state } = get_request_store();
 
-		if (!event.isRemoteRequest) {
+		if (state.is_endpoint_request) {
+			if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(event.request.method)) {
+				throw new Error(
+					`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
+				);
+			}
+		} else if (!event.isRemoteRequest) {
 			throw new Error(
 				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
 			);
 		}
 
-		get_event_state(event).refreshes ??= {};
+		state.refreshes ??= {};
 
-		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
+		const promise = Promise.resolve(run_remote_function(event, state, true, arg, validate, fn));
 
 		// @ts-expect-error
 		promise.updates = () => {

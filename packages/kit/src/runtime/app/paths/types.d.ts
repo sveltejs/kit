@@ -1,4 +1,3 @@
-// @ts-ignore
 import { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
 
 /**
@@ -57,7 +56,7 @@ export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): 
  * 	import { asset } from '$app/paths';
  * </script>
  *
- * <img alt="a potato" src={asset('potato.jpg')} />
+ * <img alt="a potato" src={asset('/potato.jpg')} />
  * ```
  * @since 2.26
  */
