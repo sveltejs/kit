@@ -394,7 +394,12 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		if (!navigation_result || nav_token !== token) return;
 
 		if (navigation_result.type === 'redirect') {
-			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+			return _goto(
+				new URL(navigation_result.location, current.url).href,
+				{ replaceState: true },
+				1,
+				nav_token
+			);
 		}
 
 		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
