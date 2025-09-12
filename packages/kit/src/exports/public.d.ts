@@ -1256,15 +1256,12 @@ export interface NavigationExternal extends NavigationBase {
 	 */
 	type: Exclude<NavigationType, 'enter' | 'popstate' | 'link'>;
 
+	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
+	// (would possibly be a breaking change to do it prior to that)
 	/**
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
 	delta?: undefined;
-
-	/**
-	 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
-	 */
-	event?: undefined;
 }
 
 export interface NavigationPopState extends NavigationBase {
@@ -1306,9 +1303,9 @@ export interface NavigationLink extends NavigationBase {
 	delta?: undefined;
 
 	/**
-	 * Dispatched `MouseEvent` object when the user clicks link element.
+	 * Dispatched `PointerEvent` object when the user clicks link element.
 	 */
-	event: MouseEvent;
+	event: PointerEvent;
 }
 
 export type Navigation = NavigationExternal | NavigationPopState | NavigationLink;
