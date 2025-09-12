@@ -1255,6 +1255,13 @@ declare module '@sveltejs/kit' {
 		 * The `SubmitEvent` that caused the navigation
 		 */
 		event: SubmitEvent;
+
+		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
+		// (would possibly be a breaking change to do it prior to that)
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta?: undefined;
 	}
 
 	export interface NavigationPopState extends NavigationBase {
@@ -1291,14 +1298,16 @@ declare module '@sveltejs/kit' {
 		type: 'link';
 
 		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
-
-		/**
 		 * The `PointerEvent` that caused the navigation
 		 */
 		event: PointerEvent;
+
+		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
+		// (would possibly be a breaking change to do it prior to that)
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta?: undefined;
 	}
 
 	export type Navigation =
