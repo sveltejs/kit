@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.39.1
+### Patch Changes
+
+
+- fix: more robust remote function code transformation ([#14418](https://github.com/sveltejs/kit/pull/14418))
+
 ## 2.39.0
 ### Minor Changes
 
