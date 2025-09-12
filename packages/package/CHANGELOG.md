@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.1
+### Patch Changes
+
+
+- fix: better alias resolution ([#14413](https://github.com/sveltejs/kit/pull/14413))
+
 ## 2.5.0
 ### Minor Changes
 
