@@ -1553,7 +1553,7 @@ async function navigate({
 
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
-		if (redirect_count < 19) {
+		if (redirect_count < 20) {
 			return navigate({
 				type,
 				url: new URL(navigation_result.location, url),
