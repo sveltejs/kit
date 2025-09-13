@@ -227,7 +227,7 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 
 ## form
 
-The `form` function makes it easy to write data to the server. It takes a callback that receives the current [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
+The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
 
 
 ```ts
@@ -259,30 +259,28 @@ export const getPosts = query(async () => { /* ... */ });
 
 export const getPost = query(v.string(), async (slug) => { /* ... */ });
 
-export const createPost = form(async (data) => {
-	// Check the user is logged in
-	const user = await auth.getUser();
-	if (!user) error(401, 'Unauthorized');
+export const createPost = form(
+	v.object({
+		title: v.pipe(v.string(), v.nonEmpty()),
+		content:v.pipe(v.string(), v.nonEmpty())
+	}),
+	async ({ title, content }) => {
+		// Check the user is logged in
+		const user = await auth.getUser();
+		if (!user) error(401, 'Unauthorized');
 
-	const title = data.get('title');
-	const content = data.get('content');
+		const slug = title.toLowerCase().replace(/ /g, '-');
 
-	// Check the data is valid
-	if (typeof title !== 'string' || typeof content !== 'string') {
-		error(400, 'Title and content are required');
+		// Insert into the database
+		await db.sql`
+			INSERT INTO post (slug, title, content)
+			VALUES (${slug}, ${title}, ${content})
+		`;
+
+		// Redirect to the newly created page
+		redirect(303, `/blog/${slug}`);
 	}
-
-	const slug = title.toLowerCase().replace(/ /g, '-');
-
-	// Insert into the database
-	await db.sql`
-		INSERT INTO post (slug, title, content)
-		VALUES (${slug}, ${title}, ${content})
-	`;
-
-	// Redirect to the newly created page
-	redirect(303, `/blog/${slug}`);
-});
+);
 ```
 
 ...and returns an object that can be spread onto a `<form>` element. The callback is called whenever the form is submitted.
@@ -310,7 +308,122 @@ export const createPost = form(async (data) => {
 </form>
 ```
 
-The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an `onsubmit` handler that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
+
+The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, you can use object notation...
+
+```svelte
+<!-- results in a `{ name: { first: string, last: string } }` object -->
+<input name="name.first" />
+<input name="name.last" />
+```
+
+...and if you can indicate a repeated field with a `[]` suffix:
+
+```svelte
+<label><input type="checkbox" name="language[]" value="html" /> HTML</label>
+<label><input type="checkbox" name="language[]" value="css" /> CSS</label>
+<label><input type="checkbox" name="language[]" value="js" /> JS</label>
+```
+
+If you'd like type safety and autocomplete when setting `name` attributes, you can use the form object's `field` method:
+
+```diff
+<label>
+	<h2>Title</h2>
+-	<input name="title" />
++	<input name={createPost.field('title')} />
+</label>
+```
+
+This will error during typechecking if `title` does not exist on your schema.
+
+The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+
+### Validation
+
+If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated:
+
+```diff
+<form {...createPost}>
+	<label>
+		<h2>Title</h2>
+
++		{#if createPost.issues.title}
++			{#each createPost.issues.title as issue}
++				<p class="issue">{issue.message}</p>
++			{/each}
++		{/if}
+
+-		<input name="title" />
++		<input name="title" aria-invalid={!!createPost.issues.title} />
+	</label>
+
+	<label>
+		<h2>Write your post</h2>
+
++		{#if createPost.issues.content}
++			{#each createPost.issues.content as issue}
++				<p class="issue">{issue.message}</p>
++			{/each}
++		{/if}
+
+-		<textarea name="content"></textarea>
++		<textarea name="content" aria-invalid={!!createPost.issues.content}></textarea>
+	</label>
+
+	<button>Publish!</button>
+</form>
+```
+
+You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
+
+```svelte
+<form {...createPost} oninput={() => createPost.validate()}>
+	<!---->
+</form>
+```
+
+By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ includeUntouched: true })`.
+
+For client-side validation, you can specify a _preflight_ schema which will populate `issues` and prevent data being sent to the server if the data doesn't validate:
+
+```svelte
+<script>
+	import * as v from 'valibot';
+	import { createPost } from '../data.remote';
+
+	const schema = v.object({
+		title: v.pipe(v.string(), v.nonEmpty()),
+		content:v.pipe(v.string(), v.nonEmpty())
+	});
+</script>
+
+<h1>Create a new post</h1>
+
+<form {...createPost.preflight(schema)}>
+	<!---->
+</form>
+```
+
+> [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
+
+### Live inputs
+
+As the user interacts with the form, `input` is automatically updated:
+
+```svelte
+<form {...createPost}>
+	<!---->
+</form>
+
+<div class="preview">
+	<h2>{createPost.input.title}</h2>
+	<div>{@html render(createPost.input.content)}</div>
+</div>
+```
+
+In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `input` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
 
 ### Single-flight mutations
 
@@ -402,7 +515,9 @@ export const createPost = form(async (data) => {
 
 <h1>Create a new post</h1>
 
-<form {...createPost}><!-- ... --></form>
+<form {...createPost}>
+	<!---->
+</form>
 
 {#if createPost.result?.success}
 	<p>Successfully published!</p>
@@ -438,9 +553,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 		showToast('Oh no! Something went wrong');
 	}
 })}>
-	<input name="title" />
-	<textarea name="content"></textarea>
-	<button>publish</button>
+	<!---->
 </form>
 ```
 
@@ -517,7 +630,7 @@ The `command` function, like `form`, allows you to write data to the server. Unl
 
 > [!NOTE] Prefer `form` where possible, since it gracefully degrades if JavaScript is disabled or fails to load.
 
-As with `query`, if the function accepts an argument, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `command`.
+As with `query` and `form`, if the function accepts an argument, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `command`.
 
 ```ts
 /// file: likes.remote.js
