@@ -51,7 +51,9 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### platformProxy
 
-Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
+Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options. 
+
+For local development, if you want to use cloudflare's local bindings like D1, KV etc., `platformProxy.environment` may be set, based on wrangler config env. For example if wrangler config has env, `main` for production build and `dev` or `staging` for non-production builds, `platformProxy.environment` can be set as `dev` or `staging`.
 
 ### fallback
 
