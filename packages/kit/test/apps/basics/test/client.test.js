@@ -1364,6 +1364,130 @@ test.describe('goto', () => {
 			: 'goto: invalid URL';
 		await expect(page.locator('p')).toHaveText(message);
 	});
+
+	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
+		const testEntryPage = '/goto/testentry';
+		const testStartPage = '/goto/teststart';
+		const testFinishPage = '/goto/testfinish';
+		const nonexistentPage = '/goto/nonexistent';
+		const loadReplacePage = '/goto/loadreplace1';
+
+		test.beforeEach(async ({ page }) => {
+			await page.goto(testEntryPage);
+			await page.goto(testStartPage);
+
+			await expect(page).toHaveURL(testStartPage);
+		});
+
+		/**
+		 * @param {string} from
+		 * @param {string} to
+		 * @returns {(page: import('@playwright/test').Page) => Promise<void>}
+		 */
+		function makeExpectGoback(from, to) {
+			return async (page) => {
+				await expect(page).toHaveURL(from);
+				await page.goBack();
+				await expect(page).toHaveURL(to);
+			};
+		}
+
+		test.describe('navigating outside the app on sameorigin', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+		});
+
+		test.describe('redirect after invalidation', () => {
+			test.beforeEach(async ({ app }) => {
+				await app.goto(`${testStartPage}?redirect`, { replaceState: true });
+			});
+
+			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+			test('app.invalidate', async ({ app, page }) => {
+				await app.invalidate('app:goto', { replaceState: true });
+				await expectGoback(page);
+			});
+
+			test('location.reload', async ({ page }) => {
+				await page.evaluate(() => {
+					location.reload();
+				});
+				await expectGoback(page);
+			});
+		});
+
+		test.describe('navigating through redirect chain', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: false });
+
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: true });
+
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+		});
+	});
 });
 
 test.describe('untrack', () => {
