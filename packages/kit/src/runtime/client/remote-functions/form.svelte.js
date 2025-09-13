@@ -344,6 +344,9 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
+			name: {
+				value: (/** @type {string} */ name) => name
+			},
 			preflight: {
 				/** @type {RemoteForm<any, any>['preflight']} */
 				value: (schema) => {

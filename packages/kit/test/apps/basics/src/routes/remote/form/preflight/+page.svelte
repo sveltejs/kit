@@ -30,7 +30,7 @@
 		<p>{set_number.issues.number[0].message}</p>
 	{/if}
 
-	<input type="number" name="number" value={set_number.input.number} />
+	<input type="number" name={set_number.field('number')} value={set_number.input.number} />
 	<button>set number</button>
 </form>
 
@@ -50,7 +50,7 @@
 		<p>{enhanced.issues.number[0].message}</p>
 	{/if}
 
-	<input type="number" name="number" value={enhanced.input.number} />
+	<input type="number" name={enhanced.field('number')} value={enhanced.input.number} />
 	<button><span>set enhanced number</span></button>
 </form>
 

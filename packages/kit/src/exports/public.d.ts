@@ -1750,6 +1750,24 @@ type FlattenIssues<T, Prefix extends string> =
 						}[keyof T]
 					: { [P in Prefix]: StandardSchemaV1.Issue[] };
 
+type FlattenKeys<T, Prefix extends string> =
+	IsAny<T> extends true
+		? { [key: string]: string }
+		: T extends Array<infer U>
+			? U extends string | File
+				? { [P in `${Prefix}[]`]: string[] }
+				: FlattenKeys<U, `${Prefix}[${number}]`>
+			: T extends File
+				? { [P in Prefix]: string }
+				: T extends object
+					? {
+							[K in keyof T]: FlattenKeys<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T]
+					: { [P in Prefix]: string };
+
 export interface FormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | FormInput | FormInput[];
 }
@@ -1792,6 +1810,14 @@ export type RemoteForm<Input extends FormInput | void, Output> = {
 	 * ```
 	 */
 	for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
+	/**
+	 * This method exists to allow you to typecheck `name` attributes. It returns its argument
+	 * @example
+	 * ```svelte
+	 * <input name={login.field('username')} />
+	 * ```
+	 **/
+	field<Name extends keyof UnionToIntersection<FlattenKeys<Input, ''>>>(string: Name): Name;
 	/** Preflight checks */
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */

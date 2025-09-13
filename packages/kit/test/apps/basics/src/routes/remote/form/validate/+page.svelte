@@ -13,13 +13,13 @@
 		<p>{my_form.issues.foo[0].message}</p>
 	{/if}
 
-	<input name="foo" />
+	<input name={my_form.field('foo')} />
 
 	{#if my_form.issues.bar}
 		<p>{my_form.issues.bar[0].message}</p>
 	{/if}
 
-	<input name="bar" />
+	<input name={my_form.field('bar')} />
 
 	<button>submit</button>
 </form>
