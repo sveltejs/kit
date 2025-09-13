@@ -65,6 +65,13 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	/**
+	 * Worker script `_worker.js` output directory.
+	 * If not specified, the adapter will use the `main` field in your
+	 * wrangler file, or default to `_worker.js` in the output directory.
+	 */
+	workerScriptPath?: string;
 }
 
 export interface RoutesJSONSpec {
