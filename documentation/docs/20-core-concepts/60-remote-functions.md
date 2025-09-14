@@ -328,11 +328,10 @@ The `name` attributes on the form controls must correspond to the properties of 
 
 If you'd like type safety and autocomplete when setting `name` attributes, you can use the form object's `field` method:
 
-```diff
+```svelte
 <label>
 	<h2>Title</h2>
--	<input name="title" />
-+	<input name={createPost.field('title')} />
+	<input name={+++createPost.field('title')+++} />
 </label>
 ```
 
@@ -344,32 +343,36 @@ The form object contains `method` and `action` properties that allow it to work 
 
 If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated:
 
-```diff
+```svelte
 <form {...createPost}>
 	<label>
 		<h2>Title</h2>
 
-+		{#if createPost.issues.title}
-+			{#each createPost.issues.title as issue}
-+				<p class="issue">{issue.message}</p>
-+			{/each}
-+		{/if}
++++		{#if createPost.issues.title}
+			{#each createPost.issues.title as issue}
+				<p class="issue">{issue.message}</p>
+			{/each}
+		{/if}+++
 
--		<input name="title" />
-+		<input name="title" aria-invalid={!!createPost.issues.title} />
+		<input
+			name="title"
+			+++aria-invalid={!!createPost.issues.title}+++
+		/>
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+		{#if createPost.issues.content}
-+			{#each createPost.issues.content as issue}
-+				<p class="issue">{issue.message}</p>
-+			{/each}
-+		{/if}
++++		{#if createPost.issues.content}
+			{#each createPost.issues.content as issue}
+				<p class="issue">{issue.message}</p>
+			{/each}
+		{/if}+++
 
--		<textarea name="content"></textarea>
-+		<textarea name="content" aria-invalid={!!createPost.issues.content}></textarea>
+		<textarea
+			name="content"
+			+++aria-invalid={!!createPost.issues.content}+++
+		></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -380,7 +383,7 @@ You don't need to wait until the form is submitted to validate the data — you 
 
 ```svelte
 <form {...createPost} oninput={() => createPost.validate()}>
-	<!---->
+	<!-- -->
 </form>
 ```
 
@@ -401,8 +404,8 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 <h1>Create a new post</h1>
 
-<form {...createPost.preflight(schema)}>
-	<!---->
+<form {...+++createPost.preflight(schema)+++}>
+	<!-- -->
 </form>
 ```
 
@@ -414,7 +417,7 @@ As the user interacts with the form, `input` is automatically updated:
 
 ```svelte
 <form {...createPost}>
-	<!---->
+	<!-- -->
 </form>
 
 <div class="preview">
@@ -445,7 +448,7 @@ export const getPosts = query(async () => { /* ... */ });
 export const getPost = query(v.string(), async (slug) => { /* ... */ });
 
 export const createPost = form(
-	v.object({/* ... */})
+	v.object({/* ... */}),
 	async (data) => {
 		// form logic goes here...
 
@@ -459,7 +462,7 @@ export const createPost = form(
 );
 
 export const updatePost = form(
-	v.object({/* ... */})
+	v.object({/* ... */}),
 	async (data) => {
 		// form logic goes here...
 		const result = externalApi.update(post);
@@ -525,7 +528,7 @@ export const createPost = form(
 <h1>Create a new post</h1>
 
 <form {...createPost}>
-	<!---->
+	<!-- -->
 </form>
 
 {#if createPost.result?.success}
@@ -562,7 +565,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 		showToast('Oh no! Something went wrong');
 	}
 })}>
-	<!---->
+	<!-- -->
 </form>
 ```
 
