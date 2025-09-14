@@ -444,25 +444,31 @@ export const getPosts = query(async () => { /* ... */ });
 
 export const getPost = query(v.string(), async (slug) => { /* ... */ });
 
-export const createPost = form(async (data) => {
-	// form logic goes here...
+export const createPost = form(
+	v.object({/* ... */})
+	async (data) => {
+		// form logic goes here...
 
-	// Refresh `getPosts()` on the server, and send
-	// the data back with the result of `createPost`
-	+++await getPosts().refresh();+++
+		// Refresh `getPosts()` on the server, and send
+		// the data back with the result of `createPost`
+		+++await getPosts().refresh();+++
 
-	// Redirect to the newly created page
-	redirect(303, `/blog/${slug}`);
-});
+		// Redirect to the newly created page
+		redirect(303, `/blog/${slug}`);
+	}
+);
 
-export const updatePost = form(async (data) => {
-	// form logic goes here...
-	const result = externalApi.update(post);
+export const updatePost = form(
+	v.object({/* ... */})
+	async (data) => {
+		// form logic goes here...
+		const result = externalApi.update(post);
 
-	// The API already gives us the updated post,
-	// no need to refresh it, we can set it directly
-	+++await getPost(post.id).set(result);+++
-});
+		// The API already gives us the updated post,
+		// no need to refresh it, we can set it directly
+		+++await getPost(post.id).set(result);+++
+	}
+);
 ```
 
 The second is to drive the single-flight mutation from the client, which we'll see in the section on [`enhance`](#form-enhance).
@@ -500,11 +506,14 @@ export const getPosts = query(async () => { /* ... */ });
 export const getPost = query(v.string(), async (slug) => { /* ... */ });
 
 // ---cut---
-export const createPost = form(async (data) => {
-	// ...
+export const createPost = form(
+	v.object({/* ... */}),
+	async (data) => {
+		// ...
 
-	return { success: true };
-});
+		return { success: true };
+	}
+);
 ```
 
 ```svelte
