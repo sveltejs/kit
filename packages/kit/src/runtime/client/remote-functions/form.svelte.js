@@ -344,7 +344,7 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
-			name: {
+			field: {
 				value: (/** @type {string} */ name) => name
 			},
 			preflight: {
