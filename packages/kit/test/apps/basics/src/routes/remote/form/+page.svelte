@@ -56,7 +56,7 @@
 <form
 	data-enhanced
 	{...enhanced.enhance(async ({ data, submit }) => {
-		await submit().updates(get_message().withOverride((message) => message + ' (override)'));
+		await submit().updates(get_message().withOverride(() => data.message + ' (override)'));
 	})}
 >
 	{#if enhanced.issues.message}

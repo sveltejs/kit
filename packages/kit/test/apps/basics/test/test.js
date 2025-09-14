@@ -1765,12 +1765,10 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
 
 			await page.getByText('message.current: hello (override)').waitFor();
-			await expect(page.getByText('await get_message():')).toHaveText(
-				'await get_message(): hello (override)'
-			);
 
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText('enhanced.result: hello');
