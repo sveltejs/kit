@@ -418,23 +418,69 @@ export async function render_response({
 				remote[key] = await remote_data[key];
 			}
 
+			// Array to store deferred decoder data
+			/** @type {Array<{type: string, value: any}>} */
+			const deferred_decoders = [];
+
 			// TODO this is repeated in a few places — dedupe it
 			const replacer = (/** @type {any} */ thing) => {
 				for (const key in options.hooks.transport) {
 					const encoded = options.hooks.transport[key].encode(thing);
 					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+						// Store the encoded data in deferred array and return placeholder object
+						const index = deferred_decoders.length;
+						deferred_decoders.push({
+							type: key,
+							value: encoded
+						});
+						// Return a placeholder object code that will be replaced on client
+						// Using devalue.uneval to safely serialize the object
+						return devalue.uneval({ __deferredIndex: index });
 					}
 				}
 			};
 
 			properties.push(`data: ${devalue.uneval(remote, replacer)}`);
+
+			// Add deferred decoders if any exist
+			if (deferred_decoders.length > 0) {
+				properties.push(`__deferred: ${devalue.uneval(deferred_decoders)}`);
+			}
 		}
 
 		// create this before declaring `data`, which may contain references to `${global}`
 		blocks.push(`${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
+
+		// Define processDeferred function once if we have transport and remote data
+		if (remote_data && Object.keys(options.hooks.transport || {}).length > 0) {
+			blocks.push(`
+				function processDeferred(obj, app) {
+					if (obj && typeof obj === 'object') {
+						if (obj.__deferredIndex != null && ${global}.__deferred) {
+							const item = ${global}.__deferred[obj.__deferredIndex];
+							try {
+								return app.decode(item.type, item.value);
+							} catch (e) {
+								if (${DEV}) console.warn('Failed to decode deferred value:', e);
+								return obj; // Return placeholder on error
+							}
+						}
+						if (Array.isArray(obj)) {
+							for (let i = 0; i < obj.length; i++) {
+								obj[i] = processDeferred(obj[i], app);
+							}
+						} else {
+							for (const key in obj) {
+								obj[key] = processDeferred(obj[key], app);
+							}
+						}
+					}
+					return obj;
+				}
+			`);
+		}
 
 		const args = ['element'];
 
@@ -485,17 +531,34 @@ export async function render_response({
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
-
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+					{
+						const appNS = __sveltekit_${options.version_hash}.app;
+						const app = appNS.app || appNS;
+						if (${global}.data && ${global}.__deferred) {
+							${global}.data = processDeferred(${global}.data, app);
+							delete ${global}.__deferred;
+						}
+						app.start(${args.join(', ')});
+					}`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
+						if (${global}.data && ${global}.__deferred) {
+							${global}.data = processDeferred(${global}.data, app);
+							delete ${global}.__deferred;
+						}
 						kit.start(app, ${args.join(', ')});
 					});`
-				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
+				: `import(${s(prefixed(client.start))}).then((mod) => {
+						const app = mod.app || mod;
+						const start = mod.start || app.start;
+						if (${global}.data && ${global}.__deferred) {
+							${global}.data = processDeferred(${global}.data, app);
+							delete ${global}.__deferred;
+						}
+						start(${args.join(', ')});
 					});`;
 
 		if (load_env_eagerly) {
