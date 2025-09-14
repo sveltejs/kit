@@ -531,15 +531,11 @@ export async function render_response({
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
-					{
-						const appNS = __sveltekit_${options.version_hash}.app;
-						const app = appNS.app || appNS;
-						if (${global}.data && ${global}.__deferred) {
-							${global}.data = processDeferred(${global}.data, app);
-							delete ${global}.__deferred;
-						}
-						app.start(${args.join(', ')});
-					}`
+					if (${global}.data && ${global}.__deferred) {
+						${global}.data = processDeferred(${global}.data, __sveltekit_${options.version_hash}.app);
+						delete ${global}.__deferred;
+					}
+					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
