@@ -149,9 +149,14 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
+ * @param {boolean} [replace] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  */
-function native_navigation(url) {
-	location.href = url.href;
+function native_navigation(url, replace = false) {
+	if (replace) {
+		location.replace(url.href);
+	} else {
+		location.href = url.href;
+	}
 	return new Promise(() => {});
 }
 
@@ -388,7 +393,12 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		if (!navigation_result || nav_token !== token) return;
 
 		if (navigation_result.type === 'redirect') {
-			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+			return _goto(
+				new URL(navigation_result.location, current.url).href,
+				{ replaceState: true },
+				1,
+				nav_token
+			);
 		}
 
 		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
@@ -1532,10 +1542,11 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404
+					404,
+					replace_state
 				);
 			} else {
-				return await native_navigation(url);
+				return await native_navigation(url, replace_state);
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1546,7 +1557,8 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404
+				404,
+				replace_state
 			);
 		}
 	}
@@ -1563,27 +1575,36 @@ async function navigate({
 
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
-		if (redirect_count >= 20) {
-			navigation_result = await load_root_error_page({
-				status: 500,
-				error: await handle_error(new Error('Redirect loop'), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				url,
-				route: { id: null }
+		if (redirect_count < 20) {
+			return navigate({
+				type,
+				url: new URL(navigation_result.location, url),
+				popped,
+				keepfocus,
+				noscroll,
+				replace_state,
+				state,
+				redirect_count: redirect_count + 1,
+				nav_token
 			});
-		} else {
-			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
-			return false;
 		}
+
+		navigation_result = await load_root_error_page({
+			status: 500,
+			error: await handle_error(new Error('Redirect loop'), {
+				url,
+				params: {},
+				route: { id: null }
+			}),
+			url,
+			route: { id: null }
+		});
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url);
+			await native_navigation(url, replace_state);
 		}
 	}
 
@@ -1725,9 +1746,10 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
+ * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
-async function server_fallback(url, route, error, status) {
+async function server_fallback(url, route, error, status, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
@@ -1747,7 +1769,7 @@ async function server_fallback(url, route, error, status) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url);
+	return await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
