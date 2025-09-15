@@ -22,7 +22,7 @@ export function resolve_aliases(input, file, content, aliases) {
 	 */
 	const replace_import_path = (match, quote, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
-			if (!import_path.startsWith(alias)) continue;
+			if (import_path !== alias && !import_path.startsWith(alias + '/')) continue;
 
 			const full_path = path.join(input, file);
 			const full_import_path = path.join(value, import_path.slice(alias.length));
