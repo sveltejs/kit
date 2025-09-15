@@ -52,6 +52,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
+  - `%sveltekit.version%` — the deployment version, which can be specified with the [`version`](configuration#version) configuration
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
