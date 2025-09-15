@@ -5,14 +5,7 @@ import { app_dir, base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import {
-	app,
-	remote_responses,
-	started,
-	_goto,
-	set_nearest_error_page,
-	invalidateAll
-} from '../client.js';
+import { app, started, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 
@@ -32,7 +25,7 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/** @type {any} */
-		let result = $state.raw(started ? undefined : remote_responses[action_id]);
+		let result = $state.raw(started ? undefined : __SVELTEKIT_PAYLOAD__.data?.[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
