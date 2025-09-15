@@ -189,7 +189,7 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-/** @type {Record<string, any>} */
+/** @type {Record<string, (app: import('./types.js').SvelteKitApp) => any>} */
 // we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
 // because it will be `undefined` when users import the exports from this module.
 // It's only defined when the server renders a page.

@@ -15,7 +15,7 @@ export function query(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
 			if (!started) {
-				const result = remote_responses[cache_key];
+				const result = remote_responses[cache_key]?.(app);
 				if (result) {
 					return result;
 				}
@@ -39,7 +39,7 @@ export function query_batch(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
 			if (!started) {
-				const result = remote_responses[cache_key];
+				const result = remote_responses[cache_key]?.(app);
 				if (result) {
 					return result;
 				}

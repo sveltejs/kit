@@ -428,7 +428,11 @@ export async function render_response({
 				}
 			};
 
-			properties.push(`data: ${devalue.uneval(remote, replacer)}`);
+			properties.push(
+				`data: {${Object.entries(remote)
+					.map(([key, value]) => s(key) + ': (app) => ' + devalue.uneval(value, replacer))
+					.join(',')}}`
+			);
 		}
 
 		// create this before declaring `data`, which may contain references to `${global}`

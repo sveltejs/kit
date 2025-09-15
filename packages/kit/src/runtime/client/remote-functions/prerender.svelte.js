@@ -118,7 +118,7 @@ export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(async () => {
 			if (!started) {
-				const result = remote_responses[cache_key];
+				const result = remote_responses[cache_key]?.(app);
 				if (result) {
 					return result;
 				}
