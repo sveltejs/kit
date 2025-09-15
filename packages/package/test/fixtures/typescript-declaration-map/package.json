@@ -1,0 +1,16 @@
+{
+	"name": "typescript-declaration-map",
+	"private": true,
+	"version": "1.0.0",
+	"description": "standard typescript package with declarationMap:true",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

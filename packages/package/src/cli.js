@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import process from 'node:process';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './config.js';
@@ -22,6 +23,7 @@ prog
 	.describe('Create a package')
 	.option('-i, --input', 'Input directory')
 	.option('-o, --output', 'Output directory', 'dist')
+	.option('-p, --preserve-output', 'Do not delete the output directory before packaging', false)
 	.option('-t, --types', 'Emit type declarations', true)
 	.option('-w, --watch', 'Rerun when files change', false)
 	.option(
@@ -46,6 +48,7 @@ prog
 				cwd: process.cwd(),
 				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',
 				output: args.output,
+				preserve_output: args['preserve-output'],
 				tsconfig: args.tsconfig,
 				types: args.types,
 				config

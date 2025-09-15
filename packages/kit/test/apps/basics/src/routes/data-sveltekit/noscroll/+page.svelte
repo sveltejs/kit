@@ -1,4 +1,4 @@
-<div style="height: 2000px; background: palegoldenrod" />
+<div style="height: 2000px; background: palegoldenrod"></div>
 
 <a id="one" href="/data-sveltekit/noscroll/target" data-sveltekit-noscroll>one</a>
 

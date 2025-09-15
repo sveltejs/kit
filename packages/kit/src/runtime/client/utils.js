@@ -122,13 +122,20 @@ export function find_anchor(element, target) {
 /**
  * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
+ * @param {boolean} uses_hash_router
  */
-export function get_link_info(a, base) {
+export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+		// if the hash doesn't start with `#/` then it's probably linking to an id on the current page
+		if (uses_hash_router && url.hash.match(/^#[^/]/)) {
+			const route = location.hash.split('#')[1] || '/';
+			url.hash = `#${route}${url.hash}`;
+		}
 	} catch {}
 
 	const target = a instanceof SVGAElement ? a.target.baseVal : a.target;
@@ -136,7 +143,7 @@ export function get_link_info(a, base) {
 	const external =
 		!url ||
 		!!target ||
-		is_external_url(url, base) ||
+		is_external_url(url, base, uses_hash_router) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
 	const download = url?.origin === origin && a.hasAttribute('download');
@@ -234,12 +241,17 @@ export function notifiable_store(value) {
 	return { notify, set, subscribe };
 }
 
+export const updated_listener = {
+	v: () => {}
+};
+
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
 	if (DEV || !BROWSER) {
 		return {
 			subscribe,
+			// eslint-disable-next-line @typescript-eslint/require-await
 			check: async () => false
 		};
 	}
@@ -272,6 +284,7 @@ export function create_updated_store() {
 
 			if (updated) {
 				set(true);
+				updated_listener.v();
 				clearTimeout(timeout);
 			}
 
@@ -290,9 +303,68 @@ export function create_updated_store() {
 }
 
 /**
+ * Is external if
+ * - origin different
+ * - path doesn't start with base
+ * - uses hash router and pathname is more than base
  * @param {URL} url
  * @param {string} base
+ * @param {boolean} hash_routing
  */
-export function is_external_url(url, base) {
-	return url.origin !== origin || !url.pathname.startsWith(base);
+export function is_external_url(url, base, hash_routing) {
+	if (url.origin !== origin || !url.pathname.startsWith(base)) {
+		return true;
+	}
+
+	if (hash_routing) {
+		if (url.pathname === base + '/' || url.pathname === base + '/index.html') {
+			return false;
+		}
+
+		// be lenient if serving from filesystem
+		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+/** @type {Record<string, boolean>} */
+const seen = {};
+
+/**
+ * Used for server-side resolution, to replicate Vite's CSS loading behaviour in production.
+ *
+ * Closely modelled after https://github.com/vitejs/vite/blob/3dd12f4724130fdf8ba44c6d3252ebdff407fd47/packages/vite/src/node/plugins/importAnalysisBuild.ts#L214
+ * (which ideally we could just use directly, but it's not exported)
+ * @param {string[]} deps
+ */
+export function load_css(deps) {
+	if (__SVELTEKIT_CLIENT_ROUTING__) return;
+
+	const csp_nonce_meta = /** @type {HTMLMetaElement} */ (
+		document.querySelector('meta[property=csp-nonce]')
+	);
+	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
+
+	for (const dep of deps) {
+		if (dep in seen) continue;
+		seen[dep] = true;
+
+		if (document.querySelector(`link[href="${dep}"][rel="stylesheet"]`)) {
+			continue;
+		}
+
+		const link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.crossOrigin = '';
+		link.href = dep;
+		if (csp_nonce) {
+			link.setAttribute('nonce', csp_nonce);
+		}
+		document.head.appendChild(link);
+	}
 }

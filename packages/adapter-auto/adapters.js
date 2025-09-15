@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 // List of adapters to check for. `version` is used to pin the installed adapter version and should point
 // to the latest version of the adapter that is compatible with adapter-auto's current peerDependency version of SvelteKit.
 export const adapters = [
@@ -5,19 +7,19 @@ export const adapters = [
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
 		module: '@sveltejs/adapter-vercel',
-		version: '4'
+		version: '5'
 	},
 	{
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
-		version: '3'
+		version: '7'
 	},
 	{
 		name: 'Netlify',
 		test: () => !!process.env.NETLIFY,
 		module: '@sveltejs/adapter-netlify',
-		version: '3'
+		version: '5'
 	},
 	{
 		name: 'Azure Static Web Apps',

@@ -22,4 +22,4 @@
 <a href="https://google.de">external</a>
 <!-- svelte-ignore a11y-invalid-attribute -->
 <a download href="">external</a>
-<pre>{times_triggered} {unload} {navigation_type}</pre>
+<pre>{times_triggered} {unload} {`${navigation_type}`}</pre>

@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { prerendered } from '$service-worker';
 
 console.log(prerendered);

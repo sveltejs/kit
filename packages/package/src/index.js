@@ -34,14 +34,17 @@ async function do_build(options, analyse_code) {
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, temp, options.cwd, alias, files);
+		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
 	}
 
 	for (const file of files) {
 		await process_file(input, temp, file, options.config.preprocess, alias, tsconfig, analyse_code);
 	}
 
-	rimraf(output);
+	if (!options.preserve_output) {
+		rimraf(output);
+	}
+
 	mkdirp(output);
 	copy(temp, output);
 
@@ -78,9 +81,10 @@ export async function watch(options) {
 	let timeout;
 
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
+	/** @type {Promise<void>} */
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
-	watcher.on('all', async (type, filepath) => {
+	watcher.on('all', (type, filepath) => {
 		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });
@@ -137,7 +141,7 @@ export async function watch(options) {
 
 			if (!errored && options.types) {
 				try {
-					await emit_dts(input, output, options.cwd, alias, files);
+					await emit_dts(input, output, output, options.cwd, alias, files, tsconfig);
 					console.log('Updated .d.ts files');
 				} catch (e) {
 					errored = true;
@@ -172,6 +176,7 @@ export async function watch(options) {
 function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
 	const output = path.resolve(options.cwd, options.output);
+	const preserve_output = options.preserve_output;
 	const temp = path.resolve(
 		options.cwd,
 		options.config.kit?.outDir ?? '.svelte-kit',
@@ -188,6 +193,7 @@ function normalize_options(options) {
 	return {
 		input,
 		output,
+		preserve_output,
 		temp,
 		extensions,
 		alias,

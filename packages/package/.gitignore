@@ -5,6 +5,8 @@
 !/test/node_modules/
 /test/apps/basics/test/errors.json
 .custom-out-dir/
+/test/watch/src/lib/*
+!/test/watch/src/lib/index.js
 
 # these are already ignored by the top level .gitignore
 # repeating them here as a faux prettier ignore

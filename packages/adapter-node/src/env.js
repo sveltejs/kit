@@ -1,4 +1,5 @@
 /* global ENV_PREFIX */
+import process from 'node:process';
 
 const expected = new Set([
 	'SOCKET_PATH',

@@ -7,7 +7,7 @@ import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 
 // TODO these types should be described in a neutral place, rather than
-// inside either `packages/kit` or `kit.svelte.dev`
+// inside either `packages/kit` or `svelte.dev/docs/kit`
 const descriptions_dir = fileURLToPath(new URL('../../../src/types/synthetic', import.meta.url));
 
 /** @param {string} filename */

@@ -6,7 +6,8 @@ export default function plugin(config?: Config): Adapter;
 export interface ServerlessConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
-	 * @default 'nodejs18.x'
+	 * @default Same as the build environment
+	 * @deprecated
 	 */
 	runtime?: `nodejs${number}.x`;
 	/**
@@ -28,11 +29,6 @@ export interface ServerlessConfig {
 	 * If `true`, this route will always be deployed as its own separate function
 	 */
 	split?: boolean;
-
-	/**
-	 * https://vercel.com/docs/build-output-api/v3/configuration#images
-	 */
-	images?: ImagesConfig;
 
 	/**
 	 * [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) configuration.
@@ -79,6 +75,7 @@ type ImagesConfig = {
 	contentDispositionType?: string;
 };
 
+/** @deprecated */
 export interface EdgeConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
@@ -100,7 +97,12 @@ export interface EdgeConfig {
 	split?: boolean;
 }
 
-export type Config = EdgeConfig | ServerlessConfig;
+export type Config = (EdgeConfig | ServerlessConfig) & {
+	/**
+	 * https://vercel.com/docs/build-output-api/v3/configuration#images
+	 */
+	images?: ImagesConfig;
+};
 
 // we copy the RequestContext interface from `@vercel/edge` because that package can't co-exist with `@types/node`.
 // see https://github.com/sveltejs/kit/pull/9280#issuecomment-1452110035

@@ -13,5 +13,5 @@
 	});
 </script>
 
-<h1>{from?.url.pathname} -> {to?.url.pathname}</h1>
+<h1>{`${from?.url.pathname} -> ${to?.url.pathname}`}</h1>
 <a href="/navigation-lifecycle/after-navigate/b">/b</a>

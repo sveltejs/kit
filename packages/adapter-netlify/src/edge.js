@@ -1,59 +1,43 @@
 import { Server } from '0SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest } from 'MANIFEST';
 
 const server = new Server(manifest);
-const prefix = `/${manifest.appPath}/`;
+
+/**
+ * We don't know the origin until we receive a request, but
+ * that's guaranteed to happen before we call `read`
+ * @type {string}
+ */
+let origin;
 
 const initialized = server.init({
 	// @ts-ignore
-	env: Deno.env.toObject()
+	env: Deno.env.toObject(),
+	read: async (file) => {
+		const url = `${origin}/${file}`;
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
+		}
+
+		return response.body;
+	}
 });
 
-/**
- * @param { Request } request
- * @param { any } context
- * @returns { Promise<Response> }
- */
+/** @type {import('@netlify/edge-functions').EdgeFunction} */
 export default async function handler(request, context) {
-	if (is_static_file(request)) {
-		// Static files can skip the handler
-		// TODO can we serve _app/immutable files with an immutable cache header?
-		return;
+	if (!origin) {
+		origin = new URL(request.url).origin;
+		await initialized;
 	}
 
-	await initialized;
 	return server.respond(request, {
 		platform: { context },
 		getClientAddress() {
 			return context.ip;
 		}
 	});
-}
-
-/**
- * @param {Request} request
- */
-function is_static_file(request) {
-	const url = new URL(request.url);
-
-	// Assets in the app dir
-	if (url.pathname.startsWith(prefix)) {
-		return true;
-	}
-
-	// prerendered pages and index.html files
-	const pathname = url.pathname.replace(/\/$/, '');
-	let file = pathname.substring(1);
-
-	try {
-		file = decodeURIComponent(file);
-	} catch (err) {
-		// ignore
-	}
-
-	return (
-		manifest.assets.has(file) ||
-		manifest.assets.has(file + '/index.html') ||
-		prerendered.has(pathname || '/')
-	);
 }

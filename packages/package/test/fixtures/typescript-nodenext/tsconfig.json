@@ -2,6 +2,9 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "NodeNext",
-		"moduleResolution": "NodeNext"
+		"verbatimModuleSyntax": true,
+		"moduleResolution": "NodeNext",
+		"checkJs": true,
+		"noEmit": true
 	}
 }

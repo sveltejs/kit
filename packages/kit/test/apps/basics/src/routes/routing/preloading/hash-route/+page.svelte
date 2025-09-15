@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	export let data;
+	let { data } = $props();
 
 	const modal_contents = {
 		'please-dont-show-me': {
@@ -16,7 +16,7 @@
 	let modal = undefined;
 
 	const show_modal = () => {
-		const hash = $page.url.hash.substring(1);
+		const hash = page.url.hash.substring(1);
 		modal = modal_contents[hash];
 	};
 
