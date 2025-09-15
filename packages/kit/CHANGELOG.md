@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.40.0
+### Minor Changes
+
+
+- feat: include `event` property on popstate/link/form navigation ([#14307](https://github.com/sveltejs/kit/pull/14307))
+
+
+### Patch Changes
+
+
+- fix: respect `replaceState`/`keepFocus`/`noScroll` when a navigation results in a redirect ([#14424](https://github.com/sveltejs/kit/pull/14424))
+
+
+- fix: invalidate preload cache when invalidateAll is true ([#14420](https://github.com/sveltejs/kit/pull/14420))
+
 ## 2.39.1
 ### Patch Changes
 

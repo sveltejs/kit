@@ -1,5 +1,14 @@
 # @sveltejs/package
 
+## 2.5.2
+### Patch Changes
+
+
+- fix: handle `import/export * (as ...)` when resolving aliases ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+
+- fix: prevent false-positive alias replacement ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
 ## 2.5.1
 ### Patch Changes
 
