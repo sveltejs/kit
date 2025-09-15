@@ -1,7 +1,7 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '__sveltekit/paths';
-import { app, goto, started } from '../client.js';
+import { app, goto, remote_responses, started } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
@@ -15,7 +15,7 @@ export function query(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
 			if (!started) {
-				const result = __SVELTEKIT_PAYLOAD__.data?.[cache_key];
+				const result = remote_responses[cache_key];
 				if (result) {
 					return result;
 				}
@@ -39,7 +39,7 @@ export function query_batch(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
 			if (!started) {
-				const result = __SVELTEKIT_PAYLOAD__.data?.[cache_key];
+				const result = remote_responses[cache_key];
 				if (result) {
 					return result;
 				}

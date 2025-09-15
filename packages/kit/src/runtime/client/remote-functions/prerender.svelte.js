@@ -3,7 +3,7 @@ import { app_dir, base } from '__sveltekit/paths';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, started } from '../client.js';
+import { app, remote_responses, started } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 
 // Initialize Cache API for prerender functions
@@ -118,7 +118,7 @@ export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(async () => {
 			if (!started) {
-				const result = __SVELTEKIT_PAYLOAD__.data?.[cache_key];
+				const result = remote_responses[cache_key];
 				if (result) {
 					return result;
 				}
