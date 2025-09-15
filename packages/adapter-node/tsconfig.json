@@ -4,6 +4,7 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
+		"strictNullChecks": true,
 		"allowSyntheticDefaultImports": true,
 		"target": "es2022",
 		"module": "node16",
@@ -13,5 +14,6 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["index.js", "src/**/*.js", "ambient.d.ts"]
+	"include": ["index.js", "src/**/*.js", "tests/**/*.js", "internal.d.ts", "utils.js"],
+	"exclude": ["tests/smoke.spec_disabled.js"]
 }

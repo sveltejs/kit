@@ -1,7 +1,7 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	export let data;
+	let { data } = $props();
 </script>
 
 <ul>
@@ -11,7 +11,7 @@
 	<li><a href="/routing/trailing-slash-server/never/">/never/</a></li>
 </ul>
 
-<p data-test-id="pathname-store">{$page.url.pathname}</p>
+<p data-test-id="pathname-store">{page.url.pathname}</p>
 <p data-test-id="pathname-data">{data.pathname}</p>
 
 <slot />

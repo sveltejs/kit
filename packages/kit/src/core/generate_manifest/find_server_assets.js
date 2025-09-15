@@ -41,6 +41,7 @@ export function find_server_assets(build_data, routes) {
 
 	for (const n of used_nodes) {
 		const node = build_data.manifest_data.nodes[n];
+		if (node?.universal) add_assets(node.universal);
 		if (node?.server) add_assets(node.server);
 	}
 

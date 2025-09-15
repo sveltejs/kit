@@ -1,14 +1,14 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<title>Custom error page: {$page.error.message}</title>
+	<title>Custom error page: {page.error.message}</title>
 </svelte:head>
 
-<h1>{$page.status}</h1>
+<h1>{page.status}</h1>
 
-<p id="message">This is your custom error page saying: "<b>{$page.error.message}</b>"</p>
+<p id="message">This is your custom error page saying: "<b>{page.error.message}</b>"</p>
 
 <style>
 	h1,

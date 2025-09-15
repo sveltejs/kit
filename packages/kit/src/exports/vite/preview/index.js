@@ -14,7 +14,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{ middlewares: import('connect').Server }} vite
+ * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -128,8 +128,10 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
+				const dir = pathname.startsWith(`/${svelte_config.kit.appDir}/remote/`) ? 'data' : 'pages';
+
 				let filename = normalizePath(
-					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
+					join(svelte_config.kit.outDir, `output/prerendered/${dir}` + pathname)
 				);
 
 				try {
@@ -185,14 +187,14 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const host = req.headers['host'];
+			const host = req.headers[':authority'] || req.headers.host;
 
 			const request = await getRequest({
 				base: `${protocol}://${host}`,
 				request: req
 			});
 
-			setResponse(
+			await setResponse(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {

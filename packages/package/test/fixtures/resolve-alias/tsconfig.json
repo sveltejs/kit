@@ -9,5 +9,5 @@
 			"$utils/*": ["./src/lib/utils/*"]
 		}
 	},
-	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte"]
+	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte", "src/**/*.ts"]
 }

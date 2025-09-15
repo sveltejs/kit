@@ -7,9 +7,10 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies styles correctly', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
+	/**
+	 * @param {(selector: string, prop: string) => Promise<string>} get_computed_style
+	 */
+	function check_styles(get_computed_style) {
 		test.step('applies imported styles', async () => {
 			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
 		});
@@ -29,6 +30,27 @@ test.describe('CSS', () => {
 		test.step('does not apply raw and url', async () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
+	}
+
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
+		await page.goto('/css');
+		// without this assertion, the WebKit browser seems to close before we can compute the styles
+		await expect(page.locator('.styled')).toBeVisible();
+		check_styles(get_computed_style);
+	});
+
+	test('applies styles correctly after client-side navigation', async ({
+		page,
+		app,
+		get_computed_style,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/css');
+
+		check_styles(get_computed_style);
 	});
 
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
@@ -198,7 +220,8 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope) (500 Internal Error)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
+					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
 			);
 		});
 	}
@@ -306,6 +329,11 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Not found"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(555);
+	});
+
+	test('server-side error from load() still has layout data', async ({ page }) => {
+		await page.goto('/errors/load-error-server/layout-data');
+		expect(await page.textContent('#error-layout-data')).toBe('42');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -593,6 +621,11 @@ test.describe('Redirects', () => {
 		await page.goto('/redirect/in-handle?throw&cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('works when used from another package', async ({ page }) => {
+		await page.goto('/redirect/package');
+		expect(await page.textContent('h1')).toBe('c');
 	});
 });
 
@@ -1028,6 +1061,14 @@ test.describe('XSS', () => {
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
 	});
+
+	test('no xss via tracked search parameters', async ({ page }) => {
+		// https://github.com/sveltejs/kit/security/advisories/GHSA-6q87-84jw-cjhp
+		await page.goto('/xss/query-tracking?</script/><script>window.pwned%3D1</script/>');
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
+	});
 });
 
 test.describe('$app/server', () => {
@@ -1036,17 +1077,21 @@ test.describe('$app/server', () => {
 
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
+		const styles = await page.textContent('[data-testid="styles"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
 
 		// the emoji is there to check that base64 decoding works correctly
-		expect(auto.trim()).toBe('Imported without ?url 😎');
-		expect(url.trim()).toBe('Imported with ?url 😎');
-		expect(local_glob.trim()).toBe('Imported with ?url via glob 😎');
-		expect(external_glob.trim()).toBe(
+		expect(auto?.trim()).toBe('Imported without ?url 😎');
+		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
+		expect(external_glob?.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
+
+		// check that paths in .css files are relative
+		expect(styles).toContain('url(.');
 	});
 });

@@ -20,4 +20,4 @@ SvelteKit users have also published plenty of examples on GitHub, under the [#sv
 
 ## Support
 
-You can ask for help on [Discord](https://svelte.dev/chat) and [StackOverflow](https://stackoverflow.com/questions/tagged/sveltekit). Please first search for information related to your issue in the FAQ, Google or another search engine, issue tracker, and Discord chat history in order to be respectful of others' time. There are many more people asking questions than answering them, so this will help in allowing the community to grow in a scalable fashion.
+You can ask for help on [Discord](/chat) and [StackOverflow](https://stackoverflow.com/questions/tagged/sveltekit). Please first search for information related to your issue in the FAQ, Google or another search engine, issue tracker, and Discord chat history in order to be respectful of others' time. There are many more people asking questions than answering them, so this will help in allowing the community to grow in a scalable fashion.

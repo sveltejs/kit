@@ -1,7 +1,7 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<script src="http://localhost:{$page.url.searchParams.get('port')}/blocked.js"></script>
+	<script src="http://localhost:{page.url.searchParams.get('port')}/blocked.js"></script>
 </svelte:head>

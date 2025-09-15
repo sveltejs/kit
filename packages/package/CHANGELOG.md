@@ -1,5 +1,76 @@
 # @sveltejs/package
 
+## 2.5.2
+### Patch Changes
+
+
+- fix: handle `import/export * (as ...)` when resolving aliases ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+
+- fix: prevent false-positive alias replacement ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+## 2.5.1
+### Patch Changes
+
+
+- fix: better alias resolution ([#14413](https://github.com/sveltejs/kit/pull/14413))
+
+## 2.5.0
+### Minor Changes
+
+
+- feat: add `--preserve-output` flag to prevent deletion of the output directory before packaging ([#13055](https://github.com/sveltejs/kit/pull/13055))
+
+## 2.4.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 2.4.0
+### Minor Changes
+
+
+- feat: support svelte.config.ts ([#13935](https://github.com/sveltejs/kit/pull/13935))
+  
+  > **NOTE**
+  >
+  > Your runtime has to support importing TypeScript files for `svelte.config.ts` to work.
+  > In Node.js, the feature is supported with the `--experimental-strip-types` flag starting in Node 22.6.0 and supported without a flag starting in Node 23.6.0.
+
+## 2.3.12
+### Patch Changes
+
+
+- fix: handle non-semver-style dependency versions ([#13925](https://github.com/sveltejs/kit/pull/13925))
+
+## 2.3.11
+### Patch Changes
+
+
+- fix: handle missing package.json gracefully ([#13691](https://github.com/sveltejs/kit/pull/13691))
+
+## 2.3.10
+### Patch Changes
+
+
+- chore: update to chokidar 4.0.3 ([#13381](https://github.com/sveltejs/kit/pull/13381))
+
+## 2.3.9
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency for more up-to-date `d.ts` output ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+
+- fix: adjust declaration map paths ([#8843](https://github.com/sveltejs/kit/pull/8843))
+
+## 2.3.8
+### Patch Changes
+
+
+- fix: resolve aliases more robustly ([#13351](https://github.com/sveltejs/kit/pull/13351))
+
 ## 2.3.7
 ### Patch Changes
 

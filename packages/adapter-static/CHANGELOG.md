@@ -1,5 +1,26 @@
 # @sveltejs/adapter-static
 
+## 3.0.9
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 3.0.8
+### Patch Changes
+
+
+- fix: use optional chaining when checking router type ([#13218](https://github.com/sveltejs/kit/pull/13218))
+
+## 3.0.7
+### Patch Changes
+
+
+- fix: allow dynamic routes with missing fallback in hash mode ([#13213](https://github.com/sveltejs/kit/pull/13213))
+
 ## 3.0.6
 ### Patch Changes
 

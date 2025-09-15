@@ -1,11 +1,11 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <pre>{JSON.stringify(
 		{
-			status: $page.status,
-			...$page.error
+			status: page.status,
+			...page.error
 		},
 		null,
 		'  '

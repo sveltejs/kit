@@ -1,5 +1,59 @@
 # @sveltejs/adapter-auto
 
+## 6.1.0
+### Minor Changes
+
+
+- feat: add Deno as a supported package manager ([#14163](https://github.com/sveltejs/kit/pull/14163))
+
+
+### Patch Changes
+
+- Updated dependencies [[`ece3906`](https://github.com/sveltejs/kit/commit/ece3906e11ab0eeac3778abc4666f2145f98f22e), [`5ac9d27`](https://github.com/sveltejs/kit/commit/5ac9d2737263364c9b6e63b115b7aa9792bd1b3f), [`fed6331`](https://github.com/sveltejs/kit/commit/fed6331722a3ea47df9dd8ab01ba23f549fe5385), [`69f4e5f`](https://github.com/sveltejs/kit/commit/69f4e5feacfee429025e78b0e1e0a7b2e0639dc9), [`6b34122`](https://github.com/sveltejs/kit/commit/6b34122b4446da545d261ad96217016412b16510), [`9493537`](https://github.com/sveltejs/kit/commit/949353793a2d27e7cc44dddbdbcf40639b33a4b7), [`f67ba09`](https://github.com/sveltejs/kit/commit/f67ba09e43a598e20d7f8bba62bbc0547fd3f8b1)]:
+  - @sveltejs/kit@2.28.0
+
+## 6.0.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 6.0.1
+### Patch Changes
+
+
+- chore: remove `import-meta-resolve` dependency ([#13629](https://github.com/sveltejs/kit/pull/13629))
+
+- Updated dependencies [[`bd1c04662332cbafa843c35a2e783486116af3d5`](https://github.com/sveltejs/kit/commit/bd1c04662332cbafa843c35a2e783486116af3d5), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f), [`09f61ec2a14573e27769edb403c58aea5433a39f`](https://github.com/sveltejs/kit/commit/09f61ec2a14573e27769edb403c58aea5433a39f)]:
+  - @sveltejs/kit@2.21.0
+
+## 6.0.0
+### Major Changes
+
+
+- feat: upgrade `@sveltejs/adapter-cloudflare` to version 7 ([#13661](https://github.com/sveltejs/kit/pull/13661))
+
+## 5.0.0
+### Major Changes
+
+
+- feat: update Netlify and Cloudflare Pages major versions ([#13615](https://github.com/sveltejs/kit/pull/13615))
+
+## 4.0.0
+### Major Changes
+
+
+- feat: update Vercel, Cloudflare Pages, and Netlify adapter major versions ([#13142](https://github.com/sveltejs/kit/pull/13142))
+
+
+### Patch Changes
+
+- Updated dependencies [[`1bedcc1cfc1f2d85946c1423f60faa8a2a56148b`](https://github.com/sveltejs/kit/commit/1bedcc1cfc1f2d85946c1423f60faa8a2a56148b), [`e201fa9380a00e072a80a2dcab56de3d77e5b67c`](https://github.com/sveltejs/kit/commit/e201fa9380a00e072a80a2dcab56de3d77e5b67c), [`f3f08582d41b08c3fd1daf742e5703d9cdca7823`](https://github.com/sveltejs/kit/commit/f3f08582d41b08c3fd1daf742e5703d9cdca7823), [`d4bcfccb4503b12fe76140dbb6cfddc81f9419fc`](https://github.com/sveltejs/kit/commit/d4bcfccb4503b12fe76140dbb6cfddc81f9419fc), [`d09bc033123903f359c1ad6fd3a6d8d7fc19298a`](https://github.com/sveltejs/kit/commit/d09bc033123903f359c1ad6fd3a6d8d7fc19298a)]:
+  - @sveltejs/kit@2.15.3
+
 ## 3.3.1
 ### Patch Changes
 
