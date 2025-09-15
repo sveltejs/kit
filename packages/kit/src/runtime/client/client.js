@@ -189,9 +189,6 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
-// because it will be `undefined` when users import the exports from this module.
-// It's only defined when the server renders a page.
 /** @type {Record<string, any>} */
 export let remote_responses = {};
 
