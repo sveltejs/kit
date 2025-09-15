@@ -71,7 +71,7 @@ export function base64_decode(encoded) {
  */
 export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
-	const result = {};
+	const result = Object.create(null); // guard against prototype pollution
 
 	for (let key of data.keys()) {
 		const is_array = key.endsWith('[]');
@@ -110,7 +110,7 @@ export function split_path(path) {
 export function deep_set(object, keys, value) {
 	for (let i = 0; i < keys.length - 1; i += 1) {
 		const key = keys[i];
-		object = object[key] ??= /^\d+$/.test(keys[i + 1]) ? [] : {};
+		object = object[key] ??= /^\d+$/.test(keys[i + 1]) ? [] : Object.create(null); // guard against prototype pollution
 	}
 
 	object[keys[keys.length - 1]] = value;
