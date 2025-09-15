@@ -22,7 +22,7 @@ export function resolve_aliases(input, file, content, aliases) {
 	 */
 	const replace_import_path = (match, quote, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
-			if (!import_path.startsWith(alias)) continue;
+			if (import_path !== alias && !import_path.startsWith(alias + '/')) continue;
 
 			const full_path = path.join(input, file);
 			const full_import_path = path.join(value, import_path.slice(alias.length));
@@ -35,7 +35,20 @@ export function resolve_aliases(input, file, content, aliases) {
 
 	// import/export ... from ...
 	content = content.replace(
-		/\b(import|export)(?:\s+type)?\s+((?:\p{L}[\p{L}0-9]*\s+)|(?:\{[^}]*\}\s*))from\s*(['"])([^'";]+)\3/gmu,
+		// Regex parts for import/export ... from ... statements:
+		// 1. \b(import|export)         - Match 'import' or 'export' at a word boundary
+		// 2. (?:\s+type)?              - Optionally match ' type'
+		// 3. \s+                       - At least one whitespace
+		// 4. (                         - Start of specifier group
+		//    (?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)  - default import/export, e.g. 'name', or named star import/export, e.g. '* as name '
+		//    | (?:\*\s+)               - e.g. star import/export, e.g. '* '
+		//    | (?:\{[^}]*\}\s*)        - e.g. named imports/exports, e.g. '{ ... }'
+		//   )
+		// 5. from\s*                   - Match 'from' with optional whitespace
+		// 6. (['"])                    - Capture quote
+		// 7. ([^'";]+)                 - Capture import path
+		// 8. \3                        - Match the same quote as before
+		/\b(import|export)(?:\s+type)?\s+((?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)|(?:\*\s+)|(?:\{[^}]*\}\s*))from\s*(['"])([^'";]+)\3/gmu,
 		(match, _keyword, _specifier, quote, import_path) =>
 			replace_import_path(match, quote, import_path)
 	);
