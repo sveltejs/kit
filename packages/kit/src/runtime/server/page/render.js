@@ -408,29 +408,6 @@ export async function render_response({
 						}`);
 		}
 
-		const { remote_data } = event_state;
-
-		if (remote_data) {
-			/** @type {Record<string, any>} */
-			const remote = {};
-
-			for (const key in remote_data) {
-				remote[key] = await remote_data[key];
-			}
-
-			// TODO this is repeated in a few places — dedupe it
-			const replacer = (/** @type {any} */ thing) => {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
-			};
-
-			properties.push(`data: ${devalue.uneval(remote, replacer)}`);
-		}
-
 		// create this before declaring `data`, which may contain references to `${global}`
 		blocks.push(`${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
@@ -482,20 +459,45 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
+		const { remote_data } = event_state;
+
+		let serialized_remote_data = '';
+
+		if (remote_data) {
+			/** @type {Record<string, any>} */
+			const remote = {};
+
+			for (const key in remote_data) {
+				remote[key] = await remote_data[key];
+			}
+
+			// TODO this is repeated in a few places — dedupe it
+			const replacer = (/** @type {any} */ thing) => {
+				for (const key in options.hooks.transport) {
+					const encoded = options.hooks.transport[key].encode(thing);
+					if (encoded) {
+						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					}
+				}
+			};
+
+			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
+		}
+
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+					${serialized_remote_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						kit.start(app, ${args.join(', ')});
+						${serialized_remote_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
+						${serialized_remote_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
