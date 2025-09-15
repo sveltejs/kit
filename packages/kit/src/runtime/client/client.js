@@ -190,10 +190,7 @@ let target;
 export let app;
 
 /** @type {Record<string, any>} */
-// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
-// because it will be `undefined` when users import the exports from this module.
-// It's only defined when the server renders a page.
-export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
+export let remote_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -292,6 +289,10 @@ export async function start(_app, _target, hydrate) {
 		console.warn(
 			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
 		);
+	}
+
+	if (__SVELTEKIT_PAYLOAD__.data) {
+		remote_responses = __SVELTEKIT_PAYLOAD__?.data;
 	}
 
 	// detect basic auth credentials in the current URL

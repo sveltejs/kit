@@ -2093,4 +2093,11 @@ test.describe('remote functions', () => {
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(1);
 	});
+
+	// TODO ditto
+	test('query works with transport', async ({ page }) => {
+		await page.goto('/remote/transport');
+
+		await expect(page.locator('h1')).toHaveText('hello from remote function!');
+	});
 });
