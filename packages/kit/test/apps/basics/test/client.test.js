@@ -2095,7 +2095,7 @@ test.describe('remote functions', () => {
 	});
 
 	// TODO ditto
-	test.only('query works with transport', async ({ page }) => {
+	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
