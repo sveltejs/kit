@@ -486,6 +486,12 @@ function validate_form_data(form_data, enctype) {
 				'FormData keys starting with `sveltekit:` are reserved for internal use and should not be set manually'
 			);
 		}
+
+		if (/^\$[.[]?/.test(key)) {
+			throw new Error(
+				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'
+			);
+		}
 	}
 
 	if (enctype !== 'multipart/form-data') {

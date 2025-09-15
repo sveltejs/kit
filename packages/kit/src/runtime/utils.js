@@ -121,10 +121,10 @@ export function deep_set(object, keys, value) {
  */
 export function flatten_issues(issues) {
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-	const result = { $: [] };
+	const result = {};
 
 	for (const issue of issues) {
-		result.$.push(issue);
+		(result.$ ??= []).push(issue);
 
 		let path = '';
 
