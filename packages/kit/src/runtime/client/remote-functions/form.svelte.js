@@ -17,7 +17,7 @@ import {
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
-import { convert_formdata, flatten_issues } from '../../utils.js';
+import { convert_formdata, file_transport, flatten_issues } from '../../utils.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -35,7 +35,7 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string | string[]>} */
+		/** @type {Record<string, string | string[] | File | File[]>} */
 		let input = $state({});
 
 		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
@@ -153,7 +153,14 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({ input = {}, issues = {}, result } = devalue.parse(form_result.result, app.decoders));
+						({
+							input = {},
+							issues = {},
+							result
+						} = devalue.parse(form_result.result, {
+							...app.decoders,
+							File: file_transport.decode
+						}));
 
 						if (issues.$) {
 							release_overrides(updates);
@@ -260,8 +267,9 @@ export function form(id) {
 				form.addEventListener('submit', onsubmit);
 
 				form.addEventListener('input', (e) => {
-					const element =
-						/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (e.target);
+					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
+					// but that makes the types unnecessarily awkward
+					const element = /** @type {HTMLInputElement} */ (e.target);
 
 					let name = element.name;
 					if (!name) return;
@@ -269,17 +277,45 @@ export function form(id) {
 					const is_array = name.endsWith('[]');
 					if (is_array) name = name.slice(0, -2);
 
+					const is_file = element.type === 'file';
+
 					touched[name] = true;
 
-					(input ??= {})[name] = is_array
-						? Array.from(
-								document.querySelectorAll(`[name="${name}[]"]`),
-								(element) =>
-									/** @type {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement} */ (
-										element
-									).value
-							)
-						: element.value;
+					if (is_array) {
+						const elements = /** @type {HTMLInputElement[]} */ (
+							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+						);
+
+						if (DEV) {
+							for (const e of elements) {
+								if ((e.type === 'file') !== is_file) {
+									throw new Error(
+										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
+									);
+								}
+							}
+						}
+
+						input[name] = is_file
+							? elements.map((input) => Array.from(input.files ?? [])).flat()
+							: elements.map((element) => element.value);
+					} else if (is_file) {
+						if (DEV && element.multiple) {
+							throw new Error(
+								`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
+							);
+						}
+
+						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
+
+						if (file) {
+							input[name] = file;
+						} else {
+							delete input[name];
+						}
+					} else {
+						input[name] = element.value;
+					}
 				});
 
 				return () => {
