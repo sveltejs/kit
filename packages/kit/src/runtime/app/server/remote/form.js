@@ -143,6 +143,9 @@ export function form(validate_or_fn, maybe_fn) {
 					output.input = {};
 
 					for (let key of form_data.keys()) {
+						// redact sensitive fields
+						if (/^[.\]]?_/.test(key)) continue;
+
 						const is_array = key.endsWith('[]');
 						const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 

@@ -1818,6 +1818,19 @@ test.describe('remote functions', () => {
 		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
 	});
 
+	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/remote/form/underscore');
+
+		await page.fill('input[name="username"]', 'abcdefg');
+		await page.fill('input[name="_password"]', 'pqrstuv');
+		await page.locator('button').click();
+
+		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
+		await expect(page.locator('input[name="_password"]')).toHaveValue('');
+	});
+
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');

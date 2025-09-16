@@ -1734,14 +1734,14 @@ type FlattenInput<T, Prefix extends string> =
 
 type FlattenIssues<T, Prefix extends string> =
 	WillRecurseIndefinitely<T> extends true
-		? { [key: string]: StandardSchemaV1.Issue[] }
+		? { [key: string]: RemoteFormIssue[] }
 		: T extends Array<infer U>
-			? { [P in Prefix | `${Prefix}[${number}]`]: StandardSchemaV1.Issue[] } & FlattenIssues<
+			? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
 					U,
 					`${Prefix}[${number}]`
 				>
 			: T extends File
-				? { [P in Prefix]: StandardSchemaV1.Issue[] }
+				? { [P in Prefix]: RemoteFormIssue[] }
 				: T extends object
 					? {
 							[K in keyof T]: FlattenIssues<
@@ -1749,7 +1749,7 @@ type FlattenIssues<T, Prefix extends string> =
 								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
 							>;
 						}[keyof T]
-					: { [P in Prefix]: StandardSchemaV1.Issue[] };
+					: { [P in Prefix]: RemoteFormIssue[] };
 
 type FlattenKeys<T, Prefix extends string> =
 	WillRecurseIndefinitely<T> extends true
@@ -1769,8 +1769,15 @@ type FlattenKeys<T, Prefix extends string> =
 						}[keyof T]
 					: { [P in Prefix]: string };
 
+// TODO rename to RemoteFormInput
 export interface FormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | FormInput | FormInput[];
+}
+
+export interface RemoteFormIssue {
+	name: string;
+	path: Array<string | number>;
+	message: string;
 }
 
 /**

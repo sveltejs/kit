@@ -1,3 +1,4 @@
+/** @import { RemoteFormIssue } from '@sveltejs/kit' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { BROWSER } from 'esm-env';
 
@@ -125,26 +126,35 @@ export function deep_set(object, keys, value) {
  * @param {readonly StandardSchemaV1.Issue[]} issues
  */
 export function flatten_issues(issues) {
-	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	/** @type {Record<string, RemoteFormIssue[]>} */
 	const result = {};
 
 	for (const issue of issues) {
-		(result.$ ??= []).push(issue);
+		/** @type {RemoteFormIssue} */
+		const normalized = { name: '', path: [], message: issue.message };
 
-		let path = '';
+		(result.$ ??= []).push(normalized);
+
+		let name = '';
 
 		if (issue.path !== undefined) {
 			for (const segment of issue.path) {
-				const key = typeof segment === 'object' ? segment.key : segment;
+				const key = /** @type {string | number} */ (
+					typeof segment === 'object' ? segment.key : segment
+				);
+
+				normalized.path.push(key);
 
 				if (typeof key === 'number') {
-					path += `[${key}]`;
+					name += `[${key}]`;
 				} else if (typeof key === 'string') {
-					path += path === '' ? key : '.' + key;
+					name += name === '' ? key : '.' + key;
 				}
 
-				(result[path] ??= []).push(issue);
+				(result[name] ??= []).push(normalized);
 			}
+
+			normalized.name = name;
 		}
 	}
 
