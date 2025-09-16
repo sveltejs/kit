@@ -326,7 +326,13 @@ export function form(id) {
 		}
 
 		instance[createAttachmentKey()] = create_attachment(
-			form_onsubmit(({ submit, form }) => submit().then(() => form.reset()))
+			form_onsubmit(({ submit, form }) =>
+				submit().then(() => {
+					if (!issues.$) {
+						form.reset();
+					}
+				})
+			)
 		);
 
 		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
