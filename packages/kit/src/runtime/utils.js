@@ -75,13 +75,18 @@ export function convert_formdata(data) {
 
 	for (let key of data.keys()) {
 		const is_array = key.endsWith('[]');
-		const values = data.getAll(key);
+		let values = data.getAll(key);
 
 		if (is_array) key = key.slice(0, -2);
 
 		if (values.length > 1 && !is_array) {
 			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
 		}
+
+		// an empty `<input type="file">` will submit a non-existent file, bizarrely
+		values = values.filter(
+			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
+		);
 
 		deep_set(result, split_path(key), is_array ? values : values[0]);
 	}
@@ -145,3 +150,20 @@ export function flatten_issues(issues) {
 
 	return result;
 }
+
+/**
+ * We need to encode `File` objects when returning `issues` from a `form` submission,
+ * because some validators include the original value in the issue. It doesn't
+ * need to deserialize to a `File` object
+ * @type {import('@sveltejs/kit').Transporter}
+ */
+export const file_transport = {
+	encode: (file) =>
+		file instanceof File && {
+			size: file.size,
+			type: file.type,
+			name: file.name,
+			lastModified: file.lastModified
+		},
+	decode: (data) => data
+};
