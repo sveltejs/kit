@@ -1,4 +1,4 @@
-/** @import { FormInput, RemoteForm } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm } from '@sveltejs/kit' */
 /** @import { MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -22,7 +22,7 @@ import { convert_formdata, flatten_issues } from '../../../utils.js';
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
- * @template {FormInput} Input
+ * @template {RemoteFormInput} Input
  * @template Output
  * @overload
  * @param {'unchecked'} validate
@@ -35,7 +35,7 @@ import { convert_formdata, flatten_issues } from '../../../utils.js';
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
- * @template {StandardSchemaV1<FormInput, Record<string, any>>} Schema
+ * @template {StandardSchemaV1<RemoteFormInput, Record<string, any>>} Schema
  * @template Output
  * @overload
  * @param {Schema} validate
@@ -44,7 +44,7 @@ import { convert_formdata, flatten_issues } from '../../../utils.js';
  * @since 2.27
  */
 /**
- * @template {FormInput} Input
+ * @template {RemoteFormInput} Input
  * @template Output
  * @param {any} validate_or_fn
  * @param {(data?: Input) => MaybePromise<Output>} [maybe_fn]

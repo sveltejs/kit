@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { FormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '__sveltekit/paths';
@@ -21,7 +21,7 @@ import { convert_formdata, file_transport, flatten_issues } from '../../utils.js
 
 /**
  * Client-version of the `form` function from `$app/server`.
- * @template {FormInput} T
+ * @template {RemoteFormInput} T
  * @template U
  * @param {string} id
  * @returns {RemoteForm<T, U>}

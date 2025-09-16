@@ -1706,8 +1706,12 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
-// If T is unknown or FormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
-type WillRecurseIndefinitely<T> = unknown extends T ? true : FormInput extends T ? true : false;
+// If T is unknown or RemoteFormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
+type WillRecurseIndefinitely<T> = unknown extends T
+	? true
+	: RemoteFormInput extends T
+		? true
+		: false;
 
 // Helper type to convert union to intersection
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
@@ -1769,9 +1773,8 @@ type FlattenKeys<T, Prefix extends string> =
 						}[keyof T]
 					: { [P in Prefix]: string };
 
-// TODO rename to RemoteFormInput
-export interface FormInput {
-	[key: string]: FormDataEntryValue | FormDataEntryValue[] | FormInput | FormInput[];
+export interface RemoteFormInput {
+	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
 }
 
 export interface RemoteFormIssue {
@@ -1783,7 +1786,7 @@ export interface RemoteFormIssue {
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteForm<Input extends FormInput | void, Output> = {
+export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 	[attachment: symbol]: (node: HTMLFormElement) => void;
 	method: 'POST';
