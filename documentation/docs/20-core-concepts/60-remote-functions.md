@@ -308,7 +308,25 @@ export const createPost = form(
 </form>
 ```
 
-As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
+As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`. The one difference is to `query` is that the schema inputs must all be of type `string` or `File`, since that's all the original `FormData` provides. You can however coerce the value into a different type — how to do that depends on the validation library you use.
+
+```ts
+/// file: src/routes/count.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+
+export const setCount = form(
+	v.object({
+		// Valibot:
+		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
+		// Zod:
+		// count: v.coerce.number()
+	}),
+	async ({ count }) => {
+		// ...
+	}
+);
+```
 
 The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
 
