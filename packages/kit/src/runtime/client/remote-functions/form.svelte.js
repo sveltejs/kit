@@ -371,7 +371,13 @@ export function form(id) {
 			type: 'submit',
 			formmethod: 'POST',
 			formaction: action,
-			onclick: form_action_onclick(({ submit, form }) => submit().then(() => form.reset()))
+			onclick: form_action_onclick(({ submit, form }) =>
+				submit().then(() => {
+					if (!issues.$) {
+						form.reset();
+					}
+				})
+			)
 		};
 
 		Object.defineProperty(button_props, 'enhance', {
