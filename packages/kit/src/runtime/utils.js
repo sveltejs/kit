@@ -116,7 +116,15 @@ export function split_path(path) {
 export function deep_set(object, keys, value) {
 	for (let i = 0; i < keys.length - 1; i += 1) {
 		const key = keys[i];
-		object = object[key] ??= /^\d+$/.test(keys[i + 1]) ? [] : Object.create(null); // guard against prototype pollution
+		const is_array = /^\d+$/.test(keys[i + 1]);
+
+		if (object[key]) {
+			if (is_array !== Array.isArray(object[key])) {
+				throw new Error(`Invalid array key ${keys[i + 1]}`);
+			}
+		} else {
+			object = object[key] ??= is_array ? [] : Object.create(null); // guard against prototype pollution
+		}
 	}
 
 	object[keys[keys.length - 1]] = value;
