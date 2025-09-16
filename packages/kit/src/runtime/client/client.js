@@ -461,7 +461,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		load_cache = null;
 	}
 
-	const result = await navigate({
+	await navigate({
 		type: 'goto',
 		url: resolve_url(url),
 		keepfocus: options.keepFocus,
@@ -481,6 +481,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			}
 		}
 	});
+
 	if (options.invalidateAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
@@ -496,7 +497,6 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				});
 			});
 	}
-	return result;
 }
 
 /** @param {import('./types.js').NavigationIntent} intent */
@@ -1283,6 +1283,7 @@ async function load_root_error_page({ status, error, url, route }) {
 		});
 	} catch (error) {
 		if (error instanceof Redirect) {
+			// @ts-expect-error TODO investigate this
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
@@ -1577,7 +1578,7 @@ async function navigate({
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
 		if (redirect_count < 20) {
-			return navigate({
+			await navigate({
 				type,
 				url: new URL(navigation_result.location, url),
 				popped,
@@ -1588,6 +1589,9 @@ async function navigate({
 				redirect_count: redirect_count + 1,
 				nav_token
 			});
+
+			nav.fulfil(undefined);
+			return;
 		}
 
 		navigation_result = await load_root_error_page({
