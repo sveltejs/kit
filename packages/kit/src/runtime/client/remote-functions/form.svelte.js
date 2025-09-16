@@ -71,6 +71,30 @@ export function form(id) {
 				return;
 			}
 
+			if (DEV) {
+				const error = () => {
+					throw new Error(
+						'Remote form functions no longer get passed a FormData object. The payload is now a POJO. See https://kit.svelte.dev/docs/remote-functions#form for details.'
+					);
+				};
+				for (const key of [
+					'append',
+					'delete',
+					'entries',
+					'forEach',
+					'get',
+					'getAll',
+					'has',
+					'keys',
+					'set',
+					'values'
+				]) {
+					if (!(key in data)) {
+						Object.defineProperty(data, key, { get: error });
+					}
+				}
+			}
+
 			try {
 				await callback({
 					form,

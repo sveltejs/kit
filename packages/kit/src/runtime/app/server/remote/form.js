@@ -2,6 +2,7 @@
 /** @import { MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
+import { DEV } from 'esm-env';
 import { run_remote_function } from './shared.js';
 import { convert_formdata, flatten_issues } from '../../../utils.js';
 
@@ -100,6 +101,31 @@ export function form(validate_or_fn, maybe_fn) {
 				form_data.delete('sveltekit:validate_only');
 
 				let data = maybe_fn ? convert_formdata(form_data) : undefined;
+
+				if (DEV && !data) {
+					const error = () => {
+						throw new Error(
+							'Remote form functions no longer get passed a FormData object. ' +
+								"`form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. " +
+								'The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details.'
+						);
+					};
+					data = {};
+					for (const key of [
+						'append',
+						'delete',
+						'entries',
+						'forEach',
+						'get',
+						'getAll',
+						'has',
+						'keys',
+						'set',
+						'values'
+					]) {
+						Object.defineProperty(data, key, { get: error });
+					}
+				}
 
 				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
 				const output = {};
