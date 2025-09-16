@@ -1683,7 +1683,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	// If T is unknown or FormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
-	type WillRecurseIndefinetly<T> = unknown extends T ? true : FormInput extends T ? true : false;
+	type WillRecurseIndefinitely<T> = unknown extends T ? true : FormInput extends T ? true : false;
 
 	// Helper type to convert union to intersection
 	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
@@ -1691,7 +1691,7 @@ declare module '@sveltejs/kit' {
 		: never;
 
 	type FlattenInput<T, Prefix extends string> =
-		WillRecurseIndefinetly<T> extends true
+		WillRecurseIndefinitely<T> extends true
 			? { [key: string]: string }
 			: T extends Array<infer U>
 				? U extends string | File
@@ -1709,7 +1709,7 @@ declare module '@sveltejs/kit' {
 						: { [P in Prefix]: string };
 
 	type FlattenIssues<T, Prefix extends string> =
-		WillRecurseIndefinetly<T> extends true
+		WillRecurseIndefinitely<T> extends true
 			? { [key: string]: StandardSchemaV1.Issue[] }
 			: T extends Array<infer U>
 				? { [P in Prefix | `${Prefix}[${number}]`]: StandardSchemaV1.Issue[] } & FlattenIssues<
@@ -1728,7 +1728,7 @@ declare module '@sveltejs/kit' {
 						: { [P in Prefix]: StandardSchemaV1.Issue[] };
 
 	type FlattenKeys<T, Prefix extends string> =
-		WillRecurseIndefinetly<T> extends true
+		WillRecurseIndefinitely<T> extends true
 			? { [key: string]: string }
 			: T extends Array<infer U>
 				? U extends string | File
