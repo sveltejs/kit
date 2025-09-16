@@ -1844,6 +1844,13 @@ test.describe('remote functions', () => {
 		await clicknav('[href="/remote/prerender/functions-only"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
 	});
+
+	test('universal load correctly expose server object', async ({ page, clicknav }) => {
+		await page.goto('/load/universal-load/ssr');
+		expect(await page.textContent('h1')).toBe('Is it correct? true');
+		await clicknav('[href="/load/universal-load/csr"]');
+		expect(await page.textContent('h1')).toBe('Is it correct? true');
+	});
 });
 
 test.describe('params prop', () => {
