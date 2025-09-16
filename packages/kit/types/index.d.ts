@@ -1682,8 +1682,12 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
-	// If T is unknown or FormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
-	type WillRecurseIndefinitely<T> = unknown extends T ? true : FormInput extends T ? true : false;
+	// If T is unknown or RemoteFormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
+	type WillRecurseIndefinitely<T> = unknown extends T
+		? true
+		: RemoteFormInput extends T
+			? true
+			: false;
 
 	// Helper type to convert union to intersection
 	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
@@ -1745,9 +1749,8 @@ declare module '@sveltejs/kit' {
 							}[keyof T]
 						: { [P in Prefix]: string };
 
-	// TODO rename to RemoteFormInput
-	export interface FormInput {
-		[key: string]: FormDataEntryValue | FormDataEntryValue[] | FormInput | FormInput[];
+	export interface RemoteFormInput {
+		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
 	}
 
 	export interface RemoteFormIssue {
@@ -1759,7 +1762,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Input extends FormInput | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -2896,7 +2899,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, FormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2958,7 +2961,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends FormInput, Output>(validate: "unchecked", fn: (data: Input) => MaybePromise<Output>): RemoteForm<Input, Output>;
+	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input) => MaybePromise<Output>): RemoteForm<Input, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -2966,7 +2969,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<FormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
