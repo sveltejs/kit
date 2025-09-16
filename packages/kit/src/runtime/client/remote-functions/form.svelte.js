@@ -71,6 +71,7 @@ export function form(id) {
 				return;
 			}
 
+			// TODO 3.0 remove this warning
 			if (DEV) {
 				const error = () => {
 					throw new Error(

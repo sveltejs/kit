@@ -102,6 +102,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 				let data = maybe_fn ? convert_formdata(form_data) : undefined;
 
+				// TODO 3.0 remove this warning
 				if (DEV && !data) {
 					const error = () => {
 						throw new Error(
