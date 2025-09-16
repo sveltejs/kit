@@ -1786,28 +1786,105 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
+	// If T is unknown or RemoteFormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
+	type WillRecurseIndefinitely<T> = unknown extends T
+		? true
+		: RemoteFormInput extends T
+			? true
+			: false;
+
+	// Helper type to convert union to intersection
+	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+		? I
+		: never;
+
+	type FlattenInput<T, Prefix extends string> =
+		WillRecurseIndefinitely<T> extends true
+			? { [key: string]: string }
+			: T extends Array<infer U>
+				? U extends string | File
+					? { [P in Prefix]: string[] }
+					: FlattenInput<U, `${Prefix}[${number}]`>
+				: T extends File
+					? { [P in Prefix]: string }
+					: T extends object
+						? {
+								[K in keyof T]: FlattenInput<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T]
+						: { [P in Prefix]: string };
+
+	type FlattenIssues<T, Prefix extends string> =
+		WillRecurseIndefinitely<T> extends true
+			? { [key: string]: RemoteFormIssue[] }
+			: T extends Array<infer U>
+				? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
+						U,
+						`${Prefix}[${number}]`
+					>
+				: T extends File
+					? { [P in Prefix]: RemoteFormIssue[] }
+					: T extends object
+						? {
+								[K in keyof T]: FlattenIssues<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T]
+						: { [P in Prefix]: RemoteFormIssue[] };
+
+	type FlattenKeys<T, Prefix extends string> =
+		WillRecurseIndefinitely<T> extends true
+			? { [key: string]: string }
+			: T extends Array<infer U>
+				? U extends string | File
+					? { [P in `${Prefix}[]`]: string[] }
+					: FlattenKeys<U, `${Prefix}[${number}]`>
+				: T extends File
+					? { [P in Prefix]: string }
+					: T extends object
+						? {
+								[K in keyof T]: FlattenKeys<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T]
+						: { [P in Prefix]: string };
+
+	export interface RemoteFormInput {
+		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
+	}
+
+	export interface RemoteFormIssue {
+		name: string;
+		path: Array<string | number>;
+		message: string;
+	}
+
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Result> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
+		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
-		/** Event handler that intercepts the form submission on the client to prevent a full page reload */
-		onsubmit: (event: SubmitEvent) => void;
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
 			callback: (opts: {
 				form: HTMLFormElement;
-				data: FormData;
+				data: Input;
 				submit: () => Promise<void> & {
 					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 				};
-			}) => void
+			}) => void | Promise<void>
 		): {
 			method: 'POST';
 			action: string;
-			onsubmit: (event: SubmitEvent) => void;
+			[attachment: symbol]: (node: HTMLFormElement) => void;
 		};
 		/**
 		 * Create an instance of the form for the given key.
@@ -1823,11 +1900,27 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for(key: string | number | boolean): Omit<RemoteForm<Result>, 'for'>;
+		for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
+		/**
+		 * This method exists to allow you to typecheck `name` attributes. It returns its argument
+		 * @example
+		 * ```svelte
+		 * <input name={login.field('username')} />
+		 * ```
+		 **/
+		field<Name extends keyof UnionToIntersection<FlattenKeys<Input, ''>>>(string: Name): Name;
+		/** Preflight checks */
+		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
+		/** Validate the form contents programmatically */
+		validate(options?: { includeUntouched?: boolean }): Promise<void>;
 		/** The result of the form submission */
-		get result(): Result | undefined;
+		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
+		/** The submitted values */
+		input: null | UnionToIntersection<FlattenInput<Input, ''>>;
+		/** Validation issues */
+		issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -1838,11 +1931,11 @@ declare module '@sveltejs/kit' {
 			enhance(
 				callback: (opts: {
 					form: HTMLFormElement;
-					data: FormData;
+					data: Input;
 					submit: () => Promise<void> & {
 						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 					};
-				}) => void
+				}) => void | Promise<void>
 			): {
 				type: 'submit';
 				formmethod: 'POST';
@@ -2910,7 +3003,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -2964,7 +3057,23 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<T>(fn: (data: FormData) => MaybePromise<T>): RemoteForm<T>;
+	export function form<Output>(fn: () => Output): RemoteForm<void, Output>;
+	/**
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input) => MaybePromise<Output>): RemoteForm<Input, Output>;
+	/**
+	 * Creates a form object that can be spread onto a `<form>` element.
+	 *
+	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 *
+	 * @since 2.27
+	 */
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

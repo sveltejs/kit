@@ -1633,59 +1633,206 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
-	test('form works', async ({ page }) => {
+	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-task', 'hi');
-		await page.click('#submit-btn-one');
-		await expect(page.locator('#form-result-1')).toHaveText('hi');
-		await expect(page.locator('#input-task')).toHaveValue('');
+
+		if (javaScriptEnabled) {
+			// TODO remove the `if` — once async SSR lands these assertions should always succeed
+			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): initial'
+			);
+		}
+
+		await page.fill('[data-unscoped] input', 'hello');
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+
+			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
+		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
 	});
 
-	test('form error works', async ({ page }) => {
+	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-task', 'error');
-		await page.click('#submit-btn-one');
-		expect(await page.textContent('h1')).toBe('400');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Expected error"'
+
+		await page.fill('input', 'hello');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.input.message:')).toHaveText(
+				'set_message.input.message: hello'
+			);
+		}
+
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('resolve deferreds').click();
+		}
+
+		await expect(page.getByText('set_message.input.message:')).toHaveText(
+			'set_message.input.message:'
 		);
 	});
 
-	test('form redirect works', async ({ page }) => {
+	test('form reports validation issues', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-task', 'redirect');
-		await page.click('#submit-btn-one');
-		expect(await page.textContent('#echo-result')).toBe('Hello world');
+
+		await page.fill('input', 'invalid');
+		await page.getByText('set message').click();
+
+		await page.getByText('message is invalid').waitFor();
 	});
 
-	test('form.buttonProps works', async ({ page }) => {
+	test('form handles unexpected error', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-task', 'hi');
-		await page.click('#submit-btn-two');
-		await expect(page.locator('#form-result-2')).toHaveText('hi');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText('This is your custom error page saying: "oops (500 Internal Error)"')
+			.waitFor();
 	});
 
-	test('form.buttonProps error works', async ({ page }) => {
+	test('form handles expected error', async ({ page }) => {
 		await page.goto('/remote/form');
-		await page.fill('#input-task', 'error');
-		await page.click('#submit-btn-two');
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
+
+		await page.fill('input', 'expected error');
+		await page.getByText('set message').click();
+
+		await page.getByText('This is your custom error page saying: "oops"').waitFor();
+	});
+
+	test('form redirects', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'redirect');
+		await page.getByText('set message').click();
+
+		await page.waitForURL('/remote');
+	});
+
+	test('form.buttonProps works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('[data-unscoped] input', 'backwards');
+		await page.getByText('set reverse message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('message.current: sdrawkcab').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): sdrawkcab'
+			);
+		}
+
+		await expect(page.getByText('set_reverse_message.result')).toHaveText(
+			'set_reverse_message.result: sdrawkcab'
 		);
 	});
 
-	test('form.for(...) scopes form submission', async ({ page, javaScriptEnabled }) => {
+	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
-		await page.click('#submit-btn-item-foo');
-		await expect(page.locator('#form-result-foo')).toHaveText('foo');
-		await expect(page.locator('#form-result-bar')).toHaveText('');
-		await expect(page.locator('#form-result-1')).toHaveText('');
 
-		await page.click('#submit-btn-item-2-foo');
-		await expect(page.locator('#form-result-2-foo')).toHaveText('foo2');
-		await expect(page.locator('#form-result-foo')).toHaveText(javaScriptEnabled ? 'foo' : '');
-		await expect(page.locator('#form-result-2')).toHaveText('');
+		await page.fill('[data-scoped] input', 'hello');
+		await page.getByText('set scoped message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 0');
+
+			await page.getByText('message.current: hello').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello');
+		await expect(page.locator('[data-scoped] input')).toHaveValue('');
+	});
+
+	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('[data-enhanced] input', 'hello');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
+		await page.locator('[data-enhanced] span').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+			await page.getByText('message.current: hello (override)').waitFor();
+
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('enhanced.result')).toHaveText('enhanced.result: hello');
+		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
+	});
+
+	test('form preflight works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight');
+
+		for (const enhanced of [true, false]) {
+			const input = page.locator(enhanced ? '[data-enhanced] input' : '[data-default] input');
+			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
+
+			await input.fill('21');
+			await button.click();
+			await page.getByText('too big').waitFor();
+
+			await input.fill('9');
+			await button.click();
+			await page.getByText('too small').waitFor();
+
+			await input.fill('15');
+			await button.click();
+			await expect(page.getByText('number.current')).toHaveText('number.current: 15');
+		}
+	});
+
+	test('form validate works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const foo = page.locator('input[name="foo"]');
+		const bar = page.locator('input[name="bar"]');
+
+		await foo.fill('a');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await bar.fill('g');
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected ("d" | "e") but received "g"'
+		);
+
+		await bar.fill('d');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+	});
+
+	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/remote/form/underscore');
+
+		await page.fill('input[name="username"]', 'abcdefg');
+		await page.fill('input[name="_password"]', 'pqrstuv');
+		await page.locator('button').click();
+
+		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
+		await expect(page.locator('input[name="_password"]')).toHaveValue('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {

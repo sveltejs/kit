@@ -12,6 +12,7 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
+import { file_transport } from '../utils.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -128,8 +129,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(form_client_refreshes)
+					result: stringify(data, { ...transport, File: file_transport }),
+					refreshes: data.issues ? {} : await serialize_refreshes(form_client_refreshes)
 				})
 			);
 		}
@@ -262,7 +263,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any>} */ (module?.default[name]);
+	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
 
 	if (!form) {
 		event.setHeaders({

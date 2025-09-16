@@ -159,8 +159,8 @@ command_tests();
 
 function form_tests() {
 	const q = query(() => '');
-	const f = form((f) => {
-		f.get('');
+	const f = form('unchecked', (data: { input: string }) => {
+		data.input;
 		return { success: true };
 	});
 
