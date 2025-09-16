@@ -310,15 +310,26 @@ export const createPost = form(
 
 As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
 
-The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, you can use object notation...
+The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
 
 ```svelte
-<!-- results in a `{ name: { first: string, last: string } }` object -->
+<!-- 
+    results in a
+    {
+	   name: { first: string, last: string },
+	   jobs: Array<{ title: string, company: string }>
+	}
+    object
+-->
 <input name="name.first" />
 <input name="name.last" />
+{#each jobs as job, idx}
+	<input name="jobs[{idx}].title">
+	<input name="jobs[{idx}].company">
+{/each}
 ```
 
-...and if you can indicate a repeated field with a `[]` suffix:
+To indicate a repeated field, use a `[]` suffix:
 
 ```svelte
 <label><input type="checkbox" name="language[]" value="html" /> HTML</label>
@@ -326,7 +337,7 @@ The `name` attributes on the form controls must correspond to the properties of 
 <label><input type="checkbox" name="language[]" value="js" /> JS</label>
 ```
 
-If you'd like type safety and autocomplete when setting `name` attributes, you can use the form object's `field` method:
+If you'd like type safety and autocomplete when setting `name` attributes, use the form object's `field` method:
 
 ```svelte
 <label>
@@ -413,7 +424,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 ### Live inputs
 
-As the user interacts with the form, `input` is automatically updated:
+The form object contains a `input` property which reflects its current value. As the user interacts with the form, `input` is automatically updated:
 
 ```svelte
 <form {...createPost}>

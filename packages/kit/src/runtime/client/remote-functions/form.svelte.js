@@ -131,7 +131,7 @@ export function form(id) {
 						({ input = {}, issues = {}, result } = devalue.parse(form_result.result, app.decoders));
 
 						if (issues.$) {
-							// do nothing
+							release_overrides(updates);
 						} else if (form_result.refreshes) {
 							refresh_queries(form_result.refreshes, updates);
 						} else {
@@ -146,7 +146,6 @@ export function form(id) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
-						result = undefined;
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {
@@ -221,7 +220,7 @@ export function form(id) {
 			return (/** @type {HTMLFormElement} */ form) => {
 				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
-					if (!key) {
+					if (DEV && !key) {
 						const name = id.split('/').pop();
 						message += `. To create multiple instances, use \`${name}.for(key)\``;
 					}
@@ -260,6 +259,7 @@ export function form(id) {
 
 				return () => {
 					element = null;
+					preflight_schema = undefined;
 				};
 			};
 		}
@@ -382,6 +382,10 @@ export function form(id) {
 
 						const result = await response.json();
 
+						if (validate_id !== id) {
+							return;
+						}
+
 						if (result.type === 'result') {
 							array = /** @type {StandardSchemaV1.Issue[]} */ (
 								devalue.parse(result.result, app.decoders)
@@ -410,10 +414,6 @@ export function form(id) {
 					}
 
 					issues = flatten_issues(array);
-
-					if (validate_id !== id) {
-						return;
-					}
 				}
 			},
 			enhance: {
