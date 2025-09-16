@@ -16,7 +16,7 @@ catalogs:
       specifier: ^18.19.119
       version: 18.19.119
     svelte:
-      specifier: ^5.38.10
+      specifier: https://pkg.pr.new/svelte@16748
       version: 5.38.10
     vite:
       specifier: ^6.3.5
@@ -463,7 +463,7 @@ importers:
         version: 1.51.1
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/connect':
         specifier: ^3.4.38
         version: 3.4.38
@@ -481,10 +481,10 @@ importers:
         version: 4.50.1
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-preprocess:
         specifier: ^6.0.0
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.38.10)(typescript@5.8.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
@@ -505,16 +505,16 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       dropcss:
         specifier: ^1.0.16
         version: 1.0.16
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -538,16 +538,16 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@vitest/browser':
         specifier: ^3.2.4
         version: 3.2.4(playwright@1.51.1)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))(vitest@3.2.4)
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       test-redirect-importer:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
@@ -571,7 +571,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       e2e-test-dep-error:
         specifier: file:./_test_dependencies/cjs-only
         version: e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
@@ -604,10 +604,10 @@ importers:
         version: e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -622,13 +622,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -643,13 +643,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -664,13 +664,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -688,13 +688,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -712,13 +712,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -739,13 +739,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -760,13 +760,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -781,13 +781,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -811,13 +811,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -835,13 +835,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -859,13 +859,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -883,13 +883,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -904,13 +904,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -925,13 +925,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -946,13 +946,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -967,13 +967,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -988,13 +988,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1009,13 +1009,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1030,13 +1030,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1051,13 +1051,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1072,13 +1072,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1093,13 +1093,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1114,13 +1114,13 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1135,13 +1135,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1159,13 +1159,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1183,13 +1183,13 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       svelte:
         specifier: 'catalog:'
-        version: 5.38.10
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -1283,22 +1283,22 @@ importers:
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 6.0.0-next.3(svelte@5.38.5)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+        version: 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       prettier:
         specifier: ^3.3.2
         version: 3.6.0
       prettier-plugin-svelte:
         specifier: ^3.2.6
-        version: 3.4.0(prettier@3.6.0)(svelte@5.38.5)
+        version: 3.4.0(prettier@3.6.0)(svelte@https://pkg.pr.new/svelte@16748)
       publint:
         specifier: ^0.3.0
         version: 0.3.0
       svelte:
-        specifier: ^5.38.5
-        version: 5.38.5
+        specifier: 'catalog:'
+        version: https://pkg.pr.new/svelte@16748
       svelte-check:
         specifier: ^4.1.1
-        version: 4.1.1(picomatch@4.0.3)(svelte@5.38.5)(typescript@5.8.3)
+        version: 4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.0
         version: 5.8.3
@@ -6595,6 +6595,7 @@ packages:
 
   svelte-check@4.1.1:
     resolution: {integrity: sha512-NfaX+6Qtc8W/CyVGS/F7/XdiSSyXz+WGYA9ZWV3z8tso14V2vzjfXviKaTFEzB7g8TqfgO2FOzP6XT4ApSTUTw==}
+    version: 4.1.1
     engines: {node: '>= 18.0.0'}
     hasBin: true
     peerDependencies:
@@ -6617,6 +6618,7 @@ packages:
 
   svelte-preprocess@6.0.0:
     resolution: {integrity: sha512-sbyHnWBwIphuaJWC7hnJd6ZoW/VN0va3jVb/8dDfeT2+0hVmo1DCx+zBK0/JfUKQmzg/FOEtcsGKRnbt8pRRkw==}
+    version: 6.0.0
     engines: {node: '>= 18.0.0'}
     peerDependencies:
       '@babel/core': ^7.10.2
@@ -6664,6 +6666,11 @@ packages:
 
   svelte@5.38.5:
     resolution: {integrity: sha512-4Go68OcH6VL4plTJMxry8ZQFxnZ8pu2EA5nNPxNHOUgCd/0lo00JZh8wnAQ2mdEK09GSYuumG+14Egk7thd6Lw==}
+    engines: {node: '>=18'}
+
+  svelte@https://pkg.pr.new/svelte@16748:
+    resolution: {tarball: https://pkg.pr.new/svelte@16748}
+    version: 5.38.10
     engines: {node: '>=18'}
 
   svgo@4.0.0:
@@ -9153,6 +9160,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)))(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+      debug: 4.4.1(supports-color@10.0.0)
+      svelte: https://pkg.pr.new/svelte@16748
+      vite: 6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
+    transitivePeerDependencies:
+      - supports-color
+
   '@sveltejs/vite-plugin-svelte@6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.3(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)))(svelte@5.38.10)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
@@ -9174,6 +9190,19 @@ snapshots:
       kleur: 4.1.5
       magic-string: 0.30.17
       svelte: 5.38.5
+      vite: 6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sveltejs/vite-plugin-svelte@6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.0-next.0(@sveltejs/vite-plugin-svelte@6.0.0-next.3(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)))(svelte@https://pkg.pr.new/svelte@16748)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
+      debug: 4.4.1(supports-color@10.0.0)
+      deepmerge: 4.3.1
+      kleur: 4.1.5
+      magic-string: 0.30.17
+      svelte: https://pkg.pr.new/svelte@16748
       vite: 6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
     transitivePeerDependencies:
@@ -12350,10 +12379,10 @@ snapshots:
       prettier: 3.6.0
       svelte: 5.38.10
 
-  prettier-plugin-svelte@3.4.0(prettier@3.6.0)(svelte@5.38.5):
+  prettier-plugin-svelte@3.4.0(prettier@3.6.0)(svelte@https://pkg.pr.new/svelte@16748):
     dependencies:
       prettier: 3.6.0
-      svelte: 5.38.5
+      svelte: https://pkg.pr.new/svelte@16748
 
   prettier@2.8.8: {}
 
@@ -13000,26 +13029,14 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.1.1(picomatch@4.0.3)(svelte@5.38.10)(typescript@5.8.3):
+  svelte-check@4.1.1(picomatch@4.0.3)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 4.0.3
       fdir: 6.5.0(picomatch@4.0.3)
       picocolors: 1.1.1
       sade: 1.8.1
-      svelte: 5.38.10
-      typescript: 5.8.3
-    transitivePeerDependencies:
-      - picomatch
-
-  svelte-check@4.1.1(picomatch@4.0.3)(svelte@5.38.5)(typescript@5.8.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
-      chokidar: 4.0.3
-      fdir: 6.5.0(picomatch@4.0.3)
-      picocolors: 1.1.1
-      sade: 1.8.1
-      svelte: 5.38.5
+      svelte: https://pkg.pr.new/svelte@16748
       typescript: 5.8.3
     transitivePeerDependencies:
       - picomatch
@@ -13039,21 +13056,21 @@ snapshots:
     dependencies:
       svelte: 5.38.5
 
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.38.10)(typescript@5.8.3):
-    dependencies:
-      detect-indent: 6.1.0
-      strip-indent: 3.0.0
-      svelte: 5.38.10
-    optionalDependencies:
-      postcss: 8.5.6
-      postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
-      typescript: 5.8.3
-
   svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.38.5)(typescript@5.8.3):
     dependencies:
       detect-indent: 6.1.0
       strip-indent: 3.0.0
       svelte: 5.38.5
+    optionalDependencies:
+      postcss: 8.5.6
+      postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
+      typescript: 5.8.3
+
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@https://pkg.pr.new/svelte@16748)(typescript@5.8.3):
+    dependencies:
+      detect-indent: 6.1.0
+      strip-indent: 3.0.0
+      svelte: https://pkg.pr.new/svelte@16748
     optionalDependencies:
       postcss: 8.5.6
       postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
@@ -13084,6 +13101,23 @@ snapshots:
       zimmerframe: 1.1.2
 
   svelte@5.38.5:
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      '@jridgewell/sourcemap-codec': 1.5.5
+      '@sveltejs/acorn-typescript': 1.0.5(acorn@8.15.0)
+      '@types/estree': 1.0.8
+      acorn: 8.15.0
+      aria-query: 5.3.2
+      axobject-query: 4.1.0
+      clsx: 2.1.1
+      esm-env: 1.2.2
+      esrap: 2.1.0
+      is-reference: 3.0.3
+      locate-character: 3.0.0
+      magic-string: 0.30.17
+      zimmerframe: 1.1.2
+
+  svelte@https://pkg.pr.new/svelte@16748:
     dependencies:
       '@jridgewell/remapping': 2.3.5
       '@jridgewell/sourcemap-codec': 1.5.5

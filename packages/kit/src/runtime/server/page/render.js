@@ -202,8 +202,11 @@ export async function render_response({
 			};
 
 			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
+				rendered = await with_request_store(
+					{ event, state: event_state },
+					() =>
+						options.root.renderAsync?.(props, render_opts) ??
+						options.root.render(props, render_opts)
 				);
 			} finally {
 				globalThis.fetch = fetch;
@@ -211,8 +214,11 @@ export async function render_response({
 			}
 		} else {
 			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
+				rendered = await with_request_store(
+					{ event, state: event_state },
+					() =>
+						options.root.renderAsync?.(props, render_opts) ??
+						options.root.render(props, render_opts)
 				);
 			} finally {
 				paths.reset();
