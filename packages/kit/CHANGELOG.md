@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.42.1
+### Patch Changes
+
+
+- fix: ensure environment setup is in its own chunk ([#14441](https://github.com/sveltejs/kit/pull/14441))
+
 ## 2.42.0
 ### Minor Changes
 
