@@ -144,7 +144,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					for (let key of form_data.keys()) {
 						const is_array = key.endsWith('[]');
-						const values = /** @type {string[]} */ (form_data.getAll(key)); // TODO what about File?
+						const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 
 						if (is_array) key = key.slice(0, -2);
 
