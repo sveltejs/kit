@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.41.0
+### Minor Changes
+
+
+- feat: add `%sveltekit.version%` to `app.html` ([#12132](https://github.com/sveltejs/kit/pull/12132))
+
+
+### Patch Changes
+
+
+- fix: allow remote functions to return custom types serialized with `transport` hooks ([#14435](https://github.com/sveltejs/kit/pull/14435))
+
+
+- fix: fulfil `beforeNavigate` `complete` when redirected ([#12896](https://github.com/sveltejs/kit/pull/12896))
+
 ## 2.40.0
 ### Minor Changes
 
