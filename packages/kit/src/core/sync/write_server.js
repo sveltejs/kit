@@ -7,6 +7,7 @@ import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
 import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
+import { escape_html } from '../../utils/escape.js';
 
 /**
  * @param {{
@@ -54,6 +55,7 @@ export const options = {
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
 			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
+			.replace(/%sveltekit\.version%/g, escape_html(config.kit.version.name))
 			.replace(
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
