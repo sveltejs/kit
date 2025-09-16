@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.42.0
+### Minor Changes
+
+
+- feat: enhance remote form functions with schema support, `input` and `issues` properties ([#14383](https://github.com/sveltejs/kit/pull/14383))
+
+
+- breaking: remote form functions get passed a parsed POJO instead of a `FormData` object now ([#14383](https://github.com/sveltejs/kit/pull/14383))
+
 ## 2.41.0
 ### Minor Changes
 
