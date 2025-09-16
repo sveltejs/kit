@@ -331,7 +331,7 @@ export const setCount = form(
 The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
 
 ```svelte
-<!-- 
+<!--
     results in a
     {
 	   name: { first: string, last: string },
@@ -455,7 +455,37 @@ The form object contains a `input` property which reflects its current value. As
 </div>
 ```
 
+### Handling sensitive data
+
 In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `input` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
+
+You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
+
+```svelte
+<form {...register}>
+	<label>
+		Username
+		<input
+			name="username"
+			value={register.input.username}
+			aria-invalid={!!register.issues.username}
+		/>
+	</label>
+
+	<label>
+		Password
+		<input
+			type="password"
+			+++name="_password"+++
+			+++aria-invalid={!!register.issues._password}+++
+		/>
+	</label>
+
+	<button>Sign up!</button>
+</form>
+```
+
+In this example, if the data does not validate, only the first `<input>` will be populated when the page reloads.
 
 ### Single-flight mutations
 
