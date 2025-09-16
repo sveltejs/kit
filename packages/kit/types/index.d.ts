@@ -1119,6 +1119,14 @@ declare module '@sveltejs/kit' {
 			/** The span associated with the current `load` function. */
 			current: Span;
 		};
+
+		/**
+		 * Server only properties when `LoadEvent` executed on server.
+		 */
+		server?: Omit<
+			ServerLoadEvent<Params, ParentData, RouteId>,
+			keyof LoadEvent<Params, Data, ParentData, RouteId>
+		>;
 	}
 
 	export interface NavigationEvent<
@@ -1419,7 +1427,7 @@ declare module '@sveltejs/kit' {
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
-	> {
+	> extends NavigationEvent<Params, RouteId> {
 		/**
 		 * Get or set cookies related to the current request
 		 */
@@ -1445,10 +1453,6 @@ declare module '@sveltejs/kit' {
 		 */
 		locals: App.Locals;
 		/**
-		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-		 */
-		params: Params;
-		/**
 		 * Additional data made available through the adapter.
 		 */
 		platform: Readonly<App.Platform> | undefined;
@@ -1456,15 +1460,6 @@ declare module '@sveltejs/kit' {
 		 * The original request object.
 		 */
 		request: Request;
-		/**
-		 * Info about the current route.
-		 */
-		route: {
-			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-			 */
-			id: RouteId;
-		};
 		/**
 		 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 		 *
@@ -1488,10 +1483,6 @@ declare module '@sveltejs/kit' {
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
 		setHeaders: (headers: Record<string, string>) => void;
-		/**
-		 * The requested URL.
-		 */
-		url: URL;
 		/**
 		 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
