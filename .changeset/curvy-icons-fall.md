@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: prevent a loop causing the build to fail ([#14444](https://github.com/sveltejs/kit/pull/14444))
+fix: prevent loops in postbuild analysis phase
