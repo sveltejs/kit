@@ -42,13 +42,13 @@ export function resolve_aliases(input, file, content, aliases) {
 		// 4. (                         - Start of specifier group
 		//    (?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)  - default import/export, e.g. 'name', or named star import/export, e.g. '* as name '
 		//    | (?:\*\s+)               - e.g. star import/export, e.g. '* '
-		//    | (?:(?:.*,\s+)?\{[^}]*\}\s*)  - e.g. named imports/exports with optional default import/export, e.g. 'name, { ... }' or '{ ... }'
+		//    | (?:(?:\p{L}[\p{L}0-9]*\s*,\s*)?\{[^}]*\}\s*)  - e.g. named imports/exports with optional default import/export, e.g. 'name, { ... }' or '{ ... }'
 		//   )
 		// 5. from\s*                   - Match 'from' with optional whitespace
 		// 6. (['"])                    - Capture quote
 		// 7. ([^'";]+)                 - Capture import path
 		// 8. \3                        - Match the same quote as before
-		/\b(import|export)(?:\s+type)?\s+((?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)|(?:\*\s+)|(?:(?:.*,\s+)?\{[^}]*\}\s*))from\s*(['"])([^'";]+)\3/gmu,
+		/\b(import|export)(?:\s+type)?\s+((?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)|(?:\*\s+)|(?:(?:\p{L}[\p{L}0-9]*\s*,\s*)?\{[^}]*\}\s*))from\s*(['"])([^'";]+)\3/gmu,
 		(match, _keyword, _specifier, quote, import_path) =>
 			replace_import_path(match, quote, import_path)
 	);
