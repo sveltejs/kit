@@ -42,6 +42,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { pathToFileURL } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -660,65 +661,40 @@ async function kit({ svelte_config }) {
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		config(config) {
-			if (!config.build?.ssr) {
-				// only set manualChunks for the SSR build
-				return;
-			}
-
-			// Ensure build.rollupOptions.output exists
-			config.build ??= {};
-			config.build.rollupOptions ??= {};
-			config.build.rollupOptions.output ??= {};
-
-			if (Array.isArray(config.build.rollupOptions.output)) {
-				// TODO I have no idea how this could occur
-				throw new Error('rollupOptions.output cannot be an array');
-			}
-
-			// Set up manualChunks to isolate *.remote.ts files
-			const { manualChunks } = config.build.rollupOptions.output;
-
-			config.build.rollupOptions.output = {
-				...config.build.rollupOptions.output,
-				manualChunks(id, meta) {
-					// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
-					if (id === `${runtime_directory}/app/server/index.js`) {
-						return 'app-server';
-					}
-					if (id === `${runtime_directory}/shared-server.js`) {
-						return 'app-shared-server';
-					}
-
-					// Check if this is a *.remote.ts file
-					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
-						const relative = posixify(path.relative(cwd, id));
-
-						return `remote-${hash(relative)}`;
-					}
-
-					// If there was an existing manualChunks function, call it
-					if (typeof manualChunks === 'function') {
-						return manualChunks(id, meta);
-					}
-
-					// If manualChunks is an object, check if this module matches any patterns
-					if (manualChunks) {
-						for (const name in manualChunks) {
-							const patterns = manualChunks[name];
-
-							// TODO is `id.includes(pattern)` correct?
-							if (patterns.some((pattern) => id.includes(pattern))) {
-								return name;
-							}
-						}
-					}
-				}
-			};
-		},
-
 		configureServer(_dev_server) {
 			dev_server = _dev_server;
+		},
+
+		async load(id) {
+			if (id === '\0virtual:__sveltekit/remote-functions-manifest') {
+				if (!is_build) {
+					// This shouldn't ever happen
+					throw new Error('__sveltekit/remote-functions-manifest is only available during build');
+				}
+
+				// Wait for all modules loaded before getting the entry ids
+				// by repeatedly checking the module graph until no new modules appear
+				const seen = new Set();
+				let modulesToWait = [];
+				do {
+					modulesToWait = [];
+					for (const id of this.getModuleIds()) {
+						if (seen.has(id)) continue;
+						seen.add(id);
+						if (id.startsWith('\0')) continue;
+						const info = this.getModuleInfo(id);
+						if (info?.isExternal) continue;
+						modulesToWait.push(this.load({ id }).catch(() => {}));
+					}
+					// generous timeout in case some other plugin's load hook does the same thing
+					await Promise.race([
+						new Promise((r) => setTimeout(r, 30_000)),
+						Promise.all(modulesToWait)
+					]);
+				} while (modulesToWait.length > 0);
+
+				return `export const map = {${remotes.map((r) => `'${r.hash}': () => import('${pathToFileURL(r.file).href}')`).join(',')}};`;
+			}
 		},
 
 		async transform(code, id, opts) {
@@ -737,6 +713,7 @@ async function kit({ svelte_config }) {
 
 			if (opts?.ssr) {
 				code += dedent`
+					;
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
@@ -747,12 +724,6 @@ async function kit({ svelte_config }) {
 						fn.__.name = name;
 					}
 				`;
-
-				if (!dev_server) {
-					// in prod, prevent the functions from being treeshaken. This will
-					// be replaced with an `export default` in the `writeBundle` hook
-					code += `$$_export_$$($$_self_$$);`;
-				}
 
 				return code;
 			}
@@ -798,19 +769,6 @@ async function kit({ svelte_config }) {
 			return {
 				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
 			};
-		},
-
-		writeBundle() {
-			for (const remote of remotes) {
-				const file = `${out}/server/chunks/remote-${remote.hash}.js`;
-				const code = fs.readFileSync(file, 'utf-8');
-
-				fs.writeFileSync(
-					file,
-					// build process might have minified/adjusted the $$_self_$$ variable, but not the fake global $$_export_$$ function
-					code.replace(/\$\$_export_\$\$\((.+?)\)/, (_, name) => `export default ${name};`)
-				);
-			}
 		}
 	};
 
@@ -837,6 +795,7 @@ async function kit({ svelte_config }) {
 					input.index = `${runtime_directory}/server/index.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
 					input['remote-entry'] = `${runtime_directory}/app/server/remote/index.js`;
+					input['remote-manifest'] = `${runtime_directory}/server/remote-manifest.js`;
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -1063,6 +1022,20 @@ async function kit({ svelte_config }) {
 					client: null,
 					server_manifest
 				};
+
+				// The remote functions manifest now has the full map of hash->import
+				// with import paths pointing to the generated chunks
+				const remotes = (() => {
+					const code = fs.readFileSync(`${out}/server/remote-manifest.js`, 'utf-8');
+					const map_match = /** @type {RegExpMatchArray } */ (code.match(/\{\s*([^}]+)\s*\}/));
+					const map_content = map_match[1];
+					return map_content.split(',').map((entry) => {
+						const key_value_match = /** @type {RegExpMatchArray} */ (
+							entry.trim().match(/["']([^"']+)["']\s*:\s*\(\)\s*=>\s*import\(["']([^"']+)["']\)/)
+						);
+						return { hash: key_value_match[1], file: key_value_match[2] };
+					});
+				})();
 
 				const manifest_path = `${out}/server/manifest-full.js`;
 				fs.writeFileSync(

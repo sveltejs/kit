@@ -495,7 +495,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	for (const loader of Object.values(manifest._.remotes)) {
 		const module = await loader();
 
-		for (const fn of Object.values(module.default)) {
+		for (const fn of Object.values(module)) {
 			if (fn?.__?.type === 'prerender') {
 				prerender_functions.push(fn.__);
 				should_prerender = true;

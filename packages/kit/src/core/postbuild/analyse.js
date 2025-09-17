@@ -170,8 +170,7 @@ async function analyse({
 	// analyse remotes
 	for (const remote of remotes) {
 		const loader = manifest._.remotes[remote.hash];
-		const { default: functions } = await loader();
-
+		const functions = await loader();
 		const exports = new Map();
 
 		for (const name in functions) {

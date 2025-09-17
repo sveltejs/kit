@@ -27,3 +27,9 @@ declare module '__sveltekit/server' {
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
+
+/** Contains a map of all the remote functions, generated on the fly during build; unused during dev */
+declare module '__sveltekit/remote-functions-manifest' {
+	/** Map of hash -> dynamic import to remote file */
+	export const map: Record<string, () => any>;
+}
