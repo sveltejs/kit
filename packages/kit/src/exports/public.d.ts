@@ -1832,12 +1832,15 @@ type FlattenInput<T, Prefix extends string> =
 			: T extends File
 				? { [P in Prefix]: string }
 				: T extends object
-					? {
-							[K in keyof T]: FlattenInput<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
+					? Exclude<
+							{
+								[K in keyof T]: FlattenInput<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T],
+							undefined
+						>
 					: { [P in Prefix]: string };
 
 type FlattenIssues<T, Prefix extends string> =
@@ -1851,12 +1854,15 @@ type FlattenIssues<T, Prefix extends string> =
 			: T extends File
 				? { [P in Prefix]: RemoteFormIssue[] }
 				: T extends object
-					? {
-							[K in keyof T]: FlattenIssues<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
+					? Exclude<
+							{
+								[K in keyof T]: FlattenIssues<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T],
+							undefined
+						>
 					: { [P in Prefix]: RemoteFormIssue[] };
 
 type FlattenKeys<T, Prefix extends string> =
@@ -1869,12 +1875,15 @@ type FlattenKeys<T, Prefix extends string> =
 			: T extends File
 				? { [P in Prefix]: string }
 				: T extends object
-					? {
-							[K in keyof T]: FlattenKeys<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
+					? Exclude<
+							{
+								[K in keyof T]: FlattenKeys<
+									T[K],
+									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+								>;
+							}[keyof T],
+							undefined
+						>
 					: { [P in Prefix]: string };
 
 export interface RemoteFormInput {
