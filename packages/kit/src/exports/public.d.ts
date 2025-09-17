@@ -1822,7 +1822,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 	? I
 	: never;
 
-type FlattenInput<T, Prefix extends string> =
+type FlattenInput<T, Prefix extends string> = NonNullable<
 	WillRecurseIndefinitely<T> extends true
 		? { [key: string]: string }
 		: T extends Array<infer U>
@@ -1838,9 +1838,10 @@ type FlattenInput<T, Prefix extends string> =
 								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
 							>;
 						}[keyof T]
-					: { [P in Prefix]: string };
+					: { [P in Prefix]: string }
+>;
 
-type FlattenIssues<T, Prefix extends string> =
+type FlattenIssues<T, Prefix extends string> = NonNullable<
 	WillRecurseIndefinitely<T> extends true
 		? { [key: string]: RemoteFormIssue[] }
 		: T extends Array<infer U>
@@ -1857,9 +1858,10 @@ type FlattenIssues<T, Prefix extends string> =
 								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
 							>;
 						}[keyof T]
-					: { [P in Prefix]: RemoteFormIssue[] };
+					: { [P in Prefix]: RemoteFormIssue[] }
+>;
 
-type FlattenKeys<T, Prefix extends string> =
+type FlattenKeys<T, Prefix extends string> = NonNullable<
 	WillRecurseIndefinitely<T> extends true
 		? { [key: string]: string }
 		: T extends Array<infer U>
@@ -1875,7 +1877,8 @@ type FlattenKeys<T, Prefix extends string> =
 								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
 							>;
 						}[keyof T]
-					: { [P in Prefix]: string };
+					: { [P in Prefix]: string }
+>;
 
 export interface RemoteFormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
