@@ -255,8 +255,12 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		manifest_data.routes.find((r) => r.id === route.id)
 	);
 
+	const visited = new Set();
 	/** @param {string} id */
 	function visit(id) {
+		if (visited.has(id)) return;
+		visited.add(id);
+
 		const chunk = server_manifest[id];
 		if (!chunk) return;
 
