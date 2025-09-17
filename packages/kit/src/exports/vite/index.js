@@ -795,7 +795,9 @@ async function kit({ svelte_config }) {
 					input.index = `${runtime_directory}/server/index.js`;
 					input.internal = `${kit.outDir}/generated/server/internal.js`;
 					input['remote-entry'] = `${runtime_directory}/app/server/remote/index.js`;
-					input['remote-manifest'] = `${runtime_directory}/server/remote-manifest.js`;
+					if (kit.experimental.remoteFunctions) {
+						input['remote-manifest'] = `${runtime_directory}/server/remote-manifest.js`;
+					}
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
