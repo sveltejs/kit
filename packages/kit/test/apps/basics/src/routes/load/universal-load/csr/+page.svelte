@@ -3,4 +3,4 @@
 	export let data;
 </script>
 
-<h1>Is it correct? {data.answer}</h1>
+<h1>Is it correct? {data.correct}</h1>
