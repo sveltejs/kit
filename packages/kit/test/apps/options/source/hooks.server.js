@@ -17,6 +17,8 @@ export function handle({ event, resolve }) {
 
 export function init() {
 	if (building) {
-		throw new Error('There are no prerendered pages or functions in this app so init() should not be called during the build');
+		throw new Error(
+			'There are no prerendered pages or functions in this app so init() should not be called during the build'
+		);
 	}
 }
