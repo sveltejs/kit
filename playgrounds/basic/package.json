@@ -29,11 +29,12 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.3.0",
-		"svelte": "^5.39.1",
+		"svelte": "^5.39.2",
 		"svelte-check": "^4.1.1",
 		"typescript": "^5.5.0",
 		"valibot": "^1.1.0",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vite-plugin-inspect": "^11.3.3"
 	},
 	"type": "module",
 	"exports": {
