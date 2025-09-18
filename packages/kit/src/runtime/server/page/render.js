@@ -1,20 +1,21 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
+import { text } from '@sveltejs/kit';
 import * as paths from '__sveltekit/paths';
-import { hash } from '../../hash.js';
+import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
-import { public_env, safe_public_env } from '../../shared-server.js';
-import { text } from '../../../exports/index.js';
-import { create_async_iterator } from '../../../utils/streaming.js';
+import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
+import { with_request_store } from '@sveltejs/kit/internal/server';
+import { text_encoder } from '../../utils.js';
+import { get_global_name } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -22,8 +23,6 @@ const updated = {
 	...readable(false),
 	check: () => false
 };
-
-const encoder = new TextEncoder();
 
 /**
  * Creates the HTML response.
@@ -37,8 +36,10 @@ const encoder = new TextEncoder();
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   data_serializer: import('./types.js').ServerDataSerializer
  * }} opts
  */
 export async function render_response({
@@ -51,8 +52,10 @@ export async function render_response({
 	status,
 	error = null,
 	event,
+	event_state,
 	resolve_opts,
-	action_result
+	action_result,
+	data_serializer
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -70,8 +73,18 @@ export async function render_response({
 	const stylesheets = new Set(client.stylesheets);
 	const fonts = new Set(client.fonts);
 
-	/** @type {Set<string>} */
-	const link_header_preloads = new Set();
+	/**
+	 * The value of the Link header that is added to the response when not prerendering
+	 * @type {Set<string>}
+	 */
+	const link_headers = new Set();
+
+	/**
+	 * `<link>` tags that are added to prerendered responses
+	 * (note that stylesheets are always added, prerendered or not)
+	 * @type {Set<string>}
+	 */
+	const link_tags = new Set();
 
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
@@ -170,17 +183,17 @@ export async function render_response({
 			])
 		};
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
 				if (typeof info === 'string' && !SCHEME.test(info)) {
 					throw new Error(
-						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);
 				} else if (!warned) {
 					console.warn(
-						'Avoid calling `fetch` eagerly during server side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 					);
 					warned = true;
 				}
@@ -189,14 +202,18 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_request_store({ event, state: event_state }, () =>
+					options.root.render(props, render_opts)
+				);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props, render_opts);
+				rendered = with_request_store({ event, state: event_state }, () =>
+					options.root.render(props, render_opts)
+				);
 			} finally {
 				paths.reset();
 			}
@@ -239,7 +256,7 @@ export async function render_response({
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
+		const attributes = DEV ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 		csp.add_style(style);
@@ -258,8 +275,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (resolve_opts.preload({ type: 'css', path })) {
-				const preload_atts = ['rel="preload"', 'as="style"'];
-				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
 
@@ -271,27 +287,17 @@ export async function render_response({
 
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
-			const attributes = [
-				'rel="preload"',
-				'as="font"',
-				`type="font/${ext}"`,
-				`href="${path}"`,
-				'crossorigin'
-			];
 
-			head += `\n\t\t<link ${attributes.join(' ')}>`;
+			link_tags.add(`<link rel="preload" as="font" type="font/${ext}" href="${path}" crossorigin>`);
+
+			link_headers.add(
+				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
+			);
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
-
-	const { data, chunks } = get_data(
-		event,
-		options,
-		branch.map((b) => b.server_data),
-		csp,
-		global
-	);
+	const global = get_global_name(options);
+	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
@@ -315,13 +321,20 @@ export async function render_response({
 
 			for (const path of included_modulepreloads) {
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+
 				if (options.preload_strategy !== 'modulepreload') {
 					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-				} else if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				} else {
+					link_tags.add(`<link rel="modulepreload" href="${path}">`);
 				}
 			}
+		}
+
+		if (state.prerendering && link_tags.size > 0) {
+			head += Array.from(link_tags)
+				.map((tag) => `\n\t\t${tag}`)
+				.join('');
 		}
 
 		// prerender a `/path/to/page/__route.js` module
@@ -359,9 +372,28 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			let app_declaration = '';
+
+			if (Object.keys(options.hooks.transport).length > 0) {
+				if (client.inline) {
+					app_declaration = `const app = __sveltekit_${options.version_hash}.app.app;`;
+				} else if (client.app) {
+					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+				} else {
+					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
+				}
+			}
+
+			const prelude = app_declaration
+				? `${app_declaration}
+							const [data, error] = fn(app);`
+				: `const [data, error] = fn();`;
+
 			// When resolving, the id might not yet be available due to the data
 			// be evaluated upon init of kit, so we use a timeout to retry
-			properties.push(`resolve: ({ id, data, error }) => {
+			properties.push(`resolve: async (id, fn) => {
+							${prelude}
+
 							const try_to_resolve = () => {
 								if (!deferred.has(id)) {
 									setTimeout(try_to_resolve, 0);
@@ -427,20 +459,45 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
+		const { remote_data } = event_state;
+
+		let serialized_remote_data = '';
+
+		if (remote_data) {
+			/** @type {Record<string, any>} */
+			const remote = {};
+
+			for (const key in remote_data) {
+				remote[key] = await remote_data[key];
+			}
+
+			// TODO this is repeated in a few places — dedupe it
+			const replacer = (/** @type {any} */ thing) => {
+				for (const key in options.hooks.transport) {
+					const encoded = options.hooks.transport[key].encode(thing);
+					if (encoded) {
+						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					}
+				}
+			};
+
+			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
+		}
+
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+					${serialized_remote_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						kit.start(app, ${args.join(', ')});
+						${serialized_remote_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
+						${serialized_remote_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
@@ -454,7 +511,14 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = DEV ? ", { type: 'module' }" : '';
+			if (options.service_worker_options != null) {
+				const service_worker_options = { ...options.service_worker_options };
+				if (DEV) {
+					service_worker_options.type = 'module';
+				}
+				opts = `, ${s(service_worker_options)}`;
+			}
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -508,8 +572,8 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_header_preloads.size) {
-			headers.set('link', Array.from(link_header_preloads).join(', '));
+		if (link_headers.size) {
+			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
 
@@ -521,7 +585,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: safe_public_env
+		env: public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -561,9 +625,9 @@ export async function render_response({
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
-						controller.enqueue(encoder.encode(transformed + '\n'));
+						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(encoder.encode(chunk));
+							controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},
@@ -574,88 +638,4 @@ export async function render_response({
 					headers
 				}
 			);
-}
-
-/**
- * If the serialized data contains promises, `chunks` will be an
- * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {Array<import('types').ServerDataNode | null>} nodes
- * @param {import('./csp.js').Csp} csp
- * @param {string} global
- * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
- */
-function get_data(event, options, nodes, csp, global) {
-	let promise_id = 1;
-	let count = 0;
-
-	const { iterator, push, done } = create_async_iterator();
-
-	/** @param {any} thing */
-	function replacer(thing) {
-		if (typeof thing?.then === 'function') {
-			const id = promise_id++;
-			count += 1;
-
-			thing
-				.then(/** @param {any} data */ (data) => ({ data }))
-				.catch(
-					/** @param {any} error */ async (error) => ({
-						error: await handle_error_and_jsonify(event, options, error)
-					})
-				)
-				.then(
-					/**
-					 * @param {{data: any; error: any}} result
-					 */
-					async ({ data, error }) => {
-						count -= 1;
-
-						let str;
-						try {
-							str = devalue.uneval({ id, data, error }, replacer);
-						} catch {
-							error = await handle_error_and_jsonify(
-								event,
-								options,
-								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
-							);
-							data = undefined;
-							str = devalue.uneval({ id, data, error }, replacer);
-						}
-
-						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
-						if (count === 0) done();
-					}
-				);
-
-			return `${global}.defer(${id})`;
-		} else {
-			for (const key in options.hooks.transport) {
-				const encoded = options.hooks.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-				}
-			}
-		}
-	}
-
-	try {
-		const strings = nodes.map((node) => {
-			if (!node) return 'null';
-
-			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
-				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-			}}`;
-		});
-
-		return {
-			data: `[${strings.join(',')}]`,
-			chunks: count > 0 ? iterator : null
-		};
-	} catch (e) {
-		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
-	}
 }

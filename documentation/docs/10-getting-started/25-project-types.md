@@ -48,7 +48,7 @@ You can create a library to be used by other Svelte apps with the [`@sveltejs/pa
 
 ## Offline app
 
-SvelteKit has full suppport for [service workers](service-workers) allowing you to build many types of applications such as offline apps and [progressive web apps](glossary#PWA).
+SvelteKit has full support for [service workers](service-workers) allowing you to build many types of applications such as offline apps and [progressive web apps](glossary#PWA).
 
 ## Mobile app
 

@@ -17,39 +17,51 @@ const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
 export function resolve_aliases(input, file, content, aliases) {
 	/**
 	 * @param {string} match
+	 * @param {string} quote
 	 * @param {string} import_path
 	 */
-	const replace_import_path = (match, import_path) => {
+	const replace_import_path = (match, quote, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
-			if (!import_path.startsWith(alias)) continue;
+			if (import_path !== alias && !import_path.startsWith(alias + '/')) continue;
 
 			const full_path = path.join(input, file);
 			const full_import_path = path.join(value, import_path.slice(alias.length));
 			let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 			resolved = resolved.startsWith('.') ? resolved : './' + resolved;
-			return match.replace(import_path, resolved);
+			return match.replace(quote + import_path + quote, quote + resolved + quote);
 		}
 		return match;
 	};
 
 	// import/export ... from ...
 	content = content.replace(
-		/\b(import|export)\s+([\w*\s{},]*)\s+from\s+(['"])([^'";]+)\3/g,
-		(_, keyword, specifier, quote, import_path) =>
-			replace_import_path(
-				`${keyword} ${specifier} from ${quote}${import_path}${quote}`,
-				import_path
-			)
+		// Regex parts for import/export ... from ... statements:
+		// 1. \b(import|export)         - Match 'import' or 'export' at a word boundary
+		// 2. (?:\s+type)?              - Optionally match ' type'
+		// 3. \s+                       - At least one whitespace
+		// 4. (                         - Start of specifier group
+		//    (?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)  - default import/export, e.g. 'name', or named star import/export, e.g. '* as name '
+		//    | (?:\*\s+)               - e.g. star import/export, e.g. '* '
+		//    | (?:\{[^}]*\}\s*)        - e.g. named imports/exports, e.g. '{ ... }'
+		//   )
+		// 5. from\s*                   - Match 'from' with optional whitespace
+		// 6. (['"])                    - Capture quote
+		// 7. ([^'";]+)                 - Capture import path
+		// 8. \3                        - Match the same quote as before
+		/\b(import|export)(?:\s+type)?\s+((?:(?:\*\s+as\s+)?\p{L}[\p{L}0-9]*\s+)|(?:\*\s+)|(?:\{[^}]*\}\s*))from\s*(['"])([^'";]+)\3/gmu,
+		(match, _keyword, _specifier, quote, import_path) =>
+			replace_import_path(match, quote, import_path)
 	);
 
 	// import(...)
-	content = content.replace(/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g, (_, quote, import_path) =>
-		replace_import_path(`import(${quote}${import_path}${quote})`, import_path)
+	content = content.replace(
+		/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g,
+		(match, quote, import_path) => replace_import_path(match, quote, import_path)
 	);
 
 	// import '...'
-	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (_, quote, import_path) =>
-		replace_import_path(`import ${quote}${import_path}${quote}`, import_path)
+	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (match, quote, import_path) =>
+		replace_import_path(match, quote, import_path)
 	);
 
 	return content;

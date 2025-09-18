@@ -46,7 +46,7 @@ export function walk(cwd, dirs = false) {
 		}
 	}
 
-	return walk_dir(''), all_files;
+	return (walk_dir(''), all_files);
 }
 
 /**

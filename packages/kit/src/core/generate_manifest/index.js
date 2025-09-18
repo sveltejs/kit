@@ -1,3 +1,4 @@
+/** @import { RemoteChunk } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import * as mime from 'mrmime';
@@ -18,9 +19,10 @@ import { uneval } from 'devalue';
  *   prerendered: string[];
  *   relative_path: string;
  *   routes: import('types').RouteData[];
+ *   remotes: RemoteChunk[];
  * }} opts
  */
-export function generate_manifest({ build_data, prerendered, relative_path, routes }) {
+export function generate_manifest({ build_data, prerendered, relative_path, routes, remotes }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -59,7 +61,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 		assets.push(build_data.service_worker);
 	}
 
-	// In case of server side route resolution, we need to include all matchers. Prerendered routes are not part
+	// In case of server-side route resolution, we need to include all matchers. Prerendered routes are not part
 	// of the server manifest, and they could reference matchers that then would not be included.
 	const matchers = new Set(
 		build_data.client?.nodes ? Object.keys(build_data.manifest_data.matchers) : undefined
@@ -100,6 +102,9 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 				nodes: [
 					${(node_paths).map(loader).join(',\n')}
 				],
+				remotes: {
+					${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, `chunks/remote-${remote.hash}.js`))}`).join(',\n')}
+				},
 				routes: [
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;

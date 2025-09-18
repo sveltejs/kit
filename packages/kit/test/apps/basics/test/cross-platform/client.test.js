@@ -41,6 +41,11 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
+	test('sets focus for valid hash but invalid selector', async ({ page }) => {
+		await page.goto('/reset-focus#an:invalid+selector');
+		await expect(page.locator('button')).toBeFocused();
+	});
+
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
 
@@ -235,6 +240,12 @@ test.describe('Navigation lifecycle functions', () => {
 		await expect(page.locator('pre')).toHaveText('1 false link');
 	});
 
+	test("beforeNavigate's complete fulfills after redirect", async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/complete');
+		clicknav('a[href="/navigation-lifecycle/before-navigate/redirect"]');
+		expect(await page.waitForEvent('console', (msg) => msg.text() === 'complete')).toBeTruthy();
+	});
+
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
 		expect(await page.textContent('h1')).toBe(
@@ -263,6 +274,29 @@ test.describe('Navigation lifecycle functions', () => {
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
 
 		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
+
+	test('navigation.event is populated', async ({ page, clicknav }) => {
+		const logs = [];
+
+		await page.goto('/navigation-lifecycle/before-navigate/event/a');
+
+		page.on('console', (message) => {
+			logs.push(message.text());
+		});
+
+		await clicknav('[href="/navigation-lifecycle/before-navigate/event/b"]');
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
+		]);
+
+		await page.goBack();
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
+			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
+		]);
 	});
 });
 
@@ -806,14 +840,31 @@ test.describe('Routing', () => {
 		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+	test('sequential focus navigation starting point is set correctly on navigation', async ({
 		page,
-		clicknav
+		browserName
+	}) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+		await page.goto('/routing/focus');
+		await page.locator('[href="/routing/focus/a#p"]').click();
+		await page.waitForURL('**/routing/focus/a#p');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+	});
+
+	test('back button returns to previous route when previous route was navigated to via hash anchor', async ({
+		page,
+		clicknav,
+		baseURL
 	}) => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="/routing/hashes/b"]');
+		expect(await page.textContent('h1')).toBe('b');
 
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
@@ -828,10 +879,13 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#hash-target"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="#replace-state"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
 
 		await page.goBack();
-		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
