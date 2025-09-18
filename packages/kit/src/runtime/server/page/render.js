@@ -202,18 +202,26 @@ export async function render_response({
 			};
 
 			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
+				rendered = with_request_store({ event, state: event_state }, () => {
+					const result = options.root.render(props, render_opts);
+					// Svelte 5.39.0 changed the properties lazily start the rendering to be able to have the same signature for sync and async render.
+					// 5.39.1 extended that to the old class components. Rendering isn't started until one of the properties is accessed, so we do that here,
+					// else we might get errors about missing request store context
+					result.html;
+					return result;
+				});
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
+				rendered = with_request_store({ event, state: event_state }, () => {
+					const result = options.root.render(props, render_opts);
+					// See comment above
+					result.html;
+					return result;
+				});
 			} finally {
 				paths.reset();
 			}
