@@ -190,6 +190,10 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	f2.field('a');
+	f2.field('nested.prop');
+	// @ts-expect-error
+	f2.field('nonexistent');
 	f2.issues!.a;
 	f2.issues!['nested.prop'];
 	// @ts-expect-error
@@ -218,6 +222,10 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	f3.field('a');
+	f3.field('nested.prop');
+	// @ts-expect-error
+	f3.field('nonexistent');
 	f3.issues!.a;
 	f3.issues!['nested.prop'];
 	// @ts-expect-error
@@ -235,6 +243,8 @@ function form_tests() {
 		data.nested?.prop === '';
 		return { success: true };
 	});
+	f4.field('a');
+	f4.field('nested.prop');
 	f4.issues!.a;
 	f4.issues!['nested.prop'];
 	f4.input!.a = '';
@@ -250,6 +260,9 @@ function form_tests() {
 		data.foo === 'e';
 		return { success: true };
 	});
+	f5.field('foo');
+	// @ts-expect-error
+	f5.field('nonexistent');
 	f5.issues!.foo;
 	f5.issues!.bar;
 	// @ts-expect-error
@@ -257,6 +270,37 @@ function form_tests() {
 	f5.input!.foo = 'a';
 	// @ts-expect-error
 	f5.input!.foo = 123;
+
+	// schema with arrays
+	const f6 = form(
+		null as any as StandardSchemaV1<{ array: Array<{ array: string[]; prop: string }> }>,
+		(data) => {
+			data.array[0].prop === 'a';
+			data.array[0].array[0] === 'a';
+			// @ts-expect-error
+			data.array[0].array[0] === 1;
+			return { success: true };
+		}
+	);
+	f6.field('array[0].prop');
+	f6.field('array[0].array[]');
+	// @ts-expect-error
+	f6.field('array[0].array');
+	f6.issues!.array;
+	f6.issues!['array[0].prop'];
+	f6.issues!['array[0].array'];
+	// @ts-expect-error
+	f6.issues!['array[0].array[]'];
+	// @ts-expect-error
+	f6.issues!.nonexistent;
+	f6.input!['array[0].prop'] = '';
+	f6.input!['array[0].array'] = [''];
+	// @ts-expect-error
+	f6.input!['array[0].array'] = '';
+	// @ts-expect-error
+	f6.input!['array[0].array[]'] = [''];
+	// @ts-expect-error
+	f6.input!['array[0].prop'] = 123;
 }
 form_tests();
 
