@@ -107,4 +107,22 @@ describe('convert_formdata', () => {
 			array: ['a', 'b', 'c']
 		});
 	});
+
+	test('handles multiple fields at the same nested level', () => {
+		const data = new FormData();
+
+		data.append('user.name.first', 'first');
+		data.append('user.name.last', 'last');
+
+		const converted = convert_formdata(data);
+
+		expect(converted).toEqual({
+			user: {
+				name: {
+					first: 'first',
+					last: 'last'
+				}
+			}
+		});
+	});
 });
