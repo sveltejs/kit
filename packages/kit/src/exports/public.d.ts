@@ -1943,9 +1943,11 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** The submitted values */
-	input: null | UnionToIntersection<FlattenInput<Input, ''>>;
+	input: null | Partial<UnionToIntersection<FlattenInput<Input, ''>>>;
 	/** Validation issues */
-	issues: null | (UnionToIntersection<FlattenIssues<Input, ''>> & { $?: RemoteFormIssue[] });
+	issues:
+		| null
+		| (Partial<UnionToIntersection<FlattenIssues<Input, ''>>> & { $?: RemoteFormIssue[] });
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
