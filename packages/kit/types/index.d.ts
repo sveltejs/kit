@@ -1787,13 +1787,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
-	type WillRecurseIndefinitely<T> = unknown extends T
-		? true
-		: string extends keyof T
-			? true
-			: number extends keyof T
-				? true
-				: false;
+	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
 	// Helper type to convert union to intersection
 	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
@@ -1841,8 +1835,6 @@ declare module '@sveltejs/kit' {
 								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
 							>;
 						}[keyof T];
-
-	type X = FlattenIssues<{ a: string }, ''>;
 
 	type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
 		? { [P in Prefix]: string }
