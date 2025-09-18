@@ -1921,7 +1921,7 @@ declare module '@sveltejs/kit' {
 		/** The submitted values */
 		input: null | UnionToIntersection<FlattenInput<Input, ''>>;
 		/** Validation issues */
-		issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
+		issues: null | (UnionToIntersection<FlattenIssues<Input, ''>> & { $?: RemoteFormIssue[] });
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
