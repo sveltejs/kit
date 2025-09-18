@@ -1810,20 +1810,23 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
-// If T is unknown or RemoteFormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
+// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T
 	? true
-	: RemoteFormInput extends T
+	: string extends keyof T
 		? true
-		: false;
+		: number extends keyof T
+			? true
+			: false;
 
 // Helper type to convert union to intersection
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
 	? I
 	: never;
 
-type FlattenInput<T, Prefix extends string> = NonNullable<
-	WillRecurseIndefinitely<T> extends true
+type FlattenInput<T, Prefix extends string> = T extends string | number | boolean | null | undefined
+	? { [P in Prefix]: string }
+	: WillRecurseIndefinitely<T> extends true
 		? { [key: string]: string }
 		: T extends Array<infer U>
 			? U extends string | File
@@ -1831,18 +1834,22 @@ type FlattenInput<T, Prefix extends string> = NonNullable<
 				: FlattenInput<U, `${Prefix}[${number}]`>
 			: T extends File
 				? { [P in Prefix]: string }
-				: T extends object
-					? {
-							[K in keyof T]: FlattenInput<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
-					: { [P in Prefix]: string }
->;
+				: {
+						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+						[K in keyof Required<T>]: FlattenInput<
+							T[K],
+							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+						>;
+					}[keyof T];
 
-type FlattenIssues<T, Prefix extends string> = NonNullable<
-	WillRecurseIndefinitely<T> extends true
+type FlattenIssues<T, Prefix extends string> = T extends
+	| string
+	| number
+	| boolean
+	| null
+	| undefined
+	? { [P in Prefix]: RemoteFormIssue[] }
+	: WillRecurseIndefinitely<T> extends true
 		? { [key: string]: RemoteFormIssue[] }
 		: T extends Array<infer U>
 			? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
@@ -1851,18 +1858,19 @@ type FlattenIssues<T, Prefix extends string> = NonNullable<
 				>
 			: T extends File
 				? { [P in Prefix]: RemoteFormIssue[] }
-				: T extends object
-					? {
-							[K in keyof T]: FlattenIssues<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
-					: { [P in Prefix]: RemoteFormIssue[] }
->;
+				: {
+						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+						[K in keyof Required<T>]: FlattenIssues<
+							T[K],
+							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+						>;
+					}[keyof T];
 
-type FlattenKeys<T, Prefix extends string> = NonNullable<
-	WillRecurseIndefinitely<T> extends true
+type X = FlattenIssues<{ a: string }, ''>;
+
+type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
+	? { [P in Prefix]: string }
+	: WillRecurseIndefinitely<T> extends true
 		? { [key: string]: string }
 		: T extends Array<infer U>
 			? U extends string | File
@@ -1870,15 +1878,13 @@ type FlattenKeys<T, Prefix extends string> = NonNullable<
 				: FlattenKeys<U, `${Prefix}[${number}]`>
 			: T extends File
 				? { [P in Prefix]: string }
-				: T extends object
-					? {
-							[K in keyof T]: FlattenKeys<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T]
-					: { [P in Prefix]: string }
->;
+				: {
+						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+						[K in keyof Required<T>]: FlattenKeys<
+							T[K],
+							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+						>;
+					}[keyof T];
 
 export interface RemoteFormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];

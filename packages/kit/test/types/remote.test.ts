@@ -175,6 +175,88 @@ function form_tests() {
 		);
 		y;
 	});
+
+	const f2 = form(
+		null as any as StandardSchemaV1<{ a: string; nested: { prop: string } }>,
+		(data) => {
+			data.a === '';
+			data.nested.prop === '';
+			// @ts-expect-error
+			data.nested.nonexistent;
+			// @ts-expect-error
+			data.nonexistent;
+			// @ts-expect-error
+			data.a === 123;
+			return { success: true };
+		}
+	);
+	f2.issues!.a;
+	f2.issues!['nested.prop'];
+	// @ts-expect-error
+	f2.issues!.nonexistent;
+	f2.input!.a = '';
+	f2.input!['nested.prop'] = '';
+	// @ts-expect-error
+	f2.input!.nonexistent = '';
+	// @ts-expect-error
+	f2.input!.a = 123;
+
+	// all schema properties optional
+	const f3 = form(
+		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
+		(data) => {
+			data.a === '';
+			data.nested?.prop === '';
+			// @ts-expect-error
+			data.nested.prop === '';
+			// @ts-expect-error
+			data.nested.nonexistent;
+			// @ts-expect-error
+			data.nonexistent;
+			// @ts-expect-error
+			data.a === 123;
+			return { success: true };
+		}
+	);
+	f3.issues!.a;
+	f3.issues!['nested.prop'];
+	// @ts-expect-error
+	f3.issues!.nonexistent;
+	f3.input!.a = '';
+	f3.input!['nested.prop'] = '';
+	// @ts-expect-error
+	f3.input!.nonexistent = '';
+	// @ts-expect-error
+	f3.input!.a = 123;
+
+	// index signature schema
+	const f4 = form(null as any as StandardSchemaV1<Record<string, any>>, (data) => {
+		data.a === '';
+		data.nested?.prop === '';
+		return { success: true };
+	});
+	f4.issues!.a;
+	f4.issues!['nested.prop'];
+	f4.input!.a = '';
+	f4.input!['nested.prop'] = '';
+	// @ts-expect-error
+	f4.input!.a = 123;
+
+	// schema with union types
+	const f5 = form(null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>, (data) => {
+		data.foo === 'a';
+		data.bar === 'c';
+		// @ts-expect-error
+		data.foo === 'e';
+		return { success: true };
+	});
+	f5.issues!.foo;
+	f5.issues!.bar;
+	// @ts-expect-error
+	f5.issues!.nonexistent;
+	f5.input!.foo = 'a';
+	// @ts-expect-error
+	f5.input!.foo = 123;
 }
 form_tests();
 
