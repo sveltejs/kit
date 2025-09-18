@@ -168,10 +168,6 @@ export async function render_response({
 			state: {}
 		};
 
-		// use relative paths during rendering, so that the resulting HTML is as
-		// portable as possible, but reset afterwards
-		if (paths.relative) paths.override({ base, assets });
-
 		const render_opts = {
 			context: new Map([
 				[
@@ -183,46 +179,48 @@ export async function render_response({
 			])
 		};
 
-		if (DEV) {
-			const fetch = globalThis.fetch;
-			let warned = false;
-			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !SCHEME.test(info)) {
-					throw new Error(
-						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-					);
-				} else if (!warned) {
-					console.warn(
-						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-					);
-					warned = true;
-				}
+		const fetch = globalThis.fetch;
 
-				return fetch(info, init);
-			};
+		try {
+			if (DEV) {
+				let warned = false;
+				globalThis.fetch = (info, init) => {
+					if (typeof info === 'string' && !SCHEME.test(info)) {
+						throw new Error(
+							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						);
+					} else if (!warned) {
+						console.warn(
+							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						);
+						warned = true;
+					}
 
-			try {
-				rendered = await with_request_store(
-					{ event, state: event_state },
-					() =>
-						options.root.renderAsync?.(props, render_opts) ??
-						options.root.render(props, render_opts)
-				);
-			} finally {
+					return fetch(info, init);
+				};
+			}
+
+			rendered = await with_request_store({ event, state: event_state }, async () => {
+				// use relative paths during rendering, so that the resulting HTML is as
+				// portable as possible, but reset afterwards
+				if (paths.relative) paths.override({ base, assets });
+
+				const rendered = options.root.render(props, render_opts);
+
+				// we reset this synchronously, rather than after async rendering is complete,
+				// to avoid cross-talk between requests
+				// TODO remove in favour of `resolve(...)` and `asset(...)`, which use AsyncLocalStorage
+				paths.reset();
+
+				// eslint-disable-next-line
+				return await rendered;
+			});
+		} finally {
+			if (DEV) {
 				globalThis.fetch = fetch;
-				paths.reset();
 			}
-		} else {
-			try {
-				rendered = await with_request_store(
-					{ event, state: event_state },
-					() =>
-						options.root.renderAsync?.(props, render_opts) ??
-						options.root.render(props, render_opts)
-				);
-			} finally {
-				paths.reset();
-			}
+
+			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 
 		for (const { node } of branch) {
