@@ -56,7 +56,7 @@ function serve(path, client = false) {
 									// only apply to build directory, not e.g. version.json
 									res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 								} else {
-									res.setHeader('cache-control', 'no-cache,no-store');
+									res.setHeader('cache-control', 'public,max-age=0,must-revalidate');
 								}
 							}
 						}
