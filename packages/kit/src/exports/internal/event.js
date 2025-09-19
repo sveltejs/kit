@@ -11,11 +11,16 @@ let sync_store = null;
 /** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
-let use_zone = DEV && !!process?.versions?.webcontainer;
+const use_zone = DEV && typeof process !== 'undefined' && !!process.versions.webcontainer;
 
 if (use_zone) {
 	// @ts-expect-error no types for zone.js/node
-	import('zone.js/node').then(() => console.log('Using zone.js')).catch(() => {});
+	import('zone.js/node')
+		.then(() => {
+			console.log('Using zone.js');
+			Zone.assertZonePatched();
+		})
+		.catch((e) => console.log('zone.js error', e));
 }
 
 import('node:async_hooks')
