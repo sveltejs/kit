@@ -320,7 +320,7 @@ export const setCount = form(
 		// Valibot:
 		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
 		// Zod:
-		// count: z.coerce.number()
+		// count: z.coerce.number<string>()
 	}),
 	async ({ count }) => {
 		// ...
