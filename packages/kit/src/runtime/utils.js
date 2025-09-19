@@ -186,3 +186,76 @@ export const file_transport = {
 		},
 	decode: (data) => data
 };
+
+/**
+ * Creates a proxy-based field accessor for form data
+ * @param {any} target - Function or empty POJO
+ * @param {() => Record<string, any>} get_input - Function to get current input data
+ * @param {() => Record<string, any>} get_issues - Function to get current issues
+ * @param {(string | number)[]} path - Current access path
+ * @returns {any} Proxy object with name(), value(), and issues() methods
+ */
+export function create_field_proxy(target, get_input, get_issues, path = []) {
+	return new Proxy(target, {
+		get(target, prop) {
+			if (typeof prop === 'symbol') return target[prop];
+
+			// Handle array access like jobs[0]
+			if (/^\d+$/.test(prop)) {
+				return create_field_proxy({}, get_input, get_issues, [...path, parseInt(prop, 10)]);
+			}
+
+			const key = build_path_string(path);
+
+			// Handle methods that can also be property access
+			if (prop === 'name') {
+				const nameFunc = (/** @type {string} */ asArray) => {
+					if (asArray === 'asArray') {
+						return key + '[]';
+					}
+					return key;
+				};
+				return create_field_proxy(nameFunc, get_input, get_issues, [...path, 'name']);
+			}
+
+			if (prop === 'value') {
+				const valueFunc = () => {
+					const input = get_input();
+					// TODO this doesn't return properly shaped objects yet
+					return key === '' ? input : input[key];
+				};
+				return create_field_proxy(valueFunc, get_input, get_issues, [...path, 'value']);
+			}
+
+			if (prop === 'issues') {
+				const issuesFunc = () => {
+					const issues = get_issues();
+					return issues[key === '' ? '$' : key];
+				};
+				return create_field_proxy(issuesFunc, get_input, get_issues, [...path, 'issues']);
+			}
+
+			// Handle property access (nested fields)
+			return create_field_proxy({}, get_input, get_issues, [...path, prop]);
+		}
+	});
+}
+
+/**
+ * Builds a path string from an array of path segments
+ * @param {(string | number)[]} path
+ * @returns {string}
+ */
+function build_path_string(path) {
+	let result = '';
+
+	for (const segment of path) {
+		if (typeof segment === 'number') {
+			result += `[${segment}]`;
+		} else {
+			result += result === '' ? segment : '.' + segment;
+		}
+	}
+
+	return result;
+}

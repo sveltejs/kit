@@ -4,7 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { run_remote_function } from './shared.js';
-import { convert_formdata, flatten_issues } from '../../../utils.js';
+import { convert_formdata, flatten_issues, create_field_proxy } from '../../../utils.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -185,17 +185,52 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		for (const property of ['input', 'issues']) {
-			Object.defineProperty(instance, property, {
-				get() {
-					try {
-						const { remote_data } = get_request_store().state;
-						return remote_data?.[__.id]?.[property] ?? {};
-					} catch {
-						return undefined;
-					}
+		Object.defineProperty(instance, 'fields', {
+			get() {
+				const { remote_data } = get_request_store().state;
+				const data = remote_data?.[__.id];
+				return create_field_proxy(
+					{},
+					() => data?.input ?? {},
+					() => data?.issues ?? {}
+				);
+			}
+		});
+
+		// TODO 3.0 remove
+		if (DEV) {
+			Object.defineProperty(instance, 'field', {
+				value: (/** @type {string} */ name) => {
+					const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
+					throw new Error(
+						`form.field has been removed in favor of form.fields: Instead of form.field('${name}') write form.fields.${new_name}.name(${new_name !== name ? "'asArray'" : ''})`
+					);
 				}
 			});
+
+			for (const property of ['input', 'issues']) {
+				Object.defineProperty(instance, property, {
+					get() {
+						const new_name = property === 'issues' ? 'issues' : 'value';
+						return new Proxy(
+							{},
+							{
+								get(_, prop) {
+									const prop_string = typeof prop === 'string' ? prop : String(prop);
+									const old =
+										prop_string.includes('[') || prop_string.includes('.')
+											? `['${prop_string}']`
+											: `.${prop_string}`;
+									const replacement = `.${prop_string}.${new_name}()`;
+									throw new Error(
+										`form.${property} has been removed in favor of form.fields: Instead of form.${property}${old} write form.fields.${replacement}.${new_name}()`
+									);
+								}
+							}
+						);
+					}
+				});
+			}
 		}
 
 		Object.defineProperty(instance, 'result', {
@@ -217,10 +252,6 @@ export function form(validate_or_fn, maybe_fn) {
 		// On the server, buttonProps.pending is always 0
 		Object.defineProperty(button_props, 'pending', {
 			get: () => 0
-		});
-
-		Object.defineProperty(instance, 'field', {
-			value: (/** @type {string} */ name) => name
 		});
 
 		Object.defineProperty(instance, 'preflight', {

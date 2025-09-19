@@ -1789,70 +1789,38 @@ declare module '@sveltejs/kit' {
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
-	// Helper type to convert union to intersection
-	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-		? I
-		: never;
+	/**
+	 * Form field accessor type that provides name(), value(), and issues() methods
+	 */
+	type FormField<ValueType, Array extends boolean> = {
+		/**
+		 * This method exists to allow you to typecheck `name` attributes. It returns its argument
+		 * @example
+		 * ```svelte
+		 * <input name={login.fields.username.name()} />
+		 * ```
+		 **/
+		name(...args: Array extends true ? ['asArray'] : []): string;
+		/** The values that will be submitted */
+		value(): ValueType;
+		/** Validation issues, if any */
+		issues(): RemoteFormIssue[] | undefined;
+	};
 
-	type FlattenInput<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-		? { [P in Prefix]: string }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: string }
-			: T extends Array<infer U>
-				? U extends string | File
-					? { [P in Prefix]: string[] }
-					: FlattenInput<U, `${Prefix}[${number}]`>
-				: T extends File
-					? { [P in Prefix]: string }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenInput<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
+	/**
+	 * Recursive type to build form fields structure with proxy access
+	 */
+	type FormFields<T> =
+		WillRecurseIndefinitely<T> extends true
+			? RecursiveFormFields
+			: NonNullable<T> extends string | number | boolean | File
+				? FormField<T, false>
+				: T extends Array<infer U>
+					? FormField<T, true> & { [K in number]: FormFields<U> }
+					: FormField<T, false> & { [K in keyof T]-?: FormFields<T[K]> };
 
-	type FlattenIssues<T, Prefix extends string> = T extends
-		| string
-		| number
-		| boolean
-		| null
-		| undefined
-		? { [P in Prefix]: RemoteFormIssue[] }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: RemoteFormIssue[] }
-			: T extends Array<infer U>
-				? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
-						U,
-						`${Prefix}[${number}]`
-					>
-				: T extends File
-					? { [P in Prefix]: RemoteFormIssue[] }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenIssues<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
-
-	type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-		? { [P in Prefix]: string }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: string }
-			: T extends Array<infer U>
-				? U extends string | File
-					? { [P in `${Prefix}[]`]: string[] }
-					: FlattenKeys<U, `${Prefix}[${number}]`>
-				: T extends File
-					? { [P in Prefix]: string }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenKeys<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
+	// By breaking this out into its own type, we avoid the TS recursion depth limit
+	type RecursiveFormFields = FormField<any, boolean> & { [key: string]: RecursiveFormFields };
 
 	export interface RemoteFormInput {
 		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
@@ -1902,14 +1870,6 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
-		/**
-		 * This method exists to allow you to typecheck `name` attributes. It returns its argument
-		 * @example
-		 * ```svelte
-		 * <input name={login.field('username')} />
-		 * ```
-		 **/
-		field<Name extends keyof UnionToIntersection<FlattenKeys<Input, ''>>>(string: Name): Name;
 		/** Preflight checks */
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
@@ -1918,10 +1878,13 @@ declare module '@sveltejs/kit' {
 		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
-		/** The submitted values */
-		input: null | UnionToIntersection<FlattenInput<Input, ''>>;
-		/** Validation issues */
-		issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
+		/** Access form fields using object notation */
+		fields: Input extends void
+			? never
+			: { [K in keyof Input]-?: FormFields<Input[K]> } & Pick<
+					FormField<Input, false>,
+					'value' | 'issues'
+				>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';

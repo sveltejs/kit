@@ -17,7 +17,12 @@ import {
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
-import { convert_formdata, file_transport, flatten_issues } from '../../utils.js';
+import {
+	convert_formdata,
+	file_transport,
+	flatten_issues,
+	create_field_proxy
+} from '../../utils.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -398,18 +403,53 @@ export function form(id) {
 
 		let validate_id = 0;
 
+		// TODO 3.0 remove
+		if (DEV) {
+			Object.defineProperty(instance, 'field', {
+				value: (/** @type {string} */ name) => {
+					const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
+					throw new Error(
+						`form.field has been removed in favor of form.fields: Instead of form.field('${name}') write form.fields.${new_name}.name(${new_name !== name ? "'asArray'" : ''})`
+					);
+				}
+			});
+
+			for (const property of ['input', 'issues']) {
+				Object.defineProperty(instance, property, {
+					get() {
+						const new_name = property === 'issues' ? 'issues' : 'value';
+						return new Proxy(
+							{},
+							{
+								get(_, prop) {
+									const prop_string = typeof prop === 'string' ? prop : String(prop);
+									const old =
+										prop_string.includes('[') || prop_string.includes('.')
+											? `['${prop_string}']`
+											: `.${prop_string}`;
+									const replacement = `.${prop_string}.${new_name}()`;
+									throw new Error(
+										`form.${property} has been removed in favor of form.fields: Instead of form.${property}${old} write form.fields.${replacement}.${new_name}()`
+									);
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
-			input: {
-				get: () => input,
-				set: (v) => {
-					input = v;
-				}
-			},
-			issues: {
-				get: () => issues
+			fields: {
+				get: () =>
+					create_field_proxy(
+						{},
+						() => input,
+						() => issues
+					)
 			},
 			result: {
 				get: () => result
@@ -417,11 +457,8 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
-			field: {
-				value: (/** @type {string} */ name) => name
-			},
 			preflight: {
-				/** @type {RemoteForm<any, any>['preflight']} */
+				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
 					return instance;

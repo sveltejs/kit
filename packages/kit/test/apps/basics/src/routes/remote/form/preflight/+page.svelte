@@ -26,15 +26,19 @@
 <hr />
 
 <form data-default {...set_number.preflight(schema)}>
-	{#if set_number.issues.number}
-		<p>{set_number.issues.number[0].message}</p>
+	{#if set_number.fields.number.issues()}
+		<p>{set_number.fields.number.issues()[0].message}</p>
 	{/if}
 
-	<input type="number" name={set_number.field('number')} value={set_number.input.number} />
+	<input
+		type="number"
+		name={set_number.fields.number.name()}
+		value={set_number.fields.number.value()}
+	/>
 	<button>set number</button>
 </form>
 
-<p>set_number.input.number: {set_number.input.number}</p>
+<p>set_number.input.number: {set_number.fields.number.value()}</p>
 <p>set_number.pending: {set_number.pending}</p>
 <p>set_number.result: {set_number.result}</p>
 
@@ -46,14 +50,18 @@
 		await submit();
 	})}
 >
-	{#if enhanced.issues.number}
-		<p>{enhanced.issues.number[0].message}</p>
+	{#if enhanced.fields.number.issues()}
+		<p>{enhanced.fields.number.issues()[0].message}</p>
 	{/if}
 
-	<input type="number" name={enhanced.field('number')} value={enhanced.input.number} />
+	<input
+		type="number"
+		name={enhanced.fields.number.name()}
+		value={enhanced.fields.number.value()}
+	/>
 	<button><span>set enhanced number</span></button>
 </form>
 
-<p>enhanced.input.number: {enhanced.input.number}</p>
+<p>enhanced.input.number: {enhanced.fields.number.value()}</p>
 <p>enhanced.pending: {enhanced.pending}</p>
 <p>enhanced.result: {enhanced.result}</p>
