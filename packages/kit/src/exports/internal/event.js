@@ -61,7 +61,13 @@ export function get_request_store() {
 }
 
 export function try_get_request_store() {
-	if (use_zone) return /** @type {RequestStore | null} */ (Zone.current.get('store') ?? null);
+	if (use_zone) {
+		console.log('try_get_request_store', Zone.current.name);
+		/** @type {RequestStore | undefined} */
+		const store = Zone.current.get('store');
+		if (store) return store;
+	}
+
 	return sync_store ?? als?.getStore() ?? null;
 }
 
@@ -73,8 +79,13 @@ export function try_get_request_store() {
 export function with_request_store(store, fn) {
 	try {
 		sync_store = store;
-		if (use_zone)
-			return Zone.current.fork({ name: Math.random().toString(36), properties: { store } }).run(fn);
+
+		if (use_zone) {
+			const name = Math.random().toString(36).slice(2);
+			console.log('with_request_store', Zone.current.name, name);
+			return Zone.current.fork({ name, properties: { store } }).run(fn);
+		}
+
 		return als ? als.run(store, fn) : fn();
 	} finally {
 		sync_store = null;
