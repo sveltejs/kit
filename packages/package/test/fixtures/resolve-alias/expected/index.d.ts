@@ -3,4 +3,8 @@ export * from "./sub/foo";
 export type * from "./sub/bar";
 import * as Utils from "./utils/index";
 export { Utils };
+import baz1, { baz } from './baz';
+import { type Baz } from './baz';
+import baz2, { type Baz as Bz } from './baz';
+export { baz, baz1, baz2, type Baz, type Bz };
 export { X } from '$libre';
