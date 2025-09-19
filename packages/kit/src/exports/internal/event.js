@@ -15,7 +15,7 @@ let use_zone = DEV && !!process?.versions?.webcontainer;
 
 if (use_zone) {
 	// @ts-expect-error no types for zone.js/node
-	import('zone.js/node').catch(() => {});
+	import('zone.js/node').then(() => console.log('Using zone.js')).catch(() => {});
 }
 
 import('node:async_hooks')
