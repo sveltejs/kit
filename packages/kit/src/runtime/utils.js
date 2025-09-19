@@ -67,6 +67,16 @@ export function base64_decode(encoded) {
 }
 
 /**
+ * Sets a value in a nested object using a path string
+ * @param {Record<string, any>} object
+ * @param {string} path_string
+ * @param {any} value
+ */
+export function set_nested_value(object, path_string, value) {
+	deep_set(object, split_path(path_string), value);
+}
+
+/**
  * Convert `FormData` into a POJO
  * @param {FormData} data
  */
@@ -89,7 +99,7 @@ export function convert_formdata(data) {
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
 
-		deep_set(result, split_path(key), is_array ? values : values[0]);
+		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
@@ -188,21 +198,42 @@ export const file_transport = {
 };
 
 /**
+ * Gets a nested value from an object using a path array
+ * @param {Record<string, any>} object
+ * @param {(string | number)[]} path
+ * @returns {any}
+ */
+export function deep_get(object, path) {
+	let current = object;
+	for (const key of path) {
+		if (current == null || typeof current !== 'object') {
+			return current;
+		}
+		current = current[key];
+	}
+	return current;
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, any>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, get_issues, path = []) {
+export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	return new Proxy(target, {
 		get(target, prop) {
 			if (typeof prop === 'symbol') return target[prop];
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, get_issues, [...path, parseInt(prop, 10)]);
+				return create_field_proxy({}, get_input, set_input, get_issues, [
+					...path,
+					parseInt(prop, 10)
+				]);
 			}
 
 			const key = build_path_string(path);
@@ -215,16 +246,20 @@ export function create_field_proxy(target, get_input, get_issues, path = []) {
 					}
 					return key;
 				};
-				return create_field_proxy(nameFunc, get_input, get_issues, [...path, 'name']);
+				return create_field_proxy(nameFunc, get_input, set_input, get_issues, [...path, 'name']);
 			}
 
 			if (prop === 'value') {
-				const valueFunc = () => {
-					const input = get_input();
-					// TODO this doesn't return properly shaped objects yet
-					return key === '' ? input : input[key];
+				const valueFunc = function (/** @type {any} */ newValue) {
+					if (arguments.length === 0) {
+						const input = get_input();
+						return deep_get(input, path);
+					} else {
+						set_input(path, newValue);
+						return newValue;
+					}
 				};
-				return create_field_proxy(valueFunc, get_input, get_issues, [...path, 'value']);
+				return create_field_proxy(valueFunc, get_input, set_input, get_issues, [...path, 'value']);
 			}
 
 			if (prop === 'issues') {
@@ -232,11 +267,14 @@ export function create_field_proxy(target, get_input, get_issues, path = []) {
 					const issues = get_issues();
 					return issues[key === '' ? '$' : key];
 				};
-				return create_field_proxy(issuesFunc, get_input, get_issues, [...path, 'issues']);
+				return create_field_proxy(issuesFunc, get_input, set_input, get_issues, [
+					...path,
+					'issues'
+				]);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
 		}
 	});
 }

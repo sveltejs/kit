@@ -22,7 +22,7 @@
 <hr />
 
 <form data-unscoped {...set_message}>
-	{#if set_message.fields.message.issues().length > 0}
+	{#if set_message.fields.message.issues()}
 		<p>{set_message.fields.message.issues()[0].message}</p>
 	{/if}
 
@@ -39,7 +39,7 @@
 <hr />
 
 <form data-scoped {...scoped}>
-	{#if scoped.fields.message.issues().length > 0}
+	{#if scoped.fields.message.issues()}
 		<p>{scoped.fields.message.issues()[0].message}</p>
 	{/if}
 
@@ -59,7 +59,7 @@
 		await submit().updates(get_message().withOverride(() => data.message + ' (override)'));
 	})}
 >
-	{#if enhanced.fields.message.issues().length > 0}
+	{#if enhanced.fields.message.issues()}
 		<p>{enhanced.fields.message.issues()[0].message}</p>
 	{/if}
 

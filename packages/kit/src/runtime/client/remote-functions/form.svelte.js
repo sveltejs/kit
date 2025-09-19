@@ -21,7 +21,9 @@ import {
 	convert_formdata,
 	file_transport,
 	flatten_issues,
-	create_field_proxy
+	create_field_proxy,
+	deep_set,
+	set_nested_value
 } from '../../utils.js';
 
 /**
@@ -301,9 +303,11 @@ export function form(id) {
 							}
 						}
 
-						input[name] = is_file
+						const value = is_file
 							? elements.map((input) => Array.from(input.files ?? [])).flat()
 							: elements.map((element) => element.value);
+
+						set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -314,12 +318,19 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							input[name] = file;
+							set_nested_value(input, name, file);
 						} else {
-							delete input[name];
+							// Remove the property by setting to undefined and clean up
+							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
+							let current = /** @type {any} */ (input);
+							for (let i = 0; i < path_parts.length - 1; i++) {
+								if (current[path_parts[i]] == null) return;
+								current = current[path_parts[i]];
+							}
+							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input[name] = element.value;
+						set_nested_value(input, name, element.value);
 					}
 				});
 
@@ -448,6 +459,13 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
+						(path, value) => {
+							if (path.length === 0) {
+								input = value;
+							} else {
+								deep_set(input, path.map(String), value);
+							}
+						},
 						() => issues
 					)
 			},

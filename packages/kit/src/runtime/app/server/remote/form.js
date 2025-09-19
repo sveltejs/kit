@@ -4,7 +4,12 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { run_remote_function } from './shared.js';
-import { convert_formdata, flatten_issues, create_field_proxy } from '../../../utils.js';
+import {
+	convert_formdata,
+	flatten_issues,
+	create_field_proxy,
+	set_nested_value
+} from '../../../utils.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -128,7 +133,7 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 				}
 
-				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
+				/** @type {{ input?: Record<string, any>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
 				const output = {};
 
 				const { event, state } = get_request_store();
@@ -151,7 +156,11 @@ export function form(validate_or_fn, maybe_fn) {
 
 						if (is_array) key = key.slice(0, -2);
 
-						output.input[key] = is_array ? values : values[0];
+						set_nested_value(
+							/** @type {Record<string, any>} */ (output.input),
+							key,
+							is_array ? values : values[0]
+						);
 					}
 				} else {
 					if (validated !== undefined) {
@@ -192,6 +201,9 @@ export function form(validate_or_fn, maybe_fn) {
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
+					() => {
+						throw new Error('Cannot set values on forms on the server');
+					},
 					() => data?.issues ?? {}
 				);
 			}
