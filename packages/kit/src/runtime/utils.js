@@ -240,17 +240,17 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle methods that can also be property access
 			if (prop === 'name') {
-				const nameFunc = (/** @type {string} */ asArray) => {
+				const name_func = (/** @type {string} */ asArray) => {
 					if (asArray === 'asArray') {
 						return key + '[]';
 					}
 					return key;
 				};
-				return create_field_proxy(nameFunc, get_input, set_input, get_issues, [...path, 'name']);
+				return create_field_proxy(name_func, get_input, set_input, get_issues, [...path, 'name']);
 			}
 
 			if (prop === 'value') {
-				const valueFunc = function (/** @type {any} */ newValue) {
+				const value_func = function (/** @type {any} */ newValue) {
 					if (arguments.length === 0) {
 						const input = get_input();
 						return deep_get(input, path);
@@ -259,18 +259,134 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						return newValue;
 					}
 				};
-				return create_field_proxy(valueFunc, get_input, set_input, get_issues, [...path, 'value']);
+				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, 'value']);
 			}
 
 			if (prop === 'issues') {
-				const issuesFunc = () => {
+				const issues_func = () => {
 					const issues = get_issues();
 					return issues[key === '' ? '$' : key];
 				};
-				return create_field_proxy(issuesFunc, get_input, set_input, get_issues, [
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [
 					...path,
 					'issues'
 				]);
+			}
+
+			if (prop === 'as') {
+				const as_func = (/** @type {string} */ inputType) => {
+					const isArray = inputType.endsWith('[]');
+					const baseType = isArray ? inputType.slice(0, -2) : inputType;
+
+					// Base properties for all input types
+					const baseProps = {
+						type: baseType,
+						name: key + (isArray ? '[]' : ''),
+						get 'aria-invalid'() {
+							const issues = get_issues();
+							return key in issues ? 'true' : undefined;
+						}
+					};
+
+					// Handle checkbox inputs
+					if (baseType === 'checkbox' || baseType === 'radio') {
+						// TODO correct for radio?
+						return Object.defineProperties(baseProps, {
+							checked: {
+								get() {
+									const input = get_input();
+									const currentValue = deep_get(input, path);
+									return Boolean(currentValue);
+								},
+								set(value) {
+									set_input(path, Boolean(value));
+								}
+							}
+						});
+					}
+
+					// Handle file inputs
+					if (baseType === 'file') {
+						return Object.defineProperties(baseProps, {
+							files: {
+								get() {
+									const input = get_input();
+									const currentValue = deep_get(input, path);
+									// Convert File/File[] to FileList-like object
+									if (currentValue instanceof File) {
+										// In browsers, we can create a proper FileList using DataTransfer
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											fileList.items.add(currentValue);
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										return { 0: currentValue, length: 1 };
+									}
+									if (Array.isArray(currentValue) && currentValue.every((f) => f instanceof File)) {
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											currentValue.forEach((file) => fileList.items.add(file));
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										/** @type {any} */
+										const fileListLike = { length: currentValue.length };
+										currentValue.forEach((file, index) => {
+											fileListLike[index] = file;
+										});
+										return fileListLike;
+									}
+									return null;
+								},
+								set(fileList) {
+									if (!fileList) {
+										set_input(path, isArray ? [] : null);
+										return;
+									}
+									const files = Array.from(fileList);
+									set_input(path, isArray ? files : files[0] || null);
+								}
+							}
+						});
+					}
+
+					// Handle all other input types (text, number, etc.)
+					return Object.defineProperties(baseProps, {
+						value: {
+							get() {
+								const input = get_input();
+								const currentValue = deep_get(input, path);
+								if (isArray && Array.isArray(currentValue)) {
+									return currentValue.join(',');
+								}
+								return currentValue != null ? String(currentValue) : '';
+							},
+							set(newValue) {
+								if (isArray) {
+									// For array inputs, split comma-separated values
+									const values = String(newValue)
+										.split(',')
+										.map((v) => v.trim())
+										.filter(Boolean);
+									if (baseType === 'number') {
+										set_input(path, values.map(Number));
+									} else {
+										set_input(path, values);
+									}
+								} else {
+									if (baseType === 'number') {
+										set_input(path, Number(newValue));
+									} else {
+										set_input(path, String(newValue));
+									}
+								}
+							}
+						}
+					});
+				};
+
+				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)

@@ -1813,6 +1813,76 @@ export interface Snapshot<T = any> {
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
+// TODO we can probably simplify this
+// Input type mappings for form fields
+type InputTypeMap = {
+	text: string;
+	email: string;
+	password: string;
+	url: string;
+	tel: string;
+	search: string;
+	number: number;
+	range: number;
+	date: string;
+	'datetime-local': string;
+	time: string;
+	month: string;
+	week: string;
+	color: string;
+	checkbox: boolean;
+	radio: string;
+	file: File;
+	hidden: string;
+	submit: string;
+	button: string;
+	reset: string;
+	image: string;
+};
+
+// Array variants of input types
+type InputTypeArrayMap = {
+	[K in keyof InputTypeMap as `${K}[]`]: InputTypeMap[K][];
+};
+
+// Combined input type map
+type AllInputTypes = InputTypeMap & InputTypeArrayMap;
+
+// Valid input types for a given value type
+type ValidInputTypesForValue<T> = {
+	[K in keyof AllInputTypes]: T extends AllInputTypes[K]
+		? K extends `${string}[]`
+			? T extends any[]
+				? K
+				: never
+			: T extends any[]
+				? never
+				: K
+		: never;
+}[keyof AllInputTypes];
+
+// Input element properties based on type
+type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	? {
+			type: T;
+			'aria-invalid': boolean | 'false' | 'true' | undefined;
+			get checked(): boolean;
+			set checked(value: boolean);
+		}
+	: T extends 'file'
+		? {
+				type: 'file';
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get files(): FileList | null;
+				set files(v: FileList | null);
+			}
+		: {
+				type: T;
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get value(): string | number;
+				set value(v: string | number);
+			};
+
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
@@ -1829,6 +1899,19 @@ type FormField<ValueType, Array extends boolean> = {
 	value(): ValueType;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
+	/**
+	 * Returns an object that can be spread onto an input element with the correct type attribute,
+	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+	 * @example
+	 * ```svelte
+	 * <input {...myForm.fields.username.as('text')} />
+	 * <input {...myForm.fields.isActive.as('checkbox')} />
+	 * <input {...myForm.fields.tags.as('text[]')} />
+	 * ```
+	 */
+	as<T extends ValidInputTypesForValue<ValueType>>(
+		inputType: T
+	): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
 };
 
 /**
