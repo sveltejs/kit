@@ -72,9 +72,9 @@ export function try_get_request_store() {
  */
 export function with_request_store(store, fn) {
 	try {
-		if (use_zone)
-			Zone.current.fork({ name: Math.random().toString(36), properties: { store } }).run(fn);
 		sync_store = store;
+		if (use_zone)
+			return Zone.current.fork({ name: Math.random().toString(36), properties: { store } }).run(fn);
 		return als ? als.run(store, fn) : fn();
 	} finally {
 		sync_store = null;
