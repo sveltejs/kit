@@ -1,16 +1,31 @@
-import { base, assets } from './internal/server.js';
+import { base, assets, relative } from './internal/server.js';
 import { resolve_route } from '../../../utils/routing.js';
+import { get_request_store } from '../../../exports/internal/server.js'; // TODO not sure why we can't use `@sveltejs/kit/internal/server` here
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
-	return (assets || base) + file;
+	// @ts-expect-error we use the `resolve` mechanism, but with the 'wrong' input
+	return assets ? assets + file : resolve(file);
 }
 
 /** @type {import('./client.js').resolve} */
 export function resolve(id, params) {
-	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
-	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
-	return base + resolve_route(id, /** @type {Record<string, string>} */ (params));
+	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
+
+	if (relative) {
+		const { event, state } = get_request_store();
+
+		if (state.prerendering?.fallback) {
+			return resolved;
+		}
+
+		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+		const prefix = segments.map(() => '..').join('/') || '.';
+
+		return prefix + resolved;
+	}
+
+	return resolved;
 }
 
 export { base, assets, resolve as resolveRoute };
