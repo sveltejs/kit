@@ -325,18 +325,26 @@ async function kit({ svelte_config }) {
 				}
 			};
 
+			const define = {
+				__SVELTEKIT_APP_DIR__: s(kit.appDir),
+				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
+				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
+				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
+				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
+				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
+			};
+
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
 				new_config.build.ssr = !secondary_build_started;
 
 				new_config.define = {
+					...define,
 					__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
 					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
-					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_PAYLOAD__: new_config.build.ssr
 						? '{}'
 						: `globalThis.__sveltekit_${version_hash}`
@@ -347,11 +355,8 @@ async function kit({ svelte_config }) {
 				}
 			} else {
 				new_config.define = {
+					...define,
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-					__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
-					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
 				};
 

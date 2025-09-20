@@ -1,8 +1,7 @@
-// TODO use defines here?
-export let base = '';
-export let assets = '';
-export const app_dir = '_app';
-export const relative = true;
+export let base = __SVELTEKIT_PAYLOAD__?.base ?? __SVELTEKIT_PATHS_BASE__;
+export let assets = __SVELTEKIT_PAYLOAD__?.assets ?? base ?? __SVELTEKIT_PATHS_ASSETS__;
+export const app_dir = __SVELTEKIT_APP_DIR__;
+export const relative = __SVELTEKIT_PATHS_RELATIVE__;
 
 const initial = { base, assets };
 
