@@ -1,12 +1,27 @@
+/// <reference types="zone.js" />
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
+
+import { DEV } from 'esm-env';
 
 /** @type {RequestStore | null} */
 let sync_store = null;
 
 /** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
+
+const use_zone = DEV && typeof process !== 'undefined' && !!process.versions.webcontainer;
+
+if (use_zone) {
+	// @ts-expect-error no types for zone.js/node
+	import('zone.js/node')
+		.then(() => {
+			console.log('Using zone.js');
+			Zone.assertZonePatched();
+		})
+		.catch((e) => console.log('zone.js error', e));
+}
 
 import('node:async_hooks')
 	.then((hooks) => (als = new hooks.AsyncLocalStorage()))
@@ -51,6 +66,13 @@ export function get_request_store() {
 }
 
 export function try_get_request_store() {
+	if (use_zone) {
+		console.log('try_get_request_store', Zone.current.name);
+		/** @type {RequestStore | undefined} */
+		const store = Zone.current.get('store');
+		if (store) return store;
+	}
+
 	return sync_store ?? als?.getStore() ?? null;
 }
 
@@ -62,6 +84,13 @@ export function try_get_request_store() {
 export function with_request_store(store, fn) {
 	try {
 		sync_store = store;
+
+		if (use_zone) {
+			const name = Math.random().toString(36).slice(2);
+			console.log('with_request_store', Zone.current.name, name);
+			return Zone.current.fork({ name, properties: { store } }).run(fn);
+		}
+
 		return als ? als.run(store, fn) : fn();
 	} finally {
 		sync_store = null;
