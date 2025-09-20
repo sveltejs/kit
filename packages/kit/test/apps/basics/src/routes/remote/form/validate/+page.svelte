@@ -9,17 +9,17 @@
 </script>
 
 <form {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
-	{#if my_form.issues.foo}
-		<p>{my_form.issues.foo[0].message}</p>
+	{#if my_form.fields.foo.issues()}
+		<p>{my_form.fields.foo.issues()[0].message}</p>
 	{/if}
 
-	<input name={my_form.field('foo')} />
+	<input name={my_form.fields.foo.name()} />
 
-	{#if my_form.issues.bar}
-		<p>{my_form.issues.bar[0].message}</p>
+	{#if my_form.fields.bar.issues()}
+		<p>{my_form.fields.bar.issues()[0].message}</p>
 	{/if}
 
-	<input name={my_form.field('bar')} />
+	<input name={my_form.fields.bar.name()} />
 
 	<button>submit</button>
 </form>

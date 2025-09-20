@@ -1813,70 +1813,121 @@ export interface Snapshot<T = any> {
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
-// Helper type to convert union to intersection
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-	? I
-	: never;
+// TODO we can probably simplify this
+// Input type mappings for form fields
+type InputTypeMap = {
+	text: string;
+	email: string;
+	password: string;
+	url: string;
+	tel: string;
+	search: string;
+	number: number;
+	range: number;
+	date: string;
+	'datetime-local': string;
+	time: string;
+	month: string;
+	week: string;
+	color: string;
+	checkbox: boolean;
+	radio: string;
+	file: File;
+	hidden: string;
+	submit: string;
+	button: string;
+	reset: string;
+	image: string;
+};
 
-type FlattenInput<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-	? { [P in Prefix]: string }
-	: WillRecurseIndefinitely<T> extends true
-		? { [key: string]: string }
-		: T extends Array<infer U>
-			? U extends string | File
-				? { [P in Prefix]: string[] }
-				: FlattenInput<U, `${Prefix}[${number}]`>
-			: T extends File
-				? { [P in Prefix]: string }
-				: {
-						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-						[K in keyof Required<T>]: FlattenInput<
-							T[K],
-							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-						>;
-					}[keyof T];
+// Array variants of input types
+type InputTypeArrayMap = {
+	[K in keyof InputTypeMap as `${K}[]`]: InputTypeMap[K][];
+};
 
-type FlattenIssues<T, Prefix extends string> = T extends
-	| string
-	| number
-	| boolean
-	| null
-	| undefined
-	? { [P in Prefix]: RemoteFormIssue[] }
-	: WillRecurseIndefinitely<T> extends true
-		? { [key: string]: RemoteFormIssue[] }
-		: T extends Array<infer U>
-			? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
-					U,
-					`${Prefix}[${number}]`
-				>
-			: T extends File
-				? { [P in Prefix]: RemoteFormIssue[] }
-				: {
-						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-						[K in keyof Required<T>]: FlattenIssues<
-							T[K],
-							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-						>;
-					}[keyof T];
+// Combined input type map
+type AllInputTypes = InputTypeMap & InputTypeArrayMap;
 
-type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-	? { [P in Prefix]: string }
-	: WillRecurseIndefinitely<T> extends true
-		? { [key: string]: string }
-		: T extends Array<infer U>
-			? U extends string | File
-				? { [P in `${Prefix}[]`]: string[] }
-				: FlattenKeys<U, `${Prefix}[${number}]`>
-			: T extends File
-				? { [P in Prefix]: string }
-				: {
-						// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-						[K in keyof Required<T>]: FlattenKeys<
-							T[K],
-							Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-						>;
-					}[keyof T];
+// Valid input types for a given value type
+type ValidInputTypesForValue<T> = {
+	[K in keyof AllInputTypes]: T extends AllInputTypes[K]
+		? K extends `${string}[]`
+			? T extends any[]
+				? K
+				: never
+			: T extends any[]
+				? never
+				: K
+		: never;
+}[keyof AllInputTypes];
+
+// Input element properties based on type
+type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	? {
+			type: T;
+			'aria-invalid': boolean | 'false' | 'true' | undefined;
+			get checked(): boolean;
+			set checked(value: boolean);
+		}
+	: T extends 'file'
+		? {
+				type: 'file';
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get files(): FileList | null;
+				set files(v: FileList | null);
+			}
+		: {
+				type: T;
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get value(): string | number;
+				set value(v: string | number);
+			};
+
+/**
+ * Form field accessor type that provides name(), value(), and issues() methods
+ */
+type FormField<ValueType, Array extends boolean> = {
+	/**
+	 * This method exists to allow you to typecheck `name` attributes. It returns its argument
+	 * @example
+	 * ```svelte
+	 * <input name={login.fields.username.name()} />
+	 * ```
+	 **/
+	name(...args: Array extends true ? ['asArray'] : []): string;
+	/** The values that will be submitted */
+	value(): ValueType;
+	/** Validation issues, if any */
+	issues(): RemoteFormIssue[] | undefined;
+	/**
+	 * Returns an object that can be spread onto an input element with the correct type attribute,
+	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+	 * @example
+	 * ```svelte
+	 * <input {...myForm.fields.username.as('text')} />
+	 * <input {...myForm.fields.isActive.as('checkbox')} />
+	 * <input {...myForm.fields.tags.as('text[]')} />
+	 * ```
+	 */
+	as<T extends ValidInputTypesForValue<ValueType>>(
+		inputType: T
+	): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+};
+
+/**
+ * Recursive type to build form fields structure with proxy access
+ */
+type FormFields<T> =
+	WillRecurseIndefinitely<T> extends true
+		? RecursiveFormFields
+		: NonNullable<T> extends string | number | boolean | File
+			? FormField<T, false>
+			: T extends Array<infer U>
+				? FormField<T, true> & { [K in number]: FormFields<U> }
+				: FormField<T, false> & { [K in keyof T]-?: FormFields<T[K]> };
+
+// By breaking this out into its own type, we avoid the TS recursion depth limit
+type RecursiveFormFields = FormField<any, boolean> & { [key: string]: RecursiveFormFields };
 
 export interface RemoteFormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
@@ -1926,14 +1977,6 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	 * ```
 	 */
 	for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
-	/**
-	 * This method exists to allow you to typecheck `name` attributes. It returns its argument
-	 * @example
-	 * ```svelte
-	 * <input name={login.field('username')} />
-	 * ```
-	 **/
-	field<Name extends keyof UnionToIntersection<FlattenKeys<Input, ''>>>(string: Name): Name;
 	/** Preflight checks */
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */
@@ -1942,10 +1985,13 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	get result(): Output | undefined;
 	/** The number of pending submissions */
 	get pending(): number;
-	/** The submitted values */
-	input: null | UnionToIntersection<FlattenInput<Input, ''>>;
-	/** Validation issues */
-	issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
+	/** Access form fields using object notation */
+	fields: Input extends void
+		? never
+		: { [K in keyof Input]-?: FormFields<Input[K]> } & Pick<
+				FormField<Input, false>,
+				'value' | 'issues'
+			>;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';

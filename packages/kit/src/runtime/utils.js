@@ -67,6 +67,16 @@ export function base64_decode(encoded) {
 }
 
 /**
+ * Sets a value in a nested object using a path string
+ * @param {Record<string, any>} object
+ * @param {string} path_string
+ * @param {any} value
+ */
+export function set_nested_value(object, path_string, value) {
+	deep_set(object, split_path(path_string), value);
+}
+
+/**
  * Convert `FormData` into a POJO
  * @param {FormData} data
  */
@@ -89,7 +99,7 @@ export function convert_formdata(data) {
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
 
-		deep_set(result, split_path(key), is_array ? values : values[0]);
+		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
@@ -186,3 +196,220 @@ export const file_transport = {
 		},
 	decode: (data) => data
 };
+
+/**
+ * Gets a nested value from an object using a path array
+ * @param {Record<string, any>} object
+ * @param {(string | number)[]} path
+ * @returns {any}
+ */
+export function deep_get(object, path) {
+	let current = object;
+	for (const key of path) {
+		if (current == null || typeof current !== 'object') {
+			return current;
+		}
+		current = current[key];
+	}
+	return current;
+}
+
+/**
+ * Creates a proxy-based field accessor for form data
+ * @param {any} target - Function or empty POJO
+ * @param {() => Record<string, any>} get_input - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
+ * @param {() => Record<string, any>} get_issues - Function to get current issues
+ * @param {(string | number)[]} path - Current access path
+ * @returns {any} Proxy object with name(), value(), and issues() methods
+ */
+export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+	return new Proxy(target, {
+		get(target, prop) {
+			if (typeof prop === 'symbol') return target[prop];
+
+			// Handle array access like jobs[0]
+			if (/^\d+$/.test(prop)) {
+				return create_field_proxy({}, get_input, set_input, get_issues, [
+					...path,
+					parseInt(prop, 10)
+				]);
+			}
+
+			const key = build_path_string(path);
+
+			// Handle methods that can also be property access
+			if (prop === 'name') {
+				const name_func = (/** @type {string} */ asArray) => {
+					if (asArray === 'asArray') {
+						return key + '[]';
+					}
+					return key;
+				};
+				return create_field_proxy(name_func, get_input, set_input, get_issues, [...path, 'name']);
+			}
+
+			if (prop === 'value') {
+				const value_func = function (/** @type {any} */ newValue) {
+					if (arguments.length === 0) {
+						const input = get_input();
+						return deep_get(input, path);
+					} else {
+						set_input(path, newValue);
+						return newValue;
+					}
+				};
+				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, 'value']);
+			}
+
+			if (prop === 'issues') {
+				const issues_func = () => {
+					const issues = get_issues();
+					return issues[key === '' ? '$' : key];
+				};
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [
+					...path,
+					'issues'
+				]);
+			}
+
+			if (prop === 'as') {
+				const as_func = (/** @type {string} */ inputType) => {
+					const isArray = inputType.endsWith('[]');
+					const baseType = isArray ? inputType.slice(0, -2) : inputType;
+
+					// Base properties for all input types
+					const baseProps = {
+						type: baseType,
+						name: key + (isArray ? '[]' : ''),
+						get 'aria-invalid'() {
+							const issues = get_issues();
+							return key in issues ? 'true' : undefined;
+						}
+					};
+
+					// Handle checkbox inputs
+					if (baseType === 'checkbox' || baseType === 'radio') {
+						// TODO correct for radio?
+						return Object.defineProperties(baseProps, {
+							checked: {
+								get() {
+									const input = get_input();
+									const currentValue = deep_get(input, path);
+									return Boolean(currentValue);
+								},
+								set(value) {
+									set_input(path, Boolean(value));
+								}
+							}
+						});
+					}
+
+					// Handle file inputs
+					if (baseType === 'file') {
+						return Object.defineProperties(baseProps, {
+							files: {
+								get() {
+									const input = get_input();
+									const currentValue = deep_get(input, path);
+									// Convert File/File[] to FileList-like object
+									if (currentValue instanceof File) {
+										// In browsers, we can create a proper FileList using DataTransfer
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											fileList.items.add(currentValue);
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										return { 0: currentValue, length: 1 };
+									}
+									if (Array.isArray(currentValue) && currentValue.every((f) => f instanceof File)) {
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											currentValue.forEach((file) => fileList.items.add(file));
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										/** @type {any} */
+										const fileListLike = { length: currentValue.length };
+										currentValue.forEach((file, index) => {
+											fileListLike[index] = file;
+										});
+										return fileListLike;
+									}
+									return null;
+								},
+								set(fileList) {
+									if (!fileList) {
+										set_input(path, isArray ? [] : null);
+										return;
+									}
+									const files = Array.from(fileList);
+									set_input(path, isArray ? files : files[0] || null);
+								}
+							}
+						});
+					}
+
+					// Handle all other input types (text, number, etc.)
+					return Object.defineProperties(baseProps, {
+						value: {
+							get() {
+								const input = get_input();
+								const currentValue = deep_get(input, path);
+								if (isArray && Array.isArray(currentValue)) {
+									return currentValue.join(',');
+								}
+								return currentValue != null ? String(currentValue) : '';
+							},
+							set(newValue) {
+								if (isArray) {
+									// For array inputs, split comma-separated values
+									const values = String(newValue)
+										.split(',')
+										.map((v) => v.trim())
+										.filter(Boolean);
+									if (baseType === 'number') {
+										set_input(path, values.map(Number));
+									} else {
+										set_input(path, values);
+									}
+								} else {
+									if (baseType === 'number') {
+										set_input(path, Number(newValue));
+									} else {
+										set_input(path, String(newValue));
+									}
+								}
+							}
+						}
+					});
+				};
+
+				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+			}
+
+			// Handle property access (nested fields)
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+		}
+	});
+}
+
+/**
+ * Builds a path string from an array of path segments
+ * @param {(string | number)[]} path
+ * @returns {string}
+ */
+function build_path_string(path) {
+	let result = '';
+
+	for (const segment of path) {
+		if (typeof segment === 'number') {
+			result += `[${segment}]`;
+		} else {
+			result += result === '' ? segment : '.' + segment;
+		}
+	}
+
+	return result;
+}

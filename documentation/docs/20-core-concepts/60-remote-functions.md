@@ -355,53 +355,46 @@ To indicate a repeated field, use a `[]` suffix:
 <label><input type="checkbox" name="language[]" value="js" /> JS</label>
 ```
 
-If you'd like type safety and autocomplete when setting `name` attributes, use the form object's `field` method:
+To save you some work and for type safety and autocomplete when these attributes, use the form object's `as` method which is available on `fields`:
 
 ```svelte
 <label>
 	<h2>Title</h2>
-	<input name={+++createPost.field('title')+++} />
+	<input {...createPost.fields.title.as('text')} />
+	<input {...createPost.fields.public.as('checkbox')}>
 </label>
 ```
 
-This will error during typechecking if `title` does not exist on your schema.
+This will
+- error during typechecking if `title` does not exist on your schema
+- return an object with various properties, among them `name`, `type` and `value` (or `checked`, in case of a checkbox). In the above case it sets `type="text"` on the first input and `type="checkbox"` on the second. It will also error if your schema definition doesn't match the field's type
 
 The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
 
 ### Validation
 
-If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated:
+If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated and `aria-invalid` (returned from `as(...)`) will be set to `true`:
 
 ```svelte
 <form {...createPost}>
 	<label>
 		<h2>Title</h2>
 
-+++		{#if createPost.issues.title}
-			{#each createPost.issues.title as issue}
-				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
++++		{#each createPost.fields.title.issues() ?? [] as issue}
+			<p class="issue">{issue.message}</p>
+		{/each}+++
 
-		<input
-			name="title"
-			+++aria-invalid={!!createPost.issues.title}+++
-		/>
+		<input +++{...createPost.fields.title.as('text')}+++ />
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#if createPost.issues.content}
-			{#each createPost.issues.content as issue}
++++		{#each createPost.fields.content.issues() ?? [] as issue}
 				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
+		{/each}+++
 
-		<textarea
-			name="content"
-			+++aria-invalid={!!createPost.issues.content}+++
-		></textarea>
+		<textarea +++{...createPost.fields.content.as('text')}+++></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -418,7 +411,7 @@ You don't need to wait until the form is submitted to validate the data — you 
 
 By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ includeUntouched: true })`.
 
-For client-side validation, you can specify a _preflight_ schema which will populate `issues` and prevent data being sent to the server if the data doesn't validate:
+For client-side validation, you can specify a _preflight_ schema which will populate `issues()` and prevent data being sent to the server if the data doesn't validate:
 
 ```svelte
 <script>
@@ -442,7 +435,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 ### Live inputs
 
-The form object contains a `input` property which reflects its current value. As the user interacts with the form, `input` is automatically updated:
+The form object contains a `value` method which reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
 <form {...createPost}>
@@ -450,14 +443,14 @@ The form object contains a `input` property which reflects its current value. As
 </form>
 
 <div class="preview">
-	<h2>{createPost.input.title}</h2>
-	<div>{@html render(createPost.input.content)}</div>
+	<h2>{createPost.fields.title.value()}</h2>
+	<div>{@html render(createPost.fields.content.value())}</div>
 </div>
 ```
 
 ### Handling sensitive data
 
-In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `input` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
+In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `value()` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
 
 You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
 
@@ -465,20 +458,12 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 <form {...register}>
 	<label>
 		Username
-		<input
-			name="username"
-			value={register.input.username}
-			aria-invalid={!!register.issues.username}
-		/>
+		<input {...register.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Password
-		<input
-			type="password"
-			+++name="_password"+++
-			+++aria-invalid={!!register.issues._password}+++
-		/>
+		<input +++aria-invalid={register.fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
