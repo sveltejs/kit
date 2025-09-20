@@ -239,6 +239,11 @@ export function form(id) {
 
 				const form_data = new FormData(form);
 
+				const submitter_name = event.submitter?.getAttribute('name');
+				if (submitter_name) {
+					form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+				}
+
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
@@ -429,12 +434,17 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false } = {}) => {
+				value: async ({ includeUntouched = false, submitter } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
 
 					const form_data = new FormData(element);
+
+					const submitter_name = submitter?.getAttribute('name');
+					if (submitter_name) {
+						form_data.append(submitter_name, submitter?.getAttribute('value') ?? '');
+					}
 
 					/** @type {readonly StandardSchemaV1.Issue[]} */
 					let array = [];
