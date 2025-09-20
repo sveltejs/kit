@@ -115,7 +115,7 @@ importers:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -136,7 +136,7 @@ importers:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -206,7 +206,7 @@ importers:
         specifier: ^23.5.1
         version: 23.5.1(@types/node@18.19.119)(picomatch@4.0.3)(rollup@4.50.1)
       svelte:
-        specifier: ^5.23.1
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -224,7 +224,7 @@ importers:
         specifier: ^23.5.1
         version: 23.5.1(@types/node@18.19.119)(picomatch@4.0.3)(rollup@4.50.1)
       svelte:
-        specifier: ^5.23.1
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -288,7 +288,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.2
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       typescript:
         specifier: ^5.3.3
@@ -309,7 +309,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -330,7 +330,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       vite:
         specifier: 'catalog:'
@@ -401,7 +401,7 @@ importers:
         specifier: ^4.27.4
         version: 4.50.1
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       typescript:
         specifier: ^5.6.3
@@ -1231,7 +1231,7 @@ importers:
         specifier: ^3.1.1
         version: 3.6.0
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       svelte-preprocess:
         specifier: ^6.0.0
@@ -1294,7 +1294,7 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       svelte:
-        specifier: ^5.38.5
+        specifier: 'catalog:'
         version: 5.38.10
       svelte-check:
         specifier: ^4.1.1
