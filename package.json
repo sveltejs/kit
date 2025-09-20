@@ -47,8 +47,5 @@
 			"unix-dgram",
 			"workerd"
 		]
-	},
-	"dependencies": {
-		"svelte": "link:../../svelte/packages/svelte"
 	}
 }
