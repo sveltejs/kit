@@ -1,5 +1,5 @@
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir, base } from '__sveltekit/paths';
+import { app_dir, base } from '$app/paths/internal/client.js';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';

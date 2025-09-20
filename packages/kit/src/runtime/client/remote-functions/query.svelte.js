@@ -1,6 +1,6 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir, base } from '__sveltekit/paths';
+import { app_dir, base } from '$app/paths/internal/client.js';
 import { app, goto, remote_responses, started } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
