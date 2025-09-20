@@ -1,8 +1,13 @@
-import * as path from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vitest/config';
 
-/** @type {import('vitest/config').UserConfig} */
-const config = {
+// we need to append the current directory because Vitest's workspace config
+// doesn't correctly resolve relative paths in `include`
+const dir = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
 	build: {
 		minify: false
 	},
@@ -24,8 +29,7 @@ const config = {
 	},
 
 	test: {
-		globalSetup: './globalSetup.js'
+		globalSetup: `${dir}/globalSetup.js`,
+		include: [`${dir}/test/**/*.spec.js`]
 	}
-};
-
-export default config;
+});

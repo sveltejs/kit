@@ -1,16 +1,18 @@
-import { assert, test } from 'vitest';
-import { execSync } from 'node:child_process';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { EOL } from 'node:os';
-import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+import { assert, test } from 'vitest';
 
 const timeout = 60_000;
+
+const dir = path.dirname(fileURLToPath(import.meta.url));
 
 test('prerenderable routes must be prerendered', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerenderable-not-prerendered'),
+				cwd: path.join(dir, 'apps/prerenderable-not-prerendered'),
 				stdio: 'pipe',
 				timeout
 			}),
@@ -22,7 +24,7 @@ test('entry generators should match their own route', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerender-entry-generator-mismatch'),
+				cwd: path.join(dir, 'apps/prerender-entry-generator-mismatch'),
 				stdio: 'pipe',
 				timeout
 			}),
@@ -34,7 +36,7 @@ test('an error in a `prerender` function should fail the build', { timeout }, ()
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerender-remote-function-error'),
+				cwd: path.join(dir, 'apps/prerender-remote-function-error'),
 				stdio: 'pipe',
 				timeout
 			}),

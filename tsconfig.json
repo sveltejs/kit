@@ -3,5 +3,5 @@
 		"checkJs": true,
 		"noEmit": true
 	},
-	"include": ["eslint.config.js"]
+	"include": ["eslint.config.js", "vitest.config.js"]
 }
