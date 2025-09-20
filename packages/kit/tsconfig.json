@@ -14,8 +14,6 @@
 			"@sveltejs/kit/node/polyfills": ["./src/exports/node/polyfills.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
 			"@sveltejs/kit/internal/server": ["./src/exports/internal/server.js"],
-			"$app/paths": ["./src/runtime/app/paths/public.d.ts"],
-			"$app/paths/internal/*": ["./src/runtime/app/paths/internal/*.js"],
 			"$app/server": ["./src/runtime/app/server/index.js"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]
