@@ -6,6 +6,9 @@ export const relative = true;
 
 const initial = { base, assets };
 
+/**
+ * @param {{ base: string, assets: string }} paths
+ */
 export function override(paths) {
 	base = paths.base;
 	assets = paths.assets;

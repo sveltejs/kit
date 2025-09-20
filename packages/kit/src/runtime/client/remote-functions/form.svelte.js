@@ -2,7 +2,7 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir, base } from '$app/paths/internal/client.js';
+import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';

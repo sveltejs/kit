@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
-import * as paths from '$app/paths/internal/server.js';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';

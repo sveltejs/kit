@@ -31,7 +31,7 @@ const server_template = ({
 }) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
-import { set_assets } from '$app/paths/internal/server.js';
+import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
