@@ -207,6 +207,17 @@ export async function render_response({
 
 				const rendered = options.root.render(props, render_opts);
 
+				try {
+					// Svelte 5.39.0 changed the properties lazily start the rendering to be able to have the same signature for sync and async render.
+					// 5.39.1 extended that to the old class components. Rendering isn't started until one of the properties is accessed, so we do that here,
+					// else we might get errors about missing request store context
+					rendered.html;
+				} catch (error) {
+					if (!(/** @type {Error} */ (error).message.includes('await_invalid'))) {
+						throw error;
+					}
+				}
+
 				// we reset this synchronously, rather than after async rendering is complete,
 				// to avoid cross-talk between requests
 				// TODO remove in favour of `resolve(...)` and `asset(...)`, which use AsyncLocalStorage

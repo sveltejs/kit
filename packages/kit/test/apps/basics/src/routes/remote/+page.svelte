@@ -9,11 +9,14 @@
 		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
+	import { q } from './accessing-env.remote';
 
 	let { data } = $props();
 
 	let command_result = $state(null);
-	let release;
+
+	// we just want it not to be treeshaken away
+	q;
 
 	const count = browser ? get_count() : null; // so that we get a remote request in the browser
 </script>

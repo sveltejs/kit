@@ -3,3 +3,5 @@ export interface Baz {
 }
 
 export const baz: Baz = { baz: 'baz' };
+
+export default baz;

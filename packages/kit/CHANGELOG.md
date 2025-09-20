@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.42.2
+### Patch Changes
+
+
+- fix: prevent loops in postbuild analysis phase ([#14450](https://github.com/sveltejs/kit/pull/14450))
+
+
+- fix: handle nested object fields in form data ([#14469](https://github.com/sveltejs/kit/pull/14469))
+
+
+- fix: robustify form helper types ([#14463](https://github.com/sveltejs/kit/pull/14463))
+
+
+- fix: avoid running the `init` hook during builds if there's nothing to prerender ([#14464](https://github.com/sveltejs/kit/pull/14464))
+
+
+- fix: ensure SSR rendering gets request store context ([#14476](https://github.com/sveltejs/kit/pull/14476))
+
+## 2.42.1
+### Patch Changes
+
+
+- fix: ensure environment setup is in its own chunk ([#14441](https://github.com/sveltejs/kit/pull/14441))
+
 ## 2.42.0
 ### Minor Changes
 

@@ -682,8 +682,12 @@ async function kit({ svelte_config }) {
 			config.build.rollupOptions.output = {
 				...config.build.rollupOptions.output,
 				manualChunks(id, meta) {
+					// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
 					if (id === `${runtime_directory}/app/server/index.js`) {
 						return 'app-server';
+					}
+					if (id === `${runtime_directory}/shared-server.js`) {
+						return 'app-shared-server';
 					}
 
 					// Check if this is a *.remote.ts file
