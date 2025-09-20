@@ -1143,6 +1143,14 @@ export interface LoadEvent<
 		/** The span associated with the current `load` function. */
 		current: Span;
 	};
+
+	/**
+	 * Server only properties when `LoadEvent` executed on server.
+	 */
+	server?: Omit<
+		ServerLoadEvent<Params, ParentData, RouteId>,
+		keyof LoadEvent<Params, Data, ParentData, RouteId>
+	>;
 }
 
 export interface NavigationEvent<
