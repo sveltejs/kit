@@ -103,7 +103,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					${(node_paths).map(loader).join(',\n')}
 				],
 				remotes: {
-					${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, `chunks/remote-${remote.hash}.js`))}`).join(',\n')}
+					${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, remote.file))}`).join(',\n')}
 				},
 				routes: [
 					${routes.map(route => {
