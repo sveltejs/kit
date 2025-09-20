@@ -1,4 +1,4 @@
-import { base, assets, relative } from '__sveltekit/paths';
+import { base, assets, relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { exec } from '../../../utils/routing.js';

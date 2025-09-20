@@ -522,7 +522,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
 				set_assets(assets);
 
 				const server = new Server(manifest);
