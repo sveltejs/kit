@@ -467,16 +467,22 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data } = event_state;
+		const { remote_cache } = event_state;
 
 		let serialized_remote_data = '';
 
-		if (remote_data) {
+		if (remote_cache) {
 			/** @type {Record<string, any>} */
 			const remote = {};
 
-			for (const key in remote_data) {
-				remote[key] = await remote_data[key];
+			for (const [info, cache] of remote_cache) {
+				// remote functions without an `id` aren't exported, and thus
+				// cannot be called from the client
+				if (!info.id) continue;
+
+				for (const key in cache) {
+					remote[key ? info.id + '/' + key : info.id] = await cache[key];
+				}
 			}
 
 			// TODO this is repeated in a few places — dedupe it

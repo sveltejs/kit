@@ -96,7 +96,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(id, arg, state, async () => {
+					return await get_response(__, arg, state, async () => {
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
 						const response = await fetch(new URL(url, event.url.origin).href);
@@ -113,7 +113,15 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 						// TODO can we redirect here?
 
-						(state.remote_data ??= {})[create_remote_cache_key(id, payload)] = prerendered.result;
+						let cache = state.remote_cache?.get(__);
+
+						if (cache === undefined) {
+							cache = {};
+							(state.remote_cache ??= new Map()).set(__, cache);
+						}
+
+						cache[stringify_remote_arg(arg, state.transport)] = prerendered.result;
+
 						return parse_remote_response(prerendered.result, state.transport);
 					});
 				} catch {
@@ -125,7 +133,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = get_response(id, arg, state, () =>
+			const promise = get_response(__, arg, state, () =>
 				run_remote_function(event, state, false, arg, validate, fn)
 			);
 

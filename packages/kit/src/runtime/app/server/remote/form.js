@@ -166,7 +166,14 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					(state.remote_data ??= {})[__.id] = output;
+					let cache = state.remote_cache?.get(__);
+
+					if (cache === undefined) {
+						cache = {};
+						(state.remote_cache ??= new Map()).set(__, cache);
+					}
+
+					cache[''] = output;
 				}
 
 				return output;
@@ -189,8 +196,8 @@ export function form(validate_or_fn, maybe_fn) {
 			Object.defineProperty(instance, property, {
 				get() {
 					try {
-						const { remote_data } = get_request_store().state;
-						return remote_data?.[__.id]?.[property] ?? {};
+						const { remote_cache } = get_request_store().state;
+						return remote_cache?.get(__)?.['']?.[property] ?? {};
 					} catch {
 						return undefined;
 					}
@@ -201,8 +208,8 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { remote_data } = get_request_store().state;
-					return remote_data?.[__.id]?.result;
+					const { remote_cache } = get_request_store().state;
+					return remote_cache?.get(__)?.['']?.result;
 				} catch {
 					return undefined;
 				}

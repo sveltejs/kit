@@ -1,9 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
+import { stringify_remote_arg } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -62,19 +62,25 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * Also saves an uneval'ed version of the result for later HTML inlining for hydration.
  *
  * @template {MaybePromise<any>} T
- * @param {string} id
+ * @param {RemoteInfo} info
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(id, arg, state, get_result) {
+export async function get_response(info, arg, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
-	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
-	return ((state.remote_data ??= {})[cache_key] ??= get_result());
+	let cache = state.remote_cache?.get(info);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote_cache ??= new Map()).set(info, cache);
+	}
+
+	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
 }
 
 /**

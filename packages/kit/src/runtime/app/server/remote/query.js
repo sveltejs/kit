@@ -73,7 +73,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, state, () =>
+		const promise = get_response(__, arg, state, () =>
 			run_remote_function(event, state, false, arg, validate, fn)
 		);
 
@@ -90,8 +90,20 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = (state.remote_data ??= {})[cache_key] = Promise.resolve(value);
+			console.log('setting', __.id, arg, value);
+
+			let cache = state.remote_cache?.get(__);
+
+			if (cache === undefined) {
+				cache = {};
+				(state.remote_cache ??= new Map()).set(__, cache);
+			}
+
+			const key = stringify_remote_arg(arg, state.transport);
+
+			if (__.id) {
+				refreshes[__.id + '/' + key] = cache[key] = Promise.resolve(value);
+			}
 		};
 
 		promise.refresh = () => {
@@ -198,7 +210,7 @@ function batch(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, state, () => {
+		const promise = get_response(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {

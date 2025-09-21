@@ -1600,7 +1600,7 @@ test.describe('getRequestEvent', () => {
 	});
 });
 
-test.describe('remote functions', () => {
+test.describe.only('remote functions', () => {
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');
@@ -1631,6 +1631,15 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-page"]');
 		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test('non-exported queries do not clobber each other', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-non-exported');
+
+		await expect(page.locator('h1')).toHaveText('3');
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
