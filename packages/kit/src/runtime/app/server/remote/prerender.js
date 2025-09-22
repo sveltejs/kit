@@ -113,11 +113,11 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 						// TODO can we redirect here?
 
-						let cache = state.remote_cache?.get(__);
+						let cache = state.remote_data?.get(__);
 
 						if (cache === undefined) {
 							cache = {};
-							(state.remote_cache ??= new Map()).set(__, cache);
+							(state.remote_data ??= new Map()).set(__, cache);
 						}
 
 						cache[stringify_remote_arg(arg, state.transport)] = prerendered.result;

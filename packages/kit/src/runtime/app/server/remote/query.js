@@ -90,11 +90,11 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			let cache = state.remote_cache?.get(__);
+			let cache = state.remote_data?.get(__);
 
 			if (cache === undefined) {
 				cache = {};
-				(state.remote_cache ??= new Map()).set(__, cache);
+				(state.remote_data ??= new Map()).set(__, cache);
 			}
 
 			const key = stringify_remote_arg(arg, state.transport);

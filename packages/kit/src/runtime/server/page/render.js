@@ -467,7 +467,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_cache } = event_state;
+		const { remote_data: remote_cache } = event_state;
 
 		let serialized_remote_data = '';
 
