@@ -90,8 +90,6 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			console.log('setting', __.id, arg, value);
-
 			let cache = state.remote_cache?.get(__);
 
 			if (cache === undefined) {

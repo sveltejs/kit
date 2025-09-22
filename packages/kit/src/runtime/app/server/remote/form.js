@@ -173,7 +173,7 @@ export function form(validate_or_fn, maybe_fn) {
 						(state.remote_cache ??= new Map()).set(__, cache);
 					}
 
-					cache[''] = output;
+					cache[''] ??= output;
 				}
 
 				return output;
