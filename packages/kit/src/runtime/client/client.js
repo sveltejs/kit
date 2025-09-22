@@ -2101,6 +2101,8 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
 
+	remote_responses = {};
+
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
 }
