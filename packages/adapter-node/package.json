@@ -42,19 +42,19 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "^1.0.0-next.28",
+		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"polka": "^1.0.0-next.28",
+		"polka": "catalog:",
 		"sirv": "^3.0.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-commonjs": "catalog:",
+		"@rollup/plugin-json": "catalog:",
+		"@rollup/plugin-node-resolve": "catalog:",
 		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {

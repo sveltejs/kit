@@ -36,15 +36,15 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^0.30.5",
-		"sharp": "^0.34.1",
-		"svelte-parse-markup": "^0.1.5",
-		"vite-imagetools": "^8.0.0",
-		"zimmerframe": "^1.1.2"
+		"magic-string": "catalog:",
+		"sharp": "catalog:",
+		"svelte-parse-markup": "catalog:",
+		"vite-imagetools": "catalog:",
+		"zimmerframe": "catalog:"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/estree": "^1.0.5",
+		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
 		"rollup": "^4.27.4",
 		"svelte": "catalog:",
