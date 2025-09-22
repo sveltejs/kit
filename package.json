@@ -29,7 +29,8 @@
 		"eslint": "^9.34.0",
 		"prettier": "^3.6.0",
 		"prettier-plugin-svelte": "^3.4.0",
-		"typescript-eslint": "^8.43.0"
+		"typescript-eslint": "^8.43.0",
+		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@10.17.0",
 	"engines": {
