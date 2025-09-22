@@ -1,6 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
-import * as paths from '__sveltekit/paths';
+import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
 import { has_prerendered_path } from './utils.js';
 

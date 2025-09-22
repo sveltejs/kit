@@ -26,7 +26,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base } from '$app/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,

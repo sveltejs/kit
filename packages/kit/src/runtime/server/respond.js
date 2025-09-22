@@ -3,7 +3,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '__sveltekit/paths';
+import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
