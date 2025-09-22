@@ -147,3 +147,18 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 	const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
 	return with_request_store({ event: cleansed, state }, () => fn(validated));
 }
+
+/**
+ * @param {RemoteInfo} info
+ * @param {RequestState} state
+ */
+export function get_cache(info, state) {
+	let cache = state.remote_data?.get(info);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote_data ??= new Map()).set(info, cache);
+	}
+
+	return cache;
+}

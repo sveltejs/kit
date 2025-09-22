@@ -8,6 +8,7 @@ import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../
 import { app_dir, base } from '__sveltekit/paths';
 import {
 	create_validator,
+	get_cache,
 	get_response,
 	parse_remote_response,
 	run_remote_function
@@ -113,12 +114,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 						// TODO can we redirect here?
 
-						let cache = state.remote_data?.get(__);
-
-						if (cache === undefined) {
-							cache = {};
-							(state.remote_data ??= new Map()).set(__, cache);
-						}
+						const cache = get_cache(__, state);
 
 						cache[stringify_remote_arg(arg, state.transport)] = prerendered.result;
 

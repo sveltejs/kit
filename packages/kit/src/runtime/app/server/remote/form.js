@@ -3,7 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
-import { run_remote_function } from './shared.js';
+import { get_cache, run_remote_function } from './shared.js';
 import { convert_formdata, flatten_issues } from '../../../utils.js';
 
 /**
@@ -166,14 +166,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					let cache = state.remote_data?.get(__);
-
-					if (cache === undefined) {
-						cache = {};
-						(state.remote_data ??= new Map()).set(__, cache);
-					}
-
-					cache[''] ??= output;
+					get_cache(__, state)[''] ??= output;
 				}
 
 				return output;
