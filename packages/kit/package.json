@@ -87,6 +87,12 @@
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"
 	},
+	"imports": {
+		"#app/paths": {
+			"browser": "./src/runtime/app/paths/client.js",
+			"default": "./src/runtime/app/paths/server.js"
+		}
+	},
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
