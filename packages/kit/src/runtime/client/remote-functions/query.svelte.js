@@ -271,6 +271,7 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
+		delete remote_responses[this._key];
 		return (this.#promise = this.#run());
 	}
 
