@@ -291,8 +291,8 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
-		remote_responses = __SVELTEKIT_PAYLOAD__?.data;
+	if (__SVELTEKIT_PAYLOAD__?.data) {
+		remote_responses = __SVELTEKIT_PAYLOAD__.data;
 	}
 
 	// detect basic auth credentials in the current URL
