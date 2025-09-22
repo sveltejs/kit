@@ -243,7 +243,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-export let started = false;
+let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
