@@ -39,8 +39,6 @@ export default [
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',
-			'packages/create-svelte/shared/**/*',
-			'packages/create-svelte/templates/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/test/apps/**/*',
 			'packages/kit/test/build-errors/**/*',
