@@ -73,12 +73,7 @@ export async function get_response(info, arg, state, get_result) {
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
-	let cache = state.remote_data?.get(info);
-
-	if (cache === undefined) {
-		cache = {};
-		(state.remote_data ??= new Map()).set(info, cache);
-	}
+	const cache = get_cache(info, state);
 
 	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
 }

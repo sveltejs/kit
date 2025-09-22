@@ -98,27 +98,28 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
 					return await get_response(__, arg, state, async () => {
-						// TODO adapters can provide prerendered data more efficiently than
-						// fetching from the public internet
-						const response = await fetch(new URL(url, event.url.origin).href);
-
-						if (!response.ok) {
-							throw new Error('Prerendered response not found');
-						}
-
-						const prerendered = await response.json();
-
-						if (prerendered.type === 'error') {
-							error(prerendered.status, prerendered.error);
-						}
-
-						// TODO can we redirect here?
-
+						const key = stringify_remote_arg(arg, state.transport);
 						const cache = get_cache(__, state);
 
-						cache[stringify_remote_arg(arg, state.transport)] = prerendered.result;
+						// TODO adapters can provide prerendered data more efficiently than
+						// fetching from the public internet
+						const promise = (cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
+							async (response) => {
+								if (!response.ok) {
+									throw new Error('Prerendered response not found');
+								}
 
-						return parse_remote_response(prerendered.result, state.transport);
+								const prerendered = await response.json();
+
+								if (prerendered.type === 'error') {
+									error(prerendered.status, prerendered.error);
+								}
+
+								return prerendered.result;
+							}
+						));
+
+						return parse_remote_response(await promise, state.transport);
 					});
 				} catch {
 					// not available prerendered, fallback to normal function
