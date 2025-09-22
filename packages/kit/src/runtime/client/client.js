@@ -189,7 +189,10 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-/** @type {Record<string, any>} */
+/**
+ * Data that was serialized during SSR. This is cleared when the user first navigates
+ * @type {Record<string, any>}
+ */
 export let remote_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
@@ -240,7 +243,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-export let started = false;
+let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -1488,6 +1491,8 @@ async function navigate({
 	block = noop,
 	event
 }) {
+	remote_responses = {};
+
 	const prev_token = token;
 	token = nav_token;
 
@@ -2095,6 +2100,8 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
+
+	remote_responses = {};
 
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
