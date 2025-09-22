@@ -91,7 +91,6 @@ export function query(validate_or_fn, maybe_fn) {
 			}
 
 			const cache = get_cache(__, state);
-
 			const key = stringify_remote_arg(arg, state.transport);
 
 			if (__.id) {
