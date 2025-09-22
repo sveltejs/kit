@@ -14,11 +14,8 @@ import { HttpError, Redirect } from '@sveltejs/kit/internal';
 export function query(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
-			if (!started) {
-				const result = remote_responses[cache_key];
-				if (result) {
-					return result;
-				}
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
 			}
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
@@ -38,11 +35,8 @@ export function query_batch(id) {
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
-			if (!started) {
-				const result = remote_responses[cache_key];
-				if (result) {
-					return result;
-				}
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
 			}
 
 			// Collect all the calls to the same query in the same macrotask,

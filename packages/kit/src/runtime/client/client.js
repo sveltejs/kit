@@ -189,7 +189,10 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-/** @type {Record<string, any>} */
+/**
+ * Data that was serialized during SSR. This is cleared when the user first navigates
+ * @type {Record<string, any>}
+ */
 export let remote_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
@@ -1488,6 +1491,8 @@ async function navigate({
 	block = noop,
 	event
 }) {
+	remote_responses = {};
+
 	const prev_token = token;
 	token = nav_token;
 
