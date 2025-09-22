@@ -35,9 +35,7 @@ export function form(id) {
 		let issues = $state.raw({});
 
 		/** @type {any} */
-		let result = $state.raw(
-			Object.hasOwn(remote_responses, action_id) ? remote_responses[action_id] : undefined
-		);
+		let result = $state.raw(remote_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
