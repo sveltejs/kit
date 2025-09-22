@@ -598,7 +598,6 @@ export interface RequestState {
 	};
 	form_instances?: Map<any, any>;
 	remote_cache?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
-	remote_data?: Record<string, MaybePromise<any>>;
 	refreshes?: Record<string, Promise<any>>;
 	is_endpoint_request?: boolean;
 }
