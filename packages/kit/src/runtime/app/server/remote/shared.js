@@ -152,7 +152,7 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
  * @param {RemoteInfo} info
  * @param {RequestState} state
  */
-export function get_cache(info, state) {
+export function get_cache(info, state = get_request_store().state) {
 	let cache = state.remote_data?.get(info);
 
 	if (cache === undefined) {

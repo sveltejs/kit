@@ -189,8 +189,7 @@ export function form(validate_or_fn, maybe_fn) {
 			Object.defineProperty(instance, property, {
 				get() {
 					try {
-						const { remote_data: remote_cache } = get_request_store().state;
-						return remote_cache?.get(__)?.['']?.[property] ?? {};
+						return get_cache(__)?.['']?.[property] ?? {};
 					} catch {
 						return undefined;
 					}
@@ -201,8 +200,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { remote_data: remote_cache } = get_request_store().state;
-					return remote_cache?.get(__)?.['']?.result;
+					return get_cache(__)?.['']?.result;
 				} catch {
 					return undefined;
 				}
