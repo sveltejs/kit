@@ -1813,7 +1813,6 @@ export interface Snapshot<T = any> {
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
-// TODO we can probably simplify this
 // Input type mappings for form fields
 type InputTypeMap = {
 	text: string;
@@ -1850,15 +1849,7 @@ type AllInputTypes = InputTypeMap & InputTypeArrayMap;
 
 // Valid input types for a given value type
 type ValidInputTypesForValue<T> = {
-	[K in keyof AllInputTypes]: T extends AllInputTypes[K]
-		? K extends `${string}[]`
-			? T extends any[]
-				? K
-				: never
-			: T extends any[]
-				? never
-				: K
-		: never;
+	[K in keyof AllInputTypes]: T extends AllInputTypes[K] ? K : never;
 }[keyof AllInputTypes];
 
 // Input element properties based on type
@@ -1896,7 +1887,7 @@ type FormField<ValueType, Array extends boolean> = {
 	 **/
 	name(...args: Array extends true ? ['asArray'] : []): string;
 	/** The values that will be submitted */
-	value(): ValueType;
+	value(input?: ValueType): ValueType;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 	/**

@@ -8,7 +8,7 @@ import {
 	flatten_issues,
 	create_field_proxy,
 	set_nested_value
-} from '../../../utils.js';
+} from '../../../form-utils.svelte.js';
 import { get_cache, run_remote_function } from './shared.js';
 
 /**
@@ -156,7 +156,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 						if (is_array) key = key.slice(0, -2);
 
-						set_nested_value(
+						output.input = set_nested_value(
 							/** @type {Record<string, any>} */ (output.input),
 							key,
 							is_array ? values : values[0]

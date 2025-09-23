@@ -17,7 +17,7 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value
-} from '../../utils.js';
+} from '../../form-utils.svelte.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -35,8 +35,12 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string | string[] | File | File[]>} */
-		let input = $state({});
+		/**
+		 * By making this $state.raw() and creating a new object each time we update it,
+		 * all consumers along the update chain are properly invalidated.
+		 * @type {Record<string, string | string[] | File | File[]>}
+		 */
+		let input = $state.raw({});
 
 		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 		let issues = $state.raw({});
@@ -300,7 +304,7 @@ export function form(id) {
 							? elements.map((input) => Array.from(input.files ?? [])).flat()
 							: elements.map((element) => element.value);
 
-						set_nested_value(input, name, value);
+						input = set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -311,7 +315,7 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							set_nested_value(input, name, file);
+							input = set_nested_value(input, name, file);
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -323,7 +327,7 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						set_nested_value(input, name, element.value);
+						input = set_nested_value(input, name, element.value);
 					}
 				});
 
@@ -456,7 +460,7 @@ export function form(id) {
 							if (path.length === 0) {
 								input = value;
 							} else {
-								deep_set(input, path.map(String), value);
+								input = deep_set(input, path.map(String), value);
 							}
 						},
 						() => issues
