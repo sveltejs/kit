@@ -2,18 +2,11 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir, base } from '__sveltekit/paths';
+import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import {
-	app,
-	remote_responses,
-	started,
-	_goto,
-	set_nearest_error_page,
-	invalidateAll
-} from '../client.js';
+import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -49,7 +42,7 @@ export function form(id) {
 		let issues = $state.raw({});
 
 		/** @type {any} */
-		let result = $state.raw(started ? undefined : remote_responses[action_id]);
+		let result = $state.raw(remote_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);

@@ -1,5 +1,26 @@
 # @sveltejs/kit
 
+## 2.43.1
+### Patch Changes
+
+
+- fix: consistently use bare import for internals ([#14506](https://github.com/sveltejs/kit/pull/14506))
+
+## 2.43.0
+### Minor Changes
+
+
+- feat: experimental async SSR ([#14447](https://github.com/sveltejs/kit/pull/14447))
+
+
+### Patch Changes
+
+
+- fix: ensure `__SVELTEKIT_PAYLOAD__.data` is accessed safely ([#14491](https://github.com/sveltejs/kit/pull/14491))
+
+
+- fix: create separate cache entries for non-exported remote function queries ([#14499](https://github.com/sveltejs/kit/pull/14499))
+
 ## 2.42.2
 ### Patch Changes
 

@@ -14,10 +14,6 @@
 		"rollup",
 		"typescript"
 	],
-	"ignorePaths": [
-		"**/create-svelte/shared/**",
-		"**/create-svelte/templates/**"
-	],
 	"packageRules": [
 		{
 			"matchPackageNames": [

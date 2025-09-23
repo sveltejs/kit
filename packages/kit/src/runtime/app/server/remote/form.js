@@ -3,13 +3,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
-import { run_remote_function } from './shared.js';
 import {
 	convert_formdata,
 	flatten_issues,
 	create_field_proxy,
 	set_nested_value
 } from '../../../utils.js';
+import { get_cache, run_remote_function } from './shared.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -175,7 +175,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					(state.remote_data ??= {})[__.id] = output;
+					get_cache(__, state)[''] ??= output;
 				}
 
 				return output;
@@ -196,8 +196,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
-				const { remote_data } = get_request_store().state;
-				const data = remote_data?.[__.id];
+				const data = get_cache(__)?.[''];
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
@@ -248,8 +247,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { remote_data } = get_request_store().state;
-					return remote_data?.[__.id]?.result;
+					return get_cache(__)?.['']?.result;
 				} catch {
 					return undefined;
 				}

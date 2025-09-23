@@ -980,13 +980,13 @@ export const getProfile = query(async () => {
 	};
 });
 
-// this function could be called from multiple places
-function getUser() {
-	const { cookies, locals } = getRequestEvent();
+// this query could be called from multiple places, but
+// the function will only run once per request
+const getUser = query(() => {
+	const { cookies } = getRequestEvent();
 
-	locals.userPromise ??= findUser(cookies.get('session_id'));
-	return await locals.userPromise;
-}
+	return await findUser(cookies.get('session_id'));
+});
 ```
 
 Note that some properties of `RequestEvent` are different inside remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).

@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
-import * as paths from '__sveltekit/paths';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -168,10 +168,6 @@ export async function render_response({
 			state: {}
 		};
 
-		// use relative paths during rendering, so that the resulting HTML is as
-		// portable as possible, but reset afterwards
-		if (paths.relative) paths.override({ base, assets });
-
 		const render_opts = {
 			context: new Map([
 				[
@@ -183,48 +179,55 @@ export async function render_response({
 			])
 		};
 
-		if (DEV) {
-			const fetch = globalThis.fetch;
-			let warned = false;
-			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !SCHEME.test(info)) {
-					throw new Error(
-						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-					);
-				} else if (!warned) {
-					console.warn(
-						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-					);
-					warned = true;
+		const fetch = globalThis.fetch;
+
+		try {
+			if (DEV) {
+				let warned = false;
+				globalThis.fetch = (info, init) => {
+					if (typeof info === 'string' && !SCHEME.test(info)) {
+						throw new Error(
+							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						);
+					} else if (!warned) {
+						console.warn(
+							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						);
+						warned = true;
+					}
+
+					return fetch(info, init);
+				};
+			}
+
+			rendered = await with_request_store({ event, state: event_state }, async () => {
+				// use relative paths during rendering, so that the resulting HTML is as
+				// portable as possible, but reset afterwards
+				if (paths.relative) paths.override({ base, assets });
+
+				const rendered = options.root.render(props, render_opts);
+
+				// TODO 3.0 remove options.async
+				if (options.async) {
+					// we reset this synchronously, rather than after async rendering is complete,
+					// to avoid cross-talk between requests. This is a breaking change for
+					// anyone who opts into async SSR, since `base` and `assets` will no
+					// longer be relative to the current pathname.
+					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+					paths.reset();
 				}
 
-				return fetch(info, init);
-			};
+				// eslint-disable-next-line
+				const { head, html, css } = options.async ? await rendered : rendered;
 
-			try {
-				rendered = with_request_store({ event, state: event_state }, () => {
-					const result = options.root.render(props, render_opts);
-					// Svelte 5.39.0 changed the properties lazily start the rendering to be able to have the same signature for sync and async render.
-					// 5.39.1 extended that to the old class components. Rendering isn't started until one of the properties is accessed, so we do that here,
-					// else we might get errors about missing request store context
-					result.html;
-					return result;
-				});
-			} finally {
+				return { head, html, css };
+			});
+		} finally {
+			if (DEV) {
 				globalThis.fetch = fetch;
-				paths.reset();
 			}
-		} else {
-			try {
-				rendered = with_request_store({ event, state: event_state }, () => {
-					const result = options.root.render(props, render_opts);
-					// See comment above
-					result.html;
-					return result;
-				});
-			} finally {
-				paths.reset();
-			}
+
+			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 
 		for (const { node } of branch) {
@@ -467,16 +470,22 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data } = event_state;
+		const { remote_data: remote_cache } = event_state;
 
 		let serialized_remote_data = '';
 
-		if (remote_data) {
+		if (remote_cache) {
 			/** @type {Record<string, any>} */
 			const remote = {};
 
-			for (const key in remote_data) {
-				remote[key] = await remote_data[key];
+			for (const [info, cache] of remote_cache) {
+				// remote functions without an `id` aren't exported, and thus
+				// cannot be called from the client
+				if (!info.id) continue;
+
+				for (const key in cache) {
+					remote[key ? info.id + '/' + key : info.id] = await cache[key];
+				}
 			}
 
 			// TODO this is repeated in a few places — dedupe it

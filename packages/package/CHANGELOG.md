@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.3
+### Patch Changes
+
+
+- fix: handle `import/export name, { ... }` when resolving aliases ([#14462](https://github.com/sveltejs/kit/pull/14462))
+
 ## 2.5.2
 ### Patch Changes
 
