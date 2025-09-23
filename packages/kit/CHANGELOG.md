@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.43.2
+### Patch Changes
+
+
+- fix: ensure rendering starts off synchronously ([#14517](https://github.com/sveltejs/kit/pull/14517))
+
+
+- fix: keep serialized remote data alive until navigation ([#14508](https://github.com/sveltejs/kit/pull/14508))
+
 ## 2.43.1
 ### Patch Changes
 
