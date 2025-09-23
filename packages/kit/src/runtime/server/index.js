@@ -1,3 +1,5 @@
+/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
+import { with_resolvers } from '../../utils/promise.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
@@ -34,17 +36,12 @@ export class Server {
 
 			/** @type {typeof respond} */
 			this.respond = async (...args) => {
-				/** @type {(value?: any) => void} */
-				let resolve;
-
-				const promise = new Promise(r => (resolve = r));
+				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
 
 				const previous = current;
 				current = promise;
 
 				await previous;
-
-				// @ts-expect-error `resolve` is assigned!
 				return respond(...args).finally(resolve);
 			};
 		}
