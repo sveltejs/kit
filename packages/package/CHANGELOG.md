@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.4
+### Patch Changes
+
+
+- fix: resolve more alias issues ([#14514](https://github.com/sveltejs/kit/pull/14514))
+
 ## 2.5.3
 ### Patch Changes
 
