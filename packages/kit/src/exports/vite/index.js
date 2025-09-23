@@ -1028,6 +1028,8 @@ async function kit({ svelte_config }) {
 				// The remote functions manifest now has the full map of hash->import
 				// with import paths pointing to the generated chunks
 				const remotes = (() => {
+					if (!kit.experimental.remoteFunctions) return [];
+
 					const code = fs.readFileSync(`${out}/server/remote-manifest.js`, 'utf-8');
 					const map_match = /** @type {RegExpMatchArray } */ (code.match(/\{\s*([^}]+)\s*\}/));
 					const map_content = map_match[1];
