@@ -356,7 +356,7 @@ test('create package with preserved output', async () => {
 test('resolves aliases correctly', () => {
 	const input = '/project/src/lib';
 	const file = 'components/Button.svelte';
-	const alias = { $lib: '/project/src/lib/components' };
+	const alias = { $lib: '/project/src/lib/components', '@/': '/project/src/' };
 
 	// Test all static import variants
 	const source = `
@@ -366,6 +366,7 @@ import { named } from '$lib/utils.js';
 import { named1, named2 } from '$lib/utils.js';
 import defaultExport, { named } from '$lib/utils.js';
 import * as All from '$lib/utils.js';
+import { foo } from '@/foo.js';
 
 // Import types
 import type { TypedInterface } from '$lib/types.js';
@@ -410,6 +411,7 @@ import { named } from './utils.js';
 import { named1, named2 } from './utils.js';
 import defaultExport, { named } from './utils.js';
 import * as All from './utils.js';
+import { foo } from '../../foo.js';
 
 // Import types
 import type { TypedInterface } from './types.js';
