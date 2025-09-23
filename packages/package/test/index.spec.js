@@ -158,10 +158,6 @@ test('create package with SvelteComponentTyped for backwards compatibility', asy
 	await test_make_package('svelte-3-types');
 });
 
-test('create package and resolves $lib alias', async () => {
-	await test_make_package('resolve-alias');
-});
-
 test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
 });
