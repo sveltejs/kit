@@ -2,6 +2,8 @@
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 
+import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
+
 /** @type {RequestStore | null} */
 let sync_store = null;
 
@@ -64,6 +66,10 @@ export function with_request_store(store, fn) {
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();
 	} finally {
-		sync_store = null;
+		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
+		// and handle only one request at a time in `src/runtime/server/index.js`.
+		if (!IN_WEBCONTAINER) {
+			sync_store = null;
+		}
 	}
 }

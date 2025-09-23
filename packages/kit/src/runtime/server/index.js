@@ -1,3 +1,4 @@
+import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
@@ -22,6 +23,31 @@ export class Server {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
 		this.#manifest = manifest;
+
+		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
+		// in `src/exports/internal/event.js` and handle only one request at a time.
+		if (IN_WEBCONTAINER) {
+			const respond = this.respond.bind(this);
+
+			/** @type {Promise<void> | null} */
+			let current = null;
+
+			/** @type {typeof respond} */
+			this.respond = async (...args) => {
+				/** @type {(value?: any) => void} */
+				let resolve;
+
+				const promise = new Promise(r => (resolve = r));
+
+				const previous = current;
+				current = promise;
+
+				await previous;
+
+				// @ts-expect-error `resolve` is assigned!
+				return respond(...args).finally(resolve);
+			};
+		}
 
 		set_manifest(manifest);
 	}
