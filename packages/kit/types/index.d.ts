@@ -1913,7 +1913,11 @@ declare module '@sveltejs/kit' {
 		/** Preflight checks */
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
-		validate(options?: { includeUntouched?: boolean }): Promise<void>;
+		validate(options?: {
+			includeUntouched?: boolean;
+			/** Perform validation as if the form was submitted by the given button. */
+			submitter?: HTMLButtonElement | HTMLInputElement;
+		}): Promise<void>;
 		/** The result of the form submission */
 		get result(): Output | undefined;
 		/** The number of pending submissions */

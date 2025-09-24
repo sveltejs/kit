@@ -230,7 +230,7 @@ export function form(id) {
 
 				event.preventDefault();
 
-				const form_data = new FormData(form);
+				const form_data = new FormData(form, event.submitter);
 
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
@@ -340,7 +340,7 @@ export function form(id) {
 				event.stopPropagation();
 				event.preventDefault();
 
-				const form_data = new FormData(form);
+				const form_data = new FormData(form, target);
 
 				if (DEV) {
 					const enctype = target.hasAttribute('formenctype')
@@ -348,10 +348,6 @@ export function form(id) {
 						: clone(form).enctype;
 
 					validate_form_data(form_data, enctype);
-				}
-
-				if (target.name) {
-					form_data.append(target.name, target?.getAttribute('value') ?? '');
 				}
 
 				await handle_submit(form, form_data, callback);
@@ -422,12 +418,12 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false } = {}) => {
+				value: async ({ includeUntouched = false, submitter } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
 
-					const form_data = new FormData(element);
+					const form_data = new FormData(element, submitter);
 
 					/** @type {readonly StandardSchemaV1.Issue[]} */
 					let array = [];

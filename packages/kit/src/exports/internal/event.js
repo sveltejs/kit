@@ -47,7 +47,17 @@ export function getRequestEvent() {
 export function get_request_store() {
 	const result = try_get_request_store();
 	if (!result) {
-		throw new Error('Could not get the request store. This is an internal error.');
+		let message = 'Could not get the request store.';
+
+		if (als) {
+			message += ' This is an internal error.';
+		} else {
+			message +=
+				' In environments without `AsyncLocalStorage`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an `await`.' +
+				' If it was accessed synchronously then this is an internal error.';
+		}
+
+		throw new Error(message);
 	}
 	return result;
 }

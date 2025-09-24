@@ -205,7 +205,16 @@ export async function render_response({
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
 
-				const rendered = options.root.render(props, render_opts);
+				const maybe_promise = options.root.render(props, render_opts);
+				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+				const rendered =
+					options.async && 'then' in maybe_promise
+						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+								maybe_promise
+							).then((r) => r)
+						: maybe_promise;
 
 				// TODO 3.0 remove options.async
 				if (options.async) {
