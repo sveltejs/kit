@@ -2199,7 +2199,7 @@
 
 ### Patch Changes
 
-- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+- fix: add `submitter` type to `SubmitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
 
 ## 1.13.0
 
