@@ -2536,12 +2536,7 @@ function _start_router() {
 		event.preventDefault();
 		event.stopPropagation();
 
-		const data = new FormData(event_form);
-
-		const submitter_name = submitter?.getAttribute('name');
-		if (submitter_name) {
-			data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-		}
+		const data = new FormData(event_form, submitter);
 
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
