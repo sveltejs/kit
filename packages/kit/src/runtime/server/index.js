@@ -13,6 +13,9 @@ import { set_app } from './app.js';
 /** @type {Promise<any>} */
 let init_promise;
 
+/** @type {Promise<void> | null} */
+let current = null;
+
 export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
@@ -30,9 +33,6 @@ export class Server {
 		// in `src/exports/internal/event.js` and handle only one request at a time.
 		if (IN_WEBCONTAINER) {
 			const respond = this.respond.bind(this);
-
-			/** @type {Promise<void> | null} */
-			let current = null;
 
 			/** @type {typeof respond} */
 			this.respond = async (...args) => {
