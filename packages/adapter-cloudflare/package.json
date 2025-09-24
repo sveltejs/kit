@@ -44,8 +44,8 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "catalog:",
-		"worktop": "catalog:"
+		"@cloudflare/workers-types": "^4.20250507.0",
+		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",

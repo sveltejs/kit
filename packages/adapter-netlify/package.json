@@ -43,9 +43,9 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@iarna/toml": "catalog:",
-		"esbuild": "catalog:",
-		"set-cookie-parser": "catalog:"
+		"@iarna/toml": "^2.2.5",
+		"esbuild": "^0.25.4",
+		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
 		"@netlify/edge-functions": "catalog:",
