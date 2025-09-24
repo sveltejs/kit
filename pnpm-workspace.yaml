@@ -54,7 +54,7 @@ catalog:
   sade: ^1.8.1
   semver: ^7.5.4
   set-cookie-parser: ^2.6.0
-  sharp: ^0.34.1
+  sharp: ^0.34.4
   sirv-cli: ^3.0.0
   svelte: ^5.39.3
   svelte-check: ^4.1.1
