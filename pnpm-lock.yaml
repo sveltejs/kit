@@ -467,7 +467,7 @@ importers:
         version: 0.30.17
       sharp:
         specifier: ^0.34.1
-        version: 0.34.3
+        version: 0.34.4
       svelte-parse-markup:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.39.3)
