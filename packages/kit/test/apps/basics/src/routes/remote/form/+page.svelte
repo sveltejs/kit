@@ -29,6 +29,7 @@
 	<input name={set_message.field('message')} value={set_message.input.message} />
 	<button>set message</button>
 	<button {...set_reverse_message.buttonProps}>set reverse message</button>
+	<button name="uppercase" value="true">set uppercase message</button>
 </form>
 
 <p>set_message.input.message: {set_message.input.message}</p>

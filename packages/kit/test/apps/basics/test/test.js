@@ -1658,6 +1658,10 @@ test.describe('remote functions', () => {
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
 		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+
+		await page.getByText('set uppercase message').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('message.current:')).toHaveText('message.current: HELLO');
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
@@ -1820,6 +1824,11 @@ test.describe('remote functions', () => {
 
 		await bar.fill('d');
 		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await page.locator('#trigger-validate').click();
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected "submitter" but received "incorrect_value"'
+		);
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
