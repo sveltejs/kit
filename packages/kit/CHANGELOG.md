@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.43.4
+### Patch Changes
+
+
+- fix: Webcontainer AsyncLocalStorage workaround ([#14526](https://github.com/sveltejs/kit/pull/14526))
+
 ## 2.43.3
 ### Patch Changes
 
