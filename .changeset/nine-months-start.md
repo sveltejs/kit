@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: include `<button name="foo" value="bar">` values on submitted remote forms
+fix: include the value of form submitters on `form` remote functions
