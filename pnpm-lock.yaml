@@ -6,43 +6,202 @@ settings:
 
 catalogs:
   default:
+    '@changesets/cli':
+      specifier: ^2.29.6
+      version: 2.29.6
+    '@cloudflare/workers-types':
+      specifier: ^4.20250507.0
+      version: 4.20250508.0
+    '@fontsource/libre-barcode-128-text':
+      specifier: ^5.1.0
+      version: 5.1.0
+    '@iarna/toml':
+      specifier: ^2.2.5
+      version: 2.2.5
+    '@netlify/edge-functions':
+      specifier: ^2.15.1
+      version: 2.15.1
+    '@netlify/functions':
+      specifier: ^4.0.0
+      version: 4.1.4
+    '@opentelemetry/sdk-node':
+      specifier: ^0.205.0
+      version: 0.205.0
+    '@opentelemetry/sdk-trace-node':
+      specifier: ^2.0.1
+      version: 2.1.0
     '@playwright/test':
       specifier: ^1.51.1
       version: 1.51.1
+    '@polka/url':
+      specifier: ^1.0.0-next.28
+      version: 1.0.0-next.28
+    '@rollup/plugin-commonjs':
+      specifier: ^28.0.1
+      version: 28.0.1
+    '@rollup/plugin-json':
+      specifier: ^6.1.0
+      version: 6.1.0
+    '@rollup/plugin-node-resolve':
+      specifier: ^16.0.0
+      version: 16.0.0
+    '@standard-schema/spec':
+      specifier: ^1.0.0
+      version: 1.0.0
+    '@sveltejs/acorn-typescript':
+      specifier: ^1.0.5
+      version: 1.0.5
+    '@sveltejs/eslint-config':
+      specifier: ^8.2.0
+      version: 8.2.0
     '@sveltejs/vite-plugin-svelte':
       specifier: ^6.0.0-next.3
       version: 6.0.0-next.3
+    '@svitejs/changesets-changelog-github-compact':
+      specifier: ^1.2.0
+      version: 1.2.0
+    '@types/connect':
+      specifier: ^3.4.38
+      version: 3.4.38
+    '@types/cookie':
+      specifier: ^0.6.0
+      version: 0.6.0
+    '@types/estree':
+      specifier: ^1.0.5
+      version: 1.0.8
     '@types/node':
       specifier: ^18.19.119
       version: 18.19.119
+    '@types/semver':
+      specifier: ^7.5.6
+      version: 7.5.8
+    '@types/set-cookie-parser':
+      specifier: ^2.4.7
+      version: 2.4.7
+    '@vercel/nft':
+      specifier: ^0.30.0
+      version: 0.30.0
+    '@vitest/browser':
+      specifier: ^3.2.4
+      version: 3.2.4
+    acorn:
+      specifier: ^8.14.1
+      version: 8.15.0
+    chokidar:
+      specifier: ^4.0.3
+      version: 4.0.3
+    cookie:
+      specifier: ^0.6.0
+      version: 0.6.0
+    devalue:
+      specifier: ^5.3.2
+      version: 5.3.2
+    dropcss:
+      specifier: ^1.0.16
+      version: 1.0.16
+    dts-buddy:
+      specifier: ^0.6.2
+      version: 0.6.2
+    esbuild:
+      specifier: ^0.25.4
+      version: 0.25.9
+    eslint:
+      specifier: ^9.34.0
+      version: 9.34.0
+    esm-env:
+      specifier: ^1.2.2
+      version: 1.2.2
+    kleur:
+      specifier: ^4.1.5
+      version: 4.1.5
+    magic-string:
+      specifier: ^0.30.5
+      version: 0.30.17
+    mrmime:
+      specifier: ^2.0.0
+      version: 2.0.0
+    netlify-cli:
+      specifier: ^23.5.1
+      version: 23.5.1
+    polka:
+      specifier: ^1.0.0-next.28
+      version: 1.0.0-next.28
+    publint:
+      specifier: ^0.3.0
+      version: 0.3.0
+    sade:
+      specifier: ^1.8.1
+      version: 1.8.1
+    semver:
+      specifier: ^7.5.4
+      version: 7.7.2
+    set-cookie-parser:
+      specifier: ^2.6.0
+      version: 2.6.0
+    sharp:
+      specifier: ^0.34.1
+      version: 0.34.3
+    sirv-cli:
+      specifier: ^3.0.0
+      version: 3.0.0
     svelte:
       specifier: ^5.39.3
       version: 5.39.3
+    svelte-check:
+      specifier: ^4.1.1
+      version: 4.1.1
+    svelte-parse-markup:
+      specifier: ^0.1.5
+      version: 0.1.5
+    svelte-preprocess:
+      specifier: ^6.0.0
+      version: 6.0.0
+    svelte2tsx:
+      specifier: ~0.7.33
+      version: 0.7.33
+    typescript-eslint:
+      specifier: ^8.43.0
+      version: 8.43.0
+    valibot:
+      specifier: ^1.1.0
+      version: 1.1.0
     vite:
       specifier: ^6.3.5
       version: 6.3.6
+    vite-imagetools:
+      specifier: ^8.0.0
+      version: 8.0.0
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
+    worktop:
+      specifier: 0.8.0-next.18
+      version: 0.8.0-next.18
+    wrangler:
+      specifier: ^4.14.3
+      version: 4.14.4
+    zimmerframe:
+      specifier: ^1.1.2
+      version: 1.1.2
 
 importers:
 
   .:
     devDependencies:
       '@changesets/cli':
-        specifier: ^2.29.6
+        specifier: 'catalog:'
         version: 2.29.6(@types/node@18.19.119)
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.51.1
       '@sveltejs/eslint-config':
-        specifier: ^8.2.0
+        specifier: 'catalog:'
         version: 8.2.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-plugin-n@17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.39.3)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@9.34.0(jiti@2.4.2))(typescript-eslint@8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)
       '@svitejs/changesets-changelog-github-compact':
-        specifier: ^1.2.0
+        specifier: 'catalog:'
         version: 1.2.0
       eslint:
-        specifier: ^9.34.0
+        specifier: 'catalog:'
         version: 9.34.0(jiti@2.4.2)
       prettier:
         specifier: ^3.6.0
@@ -51,7 +210,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0(prettier@3.6.0)(svelte@5.39.3)
       typescript-eslint:
-        specifier: ^8.43.0
+        specifier: 'catalog:'
         version: 8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3)
 
   packages/adapter-auto:
@@ -75,10 +234,10 @@ importers:
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20250507.0
+        specifier: 'catalog:'
         version: 4.20250508.0
       worktop:
-        specifier: 0.8.0-next.18
+        specifier: 'catalog:'
         version: 0.8.0-next.18
       wrangler:
         specifier: ^4.0.0
@@ -94,7 +253,7 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       esbuild:
-        specifier: ^0.25.4
+        specifier: 'catalog:'
         version: 0.25.9
       typescript:
         specifier: ^5.3.3
@@ -121,7 +280,7 @@ importers:
         specifier: 'catalog:'
         version: 6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
       wrangler:
-        specifier: ^4.14.3
+        specifier: 'catalog:'
         version: 4.14.4(@cloudflare/workers-types@4.20250508.0)
 
   packages/adapter-cloudflare/test/apps/workers:
@@ -142,35 +301,35 @@ importers:
         specifier: 'catalog:'
         version: 6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
       wrangler:
-        specifier: ^4.14.3
+        specifier: 'catalog:'
         version: 4.14.4(@cloudflare/workers-types@4.20250508.0)
 
   packages/adapter-netlify:
     dependencies:
       '@iarna/toml':
-        specifier: ^2.2.5
+        specifier: 'catalog:'
         version: 2.2.5
       esbuild:
-        specifier: ^0.25.4
+        specifier: 'catalog:'
         version: 0.25.9
       set-cookie-parser:
-        specifier: ^2.6.0
+        specifier: 'catalog:'
         version: 2.6.0
     devDependencies:
       '@netlify/edge-functions':
-        specifier: ^2.15.1
+        specifier: 'catalog:'
         version: 2.15.1
       '@netlify/functions':
-        specifier: ^4.0.0
+        specifier: 'catalog:'
         version: 4.1.4(rollup@4.50.1)
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.1
+        specifier: 'catalog:'
         version: 28.0.1(rollup@4.50.1)
       '@rollup/plugin-json':
-        specifier: ^6.1.0
+        specifier: 'catalog:'
         version: 6.1.0(rollup@4.50.1)
       '@rollup/plugin-node-resolve':
-        specifier: ^16.0.0
+        specifier: 'catalog:'
         version: 16.0.0(rollup@4.50.1)
       '@sveltejs/kit':
         specifier: workspace:^
@@ -182,7 +341,7 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       '@types/set-cookie-parser':
-        specifier: ^2.4.7
+        specifier: 'catalog:'
         version: 2.4.7
       rollup:
         specifier: ^4.14.2
@@ -203,7 +362,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       netlify-cli:
-        specifier: ^23.5.1
+        specifier: 'catalog:'
         version: 23.5.1(@types/node@18.19.119)(picomatch@4.0.3)(rollup@4.50.1)
       svelte:
         specifier: 'catalog:'
@@ -221,7 +380,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       netlify-cli:
-        specifier: ^23.5.1
+        specifier: 'catalog:'
         version: 23.5.1(@types/node@18.19.119)(picomatch@4.0.3)(rollup@4.50.1)
       svelte:
         specifier: 'catalog:'
@@ -233,20 +392,20 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.1
+        specifier: 'catalog:'
         version: 28.0.1(rollup@4.50.1)
       '@rollup/plugin-json':
-        specifier: ^6.1.0
+        specifier: 'catalog:'
         version: 6.1.0(rollup@4.50.1)
       '@rollup/plugin-node-resolve':
-        specifier: ^16.0.0
+        specifier: 'catalog:'
         version: 16.0.0(rollup@4.50.1)
       rollup:
         specifier: ^4.9.5
         version: 4.50.1
     devDependencies:
       '@polka/url':
-        specifier: ^1.0.0-next.28
+        specifier: 'catalog:'
         version: 1.0.0-next.28
       '@sveltejs/kit':
         specifier: workspace:^
@@ -258,7 +417,7 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       polka:
-        specifier: ^1.0.0-next.28
+        specifier: 'catalog:'
         version: 1.0.0-next.28
       sirv:
         specifier: ^3.0.2
@@ -306,7 +465,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       sirv-cli:
-        specifier: ^3.0.0
+        specifier: 'catalog:'
         version: 3.0.0
       svelte:
         specifier: 'catalog:'
@@ -327,7 +486,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       sirv-cli:
-        specifier: ^3.0.0
+        specifier: 'catalog:'
         version: 3.0.0
       svelte:
         specifier: 'catalog:'
@@ -339,10 +498,10 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^0.30.0
+        specifier: 'catalog:'
         version: 0.30.0(rollup@4.50.1)
       esbuild:
-        specifier: ^0.25.4
+        specifier: 'catalog:'
         version: 0.25.9
     devDependencies:
       '@sveltejs/kit':
@@ -373,26 +532,26 @@ importers:
   packages/enhanced-img:
     dependencies:
       magic-string:
-        specifier: ^0.30.5
+        specifier: 'catalog:'
         version: 0.30.17
       sharp:
-        specifier: ^0.34.1
+        specifier: 'catalog:'
         version: 0.34.3
       svelte-parse-markup:
-        specifier: ^0.1.5
+        specifier: 'catalog:'
         version: 0.1.5(svelte@5.39.3)
       vite-imagetools:
-        specifier: ^8.0.0
+        specifier: 'catalog:'
         version: 8.0.0(rollup@4.50.1)
       zimmerframe:
-        specifier: ^1.1.2
+        specifier: 'catalog:'
         version: 1.1.2
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/estree':
-        specifier: ^1.0.5
+        specifier: 'catalog:'
         version: 1.0.8
       '@types/node':
         specifier: 'catalog:'
@@ -416,40 +575,40 @@ importers:
   packages/kit:
     dependencies:
       '@standard-schema/spec':
-        specifier: ^1.0.0
+        specifier: 'catalog:'
         version: 1.0.0
       '@sveltejs/acorn-typescript':
-        specifier: ^1.0.5
+        specifier: 'catalog:'
         version: 1.0.5(acorn@8.15.0)
       '@types/cookie':
-        specifier: ^0.6.0
+        specifier: 'catalog:'
         version: 0.6.0
       acorn:
-        specifier: ^8.14.1
+        specifier: 'catalog:'
         version: 8.15.0
       cookie:
-        specifier: ^0.6.0
+        specifier: 'catalog:'
         version: 0.6.0
       devalue:
-        specifier: ^5.3.2
+        specifier: 'catalog:'
         version: 5.3.2
       esm-env:
-        specifier: ^1.2.2
+        specifier: 'catalog:'
         version: 1.2.2
       kleur:
-        specifier: ^4.1.5
+        specifier: 'catalog:'
         version: 4.1.5
       magic-string:
-        specifier: ^0.30.5
+        specifier: 'catalog:'
         version: 0.30.17
       mrmime:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       sade:
-        specifier: ^1.8.1
+        specifier: 'catalog:'
         version: 1.8.1
       set-cookie-parser:
-        specifier: ^2.6.0
+        specifier: 'catalog:'
         version: 2.6.0
       sirv:
         specifier: ^3.0.0
@@ -465,16 +624,16 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/connect':
-        specifier: ^3.4.38
+        specifier: 'catalog:'
         version: 3.4.38
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
       '@types/set-cookie-parser':
-        specifier: ^2.4.7
+        specifier: 'catalog:'
         version: 2.4.7
       dts-buddy:
-        specifier: ^0.6.2
+        specifier: 'catalog:'
         version: 0.6.2(typescript@5.8.3)
       rollup:
         specifier: ^4.14.2
@@ -483,7 +642,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-preprocess:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.3.3
@@ -507,13 +666,13 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       dropcss:
-        specifier: ^1.0.16
+        specifier: 'catalog:'
         version: 1.0.16
       svelte:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -528,10 +687,10 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@opentelemetry/sdk-node':
-        specifier: ^0.205.0
+        specifier: 'catalog:'
         version: 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node':
-        specifier: ^2.0.1
+        specifier: 'catalog:'
         version: 2.1.0(@opentelemetry/api@1.9.0)
       '@sveltejs/kit':
         specifier: workspace:^
@@ -540,13 +699,13 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.39.3)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@vitest/browser':
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(playwright@1.51.1)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))(vitest@3.2.4)
       svelte:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       test-redirect-importer:
         specifier: workspace:*
@@ -555,7 +714,7 @@ importers:
         specifier: ^5.5.4
         version: 5.8.3
       valibot:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0(typescript@5.8.3)
       vite:
         specifier: 'catalog:'
@@ -606,7 +765,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -627,7 +786,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -648,7 +807,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -669,7 +828,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -681,7 +840,7 @@ importers:
   packages/kit/test/apps/options:
     devDependencies:
       '@fontsource/libre-barcode-128-text':
-        specifier: ^5.1.0
+        specifier: 'catalog:'
         version: 5.1.0
       '@sveltejs/kit':
         specifier: workspace:^
@@ -693,7 +852,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -717,13 +876,13 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
       valibot:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0(typescript@5.8.3)
       vite:
         specifier: 'catalog:'
@@ -744,7 +903,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -765,7 +924,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -786,7 +945,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -816,7 +975,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -840,7 +999,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -864,7 +1023,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -888,7 +1047,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -909,7 +1068,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -930,7 +1089,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -951,7 +1110,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -972,7 +1131,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -993,7 +1152,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1014,7 +1173,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1035,7 +1194,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1056,7 +1215,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1077,7 +1236,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1098,7 +1257,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1119,7 +1278,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1140,7 +1299,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1164,7 +1323,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1188,7 +1347,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.4
@@ -1203,19 +1362,19 @@ importers:
   packages/package:
     dependencies:
       chokidar:
-        specifier: ^4.0.3
+        specifier: 'catalog:'
         version: 4.0.3
       kleur:
-        specifier: ^4.1.5
+        specifier: 'catalog:'
         version: 4.1.5
       sade:
-        specifier: ^1.8.1
+        specifier: 'catalog:'
         version: 1.8.1
       semver:
-        specifier: ^7.5.4
+        specifier: 'catalog:'
         version: 7.7.2
       svelte2tsx:
-        specifier: ~0.7.33
+        specifier: 'catalog:'
         version: 0.7.33(svelte@5.39.3)(typescript@5.8.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
@@ -1225,7 +1384,7 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       '@types/semver':
-        specifier: ^7.5.6
+        specifier: 'catalog:'
         version: 7.5.8
       prettier:
         specifier: ^3.1.1
@@ -1234,7 +1393,7 @@ importers:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-preprocess:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.3.3
@@ -1291,19 +1450,19 @@ importers:
         specifier: ^3.2.6
         version: 3.4.0(prettier@3.6.0)(svelte@5.39.3)
       publint:
-        specifier: ^0.3.0
+        specifier: 'catalog:'
         version: 0.3.0
       svelte:
         specifier: 'catalog:'
         version: 5.39.3
       svelte-check:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1(picomatch@4.0.3)(svelte@5.39.3)(typescript@5.8.3)
       typescript:
         specifier: ^5.5.0
         version: 5.8.3
       valibot:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0(typescript@5.8.3)
       vite:
         specifier: 'catalog:'
@@ -3856,7 +4015,7 @@ packages:
     engines: {node: '>= 14'}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   confbox@0.1.8:
     resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
@@ -4184,7 +4343,7 @@ packages:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
 
   ee-first@1.1.1:
-    resolution: {integrity: sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=}
+    resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
   emoji-regex@10.4.0:
     resolution: {integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==}
@@ -5423,7 +5582,7 @@ packages:
     resolution: {integrity: sha512-IEn+pegP1aManZuckezWCO+XZQDplx1366JoVhTpMpBB1sPey/SbveZQUosKiKiGYjg1wH4pMlNgXbCiYgihQA==}
 
   media-typer@0.3.0:
-    resolution: {integrity: sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=}
+    resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
     engines: {node: '>= 0.6'}
 
   memoize-one@6.0.0:
@@ -6985,7 +7144,7 @@ packages:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
   utils-merge@1.0.1:
-    resolution: {integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=}
+    resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
   uuid@11.1.0:

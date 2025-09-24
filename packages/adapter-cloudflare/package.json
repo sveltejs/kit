@@ -44,14 +44,14 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20250507.0",
-		"worktop": "0.8.0-next.18"
+		"@cloudflare/workers-types": "catalog:",
+		"worktop": "catalog:"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"esbuild": "^0.25.4",
+		"esbuild": "catalog:",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},
