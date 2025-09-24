@@ -1658,10 +1658,33 @@ test.describe('remote functions', () => {
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
 		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+	});
 
+	test('form submitters work', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		if (javaScriptEnabled) {
+			// TODO remove the `if` — once async SSR lands these assertions should always succeed
+			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): initial'
+			);
+		}
+
+		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set uppercase message').click();
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('message.current:')).toHaveText('message.current: HELLO');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+
+			await expect(page.getByText('message.current:')).toHaveText('message.current: HELLO');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): HELLO');
+		}
+
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: HELLO');
+		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
