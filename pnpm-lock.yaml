@@ -9,15 +9,9 @@ catalogs:
     '@changesets/cli':
       specifier: ^2.29.6
       version: 2.29.6
-    '@cloudflare/workers-types':
-      specifier: ^4.20250507.0
-      version: 4.20250508.0
     '@fontsource/libre-barcode-128-text':
       specifier: ^5.1.0
       version: 5.1.0
-    '@iarna/toml':
-      specifier: ^2.2.5
-      version: 2.2.5
     '@netlify/edge-functions':
       specifier: ^2.15.1
       version: 2.15.1
@@ -45,12 +39,6 @@ catalogs:
     '@rollup/plugin-node-resolve':
       specifier: ^16.0.0
       version: 16.0.0
-    '@standard-schema/spec':
-      specifier: ^1.0.0
-      version: 1.0.0
-    '@sveltejs/acorn-typescript':
-      specifier: ^1.0.5
-      version: 1.0.5
     '@sveltejs/eslint-config':
       specifier: ^8.2.0
       version: 8.2.0
@@ -63,9 +51,6 @@ catalogs:
     '@types/connect':
       specifier: ^3.4.38
       version: 3.4.38
-    '@types/cookie':
-      specifier: ^0.6.0
-      version: 0.6.0
     '@types/estree':
       specifier: ^1.0.5
       version: 1.0.8
@@ -78,24 +63,9 @@ catalogs:
     '@types/set-cookie-parser':
       specifier: ^2.4.7
       version: 2.4.7
-    '@vercel/nft':
-      specifier: ^0.30.0
-      version: 0.30.0
     '@vitest/browser':
       specifier: ^3.2.4
       version: 3.2.4
-    acorn:
-      specifier: ^8.14.1
-      version: 8.15.0
-    chokidar:
-      specifier: ^4.0.3
-      version: 4.0.3
-    cookie:
-      specifier: ^0.6.0
-      version: 0.6.0
-    devalue:
-      specifier: ^5.3.2
-      version: 5.3.2
     dropcss:
       specifier: ^1.0.16
       version: 1.0.16
@@ -108,18 +78,6 @@ catalogs:
     eslint:
       specifier: ^9.34.0
       version: 9.34.0
-    esm-env:
-      specifier: ^1.2.2
-      version: 1.2.2
-    kleur:
-      specifier: ^4.1.5
-      version: 4.1.5
-    magic-string:
-      specifier: ^0.30.5
-      version: 0.30.17
-    mrmime:
-      specifier: ^2.0.0
-      version: 2.0.0
     netlify-cli:
       specifier: ^23.5.1
       version: 23.5.1
@@ -129,18 +87,6 @@ catalogs:
     publint:
       specifier: ^0.3.0
       version: 0.3.0
-    sade:
-      specifier: ^1.8.1
-      version: 1.8.1
-    semver:
-      specifier: ^7.5.4
-      version: 7.7.2
-    set-cookie-parser:
-      specifier: ^2.6.0
-      version: 2.6.0
-    sharp:
-      specifier: ^0.34.4
-      version: 0.34.4
     sirv-cli:
       specifier: ^3.0.0
       version: 3.0.0
@@ -150,15 +96,9 @@ catalogs:
     svelte-check:
       specifier: ^4.1.1
       version: 4.1.1
-    svelte-parse-markup:
-      specifier: ^0.1.5
-      version: 0.1.5
     svelte-preprocess:
       specifier: ^6.0.0
       version: 6.0.0
-    svelte2tsx:
-      specifier: ~0.7.33
-      version: 0.7.33
     typescript-eslint:
       specifier: ^8.43.0
       version: 8.43.0
@@ -168,21 +108,12 @@ catalogs:
     vite:
       specifier: ^6.3.5
       version: 6.3.6
-    vite-imagetools:
-      specifier: ^8.0.0
-      version: 8.0.0
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
-    worktop:
-      specifier: 0.8.0-next.18
-      version: 0.8.0-next.18
     wrangler:
       specifier: ^4.14.3
       version: 4.14.4
-    zimmerframe:
-      specifier: ^1.1.2
-      version: 1.1.2
 
 importers:
 
@@ -234,10 +165,10 @@ importers:
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: 'catalog:'
+        specifier: ^4.20250507.0
         version: 4.20250508.0
       worktop:
-        specifier: 'catalog:'
+        specifier: 0.8.0-next.18
         version: 0.8.0-next.18
       wrangler:
         specifier: ^4.0.0
@@ -307,13 +238,13 @@ importers:
   packages/adapter-netlify:
     dependencies:
       '@iarna/toml':
-        specifier: 'catalog:'
+        specifier: ^2.2.5
         version: 2.2.5
       esbuild:
-        specifier: 'catalog:'
+        specifier: ^0.25.4
         version: 0.25.9
       set-cookie-parser:
-        specifier: 'catalog:'
+        specifier: ^2.6.0
         version: 2.6.0
     devDependencies:
       '@netlify/edge-functions':
@@ -392,13 +323,13 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: 'catalog:'
+        specifier: ^28.0.1
         version: 28.0.1(rollup@4.50.1)
       '@rollup/plugin-json':
-        specifier: 'catalog:'
+        specifier: ^6.1.0
         version: 6.1.0(rollup@4.50.1)
       '@rollup/plugin-node-resolve':
-        specifier: 'catalog:'
+        specifier: ^16.0.0
         version: 16.0.0(rollup@4.50.1)
       rollup:
         specifier: ^4.9.5
@@ -498,10 +429,10 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: 'catalog:'
+        specifier: ^0.30.0
         version: 0.30.0(rollup@4.50.1)
       esbuild:
-        specifier: 'catalog:'
+        specifier: ^0.25.4
         version: 0.25.9
     devDependencies:
       '@sveltejs/kit':
@@ -532,19 +463,19 @@ importers:
   packages/enhanced-img:
     dependencies:
       magic-string:
-        specifier: 'catalog:'
+        specifier: ^0.30.5
         version: 0.30.17
       sharp:
-        specifier: 'catalog:'
+        specifier: ^0.34.1
         version: 0.34.4
       svelte-parse-markup:
-        specifier: 'catalog:'
+        specifier: ^0.1.5
         version: 0.1.5(svelte@5.39.3)
       vite-imagetools:
-        specifier: 'catalog:'
+        specifier: ^8.0.0
         version: 8.0.0(rollup@4.50.1)
       zimmerframe:
-        specifier: 'catalog:'
+        specifier: ^1.1.2
         version: 1.1.2
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
@@ -575,40 +506,40 @@ importers:
   packages/kit:
     dependencies:
       '@standard-schema/spec':
-        specifier: 'catalog:'
+        specifier: ^1.0.0
         version: 1.0.0
       '@sveltejs/acorn-typescript':
-        specifier: 'catalog:'
+        specifier: ^1.0.5
         version: 1.0.5(acorn@8.15.0)
       '@types/cookie':
-        specifier: 'catalog:'
+        specifier: ^0.6.0
         version: 0.6.0
       acorn:
-        specifier: 'catalog:'
+        specifier: ^8.14.1
         version: 8.15.0
       cookie:
-        specifier: 'catalog:'
+        specifier: ^0.6.0
         version: 0.6.0
       devalue:
-        specifier: 'catalog:'
+        specifier: ^5.3.2
         version: 5.3.2
       esm-env:
-        specifier: 'catalog:'
+        specifier: ^1.2.2
         version: 1.2.2
       kleur:
-        specifier: 'catalog:'
+        specifier: ^4.1.5
         version: 4.1.5
       magic-string:
-        specifier: 'catalog:'
+        specifier: ^0.30.5
         version: 0.30.17
       mrmime:
-        specifier: 'catalog:'
+        specifier: ^2.0.0
         version: 2.0.0
       sade:
-        specifier: 'catalog:'
+        specifier: ^1.8.1
         version: 1.8.1
       set-cookie-parser:
-        specifier: 'catalog:'
+        specifier: ^2.6.0
         version: 2.6.0
       sirv:
         specifier: ^3.0.0
@@ -1362,19 +1293,19 @@ importers:
   packages/package:
     dependencies:
       chokidar:
-        specifier: 'catalog:'
+        specifier: ^4.0.3
         version: 4.0.3
       kleur:
-        specifier: 'catalog:'
+        specifier: ^4.1.5
         version: 4.1.5
       sade:
-        specifier: 'catalog:'
+        specifier: ^1.8.1
         version: 1.8.1
       semver:
-        specifier: 'catalog:'
+        specifier: ^7.5.4
         version: 7.7.2
       svelte2tsx:
-        specifier: 'catalog:'
+        specifier: ~0.7.33
         version: 0.7.33(svelte@5.39.3)(typescript@5.8.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':

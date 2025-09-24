@@ -36,11 +36,11 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "catalog:",
-		"sharp": "catalog:",
-		"svelte-parse-markup": "catalog:",
-		"vite-imagetools": "catalog:",
-		"zimmerframe": "catalog:"
+		"magic-string": "^0.30.5",
+		"sharp": "^0.34.1",
+		"svelte-parse-markup": "^0.1.5",
+		"vite-imagetools": "^8.0.0",
+		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "catalog:",
