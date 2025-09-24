@@ -320,7 +320,7 @@ export const setCount = form(
 		// Valibot:
 		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
 		// Zod:
-		// count: v.coerce.number()
+		// count: z.coerce.number<string>()
 	}),
 	async ({ count }) => {
 		// ...
@@ -427,7 +427,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 	const schema = v.object({
 		title: v.pipe(v.string(), v.nonEmpty()),
-		content:v.pipe(v.string(), v.nonEmpty())
+		content: v.pipe(v.string(), v.nonEmpty())
 	});
 </script>
 
@@ -995,13 +995,13 @@ export const getProfile = query(async () => {
 	};
 });
 
-// this function could be called from multiple places
-function getUser() {
-	const { cookies, locals } = getRequestEvent();
+// this query could be called from multiple places, but
+// the function will only run once per request
+const getUser = query(() => {
+	const { cookies } = getRequestEvent();
 
-	locals.userPromise ??= findUser(cookies.get('session_id'));
-	return await locals.userPromise;
-}
+	return await findUser(cookies.get('session_id'));
+});
 ```
 
 Note that some properties of `RequestEvent` are different inside remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).

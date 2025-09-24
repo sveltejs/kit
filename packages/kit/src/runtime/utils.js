@@ -123,8 +123,9 @@ export function deep_set(object, keys, value) {
 				throw new Error(`Invalid array key ${keys[i + 1]}`);
 			}
 		} else {
-			object = object[key] ??= is_array ? [] : Object.create(null); // guard against prototype pollution
+			object[key] ??= is_array ? [] : Object.create(null); // guard against prototype pollution
 		}
+		object = object[key];
 	}
 
 	object[keys[keys.length - 1]] = value;

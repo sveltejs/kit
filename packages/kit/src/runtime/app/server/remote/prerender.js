@@ -4,10 +4,11 @@
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
-import { app_dir, base } from '__sveltekit/paths';
+import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { app_dir, base } from '$app/paths/internal/server';
 import {
 	create_validator,
+	get_cache,
 	get_response,
 	parse_remote_response,
 	run_remote_function
@@ -96,25 +97,29 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(id, arg, state, async () => {
+					return await get_response(__, arg, state, async () => {
+						const key = stringify_remote_arg(arg, state.transport);
+						const cache = get_cache(__, state);
+
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
-						const response = await fetch(new URL(url, event.url.origin).href);
+						const promise = (cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
+							async (response) => {
+								if (!response.ok) {
+									throw new Error('Prerendered response not found');
+								}
 
-						if (!response.ok) {
-							throw new Error('Prerendered response not found');
-						}
+								const prerendered = await response.json();
 
-						const prerendered = await response.json();
+								if (prerendered.type === 'error') {
+									error(prerendered.status, prerendered.error);
+								}
 
-						if (prerendered.type === 'error') {
-							error(prerendered.status, prerendered.error);
-						}
+								return prerendered.result;
+							}
+						));
 
-						// TODO can we redirect here?
-
-						(state.remote_data ??= {})[create_remote_cache_key(id, payload)] = prerendered.result;
-						return parse_remote_response(prerendered.result, state.transport);
+						return parse_remote_response(await promise, state.transport);
 					});
 				} catch {
 					// not available prerendered, fallback to normal function
@@ -125,7 +130,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = get_response(id, arg, state, () =>
+			const promise = get_response(__, arg, state, () =>
 				run_remote_function(event, state, false, arg, validate, fn)
 			);
 
