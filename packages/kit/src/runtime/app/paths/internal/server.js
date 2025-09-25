@@ -5,6 +5,8 @@ export const relative = __SVELTEKIT_PATHS_RELATIVE__;
 
 const initial = { base, assets };
 
+export const initial_base = initial.base;
+
 /**
  * @param {{ base: string, assets: string }} paths
  */
