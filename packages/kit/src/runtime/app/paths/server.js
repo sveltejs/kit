@@ -1,6 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { get_request_store, try_get_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_request_store } from '@sveltejs/kit/internal/server';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
