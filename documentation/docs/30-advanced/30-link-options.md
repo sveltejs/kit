@@ -14,10 +14,11 @@ Before the browser registers that the user has clicked on a link, we can detect 
 
 SvelteKit can use this information to get a head start on importing the code and fetching the page's data, which can give us an extra couple of hundred milliseconds — the difference between a user interface that feels laggy and one that feels snappy.
 
-We can control this behaviour with the `data-sveltekit-preload-data` attribute, which can have one of two values:
+We can control this behaviour with the `data-sveltekit-preload-data` attribute, which can have one of three values:
 
 - `"hover"` means that preloading will start if the mouse comes to a rest over a link. On mobile, preloading begins on `touchstart`
 - `"tap"` means that preloading will start as soon as a `touchstart` or `mousedown` event is registered
+- `"false"` means preloading is disabled, see section "Disabling options" below
 
 The default project template has a `data-sveltekit-preload-data="hover"` attribute applied to the `<body>` element in `src/app.html`, meaning that every link is preloaded on hover by default:
 
