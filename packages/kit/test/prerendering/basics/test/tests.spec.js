@@ -200,6 +200,11 @@ test('prerenders binary data', async () => {
 	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
 });
 
+test('generates relative link for resolve helper during prerender', () => {
+	const content = read('resolve-relative/lv1/lv2.html');
+	expect(content).toMatch('href="../../resolve-relative/lv1"');
+});
+
 test('fetches data from local endpoint', () => {
 	const data = JSON.parse(read('origin/__data.json'));
 
