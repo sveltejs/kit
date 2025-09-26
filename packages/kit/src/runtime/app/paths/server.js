@@ -16,7 +16,7 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			const after_base = event.url.pathname.slice(initial_base.length);
+			const after_base = store.event.url.pathname.slice(initial_base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 
