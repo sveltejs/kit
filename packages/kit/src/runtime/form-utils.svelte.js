@@ -169,7 +169,7 @@ export function deep_get(object, path) {
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, any>} get_issues - Function to get current issues
+ * @param {() => Record<string, RemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
@@ -203,15 +203,18 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, 'value']);
 			}
 
-			if (prop === 'issues') {
+			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const issues = get_issues();
-					return issues[key === '' ? '$' : key];
+					const all_issues = get_issues()[key === '' ? '$' : key];
+
+					if (prop === 'allIssues') {
+						return all_issues;
+					}
+
+					return all_issues?.filter((issue) => issue.name === key);
 				};
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [
-					...path,
-					'issues'
-				]);
+
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'as') {

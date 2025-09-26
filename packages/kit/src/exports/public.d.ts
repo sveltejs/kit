@@ -1877,25 +1877,56 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-type FormField<ValueType> = {
-	/** The values that will be submitted */
-	value(input?: ValueType): ValueType;
-	/** Validation issues, if any */
-	issues(): RemoteFormIssue[] | undefined;
-	/**
-	 * Returns an object that can be spread onto an input element with the correct type attribute,
-	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-	 * @example
-	 * ```svelte
-	 * <input {...myForm.fields.username.as('text')} />
-	 * <input {...myForm.fields.isActive.as('checkbox')} />
-	 * <input {...myForm.fields.tags.as('text[]')} />
-	 * ```
-	 */
-	as<T extends ValidInputTypesForValue<ValueType>>(
-		inputType: T
-	): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
-};
+type FormField<ValueType> =
+	NonNullable<ValueType> extends string | number | boolean | File
+		? {
+				/** The values that will be submitted */
+				value(input?: ValueType): ValueType;
+				/** Validation issues, if any */
+				issues(): RemoteFormIssue[] | undefined;
+				/**
+				 * Returns an object that can be spread onto an input element with the correct type attribute,
+				 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+				 * @example
+				 * ```svelte
+				 * <input {...myForm.fields.username.as('text')} />
+				 * <input {...myForm.fields.isActive.as('checkbox')} />
+				 * <input {...myForm.fields.tags.as('text[]')} />
+				 * ```
+				 */
+				as<T extends ValidInputTypesForValue<ValueType>>(
+					inputType: T
+				): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+			}
+		: // TODO we can almost certainly DRY this out
+			NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
+			? {
+					/** The values that will be submitted */
+					value(input?: ValueType): ValueType;
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+					/**
+					 * Returns an object that can be spread onto an input element with the correct type attribute,
+					 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+					 * @example
+					 * ```svelte
+					 * <input {...myForm.fields.username.as('text')} />
+					 * <input {...myForm.fields.isActive.as('checkbox')} />
+					 * <input {...myForm.fields.tags.as('text[]')} />
+					 * ```
+					 */
+					as<T extends ValidInputTypesForValue<ValueType>>(
+						inputType: T
+					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+				}
+			: {
+					/** The values that will be submitted */
+					value(input?: ValueType): ValueType;
+					/** Validation issues belonging to this or any of the fields that belong to it, if any */
+					allIssues(): RemoteFormIssue[] | undefined;
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+				};
 
 /**
  * Recursive type to build form fields structure with proxy access
@@ -1969,9 +2000,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: Input extends void
-		? never
-		: { [K in keyof Input]-?: FormFields<Input[K]> } & Pick<FormField<Input>, 'value' | 'issues'>;
+	fields: Input extends void ? never : FormFields<Input>;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
