@@ -246,6 +246,11 @@ test.describe('Load', () => {
 		);
 	});
 
+	test('Server data serialization removes empty nodes', async ({ page }) => {
+		await page.goto('/load/serialization-empty-node');
+		expect(await page.textContent('h1')).toBe('42');
+	});
+
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -311,6 +316,28 @@ test.describe('Load', () => {
 			);
 			const post_script_content = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"][data-hash="16h3sp1"]'
+			);
+
+			expect(script_content).toBe(payload);
+			expect(post_script_content).toBe(post_payload);
+		}
+	});
+
+	test('fetches using a body stream serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-body-stream-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+			const post_payload =
+				'{"status":200,"statusText":"","headers":{},"body":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"]'
+			);
+			const post_script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"][data-hash="16h3sp1"]'
 			);
 
 			expect(script_content).toBe(payload);
@@ -576,6 +603,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
 		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
 		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
+	});
+
+	test('event.fetch handles response without body', async ({ page }) => {
+		await page.goto('/load/fetch-no-body');
+		expect(await page.textContent('h1')).toBe('ok: true');
 	});
 });
 
@@ -1522,7 +1554,7 @@ test.describe('Serialization', () => {
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-non-enhanced');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 
@@ -1534,9 +1566,20 @@ test.describe('Serialization', () => {
 	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
 		page
 	}) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-enhanced');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
+
+		// Test navigating to the basic page works as intended
+		await page.locator('a').first().click();
+		await expect(page.locator('h1')).toHaveText('It works!');
+	});
+
+	test('works with streaming', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
 	});
 });
 
@@ -1557,6 +1600,274 @@ test.describe('getRequestEvent', () => {
 	});
 });
 
+test.describe('remote functions', () => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		}
+	});
+
+	test('query redirects on page load (query in common layout)', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
+	});
+
+	test('query redirects on page load (query on page)', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test('non-exported queries do not clobber each other', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-non-exported');
+
+		await expect(page.locator('h1')).toHaveText('3');
+	});
+
+	test('form works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		if (javaScriptEnabled) {
+			// TODO remove the `if` — once async SSR lands these assertions should always succeed
+			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): initial'
+			);
+		}
+
+		await page.fill('[data-unscoped] input', 'hello');
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+
+			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
+		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+	});
+
+	test('form submitters work', async ({ page }) => {
+		await page.goto('/remote/form/submitter');
+
+		await page.locator('button').click();
+
+		await expect(page.locator('#result')).toHaveText('hello');
+	});
+
+	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'hello');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.input.message:')).toHaveText(
+				'set_message.input.message: hello'
+			);
+		}
+
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('resolve deferreds').click();
+		}
+
+		await expect(page.getByText('set_message.input.message:')).toHaveText(
+			'set_message.input.message:'
+		);
+	});
+
+	test('form reports validation issues', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'invalid');
+		await page.getByText('set message').click();
+
+		await page.getByText('message is invalid').waitFor();
+	});
+
+	test('form handles unexpected error', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText('This is your custom error page saying: "oops (500 Internal Error)"')
+			.waitFor();
+	});
+
+	test('form handles expected error', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'expected error');
+		await page.getByText('set message').click();
+
+		await page.getByText('This is your custom error page saying: "oops"').waitFor();
+	});
+
+	test('form redirects', async ({ page }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('input', 'redirect');
+		await page.getByText('set message').click();
+
+		await page.waitForURL('/remote');
+	});
+
+	test('form.buttonProps works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('[data-unscoped] input', 'backwards');
+		await page.getByText('set reverse message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('message.current: sdrawkcab').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): sdrawkcab'
+			);
+		}
+
+		await expect(page.getByText('set_reverse_message.result')).toHaveText(
+			'set_reverse_message.result: sdrawkcab'
+		);
+	});
+
+	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('[data-scoped] input', 'hello');
+		await page.getByText('set scoped message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 0');
+
+			await page.getByText('message.current: hello').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello');
+		await expect(page.locator('[data-scoped] input')).toHaveValue('');
+	});
+
+	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form');
+
+		await page.fill('[data-enhanced] input', 'hello');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
+		await page.locator('[data-enhanced] span').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+			await page.getByText('message.current: hello (override)').waitFor();
+
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('enhanced.result')).toHaveText('enhanced.result: hello');
+		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
+	});
+
+	test('form preflight works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight');
+
+		for (const enhanced of [true, false]) {
+			const input = page.locator(enhanced ? '[data-enhanced] input' : '[data-default] input');
+			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
+
+			await input.fill('21');
+			await button.click();
+			await page.getByText('too big').waitFor();
+
+			await input.fill('9');
+			await button.click();
+			await page.getByText('too small').waitFor();
+
+			await input.fill('15');
+			await button.click();
+			await expect(page.getByText('number.current')).toHaveText('number.current: 15');
+		}
+	});
+
+	test('form validate works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const foo = page.locator('input[name="foo"]');
+		const bar = page.locator('input[name="bar"]');
+
+		await foo.fill('a');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await bar.fill('g');
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected ("d" | "e") but received "g"'
+		);
+
+		await bar.fill('d');
+		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await page.locator('#trigger-validate').click();
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected "submitter" but received "incorrect_value"'
+		);
+	});
+
+	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/remote/form/underscore');
+
+		await page.fill('input[name="username"]', 'abcdefg');
+		await page.fill('input[name="_password"]', 'pqrstuv');
+		await page.locator('button').click();
+
+		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
+		await expect(page.locator('input[name="_password"]')).toHaveValue('');
+	});
+
+	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/whole-page"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/functions-only"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+	});
+});
+
 test.describe('params prop', () => {
 	test('params prop is passed to the page', async ({ page, clicknav }) => {
 		await page.goto('/params-prop');
@@ -1566,5 +1877,27 @@ test.describe('params prop', () => {
 
 		await clicknav('[href="/params-prop/456"]');
 		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
+
+test.describe('service worker option', () => {
+	test('pass the options to the service worker', async ({ page }) => {
+		await page.goto('/');
+		const content = await page.content();
+		const matching = content.match(/navigator\.serviceWorker\.register\(.+?, (?<options>{.+?})\)/);
+		let options = {};
+		if (matching && matching.groups) {
+			options = JSON.parse(matching.groups.options);
+		}
+		if (process.env.DEV) {
+			expect(options).toMatchObject({
+				type: 'module',
+				updateViaCache: 'imports'
+			});
+		} else {
+			expect(options).toMatchObject({
+				updateViaCache: 'imports'
+			});
+		}
 	});
 });

@@ -9,18 +9,17 @@
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "cross-env DEV=true playwright test",
+		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
-		"test:server-side-route-resolution:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true ROUTER_RESOLUTION=server playwright test",
-		"test:server-side-route-resolution:build": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env ROUTER_RESOLUTION=server playwright test"
+		"test:server-side-route-resolution:dev": "rm -rf test/errors.json && DEV=true ROUTER_RESOLUTION=server playwright test",
+		"test:server-side-route-resolution:build": "rm -rf test/errors.json && ROUTER_RESOLUTION=server playwright test"
 	},
 	"devDependencies": {
-		"@fontsource/libre-barcode-128-text": "^5.1.0",
+		"@fontsource/libre-barcode-128-text": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"cross-env": "catalog:",
-		"svelte": "^5.35.5",
-		"svelte-check": "^4.1.1",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
 	},

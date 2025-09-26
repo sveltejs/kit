@@ -19,7 +19,8 @@ my-project/
 │ ├ error.html
 │ ├ hooks.client.js
 │ ├ hooks.server.js
-│ └ service-worker.js
+| ├ service-worker.js
+│ └ tracing.server.js
 ├ static/
 │ └ [your static assets]
 ├ tests/
@@ -51,9 +52,12 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
+  - `%sveltekit.version%` — the deployment version, which can be specified with the [`version`](configuration#version) configuration
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
+- `instrumentation.server.js` contains your [observability](observability) setup and instrumentation code
+  - Requires adapter support. If your adapter supports it, it is guarnteed to run prior to loading and running your application code.
 
 (Whether the project contains `.js` or `.ts` files depends on whether you opt to use TypeScript when you create your project.)
 
@@ -79,7 +83,7 @@ This file contains your Svelte and SvelteKit [configuration](configuration).
 
 ### tsconfig.json
 
-This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`.
+This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`. To make changes to top-level options such as `include` and `exclude`, we recommend extending the generated config; see the [`typescript.config` setting](configuration#typescript) for more details.
 
 ### vite.config.js
 

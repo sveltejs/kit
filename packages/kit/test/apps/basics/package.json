@@ -8,23 +8,29 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
-		"test:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test",
-		"test:build": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env PUBLIC_PRERENDERING=false playwright test",
-		"test:cross-platform:dev": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test test/cross-platform/",
-		"test:cross-platform:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && playwright test test/cross-platform/",
-		"test:server-side-route-resolution:dev": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true ROUTER_RESOLUTION=server playwright test",
-		"test:server-side-route-resolution:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test"
+		"test": "pnpm test:unit && pnpm test:dev && pnpm test:build",
+		"test:dev": "node test/setup.js && DEV=true playwright test",
+		"test:build": "node test/setup.js && PUBLIC_PRERENDERING=false playwright test",
+		"test:cross-platform:dev": "node test/setup.js && DEV=true playwright test test/cross-platform/",
+		"test:cross-platform:build": "node test/setup.js && playwright test test/cross-platform/",
+		"test:server-side-route-resolution:dev": "node test/setup.js && DEV=true ROUTER_RESOLUTION=server playwright test",
+		"test:server-side-route-resolution:build": "node test/setup.js && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test",
+		"test:unit": "vitest run"
 	},
 	"devDependencies": {
+		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/sdk-node": "catalog:",
+		"@opentelemetry/sdk-trace-node": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"cross-env": "catalog:",
-		"svelte": "^5.35.5",
-		"svelte-check": "^4.1.1",
+		"@vitest/browser": "catalog:",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"test-redirect-importer": "workspace:*",
 		"typescript": "^5.5.4",
-		"vite": "catalog:"
+		"valibot": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"type": "module"
 }

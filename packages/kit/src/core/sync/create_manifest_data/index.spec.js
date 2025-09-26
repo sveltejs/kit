@@ -3,8 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import create_manifest_data from './index.js';
-import options from '../../config/options.js';
 import { sort_routes } from './sort.js';
+import { validate_config } from '../../config/index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
@@ -13,7 +13,7 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @param {import('@sveltejs/kit').Config} config
  */
 const create = (dir, config = {}) => {
-	const initial = options(config, 'config');
+	const initial = validate_config(config);
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
 	initial.kit.files.params = path.resolve(cwd, 'params');
@@ -268,7 +268,7 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/a/[...rest]',
-			pattern: '/^/a(?:/(.*))?/?$/',
+			pattern: '/^/a(?:/([^]*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
@@ -277,7 +277,7 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/b/[...rest]',
-			pattern: '/^/b(?:/(.*))?/?$/',
+			pattern: '/^/b(?:/([^]*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
@@ -301,12 +301,12 @@ test('allows rest parameters inside segments', () => {
 		},
 		{
 			id: '/prefix-[...rest]',
-			pattern: '/^/prefix-(.*?)/?$/',
+			pattern: '/^/prefix-([^]*?)/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
 			id: '/[...rest].json',
-			pattern: '/^/(.*?).json/?$/',
+			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 			}
@@ -714,7 +714,7 @@ test('handles pages without .svelte file', () => {
 		},
 		{
 			id: '/error/[...path]',
-			pattern: '/^/error(?:/(.*))?/?$/',
+			pattern: '/^/error(?:/([^]*))?/?$/',
 			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
 		},
 		{

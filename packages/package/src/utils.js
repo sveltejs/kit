@@ -17,39 +17,54 @@ const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
 export function resolve_aliases(input, file, content, aliases) {
 	/**
 	 * @param {string} match
+	 * @param {string} quote
 	 * @param {string} import_path
 	 */
-	const replace_import_path = (match, import_path) => {
+	const replace_import_path = (match, quote, import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
-			if (!import_path.startsWith(alias)) continue;
+			if (
+				import_path !== alias &&
+				!import_path.startsWith(alias + (alias.endsWith('/') ? '' : '/'))
+			) {
+				continue;
+			}
 
 			const full_path = path.join(input, file);
 			const full_import_path = path.join(value, import_path.slice(alias.length));
 			let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 			resolved = resolved.startsWith('.') ? resolved : './' + resolved;
-			return match.replace(import_path, resolved);
+			return match.replace(quote + import_path + quote, quote + resolved + quote);
 		}
 		return match;
 	};
 
-	// import/export ... from ...
+	// import/export (type) (xxx | xxx,) { ... } from ...
 	content = content.replace(
-		/\b(import|export)\s+([\w*\s{},]*)\s+from\s+(['"])([^'";]+)\3/g,
-		(_, keyword, specifier, quote, import_path) =>
-			replace_import_path(
-				`${keyword} ${specifier} from ${quote}${import_path}${quote}`,
-				import_path
-			)
+		/\b(?:import|export)(?:\s+type)?(?:(?:\s+\p{L}[\p{L}0-9]*\s+)|(?:(?:\s+\p{L}[\p{L}0-9]*\s*,\s*)?\s*\{[^}]*\}\s*))from\s*(['"])([^'";]+)\1/gmu,
+		(match, quote, import_path) => replace_import_path(match, quote, import_path)
+	);
+
+	// import/export (type) * as xxx from ...
+	content = content.replace(
+		/\b(?:import|export)(?:\s+type)?\s*\*\s*as\s+\p{L}[\p{L}0-9]*\s+from\s*(['"])([^'";]+)\1/gmu,
+		(match, quote, import_path) => replace_import_path(match, quote, import_path)
+	);
+
+	// export (type) * from ...
+	content = content.replace(
+		/\b(?:export)(?:\s+type)?\s*\*\s*from\s*(['"])([^'";]+)\1/gmu,
+		(match, quote, import_path) => replace_import_path(match, quote, import_path)
 	);
 
 	// import(...)
-	content = content.replace(/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g, (_, quote, import_path) =>
-		replace_import_path(`import(${quote}${import_path}${quote})`, import_path)
+	content = content.replace(
+		/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g,
+		(match, quote, import_path) => replace_import_path(match, quote, import_path)
 	);
 
 	// import '...'
-	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (_, quote, import_path) =>
-		replace_import_path(`import ${quote}${import_path}${quote}`, import_path)
+	content = content.replace(/\bimport\s+(['"])([^'";]+)\1/g, (match, quote, import_path) =>
+		replace_import_path(match, quote, import_path)
 	);
 
 	return content;

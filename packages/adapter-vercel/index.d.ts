@@ -7,6 +7,7 @@ export interface ServerlessConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
 	 * @default Same as the build environment
+	 * @deprecated
 	 */
 	runtime?: `nodejs${number}.x`;
 	/**
@@ -74,6 +75,7 @@ type ImagesConfig = {
 	contentDispositionType?: string;
 };
 
+/** @deprecated */
 export interface EdgeConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).

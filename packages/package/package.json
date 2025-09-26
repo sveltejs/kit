@@ -1,10 +1,10 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.4.0",
+	"version": "2.5.4",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/package"
 	},
 	"keywords": [
@@ -28,13 +28,13 @@
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
-		"@types/semver": "^7.5.6",
+		"@types/node": "catalog:",
+		"@types/semver": "catalog:",
 		"prettier": "^3.1.1",
-		"svelte": "^5.35.5",
-		"svelte-preprocess": "^6.0.0",
+		"svelte": "catalog:",
+		"svelte-preprocess": "catalog:",
 		"typescript": "^5.3.3",
-		"uvu": "^0.5.6"
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1"
@@ -50,7 +50,7 @@
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "pnpm lint --write",
-		"test": "uvu test \"^index.js$\""
+		"test": "vitest run"
 	},
 	"exports": {
 		"./package.json": "./package.json"

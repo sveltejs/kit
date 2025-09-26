@@ -1,3 +1,4 @@
+/** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
@@ -5,7 +6,7 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -24,6 +25,7 @@ export default forked(import.meta.url, analyse);
  *   env: Record<string, string>;
  *   out: string;
  *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
+ *   remotes: RemoteChunk[];
  * }} opts
  */
 async function analyse({
@@ -34,7 +36,8 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config
+	output_config,
+	remotes
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -55,11 +58,10 @@ async function analyse({
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_private_env(env, { public_prefix, private_prefix });
-	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+	const private_env = filter_env(env, private_prefix, public_prefix);
+	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_safe_public_env(public_env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
@@ -82,7 +84,8 @@ async function analyse({
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
-		routes: new Map()
+		routes: new Map(),
+		remotes: new Map()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
@@ -164,6 +167,26 @@ async function analyse({
 		});
 	}
 
+	// analyse remotes
+	for (const remote of remotes) {
+		const loader = manifest._.remotes[remote.hash];
+		const { default: functions } = await loader();
+
+		const exports = new Map();
+
+		for (const name in functions) {
+			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
+			const type = info.type;
+
+			exports.set(name, {
+				type,
+				dynamic: type !== 'prerender' || info.dynamic
+			});
+		}
+
+		metadata.remotes.set(remote.hash, exports);
+	}
+
 	return { metadata, static_exports };
 }
 
@@ -232,8 +255,12 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		manifest_data.routes.find((r) => r.id === route.id)
 	);
 
+	const visited = new Set();
 	/** @param {string} id */
 	function visit(id) {
+		if (visited.has(id)) return;
+		visited.add(id);
+
 		const chunk = server_manifest[id];
 		if (!chunk) return;
 

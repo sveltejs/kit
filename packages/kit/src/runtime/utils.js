@@ -1,37 +1,9 @@
-/**
- * @param {string} text
- * @returns {ArrayBufferLike}
- */
-export function b64_decode(text) {
-	const d = atob(text);
+/** @import { RemoteFormIssue } from '@sveltejs/kit' */
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+import { BROWSER } from 'esm-env';
 
-	const u8 = new Uint8Array(d.length);
-
-	for (let i = 0; i < d.length; i++) {
-		u8[i] = d.charCodeAt(i);
-	}
-
-	return u8.buffer;
-}
-
-/**
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-export function b64_encode(buffer) {
-	if (globalThis.Buffer) {
-		return Buffer.from(buffer).toString('base64');
-	}
-
-	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
-
-	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
-	return btoa(
-		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
-			new Uint16Array(new Uint8Array(buffer))
-		)
-	);
-}
+export const text_encoder = new TextEncoder();
+export const text_decoder = new TextDecoder();
 
 /**
  * Like node's path.relative, but without using node
@@ -53,3 +25,164 @@ export function get_relative_path(from, to) {
 
 	return from_parts.concat(to_parts).join('/');
 }
+
+/**
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+export function base64_encode(bytes) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		return globalThis.Buffer.from(bytes).toString('base64');
+	}
+
+	let binary = '';
+
+	for (let i = 0; i < bytes.length; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+
+	return btoa(binary);
+}
+
+/**
+ * @param {string} encoded
+ * @returns {Uint8Array}
+ */
+export function base64_decode(encoded) {
+	// Using `Buffer` is faster than iterating
+	if (!BROWSER && globalThis.Buffer) {
+		const buffer = globalThis.Buffer.from(encoded, 'base64');
+		return new Uint8Array(buffer);
+	}
+
+	const binary = atob(encoded);
+	const bytes = new Uint8Array(binary.length);
+
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+
+	return bytes;
+}
+
+/**
+ * Convert `FormData` into a POJO
+ * @param {FormData} data
+ */
+export function convert_formdata(data) {
+	/** @type {Record<string, any>} */
+	const result = Object.create(null); // guard against prototype pollution
+
+	for (let key of data.keys()) {
+		const is_array = key.endsWith('[]');
+		let values = data.getAll(key);
+
+		if (is_array) key = key.slice(0, -2);
+
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
+		}
+
+		// an empty `<input type="file">` will submit a non-existent file, bizarrely
+		values = values.filter(
+			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
+		);
+
+		deep_set(result, split_path(key), is_array ? values : values[0]);
+	}
+
+	return result;
+}
+
+const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
+
+/**
+ * @param {string} path
+ */
+export function split_path(path) {
+	if (!path_regex.test(path)) {
+		throw new Error(`Invalid path ${path}`);
+	}
+
+	return path.split(/\.|\[|\]/).filter(Boolean);
+}
+
+/**
+ * @param {Record<string, any>} object
+ * @param {string[]} keys
+ * @param {any} value
+ */
+export function deep_set(object, keys, value) {
+	for (let i = 0; i < keys.length - 1; i += 1) {
+		const key = keys[i];
+		const is_array = /^\d+$/.test(keys[i + 1]);
+
+		if (object[key]) {
+			if (is_array !== Array.isArray(object[key])) {
+				throw new Error(`Invalid array key ${keys[i + 1]}`);
+			}
+		} else {
+			object[key] ??= is_array ? [] : Object.create(null); // guard against prototype pollution
+		}
+		object = object[key];
+	}
+
+	object[keys[keys.length - 1]] = value;
+}
+
+/**
+ * @param {readonly StandardSchemaV1.Issue[]} issues
+ */
+export function flatten_issues(issues) {
+	/** @type {Record<string, RemoteFormIssue[]>} */
+	const result = {};
+
+	for (const issue of issues) {
+		/** @type {RemoteFormIssue} */
+		const normalized = { name: '', path: [], message: issue.message };
+
+		(result.$ ??= []).push(normalized);
+
+		let name = '';
+
+		if (issue.path !== undefined) {
+			for (const segment of issue.path) {
+				const key = /** @type {string | number} */ (
+					typeof segment === 'object' ? segment.key : segment
+				);
+
+				normalized.path.push(key);
+
+				if (typeof key === 'number') {
+					name += `[${key}]`;
+				} else if (typeof key === 'string') {
+					name += name === '' ? key : '.' + key;
+				}
+
+				(result[name] ??= []).push(normalized);
+			}
+
+			normalized.name = name;
+		}
+	}
+
+	return result;
+}
+
+/**
+ * We need to encode `File` objects when returning `issues` from a `form` submission,
+ * because some validators include the original value in the issue. It doesn't
+ * need to deserialize to a `File` object
+ * @type {import('@sveltejs/kit').Transporter}
+ */
+export const file_transport = {
+	encode: (file) =>
+		file instanceof File && {
+			size: file.size,
+			type: file.type,
+			name: file.name,
+			lastModified: file.lastModified
+		},
+	decode: (data) => data
+};

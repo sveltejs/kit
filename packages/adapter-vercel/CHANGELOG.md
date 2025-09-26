@@ -1,5 +1,80 @@
 # @sveltejs/adapter-vercel
 
+## 5.10.2
+### Patch Changes
+
+
+- fix: ensure `read` works in an edge function that has deployment protection. Protection bypass automation must be enabled ([#14147](https://github.com/sveltejs/kit/pull/14147))
+
+- Updated dependencies [[`c8f7ac3`](https://github.com/sveltejs/kit/commit/c8f7ac38e9ae1763e7880a29b7f7df01df964a6d), [`107f767`](https://github.com/sveltejs/kit/commit/107f767e3a1a54187527defb29dce753c4f5fa3f)]:
+  - @sveltejs/kit@2.33.1
+
+## 5.10.1
+### Patch Changes
+
+
+- chore: deprecate `runtime` config ([#14253](https://github.com/sveltejs/kit/pull/14253))
+
+## 5.10.0
+### Minor Changes
+
+
+- feat: use web standard `fetch` export ([#14251](https://github.com/sveltejs/kit/pull/14251))
+
+
+### Patch Changes
+
+- Updated dependencies [[`1d04a77`](https://github.com/sveltejs/kit/commit/1d04a7786725d2d8c412268c36722e55f841fdfe), [`5db4cd4`](https://github.com/sveltejs/kit/commit/5db4cd46489d72471a99a8677a9faf32324b9d7e)]:
+  - @sveltejs/kit@2.32.0
+
+## 5.9.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.9.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 5.8.2
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.8.1
+### Patch Changes
+
+
+- chore(deps): update dependency @vercel/nft to ^0.30.0 ([#14033](https://github.com/sveltejs/kit/pull/14033))
+
+## 5.8.0
+### Minor Changes
+
+
+- feat: add support for `read` imported from `$app/server` in edge functions ([#13859](https://github.com/sveltejs/kit/pull/13859))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e5ce8bb`](https://github.com/sveltejs/kit/commit/e5ce8bb42ea020b88bd0a4ff18dc600745657541), [`cf88369`](https://github.com/sveltejs/kit/commit/cf883692fa0e163cff6b1a2f9b17a568af14124d)]:
+  - @sveltejs/kit@2.25.0
+
 ## 5.7.2
 ### Patch Changes
 

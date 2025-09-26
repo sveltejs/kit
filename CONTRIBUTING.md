@@ -4,13 +4,13 @@
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
 
-```bash
+```sh
 npm i -g pnpm
 ```
 
 `pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and install the dependencies with:
 
-```bash
+```sh
 git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
@@ -51,7 +51,6 @@ npm add https://pkg.pr.new/sveltejs/kit/@sveltejs/kit@YOUR_PR_NUMBER_GOES_HERE
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) - code that's run when you create a new project with `npx sv create`
 - [`packages/package`](https://github.com/sveltejs/kit/tree/main/packages/package) - for the `svelte-package` command
 - [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core) - code that's called at dev/build-time
 - [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
@@ -124,7 +123,7 @@ There are a few guidelines we follow:
 
 To use the git hooks in the repo, which will save you from waiting for CI to tell you that you forgot to lint, run this:
 
-```bash
+```sh
 git config core.hookspath .githooks
 ```
 
@@ -142,6 +141,6 @@ The [Changesets GitHub action](https://github.com/changesets/action#with-publish
 
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
-```bash
+```sh
 npm publish --access=public
 ```

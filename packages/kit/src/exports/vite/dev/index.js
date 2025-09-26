@@ -29,9 +29,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -266,6 +267,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					};
 				}),
 				prerendered_routes: new Set(),
+				get remotes() {
+					return Object.fromEntries(
+						get_remotes().map((remote) => [
+							remote.hash,
+							() => vite.ssrLoadModule(remote.file).then((module) => ({ default: module }))
+						])
+					);
+				},
 				routes: compact(
 					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
@@ -331,6 +340,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
@@ -494,6 +504,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+
+				if (resolved_instrumentation) {
+					await vite.ssrLoadModule(resolved_instrumentation);
+				}
+
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
@@ -504,7 +522,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
 				set_assets(assets);
 
 				const server = new Server(manifest);

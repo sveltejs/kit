@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "5.0.2",
+	"version": "5.2.3",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -12,7 +12,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
@@ -32,12 +32,14 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
-		"test": "vitest run",
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
@@ -46,14 +48,15 @@
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
-		"@netlify/functions": "^4.0.0",
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@netlify/edge-functions": "catalog:",
+		"@netlify/functions": "catalog:",
+		"@rollup/plugin-commonjs": "catalog:",
+		"@rollup/plugin-json": "catalog:",
+		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
-		"@types/set-cookie-parser": "^2.4.7",
+		"@types/node": "catalog:",
+		"@types/set-cookie-parser": "catalog:",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"

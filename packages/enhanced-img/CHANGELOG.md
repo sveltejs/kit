@@ -1,5 +1,29 @@
 # @sveltejs/enhanced-img
 
+## 0.8.2
+### Patch Changes
+
+
+- chore: upgrade sharp to 0.34.4 ([#14478](https://github.com/sveltejs/kit/pull/14478))
+
+## 0.8.1
+### Patch Changes
+
+
+- fix(perf): correctly apply id filter from vite-plugin-svelte ([#14248](https://github.com/sveltejs/kit/pull/14248))
+
+## 0.8.0
+### Minor Changes
+
+
+- breaking: upgrade to vite-imagetools 8 to auto-rotate images ([#14172](https://github.com/sveltejs/kit/pull/14172))
+
+## 0.7.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
 ## 0.7.0
 ### Minor Changes
 
