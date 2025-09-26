@@ -145,22 +145,27 @@ export function form(validate_or_fn, maybe_fn) {
 
 				if (validated?.issues !== undefined) {
 					output.issues = flatten_issues(validated.issues);
-					output.input = {};
 
-					for (let key of form_data.keys()) {
-						// redact sensitive fields
-						if (/^[.\]]?_/.test(key)) continue;
+					// if it was a progressively-enhanced submission, we don't need
+					// to return the input — it's already there
+					if (!event.isRemoteRequest) {
+						output.input = {};
 
-						const is_array = key.endsWith('[]');
-						const values = form_data.getAll(key).filter((value) => typeof value === 'string');
+						for (let key of form_data.keys()) {
+							// redact sensitive fields
+							if (/^[.\]]?_/.test(key)) continue;
 
-						if (is_array) key = key.slice(0, -2);
+							const is_array = key.endsWith('[]');
+							const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 
-						output.input = set_nested_value(
-							/** @type {Record<string, any>} */ (output.input),
-							key,
-							is_array ? values : values[0]
-						);
+							if (is_array) key = key.slice(0, -2);
+
+							output.input = set_nested_value(
+								/** @type {Record<string, any>} */ (output.input),
+								key,
+								is_array ? values : values[0]
+							);
+						}
 					}
 				} else {
 					if (validated !== undefined) {

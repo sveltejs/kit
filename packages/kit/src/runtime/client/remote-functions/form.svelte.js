@@ -157,11 +157,7 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({
-							input = {},
-							issues = {},
-							result
-						} = devalue.parse(form_result.result, {
+						({ issues = {}, result } = devalue.parse(form_result.result, {
 							...app.decoders,
 							File: file_transport.decode
 						}));
