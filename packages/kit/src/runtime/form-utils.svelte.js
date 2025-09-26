@@ -188,17 +188,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			const key = build_path_string(path);
 
-			// Handle methods that can also be property access
-			if (prop === 'name') {
-				const name_func = (/** @type {string} */ asArray) => {
-					if (asArray === 'asArray') {
-						return key + '[]';
-					}
-					return key;
-				};
-				return create_field_proxy(name_func, get_input, set_input, get_issues, [...path, 'name']);
-			}
-
 			if (prop === 'value') {
 				const value_func = function (/** @type {any} */ newValue) {
 					if (arguments.length === 0) {

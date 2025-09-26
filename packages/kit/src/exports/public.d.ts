@@ -1841,7 +1841,7 @@ type InputTypeMap = {
 
 // Array variants of input types
 type InputTypeArrayMap = {
-	[K in keyof InputTypeMap as `${K}[]`]: InputTypeMap[K][];
+	[K in keyof InputTypeMap as `${K}[]`]: Array<InputTypeMap[K]>;
 };
 
 // Combined input type map
@@ -1877,15 +1877,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-type FormField<ValueType, Array extends boolean> = {
-	/**
-	 * This method exists to allow you to typecheck `name` attributes. It returns its argument
-	 * @example
-	 * ```svelte
-	 * <input name={login.fields.username.name()} />
-	 * ```
-	 **/
-	name(...args: Array extends true ? ['asArray'] : []): string;
+type FormField<ValueType> = {
 	/** The values that will be submitted */
 	value(input?: ValueType): ValueType;
 	/** Validation issues, if any */
@@ -1912,13 +1904,13 @@ type FormFields<T> =
 	WillRecurseIndefinitely<T> extends true
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
-			? FormField<T, false>
+			? FormField<T>
 			: T extends Array<infer U>
-				? FormField<T, true> & { [K in number]: FormFields<U> }
-				: FormField<T, false> & { [K in keyof T]-?: FormFields<T[K]> };
+				? FormField<T> & { [K in number]: FormFields<U> }
+				: FormField<T> & { [K in keyof T]-?: FormFields<T[K]> };
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = FormField<any, boolean> & { [key: string]: RecursiveFormFields };
+type RecursiveFormFields = FormField<any> & { [key: string]: RecursiveFormFields };
 
 export interface RemoteFormInput {
 	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
@@ -1979,10 +1971,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** Access form fields using object notation */
 	fields: Input extends void
 		? never
-		: { [K in keyof Input]-?: FormFields<Input[K]> } & Pick<
-				FormField<Input, false>,
-				'value' | 'issues'
-			>;
+		: { [K in keyof Input]-?: FormFields<Input[K]> } & Pick<FormField<Input>, 'value' | 'issues'>;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
