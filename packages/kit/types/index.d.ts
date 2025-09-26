@@ -1926,8 +1926,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface RemoteFormIssue {
-		name: string;
-		path: Array<string | number>;
 		message: string;
 	}
 

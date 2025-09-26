@@ -1950,8 +1950,6 @@ export interface RemoteFormInput {
 }
 
 export interface RemoteFormIssue {
-	name: string;
-	path: Array<string | number>;
 	message: string;
 }
 

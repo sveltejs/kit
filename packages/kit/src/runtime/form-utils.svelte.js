@@ -216,10 +216,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					const all_issues = get_issues()[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
-						return all_issues;
+						return all_issues?.map((issue) => ({
+							message: issue.message
+						}));
 					}
 
-					return all_issues?.filter((issue) => issue.name === key);
+					return all_issues
+						?.filter((issue) => issue.name === key)
+						?.map((issue) => ({
+							message: issue.message
+						}));
 				};
 
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
