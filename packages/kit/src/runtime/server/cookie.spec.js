@@ -280,3 +280,43 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		expect(duplicate?.value).toEqual('foobar_value');
 	});
 });
+
+test('no default values when setSerialized is called', () => {
+	const { cookies, new_cookies } = cookies_setup();
+	const cookie_string = 'a=b; Path=/;';
+	cookies.setSerialized(cookie_string);
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.secure, false);
+	assert.equal(opts?.httpOnly, false);
+	assert.equal(opts?.sameSite, undefined);
+});
+
+test('set all parameters when setSerialized is called', () => {
+	const { cookies, new_cookies } = cookies_setup();
+	const cookie_string =
+		'a=b; Path=/; Max-Age=3600; Expires=Thu, 03 Apr 2025 00:41:07 GMT; Secure; HttpOnly; SameSite=Strict; domain=example.com';
+	cookies.setSerialized(cookie_string);
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.sameSite, 'strict');
+	assert.equal(opts?.domain, 'example.com');
+	assert.equal(opts?.maxAge, 3600);
+	assert.isNotNull(opts.expires);
+});
+
+test('throw error when setSerialized is called with empty string', () => {
+	const { cookies } = cookies_setup();
+	assert.throws(() => cookies.setSerialized(''), 'Cannot pass empty string');
+});
+
+test('throw error when setSerialized is called without name, value and path', () => {
+	const { cookies } = cookies_setup();
+	const cookie_string = 'Max-Age=3600; Expires=Thu, 03 Apr 2025 00:41:07 GMT; Secure; HttpOnly;';
+	assert.throws(
+		() => cookies.setSerialized(cookie_string),
+		'The name, value and path must be provided to create a cookie.'
+	);
+});
