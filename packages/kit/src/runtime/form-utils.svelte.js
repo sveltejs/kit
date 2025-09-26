@@ -200,7 +200,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						return newValue;
 					}
 				};
-				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, 'value']);
+				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -218,14 +218,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			}
 
 			if (prop === 'as') {
-				const as_func = (/** @type {string} */ inputType) => {
-					const isArray = inputType.endsWith('[]');
-					const baseType = isArray ? inputType.slice(0, -2) : inputType;
+				const as_func = (/** @type {string} */ input_type) => {
+					const is_array = input_type.endsWith('[]');
+					const base_type = is_array ? input_type.slice(0, -2) : input_type;
 
 					// Base properties for all input types
-					const baseProps = {
-						type: baseType,
-						name: key + (isArray ? '[]' : ''),
+					const base_props = {
+						type: base_type,
+						name: key + (is_array ? '[]' : ''),
 						get 'aria-invalid'() {
 							const issues = get_issues();
 							return key in issues ? 'true' : undefined;
@@ -233,14 +233,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					};
 
 					// Handle checkbox inputs
-					if (baseType === 'checkbox' || baseType === 'radio') {
+					if (base_type === 'checkbox' || base_type === 'radio') {
 						// TODO correct for radio?
-						return Object.defineProperties(baseProps, {
+						return Object.defineProperties(base_props, {
 							checked: {
 								get() {
 									const input = get_input();
-									const currentValue = deep_get(input, path);
-									return Boolean(currentValue);
+									const value = deep_get(input, path);
+									return Boolean(value);
 								},
 								set(value) {
 									set_input(path, Boolean(value));
@@ -250,80 +250,83 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle file inputs
-					if (baseType === 'file') {
-						return Object.defineProperties(baseProps, {
+					if (base_type === 'file') {
+						return Object.defineProperties(base_props, {
 							files: {
 								get() {
 									const input = get_input();
-									const currentValue = deep_get(input, path);
+									const value = deep_get(input, path);
+
 									// Convert File/File[] to FileList-like object
-									if (currentValue instanceof File) {
+									if (value instanceof File) {
 										// In browsers, we can create a proper FileList using DataTransfer
 										if (typeof DataTransfer !== 'undefined') {
 											const fileList = new DataTransfer();
-											fileList.items.add(currentValue);
+											fileList.items.add(value);
 											return fileList.files;
 										}
 										// Fallback for environments without DataTransfer
-										return { 0: currentValue, length: 1 };
+										return { 0: value, length: 1 };
 									}
-									if (Array.isArray(currentValue) && currentValue.every((f) => f instanceof File)) {
+
+									if (Array.isArray(value) && value.every((f) => f instanceof File)) {
 										if (typeof DataTransfer !== 'undefined') {
 											const fileList = new DataTransfer();
-											currentValue.forEach((file) => fileList.items.add(file));
+											value.forEach((file) => fileList.items.add(file));
 											return fileList.files;
 										}
 										// Fallback for environments without DataTransfer
 										/** @type {any} */
-										const fileListLike = { length: currentValue.length };
-										currentValue.forEach((file, index) => {
+										const fileListLike = { length: value.length };
+										value.forEach((file, index) => {
 											fileListLike[index] = file;
 										});
 										return fileListLike;
 									}
+
 									return null;
 								},
-								set(fileList) {
-									if (!fileList) {
-										set_input(path, isArray ? [] : null);
+								set(filelist) {
+									if (!filelist) {
+										set_input(path, is_array ? [] : null);
 										return;
 									}
-									const files = Array.from(fileList);
-									set_input(path, isArray ? files : files[0] || null);
+									const files = Array.from(filelist);
+									set_input(path, is_array ? files : files[0] || null);
 								}
 							}
 						});
 					}
 
 					// Handle all other input types (text, number, etc.)
-					return Object.defineProperties(baseProps, {
+					return Object.defineProperties(base_props, {
 						value: {
 							enumerable: true,
 							get() {
 								const input = get_input();
-								const currentValue = deep_get(input, path);
-								if (isArray && Array.isArray(currentValue)) {
-									return currentValue.join(',');
+								const value = deep_get(input, path);
+								if (is_array && Array.isArray(value)) {
+									return value.join(',');
 								}
-								return currentValue != null ? String(currentValue) : '';
+								return value != null ? String(value) : '';
 							},
-							set(newValue) {
-								if (isArray) {
+							set(value) {
+								if (is_array) {
 									// For array inputs, split comma-separated values
-									const values = String(newValue)
+									const values = String(value)
 										.split(',')
 										.map((v) => v.trim())
 										.filter(Boolean);
-									if (baseType === 'number') {
+									if (base_type === 'number') {
 										set_input(path, values.map(Number));
 									} else {
 										set_input(path, values);
 									}
 								} else {
-									if (baseType === 'number') {
-										set_input(path, Number(newValue));
+									if (base_type === 'number') {
+										set_input(path, Number(value));
 									} else {
-										set_input(path, String(newValue));
+										set_input(path, String(value));
 									}
 								}
 							}
