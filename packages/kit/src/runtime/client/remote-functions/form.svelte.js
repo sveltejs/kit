@@ -323,7 +323,11 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input = set_nested_value(input, name, element.value);
+						input = set_nested_value(
+							input,
+							name,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						);
 					}
 				});
 
