@@ -1874,7 +1874,8 @@ declare module '@sveltejs/kit' {
 						inputType: T
 					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
 				}
-			: NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
+			: // TODO we can almost certainly DRY this out
+				NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
 				? {
 						/** The values that will be submitted */
 						value(input?: ValueType): ValueType;
@@ -1918,8 +1919,10 @@ declare module '@sveltejs/kit' {
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
 	type RecursiveFormFields = FormField<any> & { [key: string]: RecursiveFormFields };
 
+	type MaybeArray<T> = T | T[];
+
 	export interface RemoteFormInput {
-		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput>;
 	}
 
 	export interface RemoteFormIssue {

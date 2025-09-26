@@ -1943,8 +1943,10 @@ type FormFields<T> =
 // By breaking this out into its own type, we avoid the TS recursion depth limit
 type RecursiveFormFields = FormField<any> & { [key: string]: RecursiveFormFields };
 
+type MaybeArray<T> = T | T[];
+
 export interface RemoteFormInput {
-	[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
+	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput>;
 }
 
 export interface RemoteFormIssue {
