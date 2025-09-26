@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.43.6
+### Patch Changes
+
+
+- fix: keep resolve relative to initial base during prerender ([#14533](https://github.com/sveltejs/kit/pull/14533))
+
 ## 2.43.5
 ### Patch Changes
 
