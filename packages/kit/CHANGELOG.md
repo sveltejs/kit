@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.43.5
+### Patch Changes
+
+
+- fix: fall back to non-relative resolution when calling `resolve(...)` outside an event context ([#14532](https://github.com/sveltejs/kit/pull/14532))
+
 ## 2.43.4
 ### Patch Changes
 
