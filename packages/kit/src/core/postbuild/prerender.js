@@ -15,6 +15,7 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
+import { filter_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -124,12 +125,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const log = logger({ verbose });
 
 	installPolyfills();
-
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();
@@ -489,6 +484,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	// the user's remote function modules may reference environment variables at
+	// the top-level so we need to set `env` before evaluating those modules
+	// to avoid potential runtime errors
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	const private_env = filter_env(env, private_prefix, public_prefix);
+	const public_env = filter_env(env, public_prefix, private_prefix);
+	internal.set_private_env(private_env);
+	internal.set_public_env(public_env);
+
 	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
 	const prerender_functions = [];
 
@@ -506,6 +510,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	if (!should_prerender) {
 		return { prerendered, prerender_map };
 	}
+
+	// only run the server after the `should_prerender` check so that we
+	// don't run the user's init hook unnecessarily
+	const server = new Server(manifest);
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
 
 	log.info('Prerendering');
 

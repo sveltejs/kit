@@ -1786,20 +1786,17 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
-	// If T is unknown or RemoteFormInput, the types below will recurse indefinitely and create giant unions that TS can't handle
-	type WillRecurseIndefinitely<T> = unknown extends T
-		? true
-		: RemoteFormInput extends T
-			? true
-			: false;
+	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
+	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
 	// Helper type to convert union to intersection
 	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
 		? I
 		: never;
 
-	type FlattenInput<T, Prefix extends string> =
-		WillRecurseIndefinitely<T> extends true
+	type FlattenInput<T, Prefix extends string> = T extends string | number | boolean | null | undefined
+		? { [P in Prefix]: string }
+		: WillRecurseIndefinitely<T> extends true
 			? { [key: string]: string }
 			: T extends Array<infer U>
 				? U extends string | File
@@ -1807,17 +1804,22 @@ declare module '@sveltejs/kit' {
 					: FlattenInput<U, `${Prefix}[${number}]`>
 				: T extends File
 					? { [P in Prefix]: string }
-					: T extends object
-						? {
-								[K in keyof T]: FlattenInput<
-									T[K],
-									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-								>;
-							}[keyof T]
-						: { [P in Prefix]: string };
+					: {
+							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+							[K in keyof Required<T>]: FlattenInput<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T];
 
-	type FlattenIssues<T, Prefix extends string> =
-		WillRecurseIndefinitely<T> extends true
+	type FlattenIssues<T, Prefix extends string> = T extends
+		| string
+		| number
+		| boolean
+		| null
+		| undefined
+		? { [P in Prefix]: RemoteFormIssue[] }
+		: WillRecurseIndefinitely<T> extends true
 			? { [key: string]: RemoteFormIssue[] }
 			: T extends Array<infer U>
 				? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
@@ -1826,17 +1828,17 @@ declare module '@sveltejs/kit' {
 					>
 				: T extends File
 					? { [P in Prefix]: RemoteFormIssue[] }
-					: T extends object
-						? {
-								[K in keyof T]: FlattenIssues<
-									T[K],
-									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-								>;
-							}[keyof T]
-						: { [P in Prefix]: RemoteFormIssue[] };
+					: {
+							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+							[K in keyof Required<T>]: FlattenIssues<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T];
 
-	type FlattenKeys<T, Prefix extends string> =
-		WillRecurseIndefinitely<T> extends true
+	type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
+		? { [P in Prefix]: string }
+		: WillRecurseIndefinitely<T> extends true
 			? { [key: string]: string }
 			: T extends Array<infer U>
 				? U extends string | File
@@ -1844,14 +1846,13 @@ declare module '@sveltejs/kit' {
 					: FlattenKeys<U, `${Prefix}[${number}]`>
 				: T extends File
 					? { [P in Prefix]: string }
-					: T extends object
-						? {
-								[K in keyof T]: FlattenKeys<
-									T[K],
-									Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-								>;
-							}[keyof T]
-						: { [P in Prefix]: string };
+					: {
+							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
+							[K in keyof Required<T>]: FlattenKeys<
+								T[K],
+								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
+							>;
+						}[keyof T];
 
 	export interface RemoteFormInput {
 		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
@@ -1912,7 +1913,11 @@ declare module '@sveltejs/kit' {
 		/** Preflight checks */
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
-		validate(options?: { includeUntouched?: boolean }): Promise<void>;
+		validate(options?: {
+			includeUntouched?: boolean;
+			/** Perform validation as if the form was submitted by the given button. */
+			submitter?: HTMLButtonElement | HTMLInputElement;
+		}): Promise<void>;
 		/** The result of the form submission */
 		get result(): Output | undefined;
 		/** The number of pending submissions */
@@ -2929,7 +2934,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { Asset, RouteId, RouteParams, Pathname, ResolvedPathname } from '$app/types';
+	import type { RouteId, Pathname, ResolvedPathname, RouteParams, Asset } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -2948,12 +2953,34 @@ declare module '$app/paths' {
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
+	/**
+	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
+	 */
+	export function resolveRoute<T extends RouteId | Pathname>(
+		...args: ResolveArgs<T>
+	): ResolvedPathname;
 	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
 		? RouteParams<T> extends Record<string, never>
 			? [route: T]
 			: [route: T, params: RouteParams<T>]
 		: [route: T];
-
+	/**
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { asset } from '$app/paths';
+	 * </script>
+	 *
+	 * <img alt="a potato" src={asset('/potato.jpg')} />
+	 * ```
+	 * @since 2.26
+	 *
+	 * */
+	export function asset(file: Asset): string;
 	/**
 	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
 	 *
@@ -2972,32 +2999,9 @@ declare module '$app/paths' {
 	 * });
 	 * ```
 	 * @since 2.26
-	 */
+	 *
+	 * */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
-
-	/**
-	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
-	 *
-	 * During server rendering, the base path is relative and depends on the page currently being rendered.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { asset } from '$app/paths';
-	 * </script>
-	 *
-	 * <img alt="a potato" src={asset('/potato.jpg')} />
-	 * ```
-	 * @since 2.26
-	 */
-	export function asset(file: Asset): string;
-
-	/**
-	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
-	 */
-	export function resolveRoute<T extends RouteId | Pathname>(
-		...args: ResolveArgs<T>
-	): ResolvedPathname;
 
 	export {};
 }

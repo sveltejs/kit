@@ -1633,6 +1633,15 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
+	test('non-exported queries do not clobber each other', async ({ page, javaScriptEnabled }) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/query-non-exported');
+
+		await expect(page.locator('h1')).toHaveText('3');
+	});
+
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 
@@ -1658,6 +1667,14 @@ test.describe('remote functions', () => {
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
 		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+	});
+
+	test('form submitters work', async ({ page }) => {
+		await page.goto('/remote/form/submitter');
+
+		await page.locator('button').click();
+
+		await expect(page.locator('#result')).toHaveText('hello');
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
@@ -1820,6 +1837,11 @@ test.describe('remote functions', () => {
 
 		await bar.fill('d');
 		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+
+		await page.locator('#trigger-validate').click();
+		await expect(page.locator('form')).toContainText(
+			'Invalid type: Expected "submitter" but received "incorrect_value"'
+		);
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {

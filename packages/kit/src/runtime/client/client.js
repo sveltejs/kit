@@ -26,7 +26,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base } from '$app/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -189,7 +189,10 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-/** @type {Record<string, any>} */
+/**
+ * Data that was serialized during SSR. This is cleared when the user first navigates
+ * @type {Record<string, any>}
+ */
 export let remote_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
@@ -240,7 +243,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-export let started = false;
+let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -291,8 +294,8 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
-		remote_responses = __SVELTEKIT_PAYLOAD__?.data;
+	if (__SVELTEKIT_PAYLOAD__?.data) {
+		remote_responses = __SVELTEKIT_PAYLOAD__.data;
 	}
 
 	// detect basic auth credentials in the current URL
@@ -1488,6 +1491,8 @@ async function navigate({
 	block = noop,
 	event
 }) {
+	remote_responses = {};
+
 	const prev_token = token;
 	token = nav_token;
 
@@ -2096,6 +2101,8 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
 
+	remote_responses = {};
+
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
 }
@@ -2536,12 +2543,7 @@ function _start_router() {
 		event.preventDefault();
 		event.stopPropagation();
 
-		const data = new FormData(event_form);
-
-		const submitter_name = submitter?.getAttribute('name');
-		if (submitter_name) {
-			data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-		}
+		const data = new FormData(event_form, submitter);
 
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();

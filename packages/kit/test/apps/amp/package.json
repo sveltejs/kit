@@ -16,9 +16,9 @@
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"dropcss": "^1.0.16",
-		"svelte": "^5.38.5",
-		"svelte-check": "^4.1.1",
+		"dropcss": "catalog:",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
 	},

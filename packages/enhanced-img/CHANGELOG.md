@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.8.2
+### Patch Changes
+
+
+- chore: upgrade sharp to 0.34.4 ([#14478](https://github.com/sveltejs/kit/pull/14478))
+
 ## 0.8.1
 ### Patch Changes
 

@@ -4,7 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
-import { create_validator, get_response, run_remote_function } from './shared.js';
+import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -73,7 +73,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, state, () =>
+		const promise = get_response(__, arg, state, () =>
 			run_remote_function(event, state, false, arg, validate, fn)
 		);
 
@@ -90,8 +90,12 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = (state.remote_data ??= {})[cache_key] = Promise.resolve(value);
+			const cache = get_cache(__, state);
+			const key = stringify_remote_arg(arg, state.transport);
+
+			if (__.id) {
+				refreshes[__.id + '/' + key] = cache[key] = Promise.resolve(value);
+			}
 		};
 
 		promise.refresh = () => {
@@ -198,7 +202,7 @@ function batch(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__.id, arg, state, () => {
+		const promise = get_response(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {

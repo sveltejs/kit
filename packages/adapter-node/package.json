@@ -42,11 +42,11 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "^1.0.0-next.28",
+		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"polka": "^1.0.0-next.28",
+		"polka": "catalog:",
 		"sirv": "^3.0.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
