@@ -5,6 +5,10 @@ export const relative = __SVELTEKIT_PATHS_RELATIVE__;
 
 const initial = { base, assets };
 
+/**
+ * `base` could be overridden during rendering to be relative;
+ * this one's the original non-relative base path
+ */
 export const initial_base = initial.base;
 
 /**
