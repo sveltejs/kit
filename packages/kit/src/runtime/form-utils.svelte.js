@@ -9,6 +9,14 @@
  */
 
 export function set_nested_value(object, path_string, value) {
+	if (path_string.startsWith('n:')) {
+		path_string = path_string.slice(2);
+		value = parseFloat(value);
+	} else if (path_string.startsWith('b:')) {
+		path_string = path_string.slice(2);
+		value = value === 'on';
+	}
+
 	return deep_set(object, split_path(path_string), value);
 }
 
@@ -222,10 +230,17 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					const is_array = input_type.endsWith('[]');
 					const base_type = is_array ? input_type.slice(0, -2) : input_type;
 
+					const prefix =
+						base_type === 'number' || base_type === 'range'
+							? 'n:'
+							: input_type === 'checkbox'
+								? 'b:'
+								: '';
+
 					// Base properties for all input types
 					const base_props = {
 						type: base_type,
-						name: key + (is_array ? '[]' : ''),
+						name: prefix + key + (is_array ? '[]' : ''),
 						get 'aria-invalid'() {
 							const issues = get_issues();
 							return key in issues ? 'true' : undefined;
