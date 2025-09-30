@@ -660,7 +660,13 @@ async function kit({ svelte_config }) {
 		},
 
 		async transform(code, id, opts) {
-			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+			// On the client the id may have a query string appended, e.g. ?v=1234
+			// so we need to remove it before checking the extension
+			const normalized_id = id.split('?')[0];
+
+			if (
+				!svelte_config.kit.moduleExtensions.some((ext) => normalized_id.endsWith(`.remote${ext}`))
+			) {
 				return;
 			}
 
