@@ -1718,8 +1718,6 @@ async function navigate({
 				x: pageXOffset + left,
 				y: pageYOffset + top
 			};
-
-			console.log(scroll);
 		} else {
 			scrollTo(0, 0);
 		}
