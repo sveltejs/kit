@@ -638,21 +638,30 @@ async function kit({ svelte_config }) {
 				// by repeatedly checking the module graph until no new modules appear
 				const seen = new Set();
 				let modulesToWait = [];
+
 				do {
 					modulesToWait = [];
 					for (const id of this.getModuleIds()) {
 						if (seen.has(id)) continue;
 						seen.add(id);
+
 						if (id.startsWith('\0')) continue;
 						const info = this.getModuleInfo(id);
+
 						if (info?.isExternal) continue;
 						modulesToWait.push(this.load({ id }).catch(() => {}));
 					}
+
+					let timeout;
 					// generous timeout in case some other plugin's load hook does the same thing
 					await Promise.race([
-						new Promise((r) => setTimeout(r, 30_000)),
+						new Promise((r) => {
+							timeout = setTimeout(r, 30_000);
+						}),
 						Promise.all(modulesToWait)
 					]);
+					// not clearing the timeout means Node waits for it to resolve, prolonging the build needlessly
+					clearTimeout(timeout);
 				} while (modulesToWait.length > 0);
 
 				return `export const map = {${remotes.map((r) => `'${r.hash}': () => import('${pathToFileURL(r.file).href}')`).join(',')}};`;
