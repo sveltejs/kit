@@ -60,8 +60,16 @@ describe('split_path', () => {
 			output: ['foo']
 		},
 		{
+			input: 'foo-bar',
+			output: ['foo-bar']
+		},
+		{
 			input: 'foo.bar.baz',
 			output: ['foo', 'bar', 'baz']
+		},
+		{
+			input: 'foo-bar.bar-baz.foo-baz',
+			output: ['foo-bar', 'bar-baz', 'foo-baz']
 		},
 		{
 			input: 'foo[0][1][2]',
@@ -69,7 +77,7 @@ describe('split_path', () => {
 		}
 	];
 
-	const bad = ['[0]', 'foo.0', 'foo[bar]'];
+	const bad = ['[0]', 'foo.0', 'foo[bar]', 'foo-bar[baz]'];
 
 	for (const { input, output } of good) {
 		test(input, () => {

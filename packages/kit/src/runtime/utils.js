@@ -95,7 +95,7 @@ export function convert_formdata(data) {
 	return result;
 }
 
-const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
+const path_regex = /^[a-zA-Z_$][\w-]*(\.[a-zA-Z_$][\w-]*|\[\d+\])*$/;
 
 /**
  * @param {string} path
