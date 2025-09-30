@@ -1,4 +1,4 @@
-import { base, assets, relative } from './internal/server.js';
+import { base, assets, relative, initial_base } from './internal/server.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 
@@ -16,7 +16,8 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			const segments = store.event.url.pathname.slice(base.length).split('/').slice(2);
+			const after_base = store.event.url.pathname.slice(initial_base.length);
+			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 
 			return prefix + resolved;
