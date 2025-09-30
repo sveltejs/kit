@@ -137,12 +137,27 @@ export function write_root(manifest_data, output) {
 			${pyramid}
 
 			{#if mounted}
-				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0; top: 0; clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px">
+				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true">
 					{#if navigated}
 						{title}
 					{/if}
 				</div>
 			{/if}
+
+      <style>
+        #svelte-announcer {
+          position: absolute; 
+          left: 0; 
+          top: 0; 
+          clip: 
+          rect(0 0 0 0); 
+          clip-path: inset(50%); 
+          overflow: hidden; 
+          white-space: nowrap; 
+          width: 1px; 
+          height: 1px;
+        }
+      </style>
 		`
 	);
 
