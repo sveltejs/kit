@@ -1857,7 +1857,9 @@ declare module '@sveltejs/kit' {
 		NonNullable<ValueType> extends string | number | boolean | File
 			? {
 					/** The values that will be submitted */
-					value(input?: ValueType): ValueType;
+					value(): ValueType;
+					/** Set the values that will be submitted */
+					set(input: ValueType): ValueType;
 					/** Validation issues, if any */
 					issues(): RemoteFormIssue[] | undefined;
 					/**
@@ -1878,7 +1880,9 @@ declare module '@sveltejs/kit' {
 				NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
 				? {
 						/** The values that will be submitted */
-						value(input?: ValueType): ValueType;
+						value(): ValueType;
+						/** Set the values that will be submitted */
+						set(input: ValueType): ValueType;
 						/** Validation issues, if any */
 						issues(): RemoteFormIssue[] | undefined;
 						/**
@@ -1897,7 +1901,9 @@ declare module '@sveltejs/kit' {
 					}
 				: {
 						/** The values that will be submitted */
-						value(input?: ValueType): ValueType;
+						value(): ValueType;
+						/** Set the values that will be submitted */
+						set(input: ValueType): ValueType;
 						/** Validation issues belonging to this or any of the fields that belong to it, if any */
 						allIssues(): RemoteFormIssue[] | undefined;
 						/** Validation issues, if any */

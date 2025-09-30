@@ -196,17 +196,21 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			const key = build_path_string(path);
 
+			if (prop === 'set') {
+				const set_func = function (/** @type {any} */ newValue) {
+					set_input(path, newValue);
+					return newValue;
+				};
+				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+			}
+
 			if (prop === 'value') {
-				const value_func = function (/** @type {any} */ newValue) {
-					if (arguments.length === 0) {
-						// TODO Ideally we'd create a $derived just above and use it here but we can't because of push_reaction which prevents
-						// changes to deriveds created within an effect to rerun the effect - an argument for
-						// reverting that change in async mode?
-						return deep_get(get_input(), path);
-					} else {
-						set_input(path, newValue);
-						return newValue;
-					}
+				const value_func = function () {
+					// TODO Ideally we'd create a $derived just above and use it here but we can't because of push_reaction which prevents
+					// changes to deriveds created within an effect to rerun the effect - an argument for
+					// reverting that change in async mode?
+					// TODO we did that in Svelte now; bump Svelte version and use $derived here
+					return deep_get(get_input(), path);
 				};
 				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, prop]);
 			}
@@ -239,7 +243,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					const prefix =
 						base_type === 'number' || base_type === 'range'
 							? 'n:'
-							: input_type === 'checkbox'
+							: input_type === 'checkbox' && !is_array
 								? 'b:'
 								: '';
 
