@@ -230,29 +230,7 @@ export function crawl(html, base) {
 					const attr = name ?? property;
 
 					if (attr && CRAWLABLE_META_NAME_ATTRS.has(attr)) {
-						const resolved = resolve(base, content);
-						// Check for malformed URLs with consecutive slashes in the path
-						// Allow protocol-relative URLs (//example.com) and normal URLs (https://example.com)
-						// Block URLs with double slashes in paths (/path//file or domain//file)
-						let shouldInclude = true;
-						if (resolved.includes('//')) {
-							// If it starts with // it's protocol-relative, which is fine
-							if (resolved.startsWith('//')) {
-								shouldInclude = true;
-							}
-							// If it contains :// it's a full URL, which is fine
-							else if (resolved.includes('://')) {
-								shouldInclude = true;
-							}
-							// Otherwise it's a malformed path with double slashes
-							else {
-								shouldInclude = false;
-							}
-						}
-						
-						if (shouldInclude) {
-							hrefs.push(resolved);
-						}
+						hrefs.push(resolve(base, content));
 					}
 				}
 			}

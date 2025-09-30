@@ -221,6 +221,26 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
+		// Check for URLs that contain the prerender origin hostname in the path
+		// This can happen when meta tags reference URLs like "{page.url.host}/file.jpg"
+		// and can cause infinite loops during prerendering
+		if (config.prerender.origin !== 'http://sveltekit-prerender') {
+			// Extract hostname from prerender origin
+			const prerenderHost = new URL(config.prerender.origin).hostname;
+			// Check if the path starts with the prerender hostname (avoiding circular references)
+			if (decoded.startsWith(`/${prerenderHost}/`)) {
+				// This looks like a circular reference - handle as 404
+				handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+				return;
+			}
+		} else {
+			// For the default sveltekit-prerender origin, check for the specific pattern
+			if (decoded.startsWith('/sveltekit-prerender/')) {
+				handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+				return;
+			}
+		}
+
 		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id));
 	}
 
@@ -258,7 +278,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				}
 
 				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
+				const static_path = join(config.files.assets, file);
+				// Check if the static file exists before trying to read it
+				// This prevents potential issues with malformed paths or non-existent files
+				if (!existsSync(static_path)) {
+					throw new Error(`Static file not found: ${file}`);
+				}
+				return readFileSync(static_path);
 			},
 			emulator
 		});

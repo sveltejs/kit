@@ -14,7 +14,10 @@ test('should handle HTTP errors in meta tags without infinite loop', { timeout }
 		encoding: 'utf8'
 	});
 	
-	// The build should succeed and warn about favicon.png but not about malformed URLs
+	// The build should succeed and handle the circular reference properly
 	assert.match(result, /404.*favicon\.png/);
-	assert.ok(!result.includes('sveltekit-prerender//image'), 'Should not contain malformed URLs with double slashes');
+	// Should handle the circular reference from meta tag
+	assert.match(result, /404.*sveltekit-prerender.*me\.jpg/);
+	// Should complete successfully
+	assert.match(result, /✔ done/);
 });
