@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.43.6
+### Patch Changes
+
+
+- fix: ensure cache key is consistent between client/server ([#14563](https://github.com/sveltejs/kit/pull/14563))
+
+
+- fix: keep resolve relative to initial base during prerender ([#14533](https://github.com/sveltejs/kit/pull/14533))
+
+
+- fix: avoid including `HEAD` twice when an unhandled HTTP method is used in a request to a `+server` handler that has both a `GET` handler and a `HEAD` handler ([#14564](https://github.com/sveltejs/kit/pull/14564))
+
+
+- fix: smoothscroll to deep link ([#14569](https://github.com/sveltejs/kit/pull/14569))
+
 ## 2.43.5
 ### Patch Changes
 
