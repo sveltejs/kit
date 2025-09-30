@@ -1712,6 +1712,8 @@ async function navigate({
 			// CSS properties.
 			deep_linked.scrollIntoView();
 
+			// Get target position at this point because with smooth scrolling the scroll position
+			// retrieved from current x/y above might be wrong (since we might not have arrived at the destination yet)
 			const { top, left } = deep_linked.getBoundingClientRect();
 
 			scroll = {
