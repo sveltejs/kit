@@ -16,6 +16,7 @@ import { add_resolution_suffix } from '../../pathname.js';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
+import { create_remote_cache_key } from '../../shared.js';
 
 // TODO rename this function/module
 
@@ -493,7 +494,7 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					remote[key ? info.id + '/' + key : info.id] = await cache[key];
+					remote[create_remote_cache_key(info.id, key)] = await cache[key];
 				}
 			}
 
