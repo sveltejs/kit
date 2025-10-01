@@ -1,6 +1,8 @@
 /** @import { InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
+import { DEV } from 'esm-env';
+
 /**
  * Sets a value in a nested object using a path string, not mutating the original object but returning a new object
  * @param {Record<string, any>} object
@@ -243,7 +245,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			}
 
 			if (prop === 'as') {
-				const as_func = (/** @type {string} */ input_type) => {
+				/**
+				 * @param {string} input_type
+				 * @param {string} [checkbox_value]
+				 */
+				const as_func = (input_type, checkbox_value) => {
 					const is_array = input_type.endsWith('[]');
 					const base_type = is_array ? input_type.slice(0, -2) : input_type;
 
@@ -266,16 +272,22 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle checkbox inputs
 					if (base_type === 'checkbox' || base_type === 'radio') {
-						// TODO correct for radio?
+						if (DEV && base_type === 'radio' && is_array) {
+							throw new Error('Radio inputs cannot be arrays');
+						}
+						if (DEV && base_type === 'checkbox' && is_array && !checkbox_value) {
+							throw new Error('Checkbox array inputs must have a value');
+						}
+
 						return Object.defineProperties(base_props, {
+							// TODO should we do this for normal radio, too?
+							value: { value: checkbox_value ?? 'on', enumerable: true },
 							checked: {
+								enumerable: true,
 								get() {
 									const input = get_input();
 									const value = deep_get(input, path);
-									return Boolean(value);
-								},
-								set(value) {
-									set_input(path, Boolean(value));
+									return is_array ? (value ?? []).includes(checkbox_value) : value;
 								}
 							}
 						});
@@ -285,6 +297,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					if (base_type === 'file') {
 						return Object.defineProperties(base_props, {
 							files: {
+								enumerable: true,
 								get() {
 									const input = get_input();
 									const value = deep_get(input, path);
@@ -317,14 +330,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 									}
 
 									return null;
-								},
-								set(filelist) {
-									if (!filelist) {
-										set_input(path, is_array ? [] : null);
-										return;
-									}
-									const files = Array.from(filelist);
-									set_input(path, is_array ? files : files[0] || null);
 								}
 							}
 						});
@@ -341,26 +346,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 									return value.join(',');
 								}
 								return value != null ? String(value) : '';
-							},
-							set(value) {
-								if (is_array) {
-									// For array inputs, split comma-separated values
-									const values = String(value)
-										.split(',')
-										.map((v) => v.trim())
-										.filter(Boolean);
-									if (base_type === 'number') {
-										set_input(path, values.map(Number));
-									} else {
-										set_input(path, values);
-									}
-								} else {
-									if (base_type === 'number') {
-										set_input(path, Number(value));
-									} else {
-										set_input(path, String(value));
-									}
-								}
 							}
 						}
 					});

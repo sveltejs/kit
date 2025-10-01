@@ -296,9 +296,12 @@ export function form(id) {
 							}
 						}
 
-						const value = is_file
+						let value = is_file
 							? elements.map((input) => Array.from(input.files ?? [])).flat()
 							: elements.map((element) => element.value);
+						if (element.type === 'checkbox') {
+							value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
+						}
 
 						input = set_nested_value(input, name, value);
 					} else if (is_file) {

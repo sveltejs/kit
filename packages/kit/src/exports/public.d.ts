@@ -1841,8 +1841,8 @@ type InputTypeMap = {
 
 // Array variants of input types
 type InputTypeArrayMap = {
-	[K in keyof InputTypeMap as `${K}[]`]: Array<InputTypeMap[K]>;
-};
+	[K in keyof Omit<InputTypeMap, 'radio' | 'checkbox'> as `${K}[]`]: Array<InputTypeMap[K]>;
+} & { 'checkbox[]': string[] };
 
 // Combined input type map
 type AllInputTypes = InputTypeMap & InputTypeArrayMap;
@@ -1920,7 +1920,8 @@ type FormField<ValueType> =
 					 * ```
 					 */
 					as<T extends ValidInputTypesForValue<ValueType>>(
-						inputType: T
+						inputType: T,
+						value: T extends 'checkbox[]' ? string : void
 					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
 				}
 			: {
