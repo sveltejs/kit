@@ -308,72 +308,60 @@ export const createPost = form(
 </form>
 ```
 
-As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`. The one difference is to `query` is that the schema inputs must all be of type `string` or `File`, since that's all the original `FormData` provides. You can however coerce the value into a different type — how to do that depends on the validation library you use.
+The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+
+As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`. SvelteKit will use this schema in combination with the names of the `FormData` entries to parse the `FormData` into the proper object. There's one caveat around checkboxes, which when toggled off are not sent to the backend. This means you need to declare those properties as optional with a fallback set to `false` — how to do that depends on the validation library you use.
 
 ```ts
 /// file: src/routes/count.remote.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 
-export const setCount = form(
+export const setValid = form(
 	v.object({
 		// Valibot:
-		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
+		valid: v.optional(v.boolean(), false),
 		// Zod:
-		// count: z.coerce.number<string>()
+		// valid: z.coerce.boolean<boolean>()
 	}),
-	async ({ count }) => {
+	async ({ valid }) => {
 		// ...
 	}
 );
 ```
 
-The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
+The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in the simple case above. To properly connect your inputs to your form, use the `fields` property:
 
 ```svelte
 <!--
     results in a
     {
 	   name: { first: string, last: string },
-	   jobs: Array<{ title: string, company: string }>
+	   jobs: Array<{ title: string, company: string }>,
+	   skills: string[]
 	}
     object
 -->
-<input name="name.first" />
-<input name="name.last" />
+Name
+<input {...myForm.fields.name.first.as('text')} />
+<input {...myForm.fields.name.last.as('text')} />
+
+Work experience
 {#each jobs as job, idx}
-	<input name="jobs[{idx}].title">
-	<input name="jobs[{idx}].company">
+	<input {...myForm.fields.jobs[idx].company.as('text')}>
+	<input {...myForm.fields.jobs[idx].tenure.as('number')}>
 {/each}
+
+Skills
+<label><input {...myForm.fields.skills.as('checkbox[]')} value="js" />JavaScript</label>
+<label><input {...myForm.fields.skills.as('checkbox[]')} value="svelte" />Svelte</label>
 ```
 
-To indicate a repeated field, use a `[]` suffix:
-
-```svelte
-<label><input type="checkbox" name="language[]" value="html" /> HTML</label>
-<label><input type="checkbox" name="language[]" value="css" /> CSS</label>
-<label><input type="checkbox" name="language[]" value="js" /> JS</label>
-```
-
-To save you some work and for type safety and autocomplete when these attributes, use the form object's `as` method which is available on `fields`:
-
-```svelte
-<label>
-	<h2>Title</h2>
-	<input {...createPost.fields.title.as('text')} />
-	<input {...createPost.fields.public.as('checkbox')}>
-</label>
-```
-
-This will
-- error during typechecking if `title` does not exist on your schema
-- return an object with various properties, among them `name`, `type` and `value` (or `checked`, in case of a checkbox). In the above case it sets `type="text"` on the first input and `type="checkbox"` on the second. It will also error if your schema definition doesn't match the field's type
-
-The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+Using the `fields` property gives you autocomplete and type checking, e.g. if `{ name: { first: string }}` does not exist on your schema TypeScript will warn you. The `as(...)` method returns an object with various properties, among them `name`, `type` and `value` (or `checked`, in case of a checkbox). The string you pass to `as(...)` correspondgs to the various input types that exist. In case a leaf of your schema object is an array, i.e. you have multiple inputs that should fill the same field, append `[]`. 
 
 ### Validation
 
-If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated and `aria-invalid` (returned from `as(...)`) will be set to `true`:
+If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` method will be populated and `aria-invalid` (returned from `as(...)`) will be set to `true`:
 
 ```svelte
 <form {...createPost}>
@@ -463,7 +451,7 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 
 	<label>
 		Password
-		<input +++aria-invalid={register.fields._password.as('password')}+++ />
+		<input +++{...register.fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
@@ -665,12 +653,12 @@ This attribute exists on the `buttonProps` property of a form object:
 <form {...login}>
 	<label>
 		Your username
-		<input name="username" />
+		<input {...login.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input name="password" type="password" />
+		<input {...login.fields._password.as('password')} />
 	</label>
 
 	<button>login</button>
