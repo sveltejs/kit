@@ -301,6 +301,11 @@ function form_tests() {
 	f6.input!['array[0].array[]'] = [''];
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
+
+	// doesn't use data
+	// eslint-disable-next-line @typescript-eslint/require-await --- we are testing that the async function does not cause `result` to be typed as a Promise
+	const f7 = form(async () => ({ success: true }));
+	f7.result?.success === true;
 }
 form_tests();
 
