@@ -3,8 +3,8 @@
 	
 	let dynamic_title = 'My Page';
 	let dynamic_desc = 'Description';
-	// Simulate the original user's scenario where paths might have leading slashes
-	let a_path_to_svelte_kit_static_content = '/me.jpg'; // This would create double slashes
+	// Simulate the scenario where paths might have leading slashes creating circular references
+	let a_path_to_svelte_kit_static_content = '/me.jpg';
 </script>
 
 <svelte:head>
@@ -14,7 +14,5 @@
 	<meta property="og:image" content="{$page.url.host}/{a_path_to_svelte_kit_static_content}" />
 </svelte:head>
 
-<slot />
-
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<h1>Circular Reference Test</h1>
+<p>This page tests that circular references in meta tags don't cause infinite loops</p>

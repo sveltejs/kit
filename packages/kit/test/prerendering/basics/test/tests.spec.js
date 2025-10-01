@@ -286,3 +286,11 @@ test('identifies missing ids', () => {
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
 	expect(missing_ids).toEqual(['missing-id']);
 });
+
+test('handles circular references in meta tags without infinite loops', () => {
+	// This test verifies that the circular-ref route was prerendered successfully
+	// without causing memory issues or infinite loops
+	const content = read('circular-ref.html');
+	expect(content).toMatch('<h1>Circular Reference Test</h1>');
+	expect(content).toMatch('This page tests that circular references in meta tags');
+});
