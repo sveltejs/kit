@@ -10,7 +10,14 @@ import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } f
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
-import { convert_formdata, file_transport, flatten_issues } from '../../utils.js';
+import {
+	convert_formdata,
+	file_transport,
+	flatten_issues,
+	create_field_proxy,
+	deep_set,
+	set_nested_value
+} from '../../form-utils.svelte.js';
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -28,8 +35,12 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string | string[] | File | File[]>} */
-		let input = $state({});
+		/**
+		 * By making this $state.raw() and creating a new object each time we update it,
+		 * all consumers along the update chain are properly invalidated.
+		 * @type {Record<string, string | string[] | File | File[]>}
+		 */
+		let input = $state.raw({});
 
 		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 		let issues = $state.raw({});
@@ -146,11 +157,7 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({
-							input = {},
-							issues = {},
-							result
-						} = devalue.parse(form_result.result, {
+						({ issues = {}, result } = devalue.parse(form_result.result, {
 							...app.decoders,
 							File: file_transport.decode
 						}));
@@ -289,9 +296,11 @@ export function form(id) {
 							}
 						}
 
-						input[name] = is_file
+						const value = is_file
 							? elements.map((input) => Array.from(input.files ?? [])).flat()
 							: elements.map((element) => element.value);
+
+						input = set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -302,12 +311,23 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							input[name] = file;
+							input = set_nested_value(input, name, file);
 						} else {
-							delete input[name];
+							// Remove the property by setting to undefined and clean up
+							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
+							let current = /** @type {any} */ (input);
+							for (let i = 0; i < path_parts.length - 1; i++) {
+								if (current[path_parts[i]] == null) return;
+								current = current[path_parts[i]];
+							}
+							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input[name] = element.value;
+						input = set_nested_value(
+							input,
+							name,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						);
 					}
 				});
 
@@ -387,18 +407,60 @@ export function form(id) {
 
 		let validate_id = 0;
 
+		// TODO 3.0 remove
+		if (DEV) {
+			Object.defineProperty(instance, 'field', {
+				value: (/** @type {string} */ name) => {
+					const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
+					throw new Error(
+						`form.field has been removed in favor of form.fields: Instead of form.field('${name}') write form.fields.${new_name}.name(${new_name !== name ? "'asArray'" : ''})`
+					);
+				}
+			});
+
+			for (const property of ['input', 'issues']) {
+				Object.defineProperty(instance, property, {
+					get() {
+						const new_name = property === 'issues' ? 'issues' : 'value';
+						return new Proxy(
+							{},
+							{
+								get(_, prop) {
+									const prop_string = typeof prop === 'string' ? prop : String(prop);
+									const old =
+										prop_string.includes('[') || prop_string.includes('.')
+											? `['${prop_string}']`
+											: `.${prop_string}`;
+									const replacement = `.${prop_string}.${new_name}()`;
+									throw new Error(
+										`form.${property} has been removed in favor of form.fields: Instead of form.${property}${old} write form.fields.${replacement}.${new_name}()`
+									);
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
-			input: {
-				get: () => input,
-				set: (v) => {
-					input = v;
-				}
-			},
-			issues: {
-				get: () => issues
+			fields: {
+				get: () =>
+					create_field_proxy(
+						{},
+						() => input,
+						(path, value) => {
+							if (path.length === 0) {
+								input = value;
+							} else {
+								input = deep_set(input, path.map(String), value);
+							}
+						},
+						() => issues
+					)
 			},
 			result: {
 				get: () => result
@@ -406,11 +468,8 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
-			field: {
-				value: (/** @type {string} */ name) => name
-			},
 			preflight: {
-				/** @type {RemoteForm<any, any>['preflight']} */
+				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
 					return instance;
