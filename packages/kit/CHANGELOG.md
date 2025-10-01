@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.43.7
+### Patch Changes
+
+
+- fix: correctly type the `result` of `form` remote functions that do not accept data ([#14573](https://github.com/sveltejs/kit/pull/14573))
+
+
+- fix: force remote module chunks to isolate themselves ([#14571](https://github.com/sveltejs/kit/pull/14571))
+
 ## 2.43.6
 ### Patch Changes
 
