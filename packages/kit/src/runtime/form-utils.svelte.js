@@ -7,11 +7,10 @@
  * @param {string} path_string
  * @param {any} value
  */
-
 export function set_nested_value(object, path_string, value) {
 	if (path_string.startsWith('n:')) {
 		path_string = path_string.slice(2);
-		value = parseFloat(value);
+		value = value === '' ? undefined : parseFloat(value);
 	} else if (path_string.startsWith('b:')) {
 		path_string = path_string.slice(2);
 		value = value === 'on';
@@ -24,13 +23,13 @@ export function set_nested_value(object, path_string, value) {
  * Convert `FormData` into a POJO
  * @param {FormData} data
  */
-
 export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
 	let result = Object.create(null); // guard against prototype pollution
 
 	for (let key of data.keys()) {
 		const is_array = key.endsWith('[]');
+		/** @type {any[]} */
 		let values = data.getAll(key);
 
 		if (is_array) key = key.slice(0, -2);
@@ -43,6 +42,14 @@ export function convert_formdata(data) {
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
+
+		if (key.startsWith('n:')) {
+			key = key.slice(2);
+			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
+		} else if (key.startsWith('b:')) {
+			key = key.slice(2);
+			values = values.map((v) => v === 'on');
+		}
 
 		result = set_nested_value(result, key, is_array ? values : values[0]);
 	}

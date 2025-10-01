@@ -421,7 +421,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 > [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
 
-### Live inputs
+### Getting/setting inputs
 
 The form object contains a `value` method which reflects its current value. As the user interacts with the form, it is automatically updated:
 
@@ -435,6 +435,28 @@ The form object contains a `value` method which reflects its current value. As t
 	<div>{@html render(createPost.fields.content.value())}</div>
 </div>
 ```
+
+You can update a field (or a collection of fields) via the `set` method:
+
+
+```svelte
+<script>
+
+</script>
+
+<form {...createPost}>
+	<!-- -->
+</form>
+
+<button onclick={() => createPost.fields.set({ title: '', content: '' })}>
+	reset
+</button>
+
+<button onclick={() => createPost.fields.title.set(Math.random() + '')}>
+	random title
+</button>
+```
+
 
 ### Handling sensitive data
 
