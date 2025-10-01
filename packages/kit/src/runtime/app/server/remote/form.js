@@ -1,5 +1,5 @@
 /** @import { RemoteFormInput, RemoteForm } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteInfo } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
@@ -133,7 +133,7 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 				}
 
-				/** @type {{ input?: Record<string, any>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
+				/** @type {{ input?: Record<string, any>, issues?: Record<string, InternalRemoteFormIssue[]>, result: Output }} */
 				const output = {};
 
 				const { event, state } = get_request_store();

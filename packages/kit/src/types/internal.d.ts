@@ -21,7 +21,8 @@ import {
 	ServerInit,
 	ClientInit,
 	Transport,
-	HandleValidationError
+	HandleValidationError,
+	RemoteFormIssue
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -579,6 +580,11 @@ export type RemoteInfo =
 			dynamic?: boolean;
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
+
+export interface InternalRemoteFormIssue extends RemoteFormIssue {
+	name: string;
+	path: (string | number)[];
+}
 
 export type RecordSpan = <T>(options: {
 	name: string;

@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
+/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
@@ -42,7 +42,7 @@ export function form(id) {
 		 */
 		let input = $state.raw({});
 
-		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
 
 		/** @type {any} */

@@ -1,4 +1,4 @@
-/** @import { RemoteFormIssue } from '@sveltejs/kit' */
+/** @import { InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 /**
@@ -109,11 +109,11 @@ export function deep_set(object, keys, value) {
  * @param {readonly StandardSchemaV1.Issue[]} issues
  */
 export function flatten_issues(issues) {
-	/** @type {Record<string, RemoteFormIssue[]>} */
+	/** @type {Record<string, InternalRemoteFormIssue[]>} */
 	const result = {};
 
 	for (const issue of issues) {
-		/** @type {RemoteFormIssue} */
+		/** @type {InternalRemoteFormIssue} */
 		const normalized = { name: '', path: [], message: issue.message };
 
 		(result.$ ??= []).push(normalized);
@@ -184,7 +184,7 @@ export function deep_get(object, path) {
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, RemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
