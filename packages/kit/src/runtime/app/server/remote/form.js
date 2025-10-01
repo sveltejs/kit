@@ -13,7 +13,7 @@ import { convert_formdata, flatten_issues } from '../../../utils.js';
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteForm<void, Output>}
  * @since 2.27
  */

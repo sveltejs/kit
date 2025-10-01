@@ -3061,7 +3061,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Output>(fn: () => Output): RemoteForm<void, Output>;
+	export function form<Output>(fn: () => MaybePromise<Output>): RemoteForm<void, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
