@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	
+
 	let dynamic_title = 'My Page';
 	let dynamic_desc = 'Description';
 	// Simulate the scenario where paths might have leading slashes creating circular references
