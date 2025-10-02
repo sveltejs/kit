@@ -303,8 +303,14 @@ async function kit({ svelte_config }) {
 							{
 								name: 'vite-plugin-sveltekit-setup:optimize',
 								setup(build) {
+									if (!kit.experimental.remoteFunctions) return;
+
+									const filter = new RegExp(
+										`.remote(${kit.moduleExtensions.join('|')})`.replaceAll('.', '\\.')
+									);
+
 									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter: /\.remote\./ }, () => ({ contents: '' }));
+									build.onLoad({ filter }, () => ({ contents: '' }));
 								}
 							}
 						]
