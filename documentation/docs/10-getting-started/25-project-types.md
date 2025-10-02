@@ -62,7 +62,7 @@ You can turn a [SvelteKit SPA](single-page-apps) into a desktop app with [Tauri]
 
 ## Browser extension
 
-You can build browser extensions using either [`adapter-static`](adapter-static) or [community adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) specifically tailored towards browser extensions.
+You can build browser extensions using either [`adapter-static`](adapter-static) or [community adapters](/packages#sveltekit-adapters) specifically tailored towards browser extensions.
 
 ## Embedded device
 
