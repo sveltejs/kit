@@ -975,8 +975,6 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 });
 ```
 
-> [!NOTE] `form` does not accept a schema since you are always passed a `FormData` object. You are free to parse and validate this as you see fit.
-
 ## Using `getRequestEvent`
 
 Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
