@@ -17,7 +17,7 @@
 		"directory": "packages/adapter-auto"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-auto",
 	"type": "module",
 	"exports": {
 		".": {

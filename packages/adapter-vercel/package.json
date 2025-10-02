@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-vercel"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-vercel",
 	"type": "module",
 	"exports": {
 		".": {

@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-node"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-node",
 	"type": "module",
 	"exports": {
 		".": {
