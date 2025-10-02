@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
 	"type": "module",
 	"exports": {
 		".": {

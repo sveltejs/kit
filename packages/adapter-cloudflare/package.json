@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-cloudflare"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-cloudflare",
 	"type": "module",
 	"exports": {
 		".": {
