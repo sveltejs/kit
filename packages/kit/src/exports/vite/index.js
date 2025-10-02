@@ -697,7 +697,8 @@ async function kit({ svelte_config }) {
 		},
 
 		async transform(code, id, opts) {
-			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
