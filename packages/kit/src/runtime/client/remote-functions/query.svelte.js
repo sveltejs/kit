@@ -14,6 +14,7 @@ import { DEV } from 'esm-env';
  */
 export function query(id) {
 	if (DEV) {
+		// If this reruns as part of HMR, refresh the query
 		for (const [key, entry] of query_map) {
 			if (key === id || key.startsWith(id + '/')) {
 				// use optional chaining in case a prerender function was turned into a query
