@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.3.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 5.3.2
 ### Patch Changes
 

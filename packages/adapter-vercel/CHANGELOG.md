@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 5.10.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 5.10.2
 ### Patch Changes
 
