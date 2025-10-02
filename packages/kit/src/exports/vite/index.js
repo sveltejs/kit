@@ -306,7 +306,7 @@ async function kit({ svelte_config }) {
 									if (!kit.experimental.remoteFunctions) return;
 
 									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})`.replaceAll('.', '\\.')
+										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
 									);
 
 									// treat .remote.js files as empty for the purposes of prebundling
