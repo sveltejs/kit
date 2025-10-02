@@ -788,8 +788,14 @@ async function kit({ svelte_config }) {
 				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
 			});
 
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+
+			if (dev_server) {
+				result += `\nimport.meta.hot?.accept();\n`;
+			}
+
 			return {
-				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: result
 			};
 		},
 
