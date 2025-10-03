@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "7.2.3",
+	"version": "7.2.4",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"keywords": [
 		"adapter",
@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-cloudflare"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-cloudflare",
 	"type": "module",
 	"exports": {
 		".": {

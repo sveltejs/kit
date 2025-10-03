@@ -298,6 +298,23 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
+					esbuildOptions: {
+						plugins: [
+							{
+								name: 'vite-plugin-sveltekit-setup:optimize',
+								setup(build) {
+									if (!kit.experimental.remoteFunctions) return;
+
+									const filter = new RegExp(
+										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+									);
+
+									// treat .remote.js files as empty for the purposes of prebundling
+									build.onLoad({ filter }, () => ({ contents: '' }));
+								}
+							}
+						]
+					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -697,7 +714,8 @@ async function kit({ svelte_config }) {
 		},
 
 		async transform(code, id, opts) {
-			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
@@ -770,8 +788,14 @@ async function kit({ svelte_config }) {
 				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
 			});
 
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+
+			if (dev_server) {
+				result += `\nimport.meta.hot?.accept();\n`;
+			}
+
 			return {
-				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: result
 			};
 		},
 
