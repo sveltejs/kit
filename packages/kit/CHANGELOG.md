@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.43.9
+### Patch Changes
+
+
+- fix: don't crawl error responses during prerendering ([#14596](https://github.com/sveltejs/kit/pull/14596))
+
 ## 2.43.8
 ### Patch Changes
 
