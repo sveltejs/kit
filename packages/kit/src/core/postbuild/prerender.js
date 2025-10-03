@@ -320,7 +320,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// avoid triggering `filterSerializeResponseHeaders` guard
 		const headers = Object.fromEntries(response.headers);
 
-		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
+		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
+		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
 			const { ids, hrefs } = crawl(body.toString(), decoded);
 
 			actual_hashlinks.set(decoded, ids);
