@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.43.8
+### Patch Changes
+
+
+- fix: HMR for `query` ([#14587](https://github.com/sveltejs/kit/pull/14587))
+
+
+- fix: avoid client modules while traversing dependencies to prevent FOUC during dev ([#14577](https://github.com/sveltejs/kit/pull/14577))
+
+
+- fix: skip prebundling of .remote.js files ([#14583](https://github.com/sveltejs/kit/pull/14583))
+
+
+- fix: more robust remote file pattern matching ([#14578](https://github.com/sveltejs/kit/pull/14578))
+
 ## 2.43.7
 ### Patch Changes
 
