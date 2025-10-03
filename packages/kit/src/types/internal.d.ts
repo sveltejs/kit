@@ -583,7 +583,8 @@ export type RemoteInfo =
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
-	path: (string | number)[];
+	path: Array<string | number>;
+	server?: boolean;
 }
 
 export type RecordSpan = <T>(options: {

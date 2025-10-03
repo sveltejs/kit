@@ -20,6 +20,26 @@ import {
 } from '../../form-utils.svelte.js';
 
 /**
+ * Merge client issues into server issues
+ * @param {Record<string, InternalRemoteFormIssue[]>} current_issues
+ * @param {Record<string, InternalRemoteFormIssue[]>} client_issues
+ * @returns {Record<string, InternalRemoteFormIssue[]>}
+ */
+function merge_with_server_issues(current_issues, client_issues) {
+	const merged_issues = Object.fromEntries(
+		Object.entries(current_issues)
+			.map(([key, issue_list]) => [key, issue_list.filter((issue) => issue.server)])
+			.filter(([, issue_list]) => issue_list.length > 0)
+	);
+
+	for (const [key, new_issue_list] of Object.entries(client_issues)) {
+		merged_issues[key] = [...(merged_issues[key] || []), ...new_issue_list];
+	}
+
+	return merged_issues;
+}
+
+/**
  * Client-version of the `form` function from `$app/server`.
  * @template {RemoteFormInput} T
  * @template U
@@ -60,6 +80,8 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let touched = {};
 
+		let submitted = false;
+
 		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
@@ -68,10 +90,13 @@ export function form(id) {
 		async function handle_submit(form, form_data, callback) {
 			const data = convert_formdata(form_data);
 
+			submitted = true;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				issues = flatten_issues(validated.issues);
+				const client_issues = flatten_issues(validated.issues, false);
+				issues = merge_with_server_issues(issues, client_issues);
 				return;
 			}
 
@@ -161,6 +186,13 @@ export function form(id) {
 							...app.decoders,
 							File: file_transport.decode
 						}));
+
+						// Mark server issues with server: true
+						for (const issue_list of Object.values(issues)) {
+							for (const issue of issue_list) {
+								issue.server = true;
+							}
+						}
 
 						if (issues.$) {
 							release_overrides(updates);
@@ -282,25 +314,34 @@ export function form(id) {
 					touched[name] = true;
 
 					if (is_array) {
-						const elements = /** @type {HTMLInputElement[]} */ (
-							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
-						);
+						let value;
 
-						if (DEV) {
-							for (const e of elements) {
-								if ((e.type === 'file') !== is_file) {
-									throw new Error(
-										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
-									);
+						if (element.tagName === 'SELECT') {
+							value = Array.from(
+								element.querySelectorAll('option:checked'),
+								(e) => /** @type {HTMLOptionElement} */ (e).value
+							);
+						} else {
+							const elements = /** @type {HTMLInputElement[]} */ (
+								Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+							);
+
+							if (DEV) {
+								for (const e of elements) {
+									if ((e.type === 'file') !== is_file) {
+										throw new Error(
+											`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
+										);
+									}
 								}
 							}
-						}
 
-						let value = is_file
-							? elements.map((input) => Array.from(input.files ?? [])).flat()
-							: elements.map((element) => element.value);
-						if (element.type === 'checkbox') {
-							value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
+							value = is_file
+								? elements.map((input) => Array.from(input.files ?? [])).flat()
+								: elements.map((element) => element.value);
+							if (element.type === 'checkbox') {
+								value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
+							}
 						}
 
 						input = set_nested_value(input, name, value);
@@ -521,7 +562,7 @@ export function form(id) {
 						}
 					}
 
-					if (!includeUntouched) {
+					if (!includeUntouched && !submitted) {
 						array = array.filter((issue) => {
 							if (issue.path !== undefined) {
 								let path = '';
@@ -541,7 +582,10 @@ export function form(id) {
 						});
 					}
 
-					issues = flatten_issues(array);
+					const is_server_validation = !validated?.issues;
+					const new_issues = flatten_issues(array, is_server_validation);
+
+					issues = is_server_validation ? new_issues : merge_with_server_issues(issues, new_issues);
 				}
 			},
 			enhance: {

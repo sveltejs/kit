@@ -1837,6 +1837,7 @@ type InputTypeMap = {
 	button: string;
 	reset: string;
 	image: string;
+	select: string;
 };
 
 // Array variants of input types
@@ -1898,7 +1899,9 @@ type FormField<ValueType> =
 				 */
 				as<T extends ValidInputTypesForValue<ValueType>>(
 					inputType: T
-				): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+				): InputElementProps<T extends `${infer Base}[]` ? Base : T> & {
+					initial(value: ValueType): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+				};
 			}
 		: // TODO we can almost certainly DRY this out
 			NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
@@ -1922,7 +1925,9 @@ type FormField<ValueType> =
 					as<T extends ValidInputTypesForValue<ValueType>>(
 						inputType: T,
 						value: T extends 'checkbox[]' ? string : void
-					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+					): InputElementProps<T extends `${infer Base}[]` ? Base : T> & {
+						initial(value: ValueType): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+					};
 				}
 			: {
 					/** The values that will be submitted */

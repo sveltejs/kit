@@ -109,14 +109,15 @@ export function deep_set(object, keys, value) {
 
 /**
  * @param {readonly StandardSchemaV1.Issue[]} issues
+ * @param {boolean} [server=false] - Whether these issues come from server validation
  */
-export function flatten_issues(issues) {
+export function flatten_issues(issues, server = false) {
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
 	const result = {};
 
 	for (const issue of issues) {
 		/** @type {InternalRemoteFormIssue} */
-		const normalized = { name: '', path: [], message: issue.message };
+		const normalized = { name: '', path: [], message: issue.message, server };
 
 		(result.$ ??= []).push(normalized);
 
@@ -261,14 +262,33 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 								: '';
 
 					// Base properties for all input types
+					/** @type {Record<string, any>} */
 					const base_props = {
-						type: base_type,
 						name: prefix + key + (is_array ? '[]' : ''),
 						get 'aria-invalid'() {
 							const issues = get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
+
+					// Add type attribute only for non-text inputs and non-select elements
+					if (base_type !== 'text' && base_type !== 'select' && base_type !== 'multiselect') {
+						base_props.type = base_type;
+					}
+
+					// Handle select inputs
+					if (base_type === 'select') {
+						return create_field_result(base_props, {
+							multiple: { value: is_array, enumerable: true },
+							value: {
+								enumerable: true,
+								get() {
+									const input = get_input();
+									return deep_get(input, path);
+								}
+							}
+						});
+					}
 
 					// Handle checkbox inputs
 					if (base_type === 'checkbox' || base_type === 'radio') {
@@ -279,7 +299,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							throw new Error('Checkbox array inputs must have a value');
 						}
 
-						return Object.defineProperties(base_props, {
+						return create_field_result(base_props, {
 							// TODO should we do this for normal radio, too?
 							value: { value: checkbox_value ?? 'on', enumerable: true },
 							checked: {
@@ -295,7 +315,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle file inputs
 					if (base_type === 'file') {
-						return Object.defineProperties(base_props, {
+						return create_field_result(base_props, {
 							files: {
 								enumerable: true,
 								get() {
@@ -336,13 +356,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle all other input types (text, number, etc.)
-					return Object.defineProperties(base_props, {
+					return create_field_result(base_props, {
 						value: {
 							enumerable: true,
 							get() {
 								const input = get_input();
 								const value = deep_get(input, path);
 								if (is_array && Array.isArray(value)) {
+									// TODO incorrect - how do we know which index this is? Do we have to forbid [] generally for everything except checkbox?
 									return value.join(',');
 								}
 								return value != null ? String(value) : '';
@@ -377,4 +398,27 @@ function build_path_string(path) {
 	}
 
 	return result;
+}
+
+/**
+ * Helper function to create field result with initial() method support
+ * @param {Record<string, any>} base_props
+ * @param {Record<string, PropertyDescriptor>} additional_props
+ */
+function create_field_result(base_props, additional_props) {
+	return Object.defineProperties(base_props, {
+		...additional_props,
+		// TODO should we instead tell people to do defaultValue={...}?
+		initial: {
+			/** @param {any} defaultValue */
+			value: (defaultValue) => {
+				return Object.defineProperties(base_props, {
+					defaultValue: {
+						enumerable: true,
+						value: defaultValue
+					}
+				});
+			}
+		}
+	});
 }
