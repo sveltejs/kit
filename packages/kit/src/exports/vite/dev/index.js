@@ -629,7 +629,7 @@ async function find_deps(vite, node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await getServerModuleByUrl(vite, url);
+		const node = await get_server_module_by_url(vite, url);
 
 		if (node) {
 			await add(node);
@@ -658,7 +658,7 @@ async function find_deps(vite, node, deps) {
  * @param {import('vite').ViteDevServer} vite
  * @param {string} url
  */
-function getServerModuleByUrl(vite, url) {
+function get_server_module_by_url(vite, url) {
 	return vite.environments
 		? vite.environments.ssr.moduleGraph.getModuleByUrl(url)
 		: vite.moduleGraph.getModuleByUrl(url, true);
