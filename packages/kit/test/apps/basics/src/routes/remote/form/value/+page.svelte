@@ -7,30 +7,30 @@
 <form {...values}>
 	<label>
 		Leaf:
-		<input name="leaf" value={values.fields.leaf.value()} />
+		<input {...values.fields.leaf.as('text')} />
 	</label>
 
 	<label>
 		Object Leaf:
-		<input name="object.leaf" value={values.fields.object.leaf.value()} />
+		<input {...values.fields.object.leaf.as('text')} />
 	</label>
 
 	<label>
 		Object Array 0:
-		<input name="object.array[]" value={values.fields.object.array[0].value()} />
+		<input {...values.fields.object.array[0].as('text')} />
 	</label>
 	<label>
 		Object Array 1:
-		<input name="object.array[]" value={values.fields.object.array[1].value()} />
+		<input {...values.fields.object.array[1].as('text')} />
 	</label>
 
 	<label>
 		Array 0 Leaf:
-		<input name="array[0].leaf" value={values.fields.array[0].leaf.value()} />
+		<input {...values.fields.array[0].leaf.as('text')} />
 	</label>
 	<label>
 		Array 1 Leaf:
-		<input name="array[1].leaf" value={values.fields.array[1].leaf.value()} />
+		<input {...values.fields.array[1].leaf.as('text')} />
 	</label>
 
 	<button>Submit</button>

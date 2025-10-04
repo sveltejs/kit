@@ -26,7 +26,7 @@
 		<p>{set_message.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={set_message.fields.message.name()} value={set_message.fields.message.value()} />
+	<input {...set_message.fields.message.as('text')} />
 	<button>set message</button>
 	<button {...set_reverse_message.buttonProps}>set reverse message</button>
 </form>
@@ -43,7 +43,7 @@
 		<p>{scoped.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={scoped.fields.message.name()} value={scoped.fields.message.value()} />
+	<input {...scoped.fields.message.as('text')} />
 	<button>set scoped message</button>
 </form>
 
@@ -63,7 +63,7 @@
 		<p>{enhanced.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={enhanced.fields.message.name()} value={enhanced.fields.message.value()} />
+	<input {...enhanced.fields.message.as('text')} />
 	<button><span>set enhanced message</span></button>
 </form>
 

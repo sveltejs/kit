@@ -1,19 +1,10 @@
 <script>
 	import { register } from './form.remote.js';
-
-	const username = register.fields.username;
-	const _password = register.fields._password;
 </script>
 
 <form {...register}>
-	<input name={username.name()} value={username.value()} aria-invalid={!!username.issues()} />
-
-	<input
-		type="password"
-		name={_password.name()}
-		value={_password.value()}
-		aria-invalid={!!_password.issues()}
-	/>
+	<input {...register.fields.username.as('text')} />
+	<input {...register.fields._password.as('password')} />
 
 	<button>submit</button>
 </form>

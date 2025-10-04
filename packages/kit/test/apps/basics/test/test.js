@@ -1897,7 +1897,7 @@ test.describe('remote functions', () => {
 		});
 
 		// Fill object.array fields
-		await page.fill('input[name="object.array[]"]:nth-of-type(1)', 'array-item-1');
+		await page.fill('input[name="object.array[0]"]', 'array-item-1');
 		const afterArrayItem1 = await page.locator('#full-value').textContent();
 		expect(JSON.parse(afterArrayItem1)).toEqual({
 			leaf: 'leaf-value',
@@ -1907,7 +1907,7 @@ test.describe('remote functions', () => {
 			}
 		});
 
-		await page.fill('input[name="object.array[]"]:nth-of-type(2)', 'array-item-2');
+		await page.fill('input[name="object.array[1]"]', 'array-item-2');
 		const afterArrayItem2 = await page.locator('#full-value').textContent();
 		expect(JSON.parse(afterArrayItem2)).toEqual({
 			leaf: 'leaf-value',
