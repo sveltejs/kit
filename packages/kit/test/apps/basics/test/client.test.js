@@ -2004,7 +2004,7 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1);
 	});
 
-    // TODO ditto
+	// TODO ditto
 	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');
 
