@@ -1805,7 +1805,7 @@ declare module '@sveltejs/kit' {
 		month: string;
 		week: string;
 		color: string;
-		checkbox: boolean;
+		checkbox: boolean | string[];
 		radio: string;
 		file: File;
 		hidden: string;
@@ -1816,18 +1816,10 @@ declare module '@sveltejs/kit' {
 		select: string;
 	};
 
-	// Array variants of input types
-	type InputTypeArrayMap = {
-		[K in keyof Omit<InputTypeMap, 'radio' | 'checkbox'> as `${K}[]`]: Array<InputTypeMap[K]>;
-	} & { 'checkbox[]': string[] };
-
-	// Combined input type map
-	type AllInputTypes = InputTypeMap & InputTypeArrayMap;
-
 	// Valid input types for a given value type
 	type ValidInputTypesForValue<T> = {
-		[K in keyof AllInputTypes]: T extends AllInputTypes[K] ? K : never;
-	}[keyof AllInputTypes];
+		[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
+	}[keyof InputTypeMap];
 
 	// Input element properties based on type
 	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
@@ -1873,9 +1865,7 @@ declare module '@sveltejs/kit' {
 					 * <input {...myForm.fields.tags.as('text[]')} />
 					 * ```
 					 */
-					as<T extends ValidInputTypesForValue<ValueType>>(
-						inputType: T
-					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
+					as<T extends ValidInputTypesForValue<ValueType>>(inputType: T): InputElementProps<T>;
 				}
 			: // TODO we can almost certainly DRY this out
 				NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
@@ -1898,7 +1888,11 @@ declare module '@sveltejs/kit' {
 						 */
 						as<T extends ValidInputTypesForValue<ValueType>>(
 							inputType: T,
-							value: T extends 'checkbox[]' ? string : void
+							value: T extends 'checkbox'
+								? ValueType extends string[]
+									? ValueType[number] | (string & {})
+									: void
+								: void
 						): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
 					}
 				: {

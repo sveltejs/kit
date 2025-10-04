@@ -247,17 +247,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'as') {
 				/**
-				 * @param {string} input_type
+				 * @param {string} type
 				 * @param {string} [checkbox_value]
 				 */
-				const as_func = (input_type, checkbox_value) => {
-					const is_array = input_type.endsWith('[]');
-					const base_type = is_array ? input_type.slice(0, -2) : input_type;
+				const as_func = (type, checkbox_value) => {
+					const is_array = type === 'checkbox' && typeof checkbox_value === 'string';
 
 					const prefix =
-						base_type === 'number' || base_type === 'range'
+						type === 'number' || type === 'range'
 							? 'n:'
-							: input_type === 'checkbox' && !is_array
+							: type === 'checkbox' && !is_array
 								? 'b:'
 								: '';
 
@@ -272,12 +271,12 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					};
 
 					// Add type attribute only for non-text inputs and non-select elements
-					if (base_type !== 'text' && base_type !== 'select' && base_type !== 'multiselect') {
-						base_props.type = base_type;
+					if (type !== 'text' && type !== 'select' && type !== 'multiselect') {
+						base_props.type = type;
 					}
 
 					// Handle select inputs
-					if (base_type === 'select') {
+					if (type === 'select') {
 						return Object.defineProperties(base_props, {
 							multiple: { value: is_array, enumerable: true },
 							value: {
@@ -291,11 +290,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle checkbox inputs
-					if (base_type === 'checkbox' || base_type === 'radio') {
-						if (DEV && base_type === 'radio' && is_array) {
+					if (type === 'checkbox' || type === 'radio') {
+						if (DEV && type === 'radio' && is_array) {
 							throw new Error('Radio inputs cannot be arrays');
 						}
-						if (DEV && base_type === 'checkbox' && is_array && !checkbox_value) {
+						if (DEV && type === 'checkbox' && is_array && !checkbox_value) {
 							throw new Error('Checkbox array inputs must have a value');
 						}
 
@@ -314,7 +313,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle file inputs
-					if (base_type === 'file') {
+					if (type === 'file') {
 						return Object.defineProperties(base_props, {
 							files: {
 								enumerable: true,
