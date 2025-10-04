@@ -278,7 +278,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle select inputs
 					if (base_type === 'select') {
-						return create_field_result(base_props, {
+						return Object.defineProperties(base_props, {
 							multiple: { value: is_array, enumerable: true },
 							value: {
 								enumerable: true,
@@ -299,7 +299,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							throw new Error('Checkbox array inputs must have a value');
 						}
 
-						return create_field_result(base_props, {
+						return Object.defineProperties(base_props, {
 							// TODO should we do this for normal radio, too?
 							value: { value: checkbox_value ?? 'on', enumerable: true },
 							checked: {
@@ -315,7 +315,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle file inputs
 					if (base_type === 'file') {
-						return create_field_result(base_props, {
+						return Object.defineProperties(base_props, {
 							files: {
 								enumerable: true,
 								get() {
@@ -356,7 +356,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle all other input types (text, number, etc.)
-					return create_field_result(base_props, {
+					return Object.defineProperties(base_props, {
 						value: {
 							enumerable: true,
 							get() {
@@ -398,27 +398,4 @@ function build_path_string(path) {
 	}
 
 	return result;
-}
-
-/**
- * Helper function to create field result with initial() method support
- * @param {Record<string, any>} base_props
- * @param {Record<string, PropertyDescriptor>} additional_props
- */
-function create_field_result(base_props, additional_props) {
-	return Object.defineProperties(base_props, {
-		...additional_props,
-		// TODO should we instead tell people to do defaultValue={...}?
-		initial: {
-			/** @param {any} defaultValue */
-			value: (defaultValue) => {
-				return Object.defineProperties(base_props, {
-					defaultValue: {
-						enumerable: true,
-						value: defaultValue
-					}
-				});
-			}
-		}
-	});
 }
