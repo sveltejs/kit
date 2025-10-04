@@ -270,7 +270,7 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
- * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+ * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events (SSE).
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
  *
