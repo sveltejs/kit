@@ -1364,6 +1364,130 @@ test.describe('goto', () => {
 			: 'goto: invalid URL';
 		await expect(page.locator('p')).toHaveText(message);
 	});
+
+	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
+		const testEntryPage = '/goto/testentry';
+		const testStartPage = '/goto/teststart';
+		const testFinishPage = '/goto/testfinish';
+		const nonexistentPage = '/goto/nonexistent';
+		const loadReplacePage = '/goto/loadreplace1';
+
+		test.beforeEach(async ({ page }) => {
+			await page.goto(testEntryPage);
+			await page.goto(testStartPage);
+
+			await expect(page).toHaveURL(testStartPage);
+		});
+
+		/**
+		 * @param {string} from
+		 * @param {string} to
+		 * @returns {(page: import('@playwright/test').Page) => Promise<void>}
+		 */
+		function makeExpectGoback(from, to) {
+			return async (page) => {
+				await expect(page).toHaveURL(from);
+				await page.goBack();
+				await expect(page).toHaveURL(to);
+			};
+		}
+
+		test.describe('navigating outside the app on sameorigin', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+		});
+
+		test.describe('redirect after invalidation', () => {
+			test.beforeEach(async ({ app }) => {
+				await app.goto(`${testStartPage}?redirect`, { replaceState: true });
+			});
+
+			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+			test('app.invalidate', async ({ app, page }) => {
+				await app.invalidate('app:goto', { replaceState: true });
+				await expectGoback(page);
+			});
+
+			test('location.reload', async ({ page }) => {
+				await page.evaluate(() => {
+					location.reload();
+				});
+				await expectGoback(page);
+			});
+		});
+
+		test.describe('navigating through redirect chain', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: false });
+
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: true });
+
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+		});
+	});
 });
 
 test.describe('untrack', () => {
@@ -1754,67 +1878,14 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('form.enhance works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-enhance', 'abort');
-		await page.click('#submit-btn-enhance-one');
-		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-1')).toHaveText('');
+	test('query/command inside endpoint works', async ({ page }) => {
+		await page.goto('/remote/server-endpoint');
 
-		await page.fill('#input-task-enhance', 'hi');
-		await page.click('#submit-btn-enhance-one');
-		await expect(page.locator('#form-result-1')).toHaveText('hi');
+		await page.getByRole('button', { name: 'get' }).click();
+		await expect(page.locator('p')).toHaveText('get');
 
-		await page.fill('#input-task-enhance', 'error');
-		await page.click('#submit-btn-enhance-one');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Expected error"'
-		);
-	});
-
-	test('form.buttonProps.enhance works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-enhance', 'abort');
-		await page.click('#submit-btn-enhance-two');
-		await page.waitForTimeout(100); // allow Svelte to update in case this does submit after (which it shouldn't)
-		await expect(page.locator('#form-result-2')).toHaveText('');
-
-		await page.fill('#input-task-enhance', 'hi');
-		await page.click('#submit-btn-enhance-two');
-		await expect(page.locator('#form-result-2')).toHaveText('hi');
-
-		await page.fill('#input-task-enhance', 'error');
-		await page.click('#submit-btn-enhance-two');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Unexpected error (500 Internal Error)"'
-		);
-	});
-
-	test('form.enhance with override works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-override', 'override');
-		page.click('#submit-btn-override-one');
-		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
-		await expect(page.locator('#form-result-1')).toHaveText('override');
-		await expect(page.locator('#get-task')).toHaveText('override');
-	});
-
-	test('form.buttonProps.enhance with override works', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-override', 'override');
-		page.click('#submit-btn-override-one');
-		await expect(page.locator('#get-task')).toHaveText('override (overridden)');
-		await expect(page.locator('#form-result-1')).toHaveText('override');
-		await expect(page.locator('#get-task')).toHaveText('override');
-	});
-
-	test('form.buttonProps.enhance works with nested elements (issue #14159)', async ({ page }) => {
-		await page.goto('/remote/form');
-		await page.fill('#input-task-nested', 'nested-test');
-
-		// Click on the span inside the button to test the event.target vs event.currentTarget issue
-		await page.click('#submit-btn-nested-span span');
-		await expect(page.locator('#form-result-2')).toHaveText('nested-test');
+		await page.getByRole('button', { name: 'post' }).click();
+		await expect(page.locator('p')).toHaveText('post');
 	});
 
 	test('prerendered entries not called in prod', async ({ page }) => {
@@ -1916,33 +1987,6 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
 	});
 
-	test('form pending state is tracked correctly', async ({ page }) => {
-		await page.goto('/remote/form');
-
-		// Initially no pending forms
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
-		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
-
-		// Fill form with slow operation
-		await page.fill('#input-task', 'deferred');
-
-		// Submit form - this will hang until we resolve it
-		await page.click('#submit-btn-one');
-
-		// Check that pending has incremented to 1
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 1');
-
-		// Resolve the deferred form submission
-		await page.click('#resolve-deferreds');
-
-		// Wait for form submission to complete and verify results
-		await expect(page.locator('#get-task')).toHaveText('deferred');
-
-		// Verify pending count returns to 0
-		await expect(page.locator('#form-pending')).toHaveText('Form pending: 0');
-		await expect(page.locator('#form-button-pending')).toHaveText('Button pending: 0');
-	});
-
 	// TODO once we have async SSR adjust the test and move this into test.js
 	test('query.batch works', async ({ page }) => {
 		await page.goto('/remote/batch');
@@ -1958,6 +2002,13 @@ test.describe('remote functions', () => {
 		await page.click('button');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(1);
+	});
+
+    // TODO ditto
+	test('query works with transport', async ({ page }) => {
+		await page.goto('/remote/transport');
+
+		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
 
 	test('query.stream works', async ({ page }) => {

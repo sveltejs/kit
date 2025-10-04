@@ -1,3 +1,4 @@
+/** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
@@ -11,7 +12,6 @@ import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
-import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
@@ -25,6 +25,7 @@ export default forked(import.meta.url, analyse);
  *   env: Record<string, string>;
  *   out: string;
  *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
+ *   remotes: RemoteChunk[];
  * }} opts
  */
 async function analyse({
@@ -35,7 +36,8 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config
+	output_config,
+	remotes
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -166,16 +168,14 @@ async function analyse({
 	}
 
 	// analyse remotes
-	for (const remote of manifest_data.remotes) {
+	for (const remote of remotes) {
 		const loader = manifest._.remotes[remote.hash];
-		const module = await loader();
-
-		validate_remote_functions(module, remote.file);
+		const { default: functions } = await loader();
 
 		const exports = new Map();
 
-		for (const name in module) {
-			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
+		for (const name in functions) {
+			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
 			const type = info.type;
 
 			exports.set(name, {
@@ -255,8 +255,12 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		manifest_data.routes.find((r) => r.id === route.id)
 	);
 
+	const visited = new Set();
 	/** @param {string} id */
 	function visit(id) {
+		if (visited.has(id)) return;
+		visited.add(id);
+
 		const chunk = server_manifest[id];
 		if (!chunk) return;
 

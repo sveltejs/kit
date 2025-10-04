@@ -1,5 +1,32 @@
 # @sveltejs/package
 
+## 2.5.4
+### Patch Changes
+
+
+- fix: resolve more alias issues ([#14514](https://github.com/sveltejs/kit/pull/14514))
+
+## 2.5.3
+### Patch Changes
+
+
+- fix: handle `import/export name, { ... }` when resolving aliases ([#14462](https://github.com/sveltejs/kit/pull/14462))
+
+## 2.5.2
+### Patch Changes
+
+
+- fix: handle `import/export * (as ...)` when resolving aliases ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+
+- fix: prevent false-positive alias replacement ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+## 2.5.1
+### Patch Changes
+
+
+- fix: better alias resolution ([#14413](https://github.com/sveltejs/kit/pull/14413))
+
 ## 2.5.0
 ### Minor Changes
 

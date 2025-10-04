@@ -1,93 +1,78 @@
 <script>
-	import { get_task, task_one, task_two, resolve_deferreds } from './form.remote.js';
-	const current_task = get_task();
+	import {
+		get_message,
+		set_message,
+		resolve_deferreds,
+		set_reverse_message
+	} from './form.remote.js';
+
+	const message = get_message();
+
+	const scoped = set_message.for('scoped');
+	const enhanced = set_message.for('enhanced');
 </script>
 
+<p>message.current: {message.current}</p>
+
 <!-- TODO use await here once async lands -->
-<p id="get-task">{#await current_task then task}{task}{/await}</p>
+{#await message then m}
+	<p>await get_message(): {m}</p>
+{/await}
 
-<!-- Test pending state for forms -->
-<p id="form-pending">Form pending: {task_one.pending}</p>
-<p id="form-button-pending">Button pending: {task_two.buttonProps.pending}</p>
+<hr />
 
-<form {...task_one}>
-	<input id="input-task" name="task" />
-	<button id="submit-btn-one">Task One</button>
-	<button id="submit-btn-two" {...task_two.buttonProps}>Task Two</button>
+<form data-unscoped {...set_message}>
+	{#if set_message.issues.message}
+		<p>{set_message.issues.message[0].message}</p>
+	{/if}
+
+	<input name={set_message.field('message')} value={set_message.input.message} />
+	<button>set message</button>
+	<button {...set_reverse_message.buttonProps}>set reverse message</button>
 </form>
+
+<p>set_message.input.message: {set_message.input.message}</p>
+<p>set_message.pending: {set_message.pending}</p>
+<p>set_message.result: {set_message.result}</p>
+<p>set_reverse_message.result: {set_reverse_message.result}</p>
+
+<hr />
+
+<form data-scoped {...scoped}>
+	{#if scoped.issues.message}
+		<p>{scoped.issues.message[0].message}</p>
+	{/if}
+
+	<input name={scoped.field('message')} value={scoped.input.message} />
+	<button>set scoped message</button>
+</form>
+
+<p>scoped.input.message: {scoped.input.message}</p>
+<p>scoped.pending: {scoped.pending}</p>
+<p>scoped.result: {scoped.result}</p>
+
+<hr />
 
 <form
-	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
-		if (task === 'abort') return;
-		await submit();
+	data-enhanced
+	{...enhanced.enhance(async ({ data, submit }) => {
+		await submit().updates(get_message().withOverride(() => data.message + ' (override)'));
 	})}
 >
-	<input id="input-task-enhance" name="task" />
-	<button id="submit-btn-enhance-one">Task One (enhanced)</button>
-	<button
-		id="submit-btn-enhance-two"
-		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
-			if (task === 'abort') return;
-			await submit();
-		})}>Task Two (enhanced)</button
-	>
+	{#if enhanced.issues.message}
+		<p>{enhanced.issues.message[0].message}</p>
+	{/if}
+
+	<input name={enhanced.field('message')} value={enhanced.input.message} />
+	<button><span>set enhanced message</span></button>
 </form>
 
-<form
-	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
-		await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
-	})}
->
-	<input id="input-task-override" name="task" />
-	<button id="submit-btn-override-one">Task One (with override)</button>
-	<button
-		id="submit-btn-override-two"
-		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
-			await submit().updates(current_task.withOverride(() => task + ' (overridden)'));
-		})}>Task Two (with override)</button
-	>
-</form>
+<p>enhanced.input.message: {enhanced.input.message}</p>
+<p>enhanced.pending: {enhanced.pending}</p>
+<p>enhanced.result: {enhanced.result}</p>
 
-<!-- Test case for button with nested elements (issue #14159) -->
-<form
-	{...task_one.enhance(async ({ data, submit }) => {
-		const task = data.get('task');
-		await submit();
-	})}
->
-	<input id="input-task-nested" name="task" />
-	<button
-		id="submit-btn-nested-span"
-		{...task_two.buttonProps.enhance(async ({ data, submit }) => {
-			const task = data.get('task');
-			await submit();
-		})}
-	>
-		<span>Task Two (nested span)</span>
-	</button>
-</form>
-
-<p id="form-result-1">{task_one.result}</p>
-<p id="form-result-2">{task_two.result}</p>
+<hr />
 
 <form {...resolve_deferreds}>
-	<button id="resolve-deferreds" type="submit">Resolve Deferreds</button>
-</form>
-
-{#each ['foo', 'bar'] as item}
-	<form {...task_one.for(item)}>
-		<span id="form-result-{item}">{task_one.for(item).result}</span>
-		<input name="task" value={item} />
-		<button id="submit-btn-item-{item}">Task One for {item}</button>
-	</form>
-{/each}
-
-<form {...task_two.for('foo')}>
-	<span id="form-result-2-foo">{task_two.for('foo').result}</span>
-	<input name="task" value="foo2" />
-	<button id="submit-btn-item-2-foo">Task Two for foo</button>
+	<button>resolve deferreds</button>
 </form>

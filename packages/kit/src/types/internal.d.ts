@@ -192,12 +192,13 @@ export interface ManifestData {
 		universal: string | null;
 	};
 	nodes: PageNode[];
-	remotes: Array<{
-		file: string;
-		hash: string;
-	}>;
 	routes: RouteData[];
 	matchers: Record<string, string>;
+}
+
+export interface RemoteChunk {
+	hash: string;
+	file: string;
 }
 
 export interface PageNode {
@@ -440,6 +441,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
+	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
@@ -599,8 +601,9 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	form_instances?: Map<any, any>;
-	remote_data?: Record<string, MaybePromise<any>>;
+	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
 	refreshes?: Record<string, Promise<any>>;
+	is_endpoint_request?: boolean;
 }
 
 export interface RequestStore {

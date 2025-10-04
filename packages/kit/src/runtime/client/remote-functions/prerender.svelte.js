@@ -1,9 +1,9 @@
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir, base } from '__sveltekit/paths';
+import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, remote_responses, started } from '../client.js';
+import { app, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 
 // Initialize Cache API for prerender functions
@@ -117,11 +117,8 @@ class Prerender {
 export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(async () => {
-			if (!started) {
-				const result = remote_responses[cache_key];
-				if (result) {
-					return result;
-				}
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
 			}
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;

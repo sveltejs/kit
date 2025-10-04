@@ -281,6 +281,18 @@ test.describe('Endpoints', () => {
 		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
+	test('405 allow header has no duplicate methods listed', async ({ request }) => {
+		const response = await request.post('/endpoint-output/head-handler');
+
+		expect(response.status()).toBe(405);
+
+		const allow_header = response.headers()['allow'];
+		const methods = allow_header.split(',').map((m) => m.trim());
+		const unique_methods = [...new Set(methods)];
+
+		expect(methods).toEqual(unique_methods);
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
@@ -861,7 +873,7 @@ test.describe('getRequestEvent', () => {
 
 test.describe('$app/forms', () => {
 	test('deserialize works on the server', async ({ request }) => {
-		const response = await request.get('/serialization-form/server-deserialize');
+		const response = await request.get('/serialization-form-non-enhanced/server-deserialize');
 		expect(await response.json()).toEqual({ data: 'It works!' });
 	});
 });

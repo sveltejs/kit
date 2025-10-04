@@ -331,6 +331,11 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
+	test('server-side error from load() still has layout data', async ({ page }) => {
+		await page.goto('/errors/load-error-server/layout-data');
+		expect(await page.textContent('#error-layout-data')).toBe('42');
+	});
+
 	test('error in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint');
 

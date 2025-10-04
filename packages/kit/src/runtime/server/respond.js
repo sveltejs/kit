@@ -3,7 +3,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '__sveltekit/paths';
+import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -505,11 +505,12 @@ export async function internal_respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			const response = is_data_request
-				? redirect_json_response(e)
-				: route?.page && is_action_json_request(event)
-					? action_json_redirect(e)
-					: redirect_response(e.status, e.location);
+			const response =
+				is_data_request || remote_id
+					? redirect_json_response(e)
+					: route?.page && is_action_json_request(event)
+						? action_json_redirect(e)
+						: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, new_cookies.values());
 			return response;
 		}

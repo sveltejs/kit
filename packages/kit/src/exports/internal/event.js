@@ -2,6 +2,8 @@
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 
+import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
+
 /** @type {RequestStore | null} */
 let sync_store = null;
 
@@ -45,7 +47,17 @@ export function getRequestEvent() {
 export function get_request_store() {
 	const result = try_get_request_store();
 	if (!result) {
-		throw new Error('Could not get the request store. This is an internal error.');
+		let message = 'Could not get the request store.';
+
+		if (als) {
+			message += ' This is an internal error.';
+		} else {
+			message +=
+				' In environments without `AsyncLocalStorage`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an `await`.' +
+				' If it was accessed synchronously then this is an internal error.';
+		}
+
+		throw new Error(message);
 	}
 	return result;
 }
@@ -64,6 +76,10 @@ export function with_request_store(store, fn) {
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();
 	} finally {
-		sync_store = null;
+		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
+		// and handle only one request at a time in `src/runtime/server/index.js`.
+		if (!IN_WEBCONTAINER) {
+			sync_store = null;
+		}
 	}
 }

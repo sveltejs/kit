@@ -195,7 +195,10 @@ export async function render_page(
 						}
 					});
 
-					data_serializer.add_node(i, server_data);
+					if (node) {
+						data_serializer.add_node(i, server_data);
+					}
+
 					data_serializer_json?.add_node(i, server_data);
 
 					return server_data;
@@ -278,6 +281,8 @@ export async function render_page(
 							let j = i;
 							while (!branch[j]) j -= 1;
 
+							data_serializer.set_max_nodes(j + 1);
+
 							const layouts = compact(branch.slice(0, j + 1));
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
 
@@ -300,7 +305,7 @@ export async function render_page(
 									server_data: null
 								}),
 								fetched,
-								data_serializer: server_data_serializer(event, event_state, options)
+								data_serializer
 							});
 						}
 					}
@@ -348,7 +353,8 @@ export async function render_page(
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
 			fetched,
-			data_serializer
+			data_serializer:
+				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully

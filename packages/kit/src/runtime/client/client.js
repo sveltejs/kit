@@ -26,7 +26,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '__sveltekit/paths';
+import { base } from '$app/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -149,9 +149,14 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
+ * @param {boolean} [replace] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  */
-function native_navigation(url) {
-	location.href = url.href;
+function native_navigation(url, replace = false) {
+	if (replace) {
+		location.replace(url.href);
+	} else {
+		location.href = url.href;
+	}
 	return new Promise(() => {});
 }
 
@@ -184,11 +189,11 @@ let target;
 /** @type {import('./types.js').SvelteKitApp} */
 export let app;
 
-/** @type {Record<string, any>} */
-// we have to conditionally access the properties of `__SVELTEKIT_PAYLOAD__`
-// because it will be `undefined` when users import the exports from this module.
-// It's only defined when the server renders a page.
-export const remote_responses = __SVELTEKIT_PAYLOAD__?.data ?? {};
+/**
+ * Data that was serialized during SSR. This is cleared when the user first navigates
+ * @type {Record<string, any>}
+ */
+export let remote_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -238,7 +243,7 @@ let current = {
 
 /** this being true means we SSR'd */
 let hydrated = false;
-export let started = false;
+let started = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -287,6 +292,10 @@ export async function start(_app, _target, hydrate) {
 		console.warn(
 			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
 		);
+	}
+
+	if (__SVELTEKIT_PAYLOAD__?.data) {
+		remote_responses = __SVELTEKIT_PAYLOAD__.data;
 	}
 
 	// detect basic auth credentials in the current URL
@@ -388,7 +397,12 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		if (!navigation_result || nav_token !== token) return;
 
 		if (navigation_result.type === 'redirect') {
-			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+			return _goto(
+				new URL(navigation_result.location, current.url).href,
+				{ replaceState: true },
+				1,
+				nav_token
+			);
 		}
 
 		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
@@ -443,7 +457,14 @@ function persist_state() {
 export async function _goto(url, options, redirect_count, nav_token) {
 	/** @type {string[]} */
 	let query_keys;
-	const result = await navigate({
+
+	// Clear preload cache when invalidateAll is true to ensure fresh data
+	// after form submissions or explicit invalidations
+	if (options.invalidateAll) {
+		load_cache = null;
+	}
+
+	await navigate({
 		type: 'goto',
 		url: resolve_url(url),
 		keepfocus: options.keepFocus,
@@ -463,6 +484,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			}
 		}
 	});
+
 	if (options.invalidateAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
@@ -478,7 +500,6 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				});
 			});
 	}
-	return result;
 }
 
 /** @param {import('./types.js').NavigationIntent} intent */
@@ -1265,6 +1286,7 @@ async function load_root_error_page({ status, error, url, route }) {
 		});
 	} catch (error) {
 		if (error instanceof Redirect) {
+			// @ts-expect-error TODO investigate this
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
@@ -1402,15 +1424,21 @@ function get_page_key(url) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
+ *   event?: PopStateEvent | MouseEvent;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta }) {
+function _before_navigate({ url, type, intent, delta, event }) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
+	}
+
+	if (event !== undefined) {
+		// @ts-ignore
+		nav.navigation.event = event;
 	}
 
 	const cancellable = {
@@ -1446,6 +1474,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
+ *   event?: Event
  * }} opts
  */
 async function navigate({
@@ -1459,8 +1488,11 @@ async function navigate({
 	redirect_count = 0,
 	nav_token = {},
 	accept = noop,
-	block = noop
+	block = noop,
+	event
 }) {
+	remote_responses = {};
+
 	const prev_token = token;
 	token = nav_token;
 
@@ -1468,7 +1500,14 @@ async function navigate({
 	const nav =
 		type === 'enter'
 			? create_navigation(current, intent, url, type)
-			: _before_navigate({ url, type, delta: popped?.delta, intent });
+			: _before_navigate({
+					url,
+					type,
+					delta: popped?.delta,
+					intent,
+					// @ts-ignore
+					event
+				});
 
 	if (!nav) {
 		block();
@@ -1510,10 +1549,11 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404
+					404,
+					replace_state
 				);
 			} else {
-				return await native_navigation(url);
+				return await native_navigation(url, replace_state);
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1524,7 +1564,8 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404
+				404,
+				replace_state
 			);
 		}
 	}
@@ -1541,27 +1582,39 @@ async function navigate({
 
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
-		if (redirect_count >= 20) {
-			navigation_result = await load_root_error_page({
-				status: 500,
-				error: await handle_error(new Error('Redirect loop'), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				url,
-				route: { id: null }
+		if (redirect_count < 20) {
+			await navigate({
+				type,
+				url: new URL(navigation_result.location, url),
+				popped,
+				keepfocus,
+				noscroll,
+				replace_state,
+				state,
+				redirect_count: redirect_count + 1,
+				nav_token
 			});
-		} else {
-			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
-			return false;
+
+			nav.fulfil(undefined);
+			return;
 		}
+
+		navigation_result = await load_root_error_page({
+			status: 500,
+			error: await handle_error(new Error('Redirect loop'), {
+				url,
+				params: {},
+				route: { id: null }
+			}),
+			url,
+			route: { id: null }
+		});
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url);
+			await native_navigation(url, replace_state);
 		}
 	}
 
@@ -1647,7 +1700,7 @@ async function navigate({
 	await tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
+	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
 		const deep_linked = url.hash && document.getElementById(get_id(url));
@@ -1658,6 +1711,15 @@ async function navigate({
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
+
+			// Get target position at this point because with smooth scrolling the scroll position
+			// retrieved from current x/y above might be wrong (since we might not have arrived at the destination yet)
+			const { top, left } = deep_linked.getBoundingClientRect();
+
+			scroll = {
+				x: pageXOffset + left,
+				y: pageYOffset + top
+			};
 		} else {
 			scrollTo(0, 0);
 		}
@@ -1671,7 +1733,7 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus(url);
+		reset_focus(url, scroll);
 	}
 
 	autoscroll = true;
@@ -1703,9 +1765,10 @@ async function navigate({
  * @param {{ id: string | null }} route
  * @param {App.Error} error
  * @param {number} status
+ * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
-async function server_fallback(url, route, error, status) {
+async function server_fallback(url, route, error, status, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
@@ -1725,7 +1788,7 @@ async function server_fallback(url, route, error, status) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url);
+	return await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
@@ -2046,6 +2109,8 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
+
+	remote_responses = {};
 
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
@@ -2381,7 +2446,7 @@ function _start_router() {
 
 		// Ignore the following but fire beforeNavigate
 		if (external || (options.reload && (!same_pathname || !hash))) {
-			if (_before_navigate({ url, type: 'link' })) {
+			if (_before_navigate({ url, type: 'link', event })) {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
 				is_navigating = true;
@@ -2408,7 +2473,7 @@ function _start_router() {
 				// /#top and click on a link that goes to /#top. In those cases just go to
 				// the top of the page, and avoid a history change.
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					window.scrollTo({ top: 0 });
+					scrollTo({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
 					if (element) {
@@ -2450,7 +2515,8 @@ function _start_router() {
 			url,
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
-			replace_state: options.replace_state ?? url.href === location.href
+			replace_state: options.replace_state ?? url.href === location.href,
+			event
 		});
 	});
 
@@ -2486,12 +2552,7 @@ function _start_router() {
 		event.preventDefault();
 		event.stopPropagation();
 
-		const data = new FormData(event_form);
-
-		const submitter_name = submitter?.getAttribute('name');
-		if (submitter_name) {
-			data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-		}
+		const data = new FormData(event_form, submitter);
 
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
@@ -2501,7 +2562,8 @@ function _start_router() {
 			url,
 			keepfocus: options.keepfocus,
 			noscroll: options.noscroll,
-			replace_state: options.replace_state ?? url.href === location.href
+			replace_state: options.replace_state ?? url.href === location.href,
+			event
 		});
 	});
 
@@ -2559,7 +2621,8 @@ function _start_router() {
 				block: () => {
 					history.go(-delta);
 				},
-				nav_token: token
+				nav_token: token,
+				event
 			});
 		} else {
 			// since popstate event is also emitted when an anchor referencing the same
@@ -2869,8 +2932,9 @@ let resetting_focus = false;
 
 /**
  * @param {URL} url
+ * @param {{ x: number, y: number } | null} scroll
  */
-function reset_focus(url) {
+function reset_focus(url, scroll = null) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -2882,7 +2946,7 @@ function reset_focus(url) {
 		// starting point to the fragment identifier.
 		const id = get_id(url);
 		if (id && document.getElementById(id)) {
-			const { x, y } = scroll_state();
+			const { x, y } = scroll ?? scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
 			// to use this hack with `location.replace()` instead.
@@ -2995,8 +3059,8 @@ function create_navigation(current, intent, url, type) {
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(() => {});
 
-	/** @type {Omit<import('@sveltejs/kit').Navigation, 'type'> & { type: T }} */
-	const navigation = {
+	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
+	const navigation = /** @type {any} */ ({
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
@@ -3010,7 +3074,7 @@ function create_navigation(current, intent, url, type) {
 		willUnload: !intent,
 		type,
 		complete
-	};
+	});
 
 	return {
 		navigation,

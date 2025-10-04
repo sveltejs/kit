@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
-import * as paths from '__sveltekit/paths';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -16,6 +16,7 @@ import { add_resolution_suffix } from '../../pathname.js';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
+import { create_remote_cache_key } from '../../shared.js';
 
 // TODO rename this function/module
 
@@ -168,10 +169,6 @@ export async function render_response({
 			state: {}
 		};
 
-		// use relative paths during rendering, so that the resulting HTML is as
-		// portable as possible, but reset afterwards
-		if (paths.relative) paths.override({ base, assets });
-
 		const render_opts = {
 			context: new Map([
 				[
@@ -183,40 +180,64 @@ export async function render_response({
 			])
 		};
 
-		if (DEV) {
-			const fetch = globalThis.fetch;
-			let warned = false;
-			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !SCHEME.test(info)) {
-					throw new Error(
-						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-					);
-				} else if (!warned) {
-					console.warn(
-						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-					);
-					warned = true;
+		const fetch = globalThis.fetch;
+
+		try {
+			if (DEV) {
+				let warned = false;
+				globalThis.fetch = (info, init) => {
+					if (typeof info === 'string' && !SCHEME.test(info)) {
+						throw new Error(
+							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						);
+					} else if (!warned) {
+						console.warn(
+							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						);
+						warned = true;
+					}
+
+					return fetch(info, init);
+				};
+			}
+
+			rendered = await with_request_store({ event, state: event_state }, async () => {
+				// use relative paths during rendering, so that the resulting HTML is as
+				// portable as possible, but reset afterwards
+				if (paths.relative) paths.override({ base, assets });
+
+				const maybe_promise = options.root.render(props, render_opts);
+				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+				const rendered =
+					options.async && 'then' in maybe_promise
+						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+								maybe_promise
+							).then((r) => r)
+						: maybe_promise;
+
+				// TODO 3.0 remove options.async
+				if (options.async) {
+					// we reset this synchronously, rather than after async rendering is complete,
+					// to avoid cross-talk between requests. This is a breaking change for
+					// anyone who opts into async SSR, since `base` and `assets` will no
+					// longer be relative to the current pathname.
+					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+					paths.reset();
 				}
 
-				return fetch(info, init);
-			};
+				// eslint-disable-next-line
+				const { head, html, css } = options.async ? await rendered : rendered;
 
-			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
-			} finally {
+				return { head, html, css };
+			});
+		} finally {
+			if (DEV) {
 				globalThis.fetch = fetch;
-				paths.reset();
 			}
-		} else {
-			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
-			} finally {
-				paths.reset();
-			}
+
+			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 
 		for (const { node } of branch) {
@@ -408,29 +429,6 @@ export async function render_response({
 						}`);
 		}
 
-		const { remote_data } = event_state;
-
-		if (remote_data) {
-			/** @type {Record<string, any>} */
-			const remote = {};
-
-			for (const key in remote_data) {
-				remote[key] = await remote_data[key];
-			}
-
-			// TODO this is repeated in a few places — dedupe it
-			const replacer = (/** @type {any} */ thing) => {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
-			};
-
-			properties.push(`data: ${devalue.uneval(remote, replacer)}`);
-		}
-
 		// create this before declaring `data`, which may contain references to `${global}`
 		blocks.push(`${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
@@ -482,20 +480,51 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
+		const { remote_data: remote_cache } = event_state;
+
+		let serialized_remote_data = '';
+
+		if (remote_cache) {
+			/** @type {Record<string, any>} */
+			const remote = {};
+
+			for (const [info, cache] of remote_cache) {
+				// remote functions without an `id` aren't exported, and thus
+				// cannot be called from the client
+				if (!info.id) continue;
+
+				for (const key in cache) {
+					remote[create_remote_cache_key(info.id, key)] = await cache[key];
+				}
+			}
+
+			// TODO this is repeated in a few places — dedupe it
+			const replacer = (/** @type {any} */ thing) => {
+				for (const key in options.hooks.transport) {
+					const encoded = options.hooks.transport[key].encode(thing);
+					if (encoded) {
+						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+					}
+				}
+			};
+
+			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
+		}
+
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+					${serialized_remote_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						kit.start(app, ${args.join(', ')});
+						${serialized_remote_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
+						${serialized_remote_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
