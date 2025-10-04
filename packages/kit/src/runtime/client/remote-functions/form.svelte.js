@@ -16,7 +16,8 @@ import {
 	flatten_issues,
 	create_field_proxy,
 	deep_set,
-	set_nested_value
+	set_nested_value,
+	throw_on_old_property_access
 } from '../../form-utils.svelte.js';
 
 /**
@@ -457,38 +458,7 @@ export function form(id) {
 
 		// TODO 3.0 remove
 		if (DEV) {
-			Object.defineProperty(instance, 'field', {
-				value: (/** @type {string} */ name) => {
-					const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
-					throw new Error(
-						`form.field has been removed in favor of form.fields: Instead of form.field('${name}') write form.fields.${new_name}.name(${new_name !== name ? "'asArray'" : ''})`
-					);
-				}
-			});
-
-			for (const property of ['input', 'issues']) {
-				Object.defineProperty(instance, property, {
-					get() {
-						const new_name = property === 'issues' ? 'issues' : 'value';
-						return new Proxy(
-							{},
-							{
-								get(_, prop) {
-									const prop_string = typeof prop === 'string' ? prop : String(prop);
-									const old =
-										prop_string.includes('[') || prop_string.includes('.')
-											? `['${prop_string}']`
-											: `.${prop_string}`;
-									const replacement = `.${prop_string}.${new_name}()`;
-									throw new Error(
-										`form.${property} has been removed in favor of form.fields: Instead of form.${property}${old} write form.fields.${replacement}.${new_name}()`
-									);
-								}
-							}
-						);
-					}
-				});
-			}
+			throw_on_old_property_access(instance);
 		}
 
 		Object.defineProperties(instance, {

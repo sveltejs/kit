@@ -1,3 +1,4 @@
+/** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -401,4 +402,43 @@ function build_path_string(path) {
 	}
 
 	return result;
+}
+
+/**
+ * @param {RemoteForm<any, any>} instance
+ * @deprecated remove in 3.0
+ */
+export function throw_on_old_property_access(instance) {
+	Object.defineProperty(instance, 'field', {
+		value: (/** @type {string} */ name) => {
+			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
+			throw new Error(
+				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
+			);
+		}
+	});
+
+	for (const property of ['input', 'issues']) {
+		Object.defineProperty(instance, property, {
+			get() {
+				const new_name = property === 'issues' ? 'issues' : 'value';
+				return new Proxy(
+					{},
+					{
+						get(_, prop) {
+							const prop_string = typeof prop === 'string' ? prop : String(prop);
+							const old =
+								prop_string.includes('[') || prop_string.includes('.')
+									? `['${prop_string}']`
+									: `.${prop_string}`;
+							const replacement = `.${prop_string}.${new_name}()`;
+							throw new Error(
+								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
+							);
+						}
+					}
+				);
+			}
+		});
+	}
 }
