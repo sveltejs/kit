@@ -1838,6 +1838,8 @@ type InputTypeMap = {
 	reset: string;
 	image: string;
 	select: string;
+	'select multiple': string[];
+	'file multiple': File[];
 };
 
 // Valid input types for a given value type
@@ -1867,18 +1869,27 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				set value(v: string | number);
 			};
 
+type FormFieldMethods<ValueType> = {
+	/** The values that will be submitted */
+	value(): ValueType;
+	/** Set the values that will be submitted */
+	set(input: ValueType): ValueType;
+	/** Validation issues, if any */
+	issues(): RemoteFormIssue[] | undefined;
+};
+
+type AsArgs<Type extends keyof InputTypeMap, ValueType> = Type extends 'checkbox'
+	? ValueType extends string[]
+		? [type: 'checkbox', value: ValueType[number] | (string & {})]
+		: [type: Type]
+	: [type: Type];
+
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
 type FormField<ValueType> =
-	NonNullable<ValueType> extends string | number | boolean | File
-		? {
-				/** The values that will be submitted */
-				value(): ValueType;
-				/** Set the values that will be submitted */
-				set(input: ValueType): ValueType;
-				/** Validation issues, if any */
-				issues(): RemoteFormIssue[] | undefined;
+	NonNullable<ValueType> extends string | string[] | number | boolean | File | File[]
+		? FormFieldMethods<ValueType> & {
 				/**
 				 * Returns an object that can be spread onto an input element with the correct type attribute,
 				 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
@@ -1889,49 +1900,14 @@ type FormField<ValueType> =
 				 * <input {...myForm.fields.tags.as('text[]')} />
 				 * ```
 				 */
-				as<T extends ValidInputTypesForValue<ValueType>>(inputType: T): InputElementProps<T>;
+				as<T extends ValidInputTypesForValue<ValueType>>(
+					...args: AsArgs<T, ValueType>
+				): InputElementProps<T>;
 			}
-		: // TODO we can almost certainly DRY this out
-			NonNullable<ValueType> extends string[] | number[] | boolean[] | File[]
-			? {
-					/** The values that will be submitted */
-					value(): ValueType;
-					/** Set the values that will be submitted */
-					set(input: ValueType): ValueType;
-					/** Validation issues, if any */
-					issues(): RemoteFormIssue[] | undefined;
-					/**
-					 * Returns an object that can be spread onto an input element with the correct type attribute,
-					 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-					 * @example
-					 * ```svelte
-					 * <input {...myForm.fields.username.as('text')} />
-					 * <input {...myForm.fields.isActive.as('checkbox')} />
-					 * <input {...myForm.fields.tags.as('text[]')} />
-					 * ```
-					 */
-					as<T extends ValidInputTypesForValue<ValueType>>(
-						inputType: T,
-						value: T extends 'checkbox'
-							? ValueType extends string[]
-								? // `ValueType[number]` allows autocomplete, while `string & {}` allows
-									// things like `as('checkbox', item.value)` without having to jump
-									// through annoying hoops
-									ValueType[number] | (string & {})
-								: void
-							: void
-					): InputElementProps<T extends `${infer Base}[]` ? Base : T>;
-				}
-			: {
-					/** The values that will be submitted */
-					value(): ValueType;
-					/** Set the values that will be submitted */
-					set(input: ValueType): ValueType;
-					/** Validation issues belonging to this or any of the fields that belong to it, if any */
-					allIssues(): RemoteFormIssue[] | undefined;
-					/** Validation issues, if any */
-					issues(): RemoteFormIssue[] | undefined;
-				};
+		: FormFieldMethods<ValueType> & {
+				/** Validation issues belonging to this or any of the fields that belong to it, if any */
+				allIssues(): RemoteFormIssue[] | undefined;
+			};
 
 /**
  * Recursive type to build form fields structure with proxy access

@@ -251,7 +251,10 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 				 * @param {string} [checkbox_value]
 				 */
 				const as_func = (type, checkbox_value) => {
-					const is_array = type === 'checkbox' && typeof checkbox_value === 'string';
+					const is_array =
+						type === 'file multiple' ||
+						type === 'select multiple' ||
+						(type === 'checkbox' && typeof checkbox_value === 'string');
 
 					const prefix =
 						type === 'number' || type === 'range'
@@ -271,12 +274,12 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					};
 
 					// Add type attribute only for non-text inputs and non-select elements
-					if (type !== 'text' && type !== 'select' && type !== 'multiselect') {
-						base_props.type = type;
+					if (type !== 'text' && type !== 'select' && type !== 'select multiple') {
+						base_props.type = type === 'file multiple' ? 'file' : type;
 					}
 
 					// Handle select inputs
-					if (type === 'select') {
+					if (type === 'select' || type === 'select multiple') {
 						return Object.defineProperties(base_props, {
 							multiple: { value: is_array, enumerable: true },
 							value: {
@@ -313,8 +316,9 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					}
 
 					// Handle file inputs
-					if (type === 'file') {
+					if (type === 'file' || type === 'file multiple') {
 						return Object.defineProperties(base_props, {
+							multiple: { value: is_array, enumerable: true },
 							files: {
 								enumerable: true,
 								get() {
