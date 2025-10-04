@@ -225,6 +225,90 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 {/if}
 ```
 
+## query.stream
+
+`query.stream` allows you to stream continuous data from the server to the client.
+
+```js
+/// file: src/routes/time.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+}
+// @filename: index.js
+// ---cut---
+import { query } from '$app/server';
+
+export const time = query.stream(async function* () {
+	while (true) {
+		yield new Date();
+		await new Promise(r => setTimeout(r, 1000))
+	}
+});
+```
+
+You can consume the stream like a promise or via the `current` property. In both cases, if it's used in a reactive context, it will automatically update to the latest version upon retrieving new data.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { time } from './time.remote.js';
+</script>
+
+<p>{await time()}</p>
+<p>{time().current}</p>
+```
+
+Apart from that you can iterate over it like any other async iterable, including using `for await (...)`.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { time } from './time.remote.js';
+
+	let times = $state([]);
+
+	async function stream() {
+		times = []
+		let count = 0;
+
+		for await (const entry of time()) {
+			times.push(time);
+			count++;
+			if (count >= 5) {
+				break;
+			}
+		}
+	})
+</script>
+
+<button onclick={stream}>stream for five seconds</button>
+
+{#each times as time}
+	<span>{time}</time>
+{/each}
+```
+
+Unlike other `query` methods, stream requests to the same resource with the same payload are _not_ deduplicated. That means you can start the same stream multiple times in parallel and it will start from the beginning each time.
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { oneToTen } from './count.remote.js';
+
+	const stream = oneToTen();
+</script>
+
+<!-- these are one single ReadableStream request since they share the same stream instance -->
+{#await stream}
+{#await stream}
+
+<!-- this is a separate instance and will create a new ReadableStream request to the backend -->
+{await oneToTen()}
+```
+
+> [!NOTE] Be careful when using `query.stream` in combination with service workers. Specifically, make sure to never pass the promise of a `ReadableStream` (which `query.stream` uses) to `event.respondWith(...)`, as the promise never settles.
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
