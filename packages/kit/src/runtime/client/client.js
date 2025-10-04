@@ -308,7 +308,7 @@ export async function start(_app, _target, hydrate) {
 
 	app = _app;
 
-	await _app.hooks.init?.();
+	await app.hooks.init?.();
 
 	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -588,13 +588,13 @@ function initialize(result, target, hydrate) {
 /**
  *
  * @param {{
- *   url: URL;
- *   params: Record<string, string>;
- *   branch: Array<import('./types.js').BranchNode | undefined>;
- *   status: number;
- *   error: App.Error | null;
- *   route: import('types').CSRRoute | null;
- *   form?: Record<string, any> | null;
+ * url: URL;
+ * params: Record<string, string>;
+ * branch: Array<import('./types.js').BranchNode | undefined>;
+ * status: number;
+ * error: App.Error | null;
+ * route: import('types').CSRRoute | null;
+ * form?: Record<string, any> | null;
  * }} opts
  */
 function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
@@ -688,12 +688,12 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
  * Call the universal load function of the given node, if it exists.
  *
  * @param {{
- *   loader: import('types').CSRPageNodeLoader;
- * 	 parent: () => Promise<Record<string, any>>;
- *   url: URL;
- *   params: Record<string, string>;
- *   route: { id: string | null };
- * 	 server_data_node: import('./types.js').DataNode | null;
+ * loader: import('types').CSRPageNodeLoader;
+ * parent: () => Promise<Record<string, any>>;
+ * url: URL;
+ * params: Record<string, string>;
+ * route: { id: string | null };
+ * server_data_node: import('./types.js').DataNode | null;
  * }} options
  * @returns {Promise<import('./types.js').BranchNode>}
  */
@@ -981,6 +981,9 @@ function preload_error({ error, url, route, params }) {
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 async function load_route({ id, invalidating, url, params, route, preload }) {
+	// --- LOGGING ---
+	console.log('%c  DATA LOADING START', 'color: blue;');
+
 	if (load_cache?.id === id) {
 		// the preload becomes the real navigation
 		preload_tokens.delete(load_cache.token);
@@ -1175,6 +1178,9 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		}
 	}
 
+	// --- LOGGING ---
+	console.log('%c  DATA LOADING COMPLETE', 'color: blue; font-weight: bold;', { branch });
+
 	return get_navigation_result_from_branch({
 		url,
 		params,
@@ -1218,10 +1224,10 @@ async function load_nearest_error_page(i, branch, errors) {
 
 /**
  * @param {{
- *   status: number;
- *   error: App.Error;
- *   url: URL;
- *   route: { id: string | null }
+ * status: number;
+ * error: App.Error;
+ * url: URL;
+ * route: { id: string | null }
  * }} opts
  * @returns {Promise<import('./types.js').NavigationFinished>}
  */
@@ -1420,11 +1426,11 @@ function get_page_key(url) {
 
 /**
  * @param {{
- *   url: URL;
- *   type: import('@sveltejs/kit').Navigation["type"];
- *   intent?: import('./types.js').NavigationIntent;
- *   delta?: number;
- *   event?: PopStateEvent | MouseEvent;
+ * url: URL;
+ * type: import('@sveltejs/kit').Navigation["type"];
+ * intent?: import('./types.js').NavigationIntent;
+ * delta?: number;
+ * event?: PopStateEvent | MouseEvent;
  * }} opts
  */
 function _before_navigate({ url, type, intent, delta, event }) {
@@ -1459,22 +1465,22 @@ function _before_navigate({ url, type, intent, delta, event }) {
 
 /**
  * @param {{
- *   type: import('@sveltejs/kit').NavigationType;
- *   url: URL;
- *   popped?: {
- *     state: Record<string, any>;
- *     scroll: { x: number, y: number };
- *     delta: number;
- *   };
- *   keepfocus?: boolean;
- *   noscroll?: boolean;
- *   replace_state?: boolean;
- *   state?: Record<string, any>;
- *   redirect_count?: number;
- *   nav_token?: {};
- *   accept?: () => void;
- *   block?: () => void;
- *   event?: Event
+ * type: import('@sveltejs/kit').NavigationType;
+ * url: URL;
+ * popped?: {
+ * state: Record<string, any>;
+ * scroll: { x: number, y: number };
+ * delta: number;
+ * };
+ * keepfocus?: boolean;
+ * noscroll?: boolean;
+ * replace_state?: boolean;
+ * state?: Record<string, any>;
+ * redirect_count?: number;
+ * nav_token?: {};
+ * accept?: () => void;
+ * block?: () => void;
+ * event?: Event
  * }} opts
  */
 async function navigate({
@@ -1508,6 +1514,16 @@ async function navigate({
 					// @ts-ignore
 					event
 				});
+
+	// --- LOGGING: Start of Navigation ---
+	if (nav) {
+		const { from, to, type } = nav.navigation;
+		console.log('%cNAVIGATION START', 'background: #222; color: #bada55; font-weight: bold;', {
+			to,
+			from,
+			type
+		});
+	}
 
 	if (!nav) {
 		block();
@@ -1687,6 +1703,8 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
+		// --- LOGGING: When Svelte components are updated ---
+		console.log('%cCOMPONENT UPDATE', 'color: orange; font-weight: bold;', navigation_result.props);
 		root.$set(navigation_result.props);
 		update(navigation_result.props.page);
 		has_navigated = true;

@@ -27,7 +27,7 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
-		"prettier": "^3.6.0",
+		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
 		"typescript-eslint": "catalog:"
 	},

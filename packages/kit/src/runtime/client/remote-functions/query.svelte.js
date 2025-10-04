@@ -23,7 +23,8 @@ export function query(id) {
 		}
 	}
 
-	return create_remote_function(id, (cache_key, payload) => {
+	// 1. We receive `options` from create_remote_function and pass it to Query
+	return create_remote_function(id, (cache_key, payload, options) => {
 		return new Query(cache_key, async () => {
 			if (Object.hasOwn(remote_responses, cache_key)) {
 				return remote_responses[cache_key];
@@ -31,10 +32,14 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			return await remote_request(url);
+			// 2. We pass the `options` object to our modified remote_request function
+			return await remote_request(url, options);
 		});
 	});
 }
+
+// ... (The rest of the file, including query_batch and the Query class, remains exactly the same)
+// ... (No changes needed below this line in this file)
 
 /**
  * @param {string} id

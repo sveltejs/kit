@@ -8,12 +8,14 @@ import { tick } from 'svelte';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
 
 /**
- *
  * @param {string} url
+ * @param {RequestInit} [options]
  */
-export async function remote_request(url) {
-	const response = await fetch(url);
+export async function remote_request(url, options) {
+	// This will now correctly throw an AbortError if the signal is aborted
+	const response = await fetch(url, options);
 
+	// This part only runs if the fetch was successful (not aborted)
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
 	}
@@ -35,10 +37,11 @@ export async function remote_request(url) {
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @param {string} id
- * @param {(key: string, args: string) => any} create
+ * @param {(key: string, args: string, options?: RequestInit) => any} create
  */
 export function create_remote_function(id, create) {
-	return (/** @type {any} */ arg) => {
+	// 1. The returned function now accepts an optional `options` object
+	return (/** @type {any} */ arg, /** @type {RequestInit} */ options) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, payload);
 		let entry = query_map.get(cache_key);
@@ -65,7 +68,8 @@ export function create_remote_function(id, create) {
 
 		let resource = entry?.resource;
 		if (!resource) {
-			resource = create(cache_key, payload);
+			// 2. We pass the `options` object to the `create` callback
+			resource = create(cache_key, payload, options);
 
 			Object.defineProperty(resource, '_key', {
 				value: cache_key
