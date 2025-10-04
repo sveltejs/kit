@@ -1,3 +1,6 @@
+/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
+import { with_resolvers } from '../../utils/promise.js';
+
 /**
  * @typedef {{
  *   fn: () => Promise<any>,
@@ -10,24 +13,12 @@
 export function queue(concurrency) {
 	/** @type {Task[]} */
 	const tasks = [];
+	const { promise, resolve, reject } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
 
 	let current = 0;
-
-	// TODO: Whenever Node >21 is minimum supported version, we can use `Promise.withResolvers` to avoid this ceremony
-	/** @type {(value?: any) => void} */
-	let fulfil;
-
-	/** @type {(error: Error) => void} */
-	let reject;
-
 	let closed = false;
 
-	const done = new Promise((f, r) => {
-		fulfil = f;
-		reject = r;
-	});
-
-	done.catch(() => {
+	promise.catch(() => {
 		// this is necessary in case a catch handler is never added
 		// to the done promise by the user
 	});
@@ -51,7 +42,7 @@ export function queue(concurrency) {
 					});
 			} else if (current === 0) {
 				closed = true;
-				fulfil();
+				resolve();
 			}
 		}
 	}
@@ -72,10 +63,10 @@ export function queue(concurrency) {
 		done: () => {
 			if (current === 0) {
 				closed = true;
-				fulfil();
+				resolve();
 			}
 
-			return done;
+			return promise;
 		}
 	};
 }

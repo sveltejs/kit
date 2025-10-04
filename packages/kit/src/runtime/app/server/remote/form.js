@@ -18,7 +18,7 @@ import { get_cache, run_remote_function } from './shared.js';
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteForm<void, Output>}
  * @since 2.27
  */

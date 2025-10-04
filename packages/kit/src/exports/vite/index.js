@@ -298,6 +298,23 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
+					esbuildOptions: {
+						plugins: [
+							{
+								name: 'vite-plugin-sveltekit-setup:optimize',
+								setup(build) {
+									if (!kit.experimental.remoteFunctions) return;
+
+									const filter = new RegExp(
+										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+									);
+
+									// treat .remote.js files as empty for the purposes of prebundling
+									build.onLoad({ filter }, () => ({ contents: '' }));
+								}
+							}
+						]
+					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -618,9 +635,26 @@ async function kit({ svelte_config }) {
 	/** @type {Array<{ hash: string, file: string }>} */
 	const remotes = [];
 
+	/**
+	 * A set of modules that imported by `.remote.ts` modules. By forcing these modules
+	 * into their own chunks, we ensure that each chunk created for a `.remote.ts`
+	 * module _only_ contains that module, hopefully avoiding any circular
+	 * dependency woes that arise from treating chunks as entries
+	 */
+	const imported_by_remotes = new Set();
+	let uid = 1;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
+
+		moduleParsed(info) {
+			if (svelte_config.kit.moduleExtensions.some((ext) => info.id.endsWith(`.remote${ext}`))) {
+				for (const id of info.importedIds) {
+					imported_by_remotes.add(id);
+				}
+			}
+		},
 
 		config(config) {
 			if (!config.build?.ssr) {
@@ -644,19 +678,15 @@ async function kit({ svelte_config }) {
 			config.build.rollupOptions.output = {
 				...config.build.rollupOptions.output,
 				manualChunks(id, meta) {
-					// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
-					if (id === `${runtime_directory}/app/server/index.js`) {
-						return 'app-server';
-					}
-					if (id === `${runtime_directory}/shared-server.js`) {
-						return 'app-shared-server';
-					}
-
 					// Check if this is a *.remote.ts file
 					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
 						const relative = posixify(path.relative(cwd, id));
 
 						return `remote-${hash(relative)}`;
+					}
+
+					if (imported_by_remotes.has(id)) {
+						return `chunk-${uid++}`;
 					}
 
 					// If there was an existing manualChunks function, call it
@@ -684,7 +714,8 @@ async function kit({ svelte_config }) {
 		},
 
 		async transform(code, id, opts) {
-			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
@@ -757,8 +788,14 @@ async function kit({ svelte_config }) {
 				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
 			});
 
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+
+			if (dev_server) {
+				result += `\nimport.meta.hot?.accept();\n`;
+			}
+
 			return {
-				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
+				code: result
 			};
 		},
 

@@ -4,8 +4,11 @@
 
 	const schema = v.object({
 		foo: v.picklist(['a', 'b']),
-		bar: v.picklist(['d', 'e'])
+		bar: v.picklist(['d', 'e']),
+		button: v.literal('submitter')
 	});
+	let submitter;
+	$inspect(my_form.issues);
 </script>
 
 <form {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
@@ -21,5 +24,16 @@
 
 	<input name={my_form.fields.bar.name()} />
 
-	<button>submit</button>
+	<button bind:this={submitter} name={my_form.field('button')} value="incorrect_value">
+		submit
+	</button>
+	{#if my_form.issues.button}
+		<p>{my_form.issues.button[0].message}</p>
+	{/if}
 </form>
+<button
+	id="trigger-validate"
+	onclick={() => my_form.validate({ includeUntouched: true, submitter })}
+>
+	trigger validation
+</button>

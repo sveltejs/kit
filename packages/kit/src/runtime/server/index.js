@@ -1,3 +1,6 @@
+/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
+import { with_resolvers } from '../../utils/promise.js';
+import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
@@ -9,6 +12,9 @@ import { set_app } from './app.js';
 
 /** @type {Promise<any>} */
 let init_promise;
+
+/** @type {Promise<void> | null} */
+let current = null;
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -22,6 +28,23 @@ export class Server {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
 		this.#manifest = manifest;
+
+		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
+		// in `src/exports/internal/event.js` and handle only one request at a time.
+		if (IN_WEBCONTAINER) {
+			const respond = this.respond.bind(this);
+
+			/** @type {typeof respond} */
+			this.respond = async (...args) => {
+				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
+
+				const previous = current;
+				current = promise;
+
+				await previous;
+				return respond(...args).finally(resolve);
+			};
+		}
 
 		set_manifest(manifest);
 	}

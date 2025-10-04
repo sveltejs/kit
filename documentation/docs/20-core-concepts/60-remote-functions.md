@@ -408,7 +408,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 	const schema = v.object({
 		title: v.pipe(v.string(), v.nonEmpty()),
-		content:v.pipe(v.string(), v.nonEmpty())
+		content: v.pipe(v.string(), v.nonEmpty())
 	});
 </script>
 
@@ -969,8 +969,6 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 	// since bad actors might call this function with other arguments
 });
 ```
-
-> [!NOTE] `form` does not accept a schema since you are always passed a `FormData` object. You are free to parse and validate this as you see fit.
 
 ## Using `getRequestEvent`
 

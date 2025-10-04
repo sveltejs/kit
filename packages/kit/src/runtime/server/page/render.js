@@ -16,6 +16,7 @@ import { add_resolution_suffix } from '../../pathname.js';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
+import { create_remote_cache_key } from '../../shared.js';
 
 // TODO rename this function/module
 
@@ -205,7 +206,16 @@ export async function render_response({
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
 
-				const rendered = options.root.render(props, render_opts);
+				const maybe_promise = options.root.render(props, render_opts);
+				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+				const rendered =
+					options.async && 'then' in maybe_promise
+						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+								maybe_promise
+							).then((r) => r)
+						: maybe_promise;
 
 				// TODO 3.0 remove options.async
 				if (options.async) {
@@ -484,7 +494,7 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					remote[key ? info.id + '/' + key : info.id] = await cache[key];
+					remote[create_remote_cache_key(info.id, key)] = await cache[key];
 				}
 			}
 

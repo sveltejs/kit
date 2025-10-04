@@ -1700,7 +1700,7 @@ async function navigate({
 	await tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
+	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 	if (autoscroll) {
 		const deep_linked = url.hash && document.getElementById(get_id(url));
@@ -1711,6 +1711,15 @@ async function navigate({
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
+
+			// Get target position at this point because with smooth scrolling the scroll position
+			// retrieved from current x/y above might be wrong (since we might not have arrived at the destination yet)
+			const { top, left } = deep_linked.getBoundingClientRect();
+
+			scroll = {
+				x: pageXOffset + left,
+				y: pageYOffset + top
+			};
 		} else {
 			scrollTo(0, 0);
 		}
@@ -1724,7 +1733,7 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus(url);
+		reset_focus(url, scroll);
 	}
 
 	autoscroll = true;
@@ -2464,7 +2473,7 @@ function _start_router() {
 				// /#top and click on a link that goes to /#top. In those cases just go to
 				// the top of the page, and avoid a history change.
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					window.scrollTo({ top: 0 });
+					scrollTo({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
 					if (element) {
@@ -2543,12 +2552,7 @@ function _start_router() {
 		event.preventDefault();
 		event.stopPropagation();
 
-		const data = new FormData(event_form);
-
-		const submitter_name = submitter?.getAttribute('name');
-		if (submitter_name) {
-			data.append(submitter_name, submitter?.getAttribute('value') ?? '');
-		}
+		const data = new FormData(event_form, submitter);
 
 		// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 		url.search = new URLSearchParams(data).toString();
@@ -2928,8 +2932,9 @@ let resetting_focus = false;
 
 /**
  * @param {URL} url
+ * @param {{ x: number, y: number } | null} scroll
  */
-function reset_focus(url) {
+function reset_focus(url, scroll = null) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -2941,7 +2946,7 @@ function reset_focus(url) {
 		// starting point to the fragment identifier.
 		const id = get_id(url);
 		if (id && document.getElementById(id)) {
-			const { x, y } = scroll_state();
+			const { x, y } = scroll ?? scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
 			// to use this hack with `location.replace()` instead.

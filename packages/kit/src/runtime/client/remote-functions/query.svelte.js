@@ -1,17 +1,28 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, remote_responses } from '../client.js';
+import { app, goto, query_map, remote_responses } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
 
 /**
  * @param {string} id
  * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
+	if (DEV) {
+		// If this reruns as part of HMR, refresh the query
+		for (const [key, entry] of query_map) {
+			if (key === id || key.startsWith(id + '/')) {
+				// use optional chaining in case a prerender function was turned into a query
+				entry.resource.refresh?.();
+			}
+		}
+	}
+
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
 			if (Object.hasOwn(remote_responses, cache_key)) {

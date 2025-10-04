@@ -1,6 +1,6 @@
-import { base, assets, relative } from './internal/server.js';
+import { base, assets, relative, initial_base } from './internal/server.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_request_store } from '@sveltejs/kit/internal/server';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
@@ -13,19 +13,18 @@ export function resolve(id, params) {
 	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
 
 	if (relative) {
-		const { event, state } = get_request_store();
+		const store = try_get_request_store();
 
-		if (state.prerendering?.fallback) {
-			return resolved;
+		if (store && !store.state.prerendering?.fallback) {
+			const after_base = store.event.url.pathname.slice(initial_base.length);
+			const segments = after_base.split('/').slice(2);
+			const prefix = segments.map(() => '..').join('/') || '.';
+
+			return prefix + resolved;
 		}
-
-		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-		const prefix = segments.map(() => '..').join('/') || '.';
-
-		return prefix + resolved;
 	}
 
-	return resolved;
+	return base + resolved;
 }
 
 export { base, assets, resolve as resolveRoute };

@@ -200,8 +200,6 @@ function form_tests() {
 	f2.fields.nested.prop.value();
 	// @ts-expect-error
 	f2.fields.nonexistent.value();
-	f2.fields.a.name();
-	f2.fields.nested.prop.name();
 	// @ts-expect-error
 	f2.fields.array[0].array.name();
 
@@ -224,10 +222,8 @@ function form_tests() {
 	);
 	// @ts-expect-error
 	f3.fields.name();
-	f3.fields.a.name();
 	f3.fields.a.issues();
 	f3.fields.a.value();
-	f3.fields.nested.prop.name();
 	f3.fields.nested.prop.issues();
 	f3.fields.nested.prop.value();
 	// @ts-expect-error
@@ -241,11 +237,8 @@ function form_tests() {
 	});
 	// @ts-expect-error
 	f4.fields.name();
-	f4.fields.a.name();
-	f4.fields.a.name('asArray');
 	f4.fields.a.issues();
 	f4.fields.a.value();
-	f4.fields.nested.prop.name();
 	f4.fields.nested.prop.issues();
 	f4.fields.nested.prop.value();
 
@@ -265,8 +258,6 @@ function form_tests() {
 	f5.fields.bar.value() === 'c';
 	// @ts-expect-error
 	f5.fields.foo.value() === 'e';
-	f5.fields.foo.name();
-	f5.fields.bar.name();
 	// @ts-expect-error
 	f5.fields.nonexistent.name();
 
@@ -288,13 +279,10 @@ function form_tests() {
 	f6.fields.array.issues();
 	f6.fields.array[0].prop.issues();
 	f6.fields.array[0].array.issues();
-	f6.fields.array[0].array.name('asArray');
 	// @ts-expect-error
 	f6.fields.nonexistent.issues();
 	f6.fields.array[0].prop.value();
 	f6.fields.array[0].array.value();
-	f6.fields.array[0].prop.name();
-	f6.fields.array[0].array.name('asArray');
 	// @ts-expect-error
 	f6.fields.array[0].array.name();
 
@@ -306,11 +294,8 @@ function form_tests() {
 	});
 	// @ts-expect-error
 	f7.fields.name();
-	f7.fields.a.name();
-	f7.fields.a.name('asArray');
 	f7.fields.a.issues();
 	f7.fields.a.value();
-	f7.fields.nested.prop.name();
 	f7.fields.nested.prop.issues();
 	f7.fields.nested.prop.value();
 
@@ -319,7 +304,11 @@ function form_tests() {
 	// @ts-expect-error
 	f8.fields.x;
 	// @ts-expect-error
-	f8.fields.name();
+	f6.input!['array[0].prop'] = 123;
+
+	// doesn't use data
+	const f9 = form(() => Promise.resolve({ success: true }));
+	f9.result?.success === true;
 }
 form_tests();
 

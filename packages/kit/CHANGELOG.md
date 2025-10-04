@@ -1,5 +1,74 @@
 # @sveltejs/kit
 
+## 2.43.8
+### Patch Changes
+
+
+- fix: HMR for `query` ([#14587](https://github.com/sveltejs/kit/pull/14587))
+
+
+- fix: avoid client modules while traversing dependencies to prevent FOUC during dev ([#14577](https://github.com/sveltejs/kit/pull/14577))
+
+
+- fix: skip prebundling of .remote.js files ([#14583](https://github.com/sveltejs/kit/pull/14583))
+
+
+- fix: more robust remote file pattern matching ([#14578](https://github.com/sveltejs/kit/pull/14578))
+
+## 2.43.7
+### Patch Changes
+
+
+- fix: correctly type the `result` of `form` remote functions that do not accept data ([#14573](https://github.com/sveltejs/kit/pull/14573))
+
+
+- fix: force remote module chunks to isolate themselves ([#14571](https://github.com/sveltejs/kit/pull/14571))
+
+## 2.43.6
+### Patch Changes
+
+
+- fix: ensure cache key is consistent between client/server ([#14563](https://github.com/sveltejs/kit/pull/14563))
+
+
+- fix: keep resolve relative to initial base during prerender ([#14533](https://github.com/sveltejs/kit/pull/14533))
+
+
+- fix: avoid including `HEAD` twice when an unhandled HTTP method is used in a request to a `+server` handler that has both a `GET` handler and a `HEAD` handler ([#14564](https://github.com/sveltejs/kit/pull/14564))
+
+
+- fix: smoothscroll to deep link ([#14569](https://github.com/sveltejs/kit/pull/14569))
+
+## 2.43.5
+### Patch Changes
+
+
+- fix: fall back to non-relative resolution when calling `resolve(...)` outside an event context ([#14532](https://github.com/sveltejs/kit/pull/14532))
+
+## 2.43.4
+### Patch Changes
+
+
+- fix: Webcontainer AsyncLocalStorage workaround ([#14526](https://github.com/sveltejs/kit/pull/14526))
+
+## 2.43.3
+### Patch Changes
+
+
+- fix: Webcontainer AsyncLocalStorage workaround ([#14521](https://github.com/sveltejs/kit/pull/14521))
+
+
+- fix: include the value of form submitters on `form` remote functions ([#14475](https://github.com/sveltejs/kit/pull/14475))
+
+## 2.43.2
+### Patch Changes
+
+
+- fix: ensure rendering starts off synchronously ([#14517](https://github.com/sveltejs/kit/pull/14517))
+
+
+- fix: keep serialized remote data alive until navigation ([#14508](https://github.com/sveltejs/kit/pull/14508))
+
 ## 2.43.1
 ### Patch Changes
 
@@ -2190,7 +2259,7 @@
 
 ### Patch Changes
 
-- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+- fix: add `submitter` type to `SubmitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
 
 ## 1.13.0
 
