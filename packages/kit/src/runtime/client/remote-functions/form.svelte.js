@@ -196,10 +196,14 @@ export function form(id) {
 
 						if (issues.$) {
 							release_overrides(updates);
-						} else if (form_result.refreshes) {
-							refresh_queries(form_result.refreshes, updates);
 						} else {
-							void invalidateAll();
+							input = {};
+
+							if (form_result.refreshes) {
+								refresh_queries(form_result.refreshes, updates);
+							} else {
+								void invalidateAll();
+							}
 						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
