@@ -279,7 +279,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle checkbox inputs
 					if (type === 'checkbox' || type === 'radio') {
 						if (DEV) {
-
 							if (type === 'radio' && !input_value) {
 								throw new Error('Radio inputs must have a value');
 							}
