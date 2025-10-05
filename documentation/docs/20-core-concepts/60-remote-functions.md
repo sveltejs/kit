@@ -1002,7 +1002,10 @@ const getUser = query(() => {
 });
 ```
 
-Note that some properties of `RequestEvent` are different inside remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).
+Note that some properties of `RequestEvent` are different inside remote functions:
+
+- you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
+- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Queries are not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values. In particular, never use them to determine whether or not a user is authorized to access certain data.
 
 ## Redirects
 
