@@ -1642,6 +1642,18 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('3');
 	});
 
+	test.only('queries can access the route/url of the page they were called from', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/remote');
+
+		await clicknav('[href="/remote/event"]');
+
+		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/event');
+		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
+	});
+
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 

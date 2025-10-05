@@ -12,7 +12,15 @@ import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
  * @param {string} url
  */
 export async function remote_request(url) {
-	const response = await fetch(url);
+	const response = await fetch(url, {
+		headers: {
+			// TODO in future, when we support forking, we will likely need
+			// to grab this from context as queries will run before
+			// `location.pathname` is updated
+			'x-sveltekit-pathname': location.pathname,
+			'x-sveltekit-search': location.search
+		}
+	});
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');

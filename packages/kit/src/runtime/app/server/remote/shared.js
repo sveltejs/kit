@@ -133,9 +133,7 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 
 				return event.cookies.delete(name, opts);
 			}
-		},
-		route: { id: null },
-		url: new URL(event.url.origin)
+		}
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function

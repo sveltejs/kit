@@ -129,8 +129,8 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = base;
-		url.search = '';
+		url.pathname = /** @type {string} */ (request.headers.get('x-sveltekit-pathname'));
+		url.search = /** @type {string} */ (request.headers.get('x-sveltekit-pathname'));
 	}
 
 	/** @type {Record<string, string>} */
@@ -294,7 +294,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !remote_id) {
+	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
