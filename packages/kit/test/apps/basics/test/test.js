@@ -1866,6 +1866,92 @@ test.describe('remote functions', () => {
 		await clicknav('[href="/remote/prerender/functions-only"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
 	});
+
+	test('form.fields.value() returns correct nested object structure', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/value');
+
+		// Initially should be empty object or undefined values
+		const initialValue = await page.locator('#full-value').textContent();
+		expect(JSON.parse(initialValue)).toEqual({});
+
+		// Fill leaf field
+		await page.fill('input[name="leaf"]', 'leaf-value');
+		const afterLeaf = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterLeaf)).toEqual({
+			leaf: 'leaf-value'
+		});
+
+		// Fill object.leaf field
+		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
+		const afterObjectLeaf = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterObjectLeaf)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value'
+			}
+		});
+
+		// Fill object.array fields
+		await page.fill('input[name="object.array[0]"]', 'array-item-1');
+		const afterArrayItem1 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArrayItem1)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1']
+			}
+		});
+
+		await page.fill('input[name="object.array[1]"]', 'array-item-2');
+		const afterArrayItem2 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArrayItem2)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			}
+		});
+
+		// Fill array[0].leaf field
+		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
+		const afterArray0 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArray0)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }]
+		});
+
+		// Fill array[1].leaf field
+		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
+		const afterArray1 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArray1)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]
+		});
+
+		// Test nested object value access
+		const objectValue = await page.locator('#object-value').textContent();
+		expect(JSON.parse(objectValue)).toEqual({
+			leaf: 'object-leaf-value',
+			array: ['array-item-1', 'array-item-2']
+		});
+
+		// Test array value access
+		const arrayValue = await page.locator('#array-value').textContent();
+		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+	});
 });
 
 test.describe('params prop', () => {

@@ -8,28 +8,28 @@
 		button: v.literal('submitter')
 	});
 	let submitter;
-	$inspect(my_form.issues);
+	$inspect(my_form.fields.allIssues());
 </script>
 
 <form {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
-	{#if my_form.issues.foo}
-		<p>{my_form.issues.foo[0].message}</p>
-	{/if}
+	{#each my_form.fields.foo.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input name={my_form.field('foo')} />
+	<input {...my_form.fields.foo.as('text')} />
 
-	{#if my_form.issues.bar}
-		<p>{my_form.issues.bar[0].message}</p>
-	{/if}
+	{#each my_form.fields.bar.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input name={my_form.field('bar')} />
+	<input {...my_form.fields.bar.as('text')} />
 
-	<button bind:this={submitter} name={my_form.field('button')} value="incorrect_value">
+	<button bind:this={submitter} {...my_form.fields.button.as('submit')} value="incorrect_value">
 		submit
 	</button>
-	{#if my_form.issues.button}
-		<p>{my_form.issues.button[0].message}</p>
-	{/if}
+	{#each my_form.fields.button.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 </form>
 <button
 	id="trigger-validate"

@@ -6,6 +6,7 @@ export const my_form = form(
 		submitter: v.string()
 	}),
 	async (data) => {
+		console.log('!!!', data);
 		return data.submitter;
 	}
 );

@@ -1,10 +1,17 @@
 /** @import { RemoteFormInput, RemoteForm } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteInfo } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
+import {
+	convert_formdata,
+	flatten_issues,
+	create_field_proxy,
+	set_nested_value,
+	throw_on_old_property_access,
+	deep_set
+} from '../../../form-utils.svelte.js';
 import { get_cache, run_remote_function } from './shared.js';
-import { convert_formdata, flatten_issues } from '../../../utils.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -128,7 +135,7 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 				}
 
-				/** @type {{ input?: Record<string, string | string[]>, issues?: Record<string, StandardSchemaV1.Issue[]>, result: Output }} */
+				/** @type {{ input?: Record<string, any>, issues?: Record<string, InternalRemoteFormIssue[]>, result: Output }} */
 				const output = {};
 
 				const { event, state } = get_request_store();
@@ -140,18 +147,27 @@ export function form(validate_or_fn, maybe_fn) {
 
 				if (validated?.issues !== undefined) {
 					output.issues = flatten_issues(validated.issues);
-					output.input = {};
 
-					for (let key of form_data.keys()) {
-						// redact sensitive fields
-						if (/^[.\]]?_/.test(key)) continue;
+					// if it was a progressively-enhanced submission, we don't need
+					// to return the input — it's already there
+					if (!event.isRemoteRequest) {
+						output.input = {};
 
-						const is_array = key.endsWith('[]');
-						const values = form_data.getAll(key).filter((value) => typeof value === 'string');
+						for (let key of form_data.keys()) {
+							// redact sensitive fields
+							if (/^[.\]]?_/.test(key)) continue;
 
-						if (is_array) key = key.slice(0, -2);
+							const is_array = key.endsWith('[]');
+							const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 
-						output.input[key] = is_array ? values : values[0];
+							if (is_array) key = key.slice(0, -2);
+
+							output.input = set_nested_value(
+								/** @type {Record<string, any>} */ (output.input),
+								key,
+								is_array ? values : values[0]
+							);
+						}
 					}
 				} else {
 					if (validated !== undefined) {
@@ -185,16 +201,30 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		for (const property of ['input', 'issues']) {
-			Object.defineProperty(instance, property, {
-				get() {
-					try {
-						return get_cache(__)?.['']?.[property] ?? {};
-					} catch {
-						return undefined;
-					}
-				}
-			});
+		Object.defineProperty(instance, 'fields', {
+			get() {
+				const data = get_cache(__)?.[''];
+				return create_field_proxy(
+					{},
+					() => data?.input ?? {},
+					(path, value) => {
+						if (data) {
+							// don't override a submission
+							return;
+						}
+
+						const input = path.length === 0 ? value : deep_set({}, path.map(String), value);
+
+						get_cache(__)[''] ??= { input };
+					},
+					() => data?.issues ?? {}
+				);
+			}
+		});
+
+		// TODO 3.0 remove
+		if (DEV) {
+			throw_on_old_property_access(instance);
 		}
 
 		Object.defineProperty(instance, 'result', {
@@ -215,10 +245,6 @@ export function form(validate_or_fn, maybe_fn) {
 		// On the server, buttonProps.pending is always 0
 		Object.defineProperty(button_props, 'pending', {
 			get: () => 0
-		});
-
-		Object.defineProperty(instance, 'field', {
-			value: (/** @type {string} */ name) => name
 		});
 
 		Object.defineProperty(instance, 'preflight', {

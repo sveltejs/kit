@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
+/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
@@ -10,7 +10,34 @@ import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } f
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
-import { convert_formdata, file_transport, flatten_issues } from '../../utils.js';
+import {
+	convert_formdata,
+	flatten_issues,
+	create_field_proxy,
+	deep_set,
+	set_nested_value,
+	throw_on_old_property_access
+} from '../../form-utils.svelte.js';
+
+/**
+ * Merge client issues into server issues
+ * @param {Record<string, InternalRemoteFormIssue[]>} current_issues
+ * @param {Record<string, InternalRemoteFormIssue[]>} client_issues
+ * @returns {Record<string, InternalRemoteFormIssue[]>}
+ */
+function merge_with_server_issues(current_issues, client_issues) {
+	const merged_issues = Object.fromEntries(
+		Object.entries(current_issues)
+			.map(([key, issue_list]) => [key, issue_list.filter((issue) => issue.server)])
+			.filter(([, issue_list]) => issue_list.length > 0)
+	);
+
+	for (const [key, new_issue_list] of Object.entries(client_issues)) {
+		merged_issues[key] = [...(merged_issues[key] || []), ...new_issue_list];
+	}
+
+	return merged_issues;
+}
 
 /**
  * Client-version of the `form` function from `$app/server`.
@@ -28,10 +55,14 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
-		/** @type {Record<string, string | string[] | File | File[]>} */
-		let input = $state({});
+		/**
+		 * By making this $state.raw() and creating a new object each time we update it,
+		 * all consumers along the update chain are properly invalidated.
+		 * @type {Record<string, string | string[] | File | File[]>}
+		 */
+		let input = $state.raw({});
 
-		/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
 
 		/** @type {any} */
@@ -49,6 +80,8 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let touched = {};
 
+		let submitted = false;
+
 		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
@@ -57,10 +90,13 @@ export function form(id) {
 		async function handle_submit(form, form_data, callback) {
 			const data = convert_formdata(form_data);
 
+			submitted = true;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				issues = flatten_issues(validated.issues);
+				const client_issues = flatten_issues(validated.issues, false);
+				issues = merge_with_server_issues(issues, client_issues);
 				return;
 			}
 
@@ -146,21 +182,25 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({
-							input = {},
-							issues = {},
-							result
-						} = devalue.parse(form_result.result, {
-							...app.decoders,
-							File: file_transport.decode
-						}));
+						({ issues = {}, result } = devalue.parse(form_result.result, app.decoders));
+
+						// Mark server issues with server: true
+						for (const issue_list of Object.values(issues)) {
+							for (const issue of issue_list) {
+								issue.server = true;
+							}
+						}
 
 						if (issues.$) {
 							release_overrides(updates);
-						} else if (form_result.refreshes) {
-							refresh_queries(form_result.refreshes, updates);
 						} else {
-							void invalidateAll();
+							input = {};
+
+							if (form_result.refreshes) {
+								refresh_queries(form_result.refreshes, updates);
+							} else {
+								void invalidateAll();
+							}
 						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
@@ -275,23 +315,37 @@ export function form(id) {
 					touched[name] = true;
 
 					if (is_array) {
-						const elements = /** @type {HTMLInputElement[]} */ (
-							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
-						);
+						let value;
 
-						if (DEV) {
-							for (const e of elements) {
-								if ((e.type === 'file') !== is_file) {
-									throw new Error(
-										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
-									);
+						if (element.tagName === 'SELECT') {
+							value = Array.from(
+								element.querySelectorAll('option:checked'),
+								(e) => /** @type {HTMLOptionElement} */ (e).value
+							);
+						} else {
+							const elements = /** @type {HTMLInputElement[]} */ (
+								Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+							);
+
+							if (DEV) {
+								for (const e of elements) {
+									if ((e.type === 'file') !== is_file) {
+										throw new Error(
+											`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
+										);
+									}
 								}
+							}
+
+							value = is_file
+								? elements.map((input) => Array.from(input.files ?? [])).flat()
+								: elements.map((element) => element.value);
+							if (element.type === 'checkbox') {
+								value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
 							}
 						}
 
-						input[name] = is_file
-							? elements.map((input) => Array.from(input.files ?? [])).flat()
-							: elements.map((element) => element.value);
+						input = set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -302,12 +356,23 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							input[name] = file;
+							input = set_nested_value(input, name, file);
 						} else {
-							delete input[name];
+							// Remove the property by setting to undefined and clean up
+							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
+							let current = /** @type {any} */ (input);
+							for (let i = 0; i < path_parts.length - 1; i++) {
+								if (current[path_parts[i]] == null) return;
+								current = current[path_parts[i]];
+							}
+							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input[name] = element.value;
+						input = set_nested_value(
+							input,
+							name,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						);
 					}
 				});
 
@@ -387,18 +452,29 @@ export function form(id) {
 
 		let validate_id = 0;
 
+		// TODO 3.0 remove
+		if (DEV) {
+			throw_on_old_property_access(instance);
+		}
+
 		Object.defineProperties(instance, {
 			buttonProps: {
 				value: button_props
 			},
-			input: {
-				get: () => input,
-				set: (v) => {
-					input = v;
-				}
-			},
-			issues: {
-				get: () => issues
+			fields: {
+				get: () =>
+					create_field_proxy(
+						{},
+						() => input,
+						(path, value) => {
+							if (path.length === 0) {
+								input = value;
+							} else {
+								input = deep_set(input, path.map(String), value);
+							}
+						},
+						() => issues
+					)
 			},
 			result: {
 				get: () => result
@@ -406,11 +482,8 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
-			field: {
-				value: (/** @type {string} */ name) => name
-			},
 			preflight: {
-				/** @type {RemoteForm<any, any>['preflight']} */
+				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
 					return instance;
@@ -455,7 +528,7 @@ export function form(id) {
 						}
 					}
 
-					if (!includeUntouched) {
+					if (!includeUntouched && !submitted) {
 						array = array.filter((issue) => {
 							if (issue.path !== undefined) {
 								let path = '';
@@ -475,7 +548,10 @@ export function form(id) {
 						});
 					}
 
-					issues = flatten_issues(array);
+					const is_server_validation = !validated?.issues;
+					const new_issues = flatten_issues(array, is_server_validation);
+
+					issues = is_server_validation ? new_issues : merge_with_server_issues(issues, new_issues);
 				}
 			},
 			enhance: {

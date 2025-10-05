@@ -229,7 +229,6 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
 
-
 ```ts
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
@@ -294,114 +293,187 @@ export const createPost = form(
 <h1>Create a new post</h1>
 
 <form {...createPost}>
+	<!-- form content goes here -->
+
+	<button>Publish!</button>
+</form>
+```
+
+The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+
+As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
+
+### Fields
+
+A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use:
+
+```svelte
+<form {...createPost}>
 	<label>
 		<h2>Title</h2>
-		<input name="title" />
+		+++<input {...createPost.fields.title.as('text')} />+++
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
-		<textarea name="content"></textarea>
+		+++<textarea {...createPost.fields.content.as('text')}></textarea>+++
 	</label>
 
 	<button>Publish!</button>
 </form>
 ```
 
-As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`. The one difference is to `query` is that the schema inputs must all be of type `string` or `File`, since that's all the original `FormData` provides. You can however coerce the value into a different type — how to do that depends on the validation library you use.
+These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-```ts
-/// file: src/routes/count.remote.js
+Fields can be nested in objects and arrays, and their values can be strings, numbers, booleans or `File` objects. For example, if your schema looked like this...
+
+```js
+/// file: data.remote.js
 import * as v from 'valibot';
 import { form } from '$app/server';
-
-export const setCount = form(
-	v.object({
-		// Valibot:
-		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
-		// Zod:
-		// count: z.coerce.number<string>()
+// ---cut---
+const datingProfile = v.object({
+	name: v.string(),
+	photo: v.file(),
+	info: v.object({
+		height: v.number(),
+		likesDogs: v.optional(v.boolean(), false)
 	}),
-	async ({ count }) => {
-		// ...
-	}
+	attributes: v.array(v.string())
+});
+
+export const createProfile = form(datingProfile, (data) => { /* ... */ });
+```
+
+...your form could look like this:
+
+```svelte
+<script>
+	import { createProfile } from './data.remote';
+
+	const { name, photo, info, attributes } = createProfile.fields;
+</script>
+
+<form {...createProfile} enctype="multipart/form-data">
+	<label>
+		<input {...name.as('text')} /> Name
+	</label>
+
+	<label>
+		<input {...photo.as('file')} /> Photo
+	</label>
+
+	<label>
+		<input {...info.height.as('number')} /> Height (cm)
+	</label>
+
+	<label>
+		<input {...info.likesDogs.as('checkbox')} /> I like dogs
+	</label>
+
+	<h2>My best attributes</h2>
+	<input {...attributes[0].as('text')} />
+	<input {...attributes[1].as('text')} />
+	<input {...attributes[2].as('text')} />
+
+	<button>submit</button>
+</form>
+```
+
+Because our form contains a `file` input, we've added an `enctype="multipart/form-data"` attribute. The values for `info.height` and `info.likesDogs` are coerced to a number and a boolean respectively.
+
+> [!NOTE] If a `checkbox` input is unchecked, the value is not included in the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object that SvelteKit constructs the data from. As such, we have to make the value optional in our schema. In Valibot that means using `v.optional(v.boolean(), false)` instead of just `v.boolean()`, whereas in Zod it would mean using `z.coerce.boolean<boolean>()`.
+
+In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
+
+```js
+/// file: data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+// ---cut---
+export const survey = form(
+	v.object({
+		operatingSystem: v.picklist(['windows', 'mac', 'linux']),
+		languages: v.optional(v.array(v.picklist(['html', 'css', 'js'])), [])
+	}),
+	(data) => { /* ... */ }
 );
 ```
 
-The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
-
 ```svelte
-<!--
-    results in a
-    {
-	   name: { first: string, last: string },
-	   jobs: Array<{ title: string, company: string }>
-	}
-    object
--->
-<input name="name.first" />
-<input name="name.last" />
-{#each jobs as job, idx}
-	<input name="jobs[{idx}].title">
-	<input name="jobs[{idx}].company">
-{/each}
+<form {...survey}>
+	<h2>Which operating system do you use?</h2>
+
+	{#each ['windows', 'mac', 'linux'] as os}
+		<label>
+			<input {...survey.fields.operatingSystem.as('radio', os)}>
+			{os}
+		</label>
+	{/each}
+
+	<h2>Which languages do you write code in?</h2>
+
+	{#each ['html', 'css', 'js'] as language}
+		<label>
+			<input {...survey.fields.languages.as('checkbox', language)}>
+			{language}
+		</label>
+	{/each}
+
+	<button>submit</button>
+</form>
 ```
 
-To indicate a repeated field, use a `[]` suffix:
+Alternatively, you could use `select` and `select multiple`:
 
 ```svelte
-<label><input type="checkbox" name="language[]" value="html" /> HTML</label>
-<label><input type="checkbox" name="language[]" value="css" /> CSS</label>
-<label><input type="checkbox" name="language[]" value="js" /> JS</label>
+<form {...survey}>
+	<h2>Which operating system do you use?</h2>
+
+	<select {...survey.fields.operatingSystem.as('select')}>
+		<option>windows</option>
+		<option>mac</option>
+		<option>linux</option>
+	</select>
+
+	<h2>Which languages do you write code in?</h2>
+
+	<select {...survey.fields.languages.as('select multiple')}>
+		<option>html</option>
+		<option>css</option>
+		<option>js</option>
+	</select>
+
+	<button>submit</button>
+</form>
 ```
 
-If you'd like type safety and autocomplete when setting `name` attributes, use the form object's `field` method:
-
-```svelte
-<label>
-	<h2>Title</h2>
-	<input name={+++createPost.field('title')+++} />
-</label>
-```
-
-This will error during typechecking if `title` does not exist on your schema.
-
-The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+> [!NOTE] As with unchecked `checkbox` inputs, if no selections are made then the data will be `undefined`. For this reason, the `languages` field uses `v.optional(v.array(...), [])` rather than just `v.array(...)`.
 
 ### Validation
 
-If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated:
+If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
 
 ```svelte
 <form {...createPost}>
 	<label>
 		<h2>Title</h2>
 
-+++		{#if createPost.issues.title}
-			{#each createPost.issues.title as issue}
-				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
++++		{#each createPost.fields.title.issues() as issue}
+			<p class="issue">{issue.message}</p>
+		{/each}+++
 
-		<input
-			name="title"
-			+++aria-invalid={!!createPost.issues.title}+++
-		/>
+		<input {...createPost.fields.title.as('text')} />
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#if createPost.issues.content}
-			{#each createPost.issues.content as issue}
-				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
++++		{#each createPost.fields.content.issues() as issue}
+			<p class="issue">{issue.message}</p>
+		{/each}+++
 
-		<textarea
-			name="content"
-			+++aria-invalid={!!createPost.issues.content}+++
-		></textarea>
+		<textarea {...createPost.fields.content.as('text')}></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -418,7 +490,7 @@ You don't need to wait until the form is submitted to validate the data — you 
 
 By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ includeUntouched: true })`.
 
-For client-side validation, you can specify a _preflight_ schema which will populate `issues` and prevent data being sent to the server if the data doesn't validate:
+For client-side validation, you can specify a _preflight_ schema which will populate `issues()` and prevent data being sent to the server if the data doesn't validate:
 
 ```svelte
 <script>
@@ -440,9 +512,17 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 > [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
 
-### Live inputs
+To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
-The form object contains a `input` property which reflects its current value. As the user interacts with the form, `input` is automatically updated:
+```svelte
+{#each createPost.fields.allIssues() as issue}
+	<p>{issue.message}</p>
+{/each}
+```
+
+### Getting/setting inputs
+
+Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
 <form {...createPost}>
@@ -450,14 +530,34 @@ The form object contains a `input` property which reflects its current value. As
 </form>
 
 <div class="preview">
-	<h2>{createPost.input.title}</h2>
-	<div>{@html render(createPost.input.content)}</div>
+	<h2>{createPost.fields.title.value()}</h2>
+	<div>{@html render(createPost.fields.content.value())}</div>
 </div>
+```
+
+Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
+
+You can update a field (or a collection of fields) via the `set(...)` method:
+
+```svelte
+<script>
+	import { createPost } from '../data.remote';
+
+	// this...
+	createPost.fields.set({
+		title: 'My new blog post',
+		content: 'Lorem ipsum dolor sit amet...'
+	});
+
+	// ...is equivalent to this:
+	createPost.fields.title.set('My new blog post');
+	createPost.fields.content.set('Lorem ipsum dolor sit amet');
+</script>
 ```
 
 ### Handling sensitive data
 
-In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `input` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
+In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `value()` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
 
 You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
 
@@ -465,20 +565,12 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 <form {...register}>
 	<label>
 		Username
-		<input
-			name="username"
-			value={register.input.username}
-			aria-invalid={!!register.issues.username}
-		/>
+		<input {...register.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Password
-		<input
-			type="password"
-			+++name="_password"+++
-			+++aria-invalid={!!register.issues._password}+++
-		/>
+		<input +++{...register.fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
@@ -680,12 +772,12 @@ This attribute exists on the `buttonProps` property of a form object:
 <form {...login}>
 	<label>
 		Your username
-		<input name="username" />
+		<input {...login.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input name="password" type="password" />
+		<input {...login.fields._password.as('password')} />
 	</label>
 
 	<button>login</button>
