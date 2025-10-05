@@ -1867,25 +1867,24 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
 	 */
-	export type RemoteFormField<Value> =
-		NonNullable<Value> extends RemoteFormFieldValue
-			? RemoteFormFieldMethods<Value> & {
-					/**
-					 * Returns an object that can be spread onto an input element with the correct type attribute,
-					 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-					 * @example
-					 * ```svelte
-					 * <input {...myForm.fields.myString.as('text')} />
-					 * <input {...myForm.fields.myNumber.as('number')} />
-					 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-					 * ```
-					 */
-					as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
-				}
-			: RemoteFormFieldMethods<Value> & {
-					/** Validation issues belonging to this or any of the fields that belong to it, if any */
-					allIssues(): RemoteFormIssue[] | undefined;
-				};
+	export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	};
+
+	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
+		/** Validation issues belonging to this or any of the fields that belong to it, if any */
+		allIssues(): RemoteFormIssue[] | undefined;
+	};
 
 	/**
 	 * Recursive type to build form fields structure with proxy access
@@ -1894,10 +1893,12 @@ declare module '@sveltejs/kit' {
 		WillRecurseIndefinitely<T> extends true
 			? RecursiveFormFields
 			: NonNullable<T> extends string | number | boolean | File
-				? RemoteFormField<T>
-				: T extends Array<infer U>
-					? RemoteFormField<T> & { [K in number]: RemoteFormFields<U> }
-					: RemoteFormField<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
+				? RemoteFormField<NonNullable<T>>
+				: T extends string[] | File[]
+					? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
+					: T extends Array<infer U>
+						? RemoteFormFieldContainer<T> & { [K in number]: RemoteFormFields<U> }
+						: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
 
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
 	type RecursiveFormFields = RemoteFormField<any> & { [key: string]: RecursiveFormFields };
