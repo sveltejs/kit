@@ -448,7 +448,7 @@ Alternatively, you could use `select` and `select multiple`:
 
 ### Validation
 
-If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
+If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
 
 ```svelte
 <form {...createPost}>
@@ -508,9 +508,17 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 > [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
 
+To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
+
+```svelte
+{#each createPost.fields.allIssues() as issue}
+	<p>{issue.message}</p>
+{/each}
+```
+
 ### Getting/setting inputs
 
-The form object contains a `value` method which reflects its current value. As the user interacts with the form, it is automatically updated:
+Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
 <form {...createPost}>
@@ -523,24 +531,24 @@ The form object contains a `value` method which reflects its current value. As t
 </div>
 ```
 
-You can update a field (or a collection of fields) via the `set` method:
+Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
+
+You can update a field (or a collection of fields) via the `set(...)` method:
 
 ```svelte
 <script>
+	import { createPost } from '../data.remote';
 
+	// this...
+	createPost.fields.set({
+		title: 'My new blog post',
+		content: 'Lorem ipsum dolor sit amet...'
+	});
+
+	// ...is equivalent to this:
+	createPost.fields.title.set('My new blog post');
+	createPost.fields.content.set('Lorem ipsum dolor sit amet');
 </script>
-
-<form {...createPost}>
-	<!-- -->
-</form>
-
-<button onclick={() => createPost.fields.set({ title: '', content: '' })}>
-	reset
-</button>
-
-<button onclick={() => createPost.fields.title.set(Math.random() + '')}>
-	random title
-</button>
 ```
 
 ### Handling sensitive data
