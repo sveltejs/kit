@@ -329,7 +329,7 @@ export async function internal_respond(request, options, manifest, state) {
 			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
-		if (route) {
+		if (route && !remote_id) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {
