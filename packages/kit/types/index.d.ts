@@ -1819,7 +1819,7 @@ declare module '@sveltejs/kit' {
 	};
 
 	// Valid input types for a given value type
-	type ValidInputTypesForValue<T> = {
+	export type RemoteFormFieldType<T> = {
 		[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
 	}[keyof InputTypeMap];
 
@@ -1880,9 +1880,7 @@ declare module '@sveltejs/kit' {
 					 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 					 * ```
 					 */
-					as<T extends ValidInputTypesForValue<Value>>(
-						...args: AsArgs<T, Value>
-					): InputElementProps<T>;
+					as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
 				}
 			: RemoteFormFieldMethods<Value> & {
 					/** Validation issues belonging to this or any of the fields that belong to it, if any */
