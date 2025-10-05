@@ -8,7 +8,8 @@ import {
 	flatten_issues,
 	create_field_proxy,
 	set_nested_value,
-	throw_on_old_property_access
+	throw_on_old_property_access,
+	deep_set
 } from '../../../form-utils.svelte.js';
 import { get_cache, run_remote_function } from './shared.js';
 
@@ -206,8 +207,15 @@ export function form(validate_or_fn, maybe_fn) {
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
-					() => {
-						throw new Error('Cannot set values on forms on the server');
+					(path, value) => {
+						if (data) {
+							// don't override a submission
+							return;
+						}
+
+						const input = path.length === 0 ? value : deep_set({}, path.map(String), value);
+
+						get_cache(__)[''] ??= { input };
 					},
 					() => data?.issues ?? {}
 				);

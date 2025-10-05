@@ -1873,9 +1873,9 @@ declare module '@sveltejs/kit' {
 					 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
 					 * @example
 					 * ```svelte
-					 * <input {...myForm.fields.username.as('text')} />
-					 * <input {...myForm.fields.isActive.as('checkbox')} />
-					 * <input {...myForm.fields.tags.as('text[]')} />
+					 * <input {...myForm.fields.myString.as('text')} />
+					 * <input {...myForm.fields.myNumber.as('number')} />
+					 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 					 * ```
 					 */
 					as<T extends ValidInputTypesForValue<ValueType>>(
