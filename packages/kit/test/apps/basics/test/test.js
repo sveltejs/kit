@@ -1646,6 +1646,9 @@ test.describe('remote functions', () => {
 		page,
 		clicknav
 	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
 		await page.goto('/remote');
 
 		await clicknav('[href="/remote/event"]');
