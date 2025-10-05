@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-breaking: update `form` API
+breaking: update experimental `form` API
