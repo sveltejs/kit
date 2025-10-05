@@ -129,8 +129,8 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = /** @type {string} */ (request.headers.get('x-sveltekit-pathname'));
-		url.search = /** @type {string} */ (request.headers.get('x-sveltekit-search'));
+		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
+		url.search = request.headers.get('x-sveltekit-search') ?? '';
 	}
 
 	/** @type {Record<string, string>} */
