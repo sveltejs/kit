@@ -1869,7 +1869,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				set value(v: string | number);
 			};
 
-type FormFieldMethods<ValueType> = {
+type RemoteFormFieldMethods<ValueType> = {
 	/** The values that will be submitted */
 	value(): ValueType;
 	/** Set the values that will be submitted */
@@ -1889,9 +1889,9 @@ type AsArgs<Type extends keyof InputTypeMap, ValueType> = Type extends 'checkbox
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-type FormField<ValueType> =
+type RemoteFormField<ValueType> =
 	NonNullable<ValueType> extends string | string[] | number | boolean | File | File[]
-		? FormFieldMethods<ValueType> & {
+		? RemoteFormFieldMethods<ValueType> & {
 				/**
 				 * Returns an object that can be spread onto an input element with the correct type attribute,
 				 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
@@ -1906,7 +1906,7 @@ type FormField<ValueType> =
 					...args: AsArgs<T, ValueType>
 				): InputElementProps<T>;
 			}
-		: FormFieldMethods<ValueType> & {
+		: RemoteFormFieldMethods<ValueType> & {
 				/** Validation issues belonging to this or any of the fields that belong to it, if any */
 				allIssues(): RemoteFormIssue[] | undefined;
 			};
@@ -1914,17 +1914,17 @@ type FormField<ValueType> =
 /**
  * Recursive type to build form fields structure with proxy access
  */
-type FormFields<T> =
+type RemoteFormFields<T> =
 	WillRecurseIndefinitely<T> extends true
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
-			? FormField<T>
+			? RemoteFormField<T>
 			: T extends Array<infer U>
-				? FormField<T> & { [K in number]: FormFields<U> }
-				: FormField<T> & { [K in keyof T]-?: FormFields<T[K]> };
+				? RemoteFormField<T> & { [K in number]: RemoteFormFields<U> }
+				: RemoteFormField<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = FormField<any> & { [key: string]: RecursiveFormFields };
+type RecursiveFormFields = RemoteFormField<any> & { [key: string]: RecursiveFormFields };
 
 type MaybeArray<T> = T | T[];
 
@@ -1987,7 +1987,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: Input extends void ? never : FormFields<Input>;
+	fields: Input extends void ? never : RemoteFormFields<Input>;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';
