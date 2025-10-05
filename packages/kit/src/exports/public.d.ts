@@ -1869,29 +1869,31 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				set value(v: string | number);
 			};
 
-type RemoteFormFieldMethods<ValueType> = {
+type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
-	value(): ValueType;
+	value(): T;
 	/** Set the values that will be submitted */
-	set(input: ValueType): ValueType;
+	set(input: T): T;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 };
 
-type AsArgs<Type extends keyof InputTypeMap, ValueType> = Type extends 'checkbox'
-	? ValueType extends string[]
-		? [type: 'checkbox', value: ValueType[number] | (string & {})]
+export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
+
+type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
+	? Value extends string[]
+		? [type: 'checkbox', value: Value[number] | (string & {})]
 		: [type: Type]
 	: Type extends 'radio'
-		? [type: 'radio', value: ValueType | (string & {})]
+		? [type: 'radio', value: Value | (string & {})]
 		: [type: Type];
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-type RemoteFormField<ValueType> =
-	NonNullable<ValueType> extends string | string[] | number | boolean | File | File[]
-		? RemoteFormFieldMethods<ValueType> & {
+export type RemoteFormField<Value> =
+	NonNullable<Value> extends RemoteFormFieldValue
+		? RemoteFormFieldMethods<Value> & {
 				/**
 				 * Returns an object that can be spread onto an input element with the correct type attribute,
 				 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
@@ -1902,11 +1904,11 @@ type RemoteFormField<ValueType> =
 				 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 				 * ```
 				 */
-				as<T extends ValidInputTypesForValue<ValueType>>(
-					...args: AsArgs<T, ValueType>
+				as<T extends ValidInputTypesForValue<Value>>(
+					...args: AsArgs<T, Value>
 				): InputElementProps<T>;
 			}
-		: RemoteFormFieldMethods<ValueType> & {
+		: RemoteFormFieldMethods<Value> & {
 				/** Validation issues belonging to this or any of the fields that belong to it, if any */
 				allIssues(): RemoteFormIssue[] | undefined;
 			};
