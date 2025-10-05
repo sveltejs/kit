@@ -149,23 +149,6 @@ export function flatten_issues(issues, server = false) {
 }
 
 /**
- * We need to encode `File` objects when returning `issues` from a `form` submission,
- * because some validators include the original value in the issue. It doesn't
- * need to deserialize to a `File` object
- * @type {import('@sveltejs/kit').Transporter}
- */
-export const file_transport = {
-	encode: (file) =>
-		file instanceof File && {
-			size: file.size,
-			type: file.type,
-			name: file.name,
-			lastModified: file.lastModified
-		},
-	decode: (data) => data
-};
-
-/**
  * Gets a nested value from an object using a path array
  * @param {Record<string, any>} object
  * @param {(string | number)[]} path

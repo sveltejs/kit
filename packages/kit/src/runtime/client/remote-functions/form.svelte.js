@@ -12,7 +12,6 @@ import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
-	file_transport,
 	flatten_issues,
 	create_field_proxy,
 	deep_set,
@@ -183,10 +182,7 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({ issues = {}, result } = devalue.parse(form_result.result, {
-							...app.decoders,
-							File: file_transport.decode
-						}));
+						({ issues = {}, result } = devalue.parse(form_result.result, app.decoders));
 
 						// Mark server issues with server: true
 						for (const issue_list of Object.values(issues)) {
