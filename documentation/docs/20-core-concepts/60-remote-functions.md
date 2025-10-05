@@ -352,26 +352,22 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 
 <form {...createProfile} enctype="multipart/form-data">
 	<label>
-		Name
-		<input {...name.as('text')} />
+		<input {...name.as('text')} /> Name
 	</label>
 
 	<label>
-		Photo
-		<input {...photo.as('file')} />
+		<input {...photo.as('file')} /> Photo
 	</label>
 
 	<label>
-		Height (cm)
-		<input {...info.height.as('number')} />
+		<input {...info.height.as('number')} /> Height (cm)
 	</label>
 
 	<label>
-		I like dogs
-		<input {...info.likesDogs.as('checkbox')} />
+		<input {...info.likesDogs.as('checkbox')} /> I like dogs
 	</label>
 
-	<label>My best attributes</label>
+	<h2>My best attributes</h2>
 	<input {...attributes[0].as('text')} />
 	<input {...attributes[1].as('text')} />
 	<input {...attributes[2].as('text')} />
