@@ -1644,6 +1644,7 @@ test.describe('remote functions', () => {
 
 	test('queries can access the route/url of the page they were called from', async ({
 		page,
+		javaScriptEnabled,
 		clicknav
 	}) => {
 		// TODO remove once async SSR exists
