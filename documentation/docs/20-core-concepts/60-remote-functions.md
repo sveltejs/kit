@@ -328,6 +328,10 @@ These attributes allow SvelteKit to set the correct input type, set a `name` tha
 Fields can be nested in objects and arrays, and their values can be strings, numbers, booleans or `File` objects. For example, if your schema looked like this...
 
 ```js
+/// file: data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+// ---cut---
 const datingProfile = v.object({
 	name: v.string(),
 	photo: v.file(),
@@ -383,6 +387,10 @@ Because our form contains a `file` input, we've added an `enctype="multipart/for
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
 ```js
+/// file: data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+// ---cut---
 export const survey = form(
 	v.object({
 		operatingSystem: v.picklist(['windows', 'mac', 'linux']),
