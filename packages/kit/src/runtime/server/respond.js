@@ -130,7 +130,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
 		url.pathname = /** @type {string} */ (request.headers.get('x-sveltekit-pathname'));
-		url.search = /** @type {string} */ (request.headers.get('x-sveltekit-pathname'));
+		url.search = /** @type {string} */ (request.headers.get('x-sveltekit-search'));
 	}
 
 	/** @type {Record<string, string>} */
