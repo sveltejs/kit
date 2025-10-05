@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.44.0
+### Minor Changes
+
+
+- feat: expose `event.route` and `event.url` to remote functions ([#14606](https://github.com/sveltejs/kit/pull/14606))
+
+
+- breaking: update experimental `form` API ([#14481](https://github.com/sveltejs/kit/pull/14481))
+
+
+### Patch Changes
+
+
+- fix: don't crawl error responses during prerendering ([#14596](https://github.com/sveltejs/kit/pull/14596))
+
 ## 2.43.8
 ### Patch Changes
 
