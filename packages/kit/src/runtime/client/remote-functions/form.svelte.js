@@ -170,7 +170,11 @@ export function form(id) {
 
 					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
-						body: data
+						body: data,
+						headers: {
+							'x-sveltekit-pathname': location.pathname,
+							'x-sveltekit-search': location.search
+						}
 					});
 
 					if (!response.ok) {
