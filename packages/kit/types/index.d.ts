@@ -1858,7 +1858,9 @@ declare module '@sveltejs/kit' {
 		? ValueType extends string[]
 			? [type: 'checkbox', value: ValueType[number] | (string & {})]
 			: [type: Type]
-		: [type: Type];
+		: Type extends 'radio'
+			? [type: 'radio', value: ValueType | (string & {})]
+			: [type: Type];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods

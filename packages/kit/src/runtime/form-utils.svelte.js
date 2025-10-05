@@ -249,13 +249,13 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [checkbox_value]
+				 * @param {string} [input_value]
 				 */
-				const as_func = (type, checkbox_value) => {
+				const as_func = (type, input_value) => {
 					const is_array =
 						type === 'file multiple' ||
 						type === 'select multiple' ||
-						(type === 'checkbox' && typeof checkbox_value === 'string');
+						(type === 'checkbox' && typeof input_value === 'string');
 
 					const prefix =
 						type === 'number' || type === 'range'
@@ -295,22 +295,37 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle checkbox inputs
 					if (type === 'checkbox' || type === 'radio') {
-						if (DEV && type === 'radio' && is_array) {
-							throw new Error('Radio inputs cannot be arrays');
-						}
-						if (DEV && type === 'checkbox' && is_array && !checkbox_value) {
-							throw new Error('Checkbox array inputs must have a value');
+						if (DEV) {
+							if (type === 'radio' && is_array) {
+								throw new Error('Radio inputs cannot be arrays');
+							}
+
+							if (type === 'radio' && !input_value) {
+								throw new Error('Radio inputs must have a value');
+							}
+
+							if (type === 'checkbox' && is_array && !input_value) {
+								throw new Error('Checkbox array inputs must have a value');
+							}
 						}
 
 						return Object.defineProperties(base_props, {
-							// TODO should we do this for normal radio, too?
-							value: { value: checkbox_value ?? 'on', enumerable: true },
+							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
 								enumerable: true,
 								get() {
 									const input = get_input();
 									const value = deep_get(input, path);
-									return is_array ? (value ?? []).includes(checkbox_value) : value;
+
+									if (type === 'radio') {
+										return value === input_value;
+									}
+
+									if (is_array) {
+										return (value ?? []).includes(input_value);
+									}
+
+									return value;
 								}
 							}
 						});
@@ -366,10 +381,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							get() {
 								const input = get_input();
 								const value = deep_get(input, path);
-								if (is_array && Array.isArray(value)) {
-									// TODO incorrect - how do we know which index this is? Do we have to forbid [] generally for everything except checkbox?
-									return value.join(',');
-								}
+
 								return value != null ? String(value) : '';
 							}
 						}
