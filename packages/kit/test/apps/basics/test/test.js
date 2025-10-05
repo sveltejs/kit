@@ -1642,7 +1642,7 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('3');
 	});
 
-	test.only('queries can access the route/url of the page they were called from', async ({
+	test('queries can access the route/url of the page they were called from', async ({
 		page,
 		clicknav
 	}) => {
