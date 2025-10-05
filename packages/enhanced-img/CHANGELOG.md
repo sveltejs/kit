@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.8.4
+### Patch Changes
+
+
+- fix: add script block only when there are imports to add ([#14604](https://github.com/sveltejs/kit/pull/14604))
+
 ## 0.8.3
 ### Patch Changes
 
