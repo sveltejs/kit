@@ -402,6 +402,16 @@ export function form(id) {
 		// TODO 3.0 remove
 		if (DEV) {
 			throw_on_old_property_access(instance);
+
+			Object.defineProperty(instance, 'buttonProps', {
+				get() {
+					throw new Error(
+						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>` ' +
+							'create a schema field for the type of action and the value, do `<button {...form.fields.action.as("submit", "value")}>`' +
+							'and then branch on the value within the remote function'
+					);
+				}
+			});
 		}
 
 		Object.defineProperties(instance, {
