@@ -82,21 +82,6 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		const button_props = {
-			type: 'submit',
-			onclick: () => {}
-		};
-
-		Object.defineProperty(button_props, 'enhance', {
-			value: () => {
-				return { type: 'submit', formaction: instance.buttonProps.formaction, onclick: () => {} };
-			}
-		});
-
-		Object.defineProperty(instance, 'buttonProps', {
-			value: button_props
-		});
-
 		/** @type {RemoteInfo} */
 		const __ = {
 			type: 'form',
@@ -196,11 +181,6 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		Object.defineProperty(button_props, 'formaction', {
-			get: () => `?/remote=${__.id}`,
-			enumerable: true
-		});
-
 		Object.defineProperty(instance, 'fields', {
 			get() {
 				const data = get_cache(__)?.[''];
@@ -239,11 +219,6 @@ export function form(validate_or_fn, maybe_fn) {
 
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {
-			get: () => 0
-		});
-
-		// On the server, buttonProps.pending is always 0
-		Object.defineProperty(button_props, 'pending', {
 			get: () => 0
 		});
 

@@ -1,10 +1,5 @@
 <script>
-	import {
-		get_message,
-		set_message,
-		resolve_deferreds,
-		set_reverse_message
-	} from './form.remote.js';
+	import { get_message, set_message, resolve_deferreds } from './form.remote.js';
 
 	const message = get_message();
 
@@ -27,14 +22,13 @@
 	{/if}
 
 	<input {...set_message.fields.message.as('text')} />
-	<button>set message</button>
-	<button {...set_reverse_message.buttonProps}>set reverse message</button>
+	<button {...set_message.fields.action.as('submit', 'normal')}>set message</button>
+	<button {...set_message.fields.action.as('submit', 'reverse')}>set reverse message</button>
 </form>
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
 <p>set_message.result: {set_message.result}</p>
-<p>set_reverse_message.result: {set_reverse_message.result}</p>
 
 <hr />
 

@@ -1753,7 +1753,7 @@ test.describe('remote functions', () => {
 		await page.waitForURL('/remote');
 	});
 
-	test('form.buttonProps works', async ({ page, javaScriptEnabled }) => {
+	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 
 		await page.fill('[data-unscoped] input', 'backwards');
@@ -1766,9 +1766,7 @@ test.describe('remote functions', () => {
 			);
 		}
 
-		await expect(page.getByText('set_reverse_message.result')).toHaveText(
-			'set_reverse_message.result: sdrawkcab'
-		);
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: sdrawkcab');
 	});
 
 	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {

@@ -1826,24 +1826,34 @@ declare module '@sveltejs/kit' {
 	// Input element properties based on type
 	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
 		? {
+				name: string;
 				type: T;
+				value?: string;
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get checked(): boolean;
 				set checked(value: boolean);
 			}
 		: T extends 'file'
 			? {
+					name: string;
 					type: 'file';
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
 					get files(): FileList | null;
 					set files(v: FileList | null);
 				}
-			: {
-					type: T;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
-				};
+			: T extends 'submit'
+				? {
+						name: string;
+						value: string;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+					}
+				: {
+						name: string;
+						type: T;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					};
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
@@ -1860,8 +1870,8 @@ declare module '@sveltejs/kit' {
 		? Value extends string[]
 			? [type: 'checkbox', value: Value[number] | (string & {})]
 			: [type: Type]
-		: Type extends 'radio'
-			? [type: 'radio', value: Value | (string & {})]
+		: Type extends 'radio' | 'submit'
+			? [type: Type, value: Value | (string & {})]
 			: [type: Type];
 
 	/**
@@ -1965,30 +1975,6 @@ declare module '@sveltejs/kit' {
 		get pending(): number;
 		/** Access form fields using object notation */
 		fields: Input extends void ? never : RemoteFormFields<Input>;
-		/** Spread this onto a `<button>` or `<input type="submit">` */
-		buttonProps: {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-			/** Use the `enhance` method to influence what happens when the form is submitted. */
-			enhance(
-				callback: (opts: {
-					form: HTMLFormElement;
-					data: Input;
-					submit: () => Promise<void> & {
-						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-					};
-				}) => void | Promise<void>
-			): {
-				type: 'submit';
-				formmethod: 'POST';
-				formaction: string;
-				onclick: (event: Event) => void;
-			};
-			/** The number of pending submissions */
-			get pending(): number;
-		};
 	};
 
 	/**
