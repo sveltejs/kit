@@ -604,6 +604,7 @@ export interface RequestState {
 	tracing: {
 		record_span: RecordSpan;
 	};
+	is_in_remote_function: boolean;
 	form_instances?: Map<any, any>;
 	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
 	refreshes?: Record<string, Promise<any>>;
