@@ -1925,7 +1925,7 @@ type RemoteFormFields<T> =
 					: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = RemoteFormField<any> & { [key: string]: RecursiveFormFields };
+type RecursiveFormFields = RemoteFormField<any> & { [key: string | number]: RecursiveFormFields };
 
 type MaybeArray<T> = T | T[];
 
@@ -1936,6 +1936,46 @@ export interface RemoteFormInput {
 export interface RemoteFormIssue {
 	message: string;
 }
+
+/**
+ * Recursively maps an input type to a structure where each field can create a validation issue.
+ * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+ */
+type InvalidField<T> =
+	WillRecurseIndefinitely<T> extends true
+		? Record<string | number, any>
+		: NonNullable<T> extends string | number | boolean | File
+			? (message: string) => StandardSchemaV1.Issue
+			: NonNullable<T> extends Array<infer U>
+				? {
+						[K in number]: InvalidField<U>;
+					} & ((message: string) => StandardSchemaV1.Issue)
+				: NonNullable<T> extends RemoteFormInput
+					? {
+							[K in keyof T]-?: InvalidField<T[K]>;
+						} & ((message: string) => StandardSchemaV1.Issue)
+					: Record<string, never>;
+
+/**
+ * A function and proxy object used to imperatively create validation errors in form handlers.
+ *
+ * Call `invalid([...])` with an array of issues to throw a validation error.
+ * Access properties to create field-specific issues: `invalid.fieldName('message')`.
+ * The type structure mirrors the input data structure for type-safe field access.
+ *
+ * @example
+ * ```ts
+ * invalid([
+ *   invalid.username('Username is taken'),
+ *   invalid.items[0].qty('Insufficient stock')
+ * ]);
+ * ```
+ */
+export type Invalid<Input = any> = ((issues: StandardSchemaV1.Issue[]) => never) &
+	InvalidField<Input> & {
+		/** Create an issue for the root of the form */
+		$: (message: string) => StandardSchemaV1.Issue;
+	};
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.

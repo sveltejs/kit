@@ -1842,6 +1842,7 @@ test.describe('remote functions', () => {
 
 		const foo = page.locator('input[name="foo"]');
 		const bar = page.locator('input[name="bar"]');
+		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
 		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
@@ -1858,6 +1859,12 @@ test.describe('remote functions', () => {
 		await expect(page.locator('form')).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
+
+		// Test imperative validation
+		await foo.fill('c');
+		await bar.fill('d');
+		await submit.click();
+		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {

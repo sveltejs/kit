@@ -7,7 +7,12 @@ export const my_form = form(
 		bar: v.picklist(['d', 'e', 'f']),
 		button: v.literal('submitter')
 	}),
-	async (data) => {
+	async (data, invalid) => {
+		// Test imperative validation
+		if (data.foo === 'c') {
+			invalid([invalid.foo('Imperative: foo cannot be c')]);
+		}
+
 		console.log(data);
 	}
 );

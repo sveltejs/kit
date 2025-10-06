@@ -24,6 +24,8 @@
 
 	<input {...my_form.fields.bar.as('text')} />
 
+	<button>submit (imperative validation)</button>
+
 	<button bind:this={submitter} {...my_form.fields.button.as('submit')} value="incorrect_value">
 		submit
 	</button>
