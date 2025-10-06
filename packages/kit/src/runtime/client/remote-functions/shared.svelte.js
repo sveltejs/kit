@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { tick } from 'svelte';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
@@ -62,6 +62,7 @@ export function create_remote_function(id, create) {
 						void tick().then(() => {
 							if (!entry.count && entry === query_map.get(cache_key)) {
 								query_map.delete(cache_key);
+								delete remote_responses[cache_key];
 							}
 						});
 					}
