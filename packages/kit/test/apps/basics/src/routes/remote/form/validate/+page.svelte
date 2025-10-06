@@ -3,9 +3,9 @@
 	import * as v from 'valibot';
 
 	const schema = v.object({
-		foo: v.picklist(['a', 'b']),
+		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e']),
-		button: v.literal('submitter')
+		button: v.optional(v.literal('submitter'))
 	});
 	let submitter;
 	$inspect(my_form.fields.allIssues());
