@@ -16,7 +16,9 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access
+	throw_on_old_property_access,
+	split_path,
+	build_path_string
 } from '../../form-utils.svelte.js';
 
 /**
@@ -61,6 +63,12 @@ export function form(id) {
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
 		let input = $state.raw({});
+
+		/**
+		 * This allows us to update individual fields granularly
+		 * @type {Record<string, number>}
+		 */
+		let versions = $state({});
 
 		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
@@ -199,6 +207,13 @@ export function form(id) {
 							release_overrides(updates);
 						} else {
 							input = {};
+
+							for (const [key, value] of Object.entries(versions)) {
+								if (value !== undefined) {
+									versions[key] ??= 0;
+									versions[key] += 1;
+								}
+							}
 
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
@@ -378,6 +393,18 @@ export function form(id) {
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
 					}
+
+					versions[name] ??= 0;
+					versions[name] += 1;
+
+					const path = split_path(name);
+
+					while (path.pop() !== undefined) {
+						const name = build_path_string(path);
+
+						versions[name] ??= 0;
+						versions[name] += 1;
+					}
 				});
 
 				return () => {
@@ -470,6 +497,7 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
+						(path) => versions[path],
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;

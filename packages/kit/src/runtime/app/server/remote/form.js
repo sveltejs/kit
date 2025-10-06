@@ -207,6 +207,7 @@ export function form(validate_or_fn, maybe_fn) {
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
+					() => {},
 					(path, value) => {
 						if (data) {
 							// don't override a submission

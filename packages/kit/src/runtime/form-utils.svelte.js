@@ -3,6 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
+import { untrack } from 'svelte';
 
 /**
  * Sets a value in a nested object using a path string, not mutating the original object but returning a new object
@@ -170,19 +171,27 @@ export function deep_get(object, path) {
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
+ * @param {(path: string) => void} depend - Function to make an effect depend on a specific field
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, get_input, depend, set_input, get_issues, path = []) {
+	const path_string = build_path_string(path);
+
+	const get_value = () => {
+		depend(path_string);
+		return untrack(() => deep_get(get_input(), path));
+	};
+
 	return new Proxy(target, {
 		get(target, prop) {
 			if (typeof prop === 'symbol') return target[prop];
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
+				return create_field_proxy({}, get_input, depend, set_input, get_issues, [
 					...path,
 					parseInt(prop, 10)
 				]);
@@ -195,13 +204,17 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(set_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
 			}
 
-			const value = $derived(deep_get(get_input(), path));
-
 			if (prop === 'value') {
-				return create_field_proxy(() => value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -221,7 +234,10 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'as') {
@@ -264,7 +280,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return value;
+									return get_value();
 								}
 							}
 						});
@@ -287,6 +303,8 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							checked: {
 								enumerable: true,
 								get() {
+									const value = get_value();
+
 									if (type === 'radio') {
 										return value === input_value;
 									}
@@ -308,6 +326,8 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							files: {
 								enumerable: true,
 								get() {
+									const value = get_value();
+
 									// Convert File/File[] to FileList-like object
 									if (value instanceof File) {
 										// In browsers, we can create a proper FileList using DataTransfer
@@ -346,17 +366,21 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
+								const value = get_value();
 								return value != null ? String(value) : '';
 							}
 						}
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, get_input, depend, set_input, get_issues, [
+					...path,
+					'as'
+				]);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, depend, set_input, get_issues, [...path, prop]);
 		}
 	});
 }
@@ -366,7 +390,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
  * @param {(string | number)[]} path
  * @returns {string}
  */
-function build_path_string(path) {
+export function build_path_string(path) {
 	let result = '';
 
 	for (const segment of path) {
