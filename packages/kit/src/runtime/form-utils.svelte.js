@@ -31,6 +31,10 @@ export function convert_formdata(data) {
 	let result = Object.create(null); // guard against prototype pollution
 
 	for (let key of data.keys()) {
+		if (key.startsWith('sveltekit:')) {
+			continue;
+		}
+
 		const is_array = key.endsWith('[]');
 		/** @type {any[]} */
 		let values = data.getAll(key);

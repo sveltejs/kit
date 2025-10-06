@@ -123,9 +123,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			form_data.delete('sveltekit:remote_refreshes');
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
-			if (additional_args && !form_data.has('id')) {
-				// The action_id is URL-encoded JSON, decode and parse it
-				form_data.set('id', JSON.parse(decodeURIComponent(additional_args)));
+			if (additional_args) {
+				form_data.set('sveltekit:id', decodeURIComponent(additional_args));
 			}
 
 			const fn = info.fn;
@@ -298,7 +297,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 		if (action_id && !form_data.has('id')) {
 			// The action_id is URL-encoded JSON, decode and parse it
-			form_data.set('id', JSON.parse(decodeURIComponent(action_id)));
+			form_data.set('sveltekit:id', decodeURIComponent(action_id));
 		}
 
 		await with_request_store({ event, state }, () => fn(form_data));
