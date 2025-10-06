@@ -2071,6 +2071,40 @@ declare module '@sveltejs/kit' {
 	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
 	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
+
+	export type RemoteFunctionOutput<
+		Fn extends
+			| RemoteQueryFunction<any, any>
+			| RemotePrerenderFunction<any, any>
+			| RemoteCommand<any, any>
+			| RemoteForm<any, any>
+	> =
+		Fn extends RemoteQueryFunction<any, infer Output>
+			? Output
+			: Fn extends RemotePrerenderFunction<any, infer Output>
+				? Output
+				: Fn extends RemoteCommand<any, infer Output>
+					? Output
+					: Fn extends RemoteForm<any, infer Output>
+						? Output
+						: never;
+
+	export type RemoteFunctionInput<
+		Fn extends
+			| RemoteQueryFunction<any, any>
+			| RemotePrerenderFunction<any, any>
+			| RemoteCommand<any, any>
+			| RemoteForm<any, any>
+	> =
+		Fn extends RemoteQueryFunction<infer Input, any>
+			? Input
+			: Fn extends RemotePrerenderFunction<infer Input, any>
+				? Input
+				: Fn extends RemoteCommand<infer Input, any>
+					? Input
+					: Fn extends RemoteForm<infer Input, any>
+						? Input
+						: never;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.

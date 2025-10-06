@@ -1,6 +1,11 @@
 import { query, prerender, command, form } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+import {
+	RemoteFunctionInput,
+	RemoteFunctionOutput,
+	RemotePrerenderFunction,
+	RemoteQueryFunction
+} from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
@@ -11,6 +16,16 @@ function query_tests() {
 	// @ts-expect-error
 	void no_args('');
 
+	const no_arg_input_good: RemoteFunctionInput<typeof no_args> = undefined;
+	// @ts-expect-error
+	const no_arg_input_bad: RemoteFunctionInput<typeof no_args> = 'bad';
+	[no_arg_input_good, no_arg_input_bad];
+
+	const no_arg_output_good: RemoteFunctionOutput<typeof no_args> = 'string';
+	// @ts-expect-error
+	const no_arg_output_bad: RemoteFunctionOutput<typeof no_args> = 42;
+	[no_arg_output_good, no_arg_output_bad];
+
 	const one_arg: RemoteQueryFunction<number, string> = query('unchecked', (a: number) =>
 		a.toString()
 	);
@@ -19,6 +34,16 @@ function query_tests() {
 	void one_arg('1');
 	// @ts-expect-error
 	void one_arg();
+
+	const one_arg_input_good: RemoteFunctionInput<typeof one_arg> = 42;
+	// @ts-expect-error
+	const one_arg_input_bad: RemoteFunctionInput<typeof one_arg> = 'bad';
+	[one_arg_input_good, one_arg_input_bad];
+
+	const one_arg_output_good: RemoteFunctionOutput<typeof no_args> = 'string';
+	// @ts-expect-error
+	const one_arg_output_bad: RemoteFunctionOutput<typeof no_args> = 42;
+	[one_arg_output_good, one_arg_output_bad];
 
 	async function query_without_args() {
 		const q = query(() => 'Hello world');
@@ -152,6 +177,16 @@ function command_tests() {
 		result;
 		// @ts-expect-error
 		void cmd(123);
+
+		const command_input_good: RemoteFunctionInput<typeof cmd> = 'string';
+		// @ts-expect-error
+		const command_input_bad: RemoteFunctionInput<typeof cmd> = 42;
+		[command_input_good, command_input_bad];
+
+		const command_output_good: RemoteFunctionOutput<typeof cmd> = 'string';
+		// @ts-expect-error
+		const command_output_bad: RemoteFunctionOutput<typeof cmd> = 42;
+		[command_output_good, command_output_bad];
 	}
 	void command_schema();
 }

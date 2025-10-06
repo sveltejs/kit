@@ -2096,4 +2096,38 @@ export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResou
  */
 export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
 
+export type RemoteFunctionOutput<
+	Fn extends
+		| RemoteQueryFunction<any, any>
+		| RemotePrerenderFunction<any, any>
+		| RemoteCommand<any, any>
+		| RemoteForm<any, any>
+> =
+	Fn extends RemoteQueryFunction<any, infer Output>
+		? Output
+		: Fn extends RemotePrerenderFunction<any, infer Output>
+			? Output
+			: Fn extends RemoteCommand<any, infer Output>
+				? Output
+				: Fn extends RemoteForm<any, infer Output>
+					? Output
+					: never;
+
+export type RemoteFunctionInput<
+	Fn extends
+		| RemoteQueryFunction<any, any>
+		| RemotePrerenderFunction<any, any>
+		| RemoteCommand<any, any>
+		| RemoteForm<any, any>
+> =
+	Fn extends RemoteQueryFunction<infer Input, any>
+		? Input
+		: Fn extends RemotePrerenderFunction<infer Input, any>
+			? Input
+			: Fn extends RemoteCommand<infer Input, any>
+				? Input
+				: Fn extends RemoteForm<infer Input, any>
+					? Input
+					: never;
+
 export * from './index.js';
