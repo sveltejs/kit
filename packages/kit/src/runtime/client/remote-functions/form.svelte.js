@@ -68,7 +68,7 @@ export function form(id) {
 		 * This allows us to update individual fields granularly
 		 * @type {Record<string, number>}
 		 */
-		let versions = $state({});
+		const versions = $state({});
 
 		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
