@@ -12,7 +12,7 @@ export const get_message = query(() => {
 export const set_message = form(
 	v.object({
 		message: v.picklist(
-			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
+			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect', 'backwards'],
 			'message is invalid'
 		),
 		uppercase: v.optional(v.string()),
