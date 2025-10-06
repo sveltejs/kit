@@ -148,7 +148,8 @@ export async function internal_respond(request, options, manifest, state) {
 		handleValidationError: options.hooks.handleValidationError,
 		tracing: {
 			record_span
-		}
+		},
+		is_in_remote_function: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
