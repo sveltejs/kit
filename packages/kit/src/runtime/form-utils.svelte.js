@@ -198,15 +198,10 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
+			const value = $derived(deep_get(get_input(), path));
+
 			if (prop === 'value') {
-				const value_func = function () {
-					// TODO Ideally we'd create a $derived just above and use it here but we can't because of push_reaction which prevents
-					// changes to deriveds created within an effect to rerun the effect - an argument for
-					// reverting that change in async mode?
-					// TODO we did that in Svelte now; bump Svelte version and use $derived here
-					return deep_get(get_input(), path);
-				};
-				return create_field_proxy(value_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(() => value, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -269,8 +264,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									const input = get_input();
-									return deep_get(input, path);
+									return value;
 								}
 							}
 						});
@@ -293,9 +287,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							checked: {
 								enumerable: true,
 								get() {
-									const input = get_input();
-									const value = deep_get(input, path);
-
 									if (type === 'radio') {
 										return value === input_value;
 									}
@@ -317,9 +308,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							files: {
 								enumerable: true,
 								get() {
-									const input = get_input();
-									const value = deep_get(input, path);
-
 									// Convert File/File[] to FileList-like object
 									if (value instanceof File) {
 										// In browsers, we can create a proper FileList using DataTransfer
@@ -358,9 +346,6 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
-								const input = get_input();
-								const value = deep_get(input, path);
-
 								return value != null ? String(value) : '';
 							}
 						}
