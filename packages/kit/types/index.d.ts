@@ -1947,19 +1947,6 @@ declare module '@sveltejs/kit' {
 	 * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
 	 * Access properties to create field-specific issues: `invalid.fieldName('message')`.
 	 * The type structure mirrors the input data structure for type-safe field access.
-	 *
-	 * @example
-	 * ```ts
-	 * invalid('Username or password is invalid');
-	 * ```
-	 *
-	 * @example
-	 * ```ts
-	 * invalid(
-	 *   invalid.username('Username is taken'),
-	 *   invalid.items[0].qty('Insufficient stock')
-	 * );
-	 * ```
 	 */
 	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 		InvalidField<Input>;
