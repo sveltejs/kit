@@ -731,7 +731,7 @@ async function kit({ svelte_config }) {
 
 			if (!is_outdated_rollup) {
 				// @ts-expect-error only exists in more recent Rollup versions https://rollupjs.org/configuration-options/#output-onlyexplicitmanualchunks
-				config.build.rollupOptions.onlyExplicitManualChunks = true;
+				config.build.rollupOptions.output.onlyExplicitManualChunks = true;
 			}
 		},
 
