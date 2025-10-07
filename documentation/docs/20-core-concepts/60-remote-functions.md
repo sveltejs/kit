@@ -469,7 +469,7 @@ export const buyHotcakes = form(
 	}),
 	async (data, invalid) => {
 		try {
-			await buy(data.qty);
+			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid([
