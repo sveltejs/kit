@@ -418,9 +418,8 @@ export function form(id) {
 			Object.defineProperty(instance, 'buttonProps', {
 				get() {
 					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>` ' +
-							'create a schema field for the type of action and the value, do `<button {...form.fields.action.as("submit", "value")}>`' +
-							'and then branch on the value within the remote function'
+						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
+							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
 					);
 				}
 			});

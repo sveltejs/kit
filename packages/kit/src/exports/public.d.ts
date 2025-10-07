@@ -1865,19 +1865,13 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: T extends 'submit'
-			? {
-					name: string;
-					value: string;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-				}
-			: {
-					name: string;
-					type: T;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
-				};
+		: {
+				name: string;
+				type: T;
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get value(): string | number;
+				set value(v: string | number);
+			};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
