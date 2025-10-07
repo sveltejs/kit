@@ -1886,9 +1886,9 @@ export type RemoteFormFieldValue = string | string[] | number | boolean | File |
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: 'checkbox', value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {})]
 		: [type: Type]
-	: Type extends 'radio' | 'submit'
+	: Type extends 'radio' | 'submit' | 'hidden'
 		? [type: Type, value: Value | (string & {})]
 		: [type: Type];
 
@@ -1975,19 +1975,6 @@ type InvalidField<T> =
  * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
  * Access properties to create field-specific issues: `invalid.fieldName('message')`.
  * The type structure mirrors the input data structure for type-safe field access.
- *
- * @example
- * ```ts
- * invalid('Username or password is invalid');
- * ```
- *
- * @example
- * ```ts
- * invalid(
- *   invalid.username('Username is taken'),
- *   invalid.items[0].qty('Insufficient stock')
- * );
- * ```
  */
 export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 	InvalidField<Input>;
