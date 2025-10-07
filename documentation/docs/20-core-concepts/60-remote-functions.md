@@ -472,9 +472,9 @@ export const buy_hotcakes = form(
 			await buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
-				invalid([
+				invalid(
 					invalid.qty(`we don't have enough hotcakes`)
-				]);
+				);
 			}
 		}
 	}
@@ -483,7 +483,8 @@ export const buy_hotcakes = form(
 
 The `invalid` function works as both a function and a proxy:
 
-- Call `invalid([...])` with an array of issues to throw a validation error
+- Call `invalid(issue1, issue2, ...issueN)` to throw a validation error
+- If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
 - Use `invalid.fieldName(message)` to create an issue for a specific field. Like `fields` this is type-safe and you can use regular property access syntax to create issues for deeply nested objects (e.g. `invalid.profile.email('Email already exists')` or `invalid.items[0].qty('Insufficient stock')`)
 
 ### Validation

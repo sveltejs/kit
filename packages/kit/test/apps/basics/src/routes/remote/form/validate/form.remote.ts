@@ -10,7 +10,7 @@ export const my_form = form(
 	async (data, invalid) => {
 		// Test imperative validation
 		if (data.foo === 'c') {
-			invalid([invalid.foo('Imperative: foo cannot be c')]);
+			invalid(invalid.foo('Imperative: foo cannot be c'));
 		}
 
 		console.log(data);
