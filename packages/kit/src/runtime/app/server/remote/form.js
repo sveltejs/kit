@@ -90,9 +90,15 @@ export function form(validate_or_fn, maybe_fn) {
 			/** @param {FormData} form_data */
 			fn: async (form_data) => {
 				const validate_only = form_data.get('sveltekit:validate_only') === 'true';
-				form_data.delete('sveltekit:validate_only');
 
 				let data = maybe_fn ? convert_formdata(form_data) : undefined;
+
+				if (data && data.id === undefined) {
+					const id = form_data.get('sveltekit:id');
+					if (typeof id === 'string') {
+						data.id = JSON.parse(id);
+					}
+				}
 
 				// TODO 3.0 remove this warning
 				if (DEV && !data) {

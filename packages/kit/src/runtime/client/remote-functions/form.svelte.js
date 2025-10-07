@@ -83,12 +83,24 @@ export function form(id) {
 		let submitted = false;
 
 		/**
+		 * @param {FormData} form_data
+		 * @returns {Record<string, any>}
+		 */
+		function convert(form_data) {
+			const data = convert_formdata(form_data);
+			if (key !== undefined && !form_data.has('id')) {
+				data.id = key;
+			}
+			return data;
+		}
+
+		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
 		 * @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback
 		 */
 		async function handle_submit(form, form_data, callback) {
-			const data = convert_formdata(form_data);
+			const data = convert(form_data);
 
 			submitted = true;
 
@@ -455,9 +467,7 @@ export function form(id) {
 					/** @type {readonly StandardSchemaV1.Issue[]} */
 					let array = [];
 
-					const validated = await preflight_schema?.['~standard'].validate(
-						convert_formdata(form_data)
-					);
+					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
 
 					if (validated?.issues) {
 						array = validated.issues;
