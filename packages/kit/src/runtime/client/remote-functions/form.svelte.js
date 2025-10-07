@@ -461,12 +461,19 @@ export function form(id) {
 
 					const id = ++validate_id;
 
+					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
+					await tick();
+
 					const form_data = new FormData(element, submitter);
 
 					/** @type {readonly StandardSchemaV1.Issue[]} */
 					let array = [];
 
 					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
+
+					if (validate_id !== id) {
+						return;
+					}
 
 					if (validated?.issues) {
 						array = validated.issues;
