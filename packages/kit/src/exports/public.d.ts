@@ -1850,19 +1850,23 @@ export type RemoteFormFieldType<T> = {
 // Input element properties based on type
 type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
 	? {
+			name: string;
 			type: T;
+			value?: string;
 			'aria-invalid': boolean | 'false' | 'true' | undefined;
 			get checked(): boolean;
 			set checked(value: boolean);
 		}
 	: T extends 'file'
 		? {
+				name: string;
 				type: 'file';
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
 		: {
+				name: string;
 				type: T;
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get value(): string | number;
@@ -1882,10 +1886,10 @@ export type RemoteFormFieldValue = string | string[] | number | boolean | File |
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: 'checkbox', value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {})]
 		: [type: Type]
-	: Type extends 'radio'
-		? [type: 'radio', value: Value | (string & {})]
+	: Type extends 'radio' | 'submit' | 'hidden'
+		? [type: Type, value: Value | (string & {})]
 		: [type: Type];
 
 /**

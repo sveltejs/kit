@@ -277,6 +277,19 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 						base_props.type = type === 'file multiple' ? 'file' : type;
 					}
 
+					// Handle submit and hidden inputs
+					if (type === 'submit' || type === 'hidden') {
+						if (DEV) {
+							if (!input_value) {
+								throw new Error(`\`${type}\` inputs must have a value`);
+							}
+						}
+
+						return Object.defineProperties(base_props, {
+							value: { value: input_value, enumerable: true }
+						});
+					}
+
 					// Handle select inputs
 					if (type === 'select' || type === 'select multiple') {
 						return Object.defineProperties(base_props, {
