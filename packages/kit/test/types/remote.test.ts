@@ -159,8 +159,14 @@ command_tests();
 
 function form_tests() {
 	const q = query(() => '');
-	const f = form('unchecked', (data: { input: string }) => {
+	const f = form('unchecked', (data: { input: string }, invalid) => {
 		data.input;
+		invalid(
+			'foo',
+			invalid.input('bar'),
+			// @ts-expect-error
+			invalid.nonexistent.prop('baz')
+		);
 		return { success: true };
 	});
 
@@ -178,7 +184,7 @@ function form_tests() {
 
 	const f2 = form(
 		null as any as StandardSchemaV1<{ a: string; nested: { prop: string } }>,
-		(data) => {
+		(data, invalid) => {
 			data.a === '';
 			data.nested.prop === '';
 			// @ts-expect-error
@@ -187,6 +193,12 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			invalid(
+				'foo',
+				invalid.nested.prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
@@ -206,7 +218,7 @@ function form_tests() {
 	// all schema properties optional
 	const f3 = form(
 		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
-		(data) => {
+		(data, invalid) => {
 			data.a === '';
 			data.nested?.prop === '';
 			// @ts-expect-error
@@ -217,6 +229,12 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			invalid(
+				'foo',
+				invalid.nested.prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
@@ -243,13 +261,22 @@ function form_tests() {
 	f4.fields.nested.prop.value();
 
 	// schema with union types
-	const f5 = form(null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>, (data) => {
-		data.foo === 'a';
-		data.bar === 'c';
-		// @ts-expect-error
-		data.foo === 'e';
-		return { success: true };
-	});
+	const f5 = form(
+		null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>,
+		(data, invalid) => {
+			data.foo === 'a';
+			data.bar === 'c';
+			// @ts-expect-error
+			data.foo === 'e';
+			invalid(
+				'foo',
+				invalid.bar('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
+			return { success: true };
+		}
+	);
 	// @ts-expect-error
 	f5.fields.name();
 	f5.fields.foo.issues();
@@ -264,11 +291,17 @@ function form_tests() {
 	// schema with arrays
 	const f6 = form(
 		null as any as StandardSchemaV1<{ array: Array<{ array: string[]; prop: string }> }>,
-		(data) => {
+		(data, invalid) => {
 			data.array[0].prop === 'a';
 			data.array[0].array[0] === 'a';
 			// @ts-expect-error
 			data.array[0].array[0] === 1;
+			invalid(
+				'foo',
+				invalid.array[0].prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
@@ -287,9 +320,10 @@ function form_tests() {
 	f6.fields.array[0].array.name();
 
 	// any
-	const f7 = form(null as any, (data) => {
+	const f7 = form(null as any, (data, invalid) => {
 		data.a === '';
 		data.nested?.prop === '';
+		invalid('foo', invalid.nested.prop('bar'));
 		return { success: true };
 	});
 	// @ts-expect-error
@@ -300,7 +334,13 @@ function form_tests() {
 	f7.fields.nested.prop.value();
 
 	// no schema
-	const f8 = form(() => {});
+	const f8 = form((invalid) => {
+		invalid(
+			'foo',
+			// @ts-expect-error
+			invalid.x('bar')
+		);
+	});
 	// @ts-expect-error
 	f8.fields.x;
 	// @ts-expect-error
