@@ -64,6 +64,7 @@ export function form(id) {
 		 */
 		let input = $state.raw({});
 
+		// TODO 3.0: Remove versions state and related logic; it's a workaround for $derived not updating when created inside $effects
 		/**
 		 * This allows us to update individual fields granularly
 		 * @type {Record<string, number>}
