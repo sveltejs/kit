@@ -41,6 +41,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { rollupVersion } from 'vite';
 
 const cwd = process.cwd();
 
@@ -675,6 +676,15 @@ async function kit({ svelte_config }) {
 			// Set up manualChunks to isolate *.remote.ts files
 			const { manualChunks } = config.build.rollupOptions.output;
 
+			const [major, minor] = rollupVersion.split('.').map(Number);
+			const is_outdated_rollup = major === 4 && minor < 52;
+			if (is_outdated_rollup) {
+				console.warn(
+					'Rollup >=4.52.0 is recommended when using SvelteKit remote functions as it fixes some bugs related to code-splitting. Current version: ' +
+						rollupVersion
+				);
+			}
+
 			config.build.rollupOptions.output = {
 				...config.build.rollupOptions.output,
 				manualChunks(id, meta) {
@@ -685,8 +695,19 @@ async function kit({ svelte_config }) {
 						return `remote-${hash(relative)}`;
 					}
 
-					if (imported_by_remotes.has(id)) {
-						return `chunk-${uid++}`;
+					// With onlyExplicitManualChunks Rollup will keep any manual chunk's dependencies out of that chunk.
+					// This option only exists on more recent Rollup versions; use this as a fallback for older versions.
+					if (is_outdated_rollup) {
+						// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
+						if (id === `${runtime_directory}/app/server/index.js`) {
+							return 'app-server';
+						}
+						if (id === `${runtime_directory}/shared-server.js`) {
+							return 'app-shared-server';
+						}
+						if (imported_by_remotes.has(id)) {
+							return `chunk-${uid++}`;
+						}
 					}
 
 					// If there was an existing manualChunks function, call it
@@ -707,6 +728,11 @@ async function kit({ svelte_config }) {
 					}
 				}
 			};
+
+			if (!is_outdated_rollup) {
+				// @ts-expect-error only exists in more recent Rollup versions https://rollupjs.org/configuration-options/#output-onlyexplicitmanualchunks
+				config.build.rollupOptions.output.onlyExplicitManualChunks = true;
+			}
 		},
 
 		configureServer(_dev_server) {

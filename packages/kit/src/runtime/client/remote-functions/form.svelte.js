@@ -16,7 +16,9 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access
+	throw_on_old_property_access,
+	split_path,
+	build_path_string
 } from '../../form-utils.svelte.js';
 
 /**
@@ -62,6 +64,19 @@ export function form(id) {
 		 */
 		let input = $state.raw({});
 
+		// TODO 3.0: Remove versions state and related logic; it's a workaround for $derived not updating when created inside $effects
+		/**
+		 * This allows us to update individual fields granularly
+		 * @type {Record<string, number>}
+		 */
+		const versions = $state({});
+
+		/**
+		 * This ensures that `{field.value()}` is updated even if the version hasn't been initialized
+		 * @type {Set<string>}
+		 */
+		const version_reads = new Set();
+
 		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
 
@@ -81,6 +96,16 @@ export function form(id) {
 		let touched = {};
 
 		let submitted = false;
+
+		function update_all_versions() {
+			for (const path of version_reads) {
+				versions[path] ??= 0;
+			}
+
+			for (const key of Object.keys(versions)) {
+				versions[key] += 1;
+			}
+		}
 
 		/**
 		 * @param {FormData} form_data
@@ -210,6 +235,8 @@ export function form(id) {
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
+							update_all_versions();
+
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
 							} else {
@@ -388,6 +415,27 @@ export function form(id) {
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
 					}
+
+					versions[name] ??= 0;
+					versions[name] += 1;
+
+					const path = split_path(name);
+
+					while (path.pop() !== undefined) {
+						const name = build_path_string(path);
+
+						versions[name] ??= 0;
+						versions[name] += 1;
+					}
+				});
+
+				form.addEventListener('reset', async () => {
+					// need to wait a moment, because the `reset` event occurs before
+					// the inputs are actually updated (so that it can be cancelled)
+					await tick();
+
+					input = convert_formdata(new FormData(form));
+					update_all_versions();
 				});
 
 				return () => {
@@ -480,6 +528,10 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
+						(path) => {
+							version_reads.add(path);
+							versions[path];
+						},
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
@@ -510,12 +562,19 @@ export function form(id) {
 
 					const id = ++validate_id;
 
+					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
+					await tick();
+
 					const form_data = new FormData(element, submitter);
 
 					/** @type {readonly StandardSchemaV1.Issue[]} */
 					let array = [];
 
 					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
+
+					if (validate_id !== id) {
+						return;
+					}
 
 					if (validated?.issues) {
 						array = validated.issues;

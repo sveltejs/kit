@@ -450,6 +450,43 @@ Alternatively, you could use `select` and `select multiple`:
 
 > [!NOTE] As with unchecked `checkbox` inputs, if no selections are made then the data will be `undefined`. For this reason, the `languages` field uses `v.optional(v.array(...), [])` rather than just `v.array(...)`.
 
+### Programmatic validation
+
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+
+```js
+/// file: src/routes/shop/data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+import * as db from '$lib/server/database';
+
+export const buyHotcakes = form(
+	v.object({
+		qty: v.pipe(
+			v.number(),
+			v.minValue(1, 'you must buy at least one hotcake')
+		)
+	}),
+	async (data, invalid) => {
+		try {
+			await db.buy(data.qty);
+		} catch (e) {
+			if (e.code === 'OUT_OF_STOCK') {
+				invalid(
+					invalid.qty(`we don't have enough hotcakes`)
+				);
+			}
+		}
+	}
+);
+```
+
+The `invalid` function works as both a function and a proxy:
+
+- Call `invalid(issue1, issue2, ...issueN)` to throw a validation error
+- If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
+- Use `invalid.fieldName(message)` to create an issue for a specific field. Like `fields` this is type-safe and you can use regular property access syntax to create issues for deeply nested objects (e.g. `invalid.profile.email('Email already exists')` or `invalid.items[0].qty('Insufficient stock')`)
+
 ### Validation
 
 If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:

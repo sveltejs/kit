@@ -1844,6 +1844,7 @@ test.describe('remote functions', () => {
 
 		const foo = page.locator('input[name="foo"]');
 		const bar = page.locator('input[name="bar"]');
+		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
 		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
@@ -1860,6 +1861,12 @@ test.describe('remote functions', () => {
 		await expect(page.locator('form')).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
+
+		// Test imperative validation
+		await foo.fill('c');
+		await bar.fill('d');
+		await submit.click();
+		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
@@ -1969,6 +1976,18 @@ test.describe('remote functions', () => {
 		// Test array value access
 		const arrayValue = await page.locator('#array-value').textContent();
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+	});
+
+	test('selects are not nuked when unrelated controls change', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched');
+
+		await page.fill('input', 'hello');
+		await expect(page.locator('select')).toHaveValue('one');
 	});
 });
 

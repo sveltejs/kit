@@ -1850,19 +1850,23 @@ export type RemoteFormFieldType<T> = {
 // Input element properties based on type
 type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
 	? {
+			name: string;
 			type: T;
+			value?: string;
 			'aria-invalid': boolean | 'false' | 'true' | undefined;
 			get checked(): boolean;
 			set checked(value: boolean);
 		}
 	: T extends 'file'
 		? {
+				name: string;
 				type: 'file';
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
 		: {
+				name: string;
 				type: T;
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get value(): string | number;
@@ -1882,10 +1886,10 @@ export type RemoteFormFieldValue = string | string[] | number | boolean | File |
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: 'checkbox', value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {})]
 		: [type: Type]
-	: Type extends 'radio'
-		? [type: 'radio', value: Value | (string & {})]
+	: Type extends 'radio' | 'submit' | 'hidden'
+		? [type: Type, value: Value | (string & {})]
 		: [type: Type];
 
 /**
@@ -1925,7 +1929,7 @@ type RemoteFormFields<T> =
 					: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = RemoteFormField<any> & { [key: string]: RecursiveFormFields };
+type RecursiveFormFields = RemoteFormField<any> & { [key: string | number]: RecursiveFormFields };
 
 type MaybeArray<T> = T | T[];
 
@@ -1944,6 +1948,36 @@ type ExtractId<Input> = Input extends { id: infer Id }
 		? Id
 		: string | number
 	: string | number;
+
+/**
+ * Recursively maps an input type to a structure where each field can create a validation issue.
+ * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+ */
+type InvalidField<T> =
+	WillRecurseIndefinitely<T> extends true
+		? Record<string | number, any>
+		: NonNullable<T> extends string | number | boolean | File
+			? (message: string) => StandardSchemaV1.Issue
+			: NonNullable<T> extends Array<infer U>
+				? {
+						[K in number]: InvalidField<U>;
+					} & ((message: string) => StandardSchemaV1.Issue)
+				: NonNullable<T> extends RemoteFormInput
+					? {
+							[K in keyof T]-?: InvalidField<T[K]>;
+						} & ((message: string) => StandardSchemaV1.Issue)
+					: Record<string, never>;
+
+/**
+ * A function and proxy object used to imperatively create validation errors in form handlers.
+ *
+ * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
+ * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
+ * Access properties to create field-specific issues: `invalid.fieldName('message')`.
+ * The type structure mirrors the input data structure for type-safe field access.
+ */
+export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
+	InvalidField<Input>;
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
