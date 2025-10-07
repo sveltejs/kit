@@ -460,7 +460,7 @@ import * as v from 'valibot';
 import { form } from '$app/server';
 import * as db from '$lib/server/database';
 
-export const buy_hotcakes = form(
+export const buyHotcakes = form(
 	v.object({
 		qty: v.pipe(
 			v.number(),
