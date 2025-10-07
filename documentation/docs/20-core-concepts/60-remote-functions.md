@@ -450,9 +450,9 @@ Alternatively, you could use `select` and `select multiple`:
 
 > [!NOTE] As with unchecked `checkbox` inputs, if no selections are made then the data will be `undefined`. For this reason, the `languages` field uses `v.optional(v.array(...), [])` rather than just `v.array(...)`.
 
-### Imperative validation
+### Programmatic validation
 
-In addition to declarative schema validation, you can imperatively mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
 
 ```js
 /// file: src/routes/shop/data.remote.js
