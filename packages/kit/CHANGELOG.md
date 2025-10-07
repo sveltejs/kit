@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.46.1
+### Patch Changes
+
+
+- fix: use `$derived` for form fields ([#14621](https://github.com/sveltejs/kit/pull/14621))
+
+
+- docs: remove `@example` blocks to allow docs to deploy ([#14636](https://github.com/sveltejs/kit/pull/14636))
+
+
+- fix: require a value with `submit` and `hidden` fields ([#14635](https://github.com/sveltejs/kit/pull/14635))
+
+
+- fix: delete hydration cache on effect teardown ([#14611](https://github.com/sveltejs/kit/pull/14611))
+
 ## 2.46.0
 ### Minor Changes
 
