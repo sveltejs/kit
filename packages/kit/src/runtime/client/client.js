@@ -545,7 +545,7 @@ async function _preload_code(url) {
  * @param {HTMLElement} target
  * @param {boolean} hydrate
  */
-function initialize(result, target, hydrate) {
+async function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 	current = result.state;
@@ -579,6 +579,7 @@ function initialize(result, target, hydrate) {
 			complete: Promise.resolve()
 		};
 
+		await Promise.resolve();
 		after_navigate_callbacks.forEach((fn) => fn(navigation));
 	}
 
