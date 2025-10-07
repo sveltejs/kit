@@ -210,8 +210,6 @@ export function form(id) {
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
-							input = {};
-
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
 							} else {
