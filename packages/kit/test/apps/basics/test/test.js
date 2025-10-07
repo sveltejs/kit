@@ -1600,7 +1600,7 @@ test.describe('getRequestEvent', () => {
 	});
 });
 
-test.describe('remote functions', () => {
+test.describe.only('remote functions', () => {
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');

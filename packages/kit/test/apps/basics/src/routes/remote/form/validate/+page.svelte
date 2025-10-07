@@ -26,7 +26,7 @@
 
 	<button>submit (imperative validation)</button>
 
-	<button bind:this={submitter} {...my_form.fields.button.as('submit')} value="incorrect_value">
+	<button bind:this={submitter} {...my_form.fields.button.as('submit', 'incorrect_value')}>
 		submit
 	</button>
 	{#each my_form.fields.button.issues() as issue}
