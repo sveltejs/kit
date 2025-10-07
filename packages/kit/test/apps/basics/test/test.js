@@ -1786,7 +1786,7 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
-		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello');
+		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello (from: scoped)');
 		await expect(page.locator('[data-scoped] input')).toHaveValue('');
 	});
 
@@ -1808,7 +1808,9 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
-		await expect(page.getByText('enhanced.result')).toHaveText('enhanced.result: hello');
+		await expect(page.getByText('enhanced.result')).toHaveText(
+			'enhanced.result: hello (from: enhanced)'
+		);
 		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 	});
 

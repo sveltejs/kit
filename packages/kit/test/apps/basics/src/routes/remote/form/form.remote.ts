@@ -11,6 +11,7 @@ export const get_message = query(() => {
 
 export const set_message = form(
 	v.object({
+		id: v.optional(v.string()),
 		message: v.picklist(
 			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
 			'message is invalid'
@@ -38,7 +39,7 @@ export const set_message = form(
 			await deferred.promise;
 		}
 
-		return message;
+		return message + (data.id ? ` (from: ${data.id})` : '');
 	}
 );
 
