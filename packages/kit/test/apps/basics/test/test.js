@@ -1977,6 +1977,18 @@ test.describe('remote functions', () => {
 		const arrayValue = await page.locator('#array-value').textContent();
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
 	});
+
+	test('selects are not nuked when unrelated controls change', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched');
+
+		await page.fill('input', 'hello');
+		await expect(page.locator('select')).toHaveValue('one');
+	});
 });
 
 test.describe('params prop', () => {
