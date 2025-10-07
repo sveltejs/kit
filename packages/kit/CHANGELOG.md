@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.46.2
+### Patch Changes
+
+
+- fix: prevent code execution order issues around SvelteKit's `env` modules ([#14637](https://github.com/sveltejs/kit/pull/14637))
+
 ## 2.46.1
 ### Patch Changes
 
