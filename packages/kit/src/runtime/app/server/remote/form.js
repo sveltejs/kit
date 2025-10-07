@@ -319,11 +319,22 @@ function handle_issues(output, issues, is_remote_request, form_data) {
  */
 function create_invalid() {
 	/**
-	 * @param {StandardSchemaV1.Issue[]} issues
+	 * @param {...(string | StandardSchemaV1.Issue)} issues
 	 * @returns {never}
 	 */
-	function invalid(issues) {
-		throw new ValidationError(issues);
+	function invalid(...issues) {
+		throw new ValidationError(
+			issues.map((issue) => {
+				if (typeof issue === 'string') {
+					return {
+						path: [],
+						message: issue
+					};
+				}
+
+				return issue;
+			})
+		);
 	}
 
 	return /** @type {import('@sveltejs/kit').Invalid} */ (

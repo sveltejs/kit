@@ -161,12 +161,12 @@ function form_tests() {
 	const q = query(() => '');
 	const f = form('unchecked', (data: { input: string }, invalid) => {
 		data.input;
-		invalid([
-			invalid.$('foo'),
+		invalid(
+			'foo',
 			invalid.input('bar'),
 			// @ts-expect-error
 			invalid.nonexistent.prop('baz')
-		]);
+		);
 		return { success: true };
 	});
 
@@ -193,12 +193,12 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
-			invalid([
-				invalid.$('foo'),
+			invalid(
+				'foo',
 				invalid.nested.prop('bar'),
 				// @ts-expect-error
 				invalid.nonexistent.prop('baz')
-			]);
+			);
 			return { success: true };
 		}
 	);
@@ -229,12 +229,12 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
-			invalid([
-				invalid.$('foo'),
+			invalid(
+				'foo',
 				invalid.nested.prop('bar'),
 				// @ts-expect-error
 				invalid.nonexistent.prop('baz')
-			]);
+			);
 			return { success: true };
 		}
 	);
@@ -268,12 +268,12 @@ function form_tests() {
 			data.bar === 'c';
 			// @ts-expect-error
 			data.foo === 'e';
-			invalid([
-				invalid.$('foo'),
+			invalid(
+				'foo',
 				invalid.bar('bar'),
 				// @ts-expect-error
 				invalid.nonexistent.prop('baz')
-			]);
+			);
 			return { success: true };
 		}
 	);
@@ -296,12 +296,12 @@ function form_tests() {
 			data.array[0].array[0] === 'a';
 			// @ts-expect-error
 			data.array[0].array[0] === 1;
-			invalid([
-				invalid.$('foo'),
+			invalid(
+				'foo',
 				invalid.array[0].prop('bar'),
 				// @ts-expect-error
 				invalid.nonexistent.prop('baz')
-			]);
+			);
 			return { success: true };
 		}
 	);
@@ -323,7 +323,7 @@ function form_tests() {
 	const f7 = form(null as any, (data, invalid) => {
 		data.a === '';
 		data.nested?.prop === '';
-		invalid([invalid.$('foo'), invalid.nested.prop('bar')]);
+		invalid('foo', invalid.nested.prop('bar'));
 		return { success: true };
 	});
 	// @ts-expect-error
@@ -335,11 +335,11 @@ function form_tests() {
 
 	// no schema
 	const f8 = form((invalid) => {
-		invalid([
-			invalid.$('foo'),
+		invalid(
+			'foo',
 			// @ts-expect-error
 			invalid.x('bar')
-		]);
+		);
 	});
 	// @ts-expect-error
 	f8.fields.x;
