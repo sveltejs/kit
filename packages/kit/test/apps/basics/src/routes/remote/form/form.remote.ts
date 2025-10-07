@@ -17,7 +17,7 @@ export const set_message = form(
 			'message is invalid'
 		),
 		uppercase: v.optional(v.string()),
-		action: v.picklist(['normal', 'reverse'])
+		action: v.optional(v.picklist(['normal', 'reverse']))
 	}),
 	async (data) => {
 		if (data.message === 'unexpected error') {
