@@ -71,6 +71,12 @@ export function form(id) {
 		 */
 		const versions = $state({});
 
+		/**
+		 * This ensures that `{field.value()}` is updated even if the version hasn't been initialized
+		 * @type {Set<string>}
+		 */
+		const version_reads = new Set();
+
 		/** @type {Record<string, InternalRemoteFormIssue[]>} */
 		let issues = $state.raw({});
 
@@ -90,6 +96,16 @@ export function form(id) {
 		let touched = {};
 
 		let submitted = false;
+
+		function update_all_versions() {
+			for (const path of version_reads) {
+				versions[path] ??= 0;
+			}
+
+			for (const key of Object.keys(versions)) {
+				versions[key] += 1;
+			}
+		}
 
 		/**
 		 * @param {FormData} form_data
@@ -219,14 +235,7 @@ export function form(id) {
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
-							input = {};
-
-							for (const [key, value] of Object.entries(versions)) {
-								if (value !== undefined) {
-									versions[key] ??= 0;
-									versions[key] += 1;
-								}
-							}
+							update_all_versions();
 
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
@@ -420,6 +429,15 @@ export function form(id) {
 					}
 				});
 
+				form.addEventListener('reset', async () => {
+					// need to wait a moment, because the `reset` event occurs before
+					// the inputs are actually updated (so that it can be cancelled)
+					await tick();
+
+					input = convert_formdata(new FormData(form));
+					update_all_versions();
+				});
+
 				return () => {
 					element = null;
 					preflight_schema = undefined;
@@ -510,7 +528,10 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
-						(path) => versions[path],
+						(path) => {
+							version_reads.add(path);
+							versions[path];
+						},
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;

@@ -1806,12 +1806,16 @@ test.describe('remote functions', () => {
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+
+			// enhanced submission should not clear the input; the developer must do that at the appropriate time
+			await expect(page.locator('[data-enhanced] input')).toHaveValue('hello');
+		} else {
+			await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
 			'enhanced.result: hello (from: enhanced)'
 		);
-		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 	});
 
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
