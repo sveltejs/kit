@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.45.0
+### Minor Changes
+
+
+- feat: `form.for(id)` now implicitly sets id on form object ([#14623](https://github.com/sveltejs/kit/pull/14623))
+
+
+### Patch Changes
+
+
+- fix: allow `fetch` in remote function without emitting a warning ([#14610](https://github.com/sveltejs/kit/pull/14610))
+
 ## 2.44.0
 ### Minor Changes
 
