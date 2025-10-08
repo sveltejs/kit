@@ -1879,7 +1879,7 @@ type RemoteFormFieldMethods<T> = {
 	/** Set the values that will be submitted */
 	set(input: T): T;
 	/** Validation issues, if any */
-	issues(): RemoteFormIssue[] | undefined;
+	issues(): RemoteFormIssue[];
 };
 
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
@@ -1911,7 +1911,7 @@ export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFiel
 
 type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 	/** Validation issues belonging to this or any of the fields that belong to it, if any */
-	allIssues(): RemoteFormIssue[] | undefined;
+	allIssues(): RemoteFormIssue[];
 };
 
 /**
