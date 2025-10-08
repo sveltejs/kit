@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.46.3
+### Patch Changes
+
+
+- fix: merge `field.set(...)` calls ([#14651](https://github.com/sveltejs/kit/pull/14651))
+
+
+- fix: don't automatically reset form after an enhanced submission ([#14626](https://github.com/sveltejs/kit/pull/14626))
+
+
+- fix: normalize path strings when updating field values ([#14649](https://github.com/sveltejs/kit/pull/14649))
+
 ## 2.46.2
 ### Patch Changes
 
