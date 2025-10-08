@@ -568,7 +568,7 @@ Each field has a `value()` method that reflects its current value. As the user i
 
 <div class="preview">
 	<h2>{createPost.fields.title.value()}</h2>
-	<div>{@html render(createPost.fields.content.value())}</div>
+	<div>{@html createPost.fields.content.value()}</div>
 </div>
 ```
 
