@@ -416,6 +416,8 @@ export function form(id) {
 						);
 					}
 
+					name = name.replace(/^[nb]:/, '');
+
 					versions[name] ??= 0;
 					versions[name] += 1;
 
