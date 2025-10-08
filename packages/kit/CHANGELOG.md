@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.46.4
+### Patch Changes
+
+
+- fix: prevent access of Svelte 5-only `untrack` function ([#14658](https://github.com/sveltejs/kit/pull/14658))
+
 ## 2.46.3
 ### Patch Changes
 
