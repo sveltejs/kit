@@ -1693,7 +1693,7 @@ async function navigate({
 		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
-		initialize(navigation_result, target, false);
+		await initialize(navigation_result, target, false);
 	}
 
 	const { activeElement } = document;
@@ -2796,7 +2796,7 @@ async function _hydrate(
 		result.props.page.state = {};
 	}
 
-	initialize(result, target, hydrate);
+	await initialize(result, target, hydrate);
 }
 
 /**
