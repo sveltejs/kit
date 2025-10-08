@@ -416,10 +416,12 @@ export function form(id) {
 						);
 					}
 
+					name = name.replace(/^[nb]:/, '');
+
 					versions[name] ??= 0;
 					versions[name] += 1;
 
-					const path = split_path(name.replace(/^[nb]:/, ''));
+					const path = split_path(name);
 
 					while (path.pop() !== undefined) {
 						const name = build_path_string(path);
