@@ -563,6 +563,7 @@ async function initialize(result, target, hydrate) {
 		sync: false
 	});
 
+	// wait a microtask in case svelte async is enabled which leads to component script blocks to run async
 	void (await Promise.resolve());
 
 	restore_snapshot(current_navigation_index);
