@@ -537,8 +537,22 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
+								update_all_versions();
+								return;
 							} else {
 								input = deep_set(input, path.map(String), value);
+
+								const key = build_path_string(path);
+								versions[key] ??= 0;
+								versions[key] += 1;
+								touched[key] = true;
+
+								const parent_path = path.slice();
+								while (parent_path.pop() !== undefined) {
+									const parent_key = build_path_string(parent_path);
+									versions[parent_key] ??= 0;
+									versions[parent_key] += 1;
+								}
 							}
 						},
 						() => issues
