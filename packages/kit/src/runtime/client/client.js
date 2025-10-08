@@ -579,7 +579,7 @@ async function initialize(result, target, hydrate) {
 			complete: Promise.resolve()
 		};
 
-		void await Promise.resolve();
+		void (await Promise.resolve());
 		after_navigate_callbacks.forEach((fn) => fn(navigation));
 	}
 
