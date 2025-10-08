@@ -142,8 +142,11 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 				}
 
-				/** @type {{ input?: Record<string, any>, issues?: Record<string, InternalRemoteFormIssue[]>, result: Output }} */
+				/** @type {{ submission: true, input?: Record<string, any>, issues?: Record<string, InternalRemoteFormIssue[]>, result: Output }} */
 				const output = {};
+
+				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
+				output.submission = true;
 
 				const { event, state } = get_request_store();
 				const validated = await schema?.['~standard'].validate(data);
@@ -211,14 +214,15 @@ export function form(validate_or_fn, maybe_fn) {
 					() => data?.input ?? {},
 					() => {},
 					(path, value) => {
-						if (data) {
+						if (data?.submission) {
 							// don't override a submission
 							return;
 						}
 
-						const input = path.length === 0 ? value : deep_set({}, path.map(String), value);
+						const input =
+							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
 
-						get_cache(__)[''] ??= { input };
+						(get_cache(__)[''] ??= {}).input = input;
 					},
 					() => data?.issues ?? {}
 				);
