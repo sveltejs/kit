@@ -563,6 +563,8 @@ async function initialize(result, target, hydrate) {
 		sync: false
 	});
 
+	void (await Promise.resolve());
+
 	restore_snapshot(current_navigation_index);
 
 	if (hydrate) {
@@ -579,7 +581,6 @@ async function initialize(result, target, hydrate) {
 			complete: Promise.resolve()
 		};
 
-		void (await Promise.resolve());
 		after_navigate_callbacks.forEach((fn) => fn(navigation));
 	}
 

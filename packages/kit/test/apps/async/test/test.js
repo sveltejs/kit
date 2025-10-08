@@ -12,3 +12,9 @@ test('afterNavigate runs after hydration', async ({ page }) => {
 
 	expect(await page.innerText('pre')).toBe('1');
 });
+
+test('snapshot are restored after reload', async ({ page }) => {
+	await page.goto('/snapshot');
+	await page.reload();
+	expect(await page.innerText('pre')).toBe('{"restored":"yes"}');
+});
