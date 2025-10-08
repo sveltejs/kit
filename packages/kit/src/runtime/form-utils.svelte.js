@@ -3,7 +3,9 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
-import { untrack } from 'svelte';
+import * as svelte from 'svelte';
+// Svelte 4 and under don't have `untrack` - you'll not be able to use remote functions with Svelte 4 but this will still be loaded
+const untrack = svelte.untrack ?? ((value) => value());
 
 /**
  * Sets a value in a nested object using a path string, not mutating the original object but returning a new object
