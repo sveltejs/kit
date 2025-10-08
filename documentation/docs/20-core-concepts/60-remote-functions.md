@@ -496,7 +496,7 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 	<label>
 		<h2>Title</h2>
 
-+++		{#each createPost.fields.title.issues() as issue}
++++		{#each createPost.fields.title.issues() ?? [] as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
@@ -506,7 +506,7 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#each createPost.fields.content.issues() as issue}
++++		{#each createPost.fields.content.issues() ?? [] as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
@@ -552,7 +552,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
 ```svelte
-{#each createPost.fields.allIssues() as issue}
+{#each createPost.fields.allIssues() ?? [] as issue}
 	<p>{issue.message}</p>
 {/each}
 ```
