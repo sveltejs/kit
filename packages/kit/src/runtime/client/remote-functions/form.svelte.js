@@ -409,11 +409,17 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input = set_nested_value(
-							input,
-							name,
-							element.type === 'checkbox' && !element.checked ? null : element.value
-						);
+						let /** @type {number | boolean | string | undefined} */ value =
+								element.type === 'checkbox' && !element.checked ? '' : element.value;
+						if (name.startsWith('n:')) {
+							name = name.slice(2);
+							value = value === '' ? undefined : parseFloat(value);
+						} else if (name.startsWith('b:')) {
+							name = name.slice(2);
+							value = value === 'on';
+						}
+
+						input = set_nested_value(input, name, value);
 					}
 
 					versions[name] ??= 0;
