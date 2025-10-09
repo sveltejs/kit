@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: ensure remote form fields.set triggers reactivity
+fix: ensure `form` remote functions' `fields.set` triggers reactivity
