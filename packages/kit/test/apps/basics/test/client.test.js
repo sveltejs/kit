@@ -1965,6 +1965,18 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('success');
 	});
 
+	test('fields.set updates DOM before validate', async ({ page }) => {
+		await page.goto('/remote/form/imperative');
+
+		const input = page.locator('input[name="message"]');
+		await input.fill('123');
+
+		await page.locator('#set-and-validate').click();
+
+		await expect(input).toHaveValue('hello');
+		await expect(page.locator('#issue')).toHaveText('ok');
+	});
+
 	test('command pending state is tracked correctly', async ({ page }) => {
 		await page.goto('/remote');
 
