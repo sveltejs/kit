@@ -594,7 +594,7 @@ You can update a field (or a collection of fields) via the `set(...)` method:
 
 ### Mutating field arrays
 
-Field arrays have the following extra methods to mutate the array: `.pop()`, `.push()`, `.shift()`, `.unshift()`, `.splice()`, and `.sort()`.
+Field arrays have the following extra methods to mutate the array: `.pop()`, `.push()`, `.shift()`, `.unshift()`, `.splice()`, and `.sort()`. Other array methods and properties can still be accessed through the `.value()` method.
 
 ```svelte
 <script>
@@ -609,18 +609,10 @@ Field arrays have the following extra methods to mutate the array: `.pop()`, `.p
 	});
 
 	// clear cart
-	cart.fields.items.splice(0, cart.field.items().length);
-</script>
-```
-
-Other array methods can still be accessed through the `.value()` method.
-
-```svelte
-<script>
-	import { cart } from '../data.remote';
+	cart.fields.items.splice(0, cart.fields.items.value().length);
 
 	// cart total
-	cart.fields.items.value().reduce((acc, item) => acc + item.price * item.quantity, 0);
+	const total = cart.fields.items.value().reduce((acc, item) => acc + item.price * item.quantity, 0);
 </script>
 ```
 
