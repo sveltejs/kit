@@ -592,6 +592,38 @@ You can update a field (or a collection of fields) via the `set(...)` method:
 </script>
 ```
 
+### Mutating field arrays
+
+Field arrays have the following extra methods to mutate the array: `.pop()`, `.push()`, `.shift()`, `.unshift()`, `.splice()`, and `.sort()`.
+
+```svelte
+<script>
+	import { cart } from '../data.remote';
+
+	// add to cart
+	cart.fields.items.push({
+		sku: "SKU12345",
+		name: "TV Set",
+		price: 1200,
+		quantity: 1
+	});
+
+	// clear cart
+	cart.fields.items.splice(0, cart.field.items().length);
+</script>
+```
+
+Other array methods can still be accessed through the `.value()` method.
+
+```svelte
+<script>
+	import { cart } from '../data.remote';
+
+	// cart total
+	cart.fields.items.value().reduce((acc, item) => acc + item.price * item.quantity, 0);
+</script>
+```
+
 ### Handling sensitive data
 
 In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `value()` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.

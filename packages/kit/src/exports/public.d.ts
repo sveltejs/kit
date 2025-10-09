@@ -1895,29 +1895,45 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
-	/**
-	 * Returns an object that can be spread onto an input element with the correct type attribute,
-	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-	 * @example
-	 * ```svelte
-	 * <input {...myForm.fields.myString.as('text')} />
-	 * <input {...myForm.fields.myNumber.as('number')} />
-	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-	 * ```
-	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
-};
+export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & 
+	RemoteFormArrayFieldMethods<Value> & {
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	};
 
-type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
-	/** Validation issues belonging to this or any of the fields that belong to it, if any */
-	allIssues(): RemoteFormIssue[] | undefined;
-};
+type RemoteFormArrayFieldMethods<T> =
+	T extends Array<infer U>
+		? {
+				push(item: U): void;
+				pop(): U;
+				unshift(item: U): void;
+				shift(): U;
+				splice(start: number, deleteCount: number, ...insert: U[]): U[];
+				sort(fn: (a: U, b: U) => number): U[];
+				// you could add more, but the mutate fns are all we really need.
+				// the rest could be accessed like `.value().slice(...)` or `.value().at(-1)`
+			}
+		: {};
+
+type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> &
+	RemoteFormArrayFieldMethods<Value> & {
+		/** Validation issues belonging to this or any of the fields that belong to it, if any */
+		allIssues(): RemoteFormIssue[] | undefined;
+	};
 
 /**
  * Recursive type to build form fields structure with proxy access
  */
-type RemoteFormFields<T> =
+export type RemoteFormFields<T> =
 	WillRecurseIndefinitely<T> extends true
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
