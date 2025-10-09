@@ -1,5 +1,10 @@
 import { building, dev } from '$app/environment';
-import { prerender } from '$app/server';
+import { prerender, read } from '$app/server';
+import testfile from './test.txt';
+
+// Test that `read()` is available at the top level when loading remote functions
+// https://github.com/sveltejs/kit/issues/XXXXX
+const content = read(testfile);
 
 export const prerendered = prerender(() => {
 	if (!building && !dev) {
@@ -23,3 +28,8 @@ export const prerendered_entries = prerender(
 	},
 	{ inputs: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
 );
+
+// Test that the content from the top-level read() call is available
+export const with_read = prerender(() => {
+	return content;
+});
