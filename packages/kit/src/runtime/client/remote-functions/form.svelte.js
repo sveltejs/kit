@@ -538,7 +538,6 @@ export function form(id) {
 							if (path.length === 0) {
 								input = value;
 								update_all_versions();
-								return;
 							} else {
 								input = deep_set(input, path.map(String), value);
 
