@@ -8,6 +8,7 @@
 		button: v.optional(v.literal('submitter'))
 	});
 	let submitter;
+	let error_message = '';
 	$inspect(my_form.fields.allIssues());
 </script>
 
@@ -39,3 +40,27 @@
 >
 	trigger validation
 </button>
+
+<form
+	{...my_form.enhance(async ({ submit }) => {
+		try {
+			await submit();
+			error_message = '';
+		} catch (error) {
+			error_message = error.body?.message || 'Error occurred';
+		}
+	})}
+	id="error-test-form"
+>
+	{#each my_form.fields.foo.issues() as issue}
+		<p class="error-test-issue">{issue.message}</p>
+	{/each}
+
+	<input {...my_form.fields.foo.as('text')} id="error-test-foo" />
+	<input {...my_form.fields.bar.as('text')} id="error-test-bar" />
+
+	<button type="submit" id="error-test-submit">Submit with error handler</button>
+</form>
+{#if error_message}
+	<p id="error-message">{error_message}</p>
+{/if}

@@ -162,6 +162,10 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
+					// Set empty issues to indicate validation passed
+					// This will be available even if an error is thrown in the handler
+					output.issues = {};
+
 					state.refreshes ??= {};
 
 					const invalid = create_invalid();
@@ -179,16 +183,16 @@ export function form(validate_or_fn, maybe_fn) {
 						if (e instanceof ValidationError) {
 							handle_issues(output, e.issues, event.isRemoteRequest, form_data);
 						} else {
+							// Validation passed but an error was thrown (e.g. via error(401))
+							// output.issues is already set to {} above
 							throw e;
 						}
 					}
 				}
 
-				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
-				// where only one form submission is active at the same time
-				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
-				}
+				// Cache the output for both remote and non-remote requests
+				// so that validation state (issues) is preserved even if an error is thrown
+				get_cache(__, state)[''] = output;
 
 				return output;
 			}

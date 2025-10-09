@@ -252,6 +252,21 @@ export function form(id) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
+						// Handle error response
+						// If the response includes issues, it means validation passed but an error was thrown
+						if (form_result.issues !== undefined) {
+							issues = devalue.parse(form_result.issues, app.decoders);
+							// Mark server issues with server: true
+							for (const issue_list of Object.values(issues)) {
+								for (const issue of issue_list) {
+									issue.server = true;
+								}
+							}
+							// If issues is empty, validation passed - update versions to clear old issues
+							if (!issues.$) {
+								update_all_versions();
+							}
+						}
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {

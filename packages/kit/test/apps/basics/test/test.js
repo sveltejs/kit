@@ -1873,6 +1873,37 @@ test.describe('remote functions', () => {
 		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
 	});
 
+	test('form issues cleared when error is used after validation passes', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const errorFoo = page.locator('#error-test-foo');
+		const errorBar = page.locator('#error-test-bar');
+		const errorSubmit = page.locator('#error-test-submit');
+
+		// First, submit with invalid data to create issues
+		await errorFoo.fill('x');
+		await errorBar.fill('d');
+		await errorSubmit.click();
+		await expect(page.locator('#error-test-form')).toContainText('Invalid type: Expected');
+
+		// Now submit with valid data that triggers error(401)
+		// The issues should be cleared even though an error is thrown
+		await errorFoo.fill('b');
+		await errorBar.fill('e');
+		await errorSubmit.click();
+
+		// Wait for error message to appear
+		await expect(page.locator('#error-message')).toBeVisible();
+
+		// Verify issues are cleared (no validation error messages)
+		await expect(page.locator('.error-test-issue')).not.toBeVisible();
+	});
+
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) return;
 

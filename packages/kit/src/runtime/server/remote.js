@@ -12,6 +12,7 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
+import { get_cache } from '../app/server/remote/shared.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -186,11 +187,22 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		const status =
 			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
 
+		// For form submissions, include issues from cache to indicate validation state
+		/** @type {Record<string, any> | undefined} */
+		let form_issues;
+		if (info.type === 'form') {
+			const cached = get_cache(info, state)?.[''];
+			if (cached?.issues !== undefined) {
+				form_issues = cached.issues;
+			}
+		}
+
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: await handle_error_and_jsonify(event, state, options, error),
-				status
+				status,
+				...(form_issues !== undefined && { issues: stringify(form_issues, transport) })
 			}),
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).

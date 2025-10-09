@@ -1,4 +1,4 @@
-import { form } from '$app/server';
+import { error, form } from '$app/server';
 import * as v from 'valibot';
 
 export const my_form = form(
@@ -11,6 +11,11 @@ export const my_form = form(
 		// Test imperative validation
 		if (data.foo === 'c') {
 			invalid(invalid.foo('Imperative: foo cannot be c'));
+		}
+
+		// Test error() after validation passes
+		if (data.foo === 'b' && data.bar === 'e') {
+			error(401, 'Unauthorized');
 		}
 
 		console.log(data);
