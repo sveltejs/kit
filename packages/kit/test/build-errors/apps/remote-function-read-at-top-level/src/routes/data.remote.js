@@ -1,10 +1,10 @@
-import { query, read } from '$app/server';
+import { prerender, read } from '$app/server';
 import testfile from './test.txt';
 
 // This should fail without the fix because read implementation isn't set
-// when remote functions are being analysed
+// when remote functions are being analysed during build
 const content = read(testfile);
 
-export const getFile = query(() => {
-	return { content };
+export const getData = prerender(() => {
+	return { text: content };
 });
