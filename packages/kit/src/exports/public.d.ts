@@ -1895,7 +1895,7 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & 
+export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> &
 	RemoteFormArrayFieldMethods<Value> & {
 		/**
 		 * Returns an object that can be spread onto an input element with the correct type attribute,
