@@ -351,6 +351,11 @@ export interface ServerErrorNode {
 	 * Only set for HttpErrors.
 	 */
 	status?: number;
+	/**
+	 * Only set for form errors when validation passed but error was thrown.
+	 * Stringified issues object to indicate validation state.
+	 */
+	issues?: string;
 }
 
 export interface ServerMetadataRoute {
