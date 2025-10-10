@@ -5,7 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
+import { get_pathname, parse_isr_expiration, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 /**
@@ -433,7 +433,11 @@ const plugin = function (defaults = {}) {
 					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 
 					const pathname = get_pathname(route);
-					const json = JSON.stringify(isr, null, '\t');
+					const json = JSON.stringify(
+						{ ...isr, expiration: parse_isr_expiration(isr.expiration, route.id) },
+						null,
+						'\t'
+					);
 
 					write(`${base}.prerender-config.json`, json);
 					write(`${base}/__data.json.prerender-config.json`, json);

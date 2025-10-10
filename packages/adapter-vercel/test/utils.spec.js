@@ -1,5 +1,5 @@
-import { assert, test } from 'vitest';
-import { get_pathname, pattern_to_src } from '../utils.js';
+import { assert, test, describe } from 'vitest';
+import { get_pathname, parse_isr_expiration, pattern_to_src } from '../utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import('../../kit/src/' + 'utils/routing.js');
@@ -129,4 +129,34 @@ test('pattern_to_src for route with rest parameter', () => {
 
 test('pattern_to_src for route with rest parameter in the middle', () => {
 	run_pattern_to_src_test('/foo/[...bar]/baz', '^/foo(/[^]*)?/baz/?');
+});
+
+describe('parse_isr_expiration', () => {
+	test.each(
+		/** @type {const} */ ([
+			[1, 1],
+			['1', 1],
+			[false, 365 * 24 * 60 * 60]
+		])
+	)('works for valid inputs', (input, output) => {
+		const result = parse_isr_expiration(input, '/isr');
+		assert.equal(result, output);
+	});
+
+	test('does not allow floats', () => {
+		assert.throws(() => parse_isr_expiration(1.5, '/isr'), /should be an integer, in \/isr/);
+	});
+
+	test('does not allow `true`', () => {
+		const val = /** @type {false} */ (true);
+		assert.throws(() => parse_isr_expiration(val, '/isr'), /should be an integer, in \/isr/);
+	});
+
+	test('does not allow negative numbers', () => {
+		assert.throws(() => parse_isr_expiration(-1, '/isr'), /should be non-negative, in \/isr/);
+	});
+
+	test('does not allow strings that do not parse to valid numbers', () => {
+		assert.throws(() => parse_isr_expiration('foo', '/isr'), /should be a number, in \/isr/);
+	});
 });
