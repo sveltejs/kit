@@ -2,7 +2,8 @@ import { building, dev } from '$app/environment';
 import { prerender, read } from '$app/server';
 import text from './test.txt?url';
 
-// test that using `read()` at the top-level of a remote function file doesn't throw an error when we evaluate the remote function files
+// test that using `read()` at the top-level of a remote function file doesn't
+// throw an error when we evaluate the remote function files during build
 const response = read(text);
 const content = await response.text();
 
