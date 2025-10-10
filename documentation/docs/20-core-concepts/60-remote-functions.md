@@ -608,8 +608,8 @@ Field arrays have the following extra methods to mutate the array: `.pop()`, `.p
 		quantity: 1
 	});
 
-	// clear cart
-	cart.fields.items.splice(0, cart.fields.items.value().length);
+	// remove cart item at index `i`
+	cart.fields.items.splice(i, 1);
 
 	// cart total
 	const total = cart.fields.items.value().reduce((acc, item) => acc + item.price * item.quantity, 0);
