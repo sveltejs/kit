@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: set manifest and read implementation before loading remote functions in prerender
+fix: allow `read` to be used at the top-level of remote function files
