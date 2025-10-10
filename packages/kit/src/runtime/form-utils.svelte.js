@@ -216,6 +216,82 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 				]);
 			}
 
+			if (prop === 'push') {
+				const push_func = function (/** @type {any} */ newValue) {
+					set_input(path, [...get_value(), newValue]);
+				};
+				return create_field_proxy(push_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'unshift') {
+				const unshift_func = function (/** @type {any} */ newValue) {
+					set_input(path, [newValue, ...get_value()]);
+				};
+				return create_field_proxy(unshift_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'pop') {
+				const pop_func = function () {
+					const value = get_value();
+					const output = value.pop();
+					set_input(path, value);
+					return output;
+				};
+				return create_field_proxy(pop_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'shift') {
+				const shift_func = function () {
+					const value = get_value();
+					const output = value.shift();
+					set_input(path, value);
+					return output;
+				};
+				return create_field_proxy(shift_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'splice') {
+				const splice_func = function (
+					/** @type {number} */ start,
+					/** @type {number} */ deleteCount,
+					/** @type {any[]} */ ...insert
+				) {
+					const value = get_value();
+					const output = value.splice(start, deleteCount, ...insert);
+					set_input(path, value);
+					return output;
+				};
+				return create_field_proxy(splice_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'sort') {
+				const sort_func = function (/** @type {function} */ fn) {
+					const value = get_value();
+					const output = value.sort(fn);
+					set_input(path, value);
+					return output;
+				};
+				return create_field_proxy(sort_func, get_input, depend, set_input, get_issues, [
+					...path,
+					prop
+				]);
+			}
+
 			if (prop === 'value') {
 				return create_field_proxy(get_value, get_input, depend, set_input, get_issues, [
 					...path,
