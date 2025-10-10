@@ -28,7 +28,6 @@ export const prerendered_entries = prerender(
 	{ inputs: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
 );
 
-// Test that the content from the top-level read() call is available
 export const with_read = prerender(() => {
 	return content;
 });
