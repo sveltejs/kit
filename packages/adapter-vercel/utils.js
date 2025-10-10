@@ -67,3 +67,27 @@ export function pattern_to_src(pattern) {
 
 	return src;
 }
+
+/**
+ * @param {false | string | number} value
+ * @param {string} route_id
+ * @returns {number}
+ */
+export function parse_isr_expiration(value, route_id) {
+	if (value === false) return 365 * 24 * 60 * 60; // 1 year
+	const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+	/** @param {string} desc */
+	const err = (desc) => {
+		throw new Error(`Invalid isr.expiration value: ${value} (${desc}, in ${route_id})`);
+	};
+	if (Number.isNaN(parsed)) {
+		err('should be a number');
+	}
+	if (parsed < 0) {
+		err('should be non-negative');
+	}
+	if (!Number.isInteger(parsed)) {
+		err('should be an integer');
+	}
+	return parsed;
+}
