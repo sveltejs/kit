@@ -922,7 +922,9 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
-		await page.goto('/routing/form-get');
+		// wait until load to ensure that all in-flight requests are completed before
+		// we start watching requests
+		await page.goto('/routing/form-get', { waitUntil: 'load' });
 
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
