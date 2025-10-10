@@ -485,14 +485,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	// the user's remote function modules may reference environment variables at
-	// the top-level so we need to set `env` before evaluating those modules
-	// to avoid potential runtime errors
+	// the user's remote function modules may reference environment variables,
+	// `read` or the `manifest` at the top-level so we need to set them before
+	// evaluating those modules to avoid potential runtime errors
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
 	const private_env = filter_env(env, private_prefix, public_prefix);
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
 	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
 	const prerender_functions = [];
