@@ -3,7 +3,8 @@ import { prerender, read } from '$app/server';
 import testfile from './test.txt';
 
 // test that using `read()` at the top-level of a remote function file doesn't throw an error when we evaluate the remote function files
-const content = read(testfile);
+const response = read(testfile);
+const content = await response.text();
 
 export const prerendered = prerender(() => {
 	if (!building && !dev) {
