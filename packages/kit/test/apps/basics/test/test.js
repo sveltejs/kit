@@ -1851,18 +1851,18 @@ test.describe('remote functions', () => {
 		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-form-1]')).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
-		await expect(page.locator('form')).toContainText(
+		await expect(page.locator('[data-form-1]')).toContainText(
 			'Invalid type: Expected ("d" | "e") but received "g"'
 		);
 
 		await bar.fill('d');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-form-1]')).not.toContainText('Invalid type: Expected');
 
 		await page.locator('#trigger-validate').click();
-		await expect(page.locator('form')).toContainText(
+		await expect(page.locator('[data-form-1]')).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
 
@@ -1870,7 +1870,34 @@ test.describe('remote functions', () => {
 		await foo.fill('c');
 		await bar.fill('d');
 		await submit.click();
-		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
+		await expect(page.locator('[data-form-1]')).toContainText('Imperative: foo cannot be c');
+	});
+
+	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const baz = page.locator('input[name="baz"]');
+		const submit = page.locator('[data-form-2] button');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('[data-form-2]')).toContainText('Invalid type: Expected');
+
+		await baz.fill('a');
+		await submit.click();
+		await expect(page.locator('[data-form-2]')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('An error occurred');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('[data-form-2]')).toContainText('Invalid type: Expected');
+
+		await baz.fill('b');
+		await submit.click();
+		await expect(page.locator('[data-form-2]')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('No error');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
