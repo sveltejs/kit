@@ -641,25 +641,9 @@ async function kit({ svelte_config }) {
 	/** @type {Set<string>} Track which remote hashes have already been emitted */
 	const emitted_remote_hashes = new Set();
 
-	/**
-	 * A set of modules that imported by `.remote.ts` modules. By forcing these modules
-	 * into their own chunks, we ensure that each chunk created for a `.remote.ts`
-	 * module _only_ contains that module, hopefully avoiding any circular
-	 * dependency woes that arise from treating chunks as entries
-	 */
-	const imported_by_remotes = new Set();
-
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
-
-		moduleParsed(info) {
-			if (svelte_config.kit.moduleExtensions.some((ext) => info.id.endsWith(`.remote${ext}`))) {
-				for (const id of info.importedIds) {
-					imported_by_remotes.add(id);
-				}
-			}
-		},
 
 		resolveId(id) {
 			if (id.startsWith('\0sveltekit-remote:')) return id;
