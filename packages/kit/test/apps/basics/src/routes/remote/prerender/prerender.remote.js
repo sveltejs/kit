@@ -2,8 +2,7 @@ import { building, dev } from '$app/environment';
 import { prerender, read } from '$app/server';
 import testfile from './test.txt';
 
-// Test that `read()` is available at the top level when loading remote functions
-// https://github.com/sveltejs/kit/issues/XXXXX
+// test that using `read()` at the top-level of a remote function file doesn't throw an error when we evaluate the remote function files
 const content = read(testfile);
 
 export const prerendered = prerender(() => {
