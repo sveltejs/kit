@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.46.5
+### Patch Changes
+
+
+- fix: ensure `form` remote functions' `fields.set` triggers reactivity ([#14661](https://github.com/sveltejs/kit/pull/14661))
+
 ## 2.46.4
 ### Patch Changes
 
