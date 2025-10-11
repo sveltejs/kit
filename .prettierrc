@@ -22,6 +22,7 @@
 			"files": [
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
+				"**/.netlify/**",
 				"**/.svelte-kit/**",
 				"**/.custom-out-dir/**",
 				"**/build/**",
