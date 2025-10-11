@@ -9,7 +9,8 @@ import {
 	create_field_proxy,
 	set_nested_value,
 	throw_on_old_property_access,
-	deep_set
+	deep_set,
+	build_path_string
 } from '../../../form-utils.svelte.js';
 import { get_cache, run_remote_function } from './shared.js';
 
@@ -222,9 +223,17 @@ export function form(validate_or_fn, maybe_fn) {
 						const input =
 							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
 
-						(get_cache(__)[''] ??= {}).input = input;
+						const cache = get_cache(__);
+						const entry = (cache[''] ??= {});
+						entry.input = input;
+
+						if (path.length > 0) {
+							const key = build_path_string(path);
+							(entry.touched ??= {})[key] = true;
+						}
 					},
-					() => data?.issues ?? {}
+					() => data?.issues ?? {},
+					() => data?.touched ?? {}
 				);
 			}
 		});

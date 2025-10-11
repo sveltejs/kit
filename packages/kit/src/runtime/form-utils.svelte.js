@@ -180,10 +180,19 @@ export function deep_get(object, path) {
  * @param {(path: string) => void} depend - Function to make an effect depend on a specific field
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {() => Record<string, boolean>} [get_touched] - Function to get touched fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, depend, set_input, get_issues, path = []) {
+export function create_field_proxy(
+	target,
+	get_input,
+	depend,
+	set_input,
+	get_issues,
+	get_touched = () => ({}),
+	path = []
+) {
 	const path_string = build_path_string(path);
 
 	const get_value = () => {
@@ -197,7 +206,7 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, depend, set_input, get_issues, [
+				return create_field_proxy({}, get_input, depend, set_input, get_issues, get_touched, [
 					...path,
 					parseInt(prop, 10)
 				]);
@@ -210,17 +219,22 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, depend, set_input, get_issues, [
+				return create_field_proxy(set_func, get_input, depend, set_input, get_issues, get_touched, [
 					...path,
 					prop
 				]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, depend, set_input, get_issues, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(
+					get_value,
+					get_input,
+					depend,
+					set_input,
+					get_issues,
+					get_touched,
+					[...path, prop]
+				);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -240,10 +254,51 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, depend, set_input, get_issues, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(
+					issues_func,
+					get_input,
+					depend,
+					set_input,
+					get_issues,
+					get_touched,
+					[...path, prop]
+				);
+			}
+
+			if (prop === 'touched') {
+				const touched_func = () => {
+					depend(path_string);
+
+					const touched = get_touched();
+
+					if (path.length === 0 || path_string === '') {
+						return Object.keys(touched).length > 0;
+					}
+
+					if (touched[path_string]) return true;
+
+					for (const candidate in touched) {
+						if (candidate === path_string) continue;
+						if (!candidate.startsWith(path_string)) continue;
+
+						const next = candidate.slice(path_string.length, path_string.length + 1);
+						if (next === '.' || next === '[') {
+							return true;
+						}
+					}
+
+					return false;
+				};
+
+				return create_field_proxy(
+					touched_func,
+					get_input,
+					depend,
+					set_input,
+					get_issues,
+					get_touched,
+					[...path, prop]
+				);
 			}
 
 			if (prop === 'as') {
@@ -392,14 +447,17 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, depend, set_input, get_issues, [
+				return create_field_proxy(as_func, get_input, depend, set_input, get_issues, get_touched, [
 					...path,
 					'as'
 				]);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, depend, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, depend, set_input, get_issues, get_touched, [
+				...path,
+				prop
+			]);
 		}
 	});
 }
