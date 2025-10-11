@@ -545,7 +545,7 @@ async function _preload_code(url) {
  * @param {HTMLElement} target
  * @param {boolean} hydrate
  */
-function initialize(result, target, hydrate) {
+async function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 	current = result.state;
@@ -562,6 +562,10 @@ function initialize(result, target, hydrate) {
 		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false
 	});
+
+	// Wait for a microtask in case svelte experimental async is enabled,
+	// which causes component script blocks to run asynchronously
+	void (await Promise.resolve());
 
 	restore_snapshot(current_navigation_index);
 
@@ -1691,7 +1695,7 @@ async function navigate({
 		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
-		initialize(navigation_result, target, false);
+		await initialize(navigation_result, target, false);
 	}
 
 	const { activeElement } = document;
@@ -2794,7 +2798,7 @@ async function _hydrate(
 		result.props.page.state = {};
 	}
 
-	initialize(result, target, hydrate);
+	await initialize(result, target, hydrate);
 }
 
 /**
