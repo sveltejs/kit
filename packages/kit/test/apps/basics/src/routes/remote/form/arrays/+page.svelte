@@ -15,33 +15,33 @@
 <form {...my_form}>
 	{#each my_form.fields.strings.value() as _, i (i)}
 		<div>
-      <label>
-        String {i + 1}
-        <input {...my_form.fields.strings[i].as('text')} />
-      </label>
-    </div>
+			<label>
+				String {i + 1}
+				<input {...my_form.fields.strings[i].as('text')} />
+			</label>
+		</div>
 	{/each}
 
 	{#each my_form.fields.numbers.value() as _, i (i)}
-    <div>
-      <label>
-        Number {i + 1}
-        <input {...my_form.fields.numbers[i].as('number')} />
-      </label>
-    </div>
+		<div>
+			<label>
+				Number {i + 1}
+				<input {...my_form.fields.numbers[i].as('number')} />
+			</label>
+		</div>
 	{/each}
 
 	{#each my_form.fields.objects.value() as _, i (i)}
-    <div>
-      <label>
-        Object {i + 1} Name
-        <input {...my_form.fields.objects[i].name.as('text')} />
-      </label>
-      <label>
-        Object {i + 1} Age
-        <input {...my_form.fields.objects[i].age.as('number')} />
-      </label>
-    </div>
+		<div>
+			<label>
+				Object {i + 1} Name
+				<input {...my_form.fields.objects[i].name.as('text')} />
+			</label>
+			<label>
+				Object {i + 1} Age
+				<input {...my_form.fields.objects[i].age.as('number')} />
+			</label>
+		</div>
 	{/each}
 
 	<button>Submit</button>
