@@ -13,10 +13,11 @@ export const set_message = form(
 	v.object({
 		id: v.optional(v.string()),
 		message: v.picklist(
-			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
+			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect', 'backwards'],
 			'message is invalid'
 		),
-		uppercase: v.optional(v.string())
+		uppercase: v.optional(v.string()),
+		action: v.optional(v.picklist(['normal', 'reverse']))
 	}),
 	async (data) => {
 		if (data.message === 'unexpected error') {
@@ -31,7 +32,11 @@ export const set_message = form(
 			redirect(303, '/remote');
 		}
 
-		message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
+		if (data.action === 'reverse') {
+			message = data.message.split('').reverse().join('');
+		} else {
+			message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
+		}
 
 		if (getRequestEvent().isRemoteRequest) {
 			const deferred = Promise.withResolvers();
@@ -42,11 +47,6 @@ export const set_message = form(
 		return message + (data.id ? ` (from: ${data.id})` : '');
 	}
 );
-
-export const set_reverse_message = form(v.object({ message: v.string() }), (data) => {
-	message = data.message.split('').reverse().join('');
-	return message;
-});
 
 export const resolve_deferreds = form(async () => {
 	for (const deferred of deferreds) {
