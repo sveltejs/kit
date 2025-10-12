@@ -785,6 +785,12 @@ test.describe('setHeaders', () => {
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
 	});
+	test('allows multiple server-timing headers with different values', async ({ page }) => {
+		const response = await page.goto('/headers/server-timing/sub');
+		const serverTiming = response ? (await response.allHeaders())['server-timing'] : '';
+
+		expect(serverTiming).toMatch('db;dur=53, external-api;dur=250');
+	});
 });
 
 test.describe('cookies', () => {
