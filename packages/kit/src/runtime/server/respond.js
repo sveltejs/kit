@@ -184,7 +184,7 @@ export async function internal_respond(request, options, manifest, state) {
 					);
 				} else if (lower in headers) {
 					if (lower === 'server-timing') {
-						headers[lower] += ', ' + value;	
+						headers[lower] += ', ' + value;
 					} else {
 						throw new Error(`"${key}" header is already set`);
 					}
