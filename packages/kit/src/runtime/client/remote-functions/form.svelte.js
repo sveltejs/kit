@@ -540,6 +540,15 @@ export function form(id) {
 							} else {
 								input = deep_set(input, path.map(String), value);
 							}
+
+							const copy = path.slice();
+
+							do {
+								const name = build_path_string(copy);
+
+								versions[name] ??= 0;
+								versions[name] += 1;
+							} while (copy.pop() !== undefined);
 						},
 						() => issues
 					)

@@ -1982,6 +1982,26 @@ test.describe('remote functions', () => {
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
 	});
 
+	test('form.fields.set() triggers form.fields.value() updates', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/set');
+
+		const before = await page.locator('#full-value').textContent();
+		expect(JSON.parse(before)).toEqual({});
+
+		await page.locator('#update-value').click();
+
+		const leafValue = await page.locator('input[name="leaf"]').inputValue();
+		expect(leafValue).toBe('new value');
+
+		const after = await page.locator('#full-value').textContent();
+		expect(JSON.parse(after)).toEqual({ leaf: 'new value' });
+	});
+
 	test('selects are not nuked when unrelated controls change', async ({
 		page,
 		javaScriptEnabled
