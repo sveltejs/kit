@@ -136,9 +136,10 @@ describe('parse_isr_expiration', () => {
 		/** @type {const} */ ([
 			[1, 1],
 			['1', 1],
-			[false, 365 * 24 * 60 * 60]
+			[false, false],
+			['false', false]
 		])
-	)('works for valid inputs', (input, output) => {
+	)('works for valid inputs ($0)', (input, output) => {
 		const result = parse_isr_expiration(input, '/isr');
 		assert.equal(result, output);
 	});
@@ -157,6 +158,16 @@ describe('parse_isr_expiration', () => {
 	});
 
 	test('does not allow strings that do not parse to valid numbers', () => {
-		assert.throws(() => parse_isr_expiration('foo', '/isr'), /should be a number, in \/isr/);
+		assert.throws(
+			() => parse_isr_expiration('foo', '/isr'),
+			/value was a string but could not be parsed as an integer, in \/isr/
+		);
+	});
+
+	test('does not allow strings that parse to floats', () => {
+		assert.throws(
+			() => parse_isr_expiration('1.1', '/isr'),
+			/value was a string but could not be parsed as an integer, in \/isr/
+		);
 	});
 });
