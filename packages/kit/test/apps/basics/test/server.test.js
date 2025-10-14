@@ -1408,3 +1408,10 @@ test.describe('asset preload', () => {
 		});
 	}
 });
+
+test.describe('Streaming', () => {
+	test('page with discarded promises loads', async ({ request }) => {
+		const response = await request.get('/streaming/discarded-promise');
+		expect(response.ok()).toBe(true);
+	});
+});
