@@ -227,7 +227,6 @@ export async function render_response({
 					paths.reset();
 				}
 
-				// eslint-disable-next-line
 				const { head, html, css } = options.async ? await rendered : rendered;
 
 				return { head, html, css };
@@ -654,7 +653,7 @@ export async function render_response({
 					async start(controller) {
 						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(text_encoder.encode(chunk));
+							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},
