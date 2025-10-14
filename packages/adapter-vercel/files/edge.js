@@ -2,6 +2,7 @@
  Vercel Edge Runtime does not support node:process */
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+import { waitUntil } from '@vercel/functions';
 
 const server = new Server(manifest);
 
@@ -49,9 +50,8 @@ const initialized = server.init({
 
 /**
  * @param {Request} request
- * @param {import('../index.js').RequestContext} context
  */
-export default async (request, context) => {
+export default async (request) => {
 	if (!origin) {
 		origin = new URL(request.url).origin;
 		await initialized;
@@ -62,7 +62,10 @@ export default async (request, context) => {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
 		},
 		platform: {
-			context
+			context: {
+				waitUntil
+			},
+			waitUntil
 		}
 	});
 };

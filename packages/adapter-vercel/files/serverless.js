@@ -3,6 +3,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 import process from 'node:process';
+import { waitUntil } from '@vercel/functions';
 
 installPolyfills();
 
@@ -39,6 +40,12 @@ export default {
 		return server.respond(request, {
 			getClientAddress() {
 				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+			},
+			platform: {
+				context: {
+					waitUntil
+				},
+				waitUntil
 			}
 		});
 	}
