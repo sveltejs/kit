@@ -253,6 +253,12 @@ importers:
       '@netlify/functions':
         specifier: 'catalog:'
         version: 5.0.0
+      '@netlify/node-cookies':
+        specifier: ^0.1.0
+        version: 0.1.0
+      '@netlify/types':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@rollup/plugin-commonjs':
         specifier: 'catalog:'
         version: 28.0.1(rollup@4.50.1)
@@ -2431,6 +2437,10 @@ packages:
   '@netlify/local-functions-proxy@2.0.3':
     resolution: {integrity: sha512-siVwmrp7Ow+7jLALi6jXOja4Y4uHMMgOLLQMgd+OZ1TESOstrJvkUisJEDAc9hx7u0v/B0mh5g1g1huiH3uS3A==}
     engines: {node: '>=18.14.0'}
+
+  '@netlify/node-cookies@0.1.0':
+    resolution: {integrity: sha512-OAs1xG+FfLX0LoRASpqzVntVV/RpYkgpI0VrUnw2u0Q1qiZUzcPffxRK8HF3gc4GjuhG5ahOEMJ9bswBiZPq0g==}
+    engines: {node: ^14.16.0 || >=16.0.0}
 
   '@netlify/open-api@2.37.0':
     resolution: {integrity: sha512-zXnRFkxgNsalSgU8/vwTWnav3R+8KG8SsqHxqaoJdjjJtnZR7wo3f+qqu4z+WtZ/4V7fly91HFUwZ6Uz2OdW7w==}
@@ -8258,6 +8268,8 @@ snapshots:
       '@netlify/local-functions-proxy-openbsd-x64': 1.1.1
       '@netlify/local-functions-proxy-win32-ia32': 1.1.1
       '@netlify/local-functions-proxy-win32-x64': 1.1.1
+
+  '@netlify/node-cookies@0.1.0': {}
 
   '@netlify/open-api@2.37.0': {}
 

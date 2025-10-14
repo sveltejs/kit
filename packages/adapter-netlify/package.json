@@ -50,6 +50,8 @@
 	"devDependencies": {
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
+		"@netlify/node-cookies": "^0.1.0",
+		"@netlify/types": "^2.1.0",
 		"@rollup/plugin-commonjs": "catalog:",
 		"@rollup/plugin-json": "catalog:",
 		"@rollup/plugin-node-resolve": "catalog:",
