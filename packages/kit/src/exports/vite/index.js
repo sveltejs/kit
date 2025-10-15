@@ -755,7 +755,8 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
-				code += dedent`
+				// Extra newlines to prevent syntax errors around missing semicolons or comments
+				code += '\n\n' + dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
