@@ -1258,6 +1258,21 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
+	test("Discarded promises from server load functions don't hang SSR request", async ({
+		request, javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) return;
+
+		let error;
+		try {
+			await request.get('/streaming/discarded-promise');
+		} catch (e) {
+			error = e;
+		}
+
+		expect(error).toBeUndefined();
+	});
+
 	test('Catches fetch errors from server load functions (client nav)', async ({ page }) => {
 		await page.goto('/streaming');
 		page.click('[href="/streaming/server-error"]');
