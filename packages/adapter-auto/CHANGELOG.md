@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 7.0.0
+### Major Changes
+
+
+- feat: update adapter-vercel to version 6 ([#14737](https://github.com/sveltejs/kit/pull/14737))
+
 ## 6.1.1
 ### Patch Changes
 
