@@ -1259,7 +1259,8 @@ test.describe('Streaming', () => {
 	});
 
 	test("Discarded promises from server load functions don't hang SSR request", async ({
-		request, javaScriptEnabled
+		request,
+		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) return;
 
