@@ -765,7 +765,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-To enable client-driven [query updates after form submissions](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
+To enable client-driven [query updates after form submissions](#single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
 
 ```ts
 import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
