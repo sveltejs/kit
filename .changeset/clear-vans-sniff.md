@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: error pages with discarded promises fail to load
+fix: avoid hanging when `error()` is used while streaming promises from a server `load` function
