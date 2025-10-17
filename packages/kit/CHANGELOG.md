@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.47.2
+### Patch Changes
+
+
+- fix: update overload to set `invalid` type to schema input ([#14748](https://github.com/sveltejs/kit/pull/14748))
+
 ## 2.47.1
 ### Patch Changes
 
