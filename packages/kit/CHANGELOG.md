@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.47.1
+### Patch Changes
+
+
+- fix: allow `read` to be used at the top-level of remote function files ([#14672](https://github.com/sveltejs/kit/pull/14672))
+
+
+- fix: more robust remote files generation ([#14682](https://github.com/sveltejs/kit/pull/14682))
+
 ## 2.47.0
 ### Minor Changes
 
