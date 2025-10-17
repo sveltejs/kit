@@ -166,6 +166,7 @@ export function form(id) {
 				await callback({
 					form,
 					data,
+					formData: form_data,
 					submit: () => submit(form_data)
 				});
 			} catch (e) {
