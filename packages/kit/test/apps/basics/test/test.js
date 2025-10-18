@@ -1,5 +1,5 @@
-import process from 'node:process';
 import { expect } from '@playwright/test';
+import process from 'node:process';
 import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -1884,6 +1884,19 @@ test.describe('remote functions', () => {
 
 		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
 		await expect(page.locator('input[name="_password"]')).toHaveValue('');
+	});
+
+	test('form field arrays', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/arrays');
+
+		const value = await page.locator('#full-value').textContent();
+		expect(JSON.parse(value)).toEqual({
+			strings: [''],
+			numbers: [0],
+			objects: [{ name: '', age: 0 }]
+		});
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
