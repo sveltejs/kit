@@ -46,7 +46,7 @@ import { get_cache, run_remote_function } from './shared.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(data: StandardSchemaV1.InferOutput<Schema>, invalid: import('@sveltejs/kit').Invalid<StandardSchemaV1.InferOutput<Schema>>) => MaybePromise<Output>} fn
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>, invalid: import('@sveltejs/kit').Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
