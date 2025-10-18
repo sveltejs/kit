@@ -9,48 +9,32 @@ import { with_resolvers } from './promise.js';
  * }}
  */
 export function create_async_iterator() {
-	let count = 0;
-	let accessed = false;
+	let resolved = -1;
+	let returned = -1;
 
-	const deferred = [with_resolvers()];
+	/** @type {import('./promise.js').PromiseWithResolvers<T>[]} */
+	const deferred = [];
 
 	return {
 		iterate: (transform = (x) => x) => {
 			return {
 				[Symbol.asyncIterator]() {
-					accessed = true;
-					if (count === 0) {
-						deferred[deferred.length - 1].resolve({ done: true });
-					}
-
 					return {
 						next: async () => {
-							const next = await deferred[0].promise;
+							const next = deferred[++returned];
+							if (!next) return { value: null, done: true };
 
-							if (!next.done) {
-								deferred.shift();
-								return { value: transform(next.value), done: false };
-							}
-
-							return next;
+							const value = await next.promise;
+							return { value: transform(value), done: false };
 						}
 					};
 				}
 			};
 		},
 		add: (promise) => {
-			count += 1;
-
+			deferred.push(with_resolvers());
 			void promise.then((value) => {
-				deferred[deferred.length - 1].resolve({
-					value,
-					done: false
-				});
-				deferred.push(with_resolvers());
-
-				if (--count === 0 && accessed) {
-					deferred[deferred.length - 1].resolve({ done: true });
-				}
+				deferred[++resolved].resolve(value);
 			});
 		}
 	};
