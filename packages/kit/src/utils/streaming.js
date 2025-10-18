@@ -33,6 +33,9 @@ export function create_async_iterator() {
 			return {
 				[Symbol.asyncIterator]() {
 					accessed = true;
+					if (count === 0) {
+						deferred[deferred.length - 1].fulfil({ done: true });
+					}
 
 					return {
 						next: async () => {
