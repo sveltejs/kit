@@ -224,11 +224,12 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 			}
 		}
 
+		contents = resolve_aliases(input, file.name, contents, aliases);
+
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
 			contents = await transpile_ts(tsconfig, filename, contents);
 		}
 
-		contents = resolve_aliases(input, file.name, contents, aliases);
 		analyse_code(file.name, contents);
 		write(dest, contents);
 	} else {
