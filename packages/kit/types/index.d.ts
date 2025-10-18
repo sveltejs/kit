@@ -1809,6 +1809,8 @@ declare module '@sveltejs/kit' {
 		radio: string;
 		file: File;
 		hidden: string;
+		'hidden boolean': boolean;
+		'hidden number': number;
 		submit: string;
 		button: string;
 		reset: string;
@@ -1866,7 +1868,11 @@ declare module '@sveltejs/kit' {
 			: [type: Type]
 		: Type extends 'radio' | 'submit' | 'hidden'
 			? [type: Type, value: Value | (string & {})]
-			: [type: Type];
+			: Type extends 'hidden number'
+				? [type: Type, value: Value | (number & {})]
+				: Type extends 'hidden boolean'
+					? [type: Type, value: Value | (boolean & {})]
+					: [type: Type];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods

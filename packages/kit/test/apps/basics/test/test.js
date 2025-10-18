@@ -1693,6 +1693,20 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#result')).toHaveText('hello');
 	});
 
+	test('form hidden inputs of different types work', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/hidden');
+
+		await page.locator('button').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('await hidden().string:')).toHaveText('await hidden().string: b');
+			await expect(page.getByText('await hidden().number:')).toHaveText('await hidden().number: 1');
+			await expect(page.getByText('await hidden().boolean:')).toHaveText(
+				'await hidden().boolean: true'
+			);
+		}
+	});
+
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 

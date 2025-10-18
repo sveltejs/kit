@@ -249,7 +249,7 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {string | number | boolean} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -258,9 +258,9 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 						(type === 'checkbox' && typeof input_value === 'string');
 
 					const prefix =
-						type === 'number' || type === 'range'
+						type === 'number' || type === 'range' || type === 'hidden number'
 							? 'n:'
-							: type === 'checkbox' && !is_array
+							: (type === 'checkbox' && !is_array) || type === 'hidden boolean'
 								? 'b:'
 								: '';
 
@@ -289,6 +289,32 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 
 						return Object.defineProperties(base_props, {
 							value: { value: input_value, enumerable: true }
+						});
+					}
+
+					// Handle hidden number inputs
+					if (type === 'hidden number') {
+						if (DEV) {
+							if (typeof input_value !== 'number') {
+								throw new Error(`\`hidden number\` input must be a number value.`);
+							}
+						}
+
+						return Object.defineProperties(base_props, {
+							value: { value: input_value, enumerable: true }
+						});
+					}
+
+					// Handle hidden boolean inputs
+					if (type === 'hidden boolean') {
+						if (DEV) {
+							if (typeof input_value !== 'boolean') {
+								throw new Error(`\`hidden boolean\` input must be a boolean value.`);
+							}
+						}
+
+						return Object.defineProperties(base_props, {
+							value: { value: input_value && 'on', enumerable: true }
 						});
 					}
 
