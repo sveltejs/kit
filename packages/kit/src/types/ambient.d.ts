@@ -112,6 +112,15 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
+	 * URL Parameters that can be optionally passed to the `resolve` function.
+	 * Used to specify a hash and/or search parameters to be included in the resolved URL.
+	 */
+	export type ResolveURLParams = {
+		hash?: string;
+		searchParams?: Record<string, string> | URLSearchParams;
+	};
+
+	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
 	 */
 	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
