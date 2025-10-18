@@ -1,18 +1,4 @@
-/**
- * @returns {import('types').Deferred & { promise: Promise<any> }}}
- */
-function defer() {
-	let fulfil;
-	let reject;
-
-	const promise = new Promise((f, r) => {
-		fulfil = f;
-		reject = r;
-	});
-
-	// @ts-expect-error
-	return { promise, fulfil, reject };
-}
+import { with_resolvers } from './promise.js';
 
 /**
  * Create an async iterator and a function to push values into it
@@ -26,7 +12,7 @@ export function create_async_iterator() {
 	let count = 0;
 	let accessed = false;
 
-	const deferred = [defer()];
+	const deferred = [with_resolvers()];
 
 	return {
 		iterate: (transform = (x) => x) => {
@@ -34,7 +20,7 @@ export function create_async_iterator() {
 				[Symbol.asyncIterator]() {
 					accessed = true;
 					if (count === 0) {
-						deferred[deferred.length - 1].fulfil({ done: true });
+						deferred[deferred.length - 1].resolve({ done: true });
 					}
 
 					return {
@@ -56,14 +42,14 @@ export function create_async_iterator() {
 			count += 1;
 
 			void promise.then((value) => {
-				deferred[deferred.length - 1].fulfil({
+				deferred[deferred.length - 1].resolve({
 					value,
 					done: false
 				});
-				deferred.push(defer());
+				deferred.push(with_resolvers());
 
 				if (--count === 0 && accessed) {
-					deferred[deferred.length - 1].fulfil({ done: true });
+					deferred[deferred.length - 1].resolve({ done: true });
 				}
 			});
 		}
