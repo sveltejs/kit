@@ -24,6 +24,7 @@ function defer() {
  */
 export function create_async_iterator() {
 	let count = 0;
+	let accessed = false;
 
 	const deferred = [defer()];
 
@@ -31,6 +32,8 @@ export function create_async_iterator() {
 		iterate: (transform = (x) => x) => {
 			return {
 				[Symbol.asyncIterator]() {
+					accessed = true;
+
 					return {
 						next: async () => {
 							const next = await deferred[0].promise;
@@ -56,7 +59,7 @@ export function create_async_iterator() {
 				});
 				deferred.push(defer());
 
-				if (--count === 0) {
+				if (--count === 0 && accessed) {
 					deferred[deferred.length - 1].fulfil({ done: true });
 				}
 			});
