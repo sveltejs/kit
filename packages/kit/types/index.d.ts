@@ -1893,19 +1893,31 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Recursive type to build form fields structure with proxy access
 	 */
-	type RemoteFormFields<T> =
+	export type RemoteFormFields<T, Leaf extends boolean = false> =
 		WillRecurseIndefinitely<T> extends true
-			? RecursiveFormFields
+			? RecursiveFormFields<Leaf>
 			: NonNullable<T> extends string | number | boolean | File
 				? RemoteFormField<NonNullable<T>>
 				: T extends string[] | File[]
 					? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
 					: T extends Array<infer U>
-						? RemoteFormFieldContainer<T> & { [K in number]: RemoteFormFields<U> }
-						: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
+						? RemoteFormFieldContainer<T> & {
+								[K in number]: RemoteFormFields<
+									U,
+									U extends RemoteFormFieldValue | unknown ? true : false
+								>;
+							}
+						: RemoteFormFieldContainer<T> & {
+								[K in keyof T]-?: RemoteFormFields<
+									T[K],
+									T[K] extends RemoteFormFieldValue | unknown ? true : false
+								>;
+							};
 
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
-	type RecursiveFormFields = RemoteFormField<any> & { [key: string | number]: RecursiveFormFields };
+	type RecursiveFormFields<Leaf extends boolean = false> = (Leaf extends true
+		? RemoteFormField<any>
+		: RemoteFormFieldContainer<any>) & { [key: string | number]: RecursiveFormFields<true> };
 
 	type MaybeArray<T> = T | T[];
 
