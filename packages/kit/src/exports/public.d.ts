@@ -1914,34 +1914,47 @@ type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 	allIssues(): RemoteFormIssue[] | undefined;
 };
 
+type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
+	/** Validation issues belonging to this or any of the fields that belong to it, if any */
+	allIssues(): RemoteFormIssue[] | undefined;
+} & {
+	/**
+	 * Returns an object that can be spread onto an input element with the correct type attribute,
+	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+	 * @example
+	 * ```svelte
+	 * <input {...myForm.fields.myString.as('text')} />
+	 * <input {...myForm.fields.myNumber.as('number')} />
+	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+	 * ```
+	 */
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+} & {
+	[key: string | number]: UnknownField<any>;
+};
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
-export type RemoteFormFields<T, Leaf extends boolean = false> =
+export type RemoteFormFields<T> =
 	WillRecurseIndefinitely<T> extends true
-		? RecursiveFormFields<Leaf>
+		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
 			: T extends string[] | File[]
 				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
 				: T extends Array<infer U>
 					? RemoteFormFieldContainer<T> & {
-							[K in number]: RemoteFormFields<
-								U,
-								U extends RemoteFormFieldValue | unknown ? true : false
-							>;
+							[K in number]: RemoteFormFields<U>;
 						}
 					: RemoteFormFieldContainer<T> & {
-							[K in keyof T]-?: RemoteFormFields<
-								T[K],
-								T[K] extends RemoteFormFieldValue | unknown ? true : false
-							>;
+							[K in keyof T]-?: RemoteFormFields<T[K]>;
 						};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields<Leaf extends boolean = false> = (Leaf extends true
-	? RemoteFormField<any>
-	: RemoteFormFieldContainer<any>) & { [key: string | number]: RecursiveFormFields<true> };
+type RecursiveFormFields = RemoteFormFieldContainer<any> & {
+	[key: string | number]: UnknownField<any>;
+};
 
 type MaybeArray<T> = T | T[];
 
