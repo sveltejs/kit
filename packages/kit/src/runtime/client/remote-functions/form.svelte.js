@@ -18,27 +18,23 @@ import {
 	set_nested_value,
 	throw_on_old_property_access,
 	split_path,
-	build_path_string
+	build_path_string,
+	normalize_issue
 } from '../../form-utils.svelte.js';
 
 /**
  * Merge client issues into server issues
- * @param {Record<string, InternalRemoteFormIssue[]>} current_issues
- * @param {Record<string, InternalRemoteFormIssue[]>} client_issues
- * @returns {Record<string, InternalRemoteFormIssue[]>}
+ * @param {InternalRemoteFormIssue[]} current_issues
+ * @param {InternalRemoteFormIssue[]} client_issues
+ * @returns {InternalRemoteFormIssue[]}
  */
 function merge_with_server_issues(current_issues, client_issues) {
-	const merged_issues = Object.fromEntries(
-		Object.entries(current_issues)
-			.map(([key, issue_list]) => [key, issue_list.filter((issue) => issue.server)])
-			.filter(([, issue_list]) => issue_list.length > 0)
-	);
-
-	for (const [key, new_issue_list] of Object.entries(client_issues)) {
-		merged_issues[key] = [...(merged_issues[key] || []), ...new_issue_list];
-	}
-
-	return merged_issues;
+	return [
+		...current_issues.filter(
+			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
+		),
+		...client_issues
+	];
 }
 
 /**
@@ -77,8 +73,10 @@ export function form(id) {
 		 */
 		const version_reads = new Set();
 
-		/** @type {Record<string, InternalRemoteFormIssue[]>} */
-		let issues = $state.raw({});
+		/** @type {InternalRemoteFormIssue[]} */
+		let raw_issues = $state.raw([]);
+
+		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
 		let result = $state.raw(remote_responses[action_id]);
@@ -132,8 +130,10 @@ export function form(id) {
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				const client_issues = flatten_issues(validated.issues, false);
-				issues = merge_with_server_issues(issues, client_issues);
+				raw_issues = merge_with_server_issues(
+					raw_issues,
+					validated.issues.map((issue) => normalize_issue(issue, false))
+				);
 				return;
 			}
 
@@ -223,13 +223,11 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({ issues = {}, result } = devalue.parse(form_result.result, app.decoders));
+						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
 						// Mark server issues with server: true
-						for (const issue_list of Object.values(issues)) {
-							for (const issue of issue_list) {
-								issue.server = true;
-							}
+						for (const issue of raw_issues) {
+							issue.server = true;
 						}
 
 						if (issues.$) {
@@ -582,7 +580,7 @@ export function form(id) {
 
 					const form_data = new FormData(element, submitter);
 
-					/** @type {readonly StandardSchemaV1.Issue[]} */
+					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
 
 					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
@@ -592,7 +590,7 @@ export function form(id) {
 					}
 
 					if (validated?.issues) {
-						array = validated.issues;
+						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
 						form_data.set('sveltekit:validate_only', 'true');
 
@@ -608,36 +606,23 @@ export function form(id) {
 						}
 
 						if (result.type === 'result') {
-							array = /** @type {StandardSchemaV1.Issue[]} */ (
+							array = /** @type {InternalRemoteFormIssue[]} */ (
 								devalue.parse(result.result, app.decoders)
 							);
+
+							for (const issue of array) {
+								issue.server = true;
+							}
 						}
 					}
 
 					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => {
-							if (issue.path !== undefined) {
-								let path = '';
-
-								for (const segment of issue.path) {
-									const key = typeof segment === 'object' ? segment.key : segment;
-
-									if (typeof key === 'number') {
-										path += `[${key}]`;
-									} else if (typeof key === 'string') {
-										path += path === '' ? key : '.' + key;
-									}
-								}
-
-								return touched[path];
-							}
-						});
+						array = array.filter((issue) => touched[issue.name]);
 					}
 
-					const is_server_validation = !validated?.issues;
-					const new_issues = flatten_issues(array, is_server_validation);
+					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					issues = is_server_validation ? new_issues : merge_with_server_issues(issues, new_issues);
+					raw_issues = is_server_validation ? array : merge_with_server_issues(raw_issues, array);
 				}
 			},
 			enhance: {

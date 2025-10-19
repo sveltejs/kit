@@ -116,39 +116,58 @@ export function deep_set(object, keys, value) {
 }
 
 /**
- * @param {readonly StandardSchemaV1.Issue[]} issues
- * @param {boolean} [server=false] - Whether these issues come from server validation
+ * @param {StandardSchemaV1.Issue} issue
+ * @param {boolean} server Whether this issue came from server validation
  */
-export function flatten_issues(issues, server = false) {
+export function normalize_issue(issue, server = false) {
+	/** @type {InternalRemoteFormIssue} */
+	const normalized = { name: '', path: [], message: issue.message, server };
+
+	if (issue.path !== undefined) {
+		let name = '';
+
+		for (const segment of issue.path) {
+			const key = /** @type {string | number} */ (
+				typeof segment === 'object' ? segment.key : segment
+			);
+
+			normalized.path.push(key);
+
+			if (typeof key === 'number') {
+				name += `[${key}]`;
+			} else if (typeof key === 'string') {
+				name += name === '' ? key : '.' + key;
+			}
+		}
+
+		normalized.name = name;
+	}
+
+	return normalized;
+}
+
+/**
+ * @param {InternalRemoteFormIssue[]} issues
+ */
+export function flatten_issues(issues) {
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
 	const result = {};
 
 	for (const issue of issues) {
-		/** @type {InternalRemoteFormIssue} */
-		const normalized = { name: '', path: [], message: issue.message, server };
-
-		(result.$ ??= []).push(normalized);
+		(result.$ ??= []).push(issue);
 
 		let name = '';
 
 		if (issue.path !== undefined) {
-			for (const segment of issue.path) {
-				const key = /** @type {string | number} */ (
-					typeof segment === 'object' ? segment.key : segment
-				);
-
-				normalized.path.push(key);
-
+			for (const key of issue.path) {
 				if (typeof key === 'number') {
 					name += `[${key}]`;
 				} else if (typeof key === 'string') {
 					name += name === '' ? key : '.' + key;
 				}
 
-				(result[name] ??= []).push(normalized);
+				(result[name] ??= []).push(issue);
 			}
-
-			normalized.name = name;
 		}
 	}
 
