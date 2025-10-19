@@ -1,18 +1,4 @@
-/**
- * @returns {import('types').Deferred & { promise: Promise<any> }}}
- */
-function defer() {
-	let fulfil;
-	let reject;
-
-	const promise = new Promise((f, r) => {
-		fulfil = f;
-		reject = r;
-	});
-
-	// @ts-expect-error
-	return { promise, fulfil, reject };
-}
+import { with_resolvers } from './promise.js';
 
 /**
  * Create an async iterator and a function to push values into it
@@ -23,9 +9,11 @@ function defer() {
  * }}
  */
 export function create_async_iterator() {
-	let count = 0;
+	let resolved = -1;
+	let returned = -1;
 
-	const deferred = [defer()];
+	/** @type {import('./promise.js').PromiseWithResolvers<T>[]} */
+	const deferred = [];
 
 	return {
 		iterate: (transform = (x) => x) => {
@@ -33,32 +21,20 @@ export function create_async_iterator() {
 				[Symbol.asyncIterator]() {
 					return {
 						next: async () => {
-							const next = await deferred[0].promise;
+							const next = deferred[++returned];
+							if (!next) return { value: null, done: true };
 
-							if (!next.done) {
-								deferred.shift();
-								return { value: transform(next.value), done: false };
-							}
-
-							return next;
+							const value = await next.promise;
+							return { value: transform(value), done: false };
 						}
 					};
 				}
 			};
 		},
 		add: (promise) => {
-			count += 1;
-
+			deferred.push(with_resolvers());
 			void promise.then((value) => {
-				deferred[deferred.length - 1].fulfil({
-					value,
-					done: false
-				});
-				deferred.push(defer());
-
-				if (--count === 0) {
-					deferred[deferred.length - 1].fulfil({ done: true });
-				}
+				deferred[++resolved].resolve(value);
 			});
 		}
 	};
