@@ -24,17 +24,22 @@ import {
 
 /**
  * Merge client issues into server issues
+ * @param {FormData} form_data
  * @param {InternalRemoteFormIssue[]} current_issues
  * @param {InternalRemoteFormIssue[]} client_issues
  * @returns {InternalRemoteFormIssue[]}
  */
-function merge_with_server_issues(current_issues, client_issues) {
-	return [
+function merge_with_server_issues(form_data, current_issues, client_issues) {
+	const merged = [
 		...current_issues.filter(
 			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
 		),
 		...client_issues
 	];
+
+	const keys = Array.from(form_data.keys());
+
+	return merged.sort((a, b) => keys.indexOf(a.name) - keys.indexOf(b.name));
 }
 
 /**
@@ -131,6 +136,7 @@ export function form(id) {
 
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
+					form_data,
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
@@ -622,7 +628,9 @@ export function form(id) {
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					raw_issues = is_server_validation ? array : merge_with_server_issues(raw_issues, array);
+					raw_issues = is_server_validation
+						? array
+						: merge_with_server_issues(form_data, raw_issues, array);
 				}
 			},
 			enhance: {
