@@ -231,11 +231,6 @@ export function form(id) {
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
-						// Mark server issues with server: true
-						for (const issue of raw_issues) {
-							issue.server = true;
-						}
-
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
@@ -615,10 +610,6 @@ export function form(id) {
 							array = /** @type {InternalRemoteFormIssue[]} */ (
 								devalue.parse(result.result, app.decoders)
 							);
-
-							for (const issue of array) {
-								issue.server = true;
-							}
 						}
 					}
 
