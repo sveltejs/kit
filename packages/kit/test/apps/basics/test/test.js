@@ -1847,8 +1847,6 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/preflight-only');
 
 		const a = page.locator('[name="a"]');
-		const b = page.locator('[name="b"]');
-		const c = page.locator('[name="c"]');
 		const button = page.locator('button');
 		const issues = page.locator('.issues');
 
