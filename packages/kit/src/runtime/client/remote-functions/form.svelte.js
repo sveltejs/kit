@@ -23,7 +23,8 @@ import {
 } from '../../form-utils.svelte.js';
 
 /**
- * Merge client issues into server issues
+ * Merge client issues into server issues. Server issues are persisted unless
+ * a client-issue exists for the same path, in which case the client-issue overrides it.
  * @param {FormData} form_data
  * @param {InternalRemoteFormIssue[]} current_issues
  * @param {InternalRemoteFormIssue[]} client_issues
