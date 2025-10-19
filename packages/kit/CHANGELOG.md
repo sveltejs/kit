@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.47.2
+### Patch Changes
+
+
+- fix: streamed promise not resolving when another load function returns a fast resolving promise ([#14753](https://github.com/sveltejs/kit/pull/14753))
+
+
+- chore: allow to run preflight validation only ([#14744](https://github.com/sveltejs/kit/pull/14744))
+
+
+- fix: update overload to set `invalid` type to schema input ([#14748](https://github.com/sveltejs/kit/pull/14748))
+
 ## 2.47.1
 ### Patch Changes
 
