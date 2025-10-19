@@ -1997,7 +1997,10 @@ declare module '@sveltejs/kit' {
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
+			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
 			includeUntouched?: boolean;
+			/** Set this to `true` to only run the `preflight` validation. */
+			preflightOnly?: boolean;
 			/** Perform validation as if the form was submitted by the given button. */
 			submitter?: HTMLButtonElement | HTMLInputElement;
 		}): Promise<void>;
