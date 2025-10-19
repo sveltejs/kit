@@ -572,7 +572,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, clientOnly = false, submitter } = {}) => {
+				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -593,7 +593,7 @@ export function form(id) {
 
 					if (validated?.issues) {
 						array = validated.issues;
-					} else if (!clientOnly) {
+					} else if (!preflightOnly) {
 						form_data.set('sveltekit:validate_only', 'true');
 
 						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {

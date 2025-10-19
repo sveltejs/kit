@@ -2024,7 +2024,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
 		includeUntouched?: boolean;
 		/** Set this to `true` to only run the `preflight` validation. */
-		clientOnly?: boolean;
+		preflightOnly?: boolean;
 		/** Perform validation as if the form was submitted by the given button. */
 		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
