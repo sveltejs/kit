@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { convert_formdata, split_path } from './form-utils.svelte.js';
+import { convert_formdata, split_path } from './form-utils.js';
 
 describe('split_path', () => {
 	const good = [
@@ -73,4 +73,20 @@ describe('convert_formdata', () => {
 			}
 		});
 	});
+
+	const pollution_attacks = [
+		'__proto__.polluted',
+		'constructor.polluted',
+		'prototype.polluted',
+		'user.__proto__.polluted',
+		'user.constructor.polluted'
+	];
+
+	for (const attack of pollution_attacks) {
+		test(`prevents prototype pollution: ${attack}`, () => {
+			const data = new FormData();
+			data.append(attack, 'bad');
+			expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
+		});
+	}
 });
