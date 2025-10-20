@@ -1917,7 +1917,6 @@ type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	/** Validation issues belonging to this or any of the fields that belong to it, if any */
 	allIssues(): RemoteFormIssue[] | undefined;
-} & {
 	/**
 	 * Returns an object that can be spread onto an input element with the correct type attribute,
 	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
