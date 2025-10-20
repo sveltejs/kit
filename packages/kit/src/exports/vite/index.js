@@ -373,13 +373,14 @@ async function kit({ svelte_config }) {
 					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
 				} else {
+					const nodes = Object.values(
+						/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
+					);
+
 					// Through the finished analysis we can now check if any node has server or universal load functions
-					const has_server_load = build_metadata
-						? Object.values(build_metadata.nodes).some((node) => node.has_server_load)
-						: true;
-					const has_universal_load = build_metadata
-						? Object.values(build_metadata.nodes).some((node) => node.has_universal_load)
-						: true;
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
 					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(has_server_load);
 					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(has_universal_load);
 				}
