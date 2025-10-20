@@ -8,7 +8,7 @@ import * as svelte from 'svelte';
 const untrack = svelte.untrack ?? ((value) => value());
 
 /**
- * Sets a value in a nested object using a path string, not mutating the original object but returning a new object
+ * Sets a value in a nested object using a path string, mutating the original object
  * @param {Record<string, any>} object
  * @param {string} path_string
  * @param {any} value
@@ -22,7 +22,7 @@ export function set_nested_value(object, path_string, value) {
 		value = value === 'on';
 	}
 
-	return deep_set(object, split_path(path_string), value);
+	deep_set(object, split_path(path_string), value);
 }
 
 /**
@@ -61,7 +61,7 @@ export function convert_formdata(data) {
 			values = values.map((v) => v === 'on');
 		}
 
-		result = set_nested_value(result, key, is_array ? values : values[0]);
+		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
@@ -81,15 +81,13 @@ export function split_path(path) {
 }
 
 /**
- * Sets a value in a nested object using an array of keys.
- * Does not mutate the original object; returns a new object.
+ * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
  * @param {any} value
  */
 export function deep_set(object, keys, value) {
-	const result = Object.assign(Object.create(null), object); // guard against prototype pollution
-	let current = result;
+	let current = object;
 
 	for (let i = 0; i < keys.length - 1; i += 1) {
 		const key = keys[i];
@@ -101,18 +99,14 @@ export function deep_set(object, keys, value) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
 		}
 
-		current[key] = is_array
-			? exists
-				? [...inner]
-				: []
-			: // guard against prototype pollution
-				Object.assign(Object.create(null), inner);
+		if (!exists) {
+			current[key] = is_array ? [] : Object.create(null); // guard against prototype pollution
+		}
 
 		current = current[key];
 	}
 
 	current[keys[keys.length - 1]] = value;
-	return result;
 }
 
 /**
@@ -206,8 +200,8 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 	const path_string = build_path_string(path);
 
 	const get_value = () => {
-		depend(path_string);
-		return untrack(() => deep_get(get_input(), path));
+		// depend(path_string);
+		return deep_get(get_input(), path);
 	};
 
 	return new Proxy(target, {

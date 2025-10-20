@@ -17,7 +17,6 @@ import {
 	deep_set,
 	set_nested_value,
 	throw_on_old_property_access,
-	split_path,
 	build_path_string,
 	normalize_issue
 } from '../../form-utils.svelte.js';
@@ -60,24 +59,9 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
-		 * By making this $state.raw() and creating a new object each time we update it,
-		 * all consumers along the update chain are properly invalidated.
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state.raw({});
-
-		// TODO 3.0: Remove versions state and related logic; it's a workaround for $derived not updating when created inside $effects
-		/**
-		 * This allows us to update individual fields granularly
-		 * @type {Record<string, number>}
-		 */
-		const versions = $state({});
-
-		/**
-		 * This ensures that `{field.value()}` is updated even if the version hasn't been initialized
-		 * @type {Set<string>}
-		 */
-		const version_reads = new Set();
+		let input = $state({});
 
 		/** @type {InternalRemoteFormIssue[]} */
 		let raw_issues = $state.raw([]);
@@ -100,16 +84,6 @@ export function form(id) {
 		let touched = {};
 
 		let submitted = false;
-
-		function update_all_versions() {
-			for (const path of version_reads) {
-				versions[path] ??= 0;
-			}
-
-			for (const key of Object.keys(versions)) {
-				versions[key] += 1;
-			}
-		}
 
 		/**
 		 * @param {FormData} form_data
@@ -235,8 +209,6 @@ export function form(id) {
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
-							update_all_versions();
-
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
 							} else {
@@ -386,7 +358,7 @@ export function form(id) {
 							}
 						}
 
-						input = set_nested_value(input, name, value);
+						set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -397,7 +369,7 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							input = set_nested_value(input, name, file);
+							set_nested_value(input, name, file);
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -409,26 +381,18 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input = set_nested_value(
+						console.log('set neseted', input, name, element.value);
+						set_nested_value(
 							input,
 							name,
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
+						console.log('afterwards', input);
 					}
 
 					name = name.replace(/^[nb]:/, '');
 
-					versions[name] ??= 0;
-					versions[name] += 1;
-
-					const path = split_path(name);
-
-					while (path.pop() !== undefined) {
-						const name = build_path_string(path);
-
-						versions[name] ??= 0;
-						versions[name] += 1;
-					}
+					touched[name] = true;
 				});
 
 				form.addEventListener('reset', async () => {
@@ -437,7 +401,14 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-					update_all_versions();
+
+					// // Clear existing properties
+					// for (const key in input) {
+					// 	delete input[key];
+					// }
+
+					// // Copy new properties
+					// Object.assign(input, new_data);
 				});
 
 				return () => {
@@ -530,28 +501,21 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
-						(path) => {
-							version_reads.add(path);
-							versions[path];
-						},
+						() => {},
 						(path, value) => {
 							if (path.length === 0) {
+								// // Clear existing properties
+								// for (const key in input) {
+								// 	delete input[key];
+								// }
+								// // Copy new properties
+								// Object.assign(input, value);
 								input = value;
-								update_all_versions();
 							} else {
-								input = deep_set(input, path.map(String), value);
+								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
-								versions[key] ??= 0;
-								versions[key] += 1;
 								touched[key] = true;
-
-								const parent_path = path.slice();
-								while (parent_path.pop() !== undefined) {
-									const parent_key = build_path_string(parent_path);
-									versions[parent_key] ??= 0;
-									versions[parent_key] += 1;
-								}
 							}
 						},
 						() => issues

@@ -318,7 +318,7 @@ function handle_issues(output, issues, is_remote_request, form_data) {
 
 			if (is_array) key = key.slice(0, -2);
 
-			output.input = set_nested_value(
+			set_nested_value(
 				/** @type {Record<string, any>} */ (output.input),
 				key,
 				is_array ? values : values[0]
