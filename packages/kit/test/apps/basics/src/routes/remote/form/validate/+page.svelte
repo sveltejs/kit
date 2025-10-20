@@ -5,7 +5,7 @@
 	const schema = v.object({
 		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e']),
-		button: v.optional(v.literal('submitter'))
+		button: v.literal('submitter')
 	});
 
 	$inspect(my_form.fields.allIssues());
