@@ -86,7 +86,7 @@ describe('convert_formdata', () => {
 		test(`prevents prototype pollution: ${attack}`, () => {
 			const data = new FormData();
 			data.append(attack, 'bad');
-			expect(() => convert_formdata(data)).toThrow(/prototype pollution attempt detected/);
+			expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
 		});
 	}
 });
