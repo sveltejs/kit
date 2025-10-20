@@ -732,7 +732,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		}
 	}
 
-	if (node.universal?.load) {
+	if (__SVELTEKIT_HAS_UNIVERSAL_LOAD__ && node.universal?.load) {
 		/** @param {string[]} deps */
 		function depends(...deps) {
 			for (const dep of deps) {
@@ -1004,49 +1004,52 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	const search_params_changed = diff_search_params(current.url, url);
 
 	let parent_invalid = false;
-	const invalid_server_nodes = loaders.map((loader, i) => {
-		const previous = current.branch[i];
 
-		const invalid =
-			!!loader?.[0] &&
-			(previous?.loader !== loader[1] ||
-				has_changed(
-					parent_invalid,
-					route_changed,
-					url_changed,
-					search_params_changed,
-					previous.server?.uses,
-					params
-				));
+	if (__SVELTEKIT_HAS_SERVER_LOAD__) {
+		const invalid_server_nodes = loaders.map((loader, i) => {
+			const previous = current.branch[i];
 
-		if (invalid) {
-			// For the next one
-			parent_invalid = true;
-		}
+			const invalid =
+				!!loader?.[0] &&
+				(previous?.loader !== loader[1] ||
+					has_changed(
+						parent_invalid,
+						route_changed,
+						url_changed,
+						search_params_changed,
+						previous.server?.uses,
+						params
+					));
 
-		return invalid;
-	});
-
-	if (invalid_server_nodes.some(Boolean)) {
-		try {
-			server_data = await load_data(url, invalid_server_nodes);
-		} catch (error) {
-			const handled_error = await handle_error(error, { url, params, route: { id } });
-
-			if (preload_tokens.has(preload)) {
-				return preload_error({ error: handled_error, url, params, route });
+			if (invalid) {
+				// For the next one
+				parent_invalid = true;
 			}
 
-			return load_root_error_page({
-				status: get_status(error),
-				error: handled_error,
-				url,
-				route
-			});
-		}
+			return invalid;
+		});
 
-		if (server_data.type === 'redirect') {
-			return server_data;
+		if (invalid_server_nodes.some(Boolean)) {
+			try {
+				server_data = await load_data(url, invalid_server_nodes);
+			} catch (error) {
+				const handled_error = await handle_error(error, { url, params, route: { id } });
+
+				if (preload_tokens.has(preload)) {
+					return preload_error({ error: handled_error, url, params, route });
+				}
+
+				return load_root_error_page({
+					status: get_status(error),
+					error: handled_error,
+					url,
+					route
+				});
+			}
+
+			if (server_data.type === 'redirect') {
+				return server_data;
+			}
 		}
 	}
 
@@ -1232,27 +1235,29 @@ async function load_root_error_page({ status, error, url, route }) {
 	/** @type {import('types').ServerDataNode | null} */
 	let server_data_node = null;
 
-	const default_layout_has_server_load = app.server_loads[0] === 0;
+	if (__SVELTEKIT_HAS_SERVER_LOAD__) {
+		const default_layout_has_server_load = app.server_loads[0] === 0;
 
-	if (default_layout_has_server_load) {
-		// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
-		// existing root layout data
-		try {
-			const server_data = await load_data(url, [true]);
+		if (default_layout_has_server_load) {
+			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
+			// existing root layout data
+			try {
+				const server_data = await load_data(url, [true]);
 
-			if (
-				server_data.type !== 'data' ||
-				(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
-			) {
-				throw 0;
-			}
+				if (
+					server_data.type !== 'data' ||
+					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+				) {
+					throw 0;
+				}
 
-			server_data_node = server_data.nodes[0] ?? null;
-		} catch {
-			// at this point we have no choice but to fall back to the server, if it wouldn't
-			// bring us right back here, turning this into an endless loop
-			if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
-				await native_navigation(url);
+				server_data_node = server_data.nodes[0] ?? null;
+			} catch {
+				// at this point we have no choice but to fall back to the server, if it wouldn't
+				// bring us right back here, turning this into an endless loop
+				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
+					await native_navigation(url);
+				}
 			}
 		}
 	}
