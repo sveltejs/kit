@@ -28,7 +28,7 @@ export function set_nested_value(object, path_string, value) {
  */
 export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
-	let result = {};
+	const result = {};
 
 	for (let key of data.keys()) {
 		if (key.startsWith('sveltekit:')) {
