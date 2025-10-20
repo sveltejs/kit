@@ -3,9 +3,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
-import * as svelte from 'svelte';
-// Svelte 4 and under don't have `untrack` - you'll not be able to use remote functions with Svelte 4 but this will still be loaded
-const untrack = svelte.untrack ?? ((value) => value());
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -31,7 +28,7 @@ export function set_nested_value(object, path_string, value) {
  */
 export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
-	let result = Object.create(null); // guard against prototype pollution
+	let result = {};
 
 	for (let key of data.keys()) {
 		if (key.startsWith('sveltekit:')) {
@@ -81,6 +78,19 @@ export function split_path(path) {
 }
 
 /**
+ * Check if a property key is dangerous and could lead to prototype pollution
+ * @param {string} key
+ */
+function check_prototype_pollution(key) {
+	if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+		throw new Error(
+			`Invalid key "${key}"` +
+				(DEV ? ': This key is not allowed to prevent prototype pollution.' : '')
+		);
+	}
+}
+
+/**
  * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
@@ -91,6 +101,9 @@ export function deep_set(object, keys, value) {
 
 	for (let i = 0; i < keys.length - 1; i += 1) {
 		const key = keys[i];
+
+		check_prototype_pollution(key);
+
 		const is_array = /^\d+$/.test(keys[i + 1]);
 		const exists = key in current;
 		const inner = current[key];
@@ -100,13 +113,15 @@ export function deep_set(object, keys, value) {
 		}
 
 		if (!exists) {
-			current[key] = is_array ? [] : Object.create(null); // guard against prototype pollution
+			current[key] = is_array ? [] : {};
 		}
 
 		current = current[key];
 	}
 
-	current[keys[keys.length - 1]] = value;
+	const final_key = keys[keys.length - 1];
+	check_prototype_pollution(final_key);
+	current[final_key] = value;
 }
 
 /**
@@ -197,10 +212,7 @@ export function deep_get(object, path) {
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
 export function create_field_proxy(target, get_input, depend, set_input, get_issues, path = []) {
-	const path_string = build_path_string(path);
-
 	const get_value = () => {
-		// depend(path_string);
 		return deep_get(get_input(), path);
 	};
 
