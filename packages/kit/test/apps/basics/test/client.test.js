@@ -1308,6 +1308,16 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeHidden();
 		});
 
+		test('Works with a fast and a slow server load functions which (direct hit)', async ({
+			page
+		}) => {
+			await page.goto('/streaming/server/fast-n-slow');
+
+			expect(await page.locator('p.ssrd').textContent()).toBe('ssrd');
+			await expect(page.locator('p.fast')).toHaveText('fast');
+			await expect(page.locator('p.streamed')).toHaveText('streamed');
+		});
+
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
 			page.goto('/streaming/server-error');
 			await expect(page.locator('p.eager')).toHaveText('eager');

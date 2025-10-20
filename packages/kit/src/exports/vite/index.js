@@ -41,7 +41,6 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
-import { rollupVersion } from 'vite';
 
 const cwd = process.cwd();
 
@@ -636,102 +635,30 @@ async function kit({ svelte_config }) {
 	/** @type {Array<{ hash: string, file: string }>} */
 	const remotes = [];
 
-	/**
-	 * A set of modules that imported by `.remote.ts` modules. By forcing these modules
-	 * into their own chunks, we ensure that each chunk created for a `.remote.ts`
-	 * module _only_ contains that module, hopefully avoiding any circular
-	 * dependency woes that arise from treating chunks as entries
-	 */
-	const imported_by_remotes = new Set();
-	let uid = 1;
+	/** @type {Map<string, string>} Maps remote hash -> original module id */
+	const remote_original_by_hash = new Map();
+
+	/** @type {Set<string>} Track which remote hashes have already been emitted */
+	const emitted_remote_hashes = new Set();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		moduleParsed(info) {
-			if (svelte_config.kit.moduleExtensions.some((ext) => info.id.endsWith(`.remote${ext}`))) {
-				for (const id of info.importedIds) {
-					imported_by_remotes.add(id);
-				}
-			}
+		resolveId(id) {
+			if (id.startsWith('\0sveltekit-remote:')) return id;
 		},
 
-		config(config) {
-			if (!config.build?.ssr) {
-				// only set manualChunks for the SSR build
-				return;
-			}
-
-			// Ensure build.rollupOptions.output exists
-			config.build ??= {};
-			config.build.rollupOptions ??= {};
-			config.build.rollupOptions.output ??= {};
-
-			if (Array.isArray(config.build.rollupOptions.output)) {
-				// TODO I have no idea how this could occur
-				throw new Error('rollupOptions.output cannot be an array');
-			}
-
-			// Set up manualChunks to isolate *.remote.ts files
-			const { manualChunks } = config.build.rollupOptions.output;
-
-			const [major, minor] = rollupVersion.split('.').map(Number);
-			const is_outdated_rollup = major === 4 && minor < 52;
-			if (is_outdated_rollup) {
-				console.warn(
-					'Rollup >=4.52.0 is recommended when using SvelteKit remote functions as it fixes some bugs related to code-splitting. Current version: ' +
-						rollupVersion
-				);
-			}
-
-			config.build.rollupOptions.output = {
-				...config.build.rollupOptions.output,
-				manualChunks(id, meta) {
-					// Check if this is a *.remote.ts file
-					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
-						const relative = posixify(path.relative(cwd, id));
-
-						return `remote-${hash(relative)}`;
-					}
-
-					// With onlyExplicitManualChunks Rollup will keep any manual chunk's dependencies out of that chunk.
-					// This option only exists on more recent Rollup versions; use this as a fallback for older versions.
-					if (is_outdated_rollup) {
-						// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
-						if (id === `${runtime_directory}/app/server/index.js`) {
-							return 'app-server';
-						}
-						if (id === `${runtime_directory}/shared-server.js`) {
-							return 'app-shared-server';
-						}
-						if (imported_by_remotes.has(id)) {
-							return `chunk-${uid++}`;
-						}
-					}
-
-					// If there was an existing manualChunks function, call it
-					if (typeof manualChunks === 'function') {
-						return manualChunks(id, meta);
-					}
-
-					// If manualChunks is an object, check if this module matches any patterns
-					if (manualChunks) {
-						for (const name in manualChunks) {
-							const patterns = manualChunks[name];
-
-							// TODO is `id.includes(pattern)` correct?
-							if (patterns.some((pattern) => id.includes(pattern))) {
-								return name;
-							}
-						}
-					}
-				}
-			};
-
-			if (!is_outdated_rollup) {
-				// @ts-expect-error only exists in more recent Rollup versions https://rollupjs.org/configuration-options/#output-onlyexplicitmanualchunks
-				config.build.rollupOptions.output.onlyExplicitManualChunks = true;
+		load(id) {
+			// On-the-fly generated entry point for remote file just forwards the original module
+			// We're not using manualChunks because it can cause problems with circular dependencies
+			// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
+			// (e.g. https://github.com/sveltejs/kit/issues/14590).
+			if (id.startsWith('\0sveltekit-remote:')) {
+				const hash_id = id.slice('\0sveltekit-remote:'.length);
+				const original = remote_original_by_hash.get(hash_id);
+				if (!original) throw new Error(`Expected to find metadata for remote file ${id}`);
+				return `import * as m from ${s(original)};\nexport default m;`;
 			}
 		},
 
@@ -746,7 +673,6 @@ async function kit({ svelte_config }) {
 			}
 
 			const file = posixify(path.relative(cwd, id));
-
 			const remote = {
 				hash: hash(file),
 				file
@@ -755,7 +681,10 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
-				code += dedent`
+				// Extra newlines to prevent syntax errors around missing semicolons or comments
+				code +=
+					'\n\n' +
+					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
@@ -767,10 +696,17 @@ async function kit({ svelte_config }) {
 					}
 				`;
 
+				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 				if (!dev_server) {
-					// in prod, prevent the functions from being treeshaken. This will
-					// be replaced with an `export default` in the `writeBundle` hook
-					code += `$$_export_$$($$_self_$$);`;
+					remote_original_by_hash.set(remote.hash, id);
+					if (!emitted_remote_hashes.has(remote.hash)) {
+						this.emitFile({
+							type: 'chunk',
+							id: `\0sveltekit-remote:${remote.hash}`,
+							name: `remote-${remote.hash}`
+						});
+						emitted_remote_hashes.add(remote.hash);
+					}
 				}
 
 				return code;
@@ -823,19 +759,6 @@ async function kit({ svelte_config }) {
 			return {
 				code: result
 			};
-		},
-
-		writeBundle() {
-			for (const remote of remotes) {
-				const file = `${out}/server/chunks/remote-${remote.hash}.js`;
-				const code = fs.readFileSync(file, 'utf-8');
-
-				fs.writeFileSync(
-					file,
-					// build process might have minified/adjusted the $$_self_$$ variable, but not the fake global $$_export_$$ function
-					code.replace(/\$\$_export_\$\$\((.+?)\)/, (_, name) => `export default ${name};`)
-				);
-			}
 		}
 	};
 

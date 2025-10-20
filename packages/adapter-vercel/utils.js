@@ -67,3 +67,42 @@ export function pattern_to_src(pattern) {
 
 	return src;
 }
+
+const integer = /^\d+$/;
+
+/**
+ * @param {false | string | number} value
+ * @param {string} route_id
+ * @returns {number | false}
+ */
+export function parse_isr_expiration(value, route_id) {
+	if (value === false || value === 'false') return false; // 1 year
+
+	/** @param {string} desc */
+	const err = (desc) => {
+		throw new Error(
+			`Invalid isr.expiration value: ${JSON.stringify(value)} (${desc}, in ${route_id})`
+		);
+	};
+
+	let parsed;
+	if (typeof value === 'string') {
+		if (!integer.test(value)) {
+			err('value was a string but could not be parsed as an integer');
+		}
+		parsed = Number.parseInt(value, 10);
+	} else {
+		if (!Number.isInteger(value)) {
+			err('should be an integer');
+		}
+		parsed = value;
+	}
+
+	if (Number.isNaN(parsed)) {
+		err('should be a number');
+	}
+	if (parsed < 0) {
+		err('should be non-negative');
+	}
+	return parsed;
+}

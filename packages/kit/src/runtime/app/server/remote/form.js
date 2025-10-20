@@ -5,11 +5,12 @@ import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import {
 	convert_formdata,
-	flatten_issues,
 	create_field_proxy,
 	set_nested_value,
 	throw_on_old_property_access,
-	deep_set
+	deep_set,
+	normalize_issue,
+	flatten_issues
 } from '../../../form-utils.svelte.js';
 import { get_cache, run_remote_function } from './shared.js';
 
@@ -46,7 +47,7 @@ import { get_cache, run_remote_function } from './shared.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(data: StandardSchemaV1.InferOutput<Schema>, invalid: import('@sveltejs/kit').Invalid<StandardSchemaV1.InferOutput<Schema>>) => MaybePromise<Output>} fn
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>, invalid: import('@sveltejs/kit').Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -142,7 +143,7 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 				}
 
-				/** @type {{ submission: true, input?: Record<string, any>, issues?: Record<string, InternalRemoteFormIssue[]>, result: Output }} */
+				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
 				const output = {};
 
 				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
@@ -209,6 +210,8 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'fields', {
 			get() {
 				const data = get_cache(__)?.[''];
+				const issues = flatten_issues(data?.issues ?? []);
+
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
@@ -224,7 +227,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 						(get_cache(__)[''] ??= {}).input = input;
 					},
-					() => data?.issues ?? {}
+					() => issues
 				);
 			}
 		});
@@ -293,13 +296,13 @@ export function form(validate_or_fn, maybe_fn) {
 }
 
 /**
- * @param {{ issues?: Record<string, any>, input?: Record<string, any>, result: any }} output
+ * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
  * @param {readonly StandardSchemaV1.Issue[]} issues
  * @param {boolean} is_remote_request
  * @param {FormData} form_data
  */
 function handle_issues(output, issues, is_remote_request, form_data) {
-	output.issues = flatten_issues(issues);
+	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
 	// if it was a progressively-enhanced submission, we don't need
 	// to return the input — it's already there

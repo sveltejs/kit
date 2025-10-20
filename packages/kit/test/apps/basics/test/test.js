@@ -1841,6 +1841,31 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-only');
+
+		const a = page.locator('[name="a"]');
+		const button = page.locator('button');
+		const issues = page.locator('.issues');
+
+		await button.click();
+		await expect(issues).toContainText('a is too short');
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		await a.fill('aaaaaaaa');
+		await expect(issues).toContainText('a is too long');
+
+		// server issues should be preserved...
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		// ...unless overridden by client issues
+		await expect(issues).not.toContainText('a is too short');
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
