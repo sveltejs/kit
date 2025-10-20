@@ -7,7 +7,7 @@
 		bar: v.picklist(['d', 'e']),
 		button: v.optional(v.literal('submitter'))
 	});
-	let submitter;
+
 	$inspect(my_form.fields.allIssues());
 </script>
 
@@ -24,18 +24,16 @@
 
 	<input {...my_form.fields.bar.as('text')} />
 
-	<button>submit (imperative validation)</button>
+	<button {...my_form.fields.button.as('submit', 'incorrect_value')}> submit </button>
 
-	<button bind:this={submitter} {...my_form.fields.button.as('submit', 'incorrect_value')}>
-		submit
-	</button>
 	{#each my_form.fields.button.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
+
+	<button {...my_form.fields.button.as('submit', 'submitter')}>
+		submit (imperative validation)
+	</button>
 </form>
-<button
-	id="trigger-validate"
-	onclick={() => my_form.validate({ includeUntouched: true, submitter })}
->
+<button id="trigger-validate" onclick={() => my_form.validate({ includeUntouched: true })}>
 	trigger validation
 </button>
