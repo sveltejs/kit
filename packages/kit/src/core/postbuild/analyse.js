@@ -105,7 +105,8 @@ async function analyse({
 		}
 
 		metadata.nodes[node.index] = {
-			has_server_load: has_server_load(node)
+			has_server_load: has_server_load(node),
+			has_universal_load: node.universal?.load !== undefined
 		};
 	}
 

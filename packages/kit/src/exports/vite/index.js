@@ -172,8 +172,8 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
-/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
-let remote_exports = undefined;
+/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+let build_metadata = undefined;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -369,12 +369,28 @@ async function kit({ svelte_config }) {
 
 				if (!secondary_build_started) {
 					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					// During the initial server build we don't know yet
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
+				} else {
+					const nodes = Object.values(
+						/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
+					);
+
+					// Through the finished analysis we can now check if any node has server or universal load functions
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(has_server_load);
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(has_universal_load);
 				}
 			} else {
 				new_config.define = {
 					...define,
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
+					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+					__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 				};
 
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
@@ -733,8 +749,8 @@ async function kit({ svelte_config }) {
 
 			// in prod, we already built and analysed the server code before
 			// building the client code, so `remote_exports` is populated
-			else if (remote_exports) {
-				const exports = remote_exports.get(remote.hash);
+			else if (build_metadata?.remotes) {
+				const exports = build_metadata?.remotes.get(remote.hash);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
@@ -1038,7 +1054,7 @@ async function kit({ svelte_config }) {
 					remotes
 				});
 
-				remote_exports = metadata.remotes;
+				build_metadata = metadata;
 
 				log.info('Building app');
 
