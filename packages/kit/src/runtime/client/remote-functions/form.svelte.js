@@ -381,13 +381,11 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						console.log('set neseted', input, name, element.value);
 						set_nested_value(
 							input,
 							name,
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
-						console.log('afterwards', input);
 					}
 
 					name = name.replace(/^[nb]:/, '');
@@ -401,14 +399,6 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-
-					// // Clear existing properties
-					// for (const key in input) {
-					// 	delete input[key];
-					// }
-
-					// // Copy new properties
-					// Object.assign(input, new_data);
 				});
 
 				return () => {
@@ -504,12 +494,6 @@ export function form(id) {
 						() => {},
 						(path, value) => {
 							if (path.length === 0) {
-								// // Clear existing properties
-								// for (const key in input) {
-								// 	delete input[key];
-								// }
-								// // Copy new properties
-								// Object.assign(input, value);
 								input = value;
 							} else {
 								deep_set(input, path.map(String), value);
