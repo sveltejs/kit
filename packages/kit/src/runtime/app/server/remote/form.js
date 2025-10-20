@@ -11,7 +11,7 @@ import {
 	deep_set,
 	normalize_issue,
 	flatten_issues
-} from '../../../form-utils.svelte.js';
+} from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
 
 /**

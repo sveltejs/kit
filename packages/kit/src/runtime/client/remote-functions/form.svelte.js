@@ -19,7 +19,7 @@ import {
 	throw_on_old_property_access,
 	build_path_string,
 	normalize_issue
-} from '../../form-utils.svelte.js';
+} from '../../form-utils.js';
 
 /**
  * Merge client issues into server issues. Server issues are persisted unless

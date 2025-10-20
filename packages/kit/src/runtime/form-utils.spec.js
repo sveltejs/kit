@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { convert_formdata, split_path } from './form-utils.svelte.js';
+import { convert_formdata, split_path } from './form-utils.js';
 
 describe('split_path', () => {
 	const good = [
