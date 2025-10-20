@@ -193,5 +193,14 @@ test.each([
 	['(variable)', 'export const load = () => { return {} }']
 ])('special-cases load function %s', (_, input) => {
 	const exports = statically_analyse_page_options('', input);
-	expect(exports).toEqual({ load: true });
+	expect(exports).toEqual({ load: null });
+});
+
+test('special-cases load function (static analysis fails)', () => {
+	const input = `
+	export const load = () => { return {} };
+	export const ssr = process.env.SSR;
+	`;
+	const exports = statically_analyse_page_options('', input);
+	expect(exports).toEqual(null);
 });

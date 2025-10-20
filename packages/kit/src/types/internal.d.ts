@@ -396,6 +396,7 @@ export interface SSRComponent {
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface UniversalNode {
+	/** Is `null` in case static analysis succeeds but the node is ssr=false */
 	load?: Load;
 	prerender?: PrerenderOption;
 	ssr?: boolean;

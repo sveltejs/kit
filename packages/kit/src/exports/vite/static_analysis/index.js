@@ -117,9 +117,9 @@ export function statically_analyse_page_options(filename, input) {
 									continue;
 								}
 
-								// Special case: We only want to know that 'load' is exported, its value is irrelevant
+								// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
 								if (variable_declarator.id.name === 'load') {
-									page_options.set('load', true);
+									page_options.set('load', null);
 									export_specifiers.delete('load');
 									continue;
 								}
@@ -146,9 +146,9 @@ export function statically_analyse_page_options(filename, input) {
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
 				if (valid_page_options.has(statement.declaration.id.name)) {
-					// Special case: We only want to know that 'load' is exported, its value is irrelevant
+					// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
 					if (statement.declaration.id.name === 'load') {
-						page_options.set('load', true);
+						page_options.set('load', null);
 					} else {
 						return null;
 					}
@@ -170,9 +170,9 @@ export function statically_analyse_page_options(filename, input) {
 					continue;
 				}
 
-				// Special case: We only want to know that 'load' is exported, its value is irrelevant
+				// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
 				if (declaration.id.name === 'load') {
-					page_options.set('load', true);
+					page_options.set('load', null);
 					continue;
 				}
 
@@ -206,7 +206,7 @@ export function get_name(node) {
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	/**
-	 * Computes the final page options (may include load function as `load: true`; special case) for a node (if possible). Otherwise, returns `null`.
+	 * Computes the final page options (may include load function as `load: null`; special case) for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
 	 * @returns {Promise<Record<string, any> | null>}
 	 */
