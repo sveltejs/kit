@@ -491,7 +491,6 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
-						() => {},
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
