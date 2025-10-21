@@ -581,7 +581,6 @@ export function form(id) {
 					touched: resetTouched = true
 				} = {}) => {
 					submitted = false;
-					console.log('reset', values, resetIssues, resetResult, resetTouched);
 
 					if (values === true) {
 						if (element) element.reset();
