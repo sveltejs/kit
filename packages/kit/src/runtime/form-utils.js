@@ -3,6 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
+import * as devalue from 'devalue';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -70,12 +71,50 @@ export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
  *
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
- * @returns {ReadableStream<Uint8Array<ArrayBuffer>>}
+ * @returns {Blob}
  */
 export function serialize_binary_form(data, meta) {
-	return new ReadableStream({
-		start(controller) {}
+	/** @type {BlobPart[]} */
+	const blob_parts = [];
+
+	/** @type {File[]} */
+	const files = [];
+
+	const encoded_header = devalue.stringify([data, meta], {
+		File: (file) => {
+			if (!(file instanceof File)) return;
+			files.push(file);
+			return {
+				name: file.name,
+				type: file.type,
+				i: files.length - 1
+			};
+		}
 	});
+	const length_buffer = new Uint8Array(4);
+	const length_view = new DataView(length_buffer.buffer);
+
+	length_view.setUint32(0, encoded_header.length, true);
+	blob_parts.push(length_buffer.slice());
+	blob_parts.push(encoded_header);
+
+	length_view.setUint32(0, files.length, true);
+	blob_parts.push(length_buffer);
+
+	if (files.length === 0) {
+		return new Blob(blob_parts);
+	}
+
+	const size_buffer = new Uint8Array(16);
+	const size_view = new DataView(size_buffer.buffer);
+
+	for (const file of files) {
+		// Use a u64 so we aren't limited to 4GB files
+		size_view.setBigUint64(0, BigInt(file.size), true);
+		blob_parts.push(size_buffer.slice());
+		blob_parts.push(file);
+	}
+	return new Blob(blob_parts);
 }
 
 /**
@@ -87,7 +126,11 @@ export async function deserialize_binary_form(request) {
 		const form_data = await request.formData();
 		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
+	if (!request.body) {
+		return { data: {}, meta: {}, form_data: null };
+	}
 
+	const reader = request.body.getReader();
 	return { data: {}, meta: {}, form_data: null };
 }
 

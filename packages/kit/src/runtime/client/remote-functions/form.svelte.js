@@ -189,7 +189,7 @@ export function form(id) {
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE
 						},
-						body: serialize_binary_form(data, {
+						body: serialize_binary_form(convert(data), {
 							remote_refreshes: updates.map((u) => u._key),
 							pathname: location.pathname,
 							search: location.search
