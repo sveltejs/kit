@@ -572,6 +572,26 @@ export function form(id) {
 						: merge_with_server_issues(form_data, raw_issues, array);
 				}
 			},
+			reset: {
+				/** @type {RemoteForm<any, any>['reset']} */
+				value: ({
+					values = true,
+					issues: resetIssues = true,
+					result: resetResult = true,
+					touched: resetTouched = true
+				} = {}) => {
+					submitted = false;
+
+					if (values === true) {
+						if (element) element.reset();
+						else input = {};
+					} else if (values) input = values;
+
+					if (resetIssues) raw_issues = [];
+					if (resetResult) result = undefined;
+					if (resetTouched) touched = {};	
+				}
+			},
 			enhance: {
 				/** @type {RemoteForm<any, any>['enhance']} */
 				value: (callback) => {

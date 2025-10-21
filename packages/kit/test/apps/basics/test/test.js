@@ -2018,6 +2018,44 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+
+	test('form resets programmatically', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/reset');
+
+		// Error case
+		await page.locator('#input').fill('hi');
+		await page.locator('#submit').click();
+		await expect(page.locator('#value')).toHaveText('"hi"');
+		await expect(page.locator('#result')).toHaveText('');
+		await expect(page.locator('#allIssues')).toHaveText(
+			'[{"message":"Invalid length: Expected >=3 but received 2"}]'
+		);
+
+		await page.locator('#partial-reset').click();
+		await expect(page.locator('#value')).toHaveText('""');
+		await expect(page.locator('#allIssues')).toHaveText(
+			'[{"message":"Invalid length: Expected >=3 but received 2"}]'
+		);
+
+		await page.locator('#full-reset').click();
+		await expect(page.locator('#allIssues')).toHaveText('');
+
+		// Result case
+		await page.locator('#input').fill('hello');
+		await page.locator('#submit').click();
+		await expect(page.locator('#value')).toHaveText('"hello"');
+		await expect(page.locator('#result')).toHaveText('{"value":"hello"}');
+		await expect(page.locator('#allIssues')).toHaveText('');
+
+		await page.locator('#partial-reset').click();
+		await expect(page.locator('#value')).toHaveText('""');
+		await expect(page.locator('#result')).toHaveText('{"value":"hello"}');
+
+		await page.locator('#full-reset').click();
+		await expect(page.locator('#result')).toHaveText('');
+	});
 });
 
 test.describe('params prop', () => {
