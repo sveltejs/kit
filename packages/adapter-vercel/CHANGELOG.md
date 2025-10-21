@@ -1,5 +1,23 @@
 # @sveltejs/adapter-vercel
 
+## 6.0.0
+### Major Changes
+
+
+- breaking: remove Node polyfills (and by extension support for Node 18) ([#14732](https://github.com/sveltejs/kit/pull/14732))
+
+
+### Minor Changes
+
+
+- feat: parse isr.expiration, allowing it to be a string ([#14691](https://github.com/sveltejs/kit/pull/14691))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
 ## 5.10.3
 ### Patch Changes
 
