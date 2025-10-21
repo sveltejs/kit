@@ -580,7 +580,11 @@ export type RemoteInfo =
 			type: 'form';
 			id: string;
 			name: string;
-			fn: (body: Record<string, any>, meta: BinaryFormMeta) => Promise<any>;
+			fn: (
+				body: Record<string, any>,
+				meta: BinaryFormMeta,
+				form_data: FormData | null
+			) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';

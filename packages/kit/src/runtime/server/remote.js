@@ -117,7 +117,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				);
 			}
 
-			const { data, meta } = await deserialize_binary_form(event.request);
+			const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 			if (additional_args) {
@@ -125,7 +125,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			const fn = info.fn;
-			const result = await with_request_store({ event, state }, () => fn(data, meta));
+			const result = await with_request_store({ event, state }, () => fn(data, meta, form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -293,12 +293,12 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	try {
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
 
-		const { data, meta } = await deserialize_binary_form(event.request);
+		const { data, meta, form_data } = await deserialize_binary_form(event.request);
 		if (action_id && !data.id) {
 			meta.id = decodeURIComponent(action_id);
 		}
 
-		await with_request_store({ event, state }, () => fn(data, meta));
+		await with_request_store({ event, state }, () => fn(data, meta, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.

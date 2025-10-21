@@ -80,15 +80,15 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
- * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta }>}
+ * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
 export async function deserialize_binary_form(request) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_data), meta: {} };
+		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
 
-	return { data: {}, meta: {} };
+	return { data: {}, meta: {}, form_data: null };
 }
 
 const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
