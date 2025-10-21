@@ -4,6 +4,7 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
+import { text_decoder } from './utils.js';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -66,29 +67,31 @@ export function convert_formdata(data) {
 }
 
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
+const BINARY_FORM_VERSION = 0;
 
 /**
- *
+ * The binary format is as follows:
+ * - 1 byte: Format version
+ * - 4 bytes: Length of the header (u32)
+ * - 4 bytes: Number of files (u32)
+ * - header: devalue.stringify([data, meta])
+ * - N files
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
  * @returns {Blob}
  */
 export function serialize_binary_form(data, meta) {
-	/** @type {BlobPart[]} */
-	const blob_parts = [];
+	/** @type {Array<BlobPart>} */
+	const blob_parts = [new Uint8Array([BINARY_FORM_VERSION])];
 
-	/** @type {File[]} */
+	/** @type {Array<File>} */
 	const files = [];
 
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
 			if (!(file instanceof File)) return;
 			files.push(file);
-			return {
-				name: file.name,
-				type: file.type,
-				i: files.length - 1
-			};
+			return [file.name, file.type, file.size, file.lastModified, files.length - 1];
 		}
 	});
 	const length_buffer = new Uint8Array(4);
@@ -96,24 +99,13 @@ export function serialize_binary_form(data, meta) {
 
 	length_view.setUint32(0, encoded_header.length, true);
 	blob_parts.push(length_buffer.slice());
-	blob_parts.push(encoded_header);
 
 	length_view.setUint32(0, files.length, true);
 	blob_parts.push(length_buffer);
 
-	if (files.length === 0) {
-		return new Blob(blob_parts);
-	}
+	blob_parts.push(encoded_header);
 
-	const size_buffer = new Uint8Array(16);
-	const size_view = new DataView(size_buffer.buffer);
-
-	for (const file of files) {
-		// Use a u64 so we aren't limited to 4GB files
-		size_view.setBigUint64(0, BigInt(file.size), true);
-		blob_parts.push(size_buffer.slice());
-		blob_parts.push(file);
-	}
+	blob_parts.push(...files);
 	return new Blob(blob_parts);
 }
 
@@ -127,11 +119,147 @@ export async function deserialize_binary_form(request) {
 		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
-		return { data: {}, meta: {}, form_data: null };
+		throw new Error('Could not deserialize binary form: no body');
 	}
 
 	const reader = request.body.getReader();
-	return { data: {}, meta: {}, form_data: null };
+
+	const first_chunk = await reader.read();
+	if (first_chunk.done) {
+		throw new Error('Could not deserialize binary form: empty body');
+	}
+	if (first_chunk.value.byteLength < 1 + 4 + 4) {
+		throw new Error('Could not deserialize binary form: first chunk was too small');
+	}
+	const version = first_chunk.value[0];
+	if (version !== BINARY_FORM_VERSION) {
+		throw new Error(
+			`Could not deserialize binary form: got version ${version}, expected version ${BINARY_FORM_VERSION}`
+		);
+	}
+	const start_view = new DataView(first_chunk.value.buffer);
+	const header_length = start_view.getUint32(1, true);
+	const file_count = start_view.getUint32(5, true);
+
+	// Read the header
+	const header_buffer = new Uint8Array(header_length);
+	header_buffer.set(first_chunk.value.subarray(9, header_length + 9));
+	let received_length = first_chunk.value.byteLength - 9;
+	/** @type {Array<Uint8Array>} */
+	let file_data;
+	if (received_length >= header_length) {
+		file_data = [first_chunk.value.subarray(header_length)];
+	} else {
+		while (true) {
+			const chunk = await reader.read();
+			if (chunk.done) {
+				throw new Error('Could not deserialize binary form: incomplete header');
+			}
+			const header_chunk = chunk.value.subarray(0, header_length - received_length);
+			header_buffer.set(header_chunk, received_length);
+
+			received_length += chunk.value.byteLength;
+
+			if (received_length >= header_length) {
+				file_data = [chunk.value.subarray(header_length)];
+				break;
+			}
+		}
+	}
+
+	/** @type {Array<number>} */
+	const file_sizes = new Array(file_count);
+	/** @type {Array<{start: number, end: number}> | null} */
+	let file_offsets = null;
+	/** @type {Array<Uint8Array<ArrayBuffer>>} */
+	const file_buffers = new Array(file_count);
+
+	const [data, meta] = devalue.parse(text_decoder.decode(header_buffer), {
+		File: ([name, type, size, last_modified, index]) => {
+			file_sizes[index] = size;
+			console.log(file_sizes);
+			return new Proxy(
+				new LazyFile(name, type, size, last_modified, async () => {
+					if (file_buffers[index]) return file_buffers[index];
+					if (file_offsets === null) {
+						file_offsets = new Array(file_count);
+						let start = 0;
+						for (let i = 0; i < file_count; i++) {
+							const end = start + file_sizes[i];
+							file_offsets[i] = { start, end };
+							start = end;
+						}
+					}
+					const { start, end } = file_offsets[index];
+					const buffer = new Uint8Array(end - start);
+					// let offset = 0;
+					// while (offset < buffer.byteLength) {
+					// TODO:
+					// - find the element from `file_data` that contains start + offset
+					// - if it doesn't exist, read from the request body until we get it, and cache results in `file_data`
+					// - copy subarray into `buffer`
+					// }
+					return buffer;
+				}),
+				{
+					getPrototypeOf() {
+						// Trick validators into thinking this is a normal File
+						return File.prototype;
+					}
+				}
+			);
+		}
+	});
+	console.log(data);
+
+	return { data, meta, form_data: null };
+}
+
+class LazyFile {
+	/** @type {() => Promise<ArrayBuffer>} */
+	getter;
+	/**
+	 * @param {string} name
+	 * @param {string} type
+	 * @param {number} size
+	 * @param {number} last_modified
+	 * @param {() => Promise<ArrayBuffer>} getter
+	 */
+	constructor(name, type, size, last_modified, getter) {
+		this.name = name;
+		this.type = type;
+		this.size = size;
+		this.lastModified = last_modified;
+		this.webkitRelativePath = '';
+		this.getter = getter;
+	}
+	arrayBuffer() {
+		return this.getter();
+	}
+	async bytes() {
+		return new Uint8Array(await this.arrayBuffer());
+	}
+	/**
+	 * @param {number=} start
+	 * @param {number=} end
+	 * @param {string=} contentType
+	 */
+	slice(start, end, contentType) {
+		return new LazyFile(this.name, contentType ?? '', this.size, this.lastModified, () =>
+			this.getter().then((buffer) => buffer.slice(start, end))
+		);
+	}
+	stream() {
+		return new ReadableStream({
+			start: async (controller) => {
+				controller.enqueue(await this.arrayBuffer());
+				controller.close();
+			}
+		});
+	}
+	async text() {
+		return text_decoder.decode(await this.arrayBuffer());
+	}
 }
 
 const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
