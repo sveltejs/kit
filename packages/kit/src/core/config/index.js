@@ -19,7 +19,6 @@ export function load_template(cwd, { kit }) {
 	if (fs.existsSync(files.appTemplate)) {
 		contents = fs.readFileSync(files.appTemplate, 'utf8');
 	} else {
-		console.warn(`${relative} does not exist - using default app template.`);
 		contents = DEFAULT_APP_TEMPLATE;
 	}
 
