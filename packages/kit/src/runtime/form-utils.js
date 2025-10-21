@@ -1,5 +1,5 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue } from 'types' */
+/** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
@@ -62,6 +62,33 @@ export function convert_formdata(data) {
 	}
 
 	return result;
+}
+
+export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
+
+/**
+ *
+ * @param {Record<string, any>} data
+ * @param {BinaryFormMeta} meta
+ * @returns {ReadableStream<Uint8Array<ArrayBuffer>>}
+ */
+export function serialize_binary_form(data, meta) {
+	return new ReadableStream({
+		start(controller) {}
+	});
+}
+
+/**
+ * @param {Request} request
+ * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta }>}
+ */
+export async function deserialize_binary_form(request) {
+	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
+		const form_data = await request.formData();
+		return { data: convert_formdata(form_data), meta: {} };
+	}
+
+	return { data: {}, meta: {} };
 }
 
 const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;

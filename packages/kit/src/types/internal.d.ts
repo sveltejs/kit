@@ -552,6 +552,14 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 	adapter?: Adapter;
 };
 
+export type BinaryFormMeta = {
+	id?: string;
+	remote_refreshes?: string[];
+	validate_only?: boolean;
+	pathname?: string;
+	search?: string;
+};
+
 export type RemoteInfo =
 	| {
 			type: 'query' | 'command';
@@ -572,7 +580,7 @@ export type RemoteInfo =
 			type: 'form';
 			id: string;
 			name: string;
-			fn: (data: FormData) => Promise<any>;
+			fn: (body: Record<string, any>, meta: BinaryFormMeta) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';

@@ -18,7 +18,9 @@ import {
 	set_nested_value,
 	throw_on_old_property_access,
 	build_path_string,
-	normalize_issue
+	normalize_issue,
+	serialize_binary_form,
+	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
 
 /**
@@ -182,17 +184,16 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					if (updates.length > 0) {
-						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
-					}
-
 					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
-						body: data,
 						headers: {
-							'x-sveltekit-pathname': location.pathname,
-							'x-sveltekit-search': location.search
-						}
+							'Content-Type': BINARY_FORM_CONTENT_TYPE
+						},
+						body: serialize_binary_form(data, {
+							remote_refreshes: updates.map((u) => u._key),
+							pathname: location.pathname,
+							search: location.search
+						})
 					});
 
 					if (!response.ok) {
@@ -532,7 +533,9 @@ export function form(id) {
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
 
-					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
+					const data = convert(form_data);
+
+					const validated = await preflight_schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;
@@ -541,11 +544,16 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						form_data.set('sveltekit:validate_only', 'true');
-
 						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 							method: 'POST',
-							body: form_data
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE
+							},
+							body: serialize_binary_form(data, {
+								validate_only: true,
+								pathname: location.pathname,
+								search: location.search
+							})
 						});
 
 						const result = await response.json();
