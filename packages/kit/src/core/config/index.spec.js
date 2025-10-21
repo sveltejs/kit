@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
-import { validate_config, load_config } from './index.js';
+import { validate_config, load_config, load_template } from './index.js';
 import process from 'node:process';
+import fs from 'node:fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -477,6 +478,27 @@ test('errors on invalid tracing values', () => {
 			}
 		});
 	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
+});
+
+test('uses default app template when app.html does not exist', () => {
+	const cwd = join(__dirname, 'fixtures/missing-template');
+	/** @type {any} */
+	const kit = {
+		env: { publicPrefix: 'PUBLIC_' },
+		files: {
+			appTemplate: join(cwd, 'src/app.html')
+		}
+	};
+
+	if (fs.existsSync(kit.files.appTemplate)) {
+		fs.unlinkSync(kit.files.appTemplate);
+	}
+
+	const html = load_template(cwd, { kit, extensions: [] });
+
+	expect(html).toContain('%sveltekit.head%');
+	expect(html).toContain('%sveltekit.body%');
+	expect(html).toContain('<!doctype html>');
 });
 
 test('uses src prefix for other kit.files options', async () => {

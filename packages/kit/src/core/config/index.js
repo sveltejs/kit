@@ -15,11 +15,13 @@ export function load_template(cwd, { kit }) {
 
 	const relative = path.relative(cwd, files.appTemplate);
 
-	if (!fs.existsSync(files.appTemplate)) {
-		throw new Error(`${relative} does not exist`);
+	let contents;
+	if (fs.existsSync(files.appTemplate)) {
+		contents = fs.readFileSync(files.appTemplate, 'utf8');
+	} else {
+		console.warn(`${relative} does not exist - using default app template.`);
+		contents = DEFAULT_APP_TEMPLATE;
 	}
-
-	const contents = fs.readFileSync(files.appTemplate, 'utf8');
 
 	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 	expected_tags.forEach((tag) => {
@@ -38,6 +40,18 @@ export function load_template(cwd, { kit }) {
 
 	return contents;
 }
+
+const DEFAULT_APP_TEMPLATE = `<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>`;
 
 /**
  * Loads the error page (src/error.html by default) if it exists.
