@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { test } from './form.remote.js';
+	test.reset({ values: { value: 'hi' } });
 </script>
 
 <form {...test.enhance(({ submit }) => submit())}>

@@ -2020,12 +2020,14 @@ test.describe('remote functions', () => {
 	});
 
 	test('form resets programmatically', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
-
 		await page.goto('/remote/form/reset');
 
+		// SSR case
+		await expect(page.locator('#value')).toHaveText('"hi"');
+
+		if (!javaScriptEnabled) return;
+
 		// Error case
-		await page.locator('#input').fill('hi');
 		await page.locator('#submit').click();
 		await expect(page.locator('#value')).toHaveText('"hi"');
 		await expect(page.locator('#result')).toHaveText('');
