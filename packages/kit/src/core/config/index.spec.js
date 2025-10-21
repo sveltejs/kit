@@ -4,6 +4,7 @@ import { assert, expect, test } from 'vitest';
 import { validate_config, load_config, load_template } from './index.js';
 import process from 'node:process';
 import fs from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -481,7 +482,8 @@ test('errors on invalid tracing values', () => {
 });
 
 test('uses default app template when app.html does not exist', () => {
-	const cwd = join(__dirname, 'fixtures/missing-template');
+	const cwd = fs.mkdtempSync(join(tmpdir(), 'kit-test-'));
+
 	/** @type {any} */
 	const kit = {
 		env: { publicPrefix: 'PUBLIC_' },
@@ -490,15 +492,13 @@ test('uses default app template when app.html does not exist', () => {
 		}
 	};
 
-	if (fs.existsSync(kit.files.appTemplate)) {
-		fs.unlinkSync(kit.files.appTemplate);
-	}
-
 	const html = load_template(cwd, { kit, extensions: [] });
 
 	expect(html).toContain('%sveltekit.head%');
 	expect(html).toContain('%sveltekit.body%');
 	expect(html).toContain('<!doctype html>');
+
+	fs.rmSync(cwd, { recursive: true, force: true });
 });
 
 test('uses src prefix for other kit.files options', async () => {
