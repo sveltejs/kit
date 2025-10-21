@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.47.3
+### Patch Changes
+
+
+- fix: avoid hanging when `error()` is used while streaming promises from a server `load` function ([#14722](https://github.com/sveltejs/kit/pull/14722))
+
+
+- chore: treeshake load function code if we know it's unused ([#14764](https://github.com/sveltejs/kit/pull/14764))
+
+
+- fix: `RecursiveFormFields` type for recursive or unknown schemas ([#14734](https://github.com/sveltejs/kit/pull/14734))
+
+
+- fix: rework internal representation of form value to be `$state` ([#14771](https://github.com/sveltejs/kit/pull/14771))
+
 ## 2.47.2
 ### Patch Changes
 
