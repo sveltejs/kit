@@ -172,3 +172,13 @@ test.describe('Vite', () => {
 		expect(manifest).toHaveProperty('optimized.e2e-test-dep-hooks');
 	});
 });
+
+test.describe('request abort', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('request.signal fires abort event', async ({ page }) => {
+		await page.goto('/request-abort');
+		await page.waitForTimeout(200);
+		expect(await page.innerText('pre')).toBe('{"aborted":true}');
+	});
+});

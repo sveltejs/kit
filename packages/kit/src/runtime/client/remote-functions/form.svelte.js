@@ -17,28 +17,29 @@ import {
 	deep_set,
 	set_nested_value,
 	throw_on_old_property_access,
-	split_path,
-	build_path_string
-} from '../../form-utils.svelte.js';
+	build_path_string,
+	normalize_issue
+} from '../../form-utils.js';
 
 /**
- * Merge client issues into server issues
- * @param {Record<string, InternalRemoteFormIssue[]>} current_issues
- * @param {Record<string, InternalRemoteFormIssue[]>} client_issues
- * @returns {Record<string, InternalRemoteFormIssue[]>}
+ * Merge client issues into server issues. Server issues are persisted unless
+ * a client-issue exists for the same path, in which case the client-issue overrides it.
+ * @param {FormData} form_data
+ * @param {InternalRemoteFormIssue[]} current_issues
+ * @param {InternalRemoteFormIssue[]} client_issues
+ * @returns {InternalRemoteFormIssue[]}
  */
-function merge_with_server_issues(current_issues, client_issues) {
-	const merged_issues = Object.fromEntries(
-		Object.entries(current_issues)
-			.map(([key, issue_list]) => [key, issue_list.filter((issue) => issue.server)])
-			.filter(([, issue_list]) => issue_list.length > 0)
-	);
+function merge_with_server_issues(form_data, current_issues, client_issues) {
+	const merged = [
+		...current_issues.filter(
+			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
+		),
+		...client_issues
+	];
 
-	for (const [key, new_issue_list] of Object.entries(client_issues)) {
-		merged_issues[key] = [...(merged_issues[key] || []), ...new_issue_list];
-	}
+	const keys = Array.from(form_data.keys());
 
-	return merged_issues;
+	return merged.sort((a, b) => keys.indexOf(a.name) - keys.indexOf(b.name));
 }
 
 /**
@@ -58,27 +59,14 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
-		 * By making this $state.raw() and creating a new object each time we update it,
-		 * all consumers along the update chain are properly invalidated.
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state.raw({});
+		let input = $state({});
 
-		// TODO 3.0: Remove versions state and related logic; it's a workaround for $derived not updating when created inside $effects
-		/**
-		 * This allows us to update individual fields granularly
-		 * @type {Record<string, number>}
-		 */
-		const versions = $state({});
+		/** @type {InternalRemoteFormIssue[]} */
+		let raw_issues = $state.raw([]);
 
-		/**
-		 * This ensures that `{field.value()}` is updated even if the version hasn't been initialized
-		 * @type {Set<string>}
-		 */
-		const version_reads = new Set();
-
-		/** @type {Record<string, InternalRemoteFormIssue[]>} */
-		let issues = $state.raw({});
+		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
 		let result = $state.raw(remote_responses[action_id]);
@@ -96,16 +84,6 @@ export function form(id) {
 		let touched = {};
 
 		let submitted = false;
-
-		function update_all_versions() {
-			for (const path of version_reads) {
-				versions[path] ??= 0;
-			}
-
-			for (const key of Object.keys(versions)) {
-				versions[key] += 1;
-			}
-		}
 
 		/**
 		 * @param {FormData} form_data
@@ -132,8 +110,11 @@ export function form(id) {
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				const client_issues = flatten_issues(validated.issues, false);
-				issues = merge_with_server_issues(issues, client_issues);
+				raw_issues = merge_with_server_issues(
+					form_data,
+					raw_issues,
+					validated.issues.map((issue) => normalize_issue(issue, false))
+				);
 				return;
 			}
 
@@ -223,20 +204,11 @@ export function form(id) {
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
 					if (form_result.type === 'result') {
-						({ issues = {}, result } = devalue.parse(form_result.result, app.decoders));
-
-						// Mark server issues with server: true
-						for (const issue_list of Object.values(issues)) {
-							for (const issue of issue_list) {
-								issue.server = true;
-							}
-						}
+						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
 						if (issues.$) {
 							release_overrides(updates);
 						} else {
-							update_all_versions();
-
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
 							} else {
@@ -386,7 +358,7 @@ export function form(id) {
 							}
 						}
 
-						input = set_nested_value(input, name, value);
+						set_nested_value(input, name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
@@ -397,7 +369,7 @@ export function form(id) {
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							input = set_nested_value(input, name, file);
+							set_nested_value(input, name, file);
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -409,24 +381,16 @@ export function form(id) {
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
-						input = set_nested_value(
+						set_nested_value(
 							input,
 							name,
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
 					}
 
-					versions[name] ??= 0;
-					versions[name] += 1;
+					name = name.replace(/^[nb]:/, '');
 
-					const path = split_path(name);
-
-					while (path.pop() !== undefined) {
-						const name = build_path_string(path);
-
-						versions[name] ??= 0;
-						versions[name] += 1;
-					}
+					touched[name] = true;
 				});
 
 				form.addEventListener('reset', async () => {
@@ -435,7 +399,6 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-					update_all_versions();
 				});
 
 				return () => {
@@ -528,15 +491,14 @@ export function form(id) {
 					create_field_proxy(
 						{},
 						() => input,
-						(path) => {
-							version_reads.add(path);
-							versions[path];
-						},
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
 							} else {
-								input = deep_set(input, path.map(String), value);
+								deep_set(input, path.map(String), value);
+
+								const key = build_path_string(path);
+								touched[key] = true;
 							}
 						},
 						() => issues
@@ -557,7 +519,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, submitter } = {}) => {
+				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -567,7 +529,7 @@ export function form(id) {
 
 					const form_data = new FormData(element, submitter);
 
-					/** @type {readonly StandardSchemaV1.Issue[]} */
+					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
 
 					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
@@ -577,8 +539,8 @@ export function form(id) {
 					}
 
 					if (validated?.issues) {
-						array = validated.issues;
-					} else {
+						array = validated.issues.map((issue) => normalize_issue(issue, false));
+					} else if (!preflightOnly) {
 						form_data.set('sveltekit:validate_only', 'true');
 
 						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
@@ -593,36 +555,21 @@ export function form(id) {
 						}
 
 						if (result.type === 'result') {
-							array = /** @type {StandardSchemaV1.Issue[]} */ (
+							array = /** @type {InternalRemoteFormIssue[]} */ (
 								devalue.parse(result.result, app.decoders)
 							);
 						}
 					}
 
 					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => {
-							if (issue.path !== undefined) {
-								let path = '';
-
-								for (const segment of issue.path) {
-									const key = typeof segment === 'object' ? segment.key : segment;
-
-									if (typeof key === 'number') {
-										path += `[${key}]`;
-									} else if (typeof key === 'string') {
-										path += path === '' ? key : '.' + key;
-									}
-								}
-
-								return touched[path];
-							}
-						});
+						array = array.filter((issue) => touched[issue.name]);
 					}
 
-					const is_server_validation = !validated?.issues;
-					const new_issues = flatten_issues(array, is_server_validation);
+					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					issues = is_server_validation ? new_issues : merge_with_server_issues(issues, new_issues);
+					raw_issues = is_server_validation
+						? array
+						: merge_with_server_issues(form_data, raw_issues, array);
 				}
 			},
 			enhance: {

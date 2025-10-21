@@ -1,5 +1,62 @@
 # @sveltejs/kit
 
+## 2.47.2
+### Patch Changes
+
+
+- fix: streamed promise not resolving when another load function returns a fast resolving promise ([#14753](https://github.com/sveltejs/kit/pull/14753))
+
+
+- chore: allow to run preflight validation only ([#14744](https://github.com/sveltejs/kit/pull/14744))
+
+
+- fix: update overload to set `invalid` type to schema input ([#14748](https://github.com/sveltejs/kit/pull/14748))
+
+## 2.47.1
+### Patch Changes
+
+
+- fix: allow `read` to be used at the top-level of remote function files ([#14672](https://github.com/sveltejs/kit/pull/14672))
+
+
+- fix: more robust remote files generation ([#14682](https://github.com/sveltejs/kit/pull/14682))
+
+## 2.47.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+
+- fix: resolve remote module syntax errors with trailing expressions ([#14728](https://github.com/sveltejs/kit/pull/14728))
+
+## 2.46.5
+### Patch Changes
+
+
+- fix: ensure `form` remote functions' `fields.set` triggers reactivity ([#14661](https://github.com/sveltejs/kit/pull/14661))
+
+## 2.46.4
+### Patch Changes
+
+
+- fix: prevent access of Svelte 5-only `untrack` function ([#14658](https://github.com/sveltejs/kit/pull/14658))
+
+## 2.46.3
+### Patch Changes
+
+
+- fix: merge `field.set(...)` calls ([#14651](https://github.com/sveltejs/kit/pull/14651))
+
+
+- fix: don't automatically reset form after an enhanced submission ([#14626](https://github.com/sveltejs/kit/pull/14626))
+
+
+- fix: normalize path strings when updating field values ([#14649](https://github.com/sveltejs/kit/pull/14649))
+
 ## 2.46.2
 ### Patch Changes
 
