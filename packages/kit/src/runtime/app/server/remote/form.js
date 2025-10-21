@@ -269,13 +269,9 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'reset', {
 			/** @type {RemoteForm<any, any>['reset']} */
-			value: ({
-				values = true,
-				issues = true,
-				result = true
-			} = {}) => {
+			value: ({ values = true, issues = true, result = true } = {}) => {
 				const cache = (get_cache(__)[''] ??= {});
-				
+
 				if (values === true) {
 					cache.input = {};
 				} else if (values) cache.input = values;

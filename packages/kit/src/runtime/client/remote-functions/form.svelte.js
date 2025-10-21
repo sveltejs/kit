@@ -590,7 +590,7 @@ export function form(id) {
 
 					if (resetIssues) raw_issues = [];
 					if (resetResult) result = undefined;
-					if (resetTouched) touched = {};	
+					if (resetTouched) touched = {};
 				}
 			},
 			enhance: {
