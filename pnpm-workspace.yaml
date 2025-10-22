@@ -12,7 +12,7 @@ packages:
 catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
-  '@netlify/edge-functions': ^2.15.1
+  '@netlify/edge-functions': ^3.0.1
   '@netlify/functions': ^5.0.0
   '@opentelemetry/sdk-node': ^0.206.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
