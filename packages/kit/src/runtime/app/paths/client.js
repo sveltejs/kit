@@ -53,7 +53,9 @@ const pathname_prefix = hash_routing ? '#' : '';
 export function resolve(...args) {
 	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
 	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
-	return base + pathname_prefix + resolve_route(args[0], /** @type {Record<string, string>} */ (args[1]));
+	return (
+		base + pathname_prefix + resolve_route(args[0], /** @type {Record<string, string>} */ (args[1]))
+	);
 }
 
 export { base, assets, resolve as resolveRoute };

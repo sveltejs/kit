@@ -134,5 +134,5 @@ test.describe('hash based navigation', () => {
 		const url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/');
-	})
+	});
 });
