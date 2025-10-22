@@ -10,3 +10,5 @@
 	<input {...upload.fields.file2.as('file')} />
 	<button>Submit</button>
 </form>
+
+<pre>{JSON.stringify(upload.result)}</pre>

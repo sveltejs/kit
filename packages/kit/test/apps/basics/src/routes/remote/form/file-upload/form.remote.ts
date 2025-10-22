@@ -8,13 +8,6 @@ export const upload = form(
 		file2: v.file()
 	}),
 	async (data) => {
-		console.log(data.text);
-		console.log(data.file1);
-		console.log(data.file2);
-		console.log(await data.file1.text());
-		console.log(await data.file2.text());
-		// for await (const chunk of data.file1.stream()) {
-		// 	console.log('file 1', chunk.length);
-		// }
+		return { text: data.text, file1: await data.file1.text(), file2: await data.file2.text() };
 	}
 );

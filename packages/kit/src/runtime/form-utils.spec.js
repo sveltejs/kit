@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { convert_formdata, split_path } from './form-utils.js';
+import {
+	BINARY_FORM_CONTENT_TYPE,
+	convert_formdata,
+	deserialize_binary_form,
+	serialize_binary_form,
+	split_path
+} from './form-utils.js';
+import { text_decoder } from './utils.js';
 
 describe('split_path', () => {
 	const good = [
@@ -89,4 +96,83 @@ describe('convert_formdata', () => {
 			expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
 		});
 	}
+});
+
+describe('binary form serializer', () => {
+	test.each([
+		{
+			data: {},
+			meta: {}
+		},
+		{
+			data: { foo: 'foo', nested: { prop: 'prop' } },
+			meta: { pathname: '/foo', validate_only: true }
+		}
+	])('simple', async (input) => {
+		const { blob } = serialize_binary_form(input.data, input.meta);
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE
+				}
+			})
+		);
+		expect(res.form_data).toBeNull();
+		expect(res.data).toEqual(input.data);
+		expect(res.meta).toEqual(input.meta ?? {});
+	});
+	test('file uploads', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				small: new File(['a'], 'a.txt', { type: 'text/plain' }),
+				large: new File([new Uint8Array(1024).fill('a'.charCodeAt(0))], 'large.txt', {
+					type: 'text/plain',
+					lastModified: 100
+				})
+			},
+			{}
+		);
+		// Split the stream into 1 byte chunks to make sure all the chunking deserialization works
+		const stream = blob.stream().pipeThrough(
+			new TransformStream({
+				transform(chunk, controller) {
+					for (const byte of chunk) {
+						controller.enqueue(new Uint8Array([byte]));
+					}
+				}
+			})
+		);
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: stream,
+				// @ts-expect-error duplex required in node
+				duplex: 'half',
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE
+				}
+			})
+		);
+		const { small, large } = res.data;
+		expect(small.name).toBe('a.txt');
+		expect(small.type).toBe('text/plain');
+		expect(small.size).toBe(1);
+		expect(await small.text()).toBe('a');
+
+		expect(large.name).toBe('large.txt');
+		expect(large.type).toBe('text/plain');
+		expect(large.size).toBe(1024);
+		expect(large.lastModified).toBe(100);
+		const buffer = new Uint8Array(large.size);
+		let cursor = 0;
+		for await (const chunk of large.stream()) {
+			buffer.set(chunk, cursor);
+			cursor += chunk.byteLength;
+		}
+		expect(buffer).toEqual(new Uint8Array(1024).fill('a'.charCodeAt(0)));
+		// text should be callable after stream is consumed
+		expect(await large.text()).toBe('a'.repeat(1024));
+	});
 });
