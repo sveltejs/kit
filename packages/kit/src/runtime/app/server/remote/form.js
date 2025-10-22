@@ -289,6 +289,8 @@ export function form(validate_or_fn, maybe_fn) {
 function handle_issues(output, issues, form_data) {
 	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
+	// if it was a progressively-enhanced submission, we don't need
+	// to return the input — it's already there
 	if (form_data) {
 		output.input = {};
 
