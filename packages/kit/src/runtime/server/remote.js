@@ -120,8 +120,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
-			if (additional_args) {
-				meta.id = decodeURIComponent(additional_args);
+			if (additional_args && !('id' in data)) {
+				data.id = JSON.parse(decodeURIComponent(additional_args));
 			}
 
 			const fn = info.fn;
@@ -294,8 +294,8 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request);
-		if (action_id && !data.id) {
-			meta.id = decodeURIComponent(action_id);
+		if (action_id && !('id' in data)) {
+			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
 
 		await with_request_store({ event, state }, () => fn(data, meta, form_data));

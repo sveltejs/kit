@@ -683,12 +683,6 @@ function clone(element) {
  */
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
-		if (key.startsWith('sveltekit:')) {
-			throw new Error(
-				'FormData keys starting with `sveltekit:` are reserved for internal use and should not be set manually'
-			);
-		}
-
 		if (/^\$[.[]?/.test(key)) {
 			throw new Error(
 				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'
