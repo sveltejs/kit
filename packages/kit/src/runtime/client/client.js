@@ -1705,7 +1705,6 @@ async function navigate({
 		}
 
 		if (load_cache_fork) {
-			console.log('committing fork');
 			const fork = await load_cache_fork;
 			fork?.commit();
 		} else {
