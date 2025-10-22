@@ -184,7 +184,7 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					const { file_offsets, blob } = serialize_binary_form(convert(data), {
+					const { blob } = serialize_binary_form(convert(data), {
 						remote_refreshes: updates.map((u) => u._key),
 						pathname: location.pathname,
 						search: location.search
@@ -206,16 +206,16 @@ export function form(id) {
 								resolve(xhr.responseText);
 							}
 						});
-						if (file_offsets.length) {
-							xhr.upload.addEventListener('progress', (ev) => {
-								for (const file of file_offsets) {
-									const progress = (ev.loaded - file.start) / file.size;
-									if (progress < 0 || progress > 1) continue;
+						// if (file_offsets.length) {
+						// 	xhr.upload.addEventListener('progress', (ev) => {
+						// 		for (const file of file_offsets) {
+						// 			const progress = (ev.loaded - file.start) / file.size;
+						// 			if (progress < 0 || progress > 1) continue;
 
-									console.log(`File ${file.name}: ${(progress * 100).toFixed(2)}%`);
-								}
-							});
-						}
+						// 			console.log(`File ${file.name}: ${(progress * 100).toFixed(2)}%`);
+						// 		}
+						// 	});
+						// }
 						xhr.open('POST', `${base}/${app_dir}/remote/${action_id}`);
 						xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
 						xhr.send(blob);
