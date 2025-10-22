@@ -124,117 +124,203 @@ export async function deserialize_binary_form(request) {
 
 	const reader = request.body.getReader();
 
-	const first_chunk = await reader.read();
-	if (first_chunk.done) {
-		throw new Error('Could not deserialize binary form: empty body');
-	}
-	if (first_chunk.value.byteLength < 1 + 4 + 4) {
-		throw new Error('Could not deserialize binary form: first chunk was too small');
-	}
-	const version = first_chunk.value[0];
-	if (version !== BINARY_FORM_VERSION) {
-		throw new Error(
-			`Could not deserialize binary form: got version ${version}, expected version ${BINARY_FORM_VERSION}`
-		);
-	}
-	const start_view = new DataView(first_chunk.value.buffer);
-	const header_length = start_view.getUint32(1, true);
-	const file_count = start_view.getUint32(5, true);
+	/** @type {Array<Uint8Array<ArrayBuffer>>} */
+	const chunks = [];
 
-	// Read the header
-	const header_buffer = new Uint8Array(header_length);
-	header_buffer.set(first_chunk.value.subarray(9, header_length + 9));
-	let received_length = first_chunk.value.byteLength - 9;
-	/** @type {Array<Uint8Array>} */
-	let file_data;
-	if (received_length >= header_length) {
-		file_data = [first_chunk.value.subarray(header_length)];
-	} else {
-		while (true) {
+	/**
+	 * @param {number} index
+	 * @returns {Promise<Uint8Array<ArrayBuffer> | null>}
+	 */
+	async function get_chunk(index) {
+		if (chunks[index]) return chunks[index];
+		let i = chunks.length;
+		while (i <= index) {
 			const chunk = await reader.read();
-			if (chunk.done) {
-				throw new Error('Could not deserialize binary form: incomplete header');
-			}
-			const header_chunk = chunk.value.subarray(0, header_length - received_length);
-			header_buffer.set(header_chunk, received_length);
+			if (chunk.done) return null;
+			chunks[i] = chunk.value;
+			i++;
+		}
+		return chunks[index];
+	}
 
-			received_length += chunk.value.byteLength;
+	/**
+	 * @param {number} offset
+	 * @param {number} length
+	 * @returns {Promise<Uint8Array | null>}
+	 */
+	async function get_buffer(offset, length) {
+		/** @type {Uint8Array} */
+		let start_chunk;
+		let chunk_start = 0;
+		/** @type {number} */
+		let chunk_index;
+		for (chunk_index = 0; ; chunk_index++) {
+			const chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
 
-			if (received_length >= header_length) {
-				file_data = [chunk.value.subarray(header_length)];
+			const chunk_end = chunk_start + chunk.byteLength;
+			// If this chunk contains the target offset
+			if (offset >= chunk_start && offset < chunk_end) {
+				start_chunk = chunk;
 				break;
 			}
+			chunk_start = chunk_end;
 		}
+		// If the buffer is completely contained in one chunk, do a subarray
+		if (offset + length <= chunk_start + start_chunk.byteLength) {
+			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
+		}
+		// Otherwise, copy the data into a new buffer
+		const buffer = new Uint8Array(length);
+		buffer.set(start_chunk.subarray(offset - chunk_start));
+		let cursor = start_chunk.byteLength - offset + chunk_start;
+		while (cursor < length) {
+			chunk_index++;
+			let chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+			if (chunk.byteLength > length - cursor) {
+				chunk = chunk.subarray(0, length - cursor);
+			}
+			buffer.set(chunk, cursor);
+			cursor += chunk.byteLength;
+		}
+
+		return buffer;
 	}
 
-	/** @type {Array<number>} */
-	const file_sizes = new Array(file_count);
-	/** @type {Array<{start: number, end: number}> | null} */
-	let file_offsets = null;
-	/** @type {Array<Uint8Array<ArrayBuffer>>} */
-	const file_buffers = new Array(file_count);
+	const header = await get_buffer(0, 1 + 4 + 4);
+	if (!header) throw new Error('Could not deserialize binary form: too short');
 
-	const [data, meta] = devalue.parse(text_decoder.decode(header_buffer), {
+	if (header[0] !== BINARY_FORM_VERSION) {
+		throw new Error(
+			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
+		);
+	}
+	const header_view = new DataView(header.buffer);
+	const data_length = header_view.getUint32(1, true);
+	const file_count = header_view.getUint32(5, true);
+
+	// Read the form data
+	const data_buffer = await get_buffer(1 + 4 + 4, data_length);
+	if (!data_buffer) throw new Error('Could not deserialize binary form: data too short');
+
+	/** @type {Array<LazyFile>} */
+	const files = new Array(file_count);
+
+	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
-			file_sizes[index] = size;
-			console.log(file_sizes);
-			return new Proxy(
-				new LazyFile(name, type, size, last_modified, async () => {
-					if (file_buffers[index]) return file_buffers[index];
-					if (file_offsets === null) {
-						file_offsets = new Array(file_count);
-						let start = 0;
-						for (let i = 0; i < file_count; i++) {
-							const end = start + file_sizes[i];
-							file_offsets[i] = { start, end };
-							start = end;
-						}
-					}
-					const { start, end } = file_offsets[index];
-					const buffer = new Uint8Array(end - start);
-					// let offset = 0;
-					// while (offset < buffer.byteLength) {
-					// TODO:
-					// - find the element from `file_data` that contains start + offset
-					// - if it doesn't exist, read from the request body until we get it, and cache results in `file_data`
-					// - copy subarray into `buffer`
-					// }
-					return buffer;
-				}),
-				{
-					getPrototypeOf() {
-						// Trick validators into thinking this is a normal File
-						return File.prototype;
-					}
+			const file = new LazyFile(name, type, size, last_modified);
+			files[index] = file;
+			return new Proxy(file, {
+				getPrototypeOf() {
+					// Trick validators into thinking this is a normal File
+					return File.prototype;
 				}
-			);
+			});
 		}
 	});
-	console.log(data);
+
+	let offset = 1 + 4 + 4 + data_length;
+	for (const file of files) {
+		const start = offset;
+		const end = start + file.size;
+		file._setup_internal(get_chunk, start);
+		offset = end;
+	}
 
 	return { data, meta, form_data: null };
 }
 
+/** @implements {File} */
 class LazyFile {
-	/** @type {() => Promise<ArrayBuffer>} */
-	getter;
+	/** @type {ReadableStream<Uint8Array<ArrayBuffer>>} */
+	// @ts-expect-error no equivalent to !:
+	#stream;
+	/** @type {(index: number) => Promise<Uint8Array<ArrayBuffer> | null>} */
+	// @ts-expect-error no equivalent to !:
+	#get_chunk;
+	/** @type {number} */
+	// @ts-expect-error no equivalent to !:
+	#offset;
+	/**
+	 * @param {(index: number) => Promise<Uint8Array<ArrayBuffer> | null>} get_chunk
+	 * @param {number} offset
+	 */
+	_setup_internal(get_chunk, offset) {
+		if (this.#stream) throw new TypeError('_setup_internal called twice');
+		let cursor = 0;
+		let chunk_index = 0;
+		this.#stream = new ReadableStream({
+			start: async (controller) => {
+				let chunk_start = 0;
+				let start_chunk = null;
+				for (chunk_index = 0; ; chunk_index++) {
+					const chunk = await get_chunk(chunk_index);
+					if (!chunk) return null;
+
+					const chunk_end = chunk_start + chunk.byteLength;
+					// If this chunk contains the target offset
+					if (offset >= chunk_start && offset < chunk_end) {
+						start_chunk = chunk;
+						break;
+					}
+					chunk_start = chunk_end;
+				}
+				// If the buffer is completely contained in one chunk, do a subarray
+				if (offset + this.size <= chunk_start + start_chunk.byteLength) {
+					controller.enqueue(
+						start_chunk.subarray(offset - chunk_start, offset + this.size - chunk_start)
+					);
+					controller.close();
+				} else {
+					controller.enqueue(start_chunk.subarray(offset - chunk_start));
+					cursor = start_chunk.byteLength - offset + chunk_start;
+				}
+			},
+			pull: async (controller) => {
+				chunk_index++;
+				let chunk = await get_chunk(chunk_index);
+				if (!chunk) {
+					controller.error('Could not deserialize binary form: incomplete data');
+					return;
+				}
+				if (chunk.byteLength > this.size - cursor) {
+					chunk = chunk.subarray(0, this.size - cursor);
+				}
+				controller.enqueue(chunk);
+				cursor += chunk.byteLength;
+				if (cursor >= this.size) {
+					controller.close();
+				}
+			}
+		});
+		this.#get_chunk = get_chunk;
+		this.#offset = offset;
+	}
 	/**
 	 * @param {string} name
 	 * @param {string} type
 	 * @param {number} size
 	 * @param {number} last_modified
-	 * @param {() => Promise<ArrayBuffer>} getter
 	 */
-	constructor(name, type, size, last_modified, getter) {
+	constructor(name, type, size, last_modified) {
 		this.name = name;
 		this.type = type;
 		this.size = size;
 		this.lastModified = last_modified;
 		this.webkitRelativePath = '';
-		this.getter = getter;
+		// TODO - hacky, required for private members to be accessed on proxy
+		this.arrayBuffer = this.arrayBuffer.bind(this);
+		this.bytes = this.bytes.bind(this);
+		this.slice = this.slice.bind(this);
+		this.stream = this.stream.bind(this);
+		this.text = this.text.bind(this);
 	}
-	arrayBuffer() {
-		return this.getter();
+	/** @type {ArrayBuffer | undefined} */
+	#buffer;
+	async arrayBuffer() {
+		this.#buffer ??= await new Response(this.#stream).arrayBuffer();
+		return this.#buffer;
 	}
 	async bytes() {
 		return new Uint8Array(await this.arrayBuffer());
@@ -244,18 +330,27 @@ class LazyFile {
 	 * @param {number=} end
 	 * @param {string=} contentType
 	 */
-	slice(start, end, contentType) {
-		return new LazyFile(this.name, contentType ?? '', this.size, this.lastModified, () =>
-			this.getter().then((buffer) => buffer.slice(start, end))
-		);
+	slice(start = 0, end = this.size, contentType = this.type) {
+		// https://github.com/nodejs/node/blob/a5f3cd8cb5ba9e7911d93c5fd3ebc6d781220dd8/lib/internal/blob.js#L240
+		if (start < 0) {
+			start = Math.max(this.size + start, 0);
+		} else {
+			start = Math.min(start, this.size);
+		}
+
+		if (end < 0) {
+			end = Math.max(this.size + end, 0);
+		} else {
+			end = Math.min(end, this.size);
+		}
+		const size = Math.max(end - start, 0);
+		const file = new LazyFile(this.name, contentType, size, this.lastModified);
+
+		file._setup_internal(this.#get_chunk, this.#offset + start);
+		return file;
 	}
 	stream() {
-		return new ReadableStream({
-			start: async (controller) => {
-				controller.enqueue(await this.arrayBuffer());
-				controller.close();
-			}
-		});
+		return this.#stream;
 	}
 	async text() {
 		return text_decoder.decode(await this.arrayBuffer());

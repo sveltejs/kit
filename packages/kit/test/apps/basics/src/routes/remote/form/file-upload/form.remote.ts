@@ -9,6 +9,8 @@ export const upload = form(
 	async (data) => {
 		console.log(data.text);
 		console.log(data.file);
-		console.log(await data.file.text());
+		for await (const chunk of data.file.stream()) {
+			console.log(chunk);
+		}
 	}
 );
