@@ -184,25 +184,63 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': BINARY_FORM_CONTENT_TYPE
-						},
-						body: serialize_binary_form(convert(data), {
-							remote_refreshes: updates.map((u) => u._key),
-							pathname: location.pathname,
-							search: location.search
-						})
+					const { file_offsets, blob } = serialize_binary_form(convert(data), {
+						remote_refreshes: updates.map((u) => u._key),
+						pathname: location.pathname,
+						search: location.search
 					});
 
-					if (!response.ok) {
-						// We only end up here in case of a network error or if the server has an internal error
-						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						throw new Error('Failed to execute remote function');
-					}
+					// TODO - check this - does it block the event loop?
+					// TODO - extract XHR to a function and reuse for validate_only
+					const response = await new Promise((resolve, reject) => {
+						const xhr = new XMLHttpRequest();
+						xhr.addEventListener('error', () => {
+							reject(new Error('Failed to execute remote function'));
+						});
+						xhr.addEventListener('readystatechange', () => {
+							if (xhr.readyState === 2 /* HEADERS_RECEIVED */) {
+								if (xhr.status !== 200) {
+									reject(new Error('Failed to execute remote function'));
+								}
+							} else if (xhr.readyState === 4 /* DONE */) {
+								resolve(xhr.responseText);
+							}
+						});
+						if (file_offsets.length) {
+							xhr.upload.addEventListener('progress', (ev) => {
+								for (const file of file_offsets) {
+									const progress = (ev.loaded - file.start) / file.size;
+									if (progress < 0 || progress > 1) continue;
 
-					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+									console.log(`File ${file.name}: ${(progress * 100).toFixed(2)}%`);
+								}
+							});
+						}
+						xhr.open('POST', `${base}/${app_dir}/remote/${action_id}`);
+						xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
+						xhr.send(blob);
+					});
+
+					// const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+					// 	method: 'POST',
+					// 	headers: {
+					// 		'Content-Type': BINARY_FORM_CONTENT_TYPE
+					// 	},
+					// 	body: serialize_binary_form(convert(data), {
+					// 		remote_refreshes: updates.map((u) => u._key),
+					// 		pathname: location.pathname,
+					// 		search: location.search
+					// 	})
+					// });
+
+					// if (!response.ok) {
+					// 	// We only end up here in case of a network error or if the server has an internal error
+					// 	// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+					// 	throw new Error('Failed to execute remote function');
+					// }
+
+					// const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+					const form_result = /** @type { RemoteFunctionResponse} */ (JSON.parse(response));
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
@@ -553,7 +591,7 @@ export function form(id) {
 								validate_only: true,
 								pathname: location.pathname,
 								search: location.search
-							})
+							}).blob
 						});
 
 						const result = await response.json();

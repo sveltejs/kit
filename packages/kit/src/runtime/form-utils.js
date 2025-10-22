@@ -78,7 +78,6 @@ const BINARY_FORM_VERSION = 0;
  * - N files
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
- * @returns {Blob}
  */
 export function serialize_binary_form(data, meta) {
 	/** @type {Array<BlobPart>} */
@@ -105,8 +104,18 @@ export function serialize_binary_form(data, meta) {
 
 	blob_parts.push(encoded_header);
 
-	blob_parts.push(...files);
-	return new Blob(blob_parts);
+	/** @type {Array<{ start: number, size: number, name: string }>} */
+	const file_offsets = [];
+	let start = 1 + 4 + 4 + encoded_header.length;
+	for (const file of files) {
+		blob_parts.push(file);
+		file_offsets.push({ start, size: file.size, name: file.name });
+		start += file.size;
+	}
+	return {
+		blob: new Blob(blob_parts),
+		file_offsets
+	};
 }
 
 /**
@@ -135,6 +144,7 @@ export async function deserialize_binary_form(request) {
 		if (chunks[index]) return chunks[index];
 		let i = chunks.length;
 		while (i <= index) {
+			// TODO - this breaks when two chunks are read at once :(
 			const chunk = await reader.read();
 			if (chunk.done) return null;
 			chunks[i] = chunk.value;
@@ -282,6 +292,7 @@ class LazyFile {
 				let chunk = await get_chunk(chunk_index);
 				if (!chunk) {
 					controller.error('Could not deserialize binary form: incomplete data');
+					controller.close();
 					return;
 				}
 				if (chunk.byteLength > this.size - cursor) {
