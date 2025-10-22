@@ -206,7 +206,7 @@ const invalidated = [];
  */
 const components = [];
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
+/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<{ commit: () => void } | null> | null} | null} */
 let load_cache = null;
 
 /**
@@ -521,8 +521,19 @@ async function _preload_data(intent) {
 					load_cache = null;
 				}
 				return result;
-			})
+			}),
+			fork: null
 		};
+
+		if (svelte.fork) {
+			load_cache.fork = load_cache.promise.then((result) => {
+				if (result.type === 'redirect') return null; // TODO is this right?
+
+				return svelte.fork(() => {
+					root.$set(result.props);
+				});
+			});
+		}
 	}
 
 	return load_cache.promise;
@@ -1658,6 +1669,7 @@ async function navigate({
 	}
 
 	// reset preload synchronously after the history state has been set to avoid race conditions
+	const load_cache_fork = load_cache?.fork;
 	load_cache = null;
 
 	navigation_result.props.page.state = state;
@@ -1692,7 +1704,14 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
-		root.$set(navigation_result.props);
+		if (load_cache_fork) {
+			console.log('committing fork');
+			const fork = await load_cache_fork;
+			fork?.commit();
+		} else {
+			root.$set(navigation_result.props);
+		}
+
 		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
