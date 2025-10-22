@@ -260,8 +260,6 @@ export async function deserialize_binary_form(request) {
 
 /** @implements {File} */
 class LazyFile {
-	/** @type {ReadableStream<Uint8Array<ArrayBuffer>>} */
-	#stream;
 	/** @type {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} */
 	#get_chunk;
 	/** @type {number} */
@@ -280,54 +278,6 @@ class LazyFile {
 		this.size = size;
 		this.lastModified = last_modified;
 		this.webkitRelativePath = '';
-
-		let cursor = 0;
-		let chunk_index = 0;
-		this.#stream = new ReadableStream({
-			start: async (controller) => {
-				let chunk_start = 0;
-				let start_chunk = null;
-				for (chunk_index = 0; ; chunk_index++) {
-					const chunk = await get_chunk(chunk_index);
-					if (!chunk) return null;
-
-					const chunk_end = chunk_start + chunk.byteLength;
-					// If this chunk contains the target offset
-					if (offset >= chunk_start && offset < chunk_end) {
-						start_chunk = chunk;
-						break;
-					}
-					chunk_start = chunk_end;
-				}
-				// If the buffer is completely contained in one chunk, do a subarray
-				if (offset + this.size <= chunk_start + start_chunk.byteLength) {
-					controller.enqueue(
-						start_chunk.subarray(offset - chunk_start, offset + this.size - chunk_start)
-					);
-					controller.close();
-				} else {
-					controller.enqueue(start_chunk.subarray(offset - chunk_start));
-					cursor = start_chunk.byteLength - offset + chunk_start;
-				}
-			},
-			pull: async (controller) => {
-				chunk_index++;
-				let chunk = await get_chunk(chunk_index);
-				if (!chunk) {
-					controller.error('Could not deserialize binary form: incomplete file data');
-					controller.close();
-					return;
-				}
-				if (chunk.byteLength > this.size - cursor) {
-					chunk = chunk.subarray(0, this.size - cursor);
-				}
-				controller.enqueue(chunk);
-				cursor += chunk.byteLength;
-				if (cursor >= this.size) {
-					controller.close();
-				}
-			}
-		});
 		this.#get_chunk = get_chunk;
 		this.#offset = offset;
 
@@ -341,7 +291,7 @@ class LazyFile {
 	/** @type {ArrayBuffer | undefined} */
 	#buffer;
 	async arrayBuffer() {
-		this.#buffer ??= await new Response(this.#stream).arrayBuffer();
+		this.#buffer ??= await new Response(this.stream()).arrayBuffer();
 		return this.#buffer;
 	}
 	async bytes() {
@@ -378,7 +328,53 @@ class LazyFile {
 		return file;
 	}
 	stream() {
-		return this.#stream;
+		let cursor = 0;
+		let chunk_index = 0;
+		return new ReadableStream({
+			start: async (controller) => {
+				let chunk_start = 0;
+				let start_chunk = null;
+				for (chunk_index = 0; ; chunk_index++) {
+					const chunk = await this.#get_chunk(chunk_index);
+					if (!chunk) return null;
+
+					const chunk_end = chunk_start + chunk.byteLength;
+					// If this chunk contains the target offset
+					if (this.#offset >= chunk_start && this.#offset < chunk_end) {
+						start_chunk = chunk;
+						break;
+					}
+					chunk_start = chunk_end;
+				}
+				// If the buffer is completely contained in one chunk, do a subarray
+				if (this.#offset + this.size <= chunk_start + start_chunk.byteLength) {
+					controller.enqueue(
+						start_chunk.subarray(this.#offset - chunk_start, this.#offset + this.size - chunk_start)
+					);
+					controller.close();
+				} else {
+					controller.enqueue(start_chunk.subarray(this.#offset - chunk_start));
+					cursor = start_chunk.byteLength - this.#offset + chunk_start;
+				}
+			},
+			pull: async (controller) => {
+				chunk_index++;
+				let chunk = await this.#get_chunk(chunk_index);
+				if (!chunk) {
+					controller.error('Could not deserialize binary form: incomplete file data');
+					controller.close();
+					return;
+				}
+				if (chunk.byteLength > this.size - cursor) {
+					chunk = chunk.subarray(0, this.size - cursor);
+				}
+				controller.enqueue(chunk);
+				cursor += chunk.byteLength;
+				if (cursor >= this.size) {
+					controller.close();
+				}
+			}
+		});
 	}
 	async text() {
 		return text_decoder.decode(await this.arrayBuffer());
