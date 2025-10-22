@@ -185,9 +185,7 @@ export function form(id) {
 					await Promise.resolve();
 
 					const { blob } = serialize_binary_form(convert(data), {
-						remote_refreshes: updates.map((u) => u._key),
-						pathname: location.pathname,
-						search: location.search
+						remote_refreshes: updates.map((u) => u._key)
 					});
 
 					// TODO - check this - does it block the event loop?
@@ -218,6 +216,8 @@ export function form(id) {
 						// }
 						xhr.open('POST', `${base}/${app_dir}/remote/${action_id}`);
 						xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
+						xhr.setRequestHeader('x-sveltekit-pathname', location.pathname);
+						xhr.setRequestHeader('x-sveltekit-search', location.search);
 						xhr.send(blob);
 					});
 
@@ -585,12 +585,12 @@ export function form(id) {
 						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 							method: 'POST',
 							headers: {
-								'Content-Type': BINARY_FORM_CONTENT_TYPE
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
 							},
 							body: serialize_binary_form(data, {
-								validate_only: true,
-								pathname: location.pathname,
-								search: location.search
+								validate_only: true
 							}).blob
 						});
 

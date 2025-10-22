@@ -6,7 +6,6 @@ import {
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
-import { text_decoder } from './utils.js';
 
 describe('split_path', () => {
 	const good = [
