@@ -1408,3 +1408,18 @@ test.describe('asset preload', () => {
 		});
 	}
 });
+
+test.describe('Streaming', () => {
+	test("Discarded promises from server load functions don't hang SSR request", async ({
+		request
+	}) => {
+		let error;
+		try {
+			await request.get('/streaming/discarded-promise');
+		} catch (e) {
+			error = e;
+		}
+
+		expect(error).toBeUndefined();
+	});
+});
