@@ -1704,9 +1704,10 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
-		if (load_cache_fork) {
-			const fork = await load_cache_fork;
-			fork?.commit();
+		const fork = load_cache_fork && (await load_cache_fork);
+
+		if (fork) {
+			fork.commit();
 		} else {
 			root.$set(navigation_result.props);
 		}
