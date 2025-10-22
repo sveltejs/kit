@@ -83,6 +83,10 @@ export function serialize_binary_form(data, meta) {
 	/** @type {Array<[file: File, index: number]>} */
 	const files = [];
 
+	if (!meta.remote_refreshes?.length) {
+		delete meta.remote_refreshes;
+	}
+
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
 			if (!(file instanceof File)) return;
