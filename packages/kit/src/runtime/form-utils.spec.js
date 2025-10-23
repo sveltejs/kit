@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
@@ -6,6 +6,7 @@ import {
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
+import buffer from 'node:buffer';
 
 describe('split_path', () => {
 	const good = [
@@ -98,6 +99,13 @@ describe('convert_formdata', () => {
 });
 
 describe('binary form serializer', () => {
+	beforeAll(() => {
+		// TODO: remove after dropping support for Node 18
+		if (!('File' in globalThis)) {
+			// @ts-ignore
+			globalThis.File = buffer.File;
+		}
+	});
 	test.each([
 		{
 			data: {},
@@ -123,12 +131,6 @@ describe('binary form serializer', () => {
 		expect(res.meta).toEqual(input.meta ?? {});
 	});
 	test('file uploads', async () => {
-		// eslint-disable-next-line n/prefer-global/process
-		const major = process.versions.node.split('.', 2).map((str) => +str)[0];
-		if (major < 20) {
-			// TODO: remove after dropping support for Node < 20
-			return;
-		}
 		const { blob } = serialize_binary_form(
 			{
 				small: new File(['a'], 'a.txt', { type: 'text/plain' }),
