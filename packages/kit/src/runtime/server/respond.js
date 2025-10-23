@@ -78,7 +78,14 @@ export async function internal_respond(request, options, manifest, state) {
 		const request_origin = request.headers.get('origin');
 
 		if (remote_id) {
-			if (request.method !== 'GET' && request_origin !== url.origin) {
+			// Check CSRF for remote functions, respecting trustedOrigins configuration
+			const forbidden =
+				request.method !== 'GET' &&
+				request_origin !== url.origin &&
+				!options.csrf_trusted_origins.includes('*') &&
+				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
+
+			if (forbidden) {
 				const message = 'Cross-site remote requests are forbidden';
 				return json({ message }, { status: 403 });
 			}
