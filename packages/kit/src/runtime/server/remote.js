@@ -131,10 +131,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(result, transport),
-					refreshes:
-						result.issues || !meta.remote_refreshes
-							? {}
-							: await serialize_refreshes(meta.remote_refreshes)
+					refreshes: result.issues ? undefined : await serialize_refreshes(meta.remote_refreshes)
 				})
 			);
 		}
@@ -178,7 +175,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_refreshes(form_client_refreshes ?? [])
+					refreshes: await serialize_refreshes(form_client_refreshes)
 				})
 			);
 		}
@@ -204,24 +201,26 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	}
 
 	/**
-	 * @param {string[]} client_refreshes
+	 * @param {string[]=} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
 		const refreshes = state.refreshes ?? {};
 
-		for (const key of client_refreshes) {
-			if (refreshes[key] !== undefined) continue;
+		if (client_refreshes) {
+			for (const key of client_refreshes) {
+				if (refreshes[key] !== undefined) continue;
 
-			const [hash, name, payload] = key.split('/');
+				const [hash, name, payload] = key.split('/');
 
-			const loader = manifest._.remotes[hash];
-			const fn = (await loader?.())?.default?.[name];
+				const loader = manifest._.remotes[hash];
+				const fn = (await loader?.())?.default?.[name];
 
-			if (!fn) error(400, 'Bad Request');
+				if (!fn) error(400, 'Bad Request');
 
-			refreshes[key] = with_request_store({ event, state }, () =>
-				fn(parse_remote_arg(payload, transport))
-			);
+				refreshes[key] = with_request_store({ event, state }, () =>
+					fn(parse_remote_arg(payload, transport))
+				);
+			}
 		}
 
 		if (Object.keys(refreshes).length === 0) {
