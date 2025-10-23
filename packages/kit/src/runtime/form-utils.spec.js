@@ -7,6 +7,7 @@ import {
 	split_path
 } from './form-utils.js';
 import buffer from 'node:buffer';
+import { text_encoder } from './utils.js';
 
 describe('split_path', () => {
 	const good = [
@@ -181,5 +182,35 @@ describe('binary form serializer', () => {
 		expect(buffer).toEqual(new Uint8Array(1024).fill('a'.charCodeAt(0)));
 		// text should be callable after stream is consumed
 		expect(await large.text()).toBe('a'.repeat(1024));
+	});
+	test('LazyFile methods', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File(['Hello World'], 'a.txt')
+			},
+			{}
+		);
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE
+				}
+			})
+		);
+		/** @type {File} */
+		const file = res.data.file;
+		const expected = text_encoder.encode('Hello World');
+		expect(await file.text()).toBe('Hello World');
+		expect(await file.arrayBuffer()).toEqual(expected.buffer);
+		expect(await file.bytes()).toEqual(expected);
+		expect(await new Response(file.stream()).arrayBuffer()).toEqual(expected.buffer);
+		const ello_slice = file.slice(1, 5, 'test/content-type');
+		expect(ello_slice.type).toBe('test/content-type');
+		expect(await ello_slice.text()).toBe('ello');
+		const world_slice = file.slice(-5);
+		expect(await world_slice.text()).toBe('World');
+		expect(world_slice.type).toBe(file.type);
 	});
 });
