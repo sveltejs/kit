@@ -69,9 +69,9 @@ const BINARY_FORM_VERSION = 0;
  * The binary format is as follows:
  * - 1 byte: Format version
  * - 4 bytes: Length of the header (u32)
- * - 4 bytes: Length of the file offset table (u32)
+ * - 2 bytes: Length of the file offset table (u16)
  * - header: devalue.stringify([data, meta])
- * - file offset table: JSON.stringify([offset1, offset2, ...]) (offsets start from the end of the table)
+ * - file offset table: JSON.stringify([offset1, offset2, ...]) (empty if not files) (offsets start from the end of the table)
  * - file1, file2, ...
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
@@ -96,17 +96,20 @@ export function serialize_binary_form(data, meta) {
 		}
 	});
 
-	// Sort small files to the front
-	files.sort(([a], [b]) => a.size - b.size);
+	let encoded_file_offsets = '';
+	if (files.length) {
+		// Sort small files to the front
+		files.sort(([a], [b]) => a.size - b.size);
 
-	/** @type {Array<number>} */
-	const file_offsets = new Array(files.length);
-	let start = 0;
-	for (const [file, index] of files) {
-		file_offsets[index] = start;
-		start += file.size;
+		/** @type {Array<number>} */
+		const file_offsets = new Array(files.length);
+		let start = 0;
+		for (const [file, index] of files) {
+			file_offsets[index] = start;
+			start += file.size;
+		}
+		encoded_file_offsets = JSON.stringify(file_offsets);
 	}
-	const encoded_file_offsets = JSON.stringify(file_offsets);
 
 	const length_buffer = new Uint8Array(4);
 	const length_view = new DataView(length_buffer.buffer);
@@ -114,8 +117,8 @@ export function serialize_binary_form(data, meta) {
 	length_view.setUint32(0, encoded_header.length, true);
 	blob_parts.push(length_buffer.slice());
 
-	length_view.setUint32(0, encoded_file_offsets.length, true);
-	blob_parts.push(length_buffer);
+	length_view.setUint16(0, encoded_file_offsets.length, true);
+	blob_parts.push(length_buffer.slice(0, 2));
 
 	blob_parts.push(encoded_header);
 	blob_parts.push(encoded_file_offsets);
@@ -207,7 +210,7 @@ export async function deserialize_binary_form(request) {
 		return buffer;
 	}
 
-	const header = await get_buffer(0, 1 + 4 + 4);
+	const header = await get_buffer(0, 1 + 4 + 2);
 	if (!header) throw new Error('Could not deserialize binary form: too short');
 
 	if (header[0] !== BINARY_FORM_VERSION) {
@@ -217,22 +220,27 @@ export async function deserialize_binary_form(request) {
 	}
 	const header_view = new DataView(header.buffer);
 	const data_length = header_view.getUint32(1, true);
-	const file_offsets_length = header_view.getUint32(5, true);
+	const file_offsets_length = header_view.getUint16(5, true);
 
 	// Read the form data
-	const data_buffer = await get_buffer(1 + 4 + 4, data_length);
+	const data_buffer = await get_buffer(1 + 4 + 2, data_length);
 	if (!data_buffer) throw new Error('Could not deserialize binary form: data too short');
 
-	// Read the file offset table
-	const file_offsets_buffer = await get_buffer(1 + 4 + 4 + data_length, file_offsets_length);
-	if (!file_offsets_buffer)
-		throw new Error('Could not deserialize binary form: file offset table too short');
+	/** @type {Array<number>} */
+	let file_offsets;
+	/** @type {number} */
+	let files_start_offset;
+	if (file_offsets_length > 0) {
+		// Read the file offset table
+		const file_offsets_buffer = await get_buffer(1 + 4 + 2 + data_length, file_offsets_length);
+		if (!file_offsets_buffer)
+			throw new Error('Could not deserialize binary form: file offset table too short');
 
-	const file_offsets = /** @type {Array<number>} */ (
-		JSON.parse(text_decoder.decode(file_offsets_buffer))
-	);
-
-	const files_start_offset = 1 + 4 + 4 + data_length + file_offsets_length;
+		file_offsets = /** @type {Array<number>} */ (
+			JSON.parse(text_decoder.decode(file_offsets_buffer))
+		);
+		files_start_offset = 1 + 4 + 2 + data_length + file_offsets_length;
+	}
 
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
