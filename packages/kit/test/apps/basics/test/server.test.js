@@ -222,7 +222,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://evil.com'
+				origin: 'https://evil.com'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -236,7 +236,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://malicious.com'
+				origin: 'https://malicious.com'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -248,7 +248,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://subdomain.trusted.example.com'
+				origin: 'https://subdomain.trusted.example.com'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -276,7 +276,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': url.origin
+				origin: url.origin
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -289,7 +289,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://trusted.example.com'
+				origin: 'https://trusted.example.com'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -300,7 +300,7 @@ test.describe('CSRF for remote functions', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://payment-gateway.test'
+				origin: 'https://payment-gateway.test'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
@@ -322,7 +322,7 @@ test.describe('CSRF for remote functions with wildcard trustedOrigins', () => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				'origin': 'https://any-evil-site.com'
+				origin: 'https://any-evil-site.com'
 			},
 			body: JSON.stringify({ method: 'echo', args: ['test'] })
 		});
