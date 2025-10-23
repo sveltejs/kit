@@ -71,7 +71,7 @@ const BINARY_FORM_VERSION = 0;
  * - 4 bytes: Length of the header (u32)
  * - 2 bytes: Length of the file offset table (u16)
  * - header: devalue.stringify([data, meta])
- * - file offset table: JSON.stringify([offset1, offset2, ...]) (empty if not files) (offsets start from the end of the table)
+ * - file offset table: JSON.stringify([offset1, offset2, ...]) (empty if no files) (offsets start from the end of the table)
  * - file1, file2, ...
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
