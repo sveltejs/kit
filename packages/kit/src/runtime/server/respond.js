@@ -81,7 +81,6 @@ export async function internal_respond(request, options, manifest, state) {
 			const forbidden =
 				request.method !== 'GET' &&
 				request_origin !== url.origin &&
-				!options.csrf_trusted_origins.includes('*') &&
 				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
 
 			if (forbidden) {
