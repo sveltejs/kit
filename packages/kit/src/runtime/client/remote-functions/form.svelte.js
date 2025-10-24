@@ -81,7 +81,7 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
 
 		let submitted = false;
 
