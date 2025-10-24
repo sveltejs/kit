@@ -229,14 +229,10 @@ export function create_field_proxy(
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy(
-					{},
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, parseInt(prop, 10)]
-				);
+				return create_field_proxy({}, get_input, set_input, get_issues, get_touched, [
+					...path,
+					parseInt(prop, 10)
+				]);
 			}
 
 			const key = build_path_string(path);
@@ -247,25 +243,17 @@ export function create_field_proxy(
 					return newValue;
 				};
 
-				return create_field_proxy(
-					set_func,
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, prop]
-				);
+				return create_field_proxy(set_func, get_input, set_input, get_issues, get_touched, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(
-					get_value,
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, prop]
-				);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, get_touched, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -285,14 +273,10 @@ export function create_field_proxy(
 						}));
 				};
 
-				return create_field_proxy(
-					issues_func,
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, prop]
-				);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_touched, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'touched') {
@@ -318,14 +302,10 @@ export function create_field_proxy(
 					return false;
 				};
 
-				return create_field_proxy(
-					touched_func,
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, prop]
-				);
+				return create_field_proxy(touched_func, get_input, set_input, get_issues, get_touched, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'as') {
@@ -474,25 +454,14 @@ export function create_field_proxy(
 					});
 				};
 
-				return create_field_proxy(
-					as_func,
-					get_input,
-					set_input,
-					get_issues,
-					get_touched,
-					[...path, 'as']
-				);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, get_touched, [
+					...path,
+					'as'
+				]);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy(
-				{},
-				get_input,
-				set_input,
-				get_issues,
-				get_touched,
-				[...path, prop]
-			);
+			return create_field_proxy({}, get_input, set_input, get_issues, get_touched, [...path, prop]);
 		}
 	});
 }
