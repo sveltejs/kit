@@ -1701,14 +1701,16 @@ async function navigate({
 
 	const { activeElement } = document;
 
+	const promises = [tick()];
+
 	// need to render the DOM before we can scroll to the rendered elements and do focus management
 	// @ts-expect-error svelte.settled is only available in Svelte 5
 	if (svelte.settled) {
 		// @ts-expect-error svelte.settled is only available in Svelte 5
-		await svelte.settled();
+		promises.push(svelte.settled());
 	}
 	// we still need to await tick everytime because if there's no async work settled resolves immediately
-	await tick();
+	await Promise.all(promises);
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
