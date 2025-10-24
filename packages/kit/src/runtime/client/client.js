@@ -1704,10 +1704,9 @@ async function navigate({
 	const promises = [tick()];
 
 	// need to render the DOM before we can scroll to the rendered elements and do focus management
-	// @ts-expect-error svelte.settled is only available in Svelte 5
-	if (svelte.settled) {
-		// @ts-expect-error svelte.settled is only available in Svelte 5
-		promises.push(svelte.settled());
+	// svelte.settled is only available in Svelte 5
+	if (/** @type {any} */ (svelte).settled) {
+		promises.push(/** @type {any} */ (svelte).settled());
 	}
 	// we still need to await tick everytime because if there's no async work settled resolves immediately
 	await Promise.all(promises);
