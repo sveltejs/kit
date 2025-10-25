@@ -1,4 +1,5 @@
 import { form } from '$app/server';
+import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const my_form = form(
@@ -14,5 +15,14 @@ export const my_form = form(
 		}
 
 		console.log(data);
+	}
+);
+
+export const my_form_2 = form(
+	v.object({
+		baz: v.picklist(['a', 'b'])
+	}),
+	async ({ baz }) => {
+		if (baz === 'a') error(400, 'Nope');
 	}
 );
