@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.47.4
+### Patch Changes
+
+
+- fix: await for `settled` instead of `tick` in navigate ([#14800](https://github.com/sveltejs/kit/pull/14800))
+
 ## 2.47.3
 ### Patch Changes
 
