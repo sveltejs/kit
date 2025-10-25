@@ -2003,6 +2003,10 @@ type InvalidField<T> =
 export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 	InvalidField<Input>;
 
+type DeepPartial<T> = {
+	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
@@ -2052,6 +2056,21 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Perform validation as if the form was submitted by the given button. */
 		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
+	/** Reset the form to its initial state */
+	reset(options?: {
+		/**
+		 * Set this to the new values to reset the form to.
+		 * Set this to `false` to not reset the values.
+		 * @default true
+		 */
+		values?: DeepPartial<Input> | boolean;
+		/** Set this to `false` to not reset the issues. */
+		issues?: boolean;
+		/** Set this to `false` to not reset the result. */
+		result?: boolean;
+		/** Set this to `false` to not reset the touched fields. */
+		touched?: boolean;
+	}): void;
 	/** The result of the form submission */
 	get result(): Output | undefined;
 	/** The number of pending submissions */
