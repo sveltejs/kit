@@ -2007,6 +2007,30 @@ test.describe('remote functions', () => {
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
 	});
 
+	test('form fields touched tracks interactions', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/touched');
+
+		const nameTouched = page.locator('#touched-name');
+		const ageTouched = page.locator('#touched-age');
+
+		await expect(nameTouched).toHaveText('Name touched: no');
+		await expect(ageTouched).toHaveText('Age touched: no');
+
+		await page.click('#set-btn');
+		await expect(nameTouched).toHaveText('Name touched: yes');
+
+		await page.click('#reset-btn');
+		await expect(nameTouched).toHaveText('Name touched: no');
+
+		await page.fill('#age-input', '42');
+		await expect(ageTouched).toHaveText('Age touched: yes');
+
+		await page.click('#reset-btn');
+		await expect(ageTouched).toHaveText('Age touched: no');
+	});
+
 	test('selects are not nuked when unrelated controls change', async ({
 		page,
 		javaScriptEnabled
