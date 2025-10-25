@@ -16,3 +16,14 @@ export const my_form = form(
 		console.log(data);
 	}
 );
+
+export const issue_path_form = form(
+	v.object({
+		nested: v.object({
+			value: v.pipe(v.string(), v.minLength(3))
+		})
+	}),
+	async (data) => {
+		return data;
+	}
+);

@@ -153,7 +153,7 @@ export function form(validate_or_fn, maybe_fn) {
 				const validated = await schema?.['~standard'].validate(data);
 
 				if (validate_only) {
-					return validated?.issues ?? [];
+					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
 				}
 
 				if (validated?.issues !== undefined) {
