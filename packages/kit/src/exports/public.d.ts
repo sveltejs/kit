@@ -1974,10 +1974,13 @@ type ExtractId<Input> = Input extends { id: infer Id }
 	: string | number;
 
 /**
- * Recursively maps an input type to a structure where each field can create a validation issue.
- * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+ * A function and proxy object used to imperatively create validation errors in form handlers.
+ *
+ * Access properties to create field-specific issues: `issue.fieldName('message')`.
+ * The type structure mirrors the input data structure for type-safe field access.
+ * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
  */
-type InvalidField<T> =
+export type InvalidField<T> =
 	WillRecurseIndefinitely<T> extends true
 		? Record<string | number, any>
 		: NonNullable<T> extends string | number | boolean | File
@@ -1993,15 +1996,12 @@ type InvalidField<T> =
 					: Record<string, never>;
 
 /**
- * A function and proxy object used to imperatively create validation errors in form handlers.
- *
- * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
- * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
- * Access properties to create field-specific issues: `invalid.fieldName('message')`.
- * The type structure mirrors the input data structure for type-safe field access.
+ * A validation error thrown by `invalid`.
  */
-export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
-	InvalidField<Input>;
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
+}
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
