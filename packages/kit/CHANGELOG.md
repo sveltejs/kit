@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.48.0
+### Minor Changes
+
+
+- feat: use experimental `fork` API when available ([#14793](https://github.com/sveltejs/kit/pull/14793))
+
+
+### Patch Changes
+
+
+- fix: await for `settled` instead of `tick` in navigate ([#14800](https://github.com/sveltejs/kit/pull/14800))
+
 ## 2.47.3
 ### Patch Changes
 
