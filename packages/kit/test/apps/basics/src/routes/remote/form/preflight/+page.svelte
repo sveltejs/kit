@@ -4,7 +4,8 @@
 
 	const number = get_number();
 
-	const enhanced = set_number.for('enhanced');
+	const number_form = set_number();
+	const enhanced = set_number('enhanced');
 
 	const schema = v.object({
 		number: v.pipe(v.number(), v.maxValue(20, 'too big'))
@@ -20,18 +21,18 @@
 
 <hr />
 
-<form data-default {...set_number.preflight(schema)}>
-	{#each set_number.fields.number.issues() as issue}
+<form data-default {...number_form.preflight(schema)}>
+	{#each number_form.fields.number.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
 
-	<input {...set_number.fields.number.as('number')} />
+	<input {...number_form.fields.number.as('number')} />
 	<button>set number</button>
 </form>
 
-<p>set_number.input.number: {set_number.fields.number.value()}</p>
-<p>set_number.pending: {set_number.pending}</p>
-<p>set_number.result: {set_number.result}</p>
+<p>set_number.input.number: {number_form.fields.number.value()}</p>
+<p>set_number.pending: {number_form.pending}</p>
+<p>set_number.result: {number_form.result}</p>
 
 <hr />
 

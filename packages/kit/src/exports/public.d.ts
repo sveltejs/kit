@@ -2003,6 +2003,10 @@ type InvalidField<T> =
 export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 	InvalidField<Input>;
 
+export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
+	key?: ExtractId<Input>
+) => RemoteForm<Input, Output>;
+
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
@@ -2026,21 +2030,6 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		action: string;
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 	};
-	/**
-	 * Create an instance of the form for the given `id`.
-	 * The `id` is stringified and used for deduplication to potentially reuse existing instances.
-	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
-	 * ```svelte
-	 * {#each todos as todo}
-	 *	{@const todoForm = updateTodo.for(todo.id)}
-	 *	<form {...todoForm}>
-	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
-	 *		...
-	 *	</form>
-	 *	{/each}
-	 * ```
-	 */
-	for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
 	/** Preflight checks */
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */

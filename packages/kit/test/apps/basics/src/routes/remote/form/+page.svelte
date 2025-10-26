@@ -8,8 +8,11 @@
 
 	const message = get_message();
 
-	const scoped = set_message.for('scoped');
-	const enhanced = set_message.for('enhanced');
+	const scoped = set_message('scoped');
+	const enhanced = set_message('enhanced');
+	const message_form = set_message();
+	const reverse_message_form = set_reverse_message();
+	const deferreds = resolve_deferreds();
 </script>
 
 <p>message.current: {message.current}</p>
@@ -21,20 +24,20 @@
 
 <hr />
 
-<form data-unscoped {...set_message}>
-	{#if set_message.fields.message.issues()}
-		<p>{set_message.fields.message.issues()[0].message}</p>
+<form data-unscoped {...message_form}>
+	{#if message_form.fields.message.issues()}
+		<p>{message_form.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input {...set_message.fields.message.as('text')} />
+	<input {...message_form.fields.message.as('text')} />
 	<button>set message</button>
-	<button {...set_reverse_message.buttonProps}>set reverse message</button>
+	<button {...reverse_message_form.buttonProps}>set reverse message</button>
 </form>
 
-<p>set_message.input.message: {set_message.fields.message.value()}</p>
-<p>set_message.pending: {set_message.pending}</p>
-<p>set_message.result: {set_message.result}</p>
-<p>set_reverse_message.result: {set_reverse_message.result}</p>
+<p>set_message.input.message: {message_form.fields.message.value()}</p>
+<p>set_message.pending: {message_form.pending}</p>
+<p>set_message.result: {message_form.result}</p>
+<p>set_reverse_message.result: {reverse_message_form.result}</p>
 
 <hr />
 
@@ -73,6 +76,6 @@
 
 <hr />
 
-<form {...resolve_deferreds}>
+<form {...deferreds}>
 	<button>resolve deferreds</button>
 </form>

@@ -1979,6 +1979,10 @@ declare module '@sveltejs/kit' {
 	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 		InvalidField<Input>;
 
+	export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
+		key?: ExtractId<Input>
+	) => RemoteForm<Input, Output>;
+
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
@@ -2002,21 +2006,6 @@ declare module '@sveltejs/kit' {
 			action: string;
 			[attachment: symbol]: (node: HTMLFormElement) => void;
 		};
-		/**
-		 * Create an instance of the form for the given `id`.
-		 * The `id` is stringified and used for deduplication to potentially reuse existing instances.
-		 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
-		 * ```svelte
-		 * {#each todos as todo}
-		 *	{@const todoForm = updateTodo.for(todo.id)}
-		 *	<form {...todoForm}>
-		 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
-		 *		...
-		 *	</form>
-		 *	{/each}
-		 * ```
-		 */
-		for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** Preflight checks */
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
@@ -3116,7 +3105,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteFormFactory, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3164,29 +3153,29 @@ declare module '$app/server' {
 	 */
 	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
-	 * Creates a form object that can be spread onto a `<form>` element.
+	 * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 *
 	 * @since 2.27
 	 */
-	export function form<Output>(fn: (invalid: import("@sveltejs/kit").Invalid<void>) => MaybePromise<Output>): RemoteForm<void, Output>;
+	export function form<Output>(fn: (invalid: import("@sveltejs/kit").Invalid<void>) => MaybePromise<Output>): RemoteFormFactory<void, Output>;
 	/**
-	 * Creates a form object that can be spread onto a `<form>` element.
+	 * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input, invalid: import("@sveltejs/kit").Invalid<Input>) => MaybePromise<Output>): RemoteForm<Input, Output>;
+	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input, invalid: import("@sveltejs/kit").Invalid<Input>) => MaybePromise<Output>): RemoteFormFactory<Input, Output>;
 	/**
-	 * Creates a form object that can be spread onto a `<form>` element.
+	 * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
 	 *
 	 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteFormFactory<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

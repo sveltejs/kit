@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride, RemoteFormFactory } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
@@ -47,7 +47,7 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  * @template {RemoteFormInput} T
  * @template U
  * @param {string} id
- * @returns {RemoteForm<T, U>}
+ * @returns {RemoteFormFactory<T, U>}
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
@@ -55,7 +55,7 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
-		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
+		const action_id = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
@@ -587,37 +587,38 @@ export function form(id) {
 		return instance;
 	}
 
-	const instance = create_instance();
-
-	Object.defineProperty(instance, 'for', {
-		/** @type {RemoteForm<T, U>['for']} */
-		value: (key) => {
-			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
-
-			try {
-				$effect.pre(() => {
-					return () => {
-						entry.count--;
-
-						void tick().then(() => {
-							if (entry.count === 0) {
-								instances.delete(key);
-							}
-						});
-					};
-				});
-
-				entry.count += 1;
-				instances.set(key, entry);
-			} catch {
-				// not in an effect context
-			}
-
-			return entry.instance;
+	/** @type {RemoteFormFactory<T, U>} */
+	const factory = (key) => {
+		if (key === undefined) {
+			// For the default instance (no key), create a new instance each time
+			return create_instance();
 		}
-	});
 
-	return instance;
+		const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
+
+		try {
+			$effect.pre(() => {
+				return () => {
+					entry.count--;
+
+					void tick().then(() => {
+						if (entry.count === 0) {
+							instances.delete(key);
+						}
+					});
+				};
+			});
+
+			entry.count += 1;
+			instances.set(key, entry);
+		} catch {
+			// not in an effect context
+		}
+
+		return entry.instance;
+	};
+
+	return factory;
 }
 
 /**

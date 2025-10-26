@@ -116,6 +116,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				);
 			}
 
+			const action_id = decodeURIComponent(additional_args ?? '');
+			const instance = fn(action_id ? JSON.parse(action_id) : undefined);
+
 			const form_data = await event.request.formData();
 			form_client_refreshes = /** @type {string[]} */ (
 				JSON.parse(/** @type {string} */ (form_data.get('sveltekit:remote_refreshes')) ?? '[]')
@@ -123,12 +126,14 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			form_data.delete('sveltekit:remote_refreshes');
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
-			if (additional_args) {
-				form_data.set('sveltekit:id', decodeURIComponent(additional_args));
+			if (action_id) {
+				form_data.set('sveltekit:id', action_id);
 			}
 
-			const fn = info.fn;
-			const data = await with_request_store({ event, state }, () => fn(form_data));
+			const form_fn = /** @type {RemoteInfo & { type: 'form' }} */ (
+				/** @type {any} */ (instance).__
+			).fn;
+			const data = await with_request_store({ event, state }, () => form_fn(form_data, instance));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -267,7 +272,9 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
+	const form = /** @type {import("@sveltejs/kit").RemoteFormFactory<any, any>} */ (
+		module?.default[name]
+	);
 
 	if (!form) {
 		event.setHeaders({
@@ -285,14 +292,11 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		};
 	}
 
-	if (action_id) {
-		// @ts-expect-error
-		form = with_request_store({ event, state }, () => form.for(JSON.parse(action_id)));
-	}
+	const instance = form(action_id ? JSON.parse(action_id) : undefined);
 
 	try {
 		const form_data = await event.request.formData();
-		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
+		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (instance).__).fn;
 
 		// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 		if (action_id && !form_data.has('id')) {
@@ -300,7 +304,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			form_data.set('sveltekit:id', decodeURIComponent(action_id));
 		}
 
-		await with_request_store({ event, state }, () => fn(form_data));
+		await with_request_store({ event, state }, () => fn(form_data, instance));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
