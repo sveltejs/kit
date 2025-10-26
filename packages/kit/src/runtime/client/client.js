@@ -531,8 +531,12 @@ async function _preload_data(intent) {
 		};
 
 		if (svelte.fork) {
-			load_cache.fork = load_cache.promise.then((result) => {
-				if (result.type === 'loaded') {
+			const lc = load_cache;
+
+			lc.fork = lc.promise.then((result) => {
+				// if load_cache was discarded before load_cache.promise could
+				// resolve, bail rather than creating an orphan fork
+				if (lc === load_cache && result.type === 'loaded') {
 					try {
 						return svelte.fork(() => {
 							root.$set(result.props);
