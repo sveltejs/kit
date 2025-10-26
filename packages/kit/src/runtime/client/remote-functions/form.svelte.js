@@ -589,11 +589,6 @@ export function form(id) {
 
 	/** @type {RemoteFormFactory<T, U>} */
 	const factory = (key) => {
-		if (key === undefined) {
-			// For the default instance (no key), create a new instance each time
-			return create_instance();
-		}
-
 		const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
 
 		try {

@@ -288,12 +288,11 @@ export const createPost = form(
 <!--- file: src/routes/blog/new/+page.svelte --->
 <script>
 	import { createPost } from '../data.remote';
-	const form = createPost();
 </script>
 
 <h1>Create a new post</h1>
 
-<form {...form}>
+<form {...createPost()}>
 	<!-- form content goes here -->
 
 	<button>Publish!</button>
@@ -309,20 +308,15 @@ As with `query`, if the callback uses the submitted `data`, it should be [valida
 A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use:
 
 ```svelte
-<script>
-	import { createPost } from '../data.remote';
-	const form = createPost();
-</script>
-
-<form {...form}>
+<form {...createPost()}>
 	<label>
 		<h2>Title</h2>
-		+++<input {...form.fields.title.as('text')} />+++
+		+++<input {...createPost().fields.title.as('text')} />+++
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
-		+++<textarea {...form.fields.content.as('text')}></textarea>+++
+		+++<textarea {...createPost().fields.content.as('text')}></textarea>+++
 	</label>
 
 	<button>Publish!</button>
@@ -357,11 +351,10 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 <script>
 	import { createProfile } from './data.remote';
 
-	const form = createProfile();
-	const { name, photo, info, attributes } = form.fields;
+	const { name, photo, info, attributes } = createProfile().fields;
 </script>
 
-<form {...form} enctype="multipart/form-data">
+<form {...createProfile()} enctype="multipart/form-data">
 	<label>
 		<input {...name.as('text')} /> Name
 	</label>
@@ -408,17 +401,12 @@ export const survey = form(
 ```
 
 ```svelte
-<script>
-	import { survey } from '../data.remote';
-	const form = survey();
-</script>
-
-<form {...form}>
+<form {...survey()}>
 	<h2>Which operating system do you use?</h2>
 
 	{#each ['windows', 'mac', 'linux'] as os}
 		<label>
-			<input {...form.fields.operatingSystem.as('radio', os)}>
+			<input {...survey().fields.operatingSystem.as('radio', os)}>
 			{os}
 		</label>
 	{/each}
@@ -427,7 +415,7 @@ export const survey = form(
 
 	{#each ['html', 'css', 'js'] as language}
 		<label>
-			<input {...form.fields.languages.as('checkbox', language)}>
+			<input {...survey().fields.languages.as('checkbox', language)}>
 			{language}
 		</label>
 	{/each}
@@ -439,10 +427,10 @@ export const survey = form(
 Alternatively, you could use `select` and `select multiple`:
 
 ```svelte
-<form {...form}>
+<form {...survey()}>
 	<h2>Which operating system do you use?</h2>
 
-	<select {...form.fields.operatingSystem.as('select')}>
+	<select {...survey().fields.operatingSystem.as('select')}>
 		<option>windows</option>
 		<option>mac</option>
 		<option>linux</option>
@@ -450,7 +438,7 @@ Alternatively, you could use `select` and `select multiple`:
 
 	<h2>Which languages do you write code in?</h2>
 
-	<select {...form.fields.languages.as('select multiple')}>
+	<select {...survey().fields.languages.as('select multiple')}>
 		<option>html</option>
 		<option>css</option>
 		<option>js</option>
@@ -504,30 +492,25 @@ The `invalid` function works as both a function and a proxy:
 If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
 
 ```svelte
-<script>
-	import { createPost } from '../data.remote';
-	const form = createPost();
-</script>
-
-<form {...form}>
+<form {...createPost()}>
 	<label>
 		<h2>Title</h2>
 
-+++		{#each form.fields.title.issues() as issue}
++++		{#each createPost().fields.title.issues() as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
-		<input {...form.fields.title.as('text')} />
+		<input {...createPost().fields.title.as('text')} />
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#each form.fields.content.issues() as issue}
++++		{#each createPost().fields.content.issues() as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
-		<textarea {...form.fields.content.as('text')}></textarea>
+		<textarea {...createPost().fields.content.as('text')}></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -537,7 +520,7 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
 ```svelte
-<form {...form} oninput={() => form.validate()}>
+<form {...createPost()} oninput={() => form.validate()}>
 	<!-- -->
 </form>
 ```
@@ -551,8 +534,6 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 	import * as v from 'valibot';
 	import { createPost } from '../data.remote';
 
-	const form = createPost();
-
 	const schema = v.object({
 		title: v.pipe(v.string(), v.nonEmpty()),
 		content: v.pipe(v.string(), v.nonEmpty())
@@ -561,7 +542,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 <h1>Create a new post</h1>
 
-<form {...+++form.preflight(schema)+++}>
+<form {...+++createPost().preflight(schema)+++}>
 	<!-- -->
 </form>
 ```
@@ -571,7 +552,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
 ```svelte
-{#each form.fields.allIssues() as issue}
+{#each createPost().fields.allIssues() as issue}
 	<p>{issue.message}</p>
 {/each}
 ```
@@ -581,17 +562,17 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
-<form {...form}>
+<form {...createPost()}>
 	<!-- -->
 </form>
 
 <div class="preview">
-	<h2>{form.fields.title.value()}</h2>
-	<div>{@html render(form.fields.content.value())}</div>
+	<h2>{createPost().fields.title.value()}</h2>
+	<div>{@html render(createPost().fields.content.value())}</div>
 </div>
 ```
 
-Alternatively, `form.fields.value()` would return a `{ title, content }` object.
+Alternatively, `createPost().fields.value()` would return a `{ title, content }` object.
 
 You can update a field (or a collection of fields) via the `set(...)` method:
 
@@ -599,17 +580,15 @@ You can update a field (or a collection of fields) via the `set(...)` method:
 <script>
 	import { createPost } from '../data.remote';
 
-	const form = createPost();
-
 	// this...
-	form.fields.set({
+	createPost().fields.set({
 		title: 'My new blog post',
 		content: 'Lorem ipsum dolor sit amet...'
 	});
 
 	// ...is equivalent to this:
-	form.fields.title.set('My new blog post');
-	form.fields.content.set('Lorem ipsum dolor sit amet');
+	createPost().fields.title.set('My new blog post');
+	createPost().fields.content.set('Lorem ipsum dolor sit amet');
 </script>
 ```
 
@@ -620,15 +599,15 @@ In the case of a non-progressively-enhanced form submission (i.e. where JavaScri
 You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
 
 ```svelte
-<form {...form}>
+<form {...register()}>
 	<label>
 		Username
-		<input {...form.fields.username.as('text')} />
+		<input {...register().fields.username.as('text')} />
 	</label>
 
 	<label>
 		Password
-		<input +++{...form.fields._password.as('password')}+++ />
+		<input +++{...register().fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
@@ -687,7 +666,7 @@ The second is to drive the single-flight mutation from the client, which we'll s
 
 ### Returns and redirects
 
-The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `form.result`:
+The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost().result`:
 
 ```ts
 /// file: src/routes/blog/data.remote.js
@@ -732,16 +711,15 @@ export const createPost = form(
 <!--- file: src/routes/blog/new/+page.svelte --->
 <script>
 	import { createPost } from '../data.remote';
-	const form = createPost();
 </script>
 
 <h1>Create a new post</h1>
 
-<form {...form}>
+<form {...createPost()}>
 	<!-- -->
 </form>
 
-{#if form.result?.success}
+{#if createPost().result?.success}
 	<p>Successfully published!</p>
 {/if}
 ```
@@ -761,12 +739,11 @@ We can customize what happens when the form is submitted with the `enhance` meth
 <script>
 	import { createPost } from '../data.remote';
 	import { showToast } from '$lib/toast';
-	const form = createPost();
 </script>
 
 <h1>Create a new post</h1>
 
-<form {...form.enhance(async ({ form, data, submit }) => {
+<form {...createPost().enhance(async ({ form, data, submit }) => {
 	try {
 		await submit();
 		form.reset();
@@ -850,23 +827,21 @@ This attribute exists on the `buttonProps` property of a form object:
 <!--- file: src/routes/login/+page.svelte --->
 <script>
 	import { login, register } from '$lib/auth';
-	const loginForm = login();
-	const registerForm = register();
 </script>
 
-<form {...loginForm}>
+<form {...login()}>
 	<label>
 		Your username
-		<input {...loginForm.fields.username.as('text')} />
+		<input {...login().fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input {...loginForm.fields._password.as('password')} />
+		<input {...login().fields._password.as('password')} />
 	</label>
 
 	<button>login</button>
-	<button {...registerForm.buttonProps}>register</button>
+	<button {...register().buttonProps}>register</button>
 </form>
 ```
 
