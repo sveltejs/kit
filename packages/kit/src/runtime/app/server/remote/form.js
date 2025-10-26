@@ -69,7 +69,7 @@ export function form(validate_or_fn, maybe_fn) {
 	const schema =
 		!maybe_fn || validate_or_fn === 'unchecked' ? null : /** @type {any} */ (validate_or_fn);
 
-	/** @type {RemoteInfo & { fn: (data: FormData, instance: RemoteForm<any, any>) => Promise<any> }} */
+	/** @type {RemoteInfo & { type: 'form' }} */
 	const __ = {
 		type: 'form',
 		name: '',
@@ -173,7 +173,7 @@ export function form(validate_or_fn, maybe_fn) {
 			key !== undefined ? `${__.id}/${encodeURIComponent(JSON.stringify(key))}` : __.id;
 
 		// Create instance-specific info object with the correct id
-		/** @type {RemoteInfo} */
+		/** @type {RemoteInfo & { type: 'form' }} */
 		const instance_info = {
 			type: 'form',
 			name: __.name,
