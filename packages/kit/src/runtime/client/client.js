@@ -206,8 +206,13 @@ const invalidated = [];
  */
 const components = [];
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
+/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
 let load_cache = null;
+
+function discard_load_cache() {
+	void load_cache?.fork?.then((f) => f?.discard());
+	load_cache = null;
+}
 
 /**
  * @type {Map<string, Promise<URL>>}
@@ -382,7 +387,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Also solves an edge case where a preload is triggered, the navigation for it
 	// was then triggered and is still running while the invalidation kicks in,
 	// at which point the invalidation should take over and "win".
-	load_cache = null;
+	discard_load_cache();
 
 	// Rerun queries
 	if (force_invalidation) {
@@ -461,7 +466,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
 	if (options.invalidateAll) {
-		load_cache = null;
+		discard_load_cache();
 	}
 
 	await navigate({
@@ -518,11 +523,32 @@ async function _preload_data(intent) {
 				preload_tokens.delete(preload);
 				if (result.type === 'loaded' && result.state.error) {
 					// Don't cache errors, because they might be transient
-					load_cache = null;
+					discard_load_cache();
 				}
 				return result;
-			})
+			}),
+			fork: null
 		};
+
+		if (svelte.fork) {
+			const lc = load_cache;
+
+			lc.fork = lc.promise.then((result) => {
+				// if load_cache was discarded before load_cache.promise could
+				// resolve, bail rather than creating an orphan fork
+				if (lc === load_cache && result.type === 'loaded') {
+					try {
+						return svelte.fork(() => {
+							root.$set(result.props);
+						});
+					} catch {
+						// if it errors, it's because the experimental flag isn't enabled
+					}
+				}
+
+				return null;
+			});
+		}
 	}
 
 	return load_cache.promise;
@@ -1658,6 +1684,7 @@ async function navigate({
 	}
 
 	// reset preload synchronously after the history state has been set to avoid race conditions
+	const load_cache_fork = load_cache?.fork;
 	load_cache = null;
 
 	navigation_result.props.page.state = state;
@@ -1692,7 +1719,14 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
-		root.$set(navigation_result.props);
+		const fork = load_cache_fork && (await load_cache_fork);
+
+		if (fork) {
+			void fork.commit();
+		} else {
+			root.$set(navigation_result.props);
+		}
+
 		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
