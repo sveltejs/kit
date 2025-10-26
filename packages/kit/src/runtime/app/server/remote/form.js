@@ -173,8 +173,9 @@ export function form(validate_or_fn, maybe_fn) {
 			key !== undefined ? `${__.id}/${encodeURIComponent(JSON.stringify(key))}` : __.id;
 
 		// Create instance-specific info object with the correct id
-		/** @type {Omit<RemoteInfo & { type: 'form' }, 'type'>} */
+		/** @type {RemoteInfo & { type: 'form' }} */
 		const instance_info = {
+			type: 'form',
 			name: __.name,
 			id: instance_id,
 			fn: __.fn
