@@ -206,8 +206,13 @@ const invalidated = [];
  */
 const components = [];
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<{ commit: () => void } | null> | null} | null} */
+/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
 let load_cache = null;
+
+function discard_load_cache() {
+	void load_cache?.fork?.then((f) => f?.discard());
+	load_cache = null;
+}
 
 /**
  * @type {Map<string, Promise<URL>>}
@@ -382,7 +387,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Also solves an edge case where a preload is triggered, the navigation for it
 	// was then triggered and is still running while the invalidation kicks in,
 	// at which point the invalidation should take over and "win".
-	load_cache = null;
+	discard_load_cache();
 
 	// Rerun queries
 	if (force_invalidation) {
@@ -461,7 +466,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
 	if (options.invalidateAll) {
-		load_cache = null;
+		discard_load_cache();
 	}
 
 	await navigate({
@@ -518,7 +523,7 @@ async function _preload_data(intent) {
 				preload_tokens.delete(preload);
 				if (result.type === 'loaded' && result.state.error) {
 					// Don't cache errors, because they might be transient
-					load_cache = null;
+					discard_load_cache();
 				}
 				return result;
 			}),
@@ -527,11 +532,17 @@ async function _preload_data(intent) {
 
 		if (svelte.fork) {
 			load_cache.fork = load_cache.promise.then((result) => {
-				if (result.type === 'redirect') return null; // TODO is this right?
+				if (result.type === 'loaded') {
+					try {
+						return svelte.fork(() => {
+							root.$set(result.props);
+						});
+					} catch {
+						// if it errors, it's because the experimental flag isn't enabled
+					}
+				}
 
-				return svelte.fork(() => {
-					root.$set(result.props);
-				});
+				return null;
 			});
 		}
 	}
@@ -1707,7 +1718,7 @@ async function navigate({
 		const fork = load_cache_fork && (await load_cache_fork);
 
 		if (fork) {
-			fork.commit();
+			void fork.commit();
 		} else {
 			root.$set(navigation_result.props);
 		}
