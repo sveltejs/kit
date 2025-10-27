@@ -9,7 +9,7 @@ export interface ServerlessConfig {
 	 * @default Same as the build environment
 	 * @deprecated
 	 */
-	runtime?: `nodejs${number}.x`;
+	runtime?: `nodejs${number}.x` | 'experimental_bun1.x';
 	/**
 	 * To which regions to deploy the app. A list of regions.
 	 * More info: https://vercel.com/docs/concepts/edge-network/regions

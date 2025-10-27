@@ -305,9 +305,13 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 20)) {
+				if (
+					runtime !== 'edge' &&
+					runtime !== 'experimental_bun1.x' &&
+					(!node_runtime || parseInt(node_runtime[1]) < 20)
+				) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs20.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'experimental_bun1.x', and 'nodejs20.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
@@ -315,9 +319,9 @@ const plugin = function (defaults = {}) {
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
-					if (!runtime.startsWith('nodejs')) {
+					if (!runtime.startsWith('nodejs') && runtime !== 'experimental_bun1.x') {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs20.x' or 'experimental_bun1.x')`
 						);
 					}
 
