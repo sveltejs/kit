@@ -316,7 +316,7 @@ const plugin = function (defaults = {}) {
 					(!node_runtime || parseInt(node_runtime[1]) < 20)
 				) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'bun1.x', and 'nodejs20.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'experimental_bun1.x', 'nodejs20.x' or 'nodejs22.x' ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
