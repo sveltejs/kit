@@ -25,6 +25,10 @@ const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user ro
 const [kit_major, kit_minor] = VERSION.split('.');
 
 const get_default_runtime = () => {
+	if ('Bun' in globalThis) {
+		return 'bun1.x';
+	}
+
 	const major = Number(process.version.slice(1).split('.')[0]);
 
 	// If we're building on Vercel, we know that the version will be fine because Vercel
