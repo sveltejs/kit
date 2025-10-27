@@ -326,7 +326,7 @@ const plugin = function (defaults = {}) {
 
 					if (!runtime.startsWith('nodejs') && !bun_runtime) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs20.x' or 'bun1.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs22.x' or 'experimental_bun1.x')`
 						);
 					}
 
