@@ -263,7 +263,7 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify(
 						{
-							runtime: config.runtime,
+							runtime: config.runtime.replace(/^experimental_/, ''),
 							regions: config.regions,
 							entrypoint: 'index.js',
 							framework: {
@@ -786,7 +786,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 		`${dir}/.vc-config.json`,
 		JSON.stringify(
 			{
-				runtime: config.runtime,
+				runtime: config.runtime.replace(/^experimental_/, ''),
 				regions: config.regions,
 				memory: config.memory,
 				maxDuration: config.maxDuration,
