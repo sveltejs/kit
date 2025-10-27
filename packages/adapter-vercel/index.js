@@ -78,10 +78,14 @@ const plugin = function (defaults = {}) {
 			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
+			/** @type {string | undefined} */
+			let vc_bun_version;
+
 			if (fs.existsSync('vercel.json')) {
 				const vercel_file = fs.readFileSync('vercel.json', 'utf-8');
 				const vercel_config = JSON.parse(vercel_file);
 				validate_vercel_json(builder, vercel_config);
+				vc_bun_version = vercel_config.bunVersion;
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -298,7 +302,8 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
-				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
+				const runtime =
+					route.config?.runtime ?? defaults?.runtime ?? vc_bun_version ?? get_default_runtime();
 				const config = { runtime, ...defaults, ...route.config };
 
 				if (is_prerendered(route)) {
@@ -409,7 +414,7 @@ const plugin = function (defaults = {}) {
 				// we need to create a catch-all route so that 404s are handled
 				// by SvelteKit rather than Vercel
 
-				const runtime = defaults.runtime ?? get_default_runtime();
+				const runtime = defaults.runtime ?? vc_bun_version ?? get_default_runtime();
 				const generate_function =
 					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
