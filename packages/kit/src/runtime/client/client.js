@@ -1689,6 +1689,10 @@ async function navigate({
 
 	navigation_result.props.page.state = state;
 
+	/**
+	 * @type {Promise<void> | undefined}
+	 */
+	let commit_promise;
 	if (started) {
 		const after_navigate = (
 			await Promise.all(
@@ -1722,7 +1726,7 @@ async function navigate({
 		const fork = load_cache_fork && (await load_cache_fork);
 
 		if (fork) {
-			void fork.commit();
+			commit_promise = fork.commit();
 		} else {
 			root.$set(navigation_result.props);
 		}
@@ -1738,9 +1742,9 @@ async function navigate({
 	const promises = [tick()];
 
 	// need to render the DOM before we can scroll to the rendered elements and do focus management
-	// svelte.settled is only available in Svelte 5
-	if (/** @type {any} */ (svelte).settled) {
-		promises.push(/** @type {any} */ (svelte).settled());
+	// so we wait for the commit if there's one
+	if (commit_promise) {
+		promises.push(commit_promise);
 	}
 	// we still need to await tick everytime because if there's no async work settled resolves immediately
 	await Promise.all(promises);
