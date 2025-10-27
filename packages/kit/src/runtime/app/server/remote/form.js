@@ -183,7 +183,6 @@ export function form(validate_or_fn, maybe_fn) {
 
 		// Check cache for keyed instances
 		const cache_key = instance_info.id + '|' + JSON.stringify(key);
-		console.log('cache_key', cache_key);
 		const cached = (state.form_instances ??= new Map()).get(cache_key);
 		if (cached) {
 			return cached;
