@@ -1742,7 +1742,11 @@ async function navigate({
 	const promises = [tick()];
 
 	// need to render the DOM before we can scroll to the rendered elements and do focus management
-	// so we wait for the commit if there's one
+	// svelte.settled is only available in Svelte 5
+	if (/** @type {any} */ (svelte).settled) {
+		promises.push(/** @type {any} */ (svelte).settled());
+	}
+	// if we preloaded we also need to wait for the commit_promises cause settled would revolve immediately in that case
 	if (commit_promise) {
 		promises.push(commit_promise);
 	}
