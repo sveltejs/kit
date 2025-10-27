@@ -78,14 +78,10 @@ const plugin = function (defaults = {}) {
 			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
-			/** @type {string | undefined} */
-			let vc_bun_version;
-
 			if (fs.existsSync('vercel.json')) {
 				const vercel_file = fs.readFileSync('vercel.json', 'utf-8');
 				const vercel_config = JSON.parse(vercel_file);
 				validate_vercel_json(builder, vercel_config);
-				vc_bun_version = vercel_config.bunVersion;
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -302,8 +298,11 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
-				const runtime =
-					route.config?.runtime ?? defaults?.runtime ?? vc_bun_version ?? get_default_runtime();
+				const runtime = (
+					route.config?.runtime ??
+					defaults?.runtime ??
+					get_default_runtime()
+				).replace('experimental_', '');
 				const config = { runtime, ...defaults, ...route.config };
 
 				if (is_prerendered(route)) {
@@ -321,7 +320,7 @@ const plugin = function (defaults = {}) {
 					(!node_runtime || parseInt(node_runtime[1]) < 20)
 				) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'bun<version>' (e.g., 'bun1.x'), and 'nodejs20.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'bun1.x', and 'nodejs20.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
@@ -414,7 +413,7 @@ const plugin = function (defaults = {}) {
 				// we need to create a catch-all route so that 404s are handled
 				// by SvelteKit rather than Vercel
 
-				const runtime = defaults.runtime ?? vc_bun_version ?? get_default_runtime();
+				const runtime = (defaults.runtime ?? get_default_runtime()).replace('experimental_', '');
 				const generate_function =
 					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
