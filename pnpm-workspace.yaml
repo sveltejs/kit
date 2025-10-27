@@ -16,7 +16,7 @@ catalog:
   '@netlify/functions': ^5.0.0
   '@opentelemetry/sdk-node': ^0.207.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
-  '@playwright/test': ^1.51.1
+  '@playwright/test': ^1.56.1
   '@polka/url': ^1.0.0-next.28
   '@rollup/plugin-commonjs': ^28.0.1
   '@rollup/plugin-json': ^6.1.0
