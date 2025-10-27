@@ -1727,6 +1727,12 @@ async function navigate({
 
 		if (fork) {
 			commit_promise = fork.commit();
+		} else if (/** @type {any} */ (svelte).fork) {
+			commit_promise = /** @type {any} */ (svelte)
+				.fork(() => {
+					root.$set(navigation_result.props);
+				})
+				.commit();
 		} else {
 			root.$set(navigation_result.props);
 		}
