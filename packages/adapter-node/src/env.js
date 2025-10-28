@@ -3,6 +3,7 @@ import process from 'node:process';
 
 const expected = new Set([
 	'SOCKET_PATH',
+	'SOCKET_PATH_IS_WRITABLE',
 	'HOST',
 	'PORT',
 	'ORIGIN',
