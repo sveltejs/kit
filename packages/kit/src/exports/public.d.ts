@@ -5,6 +5,7 @@ import '../types/ambient.js';
 import {
 	AdapterEntry,
 	CspDirectives,
+	DeepPartial,
 	HttpMethod,
 	Logger,
 	MaybePromise,
@@ -2002,10 +2003,6 @@ type InvalidField<T> =
  */
 export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 	InvalidField<Input>;
-
-type DeepPartial<T> = {
-	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-};
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.

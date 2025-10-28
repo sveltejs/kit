@@ -1979,10 +1979,6 @@ declare module '@sveltejs/kit' {
 	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 		InvalidField<Input>;
 
-	type DeepPartial<T> = {
-		[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-	};
-
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
@@ -2394,6 +2390,10 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type DeepPartial<T> = {
+		[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+	};
 	interface Asset {
 		file: string;
 		size: number;
