@@ -1,8 +1,8 @@
 <script>
-	import { onNavigate } from "$app/navigation";
-	import { resolve } from "$app/paths";
+	import { onNavigate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
-  let { children } = $props();
+	let { children } = $props();
 
 	onNavigate((navigation) => {
 		if (!document.startViewTransition || navigation.willUnload) return;
@@ -11,15 +11,15 @@
 			document.startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
-        console.log('navigated');
+				console.log('navigated');
 			});
 		});
 	});
 </script>
 
 <ul>
-  <li><a href={resolve('/on-navigate/a')}>a</a></li>
-  <li><a href={resolve('/on-navigate/b')}>b</a></li>
+	<li><a href={resolve('/on-navigate/a')}>a</a></li>
+	<li><a href={resolve('/on-navigate/b')}>b</a></li>
 </ul>
 
 {@render children()}
