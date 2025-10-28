@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.48.1
+### Patch Changes
+
+
+- fix: wait for commit promise instead of `settled` ([#14818](https://github.com/sveltejs/kit/pull/14818))
+
 ## 2.48.0
 ### Minor Changes
 
