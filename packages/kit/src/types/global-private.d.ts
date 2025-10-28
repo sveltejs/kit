@@ -13,6 +13,8 @@ declare global {
 	const __SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: boolean;
 	/** True if `config.kit.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
+	/** True if `config.kit.router.type === 'hash'` */
+	const __SVELTEKIT_HASH_ROUTING__: boolean;
 	/**
 	 * True if any node in the manifest has a server load function.
 	 * Used for treeshaking server load code from client bundles when no server loads exist.

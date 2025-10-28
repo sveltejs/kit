@@ -1887,12 +1887,12 @@ declare module '@sveltejs/kit' {
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 		/** Validation issues belonging to this or any of the fields that belong to it, if any */
-		allIssues(): RemoteFormIssue[] | undefined;
+		allIssues(): RemoteFormAllIssue[] | undefined;
 	};
 
 	type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 		/** Validation issues belonging to this or any of the fields that belong to it, if any */
-		allIssues(): RemoteFormIssue[] | undefined;
+		allIssues(): RemoteFormAllIssue[] | undefined;
 		/**
 		 * Returns an object that can be spread onto an input element with the correct type attribute,
 		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
@@ -1939,6 +1939,10 @@ declare module '@sveltejs/kit' {
 
 	export interface RemoteFormIssue {
 		message: string;
+	}
+
+	export interface RemoteFormAllIssue extends RemoteFormIssue {
+		path: Array<string | number>;
 	}
 
 	// If the schema specifies `id` as a string or number, ensure that `for(...)`
