@@ -1,5 +1,5 @@
 <script>
-  import logo from './logo.png';
+	import logo from './logo.png';
 </script>
 
 <enhanced:img id="birds" src="./birds.jpg" alt="birds" />
