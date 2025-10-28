@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 6.1.0
+### Minor Changes
+
+
+- feat: Add experimental support for Bun runtime ([#14817](https://github.com/sveltejs/kit/pull/14817))
+
+
+### Patch Changes
+
+- Updated dependencies [[`102aecf`](https://github.com/sveltejs/kit/commit/102aecfd228dd632664d748b9e87bc6d219294c4)]:
+  - @sveltejs/kit@2.48.1
+
 ## 6.0.0
 ### Major Changes
 
