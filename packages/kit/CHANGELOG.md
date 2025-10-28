@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.48.2
+### Patch Changes
+
+
+- fix: update DOM before running navigate callbacks ([#14829](https://github.com/sveltejs/kit/pull/14829))
+
 ## 2.48.1
 ### Patch Changes
 
