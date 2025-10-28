@@ -2391,9 +2391,13 @@ declare module '@sveltejs/kit' {
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
 
-	type DeepPartial<T> = {
-		[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-	};
+	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+		? {
+				[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+					? DeepPartial<T[K]>
+					: T[K];
+			}
+		: T | undefined;
 	interface Asset {
 		file: string;
 		size: number;
