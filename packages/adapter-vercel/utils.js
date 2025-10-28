@@ -129,7 +129,7 @@ function get_default_runtime() {
 
 	if (major !== 20 && major !== 22) {
 		throw new Error(
-			`Unsupported Node.js version: ${process.version}. Please use Node 20 or 22 to build your project, or explicitly specify a n explicit runtime in your adapter configuration.`
+			`Unsupported Node.js version: ${process.version}. Please use Node 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
 		);
 	}
 
