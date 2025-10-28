@@ -540,6 +540,7 @@ async function _preload_data(intent) {
 					try {
 						return svelte.fork(() => {
 							root.$set(result.props);
+							update(result.props.page);
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled
@@ -1729,9 +1730,11 @@ async function navigate({
 			commit_promise = fork.commit();
 		} else {
 			root.$set(navigation_result.props);
+			update(navigation_result.props.page);
+
+			commit_promise = svelte.settled?.();
 		}
 
-		update(navigation_result.props.page);
 		has_navigated = true;
 	} else {
 		initialize(navigation_result, target, false);
@@ -1739,15 +1742,13 @@ async function navigate({
 
 	const { activeElement } = document;
 
-	const promises = [tick()];
+	await commit_promise;
 
-	// need to render the DOM before we can scroll to the rendered elements and do focus management
-	// so we wait for the commit if there's one
-	if (commit_promise) {
-		promises.push(commit_promise);
-	}
-	// we still need to await tick everytime because if there's no async work settled resolves immediately
-	await Promise.all(promises);
+	// TODO 3.0 remote — the double tick is probably necessary because
+	// of some store shenanigans. `settled()` and `f.commit()`
+	// should resolve after DOM updates in newer versions
+	await svelte.tick();
+	await svelte.tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;

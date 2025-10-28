@@ -24,7 +24,9 @@
 		"lint": "prettier --check .",
 		"check": "tsc",
 		"format": "prettier --write .",
-		"test": "vitest run"
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"files": [
 		"src",
