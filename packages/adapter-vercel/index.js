@@ -294,7 +294,11 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
-				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
+				const runtime = (
+					route.config?.runtime ??
+					defaults?.runtime ??
+					get_default_runtime()
+				).replace('experimental_', '');
 				const config = { runtime, ...defaults, ...route.config };
 
 				if (is_prerendered(route)) {
@@ -305,9 +309,14 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 20)) {
+				const bun_runtime = /^bun/.exec(runtime);
+				if (
+					runtime !== 'edge' &&
+					!bun_runtime &&
+					(!node_runtime || parseInt(node_runtime[1]) < 20)
+				) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs20.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge', 'experimental_bun1.x', 'nodejs20.x' or 'nodejs22.x' ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
@@ -315,9 +324,9 @@ const plugin = function (defaults = {}) {
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
-					if (!runtime.startsWith('nodejs')) {
+					if (!runtime.startsWith('nodejs') && !bun_runtime) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs22.x' or 'experimental_bun1.x')`
 						);
 					}
 
@@ -400,7 +409,7 @@ const plugin = function (defaults = {}) {
 				// we need to create a catch-all route so that 404s are handled
 				// by SvelteKit rather than Vercel
 
-				const runtime = defaults.runtime ?? get_default_runtime();
+				const runtime = (defaults.runtime ?? get_default_runtime()).replace('experimental_', '');
 				const generate_function =
 					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
