@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 5.2.4
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 5.2.3
 ### Patch Changes
 

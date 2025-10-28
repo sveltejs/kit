@@ -1,7 +1,7 @@
 /** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir, base } from '__sveltekit/paths';
+import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
@@ -40,7 +40,9 @@ export function command(id) {
 						refreshes: updates.map((u) => u._key)
 					}),
 					headers: {
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json',
+						'x-sveltekit-pathname': location.pathname,
+						'x-sveltekit-search': location.search
 					}
 				});
 

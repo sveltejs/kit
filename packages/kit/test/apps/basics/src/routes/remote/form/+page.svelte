@@ -22,16 +22,16 @@
 <hr />
 
 <form data-unscoped {...set_message}>
-	{#if set_message.issues.message}
-		<p>{set_message.issues.message[0].message}</p>
+	{#if set_message.fields.message.issues()}
+		<p>{set_message.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={set_message.field('message')} value={set_message.input.message} />
+	<input {...set_message.fields.message.as('text')} />
 	<button>set message</button>
 	<button {...set_reverse_message.buttonProps}>set reverse message</button>
 </form>
 
-<p>set_message.input.message: {set_message.input.message}</p>
+<p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
 <p>set_message.result: {set_message.result}</p>
 <p>set_reverse_message.result: {set_reverse_message.result}</p>
@@ -39,15 +39,15 @@
 <hr />
 
 <form data-scoped {...scoped}>
-	{#if scoped.issues.message}
-		<p>{scoped.issues.message[0].message}</p>
+	{#if scoped.fields.message.issues()}
+		<p>{scoped.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={scoped.field('message')} value={scoped.input.message} />
+	<input {...scoped.fields.message.as('text')} />
 	<button>set scoped message</button>
 </form>
 
-<p>scoped.input.message: {scoped.input.message}</p>
+<p>scoped.input.message: {scoped.fields.message.value()}</p>
 <p>scoped.pending: {scoped.pending}</p>
 <p>scoped.result: {scoped.result}</p>
 
@@ -59,15 +59,15 @@
 		await submit().updates(get_message().withOverride(() => data.message + ' (override)'));
 	})}
 >
-	{#if enhanced.issues.message}
-		<p>{enhanced.issues.message[0].message}</p>
+	{#if enhanced.fields.message.issues()}
+		<p>{enhanced.fields.message.issues()[0].message}</p>
 	{/if}
 
-	<input name={enhanced.field('message')} value={enhanced.input.message} />
+	<input {...enhanced.fields.message.as('text')} />
 	<button><span>set enhanced message</span></button>
 </form>
 
-<p>enhanced.input.message: {enhanced.input.message}</p>
+<p>enhanced.input.message: {enhanced.fields.message.value()}</p>
 <p>enhanced.pending: {enhanced.pending}</p>
 <p>enhanced.result: {enhanced.result}</p>
 

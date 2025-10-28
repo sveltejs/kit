@@ -3,23 +3,13 @@
 </script>
 
 <form {...register}>
-	<input
-		name={register.field('username')}
-		value={register.input.username}
-		aria-invalid={!!register.issues.username}
-	/>
-
-	<input
-		type="password"
-		name={register.field('_password')}
-		value={register.input._password}
-		aria-invalid={!!register.issues._password}
-	/>
+	<input {...register.fields.username.as('text')} />
+	<input {...register.fields._password.as('password')} />
 
 	<button>submit</button>
 </form>
 
-<pre>{JSON.stringify(register.issues, null, '  ')}</pre>
+<pre>{JSON.stringify(register.fields.issues(), null, '  ')}</pre>
 
 <style>
 	[aria-invalid='true'] {

@@ -11,10 +11,12 @@ export const get_message = query(() => {
 
 export const set_message = form(
 	v.object({
+		id: v.optional(v.string()),
 		message: v.picklist(
 			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
 			'message is invalid'
-		)
+		),
+		uppercase: v.optional(v.string())
 	}),
 	async (data) => {
 		if (data.message === 'unexpected error') {
@@ -29,7 +31,7 @@ export const set_message = form(
 			redirect(303, '/remote');
 		}
 
-		message = data.message;
+		message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
 
 		if (getRequestEvent().isRemoteRequest) {
 			const deferred = Promise.withResolvers();
@@ -37,7 +39,7 @@ export const set_message = form(
 			await deferred.promise;
 		}
 
-		return message;
+		return message + (data.id ? ` (from: ${data.id})` : '');
 	}
 );
 

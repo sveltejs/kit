@@ -5,7 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
+import { get_pathname, parse_isr_expiration, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 /**
@@ -32,9 +32,9 @@ const get_default_runtime = () => {
 	// Also means we're not on the hook for updating the adapter every time a new Node
 	// version is added to Vercel.
 	if (!process.env.VERCEL) {
-		if (major < 18 || major > 22) {
+		if (major < 20 || major > 22) {
 			throw new Error(
-				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 18, 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
+				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
 			);
 		}
 
@@ -305,9 +305,9 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 18)) {
+				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 20)) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs20.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
@@ -433,7 +433,11 @@ const plugin = function (defaults = {}) {
 					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 
 					const pathname = get_pathname(route);
-					const json = JSON.stringify(isr, null, '\t');
+					const json = JSON.stringify(
+						{ ...isr, expiration: parse_isr_expiration(isr.expiration, route.id) },
+						null,
+						'\t'
+					);
 
 					write(`${base}.prerender-config.json`, json);
 					write(`${base}/__data.json.prerender-config.json`, json);

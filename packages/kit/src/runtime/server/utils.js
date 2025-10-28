@@ -39,7 +39,11 @@ export function method_not_allowed(mod, method) {
 export function allowed_methods(mod) {
 	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
 
-	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
+	// if there's no HEAD handler, but we have a GET handler, we respond to
+	// HEAD requests using the GET handler and omit the response body.
+	if ('GET' in mod && !('HEAD' in mod)) {
+		allowed.push('HEAD');
+	}
 
 	return allowed;
 }

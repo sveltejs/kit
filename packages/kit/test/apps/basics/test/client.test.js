@@ -1308,6 +1308,16 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeHidden();
 		});
 
+		test('Works with a fast and a slow server load functions which (direct hit)', async ({
+			page
+		}) => {
+			await page.goto('/streaming/server/fast-n-slow');
+
+			expect(await page.locator('p.ssrd').textContent()).toBe('ssrd');
+			await expect(page.locator('p.fast')).toHaveText('fast');
+			await expect(page.locator('p.streamed')).toHaveText('streamed');
+		});
+
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
 			page.goto('/streaming/server-error');
 			await expect(page.locator('p.eager')).toHaveText('eager');
@@ -1963,6 +1973,18 @@ test.describe('remote functions', () => {
 
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('fields.set updates DOM before validate', async ({ page }) => {
+		await page.goto('/remote/form/imperative');
+
+		const input = page.locator('input[name="message"]');
+		await input.fill('123');
+
+		await page.locator('#set-and-validate').click();
+
+		await expect(input).toHaveValue('hello');
+		await expect(page.locator('#issue')).toHaveText('ok');
 	});
 
 	test('command pending state is tracked correctly', async ({ page }) => {

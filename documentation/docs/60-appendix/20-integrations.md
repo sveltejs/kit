@@ -20,7 +20,7 @@ export default config;
 
 You will also need to use a preprocessor if you're using TypeScript with Svelte 4. TypeScript is supported natively in Svelte 5 if you're using only the type syntax. To use more complex TypeScript syntax in Svelte 5, you will need still need a preprocessor and can use `vitePreprocess({ script: true })`.
 
-## Adders
+## Add-ons
 
 Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
 - prettier (formatting)
@@ -34,9 +34,9 @@ Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integration
 - mdsvex (markdown)
 - storybook (frontend workshop)
 
-## Directory
+## Packages
 
-See [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of [packages](https://sveltesociety.dev/packages) and [templates](https://sveltesociety.dev/templates) available for use with Svelte and SvelteKit.
+Check out [the packages page](/packages) for a curated set of high quality Svelte packages. You can also see [sveltesociety.dev](https://sveltesociety.dev/) for additional libraries, templates, and resources.
 
 ## Additional integrations
 

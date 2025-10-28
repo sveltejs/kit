@@ -163,18 +163,18 @@ export function image_plugin(imagetools_plugin) {
 				await Promise.all(pending_ast_updates);
 
 				// add imports
-				let text = '';
 				if (imports.size) {
+					let text = '';
 					for (const [path, import_name] of imports.entries()) {
 						text += `\timport ${import_name} from "${path}";\n`;
 					}
-				}
 
-				if (ast.instance) {
-					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, text);
-				} else {
-					s.prepend(`<script>${text}</script>\n`);
+					if (ast.instance) {
+						// @ts-ignore
+						s.appendLeft(ast.instance.content.start, text);
+					} else {
+						s.prepend(`<script>${text}</script>\n`);
+					}
 				}
 
 				if (ast.css) {

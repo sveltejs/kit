@@ -3,7 +3,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '__sveltekit/paths';
+import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -129,8 +129,8 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = base;
-		url.search = '';
+		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
+		url.search = request.headers.get('x-sveltekit-search') ?? '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -148,7 +148,8 @@ export async function internal_respond(request, options, manifest, state) {
 		handleValidationError: options.hooks.handleValidationError,
 		tracing: {
 			record_span
-		}
+		},
+		is_in_remote_function: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -294,7 +295,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !remote_id) {
+	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
 
@@ -329,7 +330,7 @@ export async function internal_respond(request, options, manifest, state) {
 			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
-		if (route) {
+		if (route && !remote_id) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {

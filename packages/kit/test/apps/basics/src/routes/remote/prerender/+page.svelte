@@ -1,8 +1,9 @@
 <script>
-	import { prerendered, prerendered_entries } from './prerender.remote.js';
+	import { prerendered, prerendered_entries, with_read } from './prerender.remote.js';
 
 	let prerendered_result = $state(null);
 	let live_result = $state(null);
+	let read_result = $state(null);
 </script>
 
 <a href="/remote/prerender/whole-page">whole-page</a>
@@ -16,4 +17,7 @@
 	onclick={async () => (live_result = await prerendered_entries('d'))}
 >
 	{live_result}
+</button>
+<button id="fetch-with-read" onclick={async () => (read_result = await with_read())}>
+	{read_result}
 </button>

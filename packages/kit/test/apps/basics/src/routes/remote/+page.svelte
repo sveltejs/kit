@@ -100,3 +100,5 @@
 	refreshAll (remote functions only)
 </button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
+
+<a href="/remote/event">/remote/event</a>

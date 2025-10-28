@@ -1,9 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
+import { stringify_remote_arg } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -62,19 +62,20 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * Also saves an uneval'ed version of the result for later HTML inlining for hydration.
  *
  * @template {MaybePromise<any>} T
- * @param {string} id
+ * @param {RemoteInfo} info
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(id, arg, state, get_result) {
+export async function get_response(info, arg, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
-	const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
-	return ((state.remote_data ??= {})[cache_key] ??= get_result());
+	const cache = get_cache(info, state);
+
+	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
 }
 
 /**
@@ -102,42 +103,61 @@ export function parse_remote_response(data, transport) {
  * @param {(arg?: any) => T} fn
  */
 export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
-	/** @type {RequestEvent} */
-	const cleansed = {
-		...event,
-		setHeaders: () => {
-			throw new Error('setHeaders is not allowed in remote functions');
-		},
-		cookies: {
-			...event.cookies,
-			set: (name, value, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot set cookies in `query` or `prerender` functions');
-				}
-
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies set in remote functions must have an absolute path');
-				}
-
-				return event.cookies.set(name, value, opts);
+	/** @type {RequestStore} */
+	const store = {
+		event: {
+			...event,
+			setHeaders: () => {
+				throw new Error('setHeaders is not allowed in remote functions');
 			},
-			delete: (name, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-				}
+			cookies: {
+				...event.cookies,
+				set: (name, value, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot set cookies in `query` or `prerender` functions');
+					}
 
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies deleted in remote functions must have an absolute path');
-				}
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies set in remote functions must have an absolute path');
+					}
 
-				return event.cookies.delete(name, opts);
+					return event.cookies.set(name, value, opts);
+				},
+				delete: (name, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies deleted in remote functions must have an absolute path');
+					}
+
+					return event.cookies.delete(name, opts);
+				}
 			}
 		},
-		route: { id: null },
-		url: new URL(event.url.origin)
+		state: {
+			...state,
+			is_in_remote_function: true
+		}
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
-	return with_request_store({ event: cleansed, state }, () => fn(validated));
+	const validated = await with_request_store(store, () => validate(arg));
+	return with_request_store(store, () => fn(validated));
+}
+
+/**
+ * @param {RemoteInfo} info
+ * @param {RequestState} state
+ */
+export function get_cache(info, state = get_request_store().state) {
+	let cache = state.remote_data?.get(info);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote_data ??= new Map()).set(info, cache);
+	}
+
+	return cache;
 }
