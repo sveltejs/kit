@@ -202,6 +202,8 @@ Server `load` functions are called with a `ServerLoadEvent`, which inherits `cli
 
 Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
+> [!NOTE] Since 2.??, when universal `load` functions are called on server, `LoadEvent` includes `server` object, which consists of `clientAddress`, `cookies`, `locals`, `platform` and `request`. `server` becomes `undefined` if `load` functions are called on client.
+
 ### Output
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
