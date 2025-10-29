@@ -261,6 +261,7 @@ function get_attr_value(node, attr) {
  *   width: string | number,
  *   height: string | number
  * }} details
+ * @returns {string}
  */
 function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
@@ -351,7 +352,7 @@ function to_value(src) {
 }
 
 /**
- * For images like `<img src={manually_imported} />`
+ * For images like `<enhanced:img src={manually_imported} />`
  * @param {string} content
  * @param {import('svelte/compiler').AST.RegularElement} node
  * @param {string} src_var_name
@@ -373,7 +374,10 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 		height: `{${src_var_name}.img.h}`
 	};
 
-	return `{#if typeof ${src_var_name} === 'string'}
+	return `
+{#if import.meta.env.DEV && !${src_var_name}.img}
+  ${src_var_name} was not enhanced. Did you request that it be?
+{:else if typeof ${src_var_name} === 'string'}
 	<img ${serialize_img_attributes(content, attributes, details)} />
 {:else}
 	<picture>
