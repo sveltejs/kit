@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 6.1.1
+### Patch Changes
+
+
+- chore: improve runtime config parsing ([#14838](https://github.com/sveltejs/kit/pull/14838))
+
+- Updated dependencies [[`cd72d94`](https://github.com/sveltejs/kit/commit/cd72d942a75eed2c1c2ee4b9d6cba5829a4fdb7a), [`53b1b73`](https://github.com/sveltejs/kit/commit/53b1b73256d5b314b1e08ff13f920d520c4a6aed), [`2ccc638`](https://github.com/sveltejs/kit/commit/2ccc63806fa4049c0c05ebc43dce8905e355ed5a)]:
+  - @sveltejs/kit@2.48.3
+
 ## 6.1.0
 ### Minor Changes
 
