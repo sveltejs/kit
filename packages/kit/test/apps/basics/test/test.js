@@ -2040,17 +2040,22 @@ test.describe('params prop', () => {
 });
 
 test.describe('params prop async', () => {
-	test('params prop is passed to the page', async ({ page, clicknav }) => {
+	test('params prop is passed to the page and persists after async updates', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/params-prop-async');
 
 		await page.hover('[href="/params-prop-async/123"]');
 		await page.waitForTimeout(100);
 		await clicknav('[href="/params-prop-async/123"]');
+		await page.waitForTimeout(100);
 		await expect(page.locator('p')).toHaveText('x: 123');
 
 		await page.hover('[href="/params-prop-async/456"]');
 		await page.waitForTimeout(100);
 		await clicknav('[href="/params-prop-async/456"]');
+		await page.waitForTimeout(100);
 		await expect(page.locator('p')).toHaveText('x: 456');
 	});
 });
