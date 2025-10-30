@@ -72,6 +72,10 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
+		let immediate_refresh = true;
+
+		queueMicrotask(() => (immediate_refresh = false));
+
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
 		const promise = get_response(__, arg, state, () =>
 			run_remote_function(event, state, false, arg, validate, fn)
@@ -98,7 +102,7 @@ export function query(validate_or_fn, maybe_fn) {
 		};
 
 		promise.refresh = () => {
-			const { state } = get_request_store();
+			const { event, state } = get_request_store();
 			const refreshes = state.refreshes;
 
 			if (!refreshes) {
@@ -107,11 +111,25 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = promise;
+			const key = stringify_remote_arg(arg, state.transport);
+			const cache_key = create_remote_cache_key(__.id, key);
 
-			// TODO we could probably just return promise here, but would need to update the types
-			return promise.then(() => {});
+			if (immediate_refresh) {
+				refreshes[cache_key] = promise;
+
+				return promise.then(() => {});
+			}
+
+			const refreshed = Promise.resolve(
+				run_remote_function(event, state, false, arg, validate, fn)
+			);
+
+			refreshed.catch(() => {});
+
+			const cache = get_cache(__, state);
+			cache[key] = refreshes[cache_key] = refreshed;
+
+			return refreshed.then(() => {});
 		};
 
 		promise.withOverride = () => {
@@ -200,6 +218,10 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
+		let immediate_refresh = true;
+
+		queueMicrotask(() => (immediate_refresh = false));
+
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
 		const promise = get_response(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
@@ -243,8 +265,8 @@ function batch(validate_or_fn, maybe_fn) {
 
 		promise.catch(() => {});
 
-		promise.refresh = async () => {
-			const { state } = get_request_store();
+		promise.refresh = () => {
+			const { event, state } = get_request_store();
 			const refreshes = state.refreshes;
 
 			if (!refreshes) {
@@ -253,8 +275,25 @@ function batch(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state.transport));
-			refreshes[cache_key] = await /** @type {Promise<any>} */ (promise);
+			const key = stringify_remote_arg(arg, state.transport);
+			const cache_key = create_remote_cache_key(__.id, key);
+
+			if (immediate_refresh) {
+				refreshes[cache_key] = promise;
+
+				return promise.then(() => {});
+			}
+
+			const refreshed = Promise.resolve(
+				run_remote_function(event, state, false, arg, validate, fn)
+			);
+
+			refreshed.catch(() => {});
+
+			const cache = get_cache(__, state);
+			cache[key] = refreshes[cache_key] = refreshed;
+
+			return refreshed.then(() => {});
 		};
 
 		promise.withOverride = () => {
