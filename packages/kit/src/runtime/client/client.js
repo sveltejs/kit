@@ -1750,7 +1750,6 @@ async function navigate({
 
 	await commit_promise;
 
-
 	// TODO 3.0 remote — the double tick is probably necessary because
 	// of some store shenanigans. `settled()` and `f.commit()`
 	// should resolve after DOM updates in newer versions
