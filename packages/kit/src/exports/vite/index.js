@@ -791,8 +791,17 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const ssr = /** @type {boolean} */ (config.build?.ssr);
+
+			// We could always use a relative asset base path here, but it's better for performance not to.
+			// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+			// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+			// causing us to do a more expensive hydration check.
+			const client_base =
+				kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+			const base = ssr ? assets_base(kit) : client_base;
+
 			if (is_build) {
-				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
@@ -867,18 +876,11 @@ async function kit({ svelte_config }) {
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
 				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
-				// We could always use a relative asset base path here, but it's better for performance not to.
-				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
-				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
-				// causing us to do a more expensive hydration check.
-				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
-
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
 
 				new_config = {
-					base: ssr ? assets_base(kit) : client_base,
+					base,
 					build: {
 						copyPublicDir: !ssr,
 						cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
@@ -931,7 +933,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
