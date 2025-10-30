@@ -7,12 +7,12 @@ import { app, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 
 // Initialize Cache API for prerender functions
-const CACHE_NAME = `sveltekit:${version}`;
+const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
 /** @type {Cache | undefined} */
 let prerender_cache;
 
 void (async () => {
-	if (!DEV && typeof caches !== 'undefined') {
+	if (typeof caches !== 'undefined') {
 		try {
 			prerender_cache = await caches.open(CACHE_NAME);
 
@@ -127,11 +127,10 @@ export function prerender(id) {
 			if (prerender_cache) {
 				try {
 					const cached_response = await prerender_cache.match(url);
+
 					if (cached_response) {
-						const cached_result = /** @type { RemoteFunctionResponse & { type: 'result' } } */ (
-							await cached_response.json()
-						);
-						return devalue.parse(cached_result.result, app.decoders);
+						const cached_result = await cached_response.text();
+						return devalue.parse(cached_result, app.decoders);
 					}
 				} catch {
 					// Nothing we can do here
@@ -146,18 +145,20 @@ export function prerender(id) {
 					await prerender_cache.put(
 						url,
 						// We need to create a new response because the original response is already consumed
-						new Response(JSON.stringify(result), {
+						new Response(result, {
 							headers: {
 								'Content-Type': 'application/json'
 							}
 						})
 					);
+
+					console.log('put', url);
 				} catch {
 					// Nothing we can do here
 				}
 			}
 
-			return result;
+			return devalue.parse(result, app.decoders);
 		});
 	});
 }
