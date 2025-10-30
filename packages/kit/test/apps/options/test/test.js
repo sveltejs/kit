@@ -361,6 +361,7 @@ test.describe('Async', () => {
 
 		await page.goto('/path-base/on-navigate/a');
 
+		/** @type {string[]} */
 		const logs = [];
 		page.on('console', (msg) => {
 			logs.push(msg.text());
