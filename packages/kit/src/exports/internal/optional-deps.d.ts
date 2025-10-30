@@ -1,4 +1,3 @@
-
 /* Users may not have these packages installed, this prevents errors when using `tsc` without them. */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 declare module '@opentelemetry/api' {
