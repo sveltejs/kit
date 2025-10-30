@@ -514,6 +514,8 @@ async function _preload_data(intent) {
 	// then a later one is becoming the real navigation and the preload tokens
 	// get out of sync.
 	if (intent.id !== load_cache?.id) {
+		discard_load_cache();
+
 		const preload = {};
 		preload_tokens.add(preload);
 		load_cache = {
@@ -1747,6 +1749,7 @@ async function navigate({
 	const { activeElement } = document;
 
 	await commit_promise;
+
 
 	// TODO 3.0 remote — the double tick is probably necessary because
 	// of some store shenanigans. `settled()` and `f.commit()`
