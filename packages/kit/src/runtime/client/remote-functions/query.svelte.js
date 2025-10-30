@@ -163,15 +163,19 @@ export class Query {
 		const p = this.#promise;
 		this.#overrides.length;
 
-		return async (resolve, reject) => {
-			try {
+		return (resolve, reject) => {
+			const result = (async () => {
 				await p;
 				// svelte-ignore await_reactivity_loss
 				await tick();
-				resolve?.(/** @type {T} */ (this.#current));
-			} catch (error) {
-				reject?.(error);
+				return /** @type {T} */ (this.#current);
+			})();
+
+			if (resolve || reject) {
+				return result.then(resolve, reject);
 			}
+
+			return result;
 		};
 	});
 
@@ -251,8 +255,14 @@ export class Query {
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
-				() => fn(),
-				() => fn()
+				(value) => {
+					fn();
+					return value;
+				},
+				(error) => {
+					fn();
+					throw error;
+				}
 			);
 		};
 	}
