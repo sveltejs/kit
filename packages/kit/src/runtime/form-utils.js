@@ -255,6 +255,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					return all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
+							path: issue.path,
 							message: issue.message
 						}));
 				};
