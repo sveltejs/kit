@@ -2721,7 +2721,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 
@@ -3378,15 +3378,17 @@ declare module '@opentelemetry/api' {
 	/* Users may not have this package installed, this prevents errors when using `tsc` without it. */
 	/* eslint-disable @typescript-eslint/no-empty-object-type */
 
-	export interface Span {}
+	type _any = any;
 
-	export interface Tracer {}
+	export interface Span extends _any {}
 
-	export interface SpanContext {}
+	export interface Tracer extends _any {}
 
-	export interface PropagationAPI {}
+	export interface SpanContext extends _any {}
 
-	export interface ContextAPI {}
+	export interface PropagationAPI extends _any {}
+
+	export interface ContextAPI extends _any {}
 
 	export {};
 }/**
