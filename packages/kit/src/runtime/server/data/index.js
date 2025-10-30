@@ -7,6 +7,7 @@ import { load_server_data } from '../page/load_data.js';
 import { handle_error_and_jsonify } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -120,7 +121,11 @@ export async function render_data(
 		);
 
 		const data_serializer = server_data_serializer_json(event, event_state, options);
-		for (let i = 0; i < nodes.length; i++) data_serializer.add_node(i, nodes[i]);
+		for (let i = 0; i < nodes.length; i++) {
+			with_request_store({ event, state: event_state }, () => {
+				data_serializer.add_node(i, nodes[i]);
+			});
+		}
 		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {
