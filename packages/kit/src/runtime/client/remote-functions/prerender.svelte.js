@@ -11,7 +11,7 @@ const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
 /** @type {Cache | undefined} */
 let prerender_cache;
 
-void (async () => {
+const prerender_cache_ready = (async () => {
 	if (typeof caches !== 'undefined') {
 		try {
 			prerender_cache = await caches.open(CACHE_NAME);
@@ -112,16 +112,44 @@ class Prerender {
 }
 
 /**
+ * @param {string} url
+ * @param {string} encoded
+ */
+function put(url, encoded) {
+	return /** @type {Cache} */ (prerender_cache)
+		.put(
+			url,
+			// We need to create a new response because the original response is already consumed
+			new Response(encoded, {
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+		)
+		.catch(() => {
+			// Nothing we can do here
+		});
+}
+
+/**
  * @param {string} id
  */
 export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(async () => {
-			if (Object.hasOwn(remote_responses, cache_key)) {
-				return remote_responses[cache_key];
-			}
+			await prerender_cache_ready;
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
+
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				const data = remote_responses[cache_key];
+
+				if (prerender_cache) {
+					void put(url, devalue.stringify(data, app.encoders));
+				}
+
+				return data;
+			}
 
 			// Check the Cache API first
 			if (prerender_cache) {
@@ -137,28 +165,14 @@ export function prerender(id) {
 				}
 			}
 
-			const result = await remote_request(url);
+			const encoded = await remote_request(url);
 
 			// For successful prerender requests, save to cache
 			if (prerender_cache) {
-				try {
-					await prerender_cache.put(
-						url,
-						// We need to create a new response because the original response is already consumed
-						new Response(result, {
-							headers: {
-								'Content-Type': 'application/json'
-							}
-						})
-					);
-
-					console.log('put', url);
-				} catch {
-					// Nothing we can do here
-				}
+				void put(url, encoded);
 			}
 
-			return devalue.parse(result, app.decoders);
+			return devalue.parse(encoded, app.decoders);
 		});
 	});
 }
