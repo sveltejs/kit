@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.48.5
+### Patch Changes
+
+
+- fix: discard preload fork before creating a new one ([#14865](https://github.com/sveltejs/kit/pull/14865))
+
+
+- fix: delete `RemoteFormAllIssue`, add `path` to `RemoteFormIssue` ([#14864](https://github.com/sveltejs/kit/pull/14864))
+
 ## 2.48.4
 ### Patch Changes
 
