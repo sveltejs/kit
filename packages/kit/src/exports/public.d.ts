@@ -5,6 +5,7 @@ import '../types/ambient.js';
 import {
 	AdapterEntry,
 	CspDirectives,
+	DeepPartial,
 	HttpMethod,
 	Logger,
 	MaybePromise,
@@ -2053,6 +2054,21 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Perform validation as if the form was submitted by the given button. */
 		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
+	/** Reset the form to its initial state */
+	reset(options?: {
+		/**
+		 * Set this to the new values to reset the form to.
+		 * Set this to `false` to not reset the values.
+		 * @default true
+		 */
+		values?: DeepPartial<Input> | boolean;
+		/** Set this to `false` to not reset the issues. */
+		issues?: boolean;
+		/** Set this to `false` to not reset the result. */
+		result?: boolean;
+		/** Set this to `false` to not reset the touched fields. */
+		touched?: boolean;
+	}): void;
 	/** The result of the form submission */
 	get result(): Output | undefined;
 	/** The number of pending submissions */
