@@ -11,7 +11,7 @@ export async function record_span({ name, attributes, fn }) {
 
 	const { SpanStatusCode, tracer } = await otel;
 
-	return tracer.startActiveSpan(name, { attributes }, async (span) => {
+	return tracer.startActiveSpan(name, { attributes }, async (/** @type {import('@opentelemetry/api').Span} */ span) => {
 		try {
 			return await fn(span);
 		} catch (error) {
