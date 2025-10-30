@@ -1,4 +1,3 @@
-/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
