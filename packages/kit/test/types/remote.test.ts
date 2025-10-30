@@ -170,9 +170,11 @@ function form_tests() {
 		return { success: true };
 	});
 
-	f.result?.success === true;
+	const fi = f();
 
-	f.enhance(async ({ submit }) => {
+	fi.result?.success === true;
+
+	fi.enhance(async ({ submit }) => {
 		const x: void = await submit();
 		x;
 		const y: void = await submit().updates(
@@ -202,18 +204,19 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	const f2i = f2();
 	// @ts-expect-error
-	f2.fields.name();
-	f2.fields.a.issues();
-	f2.fields.nested.prop.issues();
+	f2i.fields.name();
+	f2i.fields.a.issues();
+	f2i.fields.nested.prop.issues();
 	// @ts-expect-error
-	f2.fields.nonexistent.issues();
-	f2.fields.a.value();
-	f2.fields.nested.prop.value();
+	f2i.fields.nonexistent.issues();
+	f2i.fields.a.value();
+	f2i.fields.nested.prop.value();
 	// @ts-expect-error
-	f2.fields.nonexistent.value();
+	f2i.fields.nonexistent.value();
 	// @ts-expect-error
-	f2.fields.array[0].array.name();
+	f2i.fields.array[0].array.name();
 
 	// all schema properties optional
 	const f3 = form(
@@ -238,14 +241,15 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	const f3i = f3();
 	// @ts-expect-error
-	f3.fields.name();
-	f3.fields.a.issues();
-	f3.fields.a.value();
-	f3.fields.nested.prop.issues();
-	f3.fields.nested.prop.value();
+	f3i.fields.name();
+	f3i.fields.a.issues();
+	f3i.fields.a.value();
+	f3i.fields.nested.prop.issues();
+	f3i.fields.nested.prop.value();
 	// @ts-expect-error
-	f3.fields.nonexistent.name();
+	f3i.fields.nonexistent.name();
 
 	// index signature schema
 	const f4 = form(null as any as StandardSchemaV1<Record<string, any>>, (data) => {
@@ -253,12 +257,13 @@ function form_tests() {
 		data.nested?.prop === '';
 		return { success: true };
 	});
+	const f4i = f4();
 	// @ts-expect-error
-	f4.fields.name();
-	f4.fields.a.issues();
-	f4.fields.a.value();
-	f4.fields.nested.prop.issues();
-	f4.fields.nested.prop.value();
+	f4i.fields.name();
+	f4i.fields.a.issues();
+	f4i.fields.a.value();
+	f4i.fields.nested.prop.issues();
+	f4i.fields.nested.prop.value();
 
 	// schema with union types
 	const f5 = form(
@@ -277,16 +282,17 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	const f5i = f5();
 	// @ts-expect-error
-	f5.fields.name();
-	f5.fields.foo.issues();
-	f5.fields.bar.issues();
-	f5.fields.foo.value();
-	f5.fields.bar.value() === 'c';
+	f5i.fields.name();
+	f5i.fields.foo.issues();
+	f5i.fields.bar.issues();
+	f5i.fields.foo.value();
+	f5i.fields.bar.value() === 'c';
 	// @ts-expect-error
-	f5.fields.foo.value() === 'e';
+	f5i.fields.foo.value() === 'e';
 	// @ts-expect-error
-	f5.fields.nonexistent.name();
+	f5i.fields.nonexistent.name();
 
 	// schema with arrays
 	const f6 = form(
@@ -305,19 +311,20 @@ function form_tests() {
 			return { success: true };
 		}
 	);
+	const f6i = f6();
 	// @ts-expect-error
-	f6.fields.name();
+	f6i.fields.name();
 	// @ts-expect-error
-	f6.field('array[0].array');
-	f6.fields.array.issues();
-	f6.fields.array[0].prop.issues();
-	f6.fields.array[0].array.issues();
+	f6i.field('array[0].array');
+	f6i.fields.array.issues();
+	f6i.fields.array[0].prop.issues();
+	f6i.fields.array[0].array.issues();
 	// @ts-expect-error
-	f6.fields.nonexistent.issues();
-	f6.fields.array[0].prop.value();
-	f6.fields.array[0].array.value();
+	f6i.fields.nonexistent.issues();
+	f6i.fields.array[0].prop.value();
+	f6i.fields.array[0].array.value();
 	// @ts-expect-error
-	f6.fields.array[0].array.name();
+	f6i.fields.array[0].array.name();
 
 	// any
 	const f7 = form(null as any, (data, invalid) => {
@@ -326,12 +333,13 @@ function form_tests() {
 		invalid('foo', invalid.nested.prop('bar'));
 		return { success: true };
 	});
+	const f7i = f7();
 	// @ts-expect-error
-	f7.fields.name();
-	f7.fields.a.issues();
-	f7.fields.a.value();
-	f7.fields.nested.prop.issues();
-	f7.fields.nested.prop.value();
+	f7i.fields.name();
+	f7i.fields.a.issues();
+	f7i.fields.a.value();
+	f7i.fields.nested.prop.issues();
+	f7i.fields.nested.prop.value();
 
 	// no schema
 	const f8 = form((invalid) => {
@@ -341,14 +349,16 @@ function form_tests() {
 			invalid.x('bar')
 		);
 	});
+	const f8i = f8();
 	// @ts-expect-error
-	f8.fields.x;
+	f8i.fields.x;
 	// @ts-expect-error
-	f6.input!['array[0].prop'] = 123;
+	f8i.input!['array[0].prop'] = 123;
 
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
-	f9.result?.success === true;
+	const f9i = f9();
+	f9i.result?.success === true;
 }
 form_tests();
 

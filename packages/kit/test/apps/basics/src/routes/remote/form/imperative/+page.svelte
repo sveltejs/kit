@@ -2,6 +2,8 @@
 	import { set_message } from '../form.remote.js';
 	import * as v from 'valibot';
 
+	const message_form = set_message();
+
 	const schema = v.object({
 		message: v.picklist(
 			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
@@ -10,23 +12,23 @@
 	});
 </script>
 
-<form {...set_message.preflight(schema)}>
+<form {...message_form.preflight(schema)}>
 	<label>
 		<span>Message</span>
-		<input {...set_message.fields.message.as('text')} />
+		<input {...message_form.fields.message.as('text')} />
 	</label>
 
 	<p id="issue">
-		{set_message.fields.message.issues()?.[0]?.message ?? 'ok'}
+		{message_form.fields.message.issues()?.[0]?.message ?? 'ok'}
 	</p>
-	<p id="value">{set_message.fields.message.value()}</p>
+	<p id="value">{message_form.fields.message.value()}</p>
 
 	<button
 		id="set-and-validate"
 		type="button"
 		on:click={async () => {
-			set_message.fields.message.set('hello');
-			await set_message.validate({ includeUntouched: true });
+			message_form.fields.message.set('hello');
+			await message_form.validate({ includeUntouched: true });
 		}}
 	>
 		Set & validate

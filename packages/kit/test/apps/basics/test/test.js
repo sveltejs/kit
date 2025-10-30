@@ -1760,7 +1760,8 @@ test.describe('remote functions', () => {
 		await page.getByText('set reverse message').click();
 
 		if (javaScriptEnabled) {
-			await page.getByText('message.current: sdrawkcab').waitFor();
+			await page.getByText('message.current').waitFor();
+			await expect(page.getByText('message.current:')).toHaveText('message.current: sdrawkcab');
 			await expect(page.getByText('await get_message():')).toHaveText(
 				'await get_message(): sdrawkcab'
 			);

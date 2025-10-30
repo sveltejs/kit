@@ -22,7 +22,8 @@ import {
 	ClientInit,
 	Transport,
 	HandleValidationError,
-	RemoteFormIssue
+	RemoteFormIssue,
+	RemoteForm
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -572,7 +573,7 @@ export type RemoteInfo =
 			type: 'form';
 			id: string;
 			name: string;
-			fn: (data: FormData) => Promise<any>;
+			fn: (data: FormData, instance: RemoteForm<any, any>) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';
