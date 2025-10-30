@@ -2039,6 +2039,18 @@ test.describe('params prop', () => {
 	});
 });
 
+test.describe('params prop async', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop-async');
+
+		await clicknav('[href="/params-prop-async/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop-async/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
+
 test.describe('service worker option', () => {
 	test('pass the options to the service worker', async ({ page }) => {
 		await page.goto('/');
