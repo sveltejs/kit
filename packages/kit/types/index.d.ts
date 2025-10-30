@@ -3372,6 +3372,20 @@ declare module '$app/stores' {
 	};
 
 	export {};
+}
+
+declare module '@opentelemetry/api' {
+	export interface Span {}
+
+	export interface Tracer {}
+
+	export interface SpanContext {}
+
+	export interface PropagationAPI {}
+
+	export interface ContextAPI {}
+
+	export {};
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *

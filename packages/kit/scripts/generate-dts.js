@@ -15,7 +15,8 @@ await createBundle({
 		'$app/paths': 'src/runtime/app/paths/public.d.ts',
 		'$app/server': 'src/runtime/app/server/index.js',
 		'$app/state': 'src/runtime/app/state/index.js',
-		'$app/stores': 'src/runtime/app/stores.js'
+		'$app/stores': 'src/runtime/app/stores.js',
+		'@opentelemetry/api': 'src/exports/internal/otel.d.ts'
 	},
 	include: ['src']
 });
