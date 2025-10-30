@@ -12,8 +12,8 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"netlify-cli": "^22.1.5",
-		"svelte": "^5.23.1",
+		"netlify-cli": "catalog:",
+		"svelte": "catalog:",
 		"vite": "catalog:"
 	},
 	"type": "module"

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.2.13",
+	"version": "5.4.0",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -12,11 +12,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-node"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-node",
 	"type": "module",
 	"exports": {
 		".": {
@@ -42,12 +42,12 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "^1.0.0-next.28",
+		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
-		"polka": "^1.0.0-next.28",
-		"sirv": "^3.0.0",
+		"@types/node": "catalog:",
+		"polka": "catalog:",
+		"sirv": "^3.0.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},

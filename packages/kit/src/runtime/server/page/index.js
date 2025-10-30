@@ -10,11 +10,12 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
+import { server_data_serializer, server_data_serializer_json } from './data_serializer.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { get_data_json } from '../data/index.js';
 import { DEV } from 'esm-env';
+import { get_remote_action, handle_remote_form_post } from '../remote.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
@@ -24,6 +25,7 @@ const MAX_DEPTH = 10;
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} event_state
  * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -32,7 +34,16 @@ const MAX_DEPTH = 10;
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, page, options, manifest, state, nodes, resolve_opts) {
+export async function render_page(
+	event,
+	event_state,
+	page,
+	options,
+	manifest,
+	state,
+	nodes,
+	resolve_opts
+) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -42,7 +53,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
-		return handle_action_json_request(event, options, node?.server);
+		return handle_action_json_request(event, event_state, options, node?.server);
 	}
 
 	try {
@@ -54,9 +65,15 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
-			// for action requests, first call handler in +page.server.js
-			// (this also determines status code)
-			action_result = await handle_action_request(event, leaf_node.server);
+			const remote_id = get_remote_action(event.url);
+			if (remote_id) {
+				action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
+			} else {
+				// for action requests, first call handler in +page.server.js
+				// (this also determines status code)
+				action_result = await handle_action_request(event, event_state, leaf_node.server);
+			}
+
 			if (action_result?.type === 'redirect') {
 				return redirect_response(action_result.status, action_result.location);
 			}
@@ -126,10 +143,12 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				status,
 				error: null,
 				event,
+				event_state,
 				options,
 				manifest,
 				state,
-				resolve_opts
+				resolve_opts,
+				data_serializer: server_data_serializer(event, event_state, options)
 			});
 		}
 
@@ -138,6 +157,12 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 		/** @type {Error | null} */
 		let load_error = null;
+
+		const data_serializer = server_data_serializer(event, event_state, options);
+		const data_serializer_json =
+			state.prerendering && should_prerender_data
+				? server_data_serializer_json(event, event_state, options)
+				: null;
 
 		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
 		const server_promises = nodes.data.map((node, i) => {
@@ -154,8 +179,9 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 						throw action_result.error;
 					}
 
-					return await load_server_data({
+					const server_data = await load_server_data({
 						event,
+						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -168,6 +194,14 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							return data;
 						}
 					});
+
+					if (node) {
+						data_serializer.add_node(i, server_data);
+					}
+
+					data_serializer_json?.add_node(i, server_data);
+
+					return server_data;
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
 					throw load_error;
@@ -182,6 +216,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 				try {
 					return await load_data({
 						event,
+						event_state,
 						fetched,
 						node,
 						parent: async () => {
@@ -236,7 +271,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 					}
 
 					const status = get_status(err);
-					const error = await handle_error_and_jsonify(event, options, err);
+					const error = await handle_error_and_jsonify(event, event_state, options, err);
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -246,11 +281,14 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 							let j = i;
 							while (!branch[j]) j -= 1;
 
+							data_serializer.set_max_nodes(j + 1);
+
 							const layouts = compact(branch.slice(0, j + 1));
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
 
 							return await render_response({
 								event,
+								event_state,
 								options,
 								manifest,
 								state,
@@ -266,7 +304,8 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 									data: null,
 									server_data: null
 								}),
-								fetched
+								fetched,
+								data_serializer
 							});
 						}
 					}
@@ -282,13 +321,9 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			}
 		}
 
-		if (state.prerendering && should_prerender_data) {
+		if (state.prerendering && data_serializer_json) {
 			// ndjson format
-			let { data, chunks } = get_data_json(
-				event,
-				options,
-				branch.map((node) => node?.server_data)
-			);
+			let { data, chunks } = data_serializer_json.get_data();
 
 			if (chunks) {
 				for await (const chunk of chunks) {
@@ -304,6 +339,7 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 
 		return await render_response({
 			event,
+			event_state,
 			options,
 			manifest,
 			state,
@@ -316,13 +352,16 @@ export async function render_page(event, page, options, manifest, state, nodes, 
 			error: null,
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
-			fetched
+			fetched,
+			data_serializer:
+				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
+			event_state,
 			options,
 			manifest,
 			state,

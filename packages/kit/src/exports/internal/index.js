@@ -49,7 +49,7 @@ export class SvelteKitError extends Error {
 }
 
 /**
- * @template {Record<string, unknown> | undefined} [T=undefined]
+ * @template [T=undefined]
  */
 export class ActionFailure {
 	/**
@@ -61,3 +61,5 @@ export class ActionFailure {
 		this.data = data;
 	}
 }
+
+export { init_remote_functions } from './remote-functions.js';

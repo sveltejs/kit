@@ -240,6 +240,12 @@ test.describe('Navigation lifecycle functions', () => {
 		await expect(page.locator('pre')).toHaveText('1 false link');
 	});
 
+	test("beforeNavigate's complete fulfills after redirect", async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/complete');
+		clicknav('a[href="/navigation-lifecycle/before-navigate/redirect"]');
+		expect(await page.waitForEvent('console', (msg) => msg.text() === 'complete')).toBeTruthy();
+	});
+
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
 		expect(await page.textContent('h1')).toBe(
@@ -268,6 +274,30 @@ test.describe('Navigation lifecycle functions', () => {
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
 
 		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+	});
+
+	test('navigation.event is populated', async ({ page, clicknav }) => {
+		/** @type {string[]} */
+		const logs = [];
+
+		await page.goto('/navigation-lifecycle/before-navigate/event/a');
+
+		page.on('console', (message) => {
+			logs.push(message.text());
+		});
+
+		await clicknav('[href="/navigation-lifecycle/before-navigate/event/b"]');
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
+		]);
+
+		await page.goBack();
+
+		expect(logs).toEqual([
+			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
+			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
+		]);
 	});
 });
 
@@ -893,7 +923,9 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
-		await page.goto('/routing/form-get');
+		// wait until load to ensure that all in-flight requests are completed before
+		// we start watching requests
+		await page.goto('/routing/form-get', { waitUntil: 'load' });
 
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');

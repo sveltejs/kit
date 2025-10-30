@@ -22,11 +22,11 @@ jobs:
   pkg-pr-new:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -34,11 +34,11 @@ jobs:
   lint-all:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -64,9 +64,9 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -84,7 +84,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -124,9 +124,9 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -142,7 +142,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -158,11 +158,11 @@ jobs:
           - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
@@ -176,20 +176,54 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           retention-days: 3
           name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
           path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
+  test-kit-svelte-async:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: 'dev'
+          - mode: 'build'
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install chromium
+      - run: pnpm run sync-all
+      - run: pnpm test:svelte-async:${{ matrix.mode }}
+      - name: Print flaky test report
+        run: node scripts/print-flaky-test-report.js
+      - name: Archive test results
+        if: failure()
+        shell: bash
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          retention-days: 3
+          name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
+          path: test-results-svelte-async-${{ matrix.mode }}.tar.gz
   test-others:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [18, 20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4.1.0
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{matrix.node-version}}
           cache: pnpm

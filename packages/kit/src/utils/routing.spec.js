@@ -36,11 +36,11 @@ describe('parse_route_id', () => {
 			params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: false }]
 		},
 		'/[...catchall]': {
-			pattern: /^(?:\/(.*))?\/?$/,
+			pattern: /^(?:\/([^]*))?\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/foo/[...catchall]/bar': {
-			pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
+			pattern: /^\/foo(?:\/([^]*))?\/bar\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/matched/[id=uuid]': {
@@ -244,6 +244,16 @@ describe('exec', () => {
 			route: '/[[slug1=doesntmatch]]/[...slug2=doesntmatch]',
 			path: '/a/b/c',
 			expected: undefined
+		},
+		{
+			route: '/[...catchall]',
+			path: '/\n',
+			expected: { catchall: '\n' }
+		},
+		{
+			route: '/[[...catchall]]',
+			path: '/\n',
+			expected: { catchall: '\n' }
 		}
 	];
 
@@ -269,9 +279,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one/two'
 		},
 		{
+			route: '/blog/[one]/[two]/',
+			params: { one: 'one', two: 'two' },
+			expected: '/blog/one/two/'
+		},
+		{
 			route: '/blog/[one=matcher]/[...two]',
 			params: { one: 'one', two: 'two/three' },
 			expected: '/blog/one/two/three'
+		},
+		{
+			route: '/blog/[one=matcher]/[...two]/',
+			params: { one: 'one', two: 'two/three' },
+			expected: '/blog/one/two/three/'
 		},
 		{
 			route: '/blog/[one=matcher]/[[two]]',
@@ -279,9 +299,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one'
 		},
 		{
+			route: '/blog/[one=matcher]/[[two]]/',
+			params: { one: 'one' },
+			expected: '/blog/one/'
+		},
+		{
 			route: '/blog/[one]/[two]-and-[three]',
 			params: { one: 'one', two: '2', three: '3' },
 			expected: '/blog/one/2-and-3'
+		},
+		{
+			route: '/blog/[one]/[two]-and-[three]/',
+			params: { one: 'one', two: '2', three: '3' },
+			expected: '/blog/one/2-and-3/'
 		},
 		{
 			route: '/blog/[...one]',
@@ -289,9 +319,19 @@ describe('resolve_route', () => {
 			expected: '/blog'
 		},
 		{
+			route: '/blog/[...one]/',
+			params: { one: '' },
+			expected: '/blog/'
+		},
+		{
 			route: '/blog/[one]/[...two]-not-three',
 			params: { one: 'one', two: 'two/2' },
 			expected: '/blog/one/two/2-not-three'
+		},
+		{
+			route: '/blog/[one]/[...two]-not-three/',
+			params: { one: 'one', two: 'two/2' },
+			expected: '/blog/one/two/2-not-three/'
 		}
 	];
 

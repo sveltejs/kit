@@ -34,6 +34,10 @@ export default function (options) {
 				// Return `true` if the route with the given `config` can use `read`
 				// from `$app/server` in production, return `false` if it can't.
 				// Or throw a descriptive error describing how to configure the deployment
+			},
+			tracing: () => {
+				// Return `true` if this adapter supports loading `tracing.server.js`.
+				// Return `false if it can't, or throw a descriptive error.
 			}
 		}
 	};

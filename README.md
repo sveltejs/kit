@@ -18,7 +18,6 @@ Web development, streamlined. Read the [documentation](https://svelte.dev/docs/k
 | [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
 | [@sveltejs/enhanced-img](packages/enhanced-img)                             | [Changelog](packages/enhanced-img/CHANGELOG.md)               |
 | [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
-| [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
 
 [Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.
 
