@@ -3375,6 +3375,9 @@ declare module '$app/stores' {
 }
 
 declare module '@opentelemetry/api' {
+	/* Users may not have this package installed, this prevents errors when using `tsc` without it. */
+	/* eslint-disable @typescript-eslint/no-empty-object-type */
+
 	export interface Span {}
 
 	export interface Tracer {}
