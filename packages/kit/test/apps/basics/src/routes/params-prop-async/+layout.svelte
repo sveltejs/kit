@@ -2,7 +2,7 @@
 	let { children } = $props();
 </script>
 
-<a href="/params-prop/123">123</a>
-<a href="/params-prop/456">456</a>
+<a href="/params-prop-async/123" data-sveltekit-preload-data="hover">123</a>
+<a href="/params-prop-async/456" data-sveltekit-preload-data="hover">456</a>
 
 {@render children()}
