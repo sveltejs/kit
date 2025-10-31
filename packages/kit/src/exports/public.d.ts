@@ -25,6 +25,7 @@ import {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
 } from '$app/types';
+
 import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
