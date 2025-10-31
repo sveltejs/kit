@@ -2,10 +2,11 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, goto } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick } from 'svelte';
-import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
+import { create_remote_cache_key, QUERY_CACHE_PREFIX, stringify_remote_arg } from '../../shared.js';
+import { cache } from 'svelte/reactivity';
+import { query_cache } from './query-cache.js';
 
 /**
  *
@@ -49,65 +50,7 @@ export function create_remote_function(id, create) {
 	return (/** @type {any} */ arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_cache_key(id, payload);
-		let entry = query_map.get(cache_key);
-
-		let tracking = true;
-		try {
-			$effect.pre(() => {
-				if (entry) entry.count++;
-				return () => {
-					const entry = query_map.get(cache_key);
-					if (entry) {
-						entry.count--;
-						void tick().then(() => {
-							if (!entry.count && entry === query_map.get(cache_key)) {
-								query_map.delete(cache_key);
-								delete remote_responses[cache_key];
-							}
-						});
-					}
-				};
-			});
-		} catch {
-			tracking = false;
-		}
-
-		let resource = entry?.resource;
-		if (!resource) {
-			resource = create(cache_key, payload);
-
-			Object.defineProperty(resource, '_key', {
-				value: cache_key
-			});
-
-			query_map.set(
-				cache_key,
-				(entry = {
-					count: tracking ? 1 : 0,
-					resource
-				})
-			);
-
-			resource
-				.then(() => {
-					void tick().then(() => {
-						if (
-							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
-							entry === query_map.get(cache_key)
-						) {
-							// If no one is tracking this resource anymore, we can delete it from the cache
-							query_map.delete(cache_key);
-						}
-					});
-				})
-				.catch(() => {
-					// error delete the resource from the cache
-					// TODO is that correct?
-					query_map.delete(cache_key);
-				});
-		}
-
-		return resource;
+		return cache(cache_key, () => create(cache_key, payload));
 	};
 }
 
@@ -137,7 +80,7 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 			update.release();
 		}
 		// Update the query with the new value
-		const entry = query_map.get(key);
-		entry?.resource.set(value);
+		const resource = query_cache.get(key.replace(QUERY_CACHE_PREFIX, '')); // TODO should query cache treat prefixed keys as identical to unprefixed ones
+		resource?.set(value);
 	}
 }

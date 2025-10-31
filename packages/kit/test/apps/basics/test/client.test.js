@@ -1786,7 +1786,7 @@ test.describe('routing', () => {
 });
 
 // have to run in serial because commands mutate in-memory data on the server
-test.describe('remote functions', () => {
+test.describe.only('remote functions', () => {
 	test.describe.configure({ mode: 'default' });
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {

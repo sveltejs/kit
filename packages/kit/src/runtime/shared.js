@@ -84,10 +84,13 @@ export function parse_remote_arg(string, transport) {
 	return devalue.parse(json_string, decoders);
 }
 
+export const QUERY_CACHE_PREFIX = '@sveltejs/kit/remote-query';
+export const QUERY_CACHE_DELIMITER = '::::';
+
 /**
  * @param {string} id
  * @param {string} payload
  */
 export function create_remote_cache_key(id, payload) {
-	return id + '/' + payload;
+	return [QUERY_CACHE_PREFIX, id, payload].join(QUERY_CACHE_DELIMITER);
 }

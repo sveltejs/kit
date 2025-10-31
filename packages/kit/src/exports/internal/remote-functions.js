@@ -1,4 +1,5 @@
 /** @import { RemoteInfo } from 'types' */
+import { QUERY_CACHE_DELIMITER } from '../../runtime/shared.js';
 
 /** @type {RemoteInfo['type'][]} */
 const types = ['command', 'form', 'prerender', 'query', 'query_batch'];
@@ -22,7 +23,7 @@ export function init_remote_functions(module, file, hash) {
 			);
 		}
 
-		fn.__.id = `${hash}/${name}`;
+		fn.__.id = `${hash}${QUERY_CACHE_DELIMITER}${name}`;
 		fn.__.name = name;
 	}
 }

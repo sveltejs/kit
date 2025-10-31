@@ -41,6 +41,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { QUERY_CACHE_DELIMITER } from '../../runtime/shared.js';
 
 const cwd = process.cwd();
 
@@ -707,7 +708,7 @@ async function kit({ svelte_config }) {
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
 					for (const [name, fn] of Object.entries($$_self_$$)) {
-						fn.__.id = ${s(remote.hash)} + '/' + name;
+						fn.__.id = ${s(remote.hash)} + '${QUERY_CACHE_DELIMITER}' + name;
 						fn.__.name = name;
 					}
 				`;
@@ -763,7 +764,7 @@ async function kit({ svelte_config }) {
 			while (map.has(namespace)) namespace = `__remote${uid++}`;
 
 			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
+				return `export const ${name} = ${namespace}.${type}('${remote.hash}${QUERY_CACHE_DELIMITER}${name}');`;
 			});
 
 			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;

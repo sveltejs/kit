@@ -1,9 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
-import { parse } from 'devalue';
+/** @import { MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg } from '../../../shared.js';
+import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { setHydratableValue } from 'svelte/server';
 
 /**
  * @param {any} validate_or_fn
@@ -75,21 +75,20 @@ export async function get_response(info, arg, state, get_result) {
 
 	const cache = get_cache(info, state);
 
-	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
-}
+	const payload = stringify_remote_arg(arg, state.transport);
+	const response = (cache.data[payload] ??= get_result());
 
-/**
- * @param {any} data
- * @param {ServerHooks['transport']} transport
- */
-export function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
+	if (info.id) {
+		if (state.is_in_render && !cache.hydratable) {
+			cache.hydratable = true;
+			setHydratableValue(create_remote_cache_key(info.id, payload), response, {
+				stringify: (val) => stringify(val, state.transport)
+			});
+		}
+		cache.universal_load ||= state.is_in_universal_load;
 	}
 
-	return parse(data, revivers);
+	return response;
 }
 
 /**
@@ -152,11 +151,11 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
  * @param {RequestState} state
  */
 export function get_cache(info, state = get_request_store().state) {
-	let cache = state.remote_data?.get(info);
+	let cache = state.remote_responses?.get(info);
 
 	if (cache === undefined) {
-		cache = {};
-		(state.remote_data ??= new Map()).set(info, cache);
+		cache = { hydratable: false, universal_load: false, data: {} };
+		(state.remote_responses ??= new Map()).set(info, cache);
 	}
 
 	return cache;

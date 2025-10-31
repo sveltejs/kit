@@ -607,8 +607,13 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	is_in_remote_function: boolean;
+	is_in_universal_load: boolean;
+	is_in_render: boolean;
 	form_instances?: Map<any, any>;
-	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
+	remote_responses?: Map<
+		RemoteInfo,
+		{ hydratable: boolean; universal_load: boolean; data: Record<string, MaybePromise<any>> }
+	>;
 	refreshes?: Record<string, Promise<any>>;
 	is_endpoint_request?: boolean;
 }

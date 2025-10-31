@@ -51,6 +51,7 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { text_decoder } from '../utils.js';
+import { query_cache } from './remote-functions/query-cache.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -190,6 +191,9 @@ let target;
 export let app;
 
 /**
+ * TODO this is only needed to catch stuff that's in `load` functions, so it can eventually
+ * be removed when we deprecate `load` functions. That, or we can decide that it's only valid to
+ * call remote functions in the render cycle. (This might be good in the long run?)
  * Data that was serialized during SSR. This is cleared when the user first navigates
  * @type {Record<string, any>}
  */
@@ -275,12 +279,6 @@ const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
 export let pending_invalidate;
-
-/**
- * @type {Map<string, {count: number, resource: any}>}
- * A map of id -> query info with all queries that currently exist in the app.
- */
-export const query_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -386,7 +384,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 
 	// Rerun queries
 	if (force_invalidation) {
-		query_map.forEach(({ resource }) => {
+		query_cache.forEach((resource) => {
 			resource.refresh?.();
 		});
 	}
@@ -418,7 +416,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
+	await Promise.all([...query_cache.values()]).catch(noop);
 }
 
 function reset_invalidation() {
@@ -476,7 +474,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [...query_map.keys()];
+				query_keys = [...query_cache.keys()];
 			}
 
 			if (options.invalidate) {
@@ -492,7 +490,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach(({ resource }, key) => {
+				query_cache.forEach((resource, key) => {
 					// Only refresh those that already existed on the old page
 					if (query_keys?.includes(key)) {
 						resource.refresh?.();

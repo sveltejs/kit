@@ -1,10 +1,13 @@
 /** @import { RemoteFunctionResponse } from 'types' */
+/** @import { Resource } from 'svelte/reactivity' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
+import { hydratable } from 'svelte';
+import { resource } from 'svelte/reactivity';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = `sveltekit:${version}`;
@@ -34,34 +37,15 @@ void (async () => {
  * @implements {Partial<Promise<T>>}
  */
 class Prerender {
-	/** @type {Promise<T>} */
-	#promise;
-
-	#loading = $state(true);
-	#ready = $state(false);
-
-	/** @type {T | undefined} */
-	#current = $state.raw();
-
-	#error = $state.raw(undefined);
+	/** @type {Resource<T>} */
+	#resource;
 
 	/**
+	 * @param {string} key
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(fn) {
-		this.#promise = fn().then(
-			(value) => {
-				this.#loading = false;
-				this.#ready = true;
-				this.#current = value;
-				return value;
-			},
-			(error) => {
-				this.#loading = false;
-				this.#error = error;
-				throw error;
-			}
-		);
+	constructor(key, fn) {
+		this.#resource = resource(() => hydratable(key, fn));
 	}
 
 	/**
@@ -71,43 +55,43 @@ class Prerender {
 	 * @returns
 	 */
 	then(onfulfilled, onrejected) {
-		return this.#promise.then(onfulfilled, onrejected);
+		return this.#resource.then(onfulfilled, onrejected);
 	}
 
 	/**
 	 * @param {((reason: any) => any) | null | undefined} onrejected
 	 */
 	catch(onrejected) {
-		return this.#promise.catch(onrejected);
+		return this.#resource.catch(onrejected);
 	}
 
 	/**
 	 * @param {(() => any) | null | undefined} onfinally
 	 */
 	finally(onfinally) {
-		return this.#promise.finally(onfinally);
+		return this.#resource.finally(onfinally);
 	}
 
 	get current() {
-		return this.#current;
+		return this.#resource.current;
 	}
 
 	get error() {
-		return this.#error;
+		return this.#resource.error;
 	}
 
 	/**
 	 * Returns true if the resource is loading.
 	 */
 	get loading() {
-		return this.#loading;
+		return this.#resource.loading;
 	}
 
 	/**
 	 * Returns true once the resource has been loaded.
 	 */
 	get ready() {
-		return this.#ready;
+		return this.#resource.ready;
 	}
 }
 
@@ -116,7 +100,7 @@ class Prerender {
  */
 export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
-		return new Prerender(async () => {
+		return new Prerender(cache_key, async () => {
 			if (Object.hasOwn(remote_responses, cache_key)) {
 				return remote_responses[cache_key];
 			}

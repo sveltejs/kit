@@ -149,7 +149,9 @@ export async function internal_respond(request, options, manifest, state) {
 		tracing: {
 			record_span
 		},
-		is_in_remote_function: false
+		is_in_remote_function: false,
+		is_in_universal_load: false,
+		is_in_render: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */

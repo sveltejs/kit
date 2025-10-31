@@ -93,7 +93,7 @@ export function query(validate_or_fn, maybe_fn) {
 			if (__.id) {
 				const cache = get_cache(__, state);
 				const key = stringify_remote_arg(arg, state.transport);
-				refreshes[create_remote_cache_key(__.id, key)] = cache[key] = Promise.resolve(value);
+				refreshes[create_remote_cache_key(__.id, key)] = cache.data[key] = Promise.resolve(value);
 			}
 		};
 
