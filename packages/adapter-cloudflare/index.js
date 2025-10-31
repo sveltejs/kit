@@ -58,11 +58,6 @@ export default function (options = {}) {
 					worker_dest = `${dest}/_worker.js`;
 				}
 			} else {
-				if (options.workerScriptPath) {
-					worker_dest = options.workerScriptPath;
-				} else if (wrangler_config.main) {
-					worker_dest = wrangler_config.main;
-				}
 				if (wrangler_config.assets?.directory) {
 					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
 					// `main` and `pages_build_output_dir` so we need to do it ourselves here
