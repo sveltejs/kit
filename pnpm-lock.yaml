@@ -31,8 +31,8 @@ catalogs:
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
     '@rollup/plugin-commonjs':
-      specifier: ^28.0.1
-      version: 28.0.1
+      specifier: ^29.0.0
+      version: 29.0.0
     '@rollup/plugin-json':
       specifier: ^6.1.0
       version: 6.1.0
@@ -261,7 +261,7 @@ importers:
         version: 2.1.0
       '@rollup/plugin-commonjs':
         specifier: 'catalog:'
-        version: 28.0.1(rollup@4.50.1)
+        version: 29.0.0(rollup@4.50.1)
       '@rollup/plugin-json':
         specifier: 'catalog:'
         version: 6.1.0(rollup@4.50.1)
@@ -329,8 +329,8 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.1
-        version: 28.0.1(rollup@4.50.1)
+        specifier: ^29.0.0
+        version: 29.0.0(rollup@4.50.1)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.50.1)
@@ -2882,8 +2882,8 @@ packages:
     resolution: {integrity: sha512-NvV5jPAQIMCoHvaJ0ZhfouBJ2woFYYf+o6B7dCHGh/tLKSPVoxhjffi35xPuMHgOv65aTOKUzML5XwQF9EkDAA==}
     engines: {node: '>=18'}
 
-  '@rollup/plugin-commonjs@28.0.1':
-    resolution: {integrity: sha512-+tNWdlWKbpB3WgBN7ijjYkq9X5uhjmcvyjEght4NmH5fAU++zfQzAJ6wumLS+dNcvwEZhKx2Z+skY8m7v0wGSA==}
+  '@rollup/plugin-commonjs@29.0.0':
+    resolution: {integrity: sha512-U2YHaxR2cU/yAiwKJtJRhnyLk7cifnQw0zUpISsocBDoHDJn+HTV74ABqnwr5bEgWUwFZC9oFL6wLe21lHu5eQ==}
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0||^4.0.0
@@ -8779,7 +8779,7 @@ snapshots:
 
   '@publint/pack@0.1.0': {}
 
-  '@rollup/plugin-commonjs@28.0.1(rollup@4.50.1)':
+  '@rollup/plugin-commonjs@29.0.0(rollup@4.50.1)':
     dependencies:
       '@rollup/pluginutils': 5.1.3(rollup@4.50.1)
       commondir: 1.0.1
