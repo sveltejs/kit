@@ -1,6 +1,6 @@
 ---
 '@sveltejs/adapter-cloudflare': patch
-'@sveltejs/adapter-auto': patch
+'@sveltejs/adapter-auto': minor
 ---
 
-Support Cloudflare Workers in addition to Cloudflare Pages
+feat: Support Cloudflare Workers in addition to Cloudflare Pages
