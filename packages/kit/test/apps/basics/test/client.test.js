@@ -1860,6 +1860,20 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
+	test('command refresh after reading query reruns the query', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-after-read-btn');
+		await expect(page.locator('#command-result')).toHaveText('6');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
 	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
@@ -2025,6 +2039,36 @@ test.describe('remote functions', () => {
 		await page.click('button');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(1);
+	});
+
+	test('query.batch set updates cache without extra request', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-set-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy cat food');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command request
+	});
+
+	test('query.batch refresh in command reuses single flight', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-refresh-btn');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog (refreshed)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command request
 	});
 
 	// TODO ditto

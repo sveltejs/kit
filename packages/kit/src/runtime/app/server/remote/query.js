@@ -72,7 +72,8 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () => run_remote_function(event, state, false, arg, validate, fn);
+		const get_remote_function_result = () =>
+			run_remote_function(event, state, false, arg, validate, fn);
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
 		const promise = get_response(__, arg, state, get_remote_function_result);
@@ -90,11 +91,11 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
-			// TODO: Shouldn't this throw to signify that non-exported queries can't be set? Or still update the cache without touching refreshes?
 			if (__.id) {
-				const cache = get_cache(__, state);
 				const key = stringify_remote_arg(arg, state.transport);
-				refreshes[create_remote_cache_key(__.id, key)] = cache[key] = Promise.resolve(value);
+				const cache_key = create_remote_cache_key(__.id, key);
+				const cache = get_cache(__, state);
+				cache[key] = refreshes[cache_key] = Promise.resolve(value);
 			}
 		};
 
@@ -271,9 +272,10 @@ function batch(validate_or_fn, maybe_fn) {
 			if (__.id) {
 				const key = stringify_remote_arg(arg, state.transport);
 				const cache_key = create_remote_cache_key(__.id, key);
-				refreshes[cache_key] = Promise.resolve(value);
+				const cache = get_cache(__, state);
+				cache[key] = refreshes[cache_key] = Promise.resolve(value);
 			}
-		}
+		};
 
 		promise.refresh = () => {
 			const { state } = get_request_store();
