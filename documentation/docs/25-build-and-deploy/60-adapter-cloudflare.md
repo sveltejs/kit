@@ -110,7 +110,7 @@ You can define your own custom Worker entrypoint (e.g. `src/worker.ts`) to add a
 import sv from '../.svelte-kit/cloudflare/_worker.js';
 
 export default {
-	async fetch(request, env, ctx) {
+	async fetch(request, env, ctx): Promise<Response> {
 		return sv.fetch(request, env, ctx);
 	},
 
