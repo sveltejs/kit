@@ -72,14 +72,10 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		let immediate_refresh = true;
-
-		queueMicrotask(() => (immediate_refresh = false));
+		const get_remote_function_result = () => run_remote_function(event, state, false, arg, validate, fn);
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, () =>
-			run_remote_function(event, state, false, arg, validate, fn)
-		);
+		const promise = get_response(__, arg, state, get_remote_function_result);
 
 		promise.catch(() => {});
 
@@ -94,6 +90,7 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
+			// TODO: Shouldn't this throw to signify that non-exported queries can't be set? Or still update the cache without touching refreshes?
 			if (__.id) {
 				const cache = get_cache(__, state);
 				const key = stringify_remote_arg(arg, state.transport);
@@ -102,7 +99,7 @@ export function query(validate_or_fn, maybe_fn) {
 		};
 
 		promise.refresh = () => {
-			const { event, state } = get_request_store();
+			const { state } = get_request_store();
 			const refreshes = state.refreshes;
 
 			if (!refreshes) {
@@ -111,22 +108,20 @@ export function query(validate_or_fn, maybe_fn) {
 				);
 			}
 
+			const cache = get_cache(__, state);
 			const key = stringify_remote_arg(arg, state.transport);
 			const cache_key = create_remote_cache_key(__.id, key);
 
-			if (immediate_refresh) {
+			// First time query has ever been triggered and .refresh() was called within the same microtask
+			if (!cache[key]) {
 				refreshes[cache_key] = promise;
-
 				return promise.then(() => {});
 			}
 
-			const refreshed = Promise.resolve(
-				run_remote_function(event, state, false, arg, validate, fn)
-			);
+			const refreshed = get_remote_function_result();
 
 			refreshed.catch(() => {});
 
-			const cache = get_cache(__, state);
 			cache[key] = refreshes[cache_key] = refreshed;
 
 			return refreshed.then(() => {});
@@ -218,12 +213,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		let immediate_refresh = true;
-
-		queueMicrotask(() => (immediate_refresh = false));
-
-		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, () => {
+		const get_remote_function_result = () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
@@ -261,12 +251,32 @@ function batch(validate_or_fn, maybe_fn) {
 					}
 				}, 0);
 			});
-		});
+		};
+
+		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
+		const promise = get_response(__, arg, state, get_remote_function_result);
 
 		promise.catch(() => {});
 
+		promise.set = (value) => {
+			const { state } = get_request_store();
+			const refreshes = state.refreshes;
+
+			if (!refreshes) {
+				throw new Error(
+					`Cannot call set on query.batch '${__.name}' because it is not executed in the context of a command/form remote function`
+				);
+			}
+
+			if (__.id) {
+				const key = stringify_remote_arg(arg, state.transport);
+				const cache_key = create_remote_cache_key(__.id, key);
+				refreshes[cache_key] = Promise.resolve(value);
+			}
+		}
+
 		promise.refresh = () => {
-			const { event, state } = get_request_store();
+			const { state } = get_request_store();
 			const refreshes = state.refreshes;
 
 			if (!refreshes) {
@@ -275,22 +285,20 @@ function batch(validate_or_fn, maybe_fn) {
 				);
 			}
 
+			const cache = get_cache(__, state);
 			const key = stringify_remote_arg(arg, state.transport);
 			const cache_key = create_remote_cache_key(__.id, key);
 
-			if (immediate_refresh) {
+			// First time query has ever been triggered and .refresh() was called within the same microtask
+			if (!cache[key]) {
 				refreshes[cache_key] = promise;
-
 				return promise.then(() => {});
 			}
 
-			const refreshed = Promise.resolve(
-				run_remote_function(event, state, false, arg, validate, fn)
-			);
+			const refreshed = get_remote_function_result();
 
 			refreshed.catch(() => {});
 
-			const cache = get_cache(__, state);
 			cache[key] = refreshes[cache_key] = refreshed;
 
 			return refreshed.then(() => {});
