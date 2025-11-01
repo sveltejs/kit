@@ -120,6 +120,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
+			// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
 			if (additional_args && !('id' in data)) {
 				data.id = JSON.parse(decodeURIComponent(additional_args));
 			}

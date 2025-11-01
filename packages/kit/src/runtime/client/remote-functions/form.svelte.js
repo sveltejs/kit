@@ -57,6 +57,7 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
+		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
@@ -214,7 +215,8 @@ export function form(id) {
 						// 		}
 						// 	});
 						// }
-						xhr.open('POST', `${base}/${app_dir}/remote/${action_id}`);
+						// Use `action_id_without_key` here because the id is included in the body via `convert(data)`
+						xhr.open('POST', `${base}/${app_dir}/remote/${action_id_without_key}`);
 						xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
 						xhr.setRequestHeader('x-sveltekit-pathname', location.pathname);
 						xhr.setRequestHeader('x-sveltekit-search', location.search);
@@ -582,7 +584,7 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
