@@ -269,6 +269,15 @@ export async function deserialize_binary_form(request) {
 		}
 	});
 
+	// Read the request body asyncronously so it doesn't stall
+	void (async () => {
+		let has_more = true;
+		while (has_more) {
+			const chunk = await get_chunk(chunks.length);
+			has_more = !!chunk;
+		}
+	})();
+
 	return { data, meta, form_data: null };
 }
 

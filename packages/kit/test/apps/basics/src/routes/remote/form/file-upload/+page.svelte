@@ -10,6 +10,12 @@
 	<input {...upload.fields.deep.files[0].as('file')} />
 	<p>File 3: (progress: {upload.fields.deep.files[1].progress()})</p>
 	<input {...upload.fields.deep.files[1].as('file')} />
+	<label style:display="block">
+		<input {...upload.fields.read_files.as('checkbox')} />
+		Read files
+	</label>
+	<br />
+	<br />
 	<button>Submit</button>
 </form>
 
