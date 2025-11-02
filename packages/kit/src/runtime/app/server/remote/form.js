@@ -213,7 +213,8 @@ export function form(validate_or_fn, maybe_fn) {
 
 						(get_cache(__)[''] ??= {}).input = input;
 					},
-					() => issues
+					() => issues,
+					() => 0 /* upload progress is always 0 on the server */
 				);
 			}
 		});

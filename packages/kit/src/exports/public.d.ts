@@ -1880,7 +1880,12 @@ type RemoteFormFieldMethods<T> = {
 	set(input: T): T;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
-};
+} & (T extends File
+	? {
+			/** Current upload progress, from 0 to 1 */
+			progress(): number;
+		}
+	: object);
 
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 

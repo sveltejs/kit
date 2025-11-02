@@ -4,10 +4,12 @@
 
 <form {...upload} enctype="multipart/form-data">
 	<input {...upload.fields.text.as('hidden', 'Hello world')} />
-	<p>File 1:</p>
+	<p>File 1: (progress: {upload.fields.file1.progress()})</p>
 	<input {...upload.fields.file1.as('file')} />
-	<p>File 2:</p>
-	<input {...upload.fields.file2.as('file')} />
+	<p>File 2: (progress: {upload.fields.deep.files[0].progress()})</p>
+	<input {...upload.fields.deep.files[0].as('file')} />
+	<p>File 3: (progress: {upload.fields.deep.files[1].progress()})</p>
+	<input {...upload.fields.deep.files[1].as('file')} />
 	<button>Submit</button>
 </form>
 

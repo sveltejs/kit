@@ -97,12 +97,13 @@ export function serialize_binary_form(data, meta) {
 	});
 
 	let encoded_file_offsets = '';
+	/** @type {Array<number> | undefined} */
+	let file_offsets;
 	if (files.length) {
 		// Sort small files to the front
 		files.sort(([a], [b]) => a.size - b.size);
 
-		/** @type {Array<number>} */
-		const file_offsets = new Array(files.length);
+		file_offsets = new Array(files.length);
 		let start = 0;
 		for (const [file, index] of files) {
 			file_offsets[index] = start;
@@ -127,8 +128,13 @@ export function serialize_binary_form(data, meta) {
 		blob_parts.push(file);
 	}
 
+	const file_offset_start = 1 + 4 + 2 + encoded_header.length + encoded_file_offsets.length;
 	return {
-		blob: new Blob(blob_parts)
+		blob: new Blob(blob_parts),
+		file_offsets: file_offsets?.map((o, i) => ({
+			start: o + file_offset_start,
+			file: files[i][0]
+		}))
 	};
 }
 
@@ -416,6 +422,27 @@ function check_prototype_pollution(key) {
 }
 
 /**
+ * Finds the paths to every File in an object
+ * @param {unknown} object
+ * @param {Map<File, string[]>} paths
+ * @param {string[]} path
+ */
+export function get_file_paths(object, paths = new Map(), path = []) {
+	if (Array.isArray(object)) {
+		for (let i = 0; i < object.length; i++) {
+			get_file_paths(object[i], paths, [...path, i.toString()]);
+		}
+	} else if (object instanceof File) {
+		paths.set(object, path);
+	} else if (typeof object === 'object' && object !== null) {
+		for (const [key, value] of Object.entries(object)) {
+			get_file_paths(value, paths, [...path, key]);
+		}
+	}
+	return paths;
+}
+
+/**
  * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
@@ -532,10 +559,18 @@ export function deep_get(object, path) {
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path: (string | number)[]) => number} get_progress - Function to get upload progress of a file
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(
+	target,
+	get_input,
+	set_input,
+	get_issues,
+	get_progress,
+	path = []
+) {
 	const get_value = () => {
 		return deep_get(get_input(), path);
 	};
@@ -546,7 +581,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
+				return create_field_proxy({}, get_input, set_input, get_issues, get_progress, [
 					...path,
 					parseInt(prop, 10)
 				]);
@@ -559,11 +594,17 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(set_func, get_input, set_input, get_issues, get_progress, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, get_progress, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -585,7 +626,19 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_progress, [
+					...path,
+					prop
+				]);
+			}
+
+			if (prop === 'progress') {
+				const progress_func = () => get_progress(path);
+
+				return create_field_proxy(progress_func, get_input, set_input, get_issues, get_progress, [
+					...path,
+					prop
+				]);
 			}
 
 			if (prop === 'as') {
@@ -734,11 +787,17 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, get_progress, [
+					...path,
+					'as'
+				]);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, get_progress, [
+				...path,
+				prop
+			]);
 		}
 	});
 }

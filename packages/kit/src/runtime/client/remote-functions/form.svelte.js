@@ -20,7 +20,9 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	deep_get,
+	get_file_paths
 } from '../../form-utils.js';
 
 /**
@@ -65,6 +67,11 @@ export function form(id) {
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
 		let input = $state({});
+
+		/**
+		 * @type {Record<string, number>}
+		 */
+		let upload_progress = $state({});
 
 		/** @type {InternalRemoteFormIssue[]} */
 		let raw_issues = $state.raw([]);
@@ -160,10 +167,10 @@ export function form(id) {
 		}
 
 		/**
-		 * @param {FormData} data
+		 * @param {FormData} form_data
 		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
 		 */
-		function submit(data) {
+		function submit(form_data) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
@@ -185,27 +192,55 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					const { blob } = serialize_binary_form(convert(data), {
+					const data = convert(form_data);
+
+					const { blob, file_offsets } = serialize_binary_form(data, {
 						remote_refreshes: updates.map((u) => u._key)
 					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': BINARY_FORM_CONTENT_TYPE,
-							'x-sveltekit-pathname': location.pathname,
-							'x-sveltekit-search': location.search
-						},
-						body: blob
+					/** @type {string} */
+					const response_text = await new Promise((resolve, reject) => {
+						const xhr = new XMLHttpRequest();
+						xhr.addEventListener('readystatechange', () => {
+							switch (xhr.readyState) {
+								case 2 /* HEADERS_RECEIVED */:
+									if (xhr.status !== 200) {
+										// We only end up here if the server has an internal error
+										// (which shouldn't happen because we handle errors on the server and always send a 200 response)
+										reject(new Error('Failed to execute remote function'));
+									}
+									break;
+								case 4 /* DONE */:
+									if (xhr.status !== 200) {
+										reject(new Error('Failed to execute remote function'));
+										break;
+									}
+									resolve(xhr.responseText);
+									break;
+							}
+						});
+						if (file_offsets) {
+							const file_paths = get_file_paths(data);
+							xhr.upload.addEventListener('progress', (ev) => {
+								for (const file of file_offsets) {
+									let progress = (ev.loaded - file.start) / file.file.size;
+									if (progress <= 0) continue;
+									if (progress > 1) progress = 1;
+									const path = file_paths.get(file.file);
+									if (!path) continue;
+									deep_set(upload_progress, path, progress);
+								}
+							});
+						}
+						// Use `action_id_without_key` here because the id is included in the body via `convert(data)`
+						xhr.open('POST', `${base}/${app_dir}/remote/${action_id_without_key}`);
+						xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
+						xhr.setRequestHeader('x-sveltekit-pathname', location.pathname);
+						xhr.setRequestHeader('x-sveltekit-search', location.search);
+						xhr.send(blob);
 					});
 
-					if (!response.ok) {
-						// We only end up here in case of a network error or if the server has an internal error
-						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						throw new Error('Failed to execute remote function');
-					}
-
-					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+					const form_result = /** @type { RemoteFunctionResponse} */ (JSON.parse(response_text));
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
@@ -374,6 +409,7 @@ export function form(id) {
 
 						if (file) {
 							set_nested_value(input, name, file);
+							set_nested_value(upload_progress, name, 0);
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -403,6 +439,7 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
+					upload_progress = {};
 				});
 
 				return () => {
@@ -505,7 +542,8 @@ export function form(id) {
 								touched[key] = true;
 							}
 						},
-						() => issues
+						() => issues,
+						(path) => deep_get(upload_progress, path) ?? 0
 					)
 			},
 			result: {
