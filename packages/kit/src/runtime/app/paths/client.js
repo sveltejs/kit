@@ -1,6 +1,6 @@
 /** @import { Asset, RouteId, Pathname, ResolvedPathname } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
-import { base, assets, hash_routing } from './internal/client.js';
+import { base, assets } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 
 /**
@@ -24,8 +24,6 @@ import { resolve_route } from '../../../utils/routing.js';
 export function asset(file) {
 	return (assets || base) + file;
 }
-
-const pathname_prefix = hash_routing ? '#' : '';
 
 /**
  * Resolve a pathname by prefixing it with the base path, if any,
