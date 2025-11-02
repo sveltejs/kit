@@ -15,7 +15,7 @@ export const upload = form(
 			return {
 				text: data.text,
 				file1: data.file1.size,
-				file2: data.deep.files.map((f) => f.size)
+				files: data.deep.files.map((f) => f.size)
 			};
 		}
 		return {
