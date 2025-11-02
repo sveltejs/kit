@@ -8,6 +8,12 @@
 	<input {...upload.fields.file1.as('file')} />
 	<p>File 2:</p>
 	<input {...upload.fields.file2.as('file')} />
+	<label style:display="block">
+		<input {...upload.fields.read_files.as('checkbox')} />
+		Read files
+	</label>
+	<br />
+	<br />
 	<button>Submit</button>
 </form>
 
