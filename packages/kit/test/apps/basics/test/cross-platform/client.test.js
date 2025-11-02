@@ -277,6 +277,7 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	test('navigation.event is populated', async ({ page, clicknav }) => {
+		/** @type {string[]} */
 		const logs = [];
 
 		await page.goto('/navigation-lifecycle/before-navigate/event/a');

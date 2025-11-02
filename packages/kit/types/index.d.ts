@@ -1939,6 +1939,7 @@ declare module '@sveltejs/kit' {
 
 	export interface RemoteFormIssue {
 		message: string;
+		path: Array<string | number>;
 	}
 
 	// If the schema specifies `id` as a string or number, ensure that `for(...)`
