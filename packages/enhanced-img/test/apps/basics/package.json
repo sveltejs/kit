@@ -1,17 +1,17 @@
 {
-	"name": "~TODO~",
+	"name": "enhanced-img-basics",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build --mode staging",
-		"preview": "sirv -p 5173 -s 200.html build",
+		"build": "vite build",
+		"preview": "vite preview",
 		"test": "playwright test"
 	},
 	"devDependencies": {
+		"@sveltejs/enhanced-img": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"sirv-cli": "catalog:",
 		"svelte": "catalog:",
 		"vite": "catalog:"
 	},
