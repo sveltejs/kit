@@ -15,7 +15,9 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	DeepPartial,
+	ExtractId
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -1969,14 +1971,6 @@ export interface RemoteFormAllIssue extends RemoteFormIssue {
 	path: Array<string | number>;
 }
 
-// If the schema specifies `id` as a string or number, ensure that `for(...)`
-// only accepts that type. Otherwise, accept `string | number`
-type ExtractId<Input> = Input extends { id: infer Id }
-	? Id extends string | number
-		? Id
-		: string | number
-	: string | number;
-
 /**
  * Recursively maps an input type to a structure where each field can create a validation issue.
  * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
@@ -2007,8 +2001,19 @@ type InvalidField<T> =
 export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 	InvalidField<Input>;
 
+export type RemoteFormFactoryOptions<Input extends RemoteFormInput | void> = {
+	/** Optional key to create a scoped instance */
+	key?: ExtractId<Input>;
+	/** Client-side preflight schema for validation before submit */
+	preflight?: StandardSchemaV1<Input, any>;
+	/** Initial input values for the form fields */
+	initialData?: DeepPartial<Input>;
+	/** Reset the form values after successful submission (default: true) */
+	resetAfterSuccess?: boolean;
+};
+
 export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
-	key?: ExtractId<Input>
+	keyOrOptions?: ExtractId<Input> | RemoteFormFactoryOptions<Input>
 ) => RemoteForm<Input, Output>;
 
 /**

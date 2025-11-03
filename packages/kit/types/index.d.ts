@@ -1945,14 +1945,6 @@ declare module '@sveltejs/kit' {
 		path: Array<string | number>;
 	}
 
-	// If the schema specifies `id` as a string or number, ensure that `for(...)`
-	// only accepts that type. Otherwise, accept `string | number`
-	type ExtractId<Input> = Input extends { id: infer Id }
-		? Id extends string | number
-			? Id
-			: string | number
-		: string | number;
-
 	/**
 	 * Recursively maps an input type to a structure where each field can create a validation issue.
 	 * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
@@ -1983,8 +1975,19 @@ declare module '@sveltejs/kit' {
 	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
 		InvalidField<Input>;
 
+	export type RemoteFormFactoryOptions<Input extends RemoteFormInput | void> = {
+		/** Optional key to create a scoped instance */
+		key?: ExtractId<Input>;
+		/** Client-side preflight schema for validation before submit */
+		preflight?: StandardSchemaV1<Input, any>;
+		/** Initial input values for the form fields */
+		initialData?: DeepPartial<Input>;
+		/** Reset the form values after successful submission (default: true) */
+		resetAfterSuccess?: boolean;
+	};
+
 	export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
-		key?: ExtractId<Input>
+		keyOrOptions?: ExtractId<Input> | RemoteFormFactoryOptions<Input>
 	) => RemoteForm<Input, Output>;
 
 	/**
@@ -2368,6 +2371,22 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+		? {
+				[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+					? DeepPartial<T[K]>
+					: T[K];
+			}
+		: T | undefined;
+
+	// If the schema specifies `id` as a string or number, ensure that `for(...)`
+	// only accepts that type. Otherwise, accept `string | number`
+	type ExtractId<Input> = Input extends { id: infer Id }
+		? Id extends string | number
+			? Id
+			: string | number
+		: string | number;
 	interface Asset {
 		file: string;
 		size: number;

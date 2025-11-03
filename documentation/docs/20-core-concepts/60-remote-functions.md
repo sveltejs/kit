@@ -540,11 +540,15 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 		title: v.pipe(v.string(), v.nonEmpty()),
 		content: v.pipe(v.string(), v.nonEmpty())
 	});
+
+	const form = createPost(+++{
+		preflight: schema
+	}+++)
 </script>
 
 <h1>Create a new post</h1>
 
-<form {...+++createPost().preflight(schema)+++}>
+<form {...form}>
 	<!-- -->
 </form>
 ```
@@ -812,10 +816,42 @@ Some forms may be repeated as part of a list. In this case you can create separa
 	{@const modify = modifyTodo(todo.id)}
 	<form {...modify}>
 		<!-- -->
-		<button disabled={!!modify.pending}>save changes</button>
+		<button disabled={!!modify.pending}>Save Changes</button>
 	</form>
 {/each}
 ```
+
+### Initial form data
+
+There are times when you want a form to be pre-filled with certain values when it first renders. For example, you might want to populate a form with values fetched from the server or set default values for a new data entry.
+
+You can do this by passing the `initialData` option when creating a form instance. This will set the initial state of the form fields, both for their values and for client-side validation.
+
+Here's an example of how to set initial form data using `initialData`:
+
+```svelte
+<!--- file: src/routes/edit-post/[postId]/+page.svelte --->
+<script>
+	import { getPost, editPost } from '../data.remote';
+
+	const { params } = $props();
+
+	// Fetch the data to pre-fill the form
+	const data = $derived(await getPost(params.postId));
+
+	// Pass initialData when creating the form instance
+	const form = $derived(editPost({
+		initialData: data
+	}));
+</script>
+
+<form {...form}>
+	<!-- Render your form fields here, which will use the initial values from `data` -->
+	<button disabled={!!form.pending}>Save Changes</button>
+</form>
+```
+
+You can also pass a partial object to `initialData` if you only want to set values for some fields. If `initialData` is omitted, the fields will be empty by default.
 
 ### buttonProps
 

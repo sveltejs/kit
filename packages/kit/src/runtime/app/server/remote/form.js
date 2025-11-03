@@ -1,5 +1,5 @@
-/** @import { RemoteFormInput, RemoteForm, RemoteFormFactory } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
+/** @import { RemoteFormInput, RemoteForm, RemoteFormFactory, RemoteFormFactoryOptions } from '@sveltejs/kit' */
+/** @import { ExtractId, InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
@@ -165,7 +165,8 @@ export function form(validate_or_fn, maybe_fn) {
 	};
 
 	/**
-	 * @param {string | number} [key]
+	 * @param {ExtractId<Input>} [key]
+	 * @returns {RemoteForm<Input, Output>}
 	 */
 	function create_instance(key) {
 		const { state } = get_request_store();
@@ -294,7 +295,22 @@ export function form(validate_or_fn, maybe_fn) {
 	}
 
 	/** @type {RemoteFormFactory<Input, Output>} */
-	const factory = (key) => create_instance(key);
+	const factory = (arg) => {
+		/** @type {RemoteFormFactoryOptions<Input> | undefined } */
+		const options = arg && typeof arg === 'object' ? arg : undefined;
+		const key = options ? options.key : /** @type {ExtractId<Input> | undefined} */ (arg);
+
+		const instance = create_instance(key);
+
+		if (options?.initialData) {
+			// seed initial input into cache for SSR
+			const { state } = get_request_store();
+			const cache = get_cache(/** @type any */ (instance).__, state);
+			(cache[''] ??= {}).input = options.initialData;
+		}
+
+		return instance;
+	};
 
 	Object.defineProperty(factory, '__', { value: __ });
 

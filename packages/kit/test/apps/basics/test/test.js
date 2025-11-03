@@ -1772,10 +1772,9 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
+	test('form scoping works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 
-		await page.fill('[data-scoped] input', 'hello');
 		await page.getByText('set scoped message').click();
 
 		if (javaScriptEnabled) {
@@ -1788,7 +1787,7 @@ test.describe('remote functions', () => {
 		}
 
 		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello (from: scoped)');
-		await expect(page.locator('[data-scoped] input')).toHaveValue('');
+		await expect(page.locator('[data-scoped] input')).toHaveValue('hello');
 	});
 
 	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {

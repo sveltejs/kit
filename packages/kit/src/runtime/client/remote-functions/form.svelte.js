@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride, RemoteFormFactory } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride, RemoteFormFactory, RemoteFormFactoryOptions } from '@sveltejs/kit' */
+/** @import { ExtractId, InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
@@ -53,8 +53,9 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
-	/** @param {string | number | boolean} [key] */
-	function create_instance(key) {
+	/** @param {RemoteFormFactoryOptions<T>} options */
+	function create_instance(options) {
+		const { key, resetAfterSuccess = true } = options;
 		const action_id = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
@@ -411,7 +412,7 @@ export function form(id) {
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
 				submit().then(() => {
-					if (!issues.$) {
+					if (!issues.$ && resetAfterSuccess) {
 						form.reset();
 					}
 				})
@@ -452,7 +453,7 @@ export function form(id) {
 			formaction: action,
 			onclick: form_action_onclick(({ submit, form }) =>
 				submit().then(() => {
-					if (!issues.$) {
+					if (!issues.$ && resetAfterSuccess) {
 						form.reset();
 					}
 				})
@@ -588,8 +589,26 @@ export function form(id) {
 	}
 
 	/** @type {RemoteFormFactory<T, U>} */
-	const factory = (key) => {
-		const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
+	const factory = (arg) => {
+		/** @type {RemoteFormFactoryOptions<T> | undefined } */
+		const options = arg && typeof arg === 'object' ? arg : undefined;
+		const key = options ? options.key : /** @type {ExtractId<T> | undefined} */ (arg);
+
+		let entry = instances.get(key);
+		if (!entry) {
+			const instance = create_instance(options ?? { key });
+
+			if (options?.preflight) {
+				instance.preflight(options.preflight);
+			}
+			// seed optional initial input data
+			if (options?.initialData) {
+				instance.fields.set(options.initialData);
+			}
+
+			entry = { count: 0, instance };
+			instances.set(key, entry);
+		}
 
 		try {
 			$effect.pre(() => {
