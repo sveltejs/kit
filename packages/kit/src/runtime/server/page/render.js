@@ -488,7 +488,7 @@ export async function render_response({
 
 		let serialized_remote_data = '';
 
-		if (remote_cache) {
+		if (remote_cache.size) {
 			/** @type {Record<string, any>} */
 			const remote = {};
 
@@ -497,7 +497,7 @@ export async function render_response({
 				// cannot be called from the client
 				if (!info.id || !cache.universal_load) continue;
 
-				for (const key in cache) {
+				for (const key in cache.data) {
 					remote[create_remote_cache_key(info.id, key)] = await cache.data[key];
 				}
 			}

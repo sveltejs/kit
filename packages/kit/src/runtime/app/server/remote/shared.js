@@ -151,11 +151,11 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
  * @param {RequestState} state
  */
 export function get_cache(info, state = get_request_store().state) {
-	let cache = state.remote_responses?.get(info);
+	let cache = state.remote_responses.get(info);
 
 	if (cache === undefined) {
 		cache = { hydratable: false, universal_load: false, data: {} };
-		(state.remote_responses ??= new Map()).set(info, cache);
+		state.remote_responses.set(info, cache);
 	}
 
 	return cache;

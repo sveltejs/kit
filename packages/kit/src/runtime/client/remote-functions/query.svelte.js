@@ -30,6 +30,10 @@ export function query(id) {
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
+			}
+
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			return await remote_request(url);

@@ -610,7 +610,7 @@ export interface RequestState {
 	is_in_universal_load: boolean;
 	is_in_render: boolean;
 	form_instances?: Map<any, any>;
-	remote_responses?: Map<
+	remote_responses: Map<
 		RemoteInfo,
 		{ hydratable: boolean; universal_load: boolean; data: Record<string, MaybePromise<any>> }
 	>;
