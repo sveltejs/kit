@@ -1982,16 +1982,19 @@ declare module '@sveltejs/kit' {
 		preflight?: StandardSchemaV1<Input, any>;
 		/** Initial input values for the form fields */
 		initialData?: DeepPartial<Input>;
-		/** Reset the form values after successful submission (default: true) */
+		/** Reset the form values after successful submission, for non-enhanced forms (default: true) */
 		resetAfterSuccess?: boolean;
 	};
 
+	/**
+	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 */
 	export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
 		keyOrOptions?: ExtractId<Input> | RemoteFormFactoryOptions<Input>
 	) => RemoteForm<Input, Output>;
 
 	/**
-	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 * The remote form instance created by the form factory function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
