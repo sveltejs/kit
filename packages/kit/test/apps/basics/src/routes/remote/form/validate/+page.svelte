@@ -2,17 +2,19 @@
 	import { issue_path_form, my_form } from './form.remote.js';
 	import * as v from 'valibot';
 
-	const my_form_form = my_form();
 	const schema = v.object({
 		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e']),
 		button: v.optional(v.literal('submitter'))
 	});
+	const my_form_form = my_form({
+		preflight: schema
+	});
 	let submitter;
 	$inspect(my_form_form.fields.allIssues());
 </script>
 
-<form id="my-form" {...my_form_form.preflight(schema)} oninput={() => my_form_form.validate()}>
+<form id="my-form" {...my_form_form} oninput={() => my_form_form.validate()}>
 	{#each my_form_form.fields.foo.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}

@@ -2,17 +2,18 @@
 	import { set_message } from '../form.remote.js';
 	import * as v from 'valibot';
 
-	const message_form = set_message();
-
 	const schema = v.object({
 		message: v.picklist(
 			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
 			'message is invalid'
 		)
 	});
+	const message_form = set_message({
+		preflight: schema
+	});
 </script>
 
-<form {...message_form.preflight(schema)}>
+<form {...message_form}>
 	<label>
 		<span>Message</span>
 		<input {...message_form.fields.message.as('text')} />

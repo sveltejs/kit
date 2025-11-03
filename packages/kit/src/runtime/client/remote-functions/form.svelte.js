@@ -55,14 +55,14 @@ export function form(id) {
 
 	/** @param {RemoteFormFactoryOptions<T>} options */
 	function create_instance(options) {
-		const { key, resetAfterSuccess = true } = options;
+		const { key, preflight, initialData, resetAfterSuccess = true } = options;
 		const action_id = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state({});
+		let input = $state(initialData ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
 		let raw_issues = $state.raw([]);
@@ -76,7 +76,7 @@ export function form(id) {
 		let pending_count = $state(0);
 
 		/** @type {StandardSchemaV1 | undefined} */
-		let preflight_schema = undefined;
+		let preflight_schema = preflight;
 
 		/** @type {HTMLFormElement | null} */
 		let element = null;
@@ -511,13 +511,6 @@ export function form(id) {
 			pending: {
 				get: () => pending_count
 			},
-			preflight: {
-				/** @type {RemoteForm<T, U>['preflight']} */
-				value: (schema) => {
-					preflight_schema = schema;
-					return instance;
-				}
-			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
 				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
@@ -593,22 +586,7 @@ export function form(id) {
 		/** @type {RemoteFormFactoryOptions<T> | undefined } */
 		const options = arg && typeof arg === 'object' ? arg : undefined;
 		const key = options ? options.key : /** @type {ExtractId<T> | undefined} */ (arg);
-
-		let entry = instances.get(key);
-		if (!entry) {
-			const instance = create_instance(options ?? { key });
-
-			if (options?.preflight) {
-				instance.preflight(options.preflight);
-			}
-			// seed optional initial input data
-			if (options?.initialData) {
-				instance.fields.set(options.initialData);
-			}
-
-			entry = { count: 0, instance };
-			instances.set(key, entry);
-		}
+		const entry = instances.get(key) ?? { count: 0, instance: create_instance(options ?? { key }) };
 
 		try {
 			$effect.pre(() => {

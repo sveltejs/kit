@@ -2013,8 +2013,6 @@ declare module '@sveltejs/kit' {
 			action: string;
 			[attachment: symbol]: (node: HTMLFormElement) => void;
 		};
-		/** Preflight checks */
-		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
 			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */

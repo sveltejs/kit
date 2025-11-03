@@ -4,12 +4,13 @@
 
 	const data = get();
 
-	const set_form = set();
-
 	const schema = v.object({
 		a: v.pipe(v.string(), v.maxLength(7, 'a is too long')),
 		b: v.string(),
 		c: v.string()
+	});
+	const set_form = set({
+		preflight: schema
 	});
 </script>
 
@@ -23,7 +24,7 @@
 <hr />
 
 <form
-	{...set_form.preflight(schema)}
+	{...set_form}
 	oninput={() => set_form.validate({ preflightOnly: true })}
 	onchange={() => set_form.validate()}
 >
