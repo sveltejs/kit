@@ -1963,6 +1963,7 @@ export interface RemoteFormInput {
 
 export interface RemoteFormIssue {
 	message: string;
+	path: Array<string | number>;
 }
 
 // If the schema specifies `id` as a string or number, ensure that `for(...)`
