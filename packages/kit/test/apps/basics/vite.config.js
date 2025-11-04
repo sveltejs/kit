@@ -10,7 +10,8 @@ export default defineConfig({
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
 		// the reload confuses Playwright
-		include: ['cookie']
+		include: ['cookie'],
+		exclude: ['@sveltejs/kit', 'svelte']
 	},
 	plugins: [sveltekit()],
 	server: {

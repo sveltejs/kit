@@ -66,6 +66,7 @@ export async function render_page(
 
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
+			console.log(remote_id);
 			if (remote_id) {
 				action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
 			} else {

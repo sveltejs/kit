@@ -263,7 +263,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
-	const [hash, name, action_id] = id.split('/');
+	const [hash, name, action_id] = id.split(QUERY_CACHE_DELIMITER);
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
