@@ -38,7 +38,7 @@ export async function remote_request(url) {
 		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	return devalue.parse(result.result, app.decoders);
+	return result.result;
 }
 
 /**

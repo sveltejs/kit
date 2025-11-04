@@ -1,5 +1,26 @@
 # @sveltejs/kit
 
+## 2.48.4
+### Patch Changes
+
+
+- fix: adjust query's promise implementation to properly allow chaining ([#14859](https://github.com/sveltejs/kit/pull/14859))
+
+
+- fix: make prerender cache work, including in development ([#14860](https://github.com/sveltejs/kit/pull/14860))
+
+## 2.48.3
+### Patch Changes
+
+
+- fix: include hash when using `resolve` with hash routing enabled ([#14786](https://github.com/sveltejs/kit/pull/14786))
+
+
+- fix: `afterNavigate` callback not running after hydration when experimental async is enabled ([#14644](https://github.com/sveltejs/kit/pull/14644))
+  fix: Snapshot `restore` method not called after reload when experimental async is enabled
+
+- fix: expose `issue.path` in `.allIssues()` ([#14784](https://github.com/sveltejs/kit/pull/14784))
+
 ## 2.48.2
 ### Patch Changes
 
