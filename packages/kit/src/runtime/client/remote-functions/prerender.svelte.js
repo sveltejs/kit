@@ -7,7 +7,7 @@ import { app, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import { hydratable } from 'svelte';
 import { resource } from 'svelte/reactivity';
-import { QUERY_CACHE_DELIMITER } from '../../shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -126,7 +126,7 @@ export function prerender(id) {
 			}
 			await prerender_cache_ready;
 
-			const url = `${base}/${app_dir}/remote/${id}${payload ? `${QUERY_CACHE_DELIMITER}${payload}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${create_remote_id(id, payload)}`;
 
 			if (Object.hasOwn(remote_responses, cache_key)) {
 				const data = remote_responses[cache_key];

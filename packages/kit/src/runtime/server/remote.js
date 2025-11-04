@@ -2,11 +2,16 @@
 /** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import {
+	HttpError,
+	Redirect,
+	REMOTE_CACHE_DELIMITER,
+	SvelteKitError
+} from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
-import { parse_remote_arg, QUERY_CACHE_DELIMITER, stringify } from '../shared.js';
+import { parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -37,7 +42,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
  * @param {string} id
  */
 async function handle_remote_call_internal(event, state, options, manifest, id) {
-	const [hash, name, additional_args] = id.split(QUERY_CACHE_DELIMITER);
+	const [hash, name, additional_args] = id.split(REMOTE_CACHE_DELIMITER);
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) error(404);
@@ -212,7 +217,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		for (const key of client_refreshes) {
 			if (refreshes[key] !== undefined) continue;
 
-			const [, hash, name, payload] = key.split(QUERY_CACHE_DELIMITER);
+			const [, hash, name, payload] = key.split(REMOTE_CACHE_DELIMITER);
 
 			const loader = manifest._.remotes[hash];
 			const fn = (await loader?.())?.default?.[name];
@@ -263,7 +268,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
-	const [hash, name, action_id] = id.split(QUERY_CACHE_DELIMITER);
+	const [hash, name, action_id] = id.split(REMOTE_CACHE_DELIMITER);
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 

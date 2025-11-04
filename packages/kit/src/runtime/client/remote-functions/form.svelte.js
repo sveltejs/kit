@@ -5,7 +5,7 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, REMOTE_CACHE_DELIMITER } from '@sveltejs/kit/internal';
 import { app, _goto, set_nearest_error_page, invalidateAll, remote_responses } from '../client.js';
 import { tick } from 'svelte';
 import { getHydratableValue } from 'svelte/client';
@@ -21,7 +21,6 @@ import {
 	build_path_string,
 	normalize_issue
 } from '../../form-utils.js';
-import { QUERY_CACHE_DELIMITER } from '../../shared.js';
 
 /**
  * Merge client issues into server issues. Server issues are persisted unless
@@ -58,7 +57,7 @@ export function form(id) {
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
 		const action_id =
-			id + (key != undefined ? `${QUERY_CACHE_DELIMITER}${JSON.stringify(key)}` : '');
+			id + (key != undefined ? `${REMOTE_CACHE_DELIMITER}${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
@@ -305,7 +304,7 @@ export function form(id) {
 				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
 					if (DEV && !key) {
-						const name = id.split(QUERY_CACHE_DELIMITER).pop();
+						const name = id.split(REMOTE_CACHE_DELIMITER).pop();
 						message += `. To create multiple instances, use \`${name}.for(key)\``;
 					}
 

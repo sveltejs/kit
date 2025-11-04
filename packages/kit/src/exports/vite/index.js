@@ -41,7 +41,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
-import { QUERY_CACHE_DELIMITER } from '../../runtime/shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
 
 const cwd = process.cwd();
 
@@ -704,12 +704,12 @@ async function kit({ svelte_config }) {
 					'\n\n' +
 					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+					import { init_remote_functions as $$_init_$$, create_remote_id as $$_create_remote_id_$$ } from '@sveltejs/kit/internal';
 
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
 					for (const [name, fn] of Object.entries($$_self_$$)) {
-						fn.__.id = ${s(remote.hash)} + '${QUERY_CACHE_DELIMITER}' + name;
+						fn.__.id = $$_create_remote_id_$$(${s(remote.hash)}, name);
 						fn.__.name = name;
 					}
 				`;
@@ -765,7 +765,7 @@ async function kit({ svelte_config }) {
 			while (map.has(namespace)) namespace = `__remote${uid++}`;
 
 			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}${QUERY_CACHE_DELIMITER}${name}');`;
+				return `export const ${name} = ${namespace}.${type}('${create_remote_id(remote.hash, name)}');`;
 			});
 
 			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;

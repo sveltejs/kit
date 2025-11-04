@@ -3,8 +3,13 @@
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
 import { app, goto } from '../client.js';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { create_remote_cache_key, QUERY_CACHE_PREFIX, stringify_remote_arg } from '../../shared.js';
+import {
+	create_remote_cache_key,
+	HttpError,
+	Redirect,
+	REMOTE_CACHE_PREFIX
+} from '@sveltejs/kit/internal';
+import { stringify_remote_arg } from '../../shared.js';
 import { cache } from 'svelte/reactivity';
 import { query_cache } from './query-cache.js';
 
@@ -80,7 +85,7 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 			update.release();
 		}
 		// Update the query with the new value
-		const resource = query_cache.get(key.replace(QUERY_CACHE_PREFIX, '')); // TODO should query cache treat prefixed keys as identical to unprefixed ones
+		const resource = query_cache.get(key.replace(REMOTE_CACHE_PREFIX, '')); // TODO should query cache treat prefixed keys as identical to unprefixed ones
 		resource?.set(value);
 	}
 }

@@ -13,7 +13,6 @@ import {
 	flatten_issues
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
-import { QUERY_CACHE_DELIMITER } from '../../../shared.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -278,7 +277,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					if (!instance) {
 						instance = create_instance(key);
-						instance.__.id = `${__.id}${QUERY_CACHE_DELIMITER}${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.id = create_remote_id(__.id, encodeURIComponent(JSON.stringify(key)));
 						instance.__.name = __.name;
 
 						state.form_instances.set(cache_key, instance);

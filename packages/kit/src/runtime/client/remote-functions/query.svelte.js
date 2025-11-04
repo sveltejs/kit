@@ -5,12 +5,16 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import {
+	HttpError,
+	Redirect,
+	REMOTE_CACHE_DELIMITER,
+	REMOTE_CACHE_PREFIX
+} from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { resource } from 'svelte/reactivity';
 import { hydratable } from 'svelte';
 import { query_cache } from './query-cache.js';
-import { QUERY_CACHE_DELIMITER, QUERY_CACHE_PREFIX } from '../../shared.js';
 
 /**
  * @param {string} id
@@ -20,8 +24,8 @@ export function query(id) {
 	if (DEV) {
 		// If this reruns as part of HMR, refresh the query
 		for (const [key, entry] of query_cache) {
-			const cache_key = `${QUERY_CACHE_PREFIX}${QUERY_CACHE_DELIMITER}${id}`;
-			if (key === cache_key || key.startsWith(cache_key + QUERY_CACHE_DELIMITER)) {
+			const cache_key = `${REMOTE_CACHE_PREFIX}${REMOTE_CACHE_DELIMITER}${id}`;
+			if (key === cache_key || key.startsWith(cache_key + REMOTE_CACHE_DELIMITER)) {
 				// use optional chaining in case a prerender function was turned into a query
 				entry.resource.refresh?.();
 			}

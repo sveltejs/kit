@@ -62,4 +62,10 @@ export class ActionFailure {
 	}
 }
 
-export { init_remote_functions } from './remote-functions.js';
+export {
+	init_remote_functions,
+	create_remote_id,
+	create_remote_cache_key,
+	REMOTE_CACHE_DELIMITER,
+	REMOTE_CACHE_PREFIX
+} from './remote-functions.js';
