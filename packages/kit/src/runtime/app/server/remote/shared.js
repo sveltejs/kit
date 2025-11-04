@@ -2,8 +2,9 @@
 /** @import { MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { setHydratableValue } from 'svelte/server';
+import { create_remote_cache_key } from '@sveltejs/kit/internal';
 
 /**
  * @param {any} validate_or_fn

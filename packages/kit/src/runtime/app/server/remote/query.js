@@ -2,9 +2,10 @@
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
+import { stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
+import { create_remote_cache_key } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.

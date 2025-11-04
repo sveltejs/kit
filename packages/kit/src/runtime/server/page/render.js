@@ -16,7 +16,7 @@ import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
-import { create_remote_cache_key } from '../../shared.js';
+import { create_remote_cache_key } from '@sveltejs/kit/internal';
 
 // TODO rename this function/module
 
