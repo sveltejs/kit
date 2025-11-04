@@ -1900,8 +1900,6 @@ test.describe('remote functions', () => {
 	});
 
 	test('prerendered entries not called in prod', async ({ page }) => {
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 		await page.goto('/remote/prerender');
 
 		await page.click('#fetch-prerendered');

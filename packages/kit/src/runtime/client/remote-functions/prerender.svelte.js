@@ -121,9 +121,6 @@ function put(url, encoded) {
 export function prerender(id) {
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Prerender(cache_key, async () => {
-			if (Object.hasOwn(remote_responses, cache_key)) {
-				return remote_responses[cache_key];
-			}
 			await prerender_cache_ready;
 
 			const url = `${base}/${app_dir}/remote/${create_remote_id(id, payload)}`;

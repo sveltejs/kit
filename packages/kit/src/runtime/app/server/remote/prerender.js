@@ -7,6 +7,7 @@ import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import { create_validator, get_response, run_remote_function } from './shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -87,7 +88,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const { event, state } = get_request_store();
 			const payload = stringify_remote_arg(arg, state.transport);
 			const id = __.id;
-			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${create_remote_id(id, payload)}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
