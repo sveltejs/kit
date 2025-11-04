@@ -21,6 +21,7 @@ import {
 	build_path_string,
 	normalize_issue
 } from '../../form-utils.js';
+import { QUERY_CACHE_DELIMITER } from '../../shared.js';
 
 /**
  * Merge client issues into server issues. Server issues are persisted unless
@@ -56,7 +57,8 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
-		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
+		const action_id =
+			id + (key != undefined ? `${QUERY_CACHE_DELIMITER}${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
@@ -303,7 +305,7 @@ export function form(id) {
 				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
 					if (DEV && !key) {
-						const name = id.split('/').pop();
+						const name = id.split(QUERY_CACHE_DELIMITER).pop();
 						message += `. To create multiple instances, use \`${name}.for(key)\``;
 					}
 
