@@ -13,6 +13,7 @@ import {
 	flatten_issues
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
