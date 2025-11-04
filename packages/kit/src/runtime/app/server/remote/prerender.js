@@ -8,6 +8,7 @@ import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import { create_validator, get_response, run_remote_function } from './shared.js';
 import { create_remote_id } from '@sveltejs/kit/internal';
+import * as devalue from 'devalue';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -95,19 +96,26 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 					return await get_response(__, arg, state, async () => {
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
-						return await fetch(new URL(url, event.url.origin).href).then(async (response) => {
-							if (!response.ok) {
-								throw new Error('Prerendered response not found');
-							}
+						return await fetch(new URL(url, event.url.origin).href)
+							.then(async (response) => {
+								if (!response.ok) {
+									throw new Error('Prerendered response not found');
+								}
 
-							const prerendered = await response.json();
+								const prerendered = await response.json();
 
-							if (prerendered.type === 'error') {
-								error(prerendered.status, prerendered.error);
-							}
+								if (prerendered.type === 'error') {
+									error(prerendered.status, prerendered.error);
+								}
 
-							return prerendered.result;
-						});
+								return prerendered.result;
+							})
+							.then((data) =>
+								devalue.parse(
+									data,
+									Object.fromEntries(Object.entries(state.transport).map(([k, v]) => [k, v.decode]))
+								)
+							);
 					});
 				} catch {
 					// not available prerendered, fallback to normal function
