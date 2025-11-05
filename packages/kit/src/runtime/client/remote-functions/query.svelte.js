@@ -153,7 +153,9 @@ export class Query {
 	constructor(key, fn) {
 		this._key = key;
 		this.#resource = resource(() =>
-			hydratable(key, fn, { transport: { parse: (val) => devalue.parse(val, app.decoders) } })
+			hydratable(key, fn, {
+				transport: { decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders) }
+			})
 		);
 	}
 

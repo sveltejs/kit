@@ -83,7 +83,7 @@ export async function get_response(info, arg, state, get_result) {
 		if (state.is_in_render && !cache.hydratable) {
 			cache.hydratable = true;
 			setHydratableValue(create_remote_cache_key(info.id, payload), response, {
-				stringify: (val) => stringify(val, state.transport)
+				encode: (val) => stringify(val, state.transport)
 			});
 		}
 		cache.universal_load ||= state.is_in_universal_load;

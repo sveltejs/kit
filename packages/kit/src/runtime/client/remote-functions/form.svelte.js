@@ -73,7 +73,9 @@ export function form(id) {
 		/** @type {any} */
 		let result = $state.raw(
 			remote_responses[action_id] ??
-				getHydratableValue(action_id, { parse: (val) => devalue.parse(val, app.decoders) })
+				getHydratableValue(action_id, {
+					decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders)
+				})
 		);
 
 		/** @type {number} */
