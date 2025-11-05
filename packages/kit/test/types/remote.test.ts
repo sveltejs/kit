@@ -342,6 +342,7 @@ function form_tests() {
 		);
 	});
 	f8.fields.issues();
+	f8.fields.allIssues();
 	// @ts-expect-error
 	f8.fields.x;
 	// @ts-expect-error
