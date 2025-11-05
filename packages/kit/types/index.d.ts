@@ -2034,11 +2034,13 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: Input extends void
-			? {
-					issues(): RemoteFormIssue[] | undefined;
-				}
-			: RemoteFormFields<Input>;
+		fields: IsAny<Input> extends true
+			? RecursiveFormFields
+			: Input extends void
+				? {
+						issues(): RemoteFormIssue[] | undefined;
+					}
+				: RemoteFormFields<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -2380,6 +2382,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type IsAny<T> = 0 extends 1 & T ? true : false;
 	interface Asset {
 		file: string;
 		size: number;
