@@ -700,7 +700,7 @@ async function kit({ svelte_config }) {
 			if (opts?.ssr) {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
 				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload the the module can be mistakenly
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
 				// loaded and transformed twice and the first time all its exports would be undefined
 				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
