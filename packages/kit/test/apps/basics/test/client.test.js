@@ -1787,7 +1787,9 @@ test.describe('routing', () => {
 });
 
 test.describe('remote functions', () => {
-	test('preloading data works when the page component and server load both import a remote function', async ({ page }) => {
+	test('preloading data works when the page component and server load both import a remote function', async ({
+		page
+	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
 		await page.goto('/remote/dev');
 		await page.locator('a[href="/remote/dev/preload"]').hover();
