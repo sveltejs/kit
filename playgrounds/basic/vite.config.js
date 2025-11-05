@@ -7,8 +7,5 @@ export default {
 		fs: {
 			allow: ['../../packages/kit']
 		}
-	},
-	optimizeDeps: {
-		exclude: ['@sveltejs/kit', 'svelte']
 	}
 };
