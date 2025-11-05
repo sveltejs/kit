@@ -1786,8 +1786,22 @@ test.describe('routing', () => {
 	});
 });
 
-// have to run in serial because commands mutate in-memory data on the server
 test.describe('remote functions', () => {
+	test('preloading data works when the page component and server load both import a remote function', async ({ page }) => {
+		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
+		await page.goto('/remote/dev');
+		await page.locator('a[href="/remote/dev/preload"]').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		await page.click('a[href="/remote/dev/preload"]');
+		await expect(page.locator('p')).toHaveText('foobar');
+	});
+});
+
+// have to run in serial because commands mutate in-memory data on the server
+test.describe('remote function mutations', () => {
 	test.describe.configure({ mode: 'default' });
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
