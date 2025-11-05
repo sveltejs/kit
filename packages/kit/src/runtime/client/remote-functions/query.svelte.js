@@ -154,7 +154,7 @@ export class Query {
 		this._key = key;
 		this.#resource = resource(() =>
 			hydratable(key, fn, {
-				transport: { decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders) }
+				decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders)
 			})
 		);
 	}
