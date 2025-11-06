@@ -1602,6 +1602,8 @@ test.describe('getRequestEvent', () => {
 });
 
 test.describe('remote functions', () => {
+	test.skip(process.env.SVELTE_ASYNC !== 'true', 'when not in async mode');
+
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');
