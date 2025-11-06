@@ -15,6 +15,8 @@
 		"test:cross-platform:build": "node test/setup.js && playwright test test/cross-platform/",
 		"test:server-side-route-resolution:dev": "node test/setup.js && DEV=true ROUTER_RESOLUTION=server playwright test",
 		"test:server-side-route-resolution:build": "node test/setup.js && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test",
+		"test:svelte-async:dev": "node test/setup.js && DEV=true SVELTE_ASYNC=true playwright test",
+		"test:svelte-async:build": "node test/setup.js && PUBLIC_PRERENDERING=false SVELTE_ASYNC=true playwright test",
 		"test:unit": "vitest run"
 	},
 	"devDependencies": {
