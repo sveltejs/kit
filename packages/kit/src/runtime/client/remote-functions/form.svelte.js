@@ -7,8 +7,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError, REMOTE_CACHE_DELIMITER } from '@sveltejs/kit/internal';
 import { app, _goto, set_nearest_error_page, invalidateAll, remote_responses } from '../client.js';
-import { tick } from 'svelte';
-import { getHydratableValue } from 'svelte/client';
+import { tick, hydratable } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
@@ -73,7 +72,7 @@ export function form(id) {
 		/** @type {any} */
 		let result = $state.raw(
 			remote_responses[action_id] ??
-				getHydratableValue(action_id, {
+				hydratable.get(action_id, {
 					decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders)
 				})
 		);

@@ -3,7 +3,7 @@
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
-import { setHydratableValue } from 'svelte/server';
+import { hydratable } from 'svelte';
 import { create_remote_cache_key } from '@sveltejs/kit/internal';
 
 /**
@@ -80,9 +80,9 @@ export async function get_response(info, arg, state, get_result) {
 	const response = (cache.data[payload] ??= get_result());
 
 	if (info.id) {
-		if (state.is_in_render && !cache.hydratable) {
-			cache.hydratable = true;
-			setHydratableValue(create_remote_cache_key(info.id, payload), response, {
+		const key = create_remote_cache_key(info.id, payload);
+		if (state.is_in_render && !hydratable.has(key)) {
+			hydratable.set(key, response, {
 				encode: (val) => stringify(val, state.transport)
 			});
 		}
@@ -155,7 +155,7 @@ export function get_cache(info, state = get_request_store().state) {
 	let cache = state.remote_responses.get(info);
 
 	if (cache === undefined) {
-		cache = { hydratable: false, universal_load: false, data: {} };
+		cache = { universal_load: false, data: {} };
 		state.remote_responses.set(info, cache);
 	}
 
