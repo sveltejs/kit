@@ -60,6 +60,9 @@ jobs:
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
+          - node-version: 24
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
