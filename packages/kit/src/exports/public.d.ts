@@ -1865,7 +1865,14 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: {
+		: T extends "select" | "select multiple" | "text"
+			? {
+				name: string;
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get value(): string | number;
+				set value(v: string | number);
+			};
+			: {
 				name: string;
 				type: T;
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
