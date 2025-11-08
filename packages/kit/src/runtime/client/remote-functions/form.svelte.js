@@ -590,6 +590,8 @@ export function form(id) {
 
 		try {
 			$effect.pre(() => {
+				if (options?.initialData) entry.instance.fields.set(options?.initialData);
+
 				return () => {
 					entry.count--;
 

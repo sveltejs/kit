@@ -282,27 +282,26 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		// Cache keyed instances
-		const form_instances = state.form_instances ?? (state.form_instances = new Map());
-		form_instances.set(cache_key, instance);
-
 		return instance;
 	}
 
 	/** @type {RemoteFormFactory<Input, Output>} */
 	const factory = (arg) => {
+		const { state } = get_request_store();
 		/** @type {RemoteFormFactoryOptions<Input> | undefined } */
 		const options = arg && typeof arg === 'object' ? arg : undefined;
 		const key = options ? options.key : /** @type {ExtractId<Input> | undefined} */ (arg);
 
-		const instance = create_instance(key);
+		const form_instances = state.form_instances ?? (state.form_instances = new Map());
+		const instance = form_instances.get(key) ?? create_instance(key);
 
 		if (options?.initialData) {
 			// seed initial input into cache for SSR
-			const { state } = get_request_store();
 			const cache = get_cache(/** @type any */ (instance).__, state);
 			(cache[''] ??= {}).input = options.initialData;
 		}
+
+		form_instances.set(key, instance);
 
 		return instance;
 	};
