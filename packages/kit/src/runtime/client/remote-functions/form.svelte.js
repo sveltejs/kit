@@ -586,7 +586,11 @@ export function form(id) {
 		/** @type {RemoteFormFactoryOptions<T> | undefined } */
 		const options = arg && typeof arg === 'object' ? arg : undefined;
 		const key = options ? options.key : /** @type {ExtractId<T> | undefined} */ (arg);
-		const entry = instances.get(key) ?? { count: 0, instance: create_instance(options ?? { key }) };
+		const cache_key = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
+		const entry = instances.get(cache_key) ?? {
+			count: 0,
+			instance: create_instance(options ?? { key })
+		};
 
 		try {
 			$effect.pre(() => {
@@ -597,14 +601,14 @@ export function form(id) {
 
 					void tick().then(() => {
 						if (entry.count === 0) {
-							instances.delete(key);
+							instances.delete(cache_key);
 						}
 					});
 				};
 			});
 
 			entry.count += 1;
-			instances.set(key, entry);
+			instances.set(cache_key, entry);
 		} catch {
 			// not in an effect context
 		}
