@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: File upload progress is available on `myForm.fields.someFile.progress()`
+feat: file upload progress is available via `myForm.fields.someFile.progress()`
