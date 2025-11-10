@@ -514,6 +514,8 @@ async function _preload_data(intent) {
 	// then a later one is becoming the real navigation and the preload tokens
 	// get out of sync.
 	if (intent.id !== load_cache?.id) {
+		discard_load_cache();
+
 		const preload = {};
 		preload_tokens.add(preload);
 		load_cache = {

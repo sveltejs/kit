@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.48.4
+### Patch Changes
+
+
+- fix: adjust query's promise implementation to properly allow chaining ([#14859](https://github.com/sveltejs/kit/pull/14859))
+
+
+- fix: make prerender cache work, including in development ([#14860](https://github.com/sveltejs/kit/pull/14860))
+
 ## 2.48.3
 ### Patch Changes
 
