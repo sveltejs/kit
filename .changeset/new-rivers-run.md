@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: File uploads inside `form` remote functions are now streamed - form data can be accessed before large files finish uploading.
+feat: stream file uploads inside `form` remote functions allowing form data to be accessed before large files finish uploading
