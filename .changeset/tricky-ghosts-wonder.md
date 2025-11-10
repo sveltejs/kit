@@ -3,4 +3,4 @@
 '@sveltejs/adapter-auto': minor
 ---
 
-feat: Support Cloudflare Workers in addition to Cloudflare Pages
+feat: support Cloudflare Workers in addition to Cloudflare Pages
