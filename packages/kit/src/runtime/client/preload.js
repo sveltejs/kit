@@ -1,12 +1,7 @@
 import { DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { base } from '$app/paths';
-import {
-	get_current,
-	get_navigation_intent,
-	load_route,
-	set_root
-} from './client.js';
+import { get_current, get_navigation_intent, load_route, set_root } from './client.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 import { page, update } from './state.svelte.js';
 import {
@@ -144,7 +139,16 @@ export function setup(container, app, after_navigate_callbacks) {
 }
 
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
-export let load_cache = null;
+let load_cache = null;
+
+export function get_load_cache() {
+	return load_cache;
+}
+
+/** @param {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} cache */
+export function set_load_cache(cache) {
+	load_cache = cache;
+}
 
 export function discard_load_cache() {
 	void load_cache?.fork?.then((f) => f?.discard());

@@ -925,10 +925,12 @@ function diff_search_params(old_url, new_url) {
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 export async function load_route({ id, invalidating, url, params, route, preload_token }) {
-	if (preload?.load_cache?.id === id) {
+	const load_cache = preload?.get_load_cache();
+	if (load_cache?.id === id) {
 		// the preload becomes the real navigation
-		preload.preload_tokens.delete(preload.load_cache.token);
-		return preload.load_cache.promise;
+		// @ts-expect-error TS is too dumb to know that preload is defined if load_cache is also defined
+		preload.preload_tokens.delete(load_cache.token);
+		return load_cache.promise;
 	}
 
 	const { errors, layouts, leaf } = route;
@@ -1600,8 +1602,8 @@ async function navigate({
 	let load_cache_fork;
 	if (preload) {
 		// reset preload synchronously after the history state has been set to avoid race conditions
-		load_cache_fork = preload.load_cache?.fork;
-		preload.load_cache = null;
+		load_cache_fork = preload.get_load_cache()?.fork;
+		preload.set_load_cache(null);
 	}
 
 	navigation_result.props.page.state = state;
