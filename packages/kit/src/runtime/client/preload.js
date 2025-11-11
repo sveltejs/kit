@@ -1,6 +1,8 @@
 import { DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { base } from '$app/paths';
+// the variables _should_ be safe to statically import since they are set before
+// this module is dynamically imported
 import {
 	after_navigate_callbacks,
 	app,
