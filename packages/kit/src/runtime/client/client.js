@@ -6,10 +6,10 @@ const { onMount, tick } = svelte;
 const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
-	decode_pathname,
 	strip_hash,
 	make_trackable,
-	normalize_path
+	normalize_path,
+	decode_pathname
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
@@ -24,14 +24,15 @@ import {
 	scroll_state,
 	notifiable_store,
 	create_updated_store,
-	load_css
+	load_css,
+	clone_page,
+	get_page_key
 } from './utils.js';
 import { base } from '$app/paths';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
 	NAVIGATION_INDEX,
-	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
 	STATES_KEY,
 	SNAPSHOT_KEY,
@@ -176,13 +177,13 @@ async function update_service_worker() {
 function noop() {}
 
 /** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
-let routes;
+export let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_error_loader;
 /** @type {HTMLElement} */
-let container;
+export let container;
 /** @type {HTMLElement} */
 let target;
 
@@ -206,14 +207,6 @@ const invalidated = [];
  */
 const components = [];
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
-let load_cache = null;
-
-function discard_load_cache() {
-	void load_cache?.fork?.then((f) => f?.discard());
-	load_cache = null;
-}
-
 /**
  * @type {Map<string, Promise<URL>>}
  * Cache for client-side rerouting, since it could contain async calls which we want to
@@ -236,7 +229,7 @@ const before_navigate_callbacks = new Set();
 const on_navigate_callbacks = new Set();
 
 /** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
-const after_navigate_callbacks = new Set();
+export const after_navigate_callbacks = new Set();
 
 /** @type {import('./types.js').NavigationState} */
 let current = {
@@ -245,6 +238,10 @@ let current = {
 	// @ts-ignore - we need the initial value to be null
 	url: null
 };
+
+export function get_current() {
+	return current;
+}
 
 /** this being true means we SSR'd */
 let hydrated = false;
@@ -261,22 +258,19 @@ let force_invalidation = false;
 /** @type {import('svelte').SvelteComponent} */
 let root;
 
+/** @param {Partial<Record<string, any>>} props */
+export function set_root(props) {
+	root.$set(props);
+}
+
 /** @type {number} keeping track of the history index in order to prevent popstate navigation events if needed */
 let current_history_index;
 
 /** @type {number} */
 let current_navigation_index;
 
-/** @type {{}} */
+/** @type {{}} current navigation token */
 let token;
-
-/**
- * A set of tokens which are associated to current preloads.
- * If a preload becomes a real navigation, it's removed from the set.
- * If a preload token is in the set and the preload errors, the error
- * handling logic (for example reloading) is skipped.
- */
-const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
 export let pending_invalidate;
@@ -369,7 +363,7 @@ export async function start(_app, _target, hydrate) {
 		restore_scroll();
 	}
 
-	_start_router();
+	await _start_router();
 }
 
 async function _invalidate(include_load_functions = true, reset_page_state = true) {
@@ -387,7 +381,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Also solves an edge case where a preload is triggered, the navigation for it
 	// was then triggered and is still running while the invalidation kicks in,
 	// at which point the invalidation should take over and "win".
-	discard_load_cache();
+	preload?.discard_load_cache();
 
 	// Rerun queries
 	if (force_invalidation) {
@@ -466,7 +460,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
 	if (options.invalidateAll) {
-		discard_load_cache();
+		preload?.discard_load_cache();
 	}
 
 	await navigate({
@@ -504,68 +498,6 @@ export async function _goto(url, options, redirect_count, nav_token) {
 					}
 				});
 			});
-	}
-}
-
-/** @param {import('./types.js').NavigationIntent} intent */
-async function _preload_data(intent) {
-	// Reuse the existing pending preload if it's for the same navigation.
-	// Prevents an edge case where same preload is triggered multiple times,
-	// then a later one is becoming the real navigation and the preload tokens
-	// get out of sync.
-	if (intent.id !== load_cache?.id) {
-		discard_load_cache();
-
-		const preload = {};
-		preload_tokens.add(preload);
-		load_cache = {
-			id: intent.id,
-			token: preload,
-			promise: load_route({ ...intent, preload }).then((result) => {
-				preload_tokens.delete(preload);
-				if (result.type === 'loaded' && result.state.error) {
-					// Don't cache errors, because they might be transient
-					discard_load_cache();
-				}
-				return result;
-			}),
-			fork: null
-		};
-
-		if (svelte.fork) {
-			const lc = load_cache;
-
-			lc.fork = lc.promise.then((result) => {
-				// if load_cache was discarded before load_cache.promise could
-				// resolve, bail rather than creating an orphan fork
-				if (lc === load_cache && result.type === 'loaded') {
-					try {
-						return svelte.fork(() => {
-							root.$set(result.props);
-							update(result.props.page);
-						});
-					} catch {
-						// if it errors, it's because the experimental flag isn't enabled
-					}
-				}
-
-				return null;
-			});
-		}
-	}
-
-	return load_cache.promise;
-}
-
-/**
- * @param {URL} url
- * @returns {Promise<void>}
- */
-async function _preload_code(url) {
-	const route = (await get_navigation_intent(url, false))?.route;
-
-	if (route) {
-		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
 	}
 }
 
@@ -989,35 +921,14 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
- * @returns {import('./types.js').NavigationFinished}
- */
-function preload_error({ error, url, route, params }) {
-	return {
-		type: 'loaded',
-		state: {
-			error,
-			url,
-			route,
-			params,
-			branch: []
-		},
-		props: {
-			page: clone_page(page),
-			constructors: []
-		}
-	};
-}
-
-/**
- * @param {import('./types.js').NavigationIntent & { preload?: {} }} intent
+ * @param {import('./types.js').NavigationIntent & { preload_token?: {} }} intent
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
-async function load_route({ id, invalidating, url, params, route, preload }) {
-	if (load_cache?.id === id) {
+export async function load_route({ id, invalidating, url, params, route, preload_token }) {
+	if (preload?.load_cache?.id === id) {
 		// the preload becomes the real navigation
-		preload_tokens.delete(load_cache.token);
-		return load_cache.promise;
+		preload.preload_tokens.delete(preload.load_cache.token);
+		return preload.load_cache.promise;
 	}
 
 	const { errors, layouts, leaf } = route;
@@ -1032,7 +943,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
-	const url_changed = current.url ? id !== get_page_key(current.url) : false;
+	const url_changed = current.url ? id !== get_page_key(current.url, app) : false;
 	const route_changed = current.route ? route.id !== current.route.id : false;
 	const search_params_changed = diff_search_params(current.url, url);
 
@@ -1068,8 +979,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
-				if (preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, url, params, route });
+				if (preload?.preload_tokens.has(preload_token)) {
+					return preload.preload_error({ error: handled_error, url, params, route });
 				}
 
 				return load_root_error_page({
@@ -1158,8 +1069,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				if (preload_tokens.has(preload)) {
-					return preload_error({
+				if (preload?.preload_tokens.has(preload_token)) {
+					return preload.preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
 						url,
 						params,
@@ -1338,7 +1249,7 @@ async function load_root_error_page({ status, error, url, route }) {
  * @param {URL} url
  * @returns {Promise<URL | undefined>}
  */
-async function get_rerouted_url(url) {
+export async function get_rerouted_url(url) {
 	const href = url.href;
 
 	if (reroute_cache.has(href)) {
@@ -1400,7 +1311,7 @@ async function get_rerouted_url(url) {
  * @param {boolean} invalidating
  * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
-async function get_navigation_intent(url, invalidating) {
+export async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
 
@@ -1415,7 +1326,7 @@ async function get_navigation_intent(url, invalidating) {
 
 			if (params) {
 				return {
-					id: get_page_key(url),
+					id: get_page_key(url, app),
 					invalidating,
 					route,
 					params: decode_params(params),
@@ -1433,7 +1344,7 @@ async function get_navigation_intent(url, invalidating) {
 		if (!route) return;
 
 		return {
-			id: get_page_key(url),
+			id: get_page_key(url, app),
 			invalidating,
 			route: parse_server_route(route, app.nodes),
 			params,
@@ -1449,11 +1360,6 @@ function get_url_path(url) {
 			app.hash ? url.hash.replace(/^#/, '').replace(/[?#].+/, '') : url.pathname.slice(base.length)
 		) || '/'
 	);
-}
-
-/** @param {URL} url */
-function get_page_key(url) {
-	return (app.hash ? url.hash.replace(/^#/, '') : url.pathname) + url.search;
 }
 
 /**
@@ -1690,9 +1596,13 @@ async function navigate({
 		}
 	}
 
-	// reset preload synchronously after the history state has been set to avoid race conditions
-	const load_cache_fork = load_cache?.fork;
-	load_cache = null;
+	/** @type {Promise<svelte.Fork | null> | null | undefined} */
+	let load_cache_fork;
+	if (preload) {
+		// reset preload synchronously after the history state has been set to avoid race conditions
+		load_cache_fork = preload.load_cache?.fork;
+		preload.load_cache = null;
+	}
 
 	navigation_result.props.page.state = state;
 
@@ -1852,119 +1762,6 @@ if (import.meta.hot) {
 	import.meta.hot.on('vite:beforeUpdate', () => {
 		if (current.error) location.reload();
 	});
-}
-
-/** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
-
-function setup_preload() {
-	/** @type {NodeJS.Timeout} */
-	let mousemove_timeout;
-	/** @type {Element} */
-	let current_a;
-	/** @type {PreloadDataPriority} */
-	let current_priority;
-
-	container.addEventListener('mousemove', (event) => {
-		const target = /** @type {Element} */ (event.target);
-
-		clearTimeout(mousemove_timeout);
-		mousemove_timeout = setTimeout(() => {
-			void preload(target, PRELOAD_PRIORITIES.hover);
-		}, 20);
-	});
-
-	/** @param {Event} event */
-	function tap(event) {
-		if (event.defaultPrevented) return;
-		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
-	}
-
-	container.addEventListener('mousedown', tap);
-	container.addEventListener('touchstart', tap, { passive: true });
-
-	const observer = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting) {
-					void _preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href));
-					observer.unobserve(entry.target);
-				}
-			}
-		},
-		{ threshold: 0 }
-	);
-
-	/**
-	 * @param {Element} element
-	 * @param {PreloadDataPriority} priority
-	 */
-	async function preload(element, priority) {
-		const a = find_anchor(element, container);
-
-		// we don't want to preload data again if the user has already hovered/tapped
-		const interacted = a === current_a && priority >= current_priority;
-		if (!a || interacted) return;
-
-		const { url, external, download } = get_link_info(a, base, app.hash);
-		if (external || download) return;
-
-		const options = get_router_options(a);
-
-		// we don't want to preload data for a page we're already on
-		const same_url = url && get_page_key(current.url) === get_page_key(url);
-		if (options.reload || same_url) return;
-
-		if (priority <= options.preload_data) {
-			current_a = a;
-			// we don't want to preload data again on tap if we've already preloaded it on hover
-			current_priority = PRELOAD_PRIORITIES.tap;
-
-			const intent = await get_navigation_intent(url, false);
-			if (!intent) return;
-
-			if (DEV) {
-				void _preload_data(intent).then((result) => {
-					if (result.type === 'loaded' && result.state.error) {
-						console.warn(
-							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-								'See https://svelte.dev/docs/kit/link-options for more info'
-						);
-					}
-				});
-			} else {
-				void _preload_data(intent);
-			}
-		} else if (priority <= options.preload_code) {
-			current_a = a;
-			current_priority = priority;
-			void _preload_code(/** @type {URL} */ (url));
-		}
-	}
-
-	function after_navigate() {
-		observer.disconnect();
-
-		for (const a of container.querySelectorAll('a')) {
-			const { url, external, download } = get_link_info(a, base, app.hash);
-			if (external || download) continue;
-
-			const options = get_router_options(a);
-			if (options.reload) continue;
-
-			if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
-				observer.observe(a);
-			}
-
-			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				void _preload_code(/** @type {URL} */ (url));
-			}
-		}
-	}
-
-	after_navigate_callbacks.add(after_navigate);
-	after_navigate();
 }
 
 /**
@@ -2197,7 +1994,8 @@ export async function preloadData(href) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 	}
 
-	const result = await _preload_data(intent);
+	preload ??= await import('./preload.js');
+	const result = await preload._preload_data(intent);
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
@@ -2249,7 +2047,8 @@ export async function preloadCode(pathname) {
 		}
 	}
 
-	return _preload_code(url);
+	preload ??= await import('./preload.js');
+	return preload._preload_code(url);
 }
 
 /**
@@ -2409,7 +2208,10 @@ export async function set_nearest_error_page(error, status = 500) {
 	}
 }
 
-function _start_router() {
+/** @type {import('./preload.js') | undefined} */
+let preload;
+
+async function _start_router() {
 	history.scrollRestoration = 'manual';
 
 	// Adopted from Nuxt.js
@@ -2452,9 +2254,10 @@ function _start_router() {
 		}
 	});
 
-	// @ts-expect-error this isn't supported everywhere yet
+	// @ts-expect-error this isn't available on Firefox and Safari yet
 	if (!navigator.connection?.saveData) {
-		setup_preload();
+		preload ??= await import('./preload.js');
+		preload.setup();
 	}
 
 	/** @param {MouseEvent} event */
@@ -3139,28 +2942,6 @@ function create_navigation(current, intent, url, type) {
 		fulfil,
 		// @ts-expect-error
 		reject
-	};
-}
-
-/**
- * TODO: remove this in 3.0 when the page store is also removed
- *
- * We need to assign a new page object so that subscribers are correctly notified.
- * However, spreading `{ ...page }` returns an empty object so we manually
- * assign to each property instead.
- *
- * @param {import('@sveltejs/kit').Page} page
- */
-function clone_page(page) {
-	return {
-		data: page.data,
-		error: page.error,
-		form: page.form,
-		params: page.params,
-		route: page.route,
-		state: page.state,
-		status: page.status,
-		url: page.url
 	};
 }
 
