@@ -6,10 +6,10 @@ const { onMount, tick } = svelte;
 const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
+	decode_pathname,
 	strip_hash,
 	make_trackable,
-	normalize_path,
-	decode_pathname
+	normalize_path
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
