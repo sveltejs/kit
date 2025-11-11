@@ -177,13 +177,13 @@ async function update_service_worker() {
 function noop() {}
 
 /** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
-export let routes;
+let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_error_loader;
 /** @type {HTMLElement} */
-export let container;
+let container;
 /** @type {HTMLElement} */
 let target;
 
@@ -2257,7 +2257,7 @@ async function _start_router() {
 	// @ts-expect-error this isn't available on Firefox and Safari yet
 	if (!navigator.connection?.saveData) {
 		preload ??= await import('./preload.js');
-		preload.setup();
+		preload.setup(container, app, after_navigate_callbacks);
 	}
 
 	/** @param {MouseEvent} event */

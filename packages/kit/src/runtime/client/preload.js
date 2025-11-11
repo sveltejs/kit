@@ -1,12 +1,7 @@
 import { DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { base } from '$app/paths';
-// the variables _should_ be safe to statically import since they are set before
-// this module is dynamically imported
 import {
-	after_navigate_callbacks,
-	app,
-	container,
 	get_current,
 	get_navigation_intent,
 	load_route,
@@ -32,7 +27,12 @@ export const preload_tokens = new Set();
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
 
-export function setup() {
+/**
+ * @param {HTMLElement} container
+ * @param {import('./types.js').SvelteKitApp} app
+ * @param {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} after_navigate_callbacks
+ */
+export function setup(container, app, after_navigate_callbacks) {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
 	/** @type {Element} */
