@@ -452,6 +452,12 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 
+	test('custom error object', async ({ request }) => {
+		const response = await request.get('/errors/custom-error');
+		console.log(response.status());
+		expect(response.status()).toBe(422);
+	});
+
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {

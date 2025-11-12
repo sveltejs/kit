@@ -25,9 +25,17 @@ export function normalize_error(error) {
 
 /**
  * @param {unknown} error
+ * @returns {number}
  */
 export function get_status(error) {
-	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+	if (error instanceof HttpError || error instanceof SvelteKitError) {
+		return error.status;
+	}
+	// For overrides / custom error objects
+	if (typeof error === 'object' && error !== null && 'status' in error) {
+		return /** @type {{ status?: number }} */ (error).status ?? 500;
+	}
+	return 500;
 }
 
 /**
