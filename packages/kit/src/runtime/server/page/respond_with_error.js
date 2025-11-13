@@ -98,7 +98,7 @@ export async function respond_with_error({
 				ssr,
 				csr
 			},
-			status,
+			status: event_state.error_status_code ?? status,
 			error: await handle_error_and_jsonify(event, event_state, options, error),
 			branch,
 			fetched,
@@ -114,10 +114,8 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		return static_error_page(
-			options,
-			get_status(e),
-			(await handle_error_and_jsonify(event, event_state, options, e)).message
-		);
+		const status = get_status(e);
+		const error = await handle_error_and_jsonify(event, event_state, options, e);
+		return static_error_page(options, event_state.error_status_code ?? status, error.message);
 	}
 }

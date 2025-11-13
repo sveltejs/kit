@@ -1513,6 +1513,26 @@ export interface RequestEvent<
 	 */
 	setHeaders: (headers: Record<string, string>) => void;
 	/**
+	 * Override the status code for error responses. This is useful when you want to customize the HTTP status code returned for an error, for example:
+	 *
+	 *	```js
+	 *	/// file: src/hooks.server.js
+	 *	export async function handleError({ error, event, status, message }) {
+	 *		// Return 503 Service Unavailable for database errors
+	 *		if (error.message.includes('database')) {
+	 *			event.setStatusCode(503);
+	 *		}
+	 *
+	 *		return {
+	 *			message: 'An error occurred'
+	 *		};
+	 *	}
+	 *	```
+	 *
+	 * This method can only be called from the `handleError` hook and only affects error responses.
+	 */
+	setStatusCode: (code: number) => void;
+	/**
 	 * The requested URL.
 	 */
 	url: URL;

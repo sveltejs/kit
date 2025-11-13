@@ -1,10 +1,6 @@
-class CustomError extends Error {
-	constructor(message, errorOpts) {
-		super(message, errorOpts);
-		this.status = 422;
-	}
-}
-
+/**
+ * This gets intercepted by the handleError hook and sets the status code to 422
+ */
 export function GET() {
-	throw new CustomError('Custom error');
+	throw new Error('Custom error');
 }
