@@ -42,7 +42,7 @@ export const config = {
 
 The following options apply to all functions:
 
-- `runtime`: `'edge'`, `'nodejs18.x'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
+- `runtime`: `'edge'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
   > [!NOTE] This option is deprecated and will be removed in a future version, at which point all your functions will use whichever Node version is specified in the project configuration on Vercel
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions

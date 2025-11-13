@@ -159,8 +159,14 @@ command_tests();
 
 function form_tests() {
 	const q = query(() => '');
-	const f = form('unchecked', (data: { input: string }) => {
+	const f = form('unchecked', (data: { input: string }, invalid) => {
 		data.input;
+		invalid(
+			'foo',
+			invalid.input('bar'),
+			// @ts-expect-error
+			invalid.nonexistent.prop('baz')
+		);
 		return { success: true };
 	});
 
@@ -178,7 +184,7 @@ function form_tests() {
 
 	const f2 = form(
 		null as any as StandardSchemaV1<{ a: string; nested: { prop: string } }>,
-		(data) => {
+		(data, invalid) => {
 			data.a === '';
 			data.nested.prop === '';
 			// @ts-expect-error
@@ -187,28 +193,32 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			invalid(
+				'foo',
+				invalid.nested.prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
-	f2.field('a');
-	f2.field('nested.prop');
 	// @ts-expect-error
-	f2.field('nonexistent');
-	f2.issues!.a;
-	f2.issues!['nested.prop'];
+	f2.fields.name();
+	f2.fields.a.issues();
+	f2.fields.nested.prop.issues();
 	// @ts-expect-error
-	f2.issues!.nonexistent;
-	f2.input!.a = '';
-	f2.input!['nested.prop'] = '';
+	f2.fields.nonexistent.issues();
+	f2.fields.a.value();
+	f2.fields.nested.prop.value();
 	// @ts-expect-error
-	f2.input!.nonexistent = '';
+	f2.fields.nonexistent.value();
 	// @ts-expect-error
-	f2.input!.a = 123;
+	f2.fields.array[0].array.name();
 
 	// all schema properties optional
 	const f3 = form(
 		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
-		(data) => {
+		(data, invalid) => {
 			data.a === '';
 			data.nested?.prop === '';
 			// @ts-expect-error
@@ -219,23 +229,23 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			invalid(
+				'foo',
+				invalid.nested.prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
-	f3.field('a');
-	f3.field('nested.prop');
 	// @ts-expect-error
-	f3.field('nonexistent');
-	f3.issues!.a;
-	f3.issues!['nested.prop'];
+	f3.fields.name();
+	f3.fields.a.issues();
+	f3.fields.a.value();
+	f3.fields.nested.prop.issues();
+	f3.fields.nested.prop.value();
 	// @ts-expect-error
-	f3.issues!.nonexistent;
-	f3.input!.a = '';
-	f3.input!['nested.prop'] = '';
-	// @ts-expect-error
-	f3.input!.nonexistent = '';
-	// @ts-expect-error
-	f3.input!.a = 123;
+	f3.fields.nonexistent.name();
 
 	// index signature schema
 	const f4 = form(null as any as StandardSchemaV1<Record<string, any>>, (data) => {
@@ -243,64 +253,102 @@ function form_tests() {
 		data.nested?.prop === '';
 		return { success: true };
 	});
-	f4.field('a');
-	f4.field('nested.prop');
-	f4.issues!.a;
-	f4.issues!['nested.prop'];
-	f4.input!.a = '';
-	f4.input!['nested.prop'] = '';
 	// @ts-expect-error
-	f4.input!.a = 123;
+	f4.fields.name();
+	f4.fields.a.issues();
+	f4.fields.a.value();
+	f4.fields.nested.prop.issues();
+	f4.fields.nested.prop.value();
 
 	// schema with union types
-	const f5 = form(null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>, (data) => {
-		data.foo === 'a';
-		data.bar === 'c';
-		// @ts-expect-error
-		data.foo === 'e';
-		return { success: true };
-	});
-	f5.field('foo');
+	const f5 = form(
+		null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>,
+		(data, invalid) => {
+			data.foo === 'a';
+			data.bar === 'c';
+			// @ts-expect-error
+			data.foo === 'e';
+			invalid(
+				'foo',
+				invalid.bar('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
+			return { success: true };
+		}
+	);
 	// @ts-expect-error
-	f5.field('nonexistent');
-	f5.issues!.foo;
-	f5.issues!.bar;
+	f5.fields.name();
+	f5.fields.foo.issues();
+	f5.fields.bar.issues();
+	f5.fields.foo.value();
+	f5.fields.bar.value() === 'c';
 	// @ts-expect-error
-	f5.issues!.nonexistent;
-	f5.input!.foo = 'a';
+	f5.fields.foo.value() === 'e';
 	// @ts-expect-error
-	f5.input!.foo = 123;
+	f5.fields.nonexistent.name();
 
 	// schema with arrays
 	const f6 = form(
 		null as any as StandardSchemaV1<{ array: Array<{ array: string[]; prop: string }> }>,
-		(data) => {
+		(data, invalid) => {
 			data.array[0].prop === 'a';
 			data.array[0].array[0] === 'a';
 			// @ts-expect-error
 			data.array[0].array[0] === 1;
+			invalid(
+				'foo',
+				invalid.array[0].prop('bar'),
+				// @ts-expect-error
+				invalid.nonexistent.prop('baz')
+			);
 			return { success: true };
 		}
 	);
-	f6.field('array[0].prop');
-	f6.field('array[0].array[]');
+	// @ts-expect-error
+	f6.fields.name();
 	// @ts-expect-error
 	f6.field('array[0].array');
-	f6.issues!.array;
-	f6.issues!['array[0].prop'];
-	f6.issues!['array[0].array'];
+	f6.fields.array.issues();
+	f6.fields.array[0].prop.issues();
+	f6.fields.array[0].array.issues();
 	// @ts-expect-error
-	f6.issues!['array[0].array[]'];
+	f6.fields.nonexistent.issues();
+	f6.fields.array[0].prop.value();
+	f6.fields.array[0].array.value();
 	// @ts-expect-error
-	f6.issues!.nonexistent;
-	f6.input!['array[0].prop'] = '';
-	f6.input!['array[0].array'] = [''];
+	f6.fields.array[0].array.name();
+
+	// any
+	const f7 = form(null as any, (data, invalid) => {
+		data.a === '';
+		data.nested?.prop === '';
+		invalid('foo', invalid.nested.prop('bar'));
+		return { success: true };
+	});
 	// @ts-expect-error
-	f6.input!['array[0].array'] = '';
+	f7.fields.name();
+	f7.fields.a.issues();
+	f7.fields.a.value();
+	f7.fields.nested.prop.issues();
+	f7.fields.nested.prop.value();
+
+	// no schema
+	const f8 = form((invalid) => {
+		invalid(
+			'foo',
+			// @ts-expect-error
+			invalid.x('bar')
+		);
+	});
 	// @ts-expect-error
-	f6.input!['array[0].array[]'] = [''];
+	f8.fields.x;
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
+
+	// doesn't use data
+	const f9 = form(() => Promise.resolve({ success: true }));
+	f9.result?.success === true;
 }
 form_tests();
 

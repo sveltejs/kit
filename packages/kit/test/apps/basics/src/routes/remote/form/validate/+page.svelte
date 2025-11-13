@@ -1,35 +1,37 @@
 <script>
-	import { my_form } from './form.remote.js';
+	import { issue_path_form, my_form } from './form.remote.js';
 	import * as v from 'valibot';
 
 	const schema = v.object({
-		foo: v.picklist(['a', 'b']),
+		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e']),
-		button: v.literal('submitter')
+		button: v.optional(v.literal('submitter'))
 	});
 	let submitter;
-	$inspect(my_form.issues);
+	$inspect(my_form.fields.allIssues());
 </script>
 
-<form {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
-	{#if my_form.issues.foo}
-		<p>{my_form.issues.foo[0].message}</p>
-	{/if}
+<form id="my-form" {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
+	{#each my_form.fields.foo.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input name={my_form.field('foo')} />
+	<input {...my_form.fields.foo.as('text')} />
 
-	{#if my_form.issues.bar}
-		<p>{my_form.issues.bar[0].message}</p>
-	{/if}
+	{#each my_form.fields.bar.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input name={my_form.field('bar')} />
+	<input {...my_form.fields.bar.as('text')} />
 
-	<button bind:this={submitter} name={my_form.field('button')} value="incorrect_value">
+	<button>submit (imperative validation)</button>
+
+	<button bind:this={submitter} {...my_form.fields.button.as('submit', 'incorrect_value')}>
 		submit
 	</button>
-	{#if my_form.issues.button}
-		<p>{my_form.issues.button[0].message}</p>
-	{/if}
+	{#each my_form.fields.button.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 </form>
 <button
 	id="trigger-validate"
@@ -37,3 +39,15 @@
 >
 	trigger validation
 </button>
+
+<form id="issue-path-form" {...issue_path_form}>
+	<input {...issue_path_form.fields.nested.value.as('text')} />
+	<button
+		type="button"
+		id="validate"
+		onclick={() => issue_path_form.validate({ includeUntouched: true })}
+	>
+		Validate
+	</button>
+	<pre id="allIssues">{JSON.stringify(issue_path_form.fields.allIssues())}</pre>
+</form>

@@ -172,8 +172,8 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
-/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
-let remote_exports = undefined;
+/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+let build_metadata = undefined;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -298,6 +298,23 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
+					esbuildOptions: {
+						plugins: [
+							{
+								name: 'vite-plugin-sveltekit-setup:optimize',
+								setup(build) {
+									if (!kit.experimental.remoteFunctions) return;
+
+									const filter = new RegExp(
+										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+									);
+
+									// treat .remote.js files as empty for the purposes of prebundling
+									build.onLoad({ filter }, () => ({ contents: '' }));
+								}
+							}
+						]
+					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -333,6 +350,7 @@ async function kit({ svelte_config }) {
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
 			};
 
@@ -352,12 +370,28 @@ async function kit({ svelte_config }) {
 
 				if (!secondary_build_started) {
 					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					// During the initial server build we don't know yet
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
+				} else {
+					const nodes = Object.values(
+						/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
+					);
+
+					// Through the finished analysis we can now check if any node has server or universal load functions
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(has_server_load);
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(has_universal_load);
 				}
 			} else {
 				new_config.define = {
 					...define,
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
+					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+					__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 				};
 
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
@@ -618,65 +652,31 @@ async function kit({ svelte_config }) {
 	/** @type {Array<{ hash: string, file: string }>} */
 	const remotes = [];
 
+	/** @type {Map<string, string>} Maps remote hash -> original module id */
+	const remote_original_by_hash = new Map();
+
+	/** @type {Set<string>} Track which remote hashes have already been emitted */
+	const emitted_remote_hashes = new Set();
+
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		config(config) {
-			if (!config.build?.ssr) {
-				// only set manualChunks for the SSR build
-				return;
+		resolveId(id) {
+			if (id.startsWith('\0sveltekit-remote:')) return id;
+		},
+
+		load(id) {
+			// On-the-fly generated entry point for remote file just forwards the original module
+			// We're not using manualChunks because it can cause problems with circular dependencies
+			// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
+			// (e.g. https://github.com/sveltejs/kit/issues/14590).
+			if (id.startsWith('\0sveltekit-remote:')) {
+				const hash_id = id.slice('\0sveltekit-remote:'.length);
+				const original = remote_original_by_hash.get(hash_id);
+				if (!original) throw new Error(`Expected to find metadata for remote file ${id}`);
+				return `import * as m from ${s(original)};\nexport default m;`;
 			}
-
-			// Ensure build.rollupOptions.output exists
-			config.build ??= {};
-			config.build.rollupOptions ??= {};
-			config.build.rollupOptions.output ??= {};
-
-			if (Array.isArray(config.build.rollupOptions.output)) {
-				// TODO I have no idea how this could occur
-				throw new Error('rollupOptions.output cannot be an array');
-			}
-
-			// Set up manualChunks to isolate *.remote.ts files
-			const { manualChunks } = config.build.rollupOptions.output;
-
-			config.build.rollupOptions.output = {
-				...config.build.rollupOptions.output,
-				manualChunks(id, meta) {
-					// Prevent core runtime and env from ending up in a remote chunk, which could break because of initialization order
-					if (id === `${runtime_directory}/app/server/index.js`) {
-						return 'app-server';
-					}
-					if (id === `${runtime_directory}/shared-server.js`) {
-						return 'app-shared-server';
-					}
-
-					// Check if this is a *.remote.ts file
-					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
-						const relative = posixify(path.relative(cwd, id));
-
-						return `remote-${hash(relative)}`;
-					}
-
-					// If there was an existing manualChunks function, call it
-					if (typeof manualChunks === 'function') {
-						return manualChunks(id, meta);
-					}
-
-					// If manualChunks is an object, check if this module matches any patterns
-					if (manualChunks) {
-						for (const name in manualChunks) {
-							const patterns = manualChunks[name];
-
-							// TODO is `id.includes(pattern)` correct?
-							if (patterns.some((pattern) => id.includes(pattern))) {
-								return name;
-							}
-						}
-					}
-				}
-			};
 		},
 
 		configureServer(_dev_server) {
@@ -684,12 +684,12 @@ async function kit({ svelte_config }) {
 		},
 
 		async transform(code, id, opts) {
-			if (!svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
+			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
 			const file = posixify(path.relative(cwd, id));
-
 			const remote = {
 				hash: hash(file),
 				file
@@ -698,9 +698,20 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
-				code += dedent`
+				// we need to add an `await Promise.resolve()` because if the user imports this function
+				// on the client AND in a load function when loading the client module we will trigger
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+				// loaded and transformed twice and the first time all its exports would be undefined
+				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+
+				// Extra newlines to prevent syntax errors around missing semicolons or comments
+				code +=
+					'\n\n' +
+					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+
+					${dev_server ? 'await Promise.resolve()' : ''}
 
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
@@ -710,10 +721,17 @@ async function kit({ svelte_config }) {
 					}
 				`;
 
+				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 				if (!dev_server) {
-					// in prod, prevent the functions from being treeshaken. This will
-					// be replaced with an `export default` in the `writeBundle` hook
-					code += `$$_export_$$($$_self_$$);`;
+					remote_original_by_hash.set(remote.hash, id);
+					if (!emitted_remote_hashes.has(remote.hash)) {
+						this.emitFile({
+							type: 'chunk',
+							id: `\0sveltekit-remote:${remote.hash}`,
+							name: `remote-${remote.hash}`
+						});
+						emitted_remote_hashes.add(remote.hash);
+					}
 				}
 
 				return code;
@@ -740,8 +758,8 @@ async function kit({ svelte_config }) {
 
 			// in prod, we already built and analysed the server code before
 			// building the client code, so `remote_exports` is populated
-			else if (remote_exports) {
-				const exports = remote_exports.get(remote.hash);
+			else if (build_metadata?.remotes) {
+				const exports = build_metadata?.remotes.get(remote.hash);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
@@ -757,22 +775,15 @@ async function kit({ svelte_config }) {
 				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
 			});
 
-			return {
-				code: `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`
-			};
-		},
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
 
-		writeBundle() {
-			for (const remote of remotes) {
-				const file = `${out}/server/chunks/remote-${remote.hash}.js`;
-				const code = fs.readFileSync(file, 'utf-8');
-
-				fs.writeFileSync(
-					file,
-					// build process might have minified/adjusted the $$_self_$$ variable, but not the fake global $$_export_$$ function
-					code.replace(/\$\$_export_\$\$\((.+?)\)/, (_, name) => `export default ${name};`)
-				);
+			if (dev_server) {
+				result += `\nimport.meta.hot?.accept();\n`;
 			}
+
+			return {
+				code: result
+			};
 		}
 	};
 
@@ -1052,7 +1063,7 @@ async function kit({ svelte_config }) {
 					remotes
 				});
 
-				remote_exports = metadata.remotes;
+				build_metadata = metadata;
 
 				log.info('Building app');
 

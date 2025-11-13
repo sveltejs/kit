@@ -40,7 +40,9 @@ export function command(id) {
 						refreshes: updates.map((u) => u._key)
 					}),
 					headers: {
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json',
+						'x-sveltekit-pathname': location.pathname,
+						'x-sveltekit-search': location.search
 					}
 				});
 

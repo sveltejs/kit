@@ -4,7 +4,7 @@ import { read } from '../../../utils/filesystem.js';
 
 const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
 
-const valid_page_options = new Set([...inheritable_page_options, 'entries']);
+const valid_page_options = new Set([...inheritable_page_options, 'entries', 'load']);
 
 const skip_parsing_regex = new RegExp(
 	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
@@ -14,7 +14,8 @@ const parser = Parser.extend(tsPlugin());
 
 /**
  * Collects page options from a +page.js/+layout.js file, ignoring reassignments
- * and using the declared value. Returns `null` if any export is too difficult to analyse.
+ * and using the declared value (except for load functions, for which the value is `true`).
+ * Returns `null` if any export is too difficult to analyse.
  * @param {string} filename The name of the file to report when an error occurs
  * @param {string} input
  * @returns {Record<string, any> | null}
@@ -116,6 +117,13 @@ export function statically_analyse_page_options(filename, input) {
 									continue;
 								}
 
+								// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+								if (variable_declarator.id.name === 'load') {
+									page_options.set('load', null);
+									export_specifiers.delete('load');
+									continue;
+								}
+
 								// references a declaration we can't easily evaluate statically
 								return null;
 							}
@@ -138,7 +146,12 @@ export function statically_analyse_page_options(filename, input) {
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
 				if (valid_page_options.has(statement.declaration.id.name)) {
-					return null;
+					// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+					if (statement.declaration.id.name === 'load') {
+						page_options.set('load', null);
+					} else {
+						return null;
+					}
 				}
 				continue;
 			}
@@ -154,6 +167,12 @@ export function statically_analyse_page_options(filename, input) {
 
 				if (declaration.init?.type === 'Literal') {
 					page_options.set(declaration.id.name, declaration.init.value);
+					continue;
+				}
+
+				// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+				if (declaration.id.name === 'load') {
+					page_options.set('load', null);
 					continue;
 				}
 
@@ -187,7 +206,7 @@ export function get_name(node) {
  */
 export function create_node_analyser({ resolve, static_exports = new Map() }) {
 	/**
-	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
+	 * Computes the final page options (may include load function as `load: null`; special case) for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
 	 * @returns {Promise<Record<string, any> | null>}
 	 */

@@ -13,7 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
 import { create_remote_cache_key } from '../../shared.js';
@@ -190,7 +190,7 @@ export async function render_response({
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned) {
+					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);
@@ -227,7 +227,6 @@ export async function render_response({
 					paths.reset();
 				}
 
-				// eslint-disable-next-line
 				const { head, html, css } = options.async ? await rendered : rendered;
 
 				return { head, html, css };
@@ -654,7 +653,7 @@ export async function render_response({
 					async start(controller) {
 						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(text_encoder.encode(chunk));
+							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},

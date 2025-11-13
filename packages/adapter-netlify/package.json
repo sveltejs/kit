@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "5.2.3",
+	"version": "5.2.4",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
 	"type": "module",
 	"exports": {
 		".": {
@@ -50,6 +50,8 @@
 	"devDependencies": {
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
+		"@netlify/node-cookies": "^0.1.0",
+		"@netlify/types": "^2.1.0",
 		"@rollup/plugin-commonjs": "catalog:",
 		"@rollup/plugin-json": "catalog:",
 		"@rollup/plugin-node-resolve": "catalog:",

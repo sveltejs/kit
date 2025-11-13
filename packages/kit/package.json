@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.43.5",
+	"version": "2.48.4",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -80,6 +80,8 @@
 		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
+		"test:svelte-async:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:dev",
+		"test:svelte-async:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
 		"test:unit:dev": "vitest --config kit.vitest.config.js run",
 		"test:unit:prod": "NODE_ENV=production vitest --config kit.vitest.config.js run csp.spec.js cookie.spec.js",
 		"test:unit": "pnpm test:unit:dev && pnpm test:unit:prod",

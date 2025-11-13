@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.3.2",
+	"version": "5.4.0",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-node"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-node",
 	"type": "module",
 	"exports": {
 		".": {

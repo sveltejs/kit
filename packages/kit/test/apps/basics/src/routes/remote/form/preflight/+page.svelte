@@ -7,12 +7,7 @@
 	const enhanced = set_number.for('enhanced');
 
 	const schema = v.object({
-		number: v.pipe(
-			v.string(),
-			v.regex(/^\d+$/),
-			v.transform((n) => +n),
-			v.maxValue(20, 'too big')
-		)
+		number: v.pipe(v.number(), v.maxValue(20, 'too big'))
 	});
 </script>
 
@@ -26,15 +21,15 @@
 <hr />
 
 <form data-default {...set_number.preflight(schema)}>
-	{#if set_number.issues.number}
-		<p>{set_number.issues.number[0].message}</p>
-	{/if}
+	{#each set_number.fields.number.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input type="number" name={set_number.field('number')} value={set_number.input.number} />
+	<input {...set_number.fields.number.as('number')} />
 	<button>set number</button>
 </form>
 
-<p>set_number.input.number: {set_number.input.number}</p>
+<p>set_number.input.number: {set_number.fields.number.value()}</p>
 <p>set_number.pending: {set_number.pending}</p>
 <p>set_number.result: {set_number.result}</p>
 
@@ -46,14 +41,14 @@
 		await submit();
 	})}
 >
-	{#if enhanced.issues.number}
-		<p>{enhanced.issues.number[0].message}</p>
-	{/if}
+	{#each enhanced.fields.number.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
 
-	<input type="number" name={enhanced.field('number')} value={enhanced.input.number} />
+	<input {...enhanced.fields.number.as('number')} />
 	<button><span>set enhanced number</span></button>
 </form>
 
-<p>enhanced.input.number: {enhanced.input.number}</p>
+<p>enhanced.input.number: {enhanced.fields.number.value()}</p>
 <p>enhanced.pending: {enhanced.pending}</p>
 <p>enhanced.result: {enhanced.result}</p>

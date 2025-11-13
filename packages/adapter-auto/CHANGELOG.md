@@ -1,5 +1,17 @@
 # @sveltejs/adapter-auto
 
+## 7.0.0
+### Major Changes
+
+
+- feat: update adapter-vercel to version 6 ([#14737](https://github.com/sveltejs/kit/pull/14737))
+
+## 6.1.1
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 6.1.0
 ### Minor Changes
 

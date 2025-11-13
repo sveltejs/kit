@@ -1642,6 +1642,22 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('3');
 	});
 
+	test('queries can access the route/url of the page they were called from', async ({
+		page,
+		javaScriptEnabled,
+		clicknav
+	}) => {
+		// TODO remove once async SSR exists
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote');
+
+		await clicknav('[href="/remote/event"]');
+
+		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/event');
+		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
+	});
+
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form');
 
@@ -1770,7 +1786,7 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
-		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello');
+		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello (from: scoped)');
 		await expect(page.locator('[data-scoped] input')).toHaveValue('');
 	});
 
@@ -1790,10 +1806,16 @@ test.describe('remote functions', () => {
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+
+			// enhanced submission should not clear the input; the developer must do that at the appropriate time
+			await expect(page.locator('[data-enhanced] input')).toHaveValue('hello');
+		} else {
+			await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 		}
 
-		await expect(page.getByText('enhanced.result')).toHaveText('enhanced.result: hello');
-		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
+		await expect(page.getByText('enhanced.result')).toHaveText(
+			'enhanced.result: hello (from: enhanced)'
+		);
 	});
 
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
@@ -1819,29 +1841,68 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-only');
+
+		const a = page.locator('[name="a"]');
+		const button = page.locator('button');
+		const issues = page.locator('.issues');
+
+		await button.click();
+		await expect(issues).toContainText('a is too short');
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		await a.fill('aaaaaaaa');
+		await expect(issues).toContainText('a is too long');
+
+		// server issues should be preserved...
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		// ...unless overridden by client issues
+		await expect(issues).not.toContainText('a is too short');
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/remote/form/validate');
 
+		const myForm = page.locator('form#my-form');
 		const foo = page.locator('input[name="foo"]');
 		const bar = page.locator('input[name="bar"]');
+		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
-		await expect(page.locator('form')).toContainText(
-			'Invalid type: Expected ("d" | "e") but received "g"'
-		);
+		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await page.locator('#trigger-validate').click();
-		await expect(page.locator('form')).toContainText(
+		await expect(myForm).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
+
+		// Test imperative validation
+		await foo.fill('c');
+		await bar.fill('d');
+		await submit.click();
+		await expect(myForm).toContainText('Imperative: foo cannot be c');
+
+		const nestedValue = page.locator('input[name="nested.value"]');
+		const validate = page.locator('button#validate');
+		const allIssues = page.locator('#allIssues');
+
+		await nestedValue.fill('in');
+		await validate.click();
+		await expect(allIssues).toContainText('"path":["nested","value"]');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
@@ -1865,6 +1926,104 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/functions-only"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+	});
+
+	test('form.fields.value() returns correct nested object structure', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/value');
+
+		// Initially should be empty object or undefined values
+		const initialValue = await page.locator('#full-value').textContent();
+		expect(JSON.parse(initialValue)).toEqual({});
+
+		// Fill leaf field
+		await page.fill('input[name="leaf"]', 'leaf-value');
+		const afterLeaf = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterLeaf)).toEqual({
+			leaf: 'leaf-value'
+		});
+
+		// Fill object.leaf field
+		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
+		const afterObjectLeaf = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterObjectLeaf)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value'
+			}
+		});
+
+		// Fill object.array fields
+		await page.fill('input[name="object.array[0]"]', 'array-item-1');
+		const afterArrayItem1 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArrayItem1)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1']
+			}
+		});
+
+		await page.fill('input[name="object.array[1]"]', 'array-item-2');
+		const afterArrayItem2 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArrayItem2)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			}
+		});
+
+		// Fill array[0].leaf field
+		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
+		const afterArray0 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArray0)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }]
+		});
+
+		// Fill array[1].leaf field
+		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
+		const afterArray1 = await page.locator('#full-value').textContent();
+		expect(JSON.parse(afterArray1)).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]
+		});
+
+		// Test nested object value access
+		const objectValue = await page.locator('#object-value').textContent();
+		expect(JSON.parse(objectValue)).toEqual({
+			leaf: 'object-leaf-value',
+			array: ['array-item-1', 'array-item-2']
+		});
+
+		// Test array value access
+		const arrayValue = await page.locator('#array-value').textContent();
+		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+	});
+
+	test('selects are not nuked when unrelated controls change', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched');
+
+		await page.fill('input', 'hello');
+		await expect(page.locator('select')).toHaveValue('one');
 	});
 });
 

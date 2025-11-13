@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 3.0.10
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 3.0.9
 ### Patch Changes
 

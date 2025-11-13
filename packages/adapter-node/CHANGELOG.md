@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 5.4.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
+## 5.3.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
 ## 5.3.2
 ### Patch Changes
 

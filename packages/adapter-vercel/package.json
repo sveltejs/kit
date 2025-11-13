@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "5.10.2",
+	"version": "6.1.1",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"keywords": [
 		"adapter",
@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-vercel"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-vercel",
 	"type": "module",
 	"exports": {
 		".": {
@@ -52,5 +52,8 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"
+	},
+	"engines": {
+		"node": ">=20.0"
 	}
 }

@@ -12,7 +12,6 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
-import { file_transport } from '../utils.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -38,7 +37,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
  * @param {string} id
  */
 async function handle_remote_call_internal(event, state, options, manifest, id) {
-	const [hash, name, prerender_args] = id.split('/');
+	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
 	if (!remotes[hash]) error(404);
@@ -123,13 +122,18 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 			form_data.delete('sveltekit:remote_refreshes');
 
+			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
+			if (additional_args) {
+				form_data.set('sveltekit:id', decodeURIComponent(additional_args));
+			}
+
 			const fn = info.fn;
 			const data = await with_request_store({ event, state }, () => fn(form_data));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, { ...transport, File: file_transport }),
+					result: stringify(data, transport),
 					refreshes: data.issues ? {} : await serialize_refreshes(form_client_refreshes)
 				})
 			);
@@ -152,7 +156,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		const payload =
 			info.type === 'prerender'
-				? prerender_args
+				? additional_args
 				: /** @type {string} */ (
 						// new URL(...) necessary because we're hiding the URL from the user in the event object
 						new URL(event.request.url).searchParams.get('payload')
@@ -289,6 +293,12 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	try {
 		const form_data = await event.request.formData();
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
+
+		// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
+		if (action_id && !form_data.has('id')) {
+			// The action_id is URL-encoded JSON, decode and parse it
+			form_data.set('sveltekit:id', decodeURIComponent(action_id));
+		}
 
 		await with_request_store({ event, state }, () => fn(form_data));
 

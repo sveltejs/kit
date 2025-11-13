@@ -9,12 +9,7 @@ export const get_number = query(() => {
 
 export const set_number = form(
 	v.object({
-		number: v.pipe(
-			v.string(),
-			v.regex(/^\d+$/),
-			v.transform((n) => +n),
-			v.minValue(10, 'too small')
-		)
+		number: v.pipe(v.number(), v.minValue(10, 'too small'))
 	}),
 	async (data) => {
 		number = data.number;

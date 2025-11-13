@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { tick } from 'svelte';
 import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
@@ -12,7 +12,15 @@ import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
  * @param {string} url
  */
 export async function remote_request(url) {
-	const response = await fetch(url);
+	const response = await fetch(url, {
+		headers: {
+			// TODO in future, when we support forking, we will likely need
+			// to grab this from context as queries will run before
+			// `location.pathname` is updated
+			'x-sveltekit-pathname': location.pathname,
+			'x-sveltekit-search': location.search
+		}
+	});
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
@@ -29,7 +37,7 @@ export async function remote_request(url) {
 		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	return devalue.parse(result.result, app.decoders);
+	return result.result;
 }
 
 /**
@@ -54,6 +62,7 @@ export function create_remote_function(id, create) {
 						void tick().then(() => {
 							if (!entry.count && entry === query_map.get(cache_key)) {
 								query_map.delete(cache_key);
+								delete remote_responses[cache_key];
 							}
 						});
 					}

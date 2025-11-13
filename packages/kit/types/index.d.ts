@@ -1789,80 +1789,196 @@ declare module '@sveltejs/kit' {
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
-	// Helper type to convert union to intersection
-	type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-		? I
-		: never;
+	// Input type mappings for form fields
+	type InputTypeMap = {
+		text: string;
+		email: string;
+		password: string;
+		url: string;
+		tel: string;
+		search: string;
+		number: number;
+		range: number;
+		date: string;
+		'datetime-local': string;
+		time: string;
+		month: string;
+		week: string;
+		color: string;
+		checkbox: boolean | string[];
+		radio: string;
+		file: File;
+		hidden: string;
+		submit: string;
+		button: string;
+		reset: string;
+		image: string;
+		select: string;
+		'select multiple': string[];
+		'file multiple': File[];
+	};
 
-	type FlattenInput<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-		? { [P in Prefix]: string }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: string }
-			: T extends Array<infer U>
-				? U extends string | File
-					? { [P in Prefix]: string[] }
-					: FlattenInput<U, `${Prefix}[${number}]`>
-				: T extends File
-					? { [P in Prefix]: string }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenInput<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
+	// Valid input types for a given value type
+	export type RemoteFormFieldType<T> = {
+		[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
+	}[keyof InputTypeMap];
 
-	type FlattenIssues<T, Prefix extends string> = T extends
-		| string
-		| number
-		| boolean
-		| null
-		| undefined
-		? { [P in Prefix]: RemoteFormIssue[] }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: RemoteFormIssue[] }
-			: T extends Array<infer U>
-				? { [P in Prefix | `${Prefix}[${number}]`]: RemoteFormIssue[] } & FlattenIssues<
-						U,
-						`${Prefix}[${number}]`
-					>
-				: T extends File
-					? { [P in Prefix]: RemoteFormIssue[] }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenIssues<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
+	// Input element properties based on type
+	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+		? {
+				name: string;
+				type: T;
+				value?: string;
+				'aria-invalid': boolean | 'false' | 'true' | undefined;
+				get checked(): boolean;
+				set checked(value: boolean);
+			}
+		: T extends 'file'
+			? {
+					name: string;
+					type: 'file';
+					'aria-invalid': boolean | 'false' | 'true' | undefined;
+					get files(): FileList | null;
+					set files(v: FileList | null);
+				}
+			: {
+					name: string;
+					type: T;
+					'aria-invalid': boolean | 'false' | 'true' | undefined;
+					get value(): string | number;
+					set value(v: string | number);
+				};
 
-	type FlattenKeys<T, Prefix extends string> = T extends string | number | boolean | null | undefined
-		? { [P in Prefix]: string }
-		: WillRecurseIndefinitely<T> extends true
-			? { [key: string]: string }
-			: T extends Array<infer U>
-				? U extends string | File
-					? { [P in `${Prefix}[]`]: string[] }
-					: FlattenKeys<U, `${Prefix}[${number}]`>
-				: T extends File
-					? { [P in Prefix]: string }
-					: {
-							// Required<T> is crucial here to avoid an undefined type to sneak into the union, which would turn the intersection into never
-							[K in keyof Required<T>]: FlattenKeys<
-								T[K],
-								Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-							>;
-						}[keyof T];
+	type RemoteFormFieldMethods<T> = {
+		/** The values that will be submitted */
+		value(): T;
+		/** Set the values that will be submitted */
+		set(input: T): T;
+		/** Validation issues, if any */
+		issues(): RemoteFormIssue[] | undefined;
+	};
+
+	export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
+
+	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
+		? Value extends string[]
+			? [type: Type, value: Value[number] | (string & {})]
+			: [type: Type]
+		: Type extends 'radio' | 'submit' | 'hidden'
+			? [type: Type, value: Value | (string & {})]
+			: [type: Type];
+
+	/**
+	 * Form field accessor type that provides name(), value(), and issues() methods
+	 */
+	export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	};
+
+	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
+		/** Validation issues belonging to this or any of the fields that belong to it, if any */
+		allIssues(): RemoteFormIssue[] | undefined;
+	};
+
+	type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
+		/** Validation issues belonging to this or any of the fields that belong to it, if any */
+		allIssues(): RemoteFormIssue[] | undefined;
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	} & {
+		[key: string | number]: UnknownField<any>;
+	};
+
+	/**
+	 * Recursive type to build form fields structure with proxy access
+	 */
+	export type RemoteFormFields<T> =
+		WillRecurseIndefinitely<T> extends true
+			? RecursiveFormFields
+			: NonNullable<T> extends string | number | boolean | File
+				? RemoteFormField<NonNullable<T>>
+				: T extends string[] | File[]
+					? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
+					: T extends Array<infer U>
+						? RemoteFormFieldContainer<T> & {
+								[K in number]: RemoteFormFields<U>;
+							}
+						: RemoteFormFieldContainer<T> & {
+								[K in keyof T]-?: RemoteFormFields<T[K]>;
+							};
+
+	// By breaking this out into its own type, we avoid the TS recursion depth limit
+	type RecursiveFormFields = RemoteFormFieldContainer<any> & {
+		[key: string | number]: UnknownField<any>;
+	};
+
+	type MaybeArray<T> = T | T[];
 
 	export interface RemoteFormInput {
-		[key: string]: FormDataEntryValue | FormDataEntryValue[] | RemoteFormInput | RemoteFormInput[];
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput>;
 	}
 
 	export interface RemoteFormIssue {
-		name: string;
-		path: Array<string | number>;
 		message: string;
+		path: Array<string | number>;
 	}
+
+	// If the schema specifies `id` as a string or number, ensure that `for(...)`
+	// only accepts that type. Otherwise, accept `string | number`
+	type ExtractId<Input> = Input extends { id: infer Id }
+		? Id extends string | number
+			? Id
+			: string | number
+		: string | number;
+
+	/**
+	 * Recursively maps an input type to a structure where each field can create a validation issue.
+	 * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+	 */
+	type InvalidField<T> =
+		WillRecurseIndefinitely<T> extends true
+			? Record<string | number, any>
+			: NonNullable<T> extends string | number | boolean | File
+				? (message: string) => StandardSchemaV1.Issue
+				: NonNullable<T> extends Array<infer U>
+					? {
+							[K in number]: InvalidField<U>;
+						} & ((message: string) => StandardSchemaV1.Issue)
+					: NonNullable<T> extends RemoteFormInput
+						? {
+								[K in keyof T]-?: InvalidField<T[K]>;
+							} & ((message: string) => StandardSchemaV1.Issue)
+						: Record<string, never>;
+
+	/**
+	 * A function and proxy object used to imperatively create validation errors in form handlers.
+	 *
+	 * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
+	 * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
+	 * Access properties to create field-specific issues: `invalid.fieldName('message')`.
+	 * The type structure mirrors the input data structure for type-safe field access.
+	 */
+	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
+		InvalidField<Input>;
 
 	/**
 	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
@@ -1888,8 +2004,8 @@ declare module '@sveltejs/kit' {
 			[attachment: symbol]: (node: HTMLFormElement) => void;
 		};
 		/**
-		 * Create an instance of the form for the given key.
-		 * The key is stringified and used for deduplication to potentially reuse existing instances.
+		 * Create an instance of the form for the given `id`.
+		 * The `id` is stringified and used for deduplication to potentially reuse existing instances.
 		 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
 		 * ```svelte
 		 * {#each todos as todo}
@@ -1901,20 +2017,15 @@ declare module '@sveltejs/kit' {
 		 *	{/each}
 		 * ```
 		 */
-		for(key: string | number | boolean): Omit<RemoteForm<Input, Output>, 'for'>;
-		/**
-		 * This method exists to allow you to typecheck `name` attributes. It returns its argument
-		 * @example
-		 * ```svelte
-		 * <input name={login.field('username')} />
-		 * ```
-		 **/
-		field<Name extends keyof UnionToIntersection<FlattenKeys<Input, ''>>>(string: Name): Name;
+		for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** Preflight checks */
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
+			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
 			includeUntouched?: boolean;
+			/** Set this to `true` to only run the `preflight` validation. */
+			preflightOnly?: boolean;
 			/** Perform validation as if the form was submitted by the given button. */
 			submitter?: HTMLButtonElement | HTMLInputElement;
 		}): Promise<void>;
@@ -1922,10 +2033,8 @@ declare module '@sveltejs/kit' {
 		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
-		/** The submitted values */
-		input: null | UnionToIntersection<FlattenInput<Input, ''>>;
-		/** Validation issues */
-		issues: null | UnionToIntersection<FlattenIssues<Input, ''>>;
+		/** Access form fields using object notation */
+		fields: Input extends void ? never : RemoteFormFields<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
@@ -2407,6 +2516,7 @@ declare module '@sveltejs/kit' {
 	type SSRComponentLoader = () => Promise<SSRComponent>;
 
 	interface UniversalNode {
+		/** Is `null` in case static analysis succeeds but the node is ssr=false */
 		load?: Load;
 		prerender?: PrerenderOption;
 		ssr?: boolean;
@@ -3061,7 +3171,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Output>(fn: () => Output): RemoteForm<void, Output>;
+	export function form<Output>(fn: (invalid: import("@sveltejs/kit").Invalid<void>) => MaybePromise<Output>): RemoteForm<void, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -3069,7 +3179,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input) => MaybePromise<Output>): RemoteForm<Input, Output>;
+	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input, invalid: import("@sveltejs/kit").Invalid<Input>) => MaybePromise<Output>): RemoteForm<Input, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -3077,7 +3187,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

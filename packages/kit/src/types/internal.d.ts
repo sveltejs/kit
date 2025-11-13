@@ -21,7 +21,8 @@ import {
 	ServerInit,
 	ClientInit,
 	Transport,
-	HandleValidationError
+	HandleValidationError,
+	RemoteFormIssue
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -369,6 +370,7 @@ export interface ServerMetadata {
 	nodes: Array<{
 		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value. */
 		has_server_load: boolean;
+		has_universal_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
@@ -394,6 +396,7 @@ export interface SSRComponent {
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface UniversalNode {
+	/** Is `null` in case static analysis succeeds but the node is ssr=false */
 	load?: Load;
 	prerender?: PrerenderOption;
 	ssr?: boolean;
@@ -580,6 +583,12 @@ export type RemoteInfo =
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
 
+export interface InternalRemoteFormIssue extends RemoteFormIssue {
+	name: string;
+	path: Array<string | number>;
+	server?: boolean;
+}
+
 export type RecordSpan = <T>(options: {
 	name: string;
 	attributes: Record<string, any>;
@@ -597,6 +606,7 @@ export interface RequestState {
 	tracing: {
 		record_span: RecordSpan;
 	};
+	is_in_remote_function: boolean;
 	form_instances?: Map<any, any>;
 	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
 	refreshes?: Record<string, Promise<any>>;

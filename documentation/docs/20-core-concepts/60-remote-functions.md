@@ -33,7 +33,7 @@ export default config;
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files must be placed in your `src` directory.
+Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
 
 ## query
 
@@ -229,7 +229,6 @@ export const getWeather = query.batch(v.string(), async (cities) => {
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
 
-
 ```ts
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
@@ -294,114 +293,226 @@ export const createPost = form(
 <h1>Create a new post</h1>
 
 <form {...createPost}>
+	<!-- form content goes here -->
+
+	<button>Publish!</button>
+</form>
+```
+
+The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+
+As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
+
+### Fields
+
+A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use:
+
+```svelte
+<form {...createPost}>
 	<label>
 		<h2>Title</h2>
-		<input name="title" />
+		+++<input {...createPost.fields.title.as('text')} />+++
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
-		<textarea name="content"></textarea>
+		+++<textarea {...createPost.fields.content.as('text')}></textarea>+++
 	</label>
 
 	<button>Publish!</button>
 </form>
 ```
 
-As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`. The one difference is to `query` is that the schema inputs must all be of type `string` or `File`, since that's all the original `FormData` provides. You can however coerce the value into a different type — how to do that depends on the validation library you use.
+These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-```ts
-/// file: src/routes/count.remote.js
+> [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
+
+Fields can be nested in objects and arrays, and their values can be strings, numbers, booleans or `File` objects. For example, if your schema looked like this...
+
+```js
+/// file: data.remote.js
 import * as v from 'valibot';
 import { form } from '$app/server';
-
-export const setCount = form(
-	v.object({
-		// Valibot:
-		count: v.pipe(v.string(), v.transform((s) => Number(s)), v.number()),
-		// Zod:
-		// count: z.coerce.number<string>()
+// ---cut---
+const datingProfile = v.object({
+	name: v.string(),
+	photo: v.file(),
+	info: v.object({
+		height: v.number(),
+		likesDogs: v.optional(v.boolean(), false)
 	}),
-	async ({ count }) => {
-		// ...
+	attributes: v.array(v.string())
+});
+
+export const createProfile = form(datingProfile, (data) => { /* ... */ });
+```
+
+...your form could look like this:
+
+```svelte
+<script>
+	import { createProfile } from './data.remote';
+
+	const { name, photo, info, attributes } = createProfile.fields;
+</script>
+
+<form {...createProfile} enctype="multipart/form-data">
+	<label>
+		<input {...name.as('text')} /> Name
+	</label>
+
+	<label>
+		<input {...photo.as('file')} /> Photo
+	</label>
+
+	<label>
+		<input {...info.height.as('number')} /> Height (cm)
+	</label>
+
+	<label>
+		<input {...info.likesDogs.as('checkbox')} /> I like dogs
+	</label>
+
+	<h2>My best attributes</h2>
+	<input {...attributes[0].as('text')} />
+	<input {...attributes[1].as('text')} />
+	<input {...attributes[2].as('text')} />
+
+	<button>submit</button>
+</form>
+```
+
+Because our form contains a `file` input, we've added an `enctype="multipart/form-data"` attribute. The values for `info.height` and `info.likesDogs` are coerced to a number and a boolean respectively.
+
+> [!NOTE] If a `checkbox` input is unchecked, the value is not included in the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object that SvelteKit constructs the data from. As such, we have to make the value optional in our schema. In Valibot that means using `v.optional(v.boolean(), false)` instead of just `v.boolean()`, whereas in Zod it would mean using `z.coerce.boolean<boolean>()`.
+
+In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
+
+```js
+/// file: data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+// ---cut---
+export const survey = form(
+	v.object({
+		operatingSystem: v.picklist(['windows', 'mac', 'linux']),
+		languages: v.optional(v.array(v.picklist(['html', 'css', 'js'])), [])
+	}),
+	(data) => { /* ... */ }
+);
+```
+
+```svelte
+<form {...survey}>
+	<h2>Which operating system do you use?</h2>
+
+	{#each ['windows', 'mac', 'linux'] as os}
+		<label>
+			<input {...survey.fields.operatingSystem.as('radio', os)}>
+			{os}
+		</label>
+	{/each}
+
+	<h2>Which languages do you write code in?</h2>
+
+	{#each ['html', 'css', 'js'] as language}
+		<label>
+			<input {...survey.fields.languages.as('checkbox', language)}>
+			{language}
+		</label>
+	{/each}
+
+	<button>submit</button>
+</form>
+```
+
+Alternatively, you could use `select` and `select multiple`:
+
+```svelte
+<form {...survey}>
+	<h2>Which operating system do you use?</h2>
+
+	<select {...survey.fields.operatingSystem.as('select')}>
+		<option>windows</option>
+		<option>mac</option>
+		<option>linux</option>
+	</select>
+
+	<h2>Which languages do you write code in?</h2>
+
+	<select {...survey.fields.languages.as('select multiple')}>
+		<option>html</option>
+		<option>css</option>
+		<option>js</option>
+	</select>
+
+	<button>submit</button>
+</form>
+```
+
+> [!NOTE] As with unchecked `checkbox` inputs, if no selections are made then the data will be `undefined`. For this reason, the `languages` field uses `v.optional(v.array(...), [])` rather than just `v.array(...)`.
+
+### Programmatic validation
+
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+
+```js
+/// file: src/routes/shop/data.remote.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+import * as db from '$lib/server/database';
+
+export const buyHotcakes = form(
+	v.object({
+		qty: v.pipe(
+			v.number(),
+			v.minValue(1, 'you must buy at least one hotcake')
+		)
+	}),
+	async (data, invalid) => {
+		try {
+			await db.buy(data.qty);
+		} catch (e) {
+			if (e.code === 'OUT_OF_STOCK') {
+				invalid(
+					invalid.qty(`we don't have enough hotcakes`)
+				);
+			}
+		}
 	}
 );
 ```
 
-The `name` attributes on the form controls must correspond to the properties of the schema — `title` and `content` in this case. If you schema contains objects, use object notation:
+The `invalid` function works as both a function and a proxy:
 
-```svelte
-<!--
-    results in a
-    {
-	   name: { first: string, last: string },
-	   jobs: Array<{ title: string, company: string }>
-	}
-    object
--->
-<input name="name.first" />
-<input name="name.last" />
-{#each jobs as job, idx}
-	<input name="jobs[{idx}].title">
-	<input name="jobs[{idx}].company">
-{/each}
-```
-
-To indicate a repeated field, use a `[]` suffix:
-
-```svelte
-<label><input type="checkbox" name="language[]" value="html" /> HTML</label>
-<label><input type="checkbox" name="language[]" value="css" /> CSS</label>
-<label><input type="checkbox" name="language[]" value="js" /> JS</label>
-```
-
-If you'd like type safety and autocomplete when setting `name` attributes, use the form object's `field` method:
-
-```svelte
-<label>
-	<h2>Title</h2>
-	<input name={+++createPost.field('title')+++} />
-</label>
-```
-
-This will error during typechecking if `title` does not exist on your schema.
-
-The form object contains `method` and `action` properties that allow it to work without JavaScript (i.e. it submits data and reloads the page). It also has an [attachment](/docs/svelte/@attach) that progressively enhances the form when JavaScript is available, submitting data *without* reloading the entire page.
+- Call `invalid(issue1, issue2, ...issueN)` to throw a validation error
+- If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
+- Use `invalid.fieldName(message)` to create an issue for a specific field. Like `fields` this is type-safe and you can use regular property access syntax to create issues for deeply nested objects (e.g. `invalid.profile.email('Email already exists')` or `invalid.items[0].qty('Insufficient stock')`)
 
 ### Validation
 
-If the submitted data doesn't pass the schema, the callback will not run. Instead, the form object's `issues` object will be populated:
+If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
 
 ```svelte
 <form {...createPost}>
 	<label>
 		<h2>Title</h2>
 
-+++		{#if createPost.issues.title}
-			{#each createPost.issues.title as issue}
-				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
++++		{#each createPost.fields.title.issues() as issue}
+			<p class="issue">{issue.message}</p>
+		{/each}+++
 
-		<input
-			name="title"
-			+++aria-invalid={!!createPost.issues.title}+++
-		/>
+		<input {...createPost.fields.title.as('text')} />
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#if createPost.issues.content}
-			{#each createPost.issues.content as issue}
-				<p class="issue">{issue.message}</p>
-			{/each}
-		{/if}+++
++++		{#each createPost.fields.content.issues() as issue}
+			<p class="issue">{issue.message}</p>
+		{/each}+++
 
-		<textarea
-			name="content"
-			+++aria-invalid={!!createPost.issues.content}+++
-		></textarea>
+		<textarea {...createPost.fields.content.as('text')}></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -418,7 +529,7 @@ You don't need to wait until the form is submitted to validate the data — you 
 
 By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ includeUntouched: true })`.
 
-For client-side validation, you can specify a _preflight_ schema which will populate `issues` and prevent data being sent to the server if the data doesn't validate:
+For client-side validation, you can specify a _preflight_ schema which will populate `issues()` and prevent data being sent to the server if the data doesn't validate:
 
 ```svelte
 <script>
@@ -440,9 +551,17 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 
 > [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
 
-### Live inputs
+To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
-The form object contains a `input` property which reflects its current value. As the user interacts with the form, `input` is automatically updated:
+```svelte
+{#each createPost.fields.allIssues() as issue}
+	<p>{issue.message}</p>
+{/each}
+```
+
+### Getting/setting inputs
+
+Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
 <form {...createPost}>
@@ -450,14 +569,34 @@ The form object contains a `input` property which reflects its current value. As
 </form>
 
 <div class="preview">
-	<h2>{createPost.input.title}</h2>
-	<div>{@html render(createPost.input.content)}</div>
+	<h2>{createPost.fields.title.value()}</h2>
+	<div>{@html render(createPost.fields.content.value())}</div>
 </div>
+```
+
+Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
+
+You can update a field (or a collection of fields) via the `set(...)` method:
+
+```svelte
+<script>
+	import { createPost } from '../data.remote';
+
+	// this...
+	createPost.fields.set({
+		title: 'My new blog post',
+		content: 'Lorem ipsum dolor sit amet...'
+	});
+
+	// ...is equivalent to this:
+	createPost.fields.title.set('My new blog post');
+	createPost.fields.content.set('Lorem ipsum dolor sit amet');
+</script>
 ```
 
 ### Handling sensitive data
 
-In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `input` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
+In the case of a non-progressively-enhanced form submission (i.e. where JavaScript is unavailable, for whatever reason) `value()` is also populated if the submitted data is invalid, so that the user does not need to fill the entire form out from scratch.
 
 You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
 
@@ -465,20 +604,12 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 <form {...register}>
 	<label>
 		Username
-		<input
-			name="username"
-			value={register.input.username}
-			aria-invalid={!!register.issues.username}
-		/>
+		<input {...register.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Password
-		<input
-			type="password"
-			+++name="_password"+++
-			+++aria-invalid={!!register.issues._password}+++
-		/>
+		<input +++{...register.fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
@@ -628,6 +759,8 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
+> When using `enhance`, the `<form>` is not automatically reset — you must call `form.reset()` if you want to clear the inputs.
+
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
 To enable client-driven [single-flight mutations](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
@@ -663,6 +796,27 @@ await submit().updates(
 
 The override will be applied immediately, and released when the submission completes (or fails).
 
+### Multiple instances of a form
+
+Some forms may be repeated as part of a list. In this case you can create separate instances of a form function via `for(id)` to achieve isolation.
+
+```svelte
+<!--- file: src/routes/todos/+page.svelte --->
+<script>
+	import { getTodos, modifyTodo } from '../data.remote';
+</script>
+
+<h1>Todos</h1>
+
+{#each await getTodos() as todo}
+	{@const modify = modifyTodo.for(todo.id)}
+	<form {...modify}>
+		<!-- -->
+		<button disabled={!!modify.pending}>save changes</button>
+	</form>
+{/each}
+```
+
 ### buttonProps
 
 By default, submitting a form will send a request to the URL indicated by the `<form>` element's [`action`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form#attributes_for_form_submission) attribute, which in the case of a remote function is a property on the form object generated by SvelteKit.
@@ -680,12 +834,12 @@ This attribute exists on the `buttonProps` property of a form object:
 <form {...login}>
 	<label>
 		Your username
-		<input name="username" />
+		<input {...login.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input name="password" type="password" />
+		<input {...login.fields._password.as('password')} />
 	</label>
 
 	<button>login</button>
@@ -975,8 +1129,6 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 });
 ```
 
-> [!NOTE] `form` does not accept a schema since you are always passed a `FormData` object. You are free to parse and validate this as you see fit.
-
 ## Using `getRequestEvent`
 
 Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
@@ -997,14 +1149,17 @@ export const getProfile = query(async () => {
 
 // this query could be called from multiple places, but
 // the function will only run once per request
-const getUser = query(() => {
+const getUser = query(async () => {
 	const { cookies } = getRequestEvent();
 
 	return await findUser(cookies.get('session_id'));
 });
 ```
 
-Note that some properties of `RequestEvent` are different inside remote functions. There are no `params` or `route.id`, and you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions), and `url.pathname` is always `/` (since the path that’s actually being requested by the client is purely an implementation detail).
+Note that some properties of `RequestEvent` are different inside remote functions:
+
+- you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
+- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Queries are not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values. In particular, never use them to determine whether or not a user is authorized to access certain data.
 
 ## Redirects
 

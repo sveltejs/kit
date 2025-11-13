@@ -56,7 +56,7 @@ async function analyse({
 	// essential we do this before analysing the code
 	internal.set_building();
 
-	// set env, in case it's used in initialisation
+	// set env, `read`, and `manifest`, in case they're used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
 	const private_env = filter_env(env, private_prefix, public_prefix);
 	const public_env = filter_env(env, public_prefix, private_prefix);
@@ -105,7 +105,8 @@ async function analyse({
 		}
 
 		metadata.nodes[node.index] = {
-			has_server_load: has_server_load(node)
+			has_server_load: has_server_load(node),
+			has_universal_load: node.universal?.load !== undefined
 		};
 	}
 

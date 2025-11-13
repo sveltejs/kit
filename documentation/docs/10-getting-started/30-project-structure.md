@@ -19,7 +19,7 @@ my-project/
 │ ├ error.html
 │ ├ hooks.client.js
 │ ├ hooks.server.js
-| ├ service-worker.js
+│ ├ service-worker.js
 │ └ tracing.server.js
 ├ static/
 │ └ [your static assets]
@@ -49,10 +49,10 @@ The `src` directory contains the meat of your project. Everything except `src/ro
   - `%sveltekit.assets%` — either [`paths.assets`](configuration#paths), if specified, or a relative path to [`paths.base`](configuration#paths)
   - `%sveltekit.nonce%` — a [CSP](configuration#csp) nonce for manually included links and scripts, if used
   - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must begin with the [`publicPrefix`](configuration#env) (usually `PUBLIC_`). It will fallback to `''` if not matched.
+  - `%sveltekit.version%` — the app version, which can be specified with the [`version`](configuration#version) configuration
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
-  - `%sveltekit.version%` — the deployment version, which can be specified with the [`version`](configuration#version) configuration
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
