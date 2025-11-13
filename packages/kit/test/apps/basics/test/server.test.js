@@ -452,7 +452,7 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 
-	test('custom error object', async ({ request }) => {
+	test('handleError hook can set the response status', async ({ request }) => {
 		const response = await request.get('/errors/custom-error');
 		expect(response.status()).toBe(422);
 	});
