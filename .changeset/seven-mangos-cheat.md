@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-Allow Custom HTTP Status Codes
+feat: allow returning a custom HTTP status code from the `handleError` hook
