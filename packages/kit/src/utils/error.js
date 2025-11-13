@@ -32,7 +32,12 @@ export function get_status(error) {
 		return error.status;
 	}
 	// For overrides / custom error objects
-	if (typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number') {
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'status' in error &&
+		typeof error.status === 'number'
+	) {
 		return error.status;
 	}
 	return 500;
