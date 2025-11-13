@@ -454,7 +454,6 @@ test.describe('Errors', () => {
 
 	test('custom error object', async ({ request }) => {
 		const response = await request.get('/errors/custom-error');
-		console.log(response.status());
 		expect(response.status()).toBe(422);
 	});
 
