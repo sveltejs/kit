@@ -31,15 +31,6 @@ export function get_status(error) {
 	if (error instanceof HttpError || error instanceof SvelteKitError) {
 		return error.status;
 	}
-	// For overrides / custom error objects
-	if (
-		typeof error === 'object' &&
-		error !== null &&
-		'status' in error &&
-		typeof error.status === 'number'
-	) {
-		return error.status;
-	}
 	return 500;
 }
 
