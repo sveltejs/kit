@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.48.5
+### Patch Changes
+
+
+- fix: wait an extra microtask in dev before calling `$_init_$` ([#14799](https://github.com/sveltejs/kit/pull/14799))
+
+
+- fix: discard preload fork before creating a new one ([#14865](https://github.com/sveltejs/kit/pull/14865))
+
+
+- fix: delete `RemoteFormAllIssue`, add `path` to `RemoteFormIssue` ([#14864](https://github.com/sveltejs/kit/pull/14864))
+
 ## 2.48.4
 ### Patch Changes
 
