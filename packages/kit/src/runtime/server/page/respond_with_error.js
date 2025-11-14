@@ -90,6 +90,9 @@ export async function respond_with_error({
 			);
 		}
 
+		const error_body = await handle_error_and_jsonify(event, event_state, options, error);
+		const status = event_state.error_status_code ?? get_status(error);
+
 		return await render_response({
 			options,
 			manifest,
@@ -98,8 +101,8 @@ export async function respond_with_error({
 				ssr,
 				csr
 			},
-			status: event_state.error_status_code ?? status,
-			error: await handle_error_and_jsonify(event, event_state, options, error),
+			status,
+			error: error_body,
 			branch,
 			fetched,
 			event,
