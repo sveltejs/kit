@@ -36,13 +36,18 @@ export async function handle_action_json_request(event, event_state, options, se
 			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
 
+		const error = await handle_error_and_jsonify(event, event_state, options, no_actions_error);
+
+		// Use custom status code if set via event.setStatusCode()
+		const status = event_state.error_status_code ?? no_actions_error.status;
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, event_state, options, no_actions_error)
+				error
 			},
 			{
-				status: no_actions_error.status,
+				status,
 				headers: {
 					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 					// "The server must generate an Allow header field in a 405 status code response"
@@ -93,18 +98,23 @@ export async function handle_action_json_request(event, event_state, options, se
 			return action_json_redirect(err);
 		}
 
+		const error = await handle_error_and_jsonify(
+			event,
+			event_state,
+			options,
+			check_incorrect_fail_use(err)
+		);
+
+		// Use custom status code if set via event.setStatusCode()
+		const status = event_state.error_status_code ?? get_status(err);
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(
-					event,
-					event_state,
-					options,
-					check_incorrect_fail_use(err)
-				)
+				error
 			},
 			{
-				status: get_status(err)
+				status
 			}
 		);
 	}

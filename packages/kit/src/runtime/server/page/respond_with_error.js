@@ -114,8 +114,8 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		const status = get_status(e);
+		const status = event_state.error_status_code ?? get_status(e);
 		const error = await handle_error_and_jsonify(event, event_state, options, e);
-		return static_error_page(options, event_state.error_status_code ?? status, error.message);
+		return static_error_page(options, status, error.message);
 	}
 }

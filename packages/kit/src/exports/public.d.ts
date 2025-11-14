@@ -1529,7 +1529,7 @@ export interface RequestEvent<
 	 *	}
 	 *	```
 	 *
-	 * This method can only be called from the `handleError` hook and only affects error responses.
+	 * This method should only be called from the `handleError` hook and will only affect error responses.
 	 */
 	setStatusCode: (code: number) => void;
 	/**

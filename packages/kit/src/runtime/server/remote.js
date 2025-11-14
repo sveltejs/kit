@@ -79,11 +79,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					try {
 						return { type: 'result', data: get_result(arg, i) };
 					} catch (error) {
+						const error_body = await handle_error_and_jsonify(event, state, options, error);
+						// Use custom status code if set via event.setStatusCode()
+						const status =
+							state.error_status_code ??
+							(error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500);
 						return {
 							type: 'error',
-							error: await handle_error_and_jsonify(event, state, options, error),
-							status:
-								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+							error: error_body,
+							status
 						};
 					}
 				})
@@ -183,13 +187,17 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
+		const error_body = await handle_error_and_jsonify(event, state, options, error);
+
+		// Use custom status code if set via event.setStatusCode()
 		const status =
-			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+			state.error_status_code ??
+			(error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
-				error: await handle_error_and_jsonify(event, state, options, error),
+				error: error_body,
 				status
 			}),
 			{
