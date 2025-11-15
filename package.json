@@ -33,7 +33,7 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"typescript-eslint": "catalog:"
 	},
-	"packageManager": "pnpm@10.20.0",
+	"packageManager": "pnpm@10.22.0",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	},
