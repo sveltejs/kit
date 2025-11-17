@@ -368,3 +368,34 @@ export function load_css(deps) {
 		document.head.appendChild(link);
 	}
 }
+
+/**
+ * TODO: remove this in 3.0 when the page store is also removed
+ *
+ * We need to assign a new page object so that subscribers are correctly notified.
+ * However, spreading `{ ...page }` returns an empty object so we manually
+ * assign to each property instead.
+ *
+ * @param {import('@sveltejs/kit').Page} page
+ */
+export function clone_page(page) {
+	return {
+		data: page.data,
+		error: page.error,
+		form: page.form,
+		params: page.params,
+		route: page.route,
+		state: page.state,
+		status: page.status,
+		url: page.url
+	};
+}
+
+/**
+ * Helps us identify if the page has changed or not
+ * @param {URL} url
+ * @param {{ hash: boolean }} app
+ */
+export function get_page_key(url, app) {
+	return (app.hash ? url.hash.replace(/^#/, '') : url.pathname) + url.search;
+}
