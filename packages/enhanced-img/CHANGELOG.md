@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.8.5
+### Patch Changes
+
+
+- fix: warn rather than crash when non-enhanced image dynamically passed to `enhanced:img` ([#14845](https://github.com/sveltejs/kit/pull/14845))
+
 ## 0.8.4
 ### Patch Changes
 
