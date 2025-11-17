@@ -4,7 +4,14 @@ import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from './filesystem.js';
-import { analyze, resolve_aliases, scan, strip_lang_tags, write } from './utils.js';
+import {
+	analyze,
+	replace_ts_extensions_in_imports,
+	resolve_aliases,
+	scan,
+	strip_lang_tags,
+	write
+} from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
 
@@ -221,11 +228,16 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 			if (preprocessor) {
 				const preprocessed = (await preprocess(contents, preprocessor, { filename })).code;
 				contents = strip_lang_tags(preprocessed);
+				contents = replace_ts_extensions_in_imports(contents);
 			}
 		}
 
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
-			contents = await transpile_ts(tsconfig, filename, contents);
+			const { outputText, options } = await transpile_ts(tsconfig, filename, contents);
+			contents = outputText;
+			if (options.allowImportingTsExtensions) {
+				contents = replace_ts_extensions_in_imports(contents);
+			}
 		}
 
 		contents = resolve_aliases(input, file.name, contents, aliases);

@@ -135,7 +135,7 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
-test.only('create package with typescript using allowImportingTsExtensions', async () => {
+test('create package with typescript using allowImportingTsExtensions', async () => {
 	await test_make_package('typescript-allowImportingTsExtensions');
 });
 

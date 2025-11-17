@@ -110,6 +110,43 @@ export function scan(input, extensions) {
 }
 
 /**
+ * Replaces .ts extensions with .js in import/export statements
+ * This is needed when TypeScript files use allowImportingTsExtensions
+ * and the transpiled output still contains .ts extensions
+ *
+ * @param {string} content
+ * @returns {string}
+ */
+export function replace_ts_extensions_in_imports(content) {
+	const patterns = [
+		// import/export ... from ...
+		/\b(?:import|export)(?:(?:\s+\p{L}[\p{L}0-9]*\s+)|(?:(?:\s+\p{L}[\p{L}0-9]*\s*,\s*)?\s*\{[^}]*\}\s*))from\s*(['"])([^'";]+)\1/gmu,
+		// import/export * as xxx from ...
+		/\b(?:import|export)\s*\*\s*as\s+\p{L}[\p{L}0-9]*\s+from\s*(['"])([^'";]+)\1/gmu,
+		// export * from ...
+		/\b(?:export)\s*\*\s*from\s*(['"])([^'";]+)\1/gmu,
+		// import(...)
+		/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g,
+		// import '...'
+		/\bimport\s+(['"])([^'";]+)\1/g
+	];
+
+	for (const pattern of patterns) {
+		content = content.replace(pattern, (match, quote, import_path) => {
+			if (import_path.endsWith('.ts')) {
+				return match.replace(
+					quote + import_path + quote,
+					quote + import_path.slice(0, -3) + '.js' + quote
+				);
+			}
+			return match;
+		});
+	}
+
+	return content;
+}
+
+/**
  * @param {string} file
  * @param {string[]} extensions
  * @returns {import('./types.js').File}

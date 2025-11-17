@@ -100,14 +100,17 @@ export async function transpile_ts(tsconfig, filename, source) {
 	const options = load_tsconfig(tsconfig, filename, ts);
 	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
 	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
-	return ts.transpileModule(source, {
-		compilerOptions: {
-			...options,
-			module: ts.ModuleKind.ESNext,
-			moduleResolution: ts.ModuleResolutionKind.NodeNext
-		},
-		fileName: filename
-	}).outputText;
+	return {
+		outputText: ts.transpileModule(source, {
+			compilerOptions: {
+				...options,
+				module: ts.ModuleKind.ESNext,
+				moduleResolution: ts.ModuleResolutionKind.NodeNext
+			},
+			fileName: filename
+		}).outputText,
+		options
+	};
 }
 
 async function try_load_ts() {
