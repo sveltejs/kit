@@ -1,1 +1,3 @@
-export const cool = true;
+import { reallyCool } from './realy-cool.ts';
+
+export const cool = reallyCool;

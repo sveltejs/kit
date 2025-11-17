@@ -1,1 +1,2 @@
-export const cool = true;
+import { reallyCool } from './realy-cool.js';
+export const cool = reallyCool;
