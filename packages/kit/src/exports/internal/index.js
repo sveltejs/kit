@@ -1,17 +1,20 @@
-export class HttpError {
+export class HttpError extends Error {
 	/**
 	 * @param {number} status
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
 	 */
 	constructor(status, body) {
+		const normalized =
+			typeof body === 'string' ? { message: body } : body ?? { message: `Error: ${status}` };
+
+		const message =
+			typeof normalized?.message === 'string' ? normalized.message : `Error: ${status}`;
+
+		super(message);
+
+		this.name = 'HttpError';
 		this.status = status;
-		if (typeof body === 'string') {
-			this.body = { message: body };
-		} else if (body) {
-			this.body = body;
-		} else {
-			this.body = { message: `Error: ${status}` };
-		}
+		this.body = normalized;
 	}
 
 	toString() {
