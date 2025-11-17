@@ -1787,6 +1787,8 @@ test.describe('routing', () => {
 });
 
 test.describe('remote functions', () => {
+	test.skip(process.env.SVELTE_ASYNC !== 'true', 'when not in async mode');
+
 	test('preloading data works when the page component and server load both import a remote function', async ({
 		page
 	}) => {
@@ -1804,6 +1806,7 @@ test.describe('remote functions', () => {
 
 // have to run in serial because commands mutate in-memory data on the server
 test.describe('remote function mutations', () => {
+	test.skip(process.env.SVELTE_ASYNC !== 'true', 'when not in async mode');
 	test.describe.configure({ mode: 'default' });
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
@@ -1916,8 +1919,6 @@ test.describe('remote function mutations', () => {
 	});
 
 	test('prerendered entries not called in prod', async ({ page }) => {
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 		await page.goto('/remote/prerender');
 
 		await page.click('#fetch-prerendered');

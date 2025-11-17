@@ -733,12 +733,13 @@ test.describe('$app/paths', () => {
 	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
-		let base = javaScriptEnabled ? '' : '.';
+		// in async mode, the render is always run after a microtask, which means `base` and `assets` are not relative.
+		let base = javaScriptEnabled || process.env.SVELTE_ASYNC === 'true' ? '' : '.';
 		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 
 		await page.goto('/paths/deeply/nested');
 
-		base = javaScriptEnabled ? '' : '../..';
+		base = javaScriptEnabled || process.env.SVELTE_ASYNC === 'true' ? '' : '../..';
 		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 	});
 
@@ -1601,6 +1602,8 @@ test.describe('getRequestEvent', () => {
 });
 
 test.describe('remote functions', () => {
+	test.skip(process.env.SVELTE_ASYNC !== 'true', 'when not in async mode');
+
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');

@@ -13,6 +13,7 @@ import {
 	flatten_issues
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -188,7 +189,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
+					get_cache(__, state).data[''] ??= output;
 				}
 
 				return output;
@@ -209,7 +210,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
-				const data = get_cache(__)?.[''];
+				const data = get_cache(__).data[''];
 				const issues = flatten_issues(data?.issues ?? []);
 
 				return create_field_proxy(
@@ -224,7 +225,7 @@ export function form(validate_or_fn, maybe_fn) {
 						const input =
 							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
 
-						(get_cache(__)[''] ??= {}).input = input;
+						(get_cache(__).data[''] ??= {}).input = input;
 					},
 					() => issues
 				);
@@ -239,7 +240,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__).data['']?.result;
 				} catch {
 					return undefined;
 				}
@@ -277,7 +278,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					if (!instance) {
 						instance = create_instance(key);
-						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.id = create_remote_id(__.id, encodeURIComponent(JSON.stringify(key)));
 						instance.__.name = __.name;
 
 						state.form_instances.set(cache_key, instance);

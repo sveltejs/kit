@@ -1,12 +1,20 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
+/** @import { Resource } from 'svelte/reactivity' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, query_map, remote_responses } from '../client.js';
-import { tick } from 'svelte';
+import { app, goto, remote_responses } from '../client.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import {
+	HttpError,
+	Redirect,
+	REMOTE_CACHE_DELIMITER,
+	REMOTE_CACHE_PREFIX
+} from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { resource } from 'svelte/reactivity';
+import { hydratable } from 'svelte';
+import { query_cache } from './query-cache.js';
 
 /**
  * @param {string} id
@@ -15,8 +23,9 @@ import { DEV } from 'esm-env';
 export function query(id) {
 	if (DEV) {
 		// If this reruns as part of HMR, refresh the query
-		for (const [key, entry] of query_map) {
-			if (key === id || key.startsWith(id + '/')) {
+		for (const [key, entry] of query_cache) {
+			const cache_key = `${REMOTE_CACHE_PREFIX}${REMOTE_CACHE_DELIMITER}${id}`;
+			if (key === cache_key || key.startsWith(cache_key + REMOTE_CACHE_DELIMITER)) {
 				// use optional chaining in case a prerender function was turned into a query
 				entry.resource.refresh?.();
 			}
@@ -125,191 +134,96 @@ export function query_batch(id) {
 
 /**
  * @template T
- * @implements {Partial<Promise<T>>}
+ * @implements {Partial<Promise<Awaited<T>>>}
  */
 export class Query {
 	/** @type {string} */
 	_key;
 
-	#init = false;
-	/** @type {() => Promise<T>} */
-	#fn;
-	#loading = $state(true);
-	/** @type {Array<() => void>} */
-	#latest = [];
-
-	/** @type {boolean} */
-	#ready = $state(false);
-	/** @type {T | undefined} */
-	#raw = $state.raw();
-	/** @type {Promise<void>} */
-	#promise;
-	/** @type {Array<(old: T) => T>} */
+	/** @type {Array<(old: Awaited<T>) => Awaited<T>>} */
 	#overrides = $state([]);
 
-	/** @type {T | undefined} */
-	#current = $derived.by(() => {
-		// don't reduce undefined value
-		if (!this.#ready) return undefined;
-
-		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
-	});
-
-	#error = $state.raw(undefined);
-
-	/** @type {Promise<T>['then']} */
-	// @ts-expect-error TS doesn't understand that the promise returns something
-	#then = $derived.by(() => {
-		const p = this.#promise;
-		this.#overrides.length;
-
-		return (resolve, reject) => {
-			const result = (async () => {
-				await p;
-				// svelte-ignore await_reactivity_loss
-				await tick();
-				return /** @type {T} */ (this.#current);
-			})();
-
-			if (resolve || reject) {
-				return result.then(resolve, reject);
-			}
-
-			return result;
-		};
-	});
+	/** @type {Resource<T>} */
+	#resource;
 
 	/**
 	 * @param {string} key
-	 * @param {() => Promise<T>} fn
+	 * @param {() => T} fn
 	 */
 	constructor(key, fn) {
 		this._key = key;
-		this.#fn = fn;
-		this.#promise = $state.raw(this.#run());
-	}
-
-	#run() {
-		// Prevent state_unsafe_mutation error on first run when the resource is created within the template
-		if (this.#init) {
-			this.#loading = true;
-		} else {
-			this.#init = true;
-		}
-
-		// Don't use Promise.withResolvers, it's too new still
-		/** @type {() => void} */
-		let resolve;
-		/** @type {(e?: any) => void} */
-		let reject;
-		/** @type {Promise<void>} */
-		const promise = new Promise((res, rej) => {
-			resolve = res;
-			reject = rej;
-		});
-
-		this.#latest.push(
-			// @ts-expect-error it's defined at this point
-			resolve
-		);
-
-		Promise.resolve(this.#fn())
-			.then((value) => {
-				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
-				const idx = this.#latest.indexOf(resolve);
-				if (idx === -1) return;
-
-				this.#latest.splice(0, idx).forEach((r) => r());
-				this.#ready = true;
-				this.#loading = false;
-				this.#raw = value;
-				this.#error = undefined;
-
-				resolve();
+		this.#resource = resource(() =>
+			hydratable(key, fn, {
+				decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders)
 			})
-			.catch((e) => {
-				const idx = this.#latest.indexOf(resolve);
-				if (idx === -1) return;
-
-				this.#latest.splice(0, idx).forEach((r) => r());
-				this.#error = e;
-				this.#loading = false;
-				reject(e);
-			});
-
-		return promise;
+		);
 	}
 
 	get then() {
-		return this.#then;
+		this.#overrides.length;
+		/** @type {Resource<T>['then']} */
+		return (onresolve, onreject) =>
+			this.#resource.then(
+				onresolve ? () => onresolve(/** @type {Awaited<T>} */ (this.current)) : undefined,
+				onreject
+			);
 	}
 
 	get catch() {
-		this.#then;
-		return (/** @type {any} */ reject) => {
-			return this.#then(undefined, reject);
-		};
+		this.#overrides.length;
+		return this.#resource.catch;
 	}
 
 	get finally() {
-		this.#then;
-		return (/** @type {any} */ fn) => {
-			return this.#then(
-				(value) => {
-					fn();
-					return value;
-				},
-				(error) => {
-					fn();
-					throw error;
-				}
-			);
-		};
+		this.#overrides.length;
+		return this.#resource.finally;
 	}
 
-	get current() {
-		return this.#current;
-	}
+	/** @type {T | undefined} */
+	current = $derived.by(() => {
+		// don't reduce undefined value
+		if (!this.ready) return undefined;
+
+		return this.#overrides.reduce(
+			(v, r) => r(v),
+			/** @type {Awaited<T>} */ (this.#resource.current)
+		);
+	});
 
 	get error() {
-		return this.#error;
+		return this.#resource.error;
 	}
 
 	/**
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
-		return this.#loading;
+		return this.#resource.loading;
 	}
 
 	/**
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
-		return this.#ready;
+		return this.#resource.ready;
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		delete remote_responses[this._key];
-		return (this.#promise = this.#run());
+		return this.#resource.refresh();
 	}
 
 	/**
-	 * @param {T} value
+	 * @param {Awaited<T>} value
 	 */
 	set(value) {
-		this.#ready = true;
-		this.#loading = false;
-		this.#error = undefined;
-		this.#raw = value;
-		this.#promise = Promise.resolve();
+		return this.#resource.set(value);
 	}
 
 	/**
-	 * @param {(old: T) => T} fn
+	 * @param {(old: Awaited<T>) => Awaited<T>} fn
 	 */
 	withOverride(fn) {
 		this.#overrides.push(fn);

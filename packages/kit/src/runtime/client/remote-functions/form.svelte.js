@@ -5,9 +5,9 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
-import { tick } from 'svelte';
+import { HttpError, REMOTE_CACHE_DELIMITER } from '@sveltejs/kit/internal';
+import { app, _goto, set_nearest_error_page, invalidateAll, remote_responses } from '../client.js';
+import { tick, hydratable } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
@@ -55,7 +55,8 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
-		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
+		const action_id =
+			id + (key != undefined ? `${REMOTE_CACHE_DELIMITER}${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
@@ -69,7 +70,12 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(remote_responses[action_id]);
+		let result = $state.raw(
+			remote_responses[action_id] ??
+				hydratable.get(action_id, {
+					decode: (val) => devalue.parse(/** @type {string} */ (val), app.decoders)
+				})
+		);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -299,7 +305,7 @@ export function form(id) {
 				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
 					if (DEV && !key) {
-						const name = id.split('/').pop();
+						const name = id.split(REMOTE_CACHE_DELIMITER).pop();
 						message += `. To create multiple instances, use \`${name}.for(key)\``;
 					}
 

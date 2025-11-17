@@ -6,13 +6,9 @@ import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '$app/paths/internal/server';
-import {
-	create_validator,
-	get_cache,
-	get_response,
-	parse_remote_response,
-	run_remote_function
-} from './shared.js';
+import { create_validator, get_response, run_remote_function } from './shared.js';
+import { create_remote_id } from '@sveltejs/kit/internal';
+import * as devalue from 'devalue';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -93,18 +89,15 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const { event, state } = get_request_store();
 			const payload = stringify_remote_arg(arg, state.transport);
 			const id = __.id;
-			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${create_remote_id(id, payload)}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
 					return await get_response(__, arg, state, async () => {
-						const key = stringify_remote_arg(arg, state.transport);
-						const cache = get_cache(__, state);
-
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
-						const promise = (cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
-							async (response) => {
+						return await fetch(new URL(url, event.url.origin).href)
+							.then(async (response) => {
 								if (!response.ok) {
 									throw new Error('Prerendered response not found');
 								}
@@ -116,10 +109,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 								}
 
 								return prerendered.result;
-							}
-						));
-
-						return parse_remote_response(await promise, state.transport);
+							})
+							.then((data) =>
+								devalue.parse(
+									data,
+									Object.fromEntries(Object.entries(state.transport).map(([k, v]) => [k, v.decode]))
+								)
+							);
 					});
 				} catch {
 					// not available prerendered, fallback to normal function
