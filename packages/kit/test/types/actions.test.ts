@@ -25,7 +25,7 @@ form2.success = true;
 // @ts-expect-error - cannot both be present at the same time
 form2 = { message: '', success: true };
 
-// Test: ActionFailure is correctly infered to be different from the normal return type even if they have the same shape
+// Test: ActionFailure is correctly inferred to be different from the normal return type even if they have the same shape
 type Actions3 = {
 	bar: () => Kit.ActionFailure<{ foo: string }> | { status: number; data: { bar: string } };
 };
