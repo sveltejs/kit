@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
@@ -40,6 +41,11 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		return declarations.join('\n');
 	}
 
+	const query =
+		process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
+			? `?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`
+			: '';
+
 	/** @type {Map<import('types').PageNode, number>} */
 	const indices = new Map();
 	const nodes = manifest_data.nodes
@@ -47,7 +53,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			indices.set(node, i);
 
 			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node));
-			return `() => import('./nodes/${i}')`;
+			return `() => import('./nodes/${i}${query}')`;
 		})
 		// If route resolution happens on the server, we only need the root layout and root error page
 		// upfront, the rest is loaded on demand as the user navigates the app
