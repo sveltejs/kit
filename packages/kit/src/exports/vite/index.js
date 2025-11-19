@@ -934,6 +934,9 @@ async function kit({ svelte_config }) {
 								hoistTransitiveImports: false
 							}
 						}
+					},
+					experimental: {
+						renderBuiltUrl: render_built_url
 					}
 				};
 			} else {
@@ -1094,14 +1097,6 @@ async function kit({ svelte_config }) {
 							},
 							optimizeDeps: {
 								force: vite_config.optimizeDeps.force
-							},
-							experimental: {
-								renderBuiltUrl:
-									process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
-										? (filename) => {
-												return `${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
-											}
-										: undefined
 							}
 						})
 					);
@@ -1434,3 +1429,11 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
+
+/** @type {import('vite').RenderBuiltAssetUrl | undefined} */
+const render_built_url =
+	process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
+		? (filename) => {
+				return `/${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
+			}
+		: undefined;
