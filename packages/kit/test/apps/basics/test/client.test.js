@@ -1047,6 +1047,21 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
+	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+	});
+
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
 		page
 	}) => {
