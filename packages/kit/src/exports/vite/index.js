@@ -936,7 +936,12 @@ async function kit({ svelte_config }) {
 						}
 					},
 					experimental: {
-						renderBuiltUrl: render_built_url
+						renderBuiltUrl:
+							process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
+								? (filename) => {
+										return `${kit.paths.base}/${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
+									}
+								: undefined
 					}
 				};
 			} else {
@@ -1429,11 +1434,3 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
-
-/** @type {import('vite').RenderBuiltAssetUrl | undefined} */
-const render_built_url =
-	process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
-		? (filename) => {
-				return `/${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
-			}
-		: undefined;
