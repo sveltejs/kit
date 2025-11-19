@@ -1096,12 +1096,12 @@ async function kit({ svelte_config }) {
 								force: vite_config.optimizeDeps.force
 							},
 							experimental: {
-								renderBuiltUrl: (filename) => {
-									if (process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1') {
-										return `${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
-									}
-									return filename;
-								}
+								renderBuiltUrl:
+									process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
+										? (filename) => {
+												return `${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
+											}
+										: undefined
 							}
 						})
 					);
