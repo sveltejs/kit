@@ -30,6 +30,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
+			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
