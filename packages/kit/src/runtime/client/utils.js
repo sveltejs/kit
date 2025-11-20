@@ -317,15 +317,7 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	if (hash_routing) {
-		if (
-			url.pathname === base + '/' ||
-			url.pathname === base + '/index.html' ||
-			url.pathname.replace(/\/[^/]+\.html?$/, '') === base
-		) {
-			return false;
-		}
-
-return url.pathname !== location.pathname;
+		return url.pathname !== location.pathname;
 	}
 
 	return false;
