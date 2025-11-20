@@ -274,7 +274,7 @@ async function process_file(
 		} else if (file.is_svelte) {
 			const options = await load_tsconfig(tsconfig, filename, tsconfig_cache);
 			// Mimic TypeScript's transpileModule behavior for Svelte files
-			if (options.allowImportingTsExtensions && options.rewriteRelativeImportExtensions) {
+			if (options.rewriteRelativeImportExtensions) {
 				contents = resolve_ts_endings(contents);
 			}
 		}
