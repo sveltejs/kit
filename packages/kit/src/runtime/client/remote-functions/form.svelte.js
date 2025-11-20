@@ -534,8 +534,6 @@ export function form(id) {
 						element.querySelector('button:not([type]), [type="submit"]')
 					);
 
-					console.log({ default_submitter });
-
 					const form_data = new FormData(element, default_submitter);
 
 					/** @type {InternalRemoteFormIssue[]} */
