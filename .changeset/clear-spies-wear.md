@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allow multiple server-timing headers
+fix: allow multiple `server-timing` headers
