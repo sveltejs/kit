@@ -69,7 +69,7 @@ export function form(id) {
 		let input = $state({});
 
 		/**
-		 * @type {Record<string, number>}
+		 * @type {Record<string, {uploaded: number, total: number}>}
 		 */
 		let upload_progress = $state({});
 
@@ -221,14 +221,21 @@ export function form(id) {
 						});
 						if (file_offsets) {
 							const file_paths = get_file_paths(data);
+							for (const [file, path] of file_paths) {
+								deep_set(upload_progress, path, { uploaded: 0, total: file.size });
+							}
 							xhr.upload.addEventListener('progress', (ev) => {
+								console.log('-', ev.loaded);
+								console.log(file_offsets);
 								for (const file of file_offsets) {
-									let progress = (ev.loaded - file.start) / file.file.size;
-									if (progress <= 0) continue;
-									if (progress > 1) progress = 1;
+									const total = file.file.size;
+									let uploaded = ev.loaded - file.start;
+									if (uploaded <= 0) continue;
+									if (uploaded > total) uploaded = total;
+									console.log(file.file.name, uploaded);
 									const path = file_paths.get(file.file);
 									if (!path) continue;
-									deep_set(upload_progress, path, progress);
+									deep_get(upload_progress, path).uploaded = uploaded;
 								}
 							});
 						}
@@ -412,7 +419,7 @@ export function form(id) {
 
 						if (file) {
 							set_nested_value(input, name, file);
-							set_nested_value(upload_progress, name, 0);
+							set_nested_value(upload_progress, name, { uploaded: 0, total: file.size });
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -546,7 +553,7 @@ export function form(id) {
 							}
 						},
 						() => issues,
-						(path) => deep_get(upload_progress, path) ?? 0
+						(path) => deep_get(upload_progress, path) ?? { uploaded: 0, total: 0 }
 					)
 			},
 			result: {

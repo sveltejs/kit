@@ -1875,8 +1875,13 @@ declare module '@sveltejs/kit' {
 		issues(): RemoteFormIssue[] | undefined;
 	} & (T extends File
 		? {
-				/** Current upload progress, from 0 to 1 */
-				progress(): number;
+				/** Current file upload progress */
+				progress(): {
+					/** Bytes uploaded so far */
+					uploaded: number;
+					/** Total bytes to upload */
+					total: number;
+				};
 			}
 		: object);
 

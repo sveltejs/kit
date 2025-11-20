@@ -100,7 +100,11 @@ export function serialize_binary_form(data, meta) {
 	let file_offsets;
 
 	let encoded_file_offsets = '';
+
+	/** @type {Array<[file: File, index: number]>} */
+	let unsorted_files;
 	if (files.length) {
+		unsorted_files = [...files];
 		// Sort small files to the front
 		files.sort(([a], [b]) => a.size - b.size);
 
@@ -112,7 +116,6 @@ export function serialize_binary_form(data, meta) {
 		}
 		encoded_file_offsets = JSON.stringify(file_offsets);
 	}
-
 	const encoded_header_buffer = text_encoder.encode(encoded_header);
 
 	const length_buffer = new Uint8Array(4);
@@ -132,11 +135,12 @@ export function serialize_binary_form(data, meta) {
 	}
 
 	const file_offset_start = 1 + 4 + 2 + encoded_header.length + encoded_file_offsets.length;
+
 	return {
 		blob: new Blob(blob_parts),
 		file_offsets: file_offsets?.map((o, i) => ({
 			start: o + file_offset_start,
-			file: files[i][0]
+			file: unsorted_files[i][0]
 		}))
 	};
 }
@@ -571,7 +575,7 @@ export function deep_get(object, path) {
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
- * @param {(path: (string | number)[]) => number} get_progress - Function to get upload progress of a file
+ * @param {(path: (string | number)[]) => { uploaded: number, total: number }} get_progress - Function to get upload progress of a file
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */

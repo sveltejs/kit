@@ -2121,12 +2121,13 @@ test.describe('remote functions', () => {
 		});
 		try {
 			const progress = page.locator('#progress1');
-			expect(progress).toHaveText('0');
+			expect(progress).toHaveText('{"uploaded":0,"total":0}');
 			await page.locator('input[name="file1"]').setInputFiles({
 				name: 'a.txt',
 				mimeType: 'text/plain',
 				buffer: Buffer.alloc(1024 * 1024 * 10)
 			});
+			expect(progress).toHaveText('{"uploaded":0,"total":10485760}');
 			await page.locator('input[name="deep.files[0]"]').setInputFiles({
 				name: 'b.txt',
 				mimeType: 'text/plain',
@@ -2138,7 +2139,7 @@ test.describe('remote functions', () => {
 				buffer: Buffer.from('c')
 			});
 			await page.locator('button').click();
-			await expect(progress).not.toHaveText('0');
+			await expect(progress).not.toHaveText('{"uploaded":0,');
 		} finally {
 			await cdp.send('Network.emulateNetworkConditions', {
 				offline: false,

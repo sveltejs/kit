@@ -215,7 +215,7 @@ export function form(validate_or_fn, maybe_fn) {
 						(get_cache(__)[''] ??= {}).input = input;
 					},
 					() => issues,
-					() => 0 /* upload progress is always 0 on the server */
+					() => ({ uploaded: 0, total: 0 }) /* upload progress is always 0 on the server */
 				);
 			}
 		});
