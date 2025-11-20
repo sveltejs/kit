@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.5
+### Patch Changes
+
+
+- fix: resolve aliases before transpiling for `rewriteRelativeImportExtensions` ([#14673](https://github.com/sveltejs/kit/pull/14673))
+
 ## 2.5.4
 ### Patch Changes
 
