@@ -2,7 +2,7 @@
 /** @import { RemoteInfo, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_cache_key, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 
@@ -84,7 +84,7 @@ export function query(validate_or_fn, maybe_fn) {
 
 		promise.refresh = () => {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.key];
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
 			const value = is_immediate_refresh ? promise : get_remote_function_result();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		};
@@ -224,7 +224,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 		promise.refresh = () => {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.key];
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
 			const value = is_immediate_refresh ? promise : get_remote_function_result();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		};
@@ -248,52 +248,46 @@ Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
  * @param {RemoteInfo} __
  * @param {'set' | 'refresh'} action
  * @param {any} [arg]
- * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; cache_key: string; key: string }}
+ * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }}
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
 	const { refreshes } = state;
 
 	if (!refreshes) {
+		const name = __.type === 'query_batch' ? `query.batch '${__.name}'` : `query '${__.name}'`;
 		throw new Error(
-			`Cannot call ${action} on ${format_remote_name(__)} because it is not executed in the context of a command/form remote function`
+			`Cannot call ${action} on ${name} because it is not executed in the context of a command/form remote function`
 		);
 	}
 
-	const key = stringify_remote_arg(arg, state.transport);
-	const cache_key = create_remote_cache_key(__.id, key);
 	const cache = get_cache(__, state);
+	const cache_key = stringify_remote_arg(arg, state.transport);
+	const refreshes_key = create_remote_key(__.id, cache_key);
 
-	return { __, state, refreshes, cache, cache_key, key };
+	return { __, state, refreshes, refreshes_key, cache, cache_key };
 }
 
 /**
- * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; cache_key: string; key: string }} context
+ * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
  */
 function update_refresh_value(
-	{ __, refreshes, cache, cache_key, key },
+	{ __, refreshes, refreshes_key, cache, cache_key },
 	value,
 	is_immediate_refresh = false
 ) {
 	const promise = Promise.resolve(value);
 
 	if (!is_immediate_refresh) {
-		cache[key] = promise;
+		cache[cache_key] = promise;
 	}
 
 	if (__.id) {
-		refreshes[cache_key] = promise;
+		refreshes[refreshes_key] = promise;
 	}
 
 	return promise.then(() => {});
-}
-
-/**
- * @param {RemoteInfo} __
- */
-function format_remote_name(__) {
-	return __.type === 'query_batch' ? `query.batch '${__.name}'` : `query '${__.name}'`;
 }
