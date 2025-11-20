@@ -25,9 +25,11 @@ import {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
 } from '$app/types';
-import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
+
+// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+type Span = import('@opentelemetry/api').Span;
 
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
