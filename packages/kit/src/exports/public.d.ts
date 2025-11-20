@@ -1902,12 +1902,12 @@ type RemoteFormFieldMethods<T> = {
 			/** Current file upload progress */
 			progress(): {
 				/** Bytes uploaded so far */
-				uploaded: number;
+				readonly uploaded: number;
 				/** Total bytes to upload */
-				total: number;
+				readonly total: number;
 			};
 		}
-	: object);
+	: unknown);
 
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
