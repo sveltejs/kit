@@ -5,7 +5,9 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
-	import type { Span } from '@opentelemetry/api';
+	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+	type Span = import('@opentelemetry/api').Span;
+
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1841,13 +1843,28 @@ declare module '@sveltejs/kit' {
 					get files(): FileList | null;
 					set files(v: FileList | null);
 				}
-			: {
-					name: string;
-					type: T;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
-				};
+			: T extends 'select' | 'select multiple'
+				? {
+						name: string;
+						multiple: T extends 'select' ? false : true;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					}
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						};
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
@@ -1887,12 +1904,12 @@ declare module '@sveltejs/kit' {
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 		/** Validation issues belonging to this or any of the fields that belong to it, if any */
-		allIssues(): RemoteFormAllIssue[] | undefined;
+		allIssues(): RemoteFormIssue[] | undefined;
 	};
 
 	type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 		/** Validation issues belonging to this or any of the fields that belong to it, if any */
-		allIssues(): RemoteFormAllIssue[] | undefined;
+		allIssues(): RemoteFormIssue[] | undefined;
 		/**
 		 * Returns an object that can be spread onto an input element with the correct type attribute,
 		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
@@ -1939,9 +1956,6 @@ declare module '@sveltejs/kit' {
 
 	export interface RemoteFormIssue {
 		message: string;
-	}
-
-	export interface RemoteFormAllIssue extends RemoteFormIssue {
 		path: Array<string | number>;
 	}
 
@@ -2035,7 +2049,7 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: Input extends void ? never : RemoteFormFields<Input>;
+		fields: RemoteFormFields<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';

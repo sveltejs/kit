@@ -203,6 +203,9 @@ export function form(id) {
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
+					// reset issues in case it's a redirect or error (but issues passed in that case)
+					raw_issues = [];
+
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
@@ -528,8 +531,10 @@ export function form(id) {
 					await tick();
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button, [type="submit"]')
+						element.querySelector('button:not([type]), [type="submit"]')
 					);
+
+					console.log({ default_submitter });
 
 					const form_data = new FormData(element, default_submitter);
 

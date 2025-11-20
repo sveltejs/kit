@@ -514,6 +514,8 @@ async function _preload_data(intent) {
 	// then a later one is becoming the real navigation and the preload tokens
 	// get out of sync.
 	if (intent.id !== load_cache?.id) {
+		discard_load_cache();
+
 		const preload = {};
 		preload_tokens.add(preload);
 		load_cache = {
@@ -1688,8 +1690,9 @@ async function navigate({
 		}
 	}
 
+	// also compare ids to avoid using wrong fork (e.g. a new one could've been added while navigating)
+	const load_cache_fork = intent && load_cache?.id === intent.id ? load_cache.fork : null;
 	// reset preload synchronously after the history state has been set to avoid race conditions
-	const load_cache_fork = load_cache?.fork;
 	load_cache = null;
 
 	navigation_result.props.page.state = state;

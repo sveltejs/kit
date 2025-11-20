@@ -6,6 +6,7 @@
 		get_count,
 		set_count,
 		set_count_server_refresh,
+		set_count_server_refresh_after_read,
 		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
@@ -66,6 +67,14 @@
 	id="multiply-server-refresh-btn"
 >
 	command (query server refresh)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_after_read(6);
+	}}
+	id="multiply-server-refresh-after-read-btn"
+>
+	command (query server refresh after read)
 </button>
 <button
 	onclick={async () => {
