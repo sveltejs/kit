@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.49.0
+### Minor Changes
+
+
+- feat: stream file uploads inside `form` remote functions allowing form data to be accessed before large files finish uploading ([#14775](https://github.com/sveltejs/kit/pull/14775))
+
 ## 2.48.8
 ### Patch Changes
 
