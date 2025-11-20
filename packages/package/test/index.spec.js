@@ -135,12 +135,8 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
-test('create package with typescript using allowImportingTsExtensions', async () => {
-	await test_make_package('typescript-allowImportingTsExtensions');
-});
-
-test('create package with typescript alias extension rewrites', async () => {
-	await test_make_package('typescript-alias-rewrites');
+test('create package with typescript .ts extension rewrites, including for aliases', async () => {
+	await test_make_package('typescript-ts-extension-rewrites');
 });
 
 // only run this test in newer Node versions
