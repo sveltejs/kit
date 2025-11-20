@@ -1,5 +1,62 @@
 # @sveltejs/kit
 
+## 2.48.8
+### Patch Changes
+
+
+- breaking: `invalid` now must be imported from `@sveltejs/kit` ([#14768](https://github.com/sveltejs/kit/pull/14768))
+
+
+- breaking: remove `submitter` option from experimental form `validate()` method, always provide default submitter ([#14762](https://github.com/sveltejs/kit/pull/14762))
+
+## 2.48.7
+### Patch Changes
+
+
+- fix: allow multiple `server-timing` headers ([#14700](https://github.com/sveltejs/kit/pull/14700))
+
+
+- fix: allow access to root-level issues in schema-less forms ([#14893](https://github.com/sveltejs/kit/pull/14893))
+
+
+- fix: allow hosting hash-based apps from non-index.html files ([#14825](https://github.com/sveltejs/kit/pull/14825))
+
+## 2.48.6
+### Patch Changes
+
+
+- fix: clear issues upon passing validation ([#14683](https://github.com/sveltejs/kit/pull/14683))
+
+
+- fix: don't use fork of unrelated route ([#14947](https://github.com/sveltejs/kit/pull/14947))
+
+
+- fix: prevent type errors when optional `@opentelemetry/api` dependency isn't installed ([#14949](https://github.com/sveltejs/kit/pull/14949))
+
+
+- fix: preserve `this` when invoking standard validator ([#14943](https://github.com/sveltejs/kit/pull/14943))
+
+
+- fix: treat client/universal hooks as entrypoints for illegal server import detection ([#14876](https://github.com/sveltejs/kit/pull/14876))
+
+
+- fix: correct query `.set` and `.refresh` behavior in commands ([#14877](https://github.com/sveltejs/kit/pull/14877))
+
+
+- fix: improved the accuracy of the types of the output of `field.as('...')` ([#14908](https://github.com/sveltejs/kit/pull/14908))
+
+## 2.48.5
+### Patch Changes
+
+
+- fix: wait an extra microtask in dev before calling `$_init_$` ([#14799](https://github.com/sveltejs/kit/pull/14799))
+
+
+- fix: discard preload fork before creating a new one ([#14865](https://github.com/sveltejs/kit/pull/14865))
+
+
+- fix: delete `RemoteFormAllIssue`, add `path` to `RemoteFormIssue` ([#14864](https://github.com/sveltejs/kit/pull/14864))
+
 ## 2.48.4
 ### Patch Changes
 

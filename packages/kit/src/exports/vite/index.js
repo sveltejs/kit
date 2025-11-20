@@ -598,6 +598,9 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
+				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 				const chain = [normalized];
 

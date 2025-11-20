@@ -4,7 +4,7 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder } from './utils.js';
+import { text_decoder, text_encoder } from './utils.js';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -96,9 +96,10 @@ export function serialize_binary_form(data, meta) {
 		}
 	});
 
-	let encoded_file_offsets = '';
 	/** @type {Array<number> | undefined} */
 	let file_offsets;
+
+	let encoded_file_offsets = '';
 	if (files.length) {
 		// Sort small files to the front
 		files.sort(([a], [b]) => a.size - b.size);
@@ -112,16 +113,18 @@ export function serialize_binary_form(data, meta) {
 		encoded_file_offsets = JSON.stringify(file_offsets);
 	}
 
+	const encoded_header_buffer = text_encoder.encode(encoded_header);
+
 	const length_buffer = new Uint8Array(4);
 	const length_view = new DataView(length_buffer.buffer);
 
-	length_view.setUint32(0, encoded_header.length, true);
+	length_view.setUint32(0, encoded_header_buffer.byteLength, true);
 	blob_parts.push(length_buffer.slice());
 
 	length_view.setUint16(0, encoded_file_offsets.length, true);
 	blob_parts.push(length_buffer.slice(0, 2));
 
-	blob_parts.push(encoded_header);
+	blob_parts.push(encoded_header_buffer);
 	blob_parts.push(encoded_file_offsets);
 
 	for (const [file] of files) {
