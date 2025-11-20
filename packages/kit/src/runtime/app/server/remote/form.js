@@ -4,7 +4,6 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import {
-	convert_formdata,
 	create_field_proxy,
 	set_nested_value,
 	throw_on_old_property_access,
@@ -105,19 +104,7 @@ export function form(validate_or_fn, maybe_fn) {
 			type: 'form',
 			name: '',
 			id: '',
-			/** @param {FormData} form_data */
-			fn: async (form_data) => {
-				const validate_only = form_data.get('sveltekit:validate_only') === 'true';
-
-				let data = maybe_fn ? convert_formdata(form_data) : undefined;
-
-				if (data && data.id === undefined) {
-					const id = form_data.get('sveltekit:id');
-					if (typeof id === 'string') {
-						data.id = JSON.parse(id);
-					}
-				}
-
+			fn: async (data, meta, form_data) => {
 				// TODO 3.0 remove this warning
 				if (DEV && !data) {
 					const error = () => {
@@ -153,12 +140,12 @@ export function form(validate_or_fn, maybe_fn) {
 				const { event, state } = get_request_store();
 				const validated = await schema?.['~standard'].validate(data);
 
-				if (validate_only) {
+				if (meta.validate_only) {
 					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
 				}
 
 				if (validated?.issues !== undefined) {
-					handle_issues(output, validated.issues, event.isRemoteRequest, form_data);
+					handle_issues(output, validated.issues, form_data);
 				} else {
 					if (validated !== undefined) {
 						data = validated.value;
@@ -179,7 +166,7 @@ export function form(validate_or_fn, maybe_fn) {
 						);
 					} catch (e) {
 						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, event.isRemoteRequest, form_data);
+							handle_issues(output, e.issues, form_data);
 						} else {
 							throw e;
 						}
@@ -298,15 +285,14 @@ export function form(validate_or_fn, maybe_fn) {
 /**
  * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
  * @param {readonly StandardSchemaV1.Issue[]} issues
- * @param {boolean} is_remote_request
- * @param {FormData} form_data
+ * @param {FormData | null} form_data - null if the form is progressively enhanced
  */
-function handle_issues(output, issues, is_remote_request, form_data) {
+function handle_issues(output, issues, form_data) {
 	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
 	// if it was a progressively-enhanced submission, we don't need
 	// to return the input — it's already there
-	if (!is_remote_request) {
+	if (form_data) {
 		output.input = {};
 
 		for (let key of form_data.keys()) {
