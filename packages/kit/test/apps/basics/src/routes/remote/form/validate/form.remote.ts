@@ -26,3 +26,14 @@ export const my_form_2 = form(
 		if (baz === 'a') error(400, 'Nope');
 	}
 );
+
+export const issue_path_form = form(
+	v.object({
+		nested: v.object({
+			value: v.pipe(v.string(), v.minLength(3))
+		})
+	}),
+	async (data) => {
+		return data;
+	}
+);
