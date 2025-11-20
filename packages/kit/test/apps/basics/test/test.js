@@ -1911,24 +1911,24 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/validate');
 
 		const baz = page.locator('input[name="baz"]');
-		const submit = page.locator('[data-form-2] button');
+		const submit = page.locator('#my-form-2 button');
 
 		await baz.fill('c');
 		await submit.click();
-		await expect(page.locator('[data-form-2]')).toContainText('Invalid type: Expected');
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
 
 		await baz.fill('a');
 		await submit.click();
-		await expect(page.locator('[data-form-2]')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
 		await expect(page.locator('[data-error]')).toHaveText('An error occurred');
 
 		await baz.fill('c');
 		await submit.click();
-		await expect(page.locator('[data-form-2]')).toContainText('Invalid type: Expected');
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
 
 		await baz.fill('b');
 		await submit.click();
-		await expect(page.locator('[data-form-2]')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
 		await expect(page.locator('[data-error]')).toHaveText('No error');
 	});
 
