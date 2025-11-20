@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
-feat: allow hosting hash-based apps from non-index.html files
+fix: allow hosting hash-based apps from non-index.html files
