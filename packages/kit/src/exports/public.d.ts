@@ -6,7 +6,6 @@ import {
 	AdapterEntry,
 	CspDirectives,
 	HttpMethod,
-	IsAny,
 	Logger,
 	MaybePromise,
 	Prerendered,
