@@ -1841,28 +1841,52 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-only');
+
+		const a = page.locator('[name="a"]');
+		const button = page.locator('button');
+		const issues = page.locator('.issues');
+
+		await button.click();
+		await expect(issues).toContainText('a is too short');
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		await a.fill('aaaaaaaa');
+		await expect(issues).toContainText('a is too long');
+
+		// server issues should be preserved...
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		// ...unless overridden by client issues
+		await expect(issues).not.toContainText('a is too short');
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/remote/form/validate');
 
+		const myForm = page.locator('form#my-form');
 		const foo = page.locator('input[name="foo"]');
 		const bar = page.locator('input[name="bar"]');
 		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
-		await expect(page.locator('form')).toContainText(
-			'Invalid type: Expected ("d" | "e") but received "g"'
-		);
+		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await page.locator('#trigger-validate').click();
-		await expect(page.locator('form')).toContainText(
+		await expect(myForm).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
 
@@ -1870,7 +1894,15 @@ test.describe('remote functions', () => {
 		await foo.fill('c');
 		await bar.fill('d');
 		await submit.click();
-		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
+		await expect(myForm).toContainText('Imperative: foo cannot be c');
+
+		const nestedValue = page.locator('input[name="nested.value"]');
+		const validate = page.locator('button#validate');
+		const allIssues = page.locator('#allIssues');
+
+		await nestedValue.fill('in');
+		await validate.click();
+		await expect(allIssues).toContainText('"path":["nested","value"]');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {

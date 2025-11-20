@@ -5,7 +5,9 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
-	import type { Span } from '@opentelemetry/api';
+	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+	type Span = import('@opentelemetry/api').Span;
+
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -1841,13 +1843,28 @@ declare module '@sveltejs/kit' {
 					get files(): FileList | null;
 					set files(v: FileList | null);
 				}
-			: {
-					name: string;
-					type: T;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
-				};
+			: T extends 'select' | 'select multiple'
+				? {
+						name: string;
+						multiple: T extends 'select' ? false : true;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					}
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						};
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
@@ -1890,10 +1907,28 @@ declare module '@sveltejs/kit' {
 		allIssues(): RemoteFormIssue[] | undefined;
 	};
 
+	type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
+		/** Validation issues belonging to this or any of the fields that belong to it, if any */
+		allIssues(): RemoteFormIssue[] | undefined;
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	} & {
+		[key: string | number]: UnknownField<any>;
+	};
+
 	/**
 	 * Recursive type to build form fields structure with proxy access
 	 */
-	type RemoteFormFields<T> =
+	export type RemoteFormFields<T> =
 		WillRecurseIndefinitely<T> extends true
 			? RecursiveFormFields
 			: NonNullable<T> extends string | number | boolean | File
@@ -1901,11 +1936,17 @@ declare module '@sveltejs/kit' {
 				: T extends string[] | File[]
 					? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
 					: T extends Array<infer U>
-						? RemoteFormFieldContainer<T> & { [K in number]: RemoteFormFields<U> }
-						: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
+						? RemoteFormFieldContainer<T> & {
+								[K in number]: RemoteFormFields<U>;
+							}
+						: RemoteFormFieldContainer<T> & {
+								[K in keyof T]-?: RemoteFormFields<T[K]>;
+							};
 
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
-	type RecursiveFormFields = RemoteFormField<any> & { [key: string | number]: RecursiveFormFields };
+	type RecursiveFormFields = RemoteFormFieldContainer<any> & {
+		[key: string | number]: UnknownField<any>;
+	};
 
 	type MaybeArray<T> = T | T[];
 
@@ -1915,6 +1956,7 @@ declare module '@sveltejs/kit' {
 
 	export interface RemoteFormIssue {
 		message: string;
+		path: Array<string | number>;
 	}
 
 	// If the schema specifies `id` as a string or number, ensure that `for(...)`
@@ -1997,7 +2039,10 @@ declare module '@sveltejs/kit' {
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
+			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
 			includeUntouched?: boolean;
+			/** Set this to `true` to only run the `preflight` validation. */
+			preflightOnly?: boolean;
 			/** Perform validation as if the form was submitted by the given button. */
 			submitter?: HTMLButtonElement | HTMLInputElement;
 		}): Promise<void>;
@@ -2488,6 +2533,7 @@ declare module '@sveltejs/kit' {
 	type SSRComponentLoader = () => Promise<SSRComponent>;
 
 	interface UniversalNode {
+		/** Is `null` in case static analysis succeeds but the node is ssr=false */
 		load?: Load;
 		prerender?: PrerenderOption;
 		ssr?: boolean;
@@ -3158,7 +3204,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferOutput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

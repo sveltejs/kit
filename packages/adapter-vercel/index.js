@@ -5,7 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname, pattern_to_src } from './utils.js';
+import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 /**
@@ -23,30 +23,6 @@ const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
 const [kit_major, kit_minor] = VERSION.split('.');
-
-const get_default_runtime = () => {
-	const major = Number(process.version.slice(1).split('.')[0]);
-
-	// If we're building on Vercel, we know that the version will be fine because Vercel
-	// provides Node (and Vercel won't provide something it doesn't support).
-	// Also means we're not on the hook for updating the adapter every time a new Node
-	// version is added to Vercel.
-	if (!process.env.VERCEL) {
-		if (major < 18 || major > 22) {
-			throw new Error(
-				`Building locally with unsupported Node.js version: ${process.version}. Please use Node 18, 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
-			);
-		}
-
-		if (major % 2 !== 0) {
-			throw new Error(
-				`Unsupported Node.js version: ${process.version}. Please use an even-numbered Node version to build your project, or explicitly specify a runtime in your adapter configuration.`
-			);
-		}
-	}
-
-	return `nodejs${major}.x`;
-};
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
@@ -294,8 +270,8 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
-				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
-				const config = { runtime, ...defaults, ...route.config };
+				const runtime = resolve_runtime(defaults.runtime, route.config.runtime);
+				const config = { ...defaults, ...route.config, runtime };
 
 				if (is_prerendered(route)) {
 					if (config.isr) {
@@ -304,20 +280,12 @@ const plugin = function (defaults = {}) {
 					continue;
 				}
 
-				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 18)) {
-					throw new Error(
-						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
-							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
-					);
-				}
-
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
-					if (!runtime.startsWith('nodejs')) {
+					if (runtime === 'edge') {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs22.x' or 'experimental_bun1.x')`
 						);
 					}
 
@@ -400,13 +368,13 @@ const plugin = function (defaults = {}) {
 				// we need to create a catch-all route so that 404s are handled
 				// by SvelteKit rather than Vercel
 
-				const runtime = defaults.runtime ?? get_default_runtime();
+				const runtime = resolve_runtime(defaults.runtime);
 				const generate_function =
 					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
 				await generate_function(
 					`${INTERNAL}/catchall`,
-					/** @type {any} */ ({ runtime, ...defaults }),
+					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
 				);
 			}
@@ -433,7 +401,11 @@ const plugin = function (defaults = {}) {
 					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 
 					const pathname = get_pathname(route);
-					const json = JSON.stringify(isr, null, '\t');
+					const json = JSON.stringify(
+						{ ...isr, expiration: parse_isr_expiration(isr.expiration, route.id) },
+						null,
+						'\t'
+					);
 
 					write(`${base}.prerender-config.json`, json);
 					write(`${base}/__data.json.prerender-config.json`, json);

@@ -1,4 +1,4 @@
 // generated during release, do not modify
 
 /** @type {string} */
-export const VERSION = '2.46.4';
+export const VERSION = '2.48.5';

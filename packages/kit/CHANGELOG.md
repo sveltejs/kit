@@ -1,5 +1,116 @@
 # @sveltejs/kit
 
+## 2.48.5
+### Patch Changes
+
+
+- fix: wait an extra microtask in dev before calling `$_init_$` ([#14799](https://github.com/sveltejs/kit/pull/14799))
+
+
+- fix: discard preload fork before creating a new one ([#14865](https://github.com/sveltejs/kit/pull/14865))
+
+
+- fix: delete `RemoteFormAllIssue`, add `path` to `RemoteFormIssue` ([#14864](https://github.com/sveltejs/kit/pull/14864))
+
+## 2.48.4
+### Patch Changes
+
+
+- fix: adjust query's promise implementation to properly allow chaining ([#14859](https://github.com/sveltejs/kit/pull/14859))
+
+
+- fix: make prerender cache work, including in development ([#14860](https://github.com/sveltejs/kit/pull/14860))
+
+## 2.48.3
+### Patch Changes
+
+
+- fix: include hash when using `resolve` with hash routing enabled ([#14786](https://github.com/sveltejs/kit/pull/14786))
+
+
+- fix: `afterNavigate` callback not running after hydration when experimental async is enabled ([#14644](https://github.com/sveltejs/kit/pull/14644))
+  fix: Snapshot `restore` method not called after reload when experimental async is enabled
+
+- fix: expose `issue.path` in `.allIssues()` ([#14784](https://github.com/sveltejs/kit/pull/14784))
+
+## 2.48.2
+### Patch Changes
+
+
+- fix: update DOM before running navigate callbacks ([#14829](https://github.com/sveltejs/kit/pull/14829))
+
+## 2.48.1
+### Patch Changes
+
+
+- fix: wait for commit promise instead of `settled` ([#14818](https://github.com/sveltejs/kit/pull/14818))
+
+## 2.48.0
+### Minor Changes
+
+
+- feat: use experimental `fork` API when available ([#14793](https://github.com/sveltejs/kit/pull/14793))
+
+
+### Patch Changes
+
+
+- fix: await for `settled` instead of `tick` in navigate ([#14800](https://github.com/sveltejs/kit/pull/14800))
+
+## 2.47.3
+### Patch Changes
+
+
+- fix: avoid hanging when `error()` is used while streaming promises from a server `load` function ([#14722](https://github.com/sveltejs/kit/pull/14722))
+
+
+- chore: treeshake load function code if we know it's unused ([#14764](https://github.com/sveltejs/kit/pull/14764))
+
+
+- fix: `RecursiveFormFields` type for recursive or unknown schemas ([#14734](https://github.com/sveltejs/kit/pull/14734))
+
+
+- fix: rework internal representation of form value to be `$state` ([#14771](https://github.com/sveltejs/kit/pull/14771))
+
+## 2.47.2
+### Patch Changes
+
+
+- fix: streamed promise not resolving when another load function returns a fast resolving promise ([#14753](https://github.com/sveltejs/kit/pull/14753))
+
+
+- chore: allow to run preflight validation only ([#14744](https://github.com/sveltejs/kit/pull/14744))
+
+
+- fix: update overload to set `invalid` type to schema input ([#14748](https://github.com/sveltejs/kit/pull/14748))
+
+## 2.47.1
+### Patch Changes
+
+
+- fix: allow `read` to be used at the top-level of remote function files ([#14672](https://github.com/sveltejs/kit/pull/14672))
+
+
+- fix: more robust remote files generation ([#14682](https://github.com/sveltejs/kit/pull/14682))
+
+## 2.47.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+
+- fix: resolve remote module syntax errors with trailing expressions ([#14728](https://github.com/sveltejs/kit/pull/14728))
+
+## 2.46.5
+### Patch Changes
+
+
+- fix: ensure `form` remote functions' `fields.set` triggers reactivity ([#14661](https://github.com/sveltejs/kit/pull/14661))
+
 ## 2.46.4
 ### Patch Changes
 

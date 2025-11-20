@@ -25,9 +25,11 @@ import {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
 } from '$app/types';
-import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
+
+// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+type Span = import('@opentelemetry/api').Span;
 
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -1865,13 +1867,28 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: {
-				name: string;
-				type: T;
-				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get value(): string | number;
-				set value(v: string | number);
-			};
+		: T extends 'select' | 'select multiple'
+			? {
+					name: string;
+					multiple: T extends 'select' ? false : true;
+					'aria-invalid': boolean | 'false' | 'true' | undefined;
+					get value(): string | number;
+					set value(v: string | number);
+				}
+			: T extends 'text'
+				? {
+						name: string;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					}
+				: {
+						name: string;
+						type: T;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -1914,10 +1931,28 @@ type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 	allIssues(): RemoteFormIssue[] | undefined;
 };
 
+type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
+	/** Validation issues belonging to this or any of the fields that belong to it, if any */
+	allIssues(): RemoteFormIssue[] | undefined;
+	/**
+	 * Returns an object that can be spread onto an input element with the correct type attribute,
+	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+	 * @example
+	 * ```svelte
+	 * <input {...myForm.fields.myString.as('text')} />
+	 * <input {...myForm.fields.myNumber.as('number')} />
+	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+	 * ```
+	 */
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+} & {
+	[key: string | number]: UnknownField<any>;
+};
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
-type RemoteFormFields<T> =
+export type RemoteFormFields<T> =
 	WillRecurseIndefinitely<T> extends true
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
@@ -1925,11 +1960,17 @@ type RemoteFormFields<T> =
 			: T extends string[] | File[]
 				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
 				: T extends Array<infer U>
-					? RemoteFormFieldContainer<T> & { [K in number]: RemoteFormFields<U> }
-					: RemoteFormFieldContainer<T> & { [K in keyof T]-?: RemoteFormFields<T[K]> };
+					? RemoteFormFieldContainer<T> & {
+							[K in number]: RemoteFormFields<U>;
+						}
+					: RemoteFormFieldContainer<T> & {
+							[K in keyof T]-?: RemoteFormFields<T[K]>;
+						};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = RemoteFormField<any> & { [key: string | number]: RecursiveFormFields };
+type RecursiveFormFields = RemoteFormFieldContainer<any> & {
+	[key: string | number]: UnknownField<any>;
+};
 
 type MaybeArray<T> = T | T[];
 
@@ -1939,6 +1980,7 @@ export interface RemoteFormInput {
 
 export interface RemoteFormIssue {
 	message: string;
+	path: Array<string | number>;
 }
 
 // If the schema specifies `id` as a string or number, ensure that `for(...)`
@@ -2021,7 +2063,10 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */
 	validate(options?: {
+		/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
 		includeUntouched?: boolean;
+		/** Set this to `true` to only run the `preflight` validation. */
+		preflightOnly?: boolean;
 		/** Perform validation as if the form was submitted by the given button. */
 		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
