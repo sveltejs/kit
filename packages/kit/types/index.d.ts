@@ -2723,7 +2723,7 @@ declare module '@sveltejs/kit' {
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
-	class HttpError_1 {
+	class HttpError_1 extends Error {
 		
 		constructor(status: number, body: {
 			message: string;
