@@ -339,8 +339,8 @@ function create_issues() {
 				// TODO 3.0 remove
 				if (typeof message !== 'string') {
 					throw new Error(
-						'invalid() should now be imported from @sveltejs/kit to throw validaition issues. ' +
-							'Keep using the parameter (now named issue) provided to the form function only to construct the issues, e.g. invalid(issue.field("message")). ' +
+						'`invalid` should now be imported from `@sveltejs/kit` to throw validation issues. ' +
+							'The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field(\'message\'))`. ' +
 							'For more info see https://github.com/sveltejs/kit/pulls/14768'
 					);
 				}
