@@ -225,14 +225,11 @@ export function form(id) {
 								deep_set(upload_progress, path, { uploaded: 0, total: file.size });
 							}
 							xhr.upload.addEventListener('progress', (ev) => {
-								console.log('-', ev.loaded);
-								console.log(file_offsets);
 								for (const file of file_offsets) {
 									const total = file.file.size;
 									let uploaded = ev.loaded - file.start;
 									if (uploaded <= 0) continue;
 									if (uploaded > total) uploaded = total;
-									console.log(file.file.name, uploaded);
 									const path = file_paths.get(file.file);
 									if (!path) continue;
 									deep_get(upload_progress, path).uploaded = uploaded;
