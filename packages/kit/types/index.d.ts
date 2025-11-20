@@ -2710,7 +2710,7 @@ declare module '@sveltejs/kit' {
 	 * ```ts
 	 * import { invalid } from '@sveltejs/kit';
 	 * import { form } from '$app/server';
-	 * import { tryLogin } from $lib/server/auth';
+	 * import { tryLogin } from '$lib/server/auth';
 	 * import * as v from 'valibot';
 	 *
 	 * export const login = form(
