@@ -183,6 +183,7 @@ export async function internal_respond(request, options, manifest, state) {
 						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
+					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
 					if (lower === 'server-timing') {
 						headers[lower] += ', ' + value;
 					} else {
