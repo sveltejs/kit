@@ -476,10 +476,6 @@ export const buyHotcakes = form(
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid(
-					// This will show up on the root issue list
-					'Purchase failed',
-					// Creates a `{ message: ..., path: ['qty'] }` object,
-					// will show up on the issue list for the `qty` field
 					issue.qty(`we don't have enough hotcakes`)
 				);
 			}
