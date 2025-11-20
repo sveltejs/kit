@@ -2150,6 +2150,16 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
+	 * The return value of a remote `query.stream` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-stream) for full documentation.
+	 */
+	export type RemoteQueryStream<T> = RemoteResource<T> & AsyncIterable<Awaited<T>>;
+
+	/**
+	 * The return value of a remote `query.stream` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-stream) for full documentation.
+	 */
+	export type RemoteQueryStreamFunction<Input, Output> = (arg: Input) => RemoteQueryStream<Output>;
+
+	/**
 	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
 	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
@@ -3134,7 +3144,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction, RemoteQueryStreamFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3279,6 +3289,30 @@ declare module '$app/server' {
 		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		/**
+		 * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events (SSE).
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+		 *
+		 * @since 2.36
+		 */
+		function stream<Output>(fn: () => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>): RemoteQueryStreamFunction<void, Output>;
+		/**
+		 * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+		 *
+		 * @since 2.36
+		 */
+		function stream<Input, Output>(validate: "unchecked", fn: (arg: Input) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>): RemoteQueryStreamFunction<Input, Output>;
+		/**
+		 * Creates a streaming remote query. When called from the browser, the generator function will be invoked on the server and values will be streamed via Server-Sent Events.
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.stream) for full documentation.
+		 *
+		 * @since 2.36
+		 */
+		function stream<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Generator<Output, void, unknown> | AsyncGenerator<Output, void, unknown>): RemoteQueryStreamFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;

@@ -1,12 +1,13 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQueryFunction, RemoteQueryStreamFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, remote_responses } from '../client.js';
-import { tick } from 'svelte';
+import { stringify_remote_arg } from '../../shared.js';
 import { create_remote_function, remote_request } from './shared.svelte.js';
-import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
+import { tick } from 'svelte';
 
 /**
  * @param {string} id
@@ -121,6 +122,225 @@ export function query_batch(id) {
 			});
 		});
 	});
+}
+
+/**
+ * @param {string} id
+ * @returns {RemoteQueryStreamFunction<any, any>}
+ */
+export function query_stream(id) {
+	// @ts-expect-error [Symbol.toStringTag] missing
+	return (payload) => {
+		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${stringify_remote_arg(payload, app.hooks.transport)}` : ''}`;
+		return new QueryStream(url);
+	};
+}
+
+/**
+ * Query stream class that implements both Promise and AsyncIterable interfaces
+ * @template T
+ * @implements {Partial<Promise<T>>}
+ */
+class QueryStream {
+	/**
+	 * The promise next() and then/catch/finally methods return. Is reset after each message from the EventSource.
+	 * @type {Promise<any>}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#promise;
+
+	/**
+	 * The resolve function for the promise.
+	 * @type {(value: any) => void}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#resolve;
+
+	/**
+	 * The reject function for the promise.
+	 * @type {(error?: any) => void}
+	 */
+	// @ts-expect-error TS doesn't see that we assign it in the constructor indirectly through function calls
+	#reject;
+
+	/** @type {any} */
+	#current = $state.raw();
+
+	/** @type {boolean} */
+	#ready = $state(false);
+
+	/** @type {any} */
+	#error = $state();
+
+	/** @type {EventSource | undefined} */
+	#source;
+
+	/**
+	 * How many active async iterators are using this stream.
+	 * If there are no active iterators, the EventSource is closed if it's unused.
+	 * @type {number} */
+	#count = 0;
+
+	/**
+	 * The URL of the EventSource.
+	 * @type {string}
+	 */
+	#url;
+
+	/**
+	 * Becomes `true` when our query map deletes this stream, which means there's no reactive listener to it anymore.
+	 * @type {boolean}
+	 */
+	#unused = false;
+
+	/**
+	 * @param {string} url
+	 */
+	constructor(url) {
+		this.#url = url;
+		this.#next();
+	}
+
+	#create_promise() {
+		this.#reject?.(); // in case there's a dangling listener
+		this.#promise = new Promise((resolve, reject) => {
+			this.#resolve = resolve;
+			this.#reject = reject;
+		});
+		this.#promise.catch(() => {}); // don't let unhandled rejections bubble up
+	}
+
+	#next() {
+		if (this.#source && this.#source.readyState !== EventSource.CLOSED) return;
+
+		this.#create_promise();
+		this.#source = new EventSource(this.#url);
+
+		const source = this.#source;
+
+		/** @param {MessageEvent} event */
+		const onMessage = (event) => {
+			this.#ready = true;
+			this.#error = undefined;
+
+			const message = event.data;
+
+			if (message === '[DONE]') {
+				source.close();
+				this.#resolve({ done: true, value: undefined });
+				return;
+			}
+
+			const parsed = devalue.parse(message, app.decoders);
+			if (parsed && typeof parsed === 'object' && parsed.type === 'error') {
+				source.close();
+				this.#reject((this.#error = new HttpError(parsed.status ?? 500, parsed.error)));
+				return;
+			}
+
+			this.#current = parsed.value;
+			this.#resolve({ done: false, value: parsed.value });
+			this.#create_promise();
+		};
+
+		/** @param {Event} error */
+		const onError = (error) => {
+			this.#error = error;
+			this.#reject(error);
+		};
+
+		this.#source.addEventListener('message', onMessage);
+		this.#source.addEventListener('error', onError);
+	}
+
+	#then = $derived.by(() => {
+		this.#current;
+
+		/**
+		 * @param {any} resolve
+		 * @param {any} reject
+		 */
+		return (resolve, reject) => {
+			// On first call we return the promise. In all other cases we don't want any delay and return the current value.
+			// The getter will self-invalidate when the next message is received.
+			if (!this.#ready) {
+				return this.#promise.then((v) => v.value).then(resolve, reject);
+			} else {
+				// We return/reject right away instead of waiting on the promise,
+				// else we would end up in a constant pending state since the next
+				// promise is created right after the previous one is resolved.
+				if (this.#error) {
+					return Promise.reject(this.#error).then(undefined, reject);
+				} else {
+					return Promise.resolve(this.#current).then(resolve);
+				}
+			}
+		};
+	});
+
+	get then() {
+		return this.#then;
+	}
+
+	get catch() {
+		this.#current;
+
+		return (/** @type {any} */ reject) => {
+			return this.then(undefined, reject);
+		};
+	}
+
+	get finally() {
+		this.#current;
+
+		return (/** @type {any} */ fn) => {
+			return this.then(
+				() => fn(),
+				() => fn()
+			);
+		};
+	}
+
+	get current() {
+		return this.#current;
+	}
+
+	get ready() {
+		return this.#ready;
+	}
+
+	get error() {
+		return this.#error;
+	}
+
+	_dispose() {
+		this.#unused = true;
+		if (this.#count === 0) {
+			this.#source?.close();
+			this.#reject?.();
+		}
+	}
+
+	[Symbol.asyncIterator]() {
+		// Restart the stream in case it was closed previously.
+		// Can happen if this is iterated over from a non-reactive context.
+		this.#next();
+		this.#count++;
+		const that = this;
+
+		return {
+			next() {
+				return that.#promise;
+			},
+			return() {
+				that.#count--;
+				if (that.#count === 0 && that.#unused) {
+					that.#source?.close();
+				}
+				return Promise.resolve({ done: true, value: undefined });
+			}
+		};
+	}
 }
 
 /**

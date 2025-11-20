@@ -32,6 +32,10 @@ self.addEventListener('fetch', (event) => {
 
 	if (request.method !== 'GET' || request.headers.has('range')) return;
 
+	// Skip EventSource requests to prevent connection issues
+	const acceptHeader = request.headers.get('accept');
+	if (acceptHeader && acceptHeader.includes('text/event-stream')) return;
+
 	const url = new URL(request.url);
 	const cached = caches.match(request);
 

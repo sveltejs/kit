@@ -154,6 +154,74 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
+		if (info.type === 'query_stream') {
+			const payload = /** @type {string} */ (
+				new URL(event.request.url).searchParams.get('payload')
+			);
+
+			const generator = with_request_store({ event, state }, () =>
+				fn(parse_remote_arg(payload, transport))
+			);
+
+			// Return a Server-Sent Events stream using the pull method to consume the async iterator
+			let cancelled = false;
+			const encoder = new TextEncoder();
+			const iterator = generator[Symbol.asyncIterator]();
+
+			return new Response(
+				new ReadableStream({
+					async pull(controller) {
+						try {
+							const { value, done } = await iterator.next();
+							if (cancelled) return;
+
+							if (done) {
+								// Send end marker
+								controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+								controller.close();
+								return;
+							}
+							const serialized = stringify({ type: 'data', value }, transport);
+							const chunk = `data: ${serialized}\n\n`;
+							controller.enqueue(encoder.encode(chunk));
+						} catch (error) {
+							const errorData = await handle_error_and_jsonify(event, state, options, error);
+
+							if (cancelled) return;
+
+							const serialized = stringify(
+								{
+									type: 'error',
+									error: errorData,
+									status:
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500
+								},
+								transport
+							);
+							const chunk = `data: ${serialized}\n\n`;
+							controller.enqueue(encoder.encode(chunk));
+							controller.close();
+						}
+					},
+
+					cancel() {
+						cancelled = true;
+						if (iterator.return) {
+							iterator.return();
+						}
+					}
+				}),
+				{
+					headers: {
+						'content-type': 'text/event-stream',
+						'cache-control': 'private, no-store'
+					}
+				}
+			);
+		}
+
 		const payload =
 			info.type === 'prerender'
 				? additional_args
