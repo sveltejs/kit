@@ -350,6 +350,8 @@ function form_tests() {
 		);
 	});
 	const f8i = f8();
+	f8i.fields.issues();
+	f8i.fields.allIssues();
 	// @ts-expect-error
 	f8i.fields.x;
 	// @ts-expect-error

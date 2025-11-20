@@ -36,6 +36,13 @@ export const set_count_server_refresh = command('unchecked', (c) => {
 	return c;
 });
 
+export const set_count_server_refresh_after_read = command('unchecked', async (c) => {
+	await get_count();
+	count = c;
+	await get_count().refresh();
+	return c;
+});
+
 export const set_count_server_set = command('unchecked', async (c) => {
 	get_count_called = false;
 	count = c;

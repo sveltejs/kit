@@ -1,5 +1,5 @@
 <script>
-	import { issue_path_form, my_form } from './form.remote.js';
+	import { issue_path_form, my_form, my_form_2 } from './form.remote.js';
 	import * as v from 'valibot';
 
 	const schema = v.object({
@@ -10,8 +10,11 @@
 	const my_form_form = my_form({
 		preflight: schema
 	});
+	const my_form_2_form = my_form_2();
 	let submitter;
+
 	$inspect(my_form_form.fields.allIssues());
+	let error = $state(false);
 </script>
 
 <form id="my-form" {...my_form_form} oninput={() => my_form_form.validate()}>
@@ -36,6 +39,7 @@
 		<p>{issue.message}</p>
 	{/each}
 </form>
+
 <button
 	id="trigger-validate"
 	onclick={() => my_form_form.validate({ includeUntouched: true, submitter })}
@@ -53,4 +57,26 @@
 		Validate
 	</button>
 	<pre id="allIssues">{JSON.stringify(issue_path_form().fields.allIssues())}</pre>
+</form>
+
+<form
+	id="my-form-2"
+	{...my_form_2_form.enhance(async ({ submit }) => {
+		error = false;
+		try {
+			await submit();
+		} catch {
+			error = true;
+		}
+	})}
+>
+	{#each my_form_2_form.fields.baz.issues() as issue}
+		<p>{issue.message}</p>
+	{/each}
+
+	<input {...my_form_2_form.fields.baz.as('text')} />
+
+	<p data-error>{error ? 'An error occurred' : 'No error'}</p>
+
+	<button>submit</button>
 </form>

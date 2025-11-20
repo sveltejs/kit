@@ -204,6 +204,9 @@ export function form(id) {
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 
+					// reset issues in case it's a redirect or error (but issues passed in that case)
+					raw_issues = [];
+
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
