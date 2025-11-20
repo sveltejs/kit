@@ -5,6 +5,7 @@
 		"verbatimModuleSyntax": true,
 		"moduleResolution": "NodeNext",
 		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
 		"noEmit": true
 	}
 }
