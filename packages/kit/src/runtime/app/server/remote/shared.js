@@ -68,7 +68,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @returns {Promise<T>}
  */
 export async function get_response(info, arg, state, get_result) {
-	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
