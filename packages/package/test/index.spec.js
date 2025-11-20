@@ -135,7 +135,7 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
-test('create package with typescript .ts extension rewrites, including for aliases', async () => {
+test('create package with .ts extension rewrites, including for aliases', async () => {
 	await test_make_package('typescript-ts-extension-rewrites');
 });
 
