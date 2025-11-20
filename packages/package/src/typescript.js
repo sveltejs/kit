@@ -97,20 +97,17 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
  */
 export async function transpile_ts(tsconfig, filename, source) {
 	const ts = await try_load_ts();
-	const options = load_tsconfig(tsconfig, filename, ts);
+	const options = await load_tsconfig(tsconfig, filename, ts);
 	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
 	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
-	return {
-		outputText: ts.transpileModule(source, {
-			compilerOptions: {
-				...options,
-				module: ts.ModuleKind.ESNext,
-				moduleResolution: ts.ModuleResolutionKind.NodeNext
-			},
-			fileName: filename
-		}).outputText,
-		options
-	};
+	return ts.transpileModule(source, {
+		compilerOptions: {
+			...options,
+			module: ts.ModuleKind.ESNext,
+			moduleResolution: ts.ModuleResolutionKind.NodeNext
+		},
+		fileName: filename
+	}).outputText;
 }
 
 async function try_load_ts() {
@@ -126,9 +123,13 @@ async function try_load_ts() {
 /**
  * @param {string | undefined} tsconfig
  * @param {string} filename
- * @param {import('typescript')} ts
+ * @param {import('typescript')} [ts]
  */
-function load_tsconfig(tsconfig, filename, ts) {
+export async function load_tsconfig(tsconfig, filename, ts) {
+	if (!ts) {
+		ts = await try_load_ts();
+	}
+
 	let config_filename;
 
 	if (tsconfig) {

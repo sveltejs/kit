@@ -15,12 +15,7 @@ const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
  * @returns {string}
  */
 export function resolve_aliases(input, file, content, aliases) {
-	/**
-	 * @param {string} match
-	 * @param {string} quote
-	 * @param {string} import_path
-	 */
-	const replace_import_path = (match, quote, import_path) => {
+	return adjust_imports(content, (import_path) => {
 		for (const [alias, value] of Object.entries(aliases)) {
 			if (
 				import_path !== alias &&
@@ -33,7 +28,48 @@ export function resolve_aliases(input, file, content, aliases) {
 			const full_import_path = path.join(value, import_path.slice(alias.length));
 			let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 			resolved = resolved.startsWith('.') ? resolved : './' + resolved;
-			return match.replace(quote + import_path + quote, quote + resolved + quote);
+			return resolved;
+		}
+		return import_path;
+	});
+}
+
+/**
+ * Replace .ts extensions with .js in relative import/export statements
+ *
+ * @param {string} content
+ * @returns {string}
+ */
+export function resolve_ts_endings(content) {
+	return adjust_imports(content, (import_path) => {
+		if (
+			import_path[0] === '.' &&
+			((import_path[1] === '.' && import_path[2] === '/') || import_path[1] === '/') &&
+			import_path.endsWith('.ts')
+		) {
+			return import_path.slice(0, -3) + '.js';
+		}
+		return import_path;
+	});
+}
+
+/**
+ * Adjust import paths
+ *
+ * @param {string} content
+ * @param {(import_path: string) => string} adjust
+ * @returns {string}
+ */
+export function adjust_imports(content, adjust) {
+	/**
+	 * @param {string} match
+	 * @param {string} quote
+	 * @param {string} import_path
+	 */
+	const replace_import_path = (match, quote, import_path) => {
+		const adjusted = adjust(import_path);
+		if (adjusted !== import_path) {
+			return match.replace(quote + import_path + quote, quote + adjusted + quote);
 		}
 		return match;
 	};
@@ -107,43 +143,6 @@ export function write(file, contents) {
  */
 export function scan(input, extensions) {
 	return walk(input).map((file) => analyze(file, extensions));
-}
-
-/**
- * Replaces .ts extensions with .js in import/export statements
- * This is needed when TypeScript files use allowImportingTsExtensions
- * and the transpiled output still contains .ts extensions
- *
- * @param {string} content
- * @returns {string}
- */
-export function replace_ts_extensions_in_imports(content) {
-	const patterns = [
-		// import/export ... from ...
-		/\b(?:import|export)(?:(?:\s+\p{L}[\p{L}0-9]*\s+)|(?:(?:\s+\p{L}[\p{L}0-9]*\s*,\s*)?\s*\{[^}]*\}\s*))from\s*(['"])([^'";]+)\1/gmu,
-		// import/export * as xxx from ...
-		/\b(?:import|export)\s*\*\s*as\s+\p{L}[\p{L}0-9]*\s+from\s*(['"])([^'";]+)\1/gmu,
-		// export * from ...
-		/\b(?:export)\s*\*\s*from\s*(['"])([^'";]+)\1/gmu,
-		// import(...)
-		/\bimport\s*\(\s*(['"])([^'";]+)\1\s*\)/g,
-		// import '...'
-		/\bimport\s+(['"])([^'";]+)\1/g
-	];
-
-	for (const pattern of patterns) {
-		content = content.replace(pattern, (match, quote, import_path) => {
-			if (import_path.endsWith('.ts')) {
-				return match.replace(
-					quote + import_path + quote,
-					quote + import_path.slice(0, -3) + '.js' + quote
-				);
-			}
-			return match;
-		});
-	}
-
-	return content;
 }
 
 /**

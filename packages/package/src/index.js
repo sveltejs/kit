@@ -6,13 +6,13 @@ import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from './filesystem.js';
 import {
 	analyze,
-	replace_ts_extensions_in_imports,
 	resolve_aliases,
+	resolve_ts_endings,
 	scan,
 	strip_lang_tags,
 	write
 } from './utils.js';
-import { emit_dts, transpile_ts } from './typescript.js';
+import { emit_dts, load_tsconfig, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
 
 /**
@@ -228,7 +228,6 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 			if (preprocessor) {
 				const preprocessed = (await preprocess(contents, preprocessor, { filename })).code;
 				contents = strip_lang_tags(preprocessed);
-				contents = replace_ts_extensions_in_imports(contents);
 			}
 		}
 
@@ -237,10 +236,12 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 		contents = resolve_aliases(input, file.name, contents, aliases);
 
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
-			const { outputText, options } = await transpile_ts(tsconfig, filename, contents);
-			contents = outputText;
-			if (options.allowImportingTsExtensions) {
-				contents = replace_ts_extensions_in_imports(contents);
+			contents = await transpile_ts(tsconfig, filename, contents);
+		} else if (file.is_svelte) {
+			const options = await load_tsconfig(tsconfig, filename);
+			// Mimic TypeScript's transpileModule behavior for Svelte files
+			if (options.allowImportingTsExtensions && options.rewriteRelativeImportExtensions) {
+				contents = resolve_ts_endings(contents);
 			}
 		}
 
