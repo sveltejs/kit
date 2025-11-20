@@ -3,9 +3,16 @@ import * as path from 'node:path';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { copy, mkdirp, rimraf } from './filesystem.js';
-import { analyze, resolve_aliases, scan, strip_lang_tags, write } from './utils.js';
-import { emit_dts, transpile_ts } from './typescript.js';
+import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
+import {
+	analyze,
+	resolve_aliases,
+	resolve_ts_endings,
+	scan,
+	strip_lang_tags,
+	write
+} from './utils.js';
+import { emit_dts, load_tsconfig, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
 
 /**
@@ -37,8 +44,20 @@ async function do_build(options, analyse_code) {
 		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
 	}
 
+	/** @type {Map<string, import('typescript').CompilerOptions>} */
+	const tsconfig_cache = new Map();
+
 	for (const file of files) {
-		await process_file(input, temp, file, options.config.preprocess, alias, tsconfig, analyse_code);
+		await process_file(
+			input,
+			temp,
+			file,
+			options.config.preprocess,
+			alias,
+			tsconfig,
+			analyse_code,
+			tsconfig_cache
+		);
 	}
 
 	if (!options.preserve_output) {
@@ -80,6 +99,9 @@ export async function watch(options) {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
+	/** @type {Map<string, import('typescript').CompilerOptions>} */
+	const tsconfig_cache = new Map();
+
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
 	/** @type {Promise<void>} */
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
@@ -88,6 +110,14 @@ export async function watch(options) {
 		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });
+
+		if (
+			file.name.endsWith('tsconfig.json') ||
+			file.name.endsWith('jsconfig.json') ||
+			(options.tsconfig && posixify(filepath) === posixify(options.tsconfig))
+		) {
+			tsconfig_cache.clear();
+		}
 
 		clearTimeout(timeout);
 		timeout = setTimeout(async () => {
@@ -130,7 +160,8 @@ export async function watch(options) {
 							options.config.preprocess,
 							alias,
 							tsconfig,
-							analyse_code
+							analyse_code,
+							tsconfig_cache
 						);
 					} catch (e) {
 						errored = true;
@@ -209,8 +240,18 @@ function normalize_options(options) {
  * @param {Record<string, string>} aliases
  * @param {string | undefined} tsconfig
  * @param {(name: string, code: string) => void} analyse_code
+ * @param {Map<string, import('typescript').CompilerOptions>} tsconfig_cache
  */
-async function process_file(input, output, file, preprocessor, aliases, tsconfig, analyse_code) {
+async function process_file(
+	input,
+	output,
+	file,
+	preprocessor,
+	aliases,
+	tsconfig,
+	analyse_code,
+	tsconfig_cache
+) {
 	const filename = path.join(input, file.name);
 	const dest = path.join(output, file.dest);
 
@@ -229,7 +270,13 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 		contents = resolve_aliases(input, file.name, contents, aliases);
 
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
-			contents = await transpile_ts(tsconfig, filename, contents);
+			contents = await transpile_ts(tsconfig, filename, contents, tsconfig_cache);
+		} else if (file.is_svelte) {
+			const options = await load_tsconfig(tsconfig, filename, tsconfig_cache);
+			// Mimic TypeScript's transpileModule behavior for Svelte files
+			if (options.rewriteRelativeImportExtensions) {
+				contents = resolve_ts_endings(contents);
+			}
 		}
 
 		analyse_code(file.name, contents);
