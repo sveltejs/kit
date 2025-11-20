@@ -7,6 +7,8 @@
 	} from './batch.remote.js';
 
 	const todoIds = ['1', '2', '1', 'error'];
+	// Need to write this outside at the top level to ensure tests succeed in non-async-mode
+	// Else updates are not coming through properly because of state-created-inside-effects-not-updating logic in non-async mode
 	const todos = todoIds.map((id) => ({ id, promise: get_todo(id) }));
 </script>
 
