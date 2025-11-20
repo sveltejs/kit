@@ -2051,7 +2051,7 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: Input extends void ? never : RemoteFormFields<Input>;
+		fields: RemoteFormFields<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';
