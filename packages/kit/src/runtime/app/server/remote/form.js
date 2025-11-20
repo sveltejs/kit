@@ -69,23 +69,17 @@ export function form(validate_or_fn, maybe_fn) {
 	const schema =
 		!maybe_fn || validate_or_fn === 'unchecked' ? null : /** @type {any} */ (validate_or_fn);
 
-	/** @type {RemoteInfo & { type: 'form' }} */
-	const __ = {
-		type: 'form',
-		name: '',
-		id: '',
-		fn: async (form_data, instance) => {
-			const validate_only = form_data.get('sveltekit:validate_only') === 'true';
-
-			let data = maybe_fn ? convert_formdata(form_data) : undefined;
-
-			if (data && data.id === undefined) {
-				const id = form_data.get('sveltekit:id');
-				if (typeof id === 'string') {
-					data.id = JSON.parse(id);
-				}
-			}
-
+	/**
+	 * Creates the form handler function that processes form submissions
+	 * @param {RemoteInfo & { type: 'form' }} cache_info - The info object to use for caching results
+	 * @returns {(body: Record<string, any>, meta: any, form_data: FormData | null) => Promise<any>}
+	 */
+	function remote_handler(cache_info) {
+		return async (
+			/** @type {Record<string, any>} */ data,
+			/** @type {any} */ meta,
+			/** @type {FormData | null} */ form_data
+		) => {
 			// TODO 3.0 remove this warning
 			if (DEV && !data) {
 				const error = () => {
@@ -121,12 +115,12 @@ export function form(validate_or_fn, maybe_fn) {
 			const { event, state } = get_request_store();
 			const validated = await schema?.['~standard'].validate(data);
 
-			if (validate_only) {
+			if (meta.validate_only) {
 				return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
 			}
 
 			if (validated?.issues !== undefined) {
-				handle_issues(output, validated.issues, event.isRemoteRequest, form_data);
+				handle_issues(output, validated.issues, form_data);
 			} else {
 				if (validated !== undefined) {
 					data = validated.value;
@@ -147,7 +141,7 @@ export function form(validate_or_fn, maybe_fn) {
 					);
 				} catch (e) {
 					if (e instanceof ValidationError) {
-						handle_issues(output, e.issues, event.isRemoteRequest, form_data);
+						handle_issues(output, e.issues, form_data);
 					} else {
 						throw e;
 					}
@@ -156,13 +150,24 @@ export function form(validate_or_fn, maybe_fn) {
 
 			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 			// where only one form submission is active at the same time
+			// Cache using the provided cache_info so keyed instances have separate caches
 			if (!event.isRemoteRequest) {
-				get_cache(/** @type any */ (instance).__, state)[''] ??= output;
+				get_cache(cache_info, state)[''] ??= output;
 			}
 
 			return output;
-		}
+		};
+	}
+
+	/** @type {RemoteInfo & { type: 'form' }} */
+	const __ = {
+		type: 'form',
+		name: '',
+		id: '',
+		fn: /** @type {any} */ (null)
 	};
+	// Assign fn after __ is created to avoid circular reference
+	__.fn = remote_handler(__);
 
 	/**
 	 * @param {ExtractId<Input>} [key]
@@ -170,8 +175,7 @@ export function form(validate_or_fn, maybe_fn) {
 	 */
 	function create_instance(key) {
 		const { state } = get_request_store();
-		const instance_id =
-			key !== undefined ? `${__.id}/${encodeURIComponent(JSON.stringify(key))}` : __.id;
+		const instance_id = key !== undefined ? `${__.id}/${JSON.stringify(key)}` : __.id;
 
 		// Create instance-specific info object with the correct id
 		/** @type {RemoteInfo & { type: 'form' }} */
@@ -179,8 +183,10 @@ export function form(validate_or_fn, maybe_fn) {
 			type: 'form',
 			name: __.name,
 			id: instance_id,
-			fn: __.fn
+			fn: /** @type {any} */ (null)
 		};
+		// Assign fn after instance_info is created to avoid circular reference
+		instance_info.fn = remote_handler(instance_info);
 
 		// Check cache for keyed instances
 		const cache_key = instance_info.id + '|' + JSON.stringify(key);

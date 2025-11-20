@@ -189,7 +189,7 @@ export function form(id) {
 						remote_refreshes: updates.map((u) => u._key)
 					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 						method: 'POST',
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
@@ -547,7 +547,7 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
