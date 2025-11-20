@@ -340,7 +340,7 @@ function create_issues() {
 				if (typeof message !== 'string') {
 					throw new Error(
 						'`invalid` should now be imported from `@sveltejs/kit` to throw validation issues. ' +
-							'The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field(\'message\'))`. ' +
+							"The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field('message'))`. " +
 							'For more info see https://github.com/sveltejs/kit/pulls/14768'
 					);
 				}
