@@ -538,19 +538,21 @@ export function form(id) {
 				get: () =>
 					create_field_proxy(
 						{},
-						() => input,
-						(path, value) => {
-							if (path.length === 0) {
-								input = value;
-							} else {
-								deep_set(input, path.map(String), value);
+						{
+							get_input: () => input,
+							set_input: (path, value) => {
+								if (path.length === 0) {
+									input = value;
+								} else {
+									deep_set(input, path.map(String), value);
 
-								const key = build_path_string(path);
-								touched[key] = true;
-							}
-						},
-						() => issues,
-						(path) => deep_get(upload_progress, path) ?? { uploaded: 0, total: 0 }
+									const key = build_path_string(path);
+									touched[key] = true;
+								}
+							},
+							get_issues: () => issues,
+							get_progress: (path) => deep_get(upload_progress, path) ?? { uploaded: 0, total: 0 }
+						}
 					)
 			},
 			result: {

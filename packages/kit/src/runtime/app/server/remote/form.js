@@ -202,20 +202,25 @@ export function form(validate_or_fn, maybe_fn) {
 
 				return create_field_proxy(
 					{},
-					() => data?.input ?? {},
-					(path, value) => {
-						if (data?.submission) {
-							// don't override a submission
-							return;
-						}
+					{
+						get_input: () => data?.input ?? {},
+						set_input: (path, value) => {
+							if (data?.submission) {
+								// don't override a submission
+								return;
+							}
 
-						const input =
-							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
+							const input =
+								path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
 
-						(get_cache(__)[''] ??= {}).input = input;
-					},
-					() => issues,
-					() => ({ uploaded: 0, total: 0 }) /* upload progress is always 0 on the server */
+							(get_cache(__)[''] ??= {}).input = input;
+						},
+						get_issues: () => issues,
+						get_progress: () => ({
+							uploaded: 0,
+							total: 0
+						}) /* upload progress is always 0 on the server */
+					}
 				);
 			}
 		});
