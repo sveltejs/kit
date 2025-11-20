@@ -1,5 +1,6 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
+import { RuntimeConfigKey } from './utils.js';
 
 export default function plugin(config?: Config): Adapter;
 
@@ -7,9 +8,8 @@ export interface ServerlessConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
 	 * @default Same as the build environment
-	 * @deprecated
 	 */
-	runtime?: `nodejs${number}.x`;
+	runtime?: Exclude<RuntimeConfigKey, 'edge'>;
 	/**
 	 * To which regions to deploy the app. A list of regions.
 	 * More info: https://vercel.com/docs/concepts/edge-network/regions

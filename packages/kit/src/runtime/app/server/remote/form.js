@@ -11,7 +11,7 @@ import {
 	deep_set,
 	normalize_issue,
 	flatten_issues
-} from '../../../form-utils.svelte.js';
+} from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
 
@@ -154,7 +154,7 @@ export function form(validate_or_fn, maybe_fn) {
 				const validated = await schema?.['~standard'].validate(data);
 
 				if (validate_only) {
-					return validated?.issues ?? [];
+					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
 				}
 
 				if (validated?.issues !== undefined) {
@@ -216,7 +216,6 @@ export function form(validate_or_fn, maybe_fn) {
 				return create_field_proxy(
 					{},
 					() => data?.input ?? {},
-					() => {},
 					(path, value) => {
 						if (data?.submission) {
 							// don't override a submission
@@ -319,7 +318,7 @@ function handle_issues(output, issues, is_remote_request, form_data) {
 
 			if (is_array) key = key.slice(0, -2);
 
-			output.input = set_nested_value(
+			set_nested_value(
 				/** @type {Record<string, any>} */ (output.input),
 				key,
 				is_array ? values : values[0]

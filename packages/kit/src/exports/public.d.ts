@@ -25,9 +25,11 @@ import {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
 } from '$app/types';
-import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
+
+// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+type Span = import('@opentelemetry/api').Span;
 
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -1865,13 +1867,28 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: {
-				name: string;
-				type: T;
-				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get value(): string | number;
-				set value(v: string | number);
-			};
+		: T extends 'select' | 'select multiple'
+			? {
+					name: string;
+					multiple: T extends 'select' ? false : true;
+					'aria-invalid': boolean | 'false' | 'true' | undefined;
+					get value(): string | number;
+					set value(v: string | number);
+				}
+			: T extends 'text'
+				? {
+						name: string;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					}
+				: {
+						name: string;
+						type: T;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -1963,6 +1980,7 @@ export interface RemoteFormInput {
 
 export interface RemoteFormIssue {
 	message: string;
+	path: Array<string | number>;
 }
 
 // If the schema specifies `id` as a string or number, ensure that `for(...)`
@@ -2057,7 +2075,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: Input extends void ? never : RemoteFormFields<Input>;
+	fields: RemoteFormFields<Input>;
 	/** Spread this onto a `<button>` or `<input type="submit">` */
 	buttonProps: {
 		type: 'submit';

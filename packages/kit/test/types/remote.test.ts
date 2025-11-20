@@ -349,6 +349,8 @@ function form_tests() {
 	const f8 = form(() => {
 		invalid('foo');
 	});
+	f8.fields.issues();
+	f8.fields.allIssues();
 	// @ts-expect-error
 	f8.fields.x;
 	// @ts-expect-error

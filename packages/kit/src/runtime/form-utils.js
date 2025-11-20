@@ -3,12 +3,9 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
-import * as svelte from 'svelte';
-// Svelte 4 and under don't have `untrack` - you'll not be able to use remote functions with Svelte 4 but this will still be loaded
-const untrack = svelte.untrack ?? ((value) => value());
 
 /**
- * Sets a value in a nested object using a path string, not mutating the original object but returning a new object
+ * Sets a value in a nested object using a path string, mutating the original object
  * @param {Record<string, any>} object
  * @param {string} path_string
  * @param {any} value
@@ -22,7 +19,7 @@ export function set_nested_value(object, path_string, value) {
 		value = value === 'on';
 	}
 
-	return deep_set(object, split_path(path_string), value);
+	deep_set(object, split_path(path_string), value);
 }
 
 /**
@@ -31,7 +28,7 @@ export function set_nested_value(object, path_string, value) {
  */
 export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
-	let result = Object.create(null); // guard against prototype pollution
+	const result = {};
 
 	for (let key of data.keys()) {
 		if (key.startsWith('sveltekit:')) {
@@ -61,7 +58,7 @@ export function convert_formdata(data) {
 			values = values.map((v) => v === 'on');
 		}
 
-		result = set_nested_value(result, key, is_array ? values : values[0]);
+		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
@@ -81,18 +78,32 @@ export function split_path(path) {
 }
 
 /**
- * Sets a value in a nested object using an array of keys.
- * Does not mutate the original object; returns a new object.
+ * Check if a property key is dangerous and could lead to prototype pollution
+ * @param {string} key
+ */
+function check_prototype_pollution(key) {
+	if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+		throw new Error(
+			`Invalid key "${key}"` +
+				(DEV ? ': This key is not allowed to prevent prototype pollution.' : '')
+		);
+	}
+}
+
+/**
+ * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
  * @param {any} value
  */
 export function deep_set(object, keys, value) {
-	const result = Object.assign(Object.create(null), object); // guard against prototype pollution
-	let current = result;
+	let current = object;
 
 	for (let i = 0; i < keys.length - 1; i += 1) {
 		const key = keys[i];
+
+		check_prototype_pollution(key);
+
 		const is_array = /^\d+$/.test(keys[i + 1]);
 		const exists = key in current;
 		const inner = current[key];
@@ -101,18 +112,16 @@ export function deep_set(object, keys, value) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
 		}
 
-		current[key] = is_array
-			? exists
-				? [...inner]
-				: []
-			: // guard against prototype pollution
-				Object.assign(Object.create(null), inner);
+		if (!exists) {
+			current[key] = is_array ? [] : {};
+		}
 
 		current = current[key];
 	}
 
-	current[keys[keys.length - 1]] = value;
-	return result;
+	const final_key = keys[keys.length - 1];
+	check_prototype_pollution(final_key);
+	current[final_key] = value;
 }
 
 /**
@@ -196,18 +205,14 @@ export function deep_get(object, path) {
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: string) => void} depend - Function to make an effect depend on a specific field
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, depend, set_input, get_issues, path = []) {
-	const path_string = build_path_string(path);
-
+export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	const get_value = () => {
-		depend(path_string);
-		return untrack(() => deep_get(get_input(), path));
+		return deep_get(get_input(), path);
 	};
 
 	return new Proxy(target, {
@@ -216,7 +221,7 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, depend, set_input, get_issues, [
+				return create_field_proxy({}, get_input, set_input, get_issues, [
 					...path,
 					parseInt(prop, 10)
 				]);
@@ -229,17 +234,11 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, depend, set_input, get_issues, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, depend, set_input, get_issues, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -248,6 +247,7 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
+							path: issue.path,
 							message: issue.message
 						}));
 					}
@@ -255,14 +255,12 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 					return all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
+							path: issue.path,
 							message: issue.message
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, depend, set_input, get_issues, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'as') {
@@ -411,14 +409,11 @@ export function create_field_proxy(target, get_input, depend, set_input, get_iss
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, depend, set_input, get_issues, [
-					...path,
-					'as'
-				]);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, depend, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
 		}
 	});
 }

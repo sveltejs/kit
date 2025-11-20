@@ -172,8 +172,8 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
-/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
-let remote_exports = undefined;
+/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+let build_metadata = undefined;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -350,6 +350,7 @@ async function kit({ svelte_config }) {
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
 			};
 
@@ -369,12 +370,28 @@ async function kit({ svelte_config }) {
 
 				if (!secondary_build_started) {
 					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					// During the initial server build we don't know yet
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
+				} else {
+					const nodes = Object.values(
+						/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
+					);
+
+					// Through the finished analysis we can now check if any node has server or universal load functions
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(has_server_load);
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(has_universal_load);
 				}
 			} else {
 				new_config.define = {
 					...define,
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
+					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+					__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 				};
 
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
@@ -581,6 +598,9 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
+				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 				const chain = [normalized];
 
@@ -681,12 +701,20 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
+				// we need to add an `await Promise.resolve()` because if the user imports this function
+				// on the client AND in a load function when loading the client module we will trigger
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+				// loaded and transformed twice and the first time all its exports would be undefined
+				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+
 				// Extra newlines to prevent syntax errors around missing semicolons or comments
 				code +=
 					'\n\n' +
 					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+
+					${dev_server ? 'await Promise.resolve()' : ''}
 
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
@@ -733,8 +761,8 @@ async function kit({ svelte_config }) {
 
 			// in prod, we already built and analysed the server code before
 			// building the client code, so `remote_exports` is populated
-			else if (remote_exports) {
-				const exports = remote_exports.get(remote.hash);
+			else if (build_metadata?.remotes) {
+				const exports = build_metadata?.remotes.get(remote.hash);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
@@ -1038,7 +1066,7 @@ async function kit({ svelte_config }) {
 					remotes
 				});
 
-				remote_exports = metadata.remotes;
+				build_metadata = metadata;
 
 				log.info('Building app');
 

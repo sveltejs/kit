@@ -16,7 +16,7 @@ import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
-import { create_remote_cache_key } from '../../shared.js';
+import { create_remote_key } from '../../shared.js';
 
 // TODO rename this function/module
 
@@ -227,7 +227,6 @@ export async function render_response({
 					paths.reset();
 				}
 
-				// eslint-disable-next-line
 				const { head, html, css } = options.async ? await rendered : rendered;
 
 				return { head, html, css };
@@ -494,7 +493,7 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					remote[create_remote_cache_key(info.id, key)] = await cache[key];
+					remote[create_remote_key(info.id, key)] = await cache[key];
 				}
 			}
 
@@ -654,7 +653,7 @@ export async function render_response({
 					async start(controller) {
 						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(text_encoder.encode(chunk));
+							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},
