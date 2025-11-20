@@ -2710,18 +2710,15 @@ declare module '@sveltejs/kit' {
 	 * ```ts
 	 * import { invalid } from '@sveltejs/kit';
 	 * import { form } from '$app/server';
+	 * import { tryLogin } from $lib/server/auth';
 	 * import * as v from 'valibot';
 	 *
-	 * function tryRegisterUser(name: string, password: string) {
-	 *  // ...
-	 * }
-	 *
-	 * export const register = form(
+	 * export const login = form(
 	 *   v.object({ name: v.string(), _password: v.string() }),
-	 *   async ({ name, _password }, issue) => {
-	 *     const success = tryRegisterUser(name, _password);
+	 *   async ({ name, _password }) => {
+	 *     const success = tryLogin(name, _password);
 	 *     if (!success) {
-	 *       invalid('Registration failed', issue.name('This username is already taken'));
+	 *       invalid('Incorrect username or password');
 	 *     }
 	 *
 	 *     // ...
