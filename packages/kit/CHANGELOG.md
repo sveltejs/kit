@@ -1,5 +1,26 @@
 # @sveltejs/kit
 
+## 2.48.8
+### Patch Changes
+
+
+- breaking: `invalid` now must be imported from `@sveltejs/kit` ([#14768](https://github.com/sveltejs/kit/pull/14768))
+
+
+- breaking: remove `submitter` option from experimental form `validate()` method, always provide default submitter ([#14762](https://github.com/sveltejs/kit/pull/14762))
+
+## 2.48.7
+### Patch Changes
+
+
+- fix: allow multiple `server-timing` headers ([#14700](https://github.com/sveltejs/kit/pull/14700))
+
+
+- fix: allow access to root-level issues in schema-less forms ([#14893](https://github.com/sveltejs/kit/pull/14893))
+
+
+- fix: allow hosting hash-based apps from non-index.html files ([#14825](https://github.com/sveltejs/kit/pull/14825))
+
 ## 2.48.6
 ### Patch Changes
 

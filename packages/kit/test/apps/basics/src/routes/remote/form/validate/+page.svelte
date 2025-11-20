@@ -5,7 +5,7 @@
 	const schema = v.object({
 		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e']),
-		button: v.optional(v.literal('submitter'))
+		button: v.literal('submitter')
 	});
 	const my_form_form = my_form({
 		preflight: schema
@@ -30,20 +30,17 @@
 
 	<input {...my_form_form.fields.bar.as('text')} />
 
-	<button>submit (imperative validation)</button>
+	<button {...my_form_form.fields.button.as('submit', 'incorrect_value')}> submit </button>
 
-	<button bind:this={submitter} {...my_form_form.fields.button.as('submit', 'incorrect_value')}>
-		submit
-	</button>
 	{#each my_form_form.fields.button.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
-</form>
 
-<button
-	id="trigger-validate"
-	onclick={() => my_form_form.validate({ includeUntouched: true, submitter })}
->
+	<button {...my_form_form.fields.button.as('submit', 'submitter')}>
+		submit (imperative validation)
+	</button>
+</form>
+<button id="trigger-validate" onclick={() => my_form_form.validate({ includeUntouched: true })}>
 	trigger validation
 </button>
 

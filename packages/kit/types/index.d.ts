@@ -1960,10 +1960,13 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Recursively maps an input type to a structure where each field can create a validation issue.
-	 * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+	 * A function and proxy object used to imperatively create validation errors in form handlers.
+	 *
+	 * Access properties to create field-specific issues: `issue.fieldName('message')`.
+	 * The type structure mirrors the input data structure for type-safe field access.
+	 * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
 	 */
-	type InvalidField<T> =
+	export type InvalidField<T> =
 		WillRecurseIndefinitely<T> extends true
 			? Record<string | number, any>
 			: NonNullable<T> extends string | number | boolean | File
@@ -1979,15 +1982,12 @@ declare module '@sveltejs/kit' {
 						: Record<string, never>;
 
 	/**
-	 * A function and proxy object used to imperatively create validation errors in form handlers.
-	 *
-	 * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
-	 * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
-	 * Access properties to create field-specific issues: `invalid.fieldName('message')`.
-	 * The type structure mirrors the input data structure for type-safe field access.
+	 * A validation error thrown by `invalid`.
 	 */
-	export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
-		InvalidField<Input>;
+	export interface ValidationError {
+		/** The validation issues */
+		issues: StandardSchemaV1.Issue[];
+	}
 
 	export type RemoteFormFactoryOptions<Input extends RemoteFormInput | void> = {
 		/** Optional key to create a scoped instance */
@@ -2036,8 +2036,6 @@ declare module '@sveltejs/kit' {
 			includeUntouched?: boolean;
 			/** Set this to `true` to only run the `preflight` validation. */
 			preflightOnly?: boolean;
-			/** Perform validation as if the form was submitted by the given button. */
-			submitter?: HTMLButtonElement | HTMLInputElement;
 		}): Promise<void>;
 		/** The result of the form submission */
 		get result(): Output | undefined;
@@ -2712,6 +2710,38 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function isActionFailure(e: unknown): e is ActionFailure;
 	/**
+	 * Use this to throw a validation error to imperatively fail form validation.
+	 * Can be used in combination with `issue` passed to form actions to create field-specific issues.
+	 *
+	 * @example
+	 * ```ts
+	 * import { invalid } from '@sveltejs/kit';
+	 * import { form } from '$app/server';
+	 * import { tryLogin } from '$lib/server/auth';
+	 * import * as v from 'valibot';
+	 *
+	 * export const login = form(
+	 *   v.object({ name: v.string(), _password: v.string() }),
+	 *   async ({ name, _password }) => {
+	 *     const success = tryLogin(name, _password);
+	 *     if (!success) {
+	 *       invalid('Incorrect username or password');
+	 *     }
+	 *
+	 *     // ...
+	 *   }
+	 * );
+	 * ```
+	 * @since 2.47.3
+	 */
+	export function invalid(...issues: (StandardSchemaV1.Issue | string)[]): never;
+	/**
+	 * Checks whether this is an validation error thrown by {@link invalid}.
+	 * @param e The object to check.
+	 * @since 2.47.3
+	 */
+	export function isValidationError(e: unknown): e is ActionFailure;
+	/**
 	 * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
 	 * Returns the normalized URL as well as a method for adding the potential suffix back
 	 * based on a new pathname (possibly including search) or URL.
@@ -3143,7 +3173,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteFormFactory, RemoteFormInput, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteFormFactory, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3197,7 +3227,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Output>(fn: (invalid: import("@sveltejs/kit").Invalid<void>) => MaybePromise<Output>): RemoteFormFactory<void, Output>;
+	export function form<Output>(fn: () => MaybePromise<Output>): RemoteFormFactory<void, Output>;
 	/**
 	 * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
 	 *
@@ -3205,7 +3235,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input, invalid: import("@sveltejs/kit").Invalid<Input>) => MaybePromise<Output>): RemoteFormFactory<Input, Output>;
+	export function form<Input extends RemoteFormInput, Output>(validate: "unchecked", fn: (data: Input, issue: InvalidField<Input>) => MaybePromise<Output>): RemoteFormFactory<Input, Output>;
 	/**
 	 * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
 	 *
@@ -3213,7 +3243,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, invalid: import("@sveltejs/kit").Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteFormFactory<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteFormFactory<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

@@ -1986,10 +1986,13 @@ export interface RemoteFormIssue {
 }
 
 /**
- * Recursively maps an input type to a structure where each field can create a validation issue.
- * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+ * A function and proxy object used to imperatively create validation errors in form handlers.
+ *
+ * Access properties to create field-specific issues: `issue.fieldName('message')`.
+ * The type structure mirrors the input data structure for type-safe field access.
+ * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
  */
-type InvalidField<T> =
+export type InvalidField<T> =
 	WillRecurseIndefinitely<T> extends true
 		? Record<string | number, any>
 		: NonNullable<T> extends string | number | boolean | File
@@ -2005,15 +2008,12 @@ type InvalidField<T> =
 					: Record<string, never>;
 
 /**
- * A function and proxy object used to imperatively create validation errors in form handlers.
- *
- * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
- * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
- * Access properties to create field-specific issues: `invalid.fieldName('message')`.
- * The type structure mirrors the input data structure for type-safe field access.
+ * A validation error thrown by `invalid`.
  */
-export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
-	InvalidField<Input>;
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
+}
 
 export type RemoteFormFactoryOptions<Input extends RemoteFormInput | void> = {
 	/** Optional key to create a scoped instance */
@@ -2062,8 +2062,6 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		includeUntouched?: boolean;
 		/** Set this to `true` to only run the `preflight` validation. */
 		preflightOnly?: boolean;
-		/** Perform validation as if the form was submitted by the given button. */
-		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
 	/** The result of the form submission */
 	get result(): Output | undefined;

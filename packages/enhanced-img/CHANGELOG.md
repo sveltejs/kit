@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.9.0
+### Minor Changes
+
+
+- chore(deps): update dependency vite-imagetools to v9 ([#14608](https://github.com/sveltejs/kit/pull/14608))
+
 ## 0.8.5
 ### Patch Changes
 
