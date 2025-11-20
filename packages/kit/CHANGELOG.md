@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.48.7
+### Patch Changes
+
+
+- fix: allow multiple `server-timing` headers ([#14700](https://github.com/sveltejs/kit/pull/14700))
+
+
+- fix: allow access to root-level issues in schema-less forms ([#14893](https://github.com/sveltejs/kit/pull/14893))
+
+
+- fix: allow hosting hash-based apps from non-index.html files ([#14825](https://github.com/sveltejs/kit/pull/14825))
+
 ## 2.48.6
 ### Patch Changes
 
