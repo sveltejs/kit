@@ -2052,6 +2052,53 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+	test('file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('a')
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('input[type="checkbox"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 'a',
+				file2: 'b'
+			})
+		);
+	});
+	test('large file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.alloc(1024 * 1024 * 10)
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 1024 * 1024 * 10,
+				file2: 1
+			})
+		);
+	});
 });
 
 test.describe('params prop', () => {
