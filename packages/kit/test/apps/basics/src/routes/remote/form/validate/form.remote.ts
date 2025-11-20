@@ -1,17 +1,17 @@
 import { form } from '$app/server';
-import { error } from '@sveltejs/kit';
+import { error, invalid } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const my_form = form(
 	v.object({
 		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e', 'f']),
-		button: v.optional(v.literal('submitter'))
+		button: v.literal('submitter')
 	}),
-	async (data, invalid) => {
+	async (data, issue) => {
 		// Test imperative validation
 		if (data.foo === 'c') {
-			invalid(invalid.foo('Imperative: foo cannot be c'));
+			invalid(issue.foo('Imperative: foo cannot be c'));
 		}
 
 		console.log(data);

@@ -454,11 +454,12 @@ Alternatively, you could use `select` and `select multiple`:
 
 ### Programmatic validation
 
-In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action. Just like `redirect` or `error`, `invalid` throws. It expects a list of strings (for issues relating to the form as a whole) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
 /// file: src/routes/shop/data.remote.js
 import * as v from 'valibot';
+import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
 import * as db from '$lib/server/database';
 
@@ -469,13 +470,13 @@ export const buyHotcakes = form(
 			v.minValue(1, 'you must buy at least one hotcake')
 		)
 	}),
-	async (data, invalid) => {
+	async (data, issue) => {
 		try {
 			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid(
-					invalid.qty(`we don't have enough hotcakes`)
+					issue.qty(`we don't have enough hotcakes`)
 				);
 			}
 		}
