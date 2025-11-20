@@ -341,6 +341,8 @@ function form_tests() {
 			invalid.x('bar')
 		);
 	});
+	f8.fields.issues();
+	f8.fields.allIssues();
 	// @ts-expect-error
 	f8.fields.x;
 	// @ts-expect-error
