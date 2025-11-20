@@ -325,7 +325,7 @@ export function is_external_url(url, base, hash_routing) {
 			return false;
 		}
 
-		return true;
+return url.pathname !== location.pathname;
 	}
 
 	return false;
