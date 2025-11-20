@@ -139,6 +139,10 @@ test('create package with typescript using allowImportingTsExtensions', async ()
 	await test_make_package('typescript-allowImportingTsExtensions');
 });
 
+test('create package with typescript alias extension rewrites', async () => {
+	await test_make_package('typescript-alias-rewrites');
+});
+
 // only run this test in newer Node versions
 // TODO: remove after dropping support for Node < 22.18
 const [major, minor] = process.versions.node.split('.', 2).map((str) => +str);

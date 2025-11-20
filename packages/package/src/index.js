@@ -232,6 +232,10 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 			}
 		}
 
+		// _before_ transpilining TS, that way TS will apply rewriteRelativeImportExtensions
+		// to these now-resolved path aliases, too
+		contents = resolve_aliases(input, file.name, contents, aliases);
+
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
 			const { outputText, options } = await transpile_ts(tsconfig, filename, contents);
 			contents = outputText;
@@ -240,7 +244,6 @@ async function process_file(input, output, file, preprocessor, aliases, tsconfig
 			}
 		}
 
-		contents = resolve_aliases(input, file.name, contents, aliases);
 		analyse_code(file.name, contents);
 		write(dest, contents);
 	} else {
