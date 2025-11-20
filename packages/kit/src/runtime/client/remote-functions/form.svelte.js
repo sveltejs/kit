@@ -522,7 +522,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
+				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -530,7 +530,11 @@ export function form(id) {
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
 
-					const form_data = new FormData(element, submitter);
+					const default_submitter = /** @type {HTMLElement | undefined} */ (
+						element.querySelector('button:not([type]), [type="submit"]')
+					);
+
+					const form_data = new FormData(element, default_submitter);
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];

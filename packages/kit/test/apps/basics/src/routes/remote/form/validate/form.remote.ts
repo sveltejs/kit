@@ -6,7 +6,7 @@ export const my_form = form(
 	v.object({
 		foo: v.picklist(['a', 'b', 'c']),
 		bar: v.picklist(['d', 'e', 'f']),
-		button: v.optional(v.literal('submitter'))
+		button: v.literal('submitter')
 	}),
 	async (data, issue) => {
 		// Test imperative validation
