@@ -107,13 +107,18 @@ export async function render_data(
 					// Math.min because array isn't guaranteed to resolve in order
 					length = Math.min(length, i + 1);
 
+					const error_body = await handle_error_and_jsonify(event, event_state, options, error);
+					// Use custom status code if set via event.setStatusCode()
+					const status =
+						event_state.error_status_code ??
+						(error instanceof HttpError || error instanceof SvelteKitError
+							? error.status
+							: undefined);
+
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: await handle_error_and_jsonify(event, event_state, options, error),
-						status:
-							error instanceof HttpError || error instanceof SvelteKitError
-								? error.status
-								: undefined
+						error: error_body,
+						status
 					});
 				})
 			)
@@ -156,7 +161,10 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			return json_response(await handle_error_and_jsonify(event, event_state, options, error), 500);
+			const error_body = await handle_error_and_jsonify(event, event_state, options, error);
+			// Use custom status code if set via event.setStatusCode()
+			const status = event_state.error_status_code ?? 500;
+			return json_response(error_body, status);
 		}
 	}
 }
