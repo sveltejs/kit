@@ -220,7 +220,7 @@ export async function deserialize_binary_form(request) {
 			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
 		);
 	}
-	const header_view = new DataView(header.buffer);
+	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength); // You must pass the byteOffset and byteLength to the DataView constructor to ensure it looks at the correct slice of memory.
 	const data_length = header_view.getUint32(1, true);
 	const file_offsets_length = header_view.getUint16(5, true);
 
