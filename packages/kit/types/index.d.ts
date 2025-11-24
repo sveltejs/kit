@@ -1925,6 +1925,18 @@ declare module '@sveltejs/kit' {
 		[key: string | number]: UnknownField<any>;
 	};
 
+	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+		IsAny<Input> extends true
+			? RecursiveFormFields
+			: Input extends void
+				? {
+						/** Validation issues, if any */
+						issues(): RemoteFormIssue[] | undefined;
+						/** Validation issues belonging to this or any of the fields that belong to it, if any */
+						allIssues(): RemoteFormIssue[] | undefined;
+					}
+				: RemoteFormFields<Input>;
+
 	/**
 	 * Recursive type to build form fields structure with proxy access
 	 */
@@ -2049,16 +2061,7 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: IsAny<Input> extends true
-			? RecursiveFormFields
-			: Input extends void
-				? {
-						/** Validation issues, if any */
-						issues(): RemoteFormIssue[] | undefined;
-						/** Validation issues belonging to this or any of the fields that belong to it, if any */
-						allIssues(): RemoteFormIssue[] | undefined;
-					}
-				: RemoteFormFields<Input>;
+		fields: RemoteFormFieldsRoot<Input>;
 		/** Spread this onto a `<button>` or `<input type="submit">` */
 		buttonProps: {
 			type: 'submit';

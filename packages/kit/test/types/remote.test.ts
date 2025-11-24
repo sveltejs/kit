@@ -366,6 +366,7 @@ function form_tests() {
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
 
+	// generic form
 	function f10<
 		Schema extends StandardSchemaV1<RemoteFormInput, unknown>,
 		Form extends RemoteForm<StandardSchemaV1.InferInput<Schema>, unknown>
