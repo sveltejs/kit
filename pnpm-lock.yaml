@@ -475,8 +475,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.42.2)
       vite-imagetools:
-        specifier: ^9.0.0
-        version: 9.0.0(rollup@4.50.1)
+        specifier: ^9.0.2
+        version: 9.0.2(rollup@4.50.1)
       zimmerframe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -4847,8 +4847,8 @@ packages:
     engines: {node: '>=16.x'}
     hasBin: true
 
-  imagetools-core@9.0.0:
-    resolution: {integrity: sha512-LAU2iVl6MuLbARLrZFEOrgqUFGmHij0FqqOR1/mMndUzJoPz2BU4gCXUhjikgwwmfhBPa/1szwiliUy//ZWafw==}
+  imagetools-core@9.1.0:
+    resolution: {integrity: sha512-xQjs+2vrxLnAjCq+omuNkd5UQTld9/bP8+YT0LyYTlKfuSQtgUBvqhUwGugzSAh6sCdN+LnROMuLswn5hZ9Fhg==}
     engines: {node: '>=20.0.0'}
 
   import-fresh@3.3.0:
@@ -6977,8 +6977,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vite-imagetools@9.0.0:
-    resolution: {integrity: sha512-nxTMh7+PkZlOinV1DwgcDAill4+khOF29yQVqYEzleyKEb6qunRDYBYaT9TmGfx4l1fk2xSvDNgbiTYyiekHAw==}
+  vite-imagetools@9.0.2:
+    resolution: {integrity: sha512-FV5DXw4swU81t+g8JOLT+T7gKuBOXuVsZ0WGhi7y0R182+GfBYkcf6V9/T0Nweu/vn1X0DA2p5ePMnaGZlRl1A==}
     engines: {node: '>=20.0.0'}
 
   vite-node@3.2.4:
@@ -10936,7 +10936,7 @@ snapshots:
 
   image-size@2.0.2: {}
 
-  imagetools-core@9.0.0: {}
+  imagetools-core@9.1.0: {}
 
   import-fresh@3.3.0:
     dependencies:
@@ -13112,10 +13112,10 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-imagetools@9.0.0(rollup@4.50.1):
+  vite-imagetools@9.0.2(rollup@4.50.1):
     dependencies:
       '@rollup/pluginutils': 5.1.3(rollup@4.50.1)
-      imagetools-core: 9.0.0
+      imagetools-core: 9.1.0
       sharp: 0.34.4
     transitivePeerDependencies:
       - rollup
