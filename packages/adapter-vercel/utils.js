@@ -127,7 +127,7 @@ function get_default_runtime() {
 	// to tell us what the bun configuration is.
 	const major = Number(process.version.slice(1).split('.')[0]);
 
-	if (major !== 20 && major !== 22) {
+	if (major !== 20 && major !== 22 && major !== 24) {
 		throw new Error(
 			`Unsupported Node.js version: ${process.version}. Please use Node 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
 		);
@@ -136,7 +136,13 @@ function get_default_runtime() {
 	return `nodejs${major}.x`;
 }
 
-const valid_runtimes = /** @type {const} */ (['nodejs20.x', 'nodejs22.x', 'bun1.x', 'edge']);
+const valid_runtimes = /** @type {const} */ ([
+	'nodejs20.x',
+	'nodejs22.x',
+	'nodejs24.x',
+	'bun1.x',
+	'edge'
+]);
 
 /**
  * @param {string} key
