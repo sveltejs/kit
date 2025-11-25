@@ -2036,7 +2036,7 @@ declare module '@sveltejs/kit' {
 		 */
 		for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** Preflight checks */
-		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
+		preflight(schema: StandardSchemaV1<Input, any>, onError?: () => void): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
 			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */

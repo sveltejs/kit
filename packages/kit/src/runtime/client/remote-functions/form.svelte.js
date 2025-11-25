@@ -80,6 +80,9 @@ export function form(id) {
 		/** @type {StandardSchemaV1 | undefined} */
 		let preflight_schema = undefined;
 
+		/** @type {(() => void) | undefined} */
+		let preflight_on_error = undefined;
+
 		/** @type {HTMLFormElement | null} */
 		let element = null;
 
@@ -118,6 +121,7 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				preflight_on_error?.();
 				return;
 			}
 
@@ -519,8 +523,9 @@ export function form(id) {
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
-				value: (schema) => {
+				value: (schema, onError) => {
 					preflight_schema = schema;
+					preflight_on_error = onError;
 					return instance;
 				}
 			},
