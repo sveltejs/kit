@@ -6,7 +6,7 @@ export default function plugin(config?: Config): Adapter;
 
 export interface ServerlessConfig {
 	/**
-	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
+	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs22.x'`, `'nodejs24.x'` etc).
 	 * @default Same as the build environment
 	 */
 	runtime?: Exclude<RuntimeConfigKey, 'edge'>;
@@ -78,7 +78,7 @@ type ImagesConfig = {
 /** @deprecated */
 export interface EdgeConfig {
 	/**
-	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
+	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs22.x'`, `'nodejs24.x'` etc).
 	 */
 	runtime?: 'edge';
 	/**
