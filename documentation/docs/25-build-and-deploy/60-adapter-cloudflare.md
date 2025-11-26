@@ -99,6 +99,39 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 }
 ```
 
+### Worker entrypoint
+
+Handlers are methods on Workers that can receive and process external inputs, and can be invoked from outside your Worker.
+
+You can define your own custom Worker entrypoint (e.g. `src/worker.ts`) to add additional [Cloudflare Workers Handlers](https://developers.cloudflare.com/workers/runtime-apis/handlers/).
+
+```ts
+/// file: src/worker.ts
+import sv from '../.svelte-kit/cloudflare/_worker.js';
+
+export default {
+	async fetch(request, env, ctx): Promise<Response> {
+		return sv.fetch(request, env, ctx);
+	},
+
+	// other handlers ...
+} satisfies ExportedHandler<Env>;
+```
+
+```jsonc
+/// file: wrangler.jsonc
+{
+	"name": "<any-name-you-want>",
+---	"main": ".svelte-kit/cloudflare/_worker.js",---
++++	"main": "src/worker.ts",+++
+	"compatibility_date": "2025-01-01",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare",
+	}
+}
+```
+
 ### Deployment
 
 Please follow the [framework guide](https://developers.cloudflare.com/workers/frameworks/framework-guides/svelte/) for Cloudflare Workers to begin.
