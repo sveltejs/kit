@@ -244,7 +244,17 @@ export async function load_data({
 					depends: () => {},
 					parent,
 					untrack: (fn) => fn(),
-					tracing: traced_event.tracing
+					tracing: traced_event.tracing,
+					server: {
+						cookies: event.cookies,
+						getClientAddress: event.getClientAddress,
+						locals: event.locals,
+						platform: event.platform,
+						request: event.request,
+						isDataRequest: event.isDataRequest,
+						isSubRequest: event.isSubRequest,
+						isRemoteRequest: event.isRemoteRequest
+					}
 				})
 			);
 		}
