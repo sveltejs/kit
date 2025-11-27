@@ -474,7 +474,7 @@ export const buyHotcakes = form(
 			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
-				invalid(invalid.qty('we don\'t have enough hotcakes'));
+				invalid(invalid.qty(`we don't have enough hotcakes`));
 			}
 		}
 	}
