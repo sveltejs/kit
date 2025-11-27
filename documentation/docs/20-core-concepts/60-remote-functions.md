@@ -475,7 +475,6 @@ export const buyHotcakes = form(
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid(invalid.qty('we don\'t have enough hotcakes'));
-				return;
 			}
 		}
 	}
