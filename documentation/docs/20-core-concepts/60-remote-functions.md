@@ -459,7 +459,6 @@ In addition to declarative schema validation, you can programmatically mark fiel
 ```js
 /// file: src/routes/shop/data.remote.js
 import * as v from 'valibot';
-import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
 import * as db from '$lib/server/database';
 
@@ -470,14 +469,13 @@ export const buyHotcakes = form(
 			v.minValue(1, 'you must buy at least one hotcake')
 		)
 	}),
-	async (data, issue) => {
+	async (data, invalid) => {
 		try {
 			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
-				invalid(
-					issue.qty(`we don't have enough hotcakes`)
-				);
+				invalid(invalid.qty('we don\'t have enough hotcakes'));
+				return;
 			}
 		}
 	}
