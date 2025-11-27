@@ -1,6 +1,8 @@
 import { base, assets, relative, initial_base } from './internal/server.js';
-import { resolve_route } from '../../../utils/routing.js';
+import { resolve_route, exec } from '../../../utils/routing.js';
+import { decode_params } from '../../../utils/url.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
+import { manifest } from '__sveltekit/server';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
@@ -25,6 +27,32 @@ export function resolve(id, params) {
 	}
 
 	return base + resolved;
+}
+
+/** @type {import('./client.js').match} */
+export async function match(pathname) {
+	let path = pathname;
+
+	if (base && path.startsWith(base)) {
+		path = path.slice(base.length) || '/';
+	}
+
+	const matchers = await manifest._.matchers();
+
+	for (const route of manifest._.routes) {
+		const match = route.pattern.exec(path);
+		if (!match) continue;
+
+		const matched = exec(match, route.params, matchers);
+		if (matched) {
+			return {
+				id: /** @type {import('$app/types').RouteId} */ (route.id),
+				params: decode_params(matched)
+			};
+		}
+	}
+
+	return null;
 }
 
 export { base, assets, resolve as resolveRoute };
