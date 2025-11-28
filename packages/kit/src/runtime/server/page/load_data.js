@@ -430,9 +430,22 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				const value = Reflect.get(response, key, response);
 
 				if (value instanceof Function) {
-					return function (...args) {
-						return value.apply(this === receiver ? response : this, args);
-					};
+					// On Node v24+, the Response object has a private element #state – we
+					// need to bind this function to the response in order to allow it to
+					// access this private element. Defining the name and length ensure it
+					// is identical to the original function when introspected.
+					return Object.defineProperties(
+						/**
+						 * @this {any}
+						 */
+						function () {
+							return Reflect.apply(value, this === receiver ? response : this, arguments);
+						},
+						{
+							name: { value: value.name },
+							length: { value: value.length }
+						}
+					);
 				}
 
 				return value;
