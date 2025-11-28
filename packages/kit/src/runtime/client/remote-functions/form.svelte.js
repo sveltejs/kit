@@ -58,6 +58,7 @@ export function form(id) {
 	/** @param {RemoteFormFactoryOptions<T>} options */
 	function create_instance(options) {
 		const { key, preflight, initialData, resetAfterSuccess = true } = options;
+		const action_id_without_key = id;
 		const action_id = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
@@ -189,7 +190,7 @@ export function form(id) {
 						remote_refreshes: updates.map((u) => u._key)
 					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 						method: 'POST',
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
@@ -547,7 +548,7 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
