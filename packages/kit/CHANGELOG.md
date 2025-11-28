@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.49.1
+### Patch Changes
+
+
+- fix: TypeError when doing response.clone() in page load ([#15005](https://github.com/sveltejs/kit/pull/15005))
+
 ## 2.49.0
 ### Minor Changes
 
