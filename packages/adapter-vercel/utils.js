@@ -120,6 +120,8 @@ export function resolve_runtime(default_key, override_key) {
 	return key;
 }
 
+const valid_node_versions = [20, 22, 24];
+
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
 	// TODO may someday need to auto-detect Bun, but this will be complicated because you may want to run your build
@@ -127,16 +129,22 @@ function get_default_runtime() {
 	// to tell us what the bun configuration is.
 	const major = Number(process.version.slice(1).split('.')[0]);
 
-	if (major !== 20 && major !== 22) {
+	if (!valid_node_versions.includes(major)) {
 		throw new Error(
-			`Unsupported Node.js version: ${process.version}. Please use Node 20 or 22 to build your project, or explicitly specify a runtime in your adapter configuration.`
+			`Unsupported Node.js version: ${process.version}. Please use Node ${valid_node_versions.slice(0, -1).join(', ')} or ${valid_node_versions.at(-1)} to build your project, or explicitly specify a runtime in your adapter configuration.`
 		);
 	}
 
-	return `nodejs${major}.x`;
+	return `nodejs${/** @type {20 | 22 | 24} */ (major)}.x`;
 }
 
-const valid_runtimes = /** @type {const} */ (['nodejs20.x', 'nodejs22.x', 'bun1.x', 'edge']);
+const valid_runtimes = /** @type {const} */ ([
+	'nodejs20.x',
+	'nodejs22.x',
+	'nodejs24.x',
+	'bun1.x',
+	'edge'
+]);
 
 /**
  * @param {string} key
