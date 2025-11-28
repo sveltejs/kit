@@ -316,7 +316,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		let teed_body;
 
 		const proxy = new Proxy(response, {
-			get(response, key, _receiver) {
+			get(response, key, receiver) {
 				/**
 				 * @param {string | undefined} body
 				 * @param {boolean} is_b64
@@ -427,7 +427,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					};
 				}
 
-				return Reflect.get(response, key, response);
+				const value = Reflect.get(response, key, response);
+
+				if (value instanceof Function) {
+					return function (...args) {
+						return value.apply(this === receiver ? response : this, args);
+					};
+				}
+
+				return value;
 			}
 		});
 
