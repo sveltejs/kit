@@ -270,7 +270,8 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = get_status(err);
+					// Use custom status code if set via event.setStatusCode()
+					const status = event_state.error_status_code ?? get_status(err);
 					const error = await handle_error_and_jsonify(event, event_state, options, err);
 
 					while (i--) {
