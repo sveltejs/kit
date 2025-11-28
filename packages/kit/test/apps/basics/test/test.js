@@ -1905,6 +1905,33 @@ test.describe('remote functions', () => {
 		await expect(allIssues).toContainText('"path":["nested","value"]');
 	});
 
+	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const baz = page.locator('input[name="baz"]');
+		const submit = page.locator('#my-form-2 button');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('a');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('An error occurred');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('b');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('No error');
+	});
+
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) return;
 
@@ -2024,6 +2051,53 @@ test.describe('remote functions', () => {
 
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
+	});
+	test('file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('a')
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('input[type="checkbox"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 'a',
+				file2: 'b'
+			})
+		);
+	});
+	test('large file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.alloc(1024 * 1024 * 10)
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 1024 * 1024 * 10,
+				file2: 1
+			})
+		);
 	});
 });
 
