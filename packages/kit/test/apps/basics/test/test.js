@@ -1818,6 +1818,15 @@ test.describe('remote functions', () => {
 		);
 	});
 
+	test('form initial value works', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/remote/form/initial-value');
+
+		await expect(page.locator('#initial')).toHaveText('Initial: {"val":"initial"}');
+		await expect(page.locator('#value')).toHaveText('Value: {"val":"initial"}');
+	});
+
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 

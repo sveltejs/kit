@@ -197,24 +197,22 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
-				const data = get_cache(__)?.[''];
-				const issues = flatten_issues(data?.issues ?? []);
-
 				return create_field_proxy(
 					{},
-					() => data?.input ?? {},
+					() => (get_cache(__)[''] ?? {}).input ?? {},
 					(path, value) => {
-						if (data?.submission) {
+						const data = (get_cache(__)[''] ??= {});
+						if (data.submission) {
 							// don't override a submission
 							return;
 						}
 
 						const input =
-							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
+							path.length === 0 ? value : deep_set(data.input ?? {}, path.map(String), value);
 
-						(get_cache(__)[''] ??= {}).input = input;
+						data.input = input;
 					},
-					() => issues
+					() => flatten_issues((get_cache(__)[''] ?? {}).issues ?? [])
 				);
 			}
 		});
