@@ -21,4 +21,4 @@ Try editing the files to get a feel for how everything works.
 
 ## Editor setup
 
-We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). For other editors, see the [Editor Support collection](https://sveltesociety.dev/collection/editor-support-c85c080efc292a34).
