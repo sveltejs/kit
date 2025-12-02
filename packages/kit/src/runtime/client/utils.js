@@ -323,8 +323,8 @@ export function is_external_url(url, base, hash_routing) {
 	return false;
 }
 
-/** @type {Set<string>} */
-const seen = new Set();
+/** @type {Set<string> | null} */
+let seen = null;
 
 /**
  * Used for server-side resolution, to replicate Vite's CSS loading behaviour in production.
@@ -341,11 +341,11 @@ export function load_css(deps) {
 	);
 	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
 
-	if (seen.size === 0) {
-		document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
-			seen.add(/** @type {HTMLLinkElement} */ (link).href);
-		});
-	}
+	seen ??= new Set(
+		Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => {
+			return /** @type {HTMLLinkElement} */ (link).href;
+		})
+	);
 
 	for (const dep of deps) {
 		const href = new URL(dep, document.baseURI).href;
