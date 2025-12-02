@@ -341,7 +341,6 @@ export function load_css(deps) {
 	);
 	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
 
-	// Build a set of absolute URLs for existing stylesheets (only once)
 	if (seen.size === 0) {
 		document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
 			seen.add(/** @type {HTMLLinkElement} */ (link).href);
@@ -349,7 +348,6 @@ export function load_css(deps) {
 	}
 
 	for (const dep of deps) {
-		// Resolve to absolute URL for consistent comparison
 		const href = new URL(dep, document.baseURI).href;
 
 		if (seen.has(href)) continue;
