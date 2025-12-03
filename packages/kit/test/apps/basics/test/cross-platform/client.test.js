@@ -207,7 +207,7 @@ test.describe('Navigation lifecycle functions', () => {
 
 		await page.click('a[href="#x"]');
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
+		await expect(page.locator('h1')).toHaveText('before_navigate_ran: false');
 	});
 
 	test('beforeNavigate cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
@@ -248,22 +248,22 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'undefined -> /navigation-lifecycle/after-navigate/a'
 		);
 
 		await clicknav('[href="/navigation-lifecycle/after-navigate/b"]');
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b'
 		);
 	});
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
+		await expect(page.locator('h1')).toHaveText('undefined -> undefined (...) false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
@@ -273,7 +273,7 @@ test.describe('Navigation lifecycle functions', () => {
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/a"]');
 		await clicknav('[href="/navigation-lifecycle/after-navigate-properly-removed/b"]');
 
-		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
+		await expect(page.locator('.nav-lifecycle-after-nav-removed-test-target')).toHaveText('false');
 	});
 
 	test('navigation.event is populated', async ({ page, clicknav }) => {
@@ -414,15 +414,15 @@ test.describe('Scrolling', () => {
 		await scroll_to(0, target_scroll_y);
 
 		await page.locator('[href="/scroll/cross-document/b"]').click();
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 		await page.waitForSelector('body.started');
 
 		await clicknav('[href="/scroll/cross-document/c"]');
-		expect(await page.textContent('h1')).toBe('c');
+		await expect(page.locator('h1')).toHaveText('c');
 
 		await page.goBack(); // client-side back
 		await page.goBack(); // native back
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 		await page.waitForSelector('body.started');
 
 		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
@@ -591,8 +591,8 @@ test.describe.serial('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
@@ -600,8 +600,8 @@ test.describe.serial('Errors', () => {
 	test('client-side module context errors', async ({ page }) => {
 		await page.goto('/errors/module-scope-client');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
@@ -609,8 +609,8 @@ test.describe.serial('Errors', () => {
 	test('client-side error from load()', async ({ page }) => {
 		await page.goto('/errors/load-error-client');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Not found"'
 		);
 		expect(await page.innerHTML('h1')).toBe('555');
@@ -619,8 +619,8 @@ test.describe.serial('Errors', () => {
 	test('client-side 4xx status without error from load()', async ({ page }) => {
 		await page.goto('/errors/load-status-without-error-client');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Error: 401"'
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
@@ -630,8 +630,8 @@ test.describe.serial('Errors', () => {
 		await page.goto('/errors/error-html');
 		await clicknav('button:text-is("Unexpected")');
 
-		expect(await page.textContent('h1')).toBe('Error - 500');
-		expect(await page.textContent('p')).toBe(
+		await expect(page.locator('h1')).toHaveText('Error - 500');
+		await expect(page.locator('p')).toHaveText(
 			'This is the static error page with the following message: Failed to load (500 Internal Error)'
 		);
 	});
@@ -640,8 +640,8 @@ test.describe.serial('Errors', () => {
 		await page.goto('/errors/error-html');
 		await clicknav('button:text-is("Expected")');
 
-		expect(await page.textContent('h1')).toBe('Error - 401');
-		expect(await page.textContent('p')).toBe(
+		await expect(page.locator('h1')).toHaveText('Error - 401');
+		await expect(page.locator('p')).toHaveText(
 			'This is the static error page with the following message: Not allowed'
 		);
 	});
@@ -785,7 +785,7 @@ test.describe('Routing', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await clicknav('a[href="/routing/a"]');
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 
 		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
@@ -793,28 +793,28 @@ test.describe('Routing', () => {
 	test('navigates programmatically', async ({ page, app }) => {
 		await page.goto('/routing/a');
 		await app.goto('/routing/b');
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 	});
 
 	test('page.url.hash is correctly set on page load', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestate#target');
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 	});
 
 	test('page.url.hash is correctly set on navigation', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestate');
-		expect(await page.textContent('#window-hash')).toBe('');
-		expect(await page.textContent('#page-url-hash')).toBe('');
+		await expect(page.locator('#window-hash')).toHaveText('');
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.locator('[href="#target"]').click();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 	});
 
 	test('clicking on a hash link focuses the associated element', async ({ page }) => {
@@ -865,7 +865,7 @@ test.describe('Routing', () => {
 		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
 
 		await clicknav('[href="/routing/hashes/b"]');
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
@@ -903,16 +903,16 @@ test.describe('Routing', () => {
 
 	test('ignores popstate events from outside the router', async ({ page }) => {
 		await page.goto('/routing/external-popstate');
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 
 		await page.locator('button').click();
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 
 		await page.goForward();
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 	});
 
 	test('recognizes clicks outside the app target', async ({ page }) => {
@@ -977,10 +977,10 @@ test.describe('Routing', () => {
 		await page.goto('/routing/missing-href');
 		const selector = '[data-testid="count"]';
 
-		expect(await page.textContent(selector)).toBe('count: 1');
+		await expect(page.locator(selector)).toHaveText('count: 1');
 
 		await page.locator(selector).click();
-		expect(await page.textContent(selector)).toBe('count: 1');
+		await expect(page.locator(selector)).toHaveText('count: 1');
 	});
 
 	test('trailing slash redirect', async ({ page, clicknav }) => {
@@ -1024,7 +1024,7 @@ test.describe('Shadow DOM', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await clicknav('div[id="clickme"]');
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 
 		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
@@ -1054,14 +1054,14 @@ test.describe('Interactivity', () => {
 		});
 
 		await page.goto('/interactivity/toggle-element');
-		expect(await page.textContent('button')).toBe('remove');
+		await expect(page.locator('button')).toHaveText('remove');
 
 		await page.locator('button').click();
-		expect(await page.textContent('button')).toBe('add');
-		expect(await page.textContent('a')).toBe('add');
+		await expect(page.locator('button')).toHaveText('add');
+		await expect(page.locator('a')).toHaveText('add');
 
 		await page.locator('a').filter({ hasText: 'add' }).click();
-		expect(await page.textContent('a')).toBe('remove');
+		await expect(page.locator('a')).toHaveText('remove');
 
 		expect(errored).toBe(false);
 	});
@@ -1079,7 +1079,7 @@ test.describe('Load', () => {
 			});
 
 			await page.goto('/load/window-fetch/outside-load');
-			expect(await page.textContent('h1')).toBe('42');
+			await expect(page.locator('h1')).toHaveText('42');
 
 			expect(warnings).not.toContain(
 				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`

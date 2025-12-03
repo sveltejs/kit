@@ -11,7 +11,7 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('adapter', () => {
 	test('populates event.platform for dynamic SSR', async ({ page }) => {
 		await page.goto('/adapter/dynamic');
-		const json = JSON.parse((await page.textContent('pre')) ?? '');
+		const json = JSON.parse((await page.locator('pre').textContent()) ?? '');
 
 		expect(json).toEqual({
 			config: {
@@ -23,7 +23,7 @@ test.describe('adapter', () => {
 
 	test('populates event.platform for prerendered page', async ({ page }) => {
 		await page.goto('/adapter/prerendered');
-		const json = JSON.parse((await page.textContent('pre')) ?? '');
+		const json = JSON.parse((await page.locator('pre').textContent()) ?? '');
 
 		expect(json).toEqual({
 			config: {
@@ -140,38 +140,38 @@ test.describe('Encoded paths', () => {
 	test('allows non-ASCII character in parameterized route segment', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');
-		expect(await page.textContent('h1')).toBe('@svelte');
+		await expect(page.locator('h1')).toHaveText('@svelte');
 	});
 
 	test('allows characters to be represented as escape sequences', async ({ page, clicknav }) => {
 		await page.goto('/encoded/escape-sequences');
 
 		await clicknav('[href="/encoded/escape-sequences/:-)"]');
-		expect(await page.textContent('h1')).toBe(':-)');
+		await expect(page.locator('h1')).toHaveText(':-)');
 
 		await clicknav('[href="/encoded/escape-sequences/%23"]');
-		expect(await page.textContent('h1')).toBe('#');
+		await expect(page.locator('h1')).toHaveText('#');
 
 		await clicknav('[href="/encoded/escape-sequences/%2F"]');
-		expect(await page.textContent('h1')).toBe('/');
+		await expect(page.locator('h1')).toHaveText('/');
 
 		await clicknav('[href="/encoded/escape-sequences/%3f"]');
-		expect(await page.textContent('h1')).toBe('?');
+		await expect(page.locator('h1')).toHaveText('?');
 
 		await clicknav('[href="/encoded/escape-sequences/%25"]');
-		expect(await page.textContent('h1')).toBe('%');
+		await expect(page.locator('h1')).toHaveText('%');
 
 		await clicknav('[href="/encoded/escape-sequences/<"]');
-		expect(await page.textContent('h1')).toBe('<');
+		await expect(page.locator('h1')).toHaveText('<');
 
 		await clicknav('[href="/encoded/escape-sequences/1<2"]');
-		expect(await page.textContent('h1')).toBe('1<2');
+		await expect(page.locator('h1')).toHaveText('1<2');
 
 		await clicknav('[href="/encoded/escape-sequences/苗"]');
-		expect(await page.textContent('h1')).toBe('苗');
+		await expect(page.locator('h1')).toHaveText('苗');
 
 		await clicknav('[href="/encoded/escape-sequences/🤪"]');
-		expect(await page.textContent('h1')).toBe('🤪');
+		await expect(page.locator('h1')).toHaveText('🤪');
 	});
 });
 
@@ -179,34 +179,34 @@ test.describe('$env', () => {
 	test('includes environment variables', async ({ page, clicknav }) => {
 		await page.goto('/env/includes');
 
-		expect(await page.textContent('#static-private')).toBe(
+		await expect(page.locator('#static-private')).toHaveText(
 			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-private')).toBe(
+		await expect(page.locator('#dynamic-private')).toHaveText(
 			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
 		);
 
-		expect(await page.textContent('#static-public')).toBe(
+		await expect(page.locator('#static-public')).toHaveText(
 			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-public')).toBe(
+		await expect(page.locator('#dynamic-public')).toHaveText(
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 
 		await page.goto('/env');
 		await clicknav('[href="/env/includes"]');
 
-		expect(await page.textContent('#static-private')).toBe(
+		await expect(page.locator('#static-private')).toHaveText(
 			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-private')).toBe(
+		await expect(page.locator('#dynamic-private')).toHaveText(
 			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
 		);
 
-		expect(await page.textContent('#static-public')).toBe(
+		await expect(page.locator('#static-public')).toHaveText(
 			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-public')).toBe(
+		await expect(page.locator('#dynamic-public')).toHaveText(
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
@@ -215,12 +215,12 @@ test.describe('$env', () => {
 test.describe('Load', () => {
 	test('fetch in root index.svelte works', async ({ page }) => {
 		await page.goto('/');
-		expect(await page.textContent('h1')).toBe('the answer is 42');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
 	});
 
 	test('loads', async ({ page }) => {
 		await page.goto('/load');
-		expect(await page.textContent('h1')).toBe('bar == bar?');
+		await expect(page.locator('h1')).toHaveText('bar == bar?');
 	});
 
 	test('GET fetches are serialized', async ({ page, javaScriptEnabled }) => {
@@ -248,7 +248,7 @@ test.describe('Load', () => {
 
 	test('Server data serialization removes empty nodes', async ({ page }) => {
 		await page.goto('/load/serialization-empty-node');
-		expect(await page.textContent('h1')).toBe('42');
+		await expect(page.locator('h1')).toHaveText('42');
 	});
 
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
@@ -258,8 +258,8 @@ test.describe('Load', () => {
 
 		await page.goto('/load/serialization-post');
 
-		expect(await page.textContent('h1')).toBe('a: X');
-		expect(await page.textContent('h2')).toBe('b: Y');
+		await expect(page.locator('h1')).toHaveText('a: X');
+		await expect(page.locator('h2')).toHaveText('b: Y');
 
 		if (!javaScriptEnabled) {
 			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
@@ -282,8 +282,8 @@ test.describe('Load', () => {
 	test('POST fetches with Request init are serialized', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/serialization-post-request');
 
-		expect(await page.textContent('h1')).toBe('a: X');
-		expect(await page.textContent('h2')).toBe('b: Y');
+		await expect(page.locator('h1')).toHaveText('a: X');
+		await expect(page.locator('h2')).toHaveText('b: Y');
 
 		if (!javaScriptEnabled) {
 			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
@@ -304,7 +304,7 @@ test.describe('Load', () => {
 	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-arraybuffer-b64');
 
-		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		await expect(page.locator('.test-content')).toHaveText('[1,2,3,4]');
 
 		if (!javaScriptEnabled) {
 			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
@@ -326,7 +326,7 @@ test.describe('Load', () => {
 	test('fetches using a body stream serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-body-stream-b64');
 
-		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		await expect(page.locator('.test-content')).toHaveText('[1,2,3,4]');
 
 		if (!javaScriptEnabled) {
 			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
@@ -347,19 +347,19 @@ test.describe('Load', () => {
 
 	test('json string is returned', async ({ page }) => {
 		await page.goto('/load/relay');
-		expect(await page.textContent('h1')).toBe('42');
+		await expect(page.locator('h1')).toHaveText('42');
 	});
 
 	test('prefers static data over endpoint', async ({ page }) => {
 		await page.goto('/load/foo');
-		expect(await page.textContent('h1')).toBe('static file');
+		await expect(page.locator('h1')).toHaveText('static file');
 	});
 
 	test('data is inherited', async ({ page, javaScriptEnabled, app }) => {
 		for (const kind of ['shared', 'server']) {
 			await page.goto(`/load/parent/${kind}/a/b/c`);
-			expect(await page.textContent('h1')).toBe('message: original + new');
-			expect(await page.textContent('pre')).toBe(
+			await expect(page.locator('h1')).toHaveText('message: original + new');
+			await expect(page.locator('pre')).toHaveText(
 				JSON.stringify({
 					foo: { bar: 'Custom layout' },
 					message: 'original + new',
@@ -372,8 +372,8 @@ test.describe('Load', () => {
 			if (javaScriptEnabled) {
 				await app.goto(`/load/parent/${kind}/d/e/f`);
 
-				expect(await page.textContent('h1')).toBe('message: original + new');
-				expect(await page.textContent('pre')).toBe(
+				await expect(page.locator('h1')).toHaveText('message: original + new');
+				await expect(page.locator('pre')).toHaveText(
 					JSON.stringify({
 						foo: { bar: 'Custom layout' },
 						message: 'original + new',
@@ -389,21 +389,21 @@ test.describe('Load', () => {
 	test('fetch accepts a Request object', async ({ page, clicknav }) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request"]');
-		expect(await page.textContent('h1')).toBe('the answer is 42');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
 	});
 
 	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-relative"]');
-		expect(await page.textContent('h1')).toBe('the answer is 42');
-		expect(await page.textContent('h2')).toBe('the question was ?');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
+		await expect(page.locator('h2')).toHaveText('the question was ?');
 	});
 
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
 		await page.goto('/load/large-response');
-		expect(await page.textContent('h1')).toBe('text.length is 5000000');
+		await expect(page.locator('h1')).toHaveText('text.length is 5000000');
 	});
 
 	test('handles external api', async ({ page, start_server }) => {
@@ -429,7 +429,7 @@ test.describe('Load', () => {
 		await page.goto(`/load/server-fetch-request?port=${port}`);
 
 		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-		expect(await page.textContent('h1')).toBe('the answer is 42');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({
@@ -440,7 +440,7 @@ test.describe('Load', () => {
 		if (javaScriptEnabled) return;
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-credentialed"]');
-		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
+		await expect(page.locator('h1')).toHaveText('Hello SvelteKit!');
 	});
 
 	test('includes correct page request headers', async ({
@@ -452,7 +452,7 @@ test.describe('Load', () => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request-headers"]');
 
-		const json = /** @type {string} */ (await page.textContent('pre'));
+		const json = /** @type {string} */ (await page.locator('pre').textContent());
 		const headers = JSON.parse(json);
 
 		if (javaScriptEnabled) {
@@ -504,7 +504,7 @@ test.describe('Load', () => {
 		await context.clearCookies();
 
 		await page.goto('/load/set-cookie-fetch');
-		expect(await page.textContent('h1')).toBe('the answer is 42');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
 
 		/** @type {Record<string,string>} */
 		const cookies = {};
@@ -529,22 +529,22 @@ test.describe('Load', () => {
 		await page.goto('/load/accumulated');
 
 		await clicknav('[href="/load/accumulated/without-page-data"]');
-		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+		await expect(page.locator('h1')).toHaveText('foo.bar: Custom layout');
 	});
 
 	test('page with load has access to layout data', async ({ page, clicknav }) => {
 		await page.goto('/load/accumulated');
 
 		await clicknav('[href="/load/accumulated/with-page-data"]');
-		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
-		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
+		await expect(page.locator('h1')).toHaveText('foo.bar: Custom layout');
+		await expect(page.locator('h2')).toHaveText('pagedata: pagedata');
 	});
 
 	test('Serializes non-JSON data', async ({ page, clicknav }) => {
 		await page.goto('/load/devalue');
 		await clicknav('[href="/load/devalue/regex"]');
 
-		expect(await page.textContent('h1')).toBe('true');
+		await expect(page.locator('h1')).toHaveText('true');
 	});
 
 	test('Prerendered +server.js called from a non-prerendered +page.server.js works', async ({
@@ -559,7 +559,7 @@ test.describe('Load', () => {
 			await page.goto('/prerendering/prerendered-endpoint/page');
 		}
 
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'Im prerendered and called from a non-prerendered +page.server.js'
 		);
 	});
@@ -576,7 +576,7 @@ test.describe('Load', () => {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
 
-		expect(await page.textContent('html')).toBe(
+		await expect(page.locator('html')).toHaveText(
 			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
 	});
@@ -584,30 +584,30 @@ test.describe('Load', () => {
 	test('Logging page.url during prerendering works', async ({ page }) => {
 		await page.goto('/prerendering/log-url');
 
-		expect(await page.textContent('p')).toBe('error: false');
+		await expect(page.locator('p')).toHaveText('error: false');
 	});
 
 	test('404 and root layout load fetch to prerendered endpoint works', async ({ page }) => {
 		await page.goto('/non-existent-route');
 
-		expect(await page.textContent('h1')).toBe('404');
+		await expect(page.locator('h1')).toHaveText('404');
 
 		await page.goto('/non-existent-route-loop');
 
-		expect(await page.textContent('h1')).toBe('404');
+		await expect(page.locator('h1')).toHaveText('404');
 	});
 
 	test('AbortSignal works with internal fetch optimization', async ({ page }) => {
 		await page.goto('/load/fetch-abort-signal');
 
-		expect(await page.textContent('.aborted-immediately')).toBe('Aborted immediately: true');
-		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
-		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
+		await expect(page.locator('.aborted-immediately')).toHaveText('Aborted immediately: true');
+		await expect(page.locator('.aborted-during-request')).toHaveText('Aborted during request: true');
+		await expect(page.locator('.successful-data')).toContainText('"message":"success"');
 	});
 
 	test('event.fetch handles response without body', async ({ page }) => {
 		await page.goto('/load/fetch-no-body');
-		expect(await page.textContent('h1')).toBe('ok: true');
+		await expect(page.locator('h1')).toHaveText('ok: true');
 	});
 });
 
@@ -615,40 +615,40 @@ test.describe('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('p')).toBe('This is a nested layout component');
-		expect(await page.textContent('h1')).toBe('Hello from inside the nested layout component');
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('p')).toHaveText('This is a nested layout component');
+		await expect(page.locator('h1')).toHaveText('Hello from inside the nested layout component');
 	});
 
 	test('renders errors in the right layout', async ({ page }) => {
 		await page.goto('/nested-layout/error');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
+		await expect(page.locator('footer')).toHaveText('Custom layout');
 		expect(await page.$('p#nested')).toBeNull();
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Error"'
 		);
-		expect(await page.textContent('h1')).toBe('500');
+		await expect(page.locator('h1')).toHaveText('500');
 	});
 
 	test('renders errors in the right layout after client navigation', async ({ page, clicknav }) => {
 		await page.goto('/nested-layout/');
 		await clicknav('[href="/nested-layout/error"]');
-		expect(await page.textContent('footer')).toBe('Custom layout');
+		await expect(page.locator('footer')).toHaveText('Custom layout');
 		expect(await page.$('p#nested')).toBe(null);
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Error"'
 		);
-		expect(await page.textContent('h1')).toBe('500');
+		await expect(page.locator('h1')).toHaveText('500');
 	});
 
 	test('renders deeply-nested errors in the right layout', async ({ page }) => {
 		await page.goto('/nested-layout/foo/bar/nope');
-		expect(await page.textContent('footer')).toBe('Custom layout');
+		await expect(page.locator('footer')).toHaveText('Custom layout');
 		expect(await page.$('p#nested')).not.toBeNull();
 		expect(await page.$('p#nested-foo')).not.toBeNull();
 		expect(await page.$('p#nested-bar')).not.toBeNull();
-		expect(await page.textContent('#nested-error-message')).toBe(
+		await expect(page.locator('#nested-error-message')).toHaveText(
 			'error.message: nope (500 Internal Error)'
 		);
 	});
@@ -656,8 +656,8 @@ test.describe('Nested layouts', () => {
 	test('resets layout', async ({ page }) => {
 		await page.goto('/nested-layout/reset');
 
-		expect(await page.textContent('h1')).toBe('Layout reset');
-		expect(await page.textContent('h2')).toBe('Hello');
+		await expect(page.locator('h1')).toHaveText('Layout reset');
+		await expect(page.locator('h2')).toHaveText('Hello');
 		expect(await page.$('#nested')).toBeNull();
 	});
 
@@ -666,9 +666,9 @@ test.describe('Nested layouts', () => {
 
 		await clicknav('[href="/errors/nested-error-page/nope"]');
 
-		expect(await page.textContent('h1')).toBe('Nested error page');
-		expect(await page.textContent('#nested-error-status')).toBe('status: 500');
-		expect(await page.textContent('#nested-error-message')).toBe(
+		await expect(page.locator('h1')).toHaveText('Nested error page');
+		await expect(page.locator('#nested-error-status')).toHaveText('status: 500');
+		await expect(page.locator('#nested-error-message')).toHaveText(
 			'error.message: nope (500 Internal Error)'
 		);
 	});
@@ -681,7 +681,7 @@ test.describe('Page options', () => {
 	}) => {
 		if (!javaScriptEnabled) {
 			await page.goto('/no-csr');
-			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			await expect(page.locator('h1')).toHaveText('look ma no javascript');
 			expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
 
 			// ensure data wasn't inlined
@@ -693,7 +693,7 @@ test.describe('Page options', () => {
 		await page.goto('/no-ssr');
 
 		if (javaScriptEnabled) {
-			expect(await page.textContent('h1')).toBe('content was rendered');
+			await expect(page.locator('h1')).toHaveText('content was rendered');
 		} else {
 			expect(await page.$('h1')).toBeNull();
 			expect(await page.$('style[data-sveltekit]')).toBeNull();
@@ -725,7 +725,7 @@ test.describe('Page options', () => {
 test.describe('$app/environment', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
-		expect(await page.textContent('h1')).toBe('TEST_VERSION');
+		await expect(page.locator('h1')).toHaveText('TEST_VERSION');
 	});
 });
 
@@ -772,7 +772,7 @@ test.describe('$app/paths', () => {
 test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
-		expect(await page.textContent('h1')).toBe(baseURL);
+		await expect(page.locator('h1')).toHaveText(baseURL);
 	});
 
 	test('page store contains data', async ({ page, clicknav }) => {
@@ -780,26 +780,26 @@ test.describe('$app/stores', () => {
 
 		const foo = { bar: 'Custom layout' };
 
-		expect(await page.textContent('#store-data')).toBe(
+		await expect(page.locator('#store-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
 		);
 
 		await clicknav('a[href="/store/data/zzz"]');
-		expect(await page.textContent('#store-data')).toBe(
+		await expect(page.locator('#store-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
 		);
 
 		await clicknav('a[href="/store/data/xxx"]');
-		expect(await page.textContent('#store-data')).toBe(
+		await expect(page.locator('#store-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#store-error')).toBe('Params = xxx');
+		await expect(page.locator('#store-error')).toHaveText('Params = xxx');
 
 		await clicknav('a[href="/store/data/yyy"]');
-		expect(await page.textContent('#store-data')).toBe(
+		await expect(page.locator('#store-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#store-error')).toBe('Params = yyy');
+		await expect(page.locator('#store-error')).toHaveText('Params = yyy');
 	});
 
 	test('should load data after reloading by goto', async ({
@@ -814,35 +814,35 @@ test.describe('$app/stores', () => {
 		await page.goto('/store/data/www');
 
 		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff1);
+		expect(JSON.parse((await page.locator('#store-data').textContent()) ?? '')).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(
+		expect(JSON.parse((await page.locator('#store-data').textContent()) ?? '')).toEqual(
 			javaScriptEnabled ? stuff2 : stuff1
 		);
 
 		await clicknav('a[href="/store/data/zzz"]');
 		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff3);
+		expect(JSON.parse((await page.locator('#store-data').textContent()) ?? '')).toEqual(stuff3);
 	});
 
 	test('navigating store contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 		if (javaScriptEnabled) {
 			await app.preloadCode('/store/navigating/b');
 
 			const res = await Promise.all([
 				page.click('a[href="/store/navigating/b"]'),
-				page.textContent('#navigating')
+				page.locator('#navigating').textContent()
 			]);
 
 			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b (link)');
 
 			await page.waitForSelector('#not-navigating');
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+			await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 			await Promise.all([
 				expect(page.locator('#navigating')).toHaveText(
@@ -856,7 +856,7 @@ test.describe('$app/stores', () => {
 	test('navigating store clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 		if (javaScriptEnabled) {
 			await page.click('a[href="/store/navigating/c"]');
@@ -864,7 +864,7 @@ test.describe('$app/stores', () => {
 			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 5000 });
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+			await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 		}
 	});
 
@@ -876,7 +876,7 @@ test.describe('$app/stores', () => {
 		const href = `${baseURL}/store/data/zzz`;
 		await page.goto(href);
 
-		expect(await page.textContent('#url-hash')).toBe('');
+		await expect(page.locator('#url-hash')).toHaveText('');
 
 		if (javaScriptEnabled) {
 			for (const urlHash of ['#1', '#2', '#5', '#8']) {
@@ -887,7 +887,7 @@ test.describe('$app/stores', () => {
 					{ href, urlHash }
 				);
 
-				expect(await page.textContent('#url-hash')).toBe(urlHash);
+				await expect(page.locator('#url-hash')).toHaveText(urlHash);
 			}
 		}
 	});
@@ -896,7 +896,7 @@ test.describe('$app/stores', () => {
 test.describe('$app/state', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
-		expect(await page.textContent('h1')).toBe(baseURL);
+		await expect(page.locator('h1')).toHaveText(baseURL);
 	});
 
 	test('page state contains data', async ({ page, clicknav }) => {
@@ -904,26 +904,26 @@ test.describe('$app/state', () => {
 
 		const foo = { bar: 'Custom layout' };
 
-		expect(await page.textContent('#state-data')).toBe(
+		await expect(page.locator('#state-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
 		);
 
 		await clicknav('a[href="/state/data/zzz"]');
-		expect(await page.textContent('#state-data')).toBe(
+		await expect(page.locator('#state-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
 		);
 
 		await clicknav('a[href="/state/data/xxx"]');
-		expect(await page.textContent('#state-data')).toBe(
+		await expect(page.locator('#state-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#state-error')).toBe('Params = xxx');
+		await expect(page.locator('#state-error')).toHaveText('Params = xxx');
 
 		await clicknav('a[href="/state/data/yyy"]');
-		expect(await page.textContent('#state-data')).toBe(
+		await expect(page.locator('#state-data')).toHaveText(
 			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
-		expect(await page.textContent('#state-error')).toBe('Params = yyy');
+		await expect(page.locator('#state-error')).toHaveText('Params = yyy');
 	});
 
 	test('should load data after reloading by goto', async ({
@@ -938,35 +938,35 @@ test.describe('$app/state', () => {
 		await page.goto('/state/data/www');
 
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(stuff1);
+		expect(JSON.parse((await page.locator('#state-data').textContent()) ?? '')).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(
+		expect(JSON.parse((await page.locator('#state-data').textContent()) ?? '')).toEqual(
 			javaScriptEnabled ? stuff2 : stuff1
 		);
 
 		await clicknav('a[href="/state/data/zzz"]');
 		await clicknav('a[href="/state/data/foo"]');
-		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(stuff3);
+		expect(JSON.parse((await page.locator('#state-data').textContent()) ?? '')).toEqual(stuff3);
 	});
 
 	test('navigating state contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/state/navigating/a');
 
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 		if (javaScriptEnabled) {
 			await app.preloadCode('/state/navigating/b');
 
 			const res = await Promise.all([
 				page.click('a[href="/state/navigating/b"]'),
-				page.textContent('#navigating')
+				page.locator('#navigating').textContent()
 			]);
 
 			expect(res[1]).toBe('navigating from /state/navigating/a to /state/navigating/b (link)');
 
 			await page.waitForSelector('#not-navigating');
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+			await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 			await Promise.all([
 				expect(page.locator('#navigating')).toHaveText(
@@ -980,7 +980,7 @@ test.describe('$app/state', () => {
 	test('navigating state clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/state/navigating/a');
 
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 
 		if (javaScriptEnabled) {
 			await page.click('a[href="/state/navigating/c"]');
@@ -988,7 +988,7 @@ test.describe('$app/state', () => {
 			await page.click('a[href="/state/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 5000 });
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+			await expect(page.locator('#nav-status')).toHaveText('not currently navigating');
 		}
 	});
 
@@ -1000,7 +1000,7 @@ test.describe('$app/state', () => {
 		const href = `${baseURL}/state/data/zzz`;
 		await page.goto(href);
 
-		expect(await page.textContent('#url-hash')).toBe('');
+		await expect(page.locator('#url-hash')).toHaveText('');
 
 		if (javaScriptEnabled) {
 			for (const urlHash of ['#1', '#2', '#5', '#8']) {
@@ -1011,7 +1011,7 @@ test.describe('$app/state', () => {
 					{ href, urlHash }
 				);
 
-				expect(await page.textContent('#url-hash')).toBe(urlHash);
+				await expect(page.locator('#url-hash')).toHaveText(urlHash);
 			}
 		}
 	});
@@ -1047,8 +1047,8 @@ test.describe('searchParams', () => {
 
 			const json = JSON.stringify(expected);
 
-			expect(await page.textContent('#one')).toBe(json);
-			expect(await page.textContent('#two')).toBe(json);
+			await expect(page.locator('#one')).toHaveText(json);
+			await expect(page.locator('#two')).toHaveText(json);
 		});
 	});
 
@@ -1059,8 +1059,8 @@ test.describe('searchParams', () => {
 
 		const json = JSON.stringify({ bar: ['2'] });
 
-		expect(await page.textContent('#one')).toBe(json);
-		expect(await page.textContent('#two')).toBe(json);
+		await expect(page.locator('#one')).toHaveText(json);
+		await expect(page.locator('#two')).toHaveText(json);
 	});
 });
 
@@ -1069,16 +1069,16 @@ test.describe('Matchers', () => {
 		await page.goto('/routing/matched');
 
 		await clicknav('[href="/routing/matched/a"]');
-		expect(await page.textContent('h1')).toBe('lowercase: a');
+		await expect(page.locator('h1')).toHaveText('lowercase: a');
 
 		await clicknav('[href="/routing/matched/B"]');
-		expect(await page.textContent('h1')).toBe('uppercase: B');
+		await expect(page.locator('h1')).toHaveText('uppercase: B');
 
 		await clicknav('[href="/routing/matched/1"]');
-		expect(await page.textContent('h1')).toBe('number: 1');
+		await expect(page.locator('h1')).toHaveText('number: 1');
 
 		await clicknav('[href="/routing/matched/everything-else"]');
-		expect(await page.textContent('h1')).toBe('fallback: everything-else');
+		await expect(page.locator('h1')).toHaveText('fallback: everything-else');
 	});
 });
 
@@ -1127,9 +1127,9 @@ test.describe('Actions', () => {
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
-		expect(await page.textContent('p.server-prop')).toBe('an error occurred');
+		await expect(page.locator('p.server-prop')).toHaveText('an error occurred');
 		if (javaScriptEnabled) {
-			expect(await page.textContent('p.client-prop')).toBe('hydrated: an error occurred');
+			await expect(page.locator('p.client-prop')).toHaveText('hydrated: an error occurred');
 		}
 	});
 
@@ -1146,7 +1146,7 @@ test.describe('Actions', () => {
 		expect(await page.inputValue('input[name="username"]')).toBe('foo');
 		if (javaScriptEnabled) {
 			expect(await page.inputValue('input[name="password"]')).toBe('bar');
-			expect(await page.textContent('pre')).toBe(JSON.stringify({ username: 'foo' }));
+			await expect(page.locator('pre')).toHaveText(JSON.stringify({ username: 'foo' }));
 		} else {
 			expect(await page.inputValue('input[name="password"]')).toBe('');
 		}
@@ -1155,7 +1155,7 @@ test.describe('Actions', () => {
 	test('Success data as form-data is returned', async ({ page }) => {
 		await page.goto('/actions/success-data');
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
 		await page.locator('button[formenctype="multipart/form-data"]').click();
@@ -1166,7 +1166,7 @@ test.describe('Actions', () => {
 	test('Success data as form-urlencoded is returned', async ({ page }) => {
 		await page.goto('/actions/success-data');
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('bar');
 		await page.locator('button[formenctype="application/x-www-form-urlencoded"]').click();
@@ -1176,7 +1176,7 @@ test.describe('Actions', () => {
 
 	test('applyAction updates form prop', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
 			await page.locator('button.increment-success').click();
@@ -1193,7 +1193,7 @@ test.describe('Actions', () => {
 		javaScriptEnabled
 	}) => {
 		await page.goto('/actions/update-form');
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
 			await page.locator('button.increment-success').click();
@@ -1207,12 +1207,12 @@ test.describe('Actions', () => {
 			await page.goto('/actions/enhance');
 		}
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
 	});
 
 	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
 			await page.locator('button.redirect').click();
@@ -1222,7 +1222,7 @@ test.describe('Actions', () => {
 
 	test('applyAction errors', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
 			await page.locator('button.error').click();
@@ -1235,8 +1235,8 @@ test.describe('Actions', () => {
 	test('use:enhance', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
 		await page.locator('button.form1').click();
@@ -1249,7 +1249,7 @@ test.describe('Actions', () => {
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('span.count')).toBe('0');
+		await expect(page.locator('span.count')).toHaveText('0');
 
 		if (javaScriptEnabled) {
 			await Promise.all([
@@ -1266,7 +1266,7 @@ test.describe('Actions', () => {
 	test('use:enhance button with formAction', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
 		await page.locator('button.form1-register').click();
@@ -1287,7 +1287,7 @@ test.describe('Actions', () => {
 	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
 
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
@@ -1302,8 +1302,8 @@ test.describe('Actions', () => {
 	test('use:enhance button with formenctype', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify(null));
 
 		const fileInput = page.locator('input[type="file"].form-file-input');
 
@@ -1331,8 +1331,8 @@ test.describe('Actions', () => {
 
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify(null));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
 
@@ -1588,15 +1588,15 @@ test.describe('getRequestEvent', () => {
 		await page.goto('/get-request-event');
 		await clicknav('[href="/get-request-event/with-message"]');
 
-		expect(await page.textContent('h1')).toBe('hello from hooks.server.js');
+		await expect(page.locator('h1')).toHaveText('hello from hooks.server.js');
 
 		await page.locator('input[name="message"]').fill('hello');
 		await page.click('button');
 
-		expect(await page.textContent('h1')).toBe('from form: hello');
+		await expect(page.locator('h1')).toHaveText('from form: hello');
 
 		await page.goto('/get-request-event/with-error');
-		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
+		await expect(page.locator('h1')).toHaveText('Crashing now (500 hello from hooks.server.js)');
 	});
 });
 

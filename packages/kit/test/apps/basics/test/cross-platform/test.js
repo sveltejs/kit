@@ -63,19 +63,19 @@ test.describe('Shadowed pages', () => {
 	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/simple"]');
-		expect(await page.textContent('h1')).toBe('The answer is 42');
+		await expect(page.locator('h1')).toHaveText('The answer is 42');
 	});
 
 	test('Handles GET redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/redirect-get"]');
-		expect(await page.textContent('h1')).toBe('Redirection was successful');
+		await expect(page.locator('h1')).toHaveText('Redirection was successful');
 	});
 
 	test('Handles GET redirects with cookies', async ({ page, context, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/redirect-get-with-cookie"]');
-		expect(await page.textContent('h1')).toBe('Redirection was successful');
+		await expect(page.locator('h1')).toHaveText('Redirection was successful');
 
 		const cookies = await context.cookies();
 		expect(cookies).toEqual(
@@ -90,7 +90,7 @@ test.describe('Shadowed pages', () => {
 	}) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/redirect-get-with-cookie-from-fetch"]');
-		expect(await page.textContent('h1')).toBe('Redirection was successful');
+		await expect(page.locator('h1')).toHaveText('Redirection was successful');
 
 		const cookies = await context.cookies();
 		expect(cookies).toEqual(
@@ -103,13 +103,13 @@ test.describe('Shadowed pages', () => {
 	test('Handles POST redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('#redirect-post');
-		expect(await page.textContent('h1')).toBe('Redirection was successful');
+		await expect(page.locator('h1')).toHaveText('Redirection was successful');
 	});
 
 	test('Handles POST redirects with cookies', async ({ page, context, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('#redirect-post-with-cookie');
-		expect(await page.textContent('h1')).toBe('Redirection was successful');
+		await expect(page.locator('h1')).toHaveText('Redirection was successful');
 
 		const cookies = await context.cookies();
 		expect(cookies).toEqual(
@@ -120,54 +120,54 @@ test.describe('Shadowed pages', () => {
 	test('Handles POST success with returned location', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/post-success-redirect');
 		await clicknav('button');
-		expect(await page.textContent('h1')).toBe('POST was successful');
+		await expect(page.locator('h1')).toHaveText('POST was successful');
 	});
 
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/error-get"]');
-		expect(await page.textContent('h1')).toBe('404');
+		await expect(page.locator('h1')).toHaveText('404');
 	});
 
 	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
 		await page.goto('/shadowed');
 		const [response] = await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
-		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
+		await expect(page.locator('h1')).toHaveText('hello from get / echo: posted data');
 
 		expect(response?.status()).toBe(400);
-		expect(await page.textContent('h2')).toBe('status: 400');
+		await expect(page.locator('h2')).toHaveText('status: 400');
 	});
 
 	test('Endpoint receives consistent URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shadowed/same-render-entry');
 		await clicknav('[href="/shadowed/same-render?param1=value1"]');
-		expect(await page.textContent('h1')).toBe(`URL: ${baseURL}/shadowed/same-render?param1=value1`);
+		await expect(page.locator('h1')).toHaveText(`URL: ${baseURL}/shadowed/same-render?param1=value1`);
 	});
 
 	test('Works with missing get handler', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/no-get"]');
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 	});
 
 	test('Invalidates shadow data when URL changes', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/dynamic/foo"]');
-		expect(await page.textContent('h1')).toBe('slug: foo');
+		await expect(page.locator('h1')).toHaveText('slug: foo');
 
 		await clicknav('[href="/shadowed/dynamic/bar"]');
-		expect(await page.textContent('h1')).toBe('slug: bar');
+		await expect(page.locator('h1')).toHaveText('slug: bar');
 
 		await page.goto('/shadowed/dynamic/foo');
-		expect(await page.textContent('h1')).toBe('slug: foo');
+		await expect(page.locator('h1')).toHaveText('slug: foo');
 		await clicknav('[href="/shadowed/dynamic/bar"]');
-		expect(await page.textContent('h1')).toBe('slug: bar');
+		await expect(page.locator('h1')).toHaveText('slug: bar');
 	});
 
 	test('Shadow redirect', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/redirect');
 		await clicknav('[href="/shadowed/redirect/a"]');
-		expect(await page.textContent('h1')).toBe('done');
+		await expect(page.locator('h1')).toHaveText('done');
 	});
 
 	test('Endpoint without GET', async ({ page, clicknav, baseURL, javaScriptEnabled }) => {
@@ -179,7 +179,7 @@ test.describe('Shadowed pages', () => {
 
 		await clicknav('[href="/shadowed/missing-get"]');
 
-		expect(await page.textContent('h1')).toBe('post without get');
+		await expect(page.locator('h1')).toHaveText('post without get');
 
 		// check that the router didn't fall back to the server
 		if (javaScriptEnabled) {
@@ -218,8 +218,8 @@ test.describe('Shadowed pages', () => {
 			await page.goto('/shadowed');
 			await clicknav('[href="/shadowed/serialization"]');
 
-			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('h1')).toHaveText('500');
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
 					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
 			);
@@ -234,8 +234,8 @@ test.describe('Errors', () => {
 		test('server-side errors', async ({ page }) => {
 			await page.goto('/errors/serverside');
 
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('footer')).toHaveText('Custom layout');
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 			);
 		});
@@ -245,8 +245,8 @@ test.describe('Errors', () => {
 
 			await page.goto('/errors/module-scope-server');
 
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('footer')).toHaveText('Custom layout');
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "Crashing now"'
 			);
 		});
@@ -259,13 +259,13 @@ test.describe('Errors', () => {
 				await page.goto('/errors/invalid-load-response');
 			}
 
-			expect(await page.textContent('footer')).toBe('Custom layout');
+			await expect(page.locator('footer')).toHaveText('Custom layout');
 
 			const details = javaScriptEnabled
 				? "related to route '/errors/invalid-load-response'"
 				: 'in src/routes/errors/invalid-load-response/+page.js';
 
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('#message')).toHaveText(
 				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`) (500 Internal Error)"`
 			);
 		});
@@ -282,9 +282,9 @@ test.describe('Errors', () => {
 				await page.goto('/errors/invalid-server-load-response');
 			}
 
-			expect(await page.textContent('footer')).toBe('Custom layout');
+			await expect(page.locator('footer')).toHaveText('Custom layout');
 
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`) (500 Internal Error)"'
 			);
 		});
@@ -293,8 +293,8 @@ test.describe('Errors', () => {
 	test('server-side load errors', async ({ page, get_computed_style }) => {
 		await page.goto('/errors/load-server');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 
@@ -304,8 +304,8 @@ test.describe('Errors', () => {
 	test('404', async ({ page }) => {
 		const response = await page.goto('/why/would/anyone/fetch/this/url');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url (404 Not Found)"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
@@ -314,8 +314,8 @@ test.describe('Errors', () => {
 	test('server-side error from load() is a string', async ({ page }) => {
 		const response = await page.goto('/errors/load-error-string-server');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Not found"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(555);
@@ -324,8 +324,8 @@ test.describe('Errors', () => {
 	test('server-side error from load() is an Error', async ({ page }) => {
 		const response = await page.goto('/errors/load-error-server');
 
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('footer')).toHaveText('Custom layout');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Not found"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(555);
@@ -333,7 +333,7 @@ test.describe('Errors', () => {
 
 	test('server-side error from load() still has layout data', async ({ page }) => {
 		await page.goto('/errors/load-error-server/layout-data');
-		expect(await page.textContent('#error-layout-data')).toBe('42');
+		await expect(page.locator('#error-layout-data')).toHaveText('42');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -348,7 +348,7 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "500 (500 Internal Error)"'
 		);
 	});
@@ -365,7 +365,7 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "nope (500 Internal Error)"'
 		);
 	});
@@ -376,7 +376,7 @@ test.describe('Errors', () => {
 		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
 
 		expect(res && res.status()).toBe(555);
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Error: 555"'
 		);
 	});
@@ -385,9 +385,9 @@ test.describe('Errors', () => {
 		page
 	}) => {
 		await page.goto('/prerendering/mutative-endpoint');
-		expect(await page.textContent('h1')).toBe('500');
+		await expect(page.locator('h1')).toHaveText('500');
 
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Cannot prerender pages with actions (500 Internal Error)"'
 		);
 	});
@@ -400,7 +400,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-implicit');
 
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
@@ -425,7 +425,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-explicit');
 
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
 		);
 
@@ -443,7 +443,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#post-implicit');
 
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
@@ -471,7 +471,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#post-explicit');
 
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
 		);
 
@@ -494,7 +494,7 @@ test.describe('Redirects', () => {
 		await clicknav('[href="/redirect/a"]');
 
 		await page.waitForURL('/redirect/c');
-		expect(await page.textContent('h1')).toBe('c');
+		await expect(page.locator('h1')).toHaveText('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 
 		await page.goBack();
@@ -509,8 +509,8 @@ test.describe('Redirects', () => {
 		if (javaScriptEnabled) {
 			await page.waitForSelector('#message');
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
-			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('h1')).toHaveText('500');
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
 			);
 		} else {
@@ -537,8 +537,8 @@ test.describe('Redirects', () => {
 		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
 
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('#message')).toHaveText(
 			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 
@@ -557,8 +557,8 @@ test.describe('Redirects', () => {
 		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
 
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('#message')).toHaveText(
 			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 	});
@@ -573,7 +573,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(redirected_to_url);
 
 		if (javaScriptEnabled) {
-			expect(await page.textContent('h1')).toBe('Hazaa!');
+			await expect(page.locator('h1')).toHaveText('Hazaa!');
 		}
 	});
 
@@ -583,7 +583,7 @@ test.describe('Redirects', () => {
 		await clicknav('[href="/redirect/in-handle?response"]');
 
 		await page.waitForURL('/redirect/c');
-		expect(await page.textContent('h1')).toBe('c');
+		await expect(page.locator('h1')).toHaveText('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 
 		await page.goBack();
@@ -596,7 +596,7 @@ test.describe('Redirects', () => {
 		await clicknav('[href="/redirect/in-handle?throw"]');
 
 		await page.waitForURL('/redirect/c');
-		expect(await page.textContent('h1')).toBe('c');
+		await expect(page.locator('h1')).toHaveText('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 
 		await page.goBack();
@@ -625,7 +625,7 @@ test.describe('Redirects', () => {
 
 	test('works when used from another package', async ({ page }) => {
 		await page.goto('/redirect/package');
-		expect(await page.textContent('h1')).toBe('c');
+		await expect(page.locator('h1')).toHaveText('c');
 	});
 });
 
@@ -641,13 +641,13 @@ test.describe('Routing', () => {
 
 		await clicknav('a[href="/routing/"]');
 		expect(page.url()).toBe(`${baseURL}/routing`);
-		expect(await page.textContent('h1')).toBe('Great success!');
+		await expect(page.locator('h1')).toHaveText('Great success!');
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
 			await app.goto('/routing/');
 			expect(page.url()).toBe(`${baseURL}/routing`);
-			expect(await page.textContent('h1')).toBe('Great success!');
+			await expect(page.locator('h1')).toHaveText('Great success!');
 		}
 	});
 
@@ -662,13 +662,13 @@ test.describe('Routing', () => {
 
 		await clicknav('a[href="/routing/?"]');
 		expect(page.url()).toBe(`${baseURL}/routing`);
-		expect(await page.textContent('h1')).toBe('Great success!');
+		await expect(page.locator('h1')).toHaveText('Great success!');
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
 			await app.goto('/routing/?');
 			expect(page.url()).toBe(`${baseURL}/routing`);
-			expect(await page.textContent('h1')).toBe('Great success!');
+			await expect(page.locator('h1')).toHaveText('Great success!');
 		}
 	});
 
@@ -683,47 +683,47 @@ test.describe('Routing', () => {
 
 		await clicknav('a[href="/routing/?foo=bar"]');
 		expect(page.url()).toBe(`${baseURL}/routing?foo=bar`);
-		expect(await page.textContent('h1')).toBe('Great success!');
+		await expect(page.locator('h1')).toHaveText('Great success!');
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
 			await app.goto('/routing/?foo=bar');
 			expect(page.url()).toBe(`${baseURL}/routing?foo=bar`);
-			expect(await page.textContent('h1')).toBe('Great success!');
+			await expect(page.locator('h1')).toHaveText('Great success!');
 		}
 	});
 
 	test('serves static route', async ({ page }) => {
 		await page.goto('/routing/a');
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 	});
 
 	test('serves static route from dir/index.html file', async ({ page }) => {
 		await page.goto('/routing/b');
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 	});
 
 	test('serves static route under client directory', async ({ baseURL, page }) => {
 		await page.goto('/routing/client/foo');
 
-		expect(await page.textContent('h1')).toBe('foo');
+		await expect(page.locator('h1')).toHaveText('foo');
 
 		await page.goto(`${baseURL}/routing/client/bar`);
-		expect(await page.textContent('h1')).toBe('bar');
+		await expect(page.locator('h1')).toHaveText('bar');
 
 		await page.goto(`${baseURL}/routing/client/bar/b`);
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 	});
 
 	test('serves dynamic route', async ({ page }) => {
 		await page.goto('/routing/test-slug');
-		expect(await page.textContent('h1')).toBe('test-slug');
+		await expect(page.locator('h1')).toHaveText('test-slug');
 	});
 
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.locator('[href="/routing/ambiguous/ok.json"]').click();
-		expect(await page.textContent('body')).toBe('ok');
+		await expect(page.locator('body')).toHaveText('ok');
 	});
 
 	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
@@ -738,13 +738,13 @@ test.describe('Routing', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await clicknav('[href="/routing/b"]');
-		expect(await page.textContent('h1')).toBe('b');
+		await expect(page.locator('h1')).toHaveText('b');
 		expect(requests).toContain(`${baseURL}/routing/b`);
 	});
 
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
-		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
+		await expect(page.locator('h1')).toHaveText('reserved words are okay as routes');
 	});
 
 	test('resets the active element after navigation', async ({ page, clicknav }) => {
@@ -755,25 +755,25 @@ test.describe('Routing', () => {
 
 	test('navigates between routes with empty parts', async ({ page, clicknav }) => {
 		await page.goto('/routing/dirs/foo');
-		expect(await page.textContent('h1')).toBe('foo');
+		await expect(page.locator('h1')).toHaveText('foo');
 		await clicknav('[href="bar"]');
-		expect(await page.textContent('h1')).toBe('bar');
+		await expect(page.locator('h1')).toHaveText('bar');
 	});
 
 	test('navigates between dynamic routes with same segments', async ({ page, clicknav }) => {
 		await page.goto('/routing/dirs/bar/xyz');
-		expect(await page.textContent('h1')).toBe('A page');
+		await expect(page.locator('h1')).toHaveText('A page');
 
 		await clicknav('[href="/routing/dirs/foo/xyz"]');
-		expect(await page.textContent('h1')).toBe('B page');
+		await expect(page.locator('h1')).toHaveText('B page');
 	});
 
 	test('invalidates page when a segment is skipped', async ({ page, clicknav }) => {
 		await page.goto('/routing/skipped/x/1');
-		expect(await page.textContent('h1')).toBe('x/1');
+		await expect(page.locator('h1')).toHaveText('x/1');
 
 		await clicknav('#goto-y1');
-		expect(await page.textContent('h1')).toBe('y/1');
+		await expect(page.locator('h1')).toHaveText('y/1');
 	});
 
 	test('back button returns to initial route', async ({ page, clicknav }) => {
@@ -781,7 +781,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('Great success!');
+		await expect(page.locator('h1')).toHaveText('Great success!');
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
@@ -817,8 +817,8 @@ test.describe('Routing', () => {
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
 		await page.goto('/routing/split-params');
 		await clicknav('[href="/routing/split-params/x-y-z"]');
-		expect(await page.textContent('h1')).toBe('x');
-		expect(await page.textContent('h2')).toBe('y-z');
+		await expect(page.locator('h1')).toHaveText('x');
+		await expect(page.locator('h2')).toHaveText('y-z');
 	});
 
 	test('ignores navigation to URLs the app does not own', async ({ page, start_server }) => {
@@ -835,66 +835,66 @@ test.describe('Routing', () => {
 	test('navigates to ...rest', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/abc/xyz');
 
-		expect(await page.textContent('h1')).toBe('abc/xyz');
+		await expect(page.locator('h1')).toHaveText('abc/xyz');
 
 		await clicknav('[href="/routing/rest/xyz/abc/def/ghi"]');
-		expect(await page.textContent('h1')).toBe('xyz/abc/def/ghi');
-		expect(await page.textContent('h2')).toBe('xyz/abc/def/ghi');
+		await expect(page.locator('h1')).toHaveText('xyz/abc/def/ghi');
+		await expect(page.locator('h2')).toHaveText('xyz/abc/def/ghi');
 
 		await clicknav('[href="/routing/rest/xyz/abc/def"]');
-		expect(await page.textContent('h1')).toBe('xyz/abc/def');
-		expect(await page.textContent('h2')).toBe('xyz/abc/def');
+		await expect(page.locator('h1')).toHaveText('xyz/abc/def');
+		await expect(page.locator('h2')).toHaveText('xyz/abc/def');
 
 		await clicknav('[href="/routing/rest/xyz/abc"]');
-		expect(await page.textContent('h1')).toBe('xyz/abc');
-		expect(await page.textContent('h2')).toBe('xyz/abc');
+		await expect(page.locator('h1')).toHaveText('xyz/abc');
+		await expect(page.locator('h2')).toHaveText('xyz/abc');
 
 		await clicknav('[href="/routing/rest"]');
-		expect(await page.textContent('h1')).toBe('');
-		expect(await page.textContent('h2')).toBe('');
+		await expect(page.locator('h1')).toHaveText('');
+		await expect(page.locator('h2')).toHaveText('');
 
 		await clicknav('[href="/routing/rest/xyz/abc/deep"]');
-		expect(await page.textContent('h1')).toBe('xyz/abc');
-		expect(await page.textContent('h2')).toBe('xyz/abc');
+		await expect(page.locator('h1')).toHaveText('xyz/abc');
+		await expect(page.locator('h2')).toHaveText('xyz/abc');
 
 		await page.locator('[href="/routing/rest/xyz/abc/qwe/deep.json"]').click();
-		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
+		await expect(page.locator('body')).toHaveText('xyz/abc/qwe');
 	});
 
 	test('rest parameters do not swallow characters', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/non-greedy');
 
 		await clicknav('[href="/routing/rest/non-greedy/foo/one/two"]');
-		expect(await page.textContent('h1')).toBe('non-greedy');
-		expect(await page.textContent('h2')).toBe('{"rest":"one/two"}');
+		await expect(page.locator('h1')).toHaveText('non-greedy');
+		await expect(page.locator('h2')).toHaveText('{"rest":"one/two"}');
 
 		await clicknav('[href="/routing/rest/non-greedy/food/one/two"]');
-		expect(await page.textContent('h1')).not.toBe('non-greedy');
+		await expect(page.locator('h1')).not.toHaveText('non-greedy');
 
 		await page.goBack();
 
 		await clicknav('[href="/routing/rest/non-greedy/one-bar/two/three"]');
-		expect(await page.textContent('h1')).toBe('non-greedy');
-		expect(await page.textContent('h2')).toBe('{"dynamic":"one","rest":"two/three"}');
+		await expect(page.locator('h1')).toHaveText('non-greedy');
+		await expect(page.locator('h2')).toHaveText('{"dynamic":"one","rest":"two/three"}');
 
 		await clicknav('[href="/routing/rest/non-greedy/one-bard/two/three"]');
-		expect(await page.textContent('h1')).not.toBe('non-greedy');
+		await expect(page.locator('h1')).not.toHaveText('non-greedy');
 	});
 
 	test('reloads when navigating between ...rest pages', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/path/one');
-		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/one');
+		await expect(page.locator('h1')).toHaveText('path: /routing/rest/path/one');
 
 		await clicknav('[href="/routing/rest/path/two"]');
-		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/two');
+		await expect(page.locator('h1')).toHaveText('path: /routing/rest/path/two');
 
 		await clicknav('[href="/routing/rest/path/three"]');
-		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/three');
+		await expect(page.locator('h1')).toHaveText('path: /routing/rest/path/three');
 	});
 
 	test('allows rest routes to have prefixes and suffixes', async ({ page }) => {
 		await page.goto('/routing/rest/complex/prefix-one/two/three');
-		expect(await page.textContent('h1')).toBe('parts: one/two/three');
+		await expect(page.locator('h1')).toHaveText('parts: one/two/three');
 	});
 
 	test('links to unmatched routes result in a full page navigation, not a 404', async ({
@@ -903,7 +903,7 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing');
 		await clicknav('[href="/static.json"]');
-		expect(await page.textContent('body')).toBe('"static file"\n');
+		await expect(page.locator('body')).toHaveText('"static file"\n');
 	});
 
 	test('navigation is cancelled upon subsequent navigation', async ({
@@ -934,19 +934,19 @@ test.describe('Routing', () => {
 		await page.goto('/routing/route-id');
 		await clicknav('[href="/routing/route-id/foo"]');
 
-		expect(await page.textContent('h1')).toBe('route.id in load: /routing/route-id/[x]');
-		expect(await page.textContent('h2')).toBe('route.id in store: /routing/route-id/[x]');
+		await expect(page.locator('h1')).toHaveText('route.id in load: /routing/route-id/[x]');
+		await expect(page.locator('h2')).toHaveText('route.id in store: /routing/route-id/[x]');
 	});
 
 	test('serves a page that clashes with a root directory', async ({ page }) => {
 		await page.goto('/static');
-		expect(await page.textContent('h1')).toBe('hello');
+		await expect(page.locator('h1')).toHaveText('hello');
 	});
 
 	test('shows "Not Found" in 404 case', async ({ page }) => {
 		await page.goto('/404-fallback');
-		expect(await page.textContent('h1')).toBe('404');
-		expect(await page.textContent('p')).toBe('This is your custom error page saying: "Not Found"');
+		await expect(page.locator('h1')).toHaveText('404');
+		await expect(page.locator('p')).toHaveText('This is your custom error page saying: "Not Found"');
 	});
 
 	if (process.platform !== 'win32') {
@@ -954,17 +954,17 @@ test.describe('Routing', () => {
 			await page.goto('/routing');
 			await clicknav('[href="/routing/symlink-from"]');
 
-			expect(await page.textContent('h1')).toBe('symlinked');
+			await expect(page.locator('h1')).toHaveText('symlinked');
 		});
 	}
 
 	test('trailing slash server with config always', async ({ page, clicknav }) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/always"]');
-		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-store"]')).toHaveText(
 			'/routing/trailing-slash-server/always/'
 		);
-		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-data"]')).toHaveText(
 			'/routing/trailing-slash-server/always/'
 		);
 	});
@@ -975,10 +975,10 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/ignore"]');
-		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-store"]')).toHaveText(
 			'/routing/trailing-slash-server/ignore'
 		);
-		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-data"]')).toHaveText(
 			'/routing/trailing-slash-server/ignore'
 		);
 	});
@@ -989,10 +989,10 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/ignore/"]');
-		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-store"]')).toHaveText(
 			'/routing/trailing-slash-server/ignore/'
 		);
-		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-data"]')).toHaveText(
 			'/routing/trailing-slash-server/ignore/'
 		);
 	});
@@ -1000,10 +1000,10 @@ test.describe('Routing', () => {
 	test('trailing slash server with config never', async ({ page, clicknav }) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/never/"]');
-		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-store"]')).toHaveText(
 			'/routing/trailing-slash-server/never'
 		);
-		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+		await expect(page.locator('[data-test-id="pathname-data"]')).toHaveText(
 			'/routing/trailing-slash-server/never'
 		);
 	});
@@ -1013,14 +1013,13 @@ test.describe('XSS', () => {
 	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
-		const content = await page.textContent('body');
-		expect(content).toMatch('$& $&');
+		await expect(page.locator('body')).toContainText('$& $&');
 	});
 
 	test('escapes inline data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/xss');
 
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
 
@@ -1036,7 +1035,7 @@ test.describe('XSS', () => {
 	test('no xss via dynamic route path', async ({ page }) => {
 		await page.goto(`/xss/${uri_xss_payload_encoded}`);
 
-		expect(await page.textContent('h1')).toBe(uri_xss_payload);
+		await expect(page.locator('h1')).toHaveText(uri_xss_payload);
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
@@ -1045,8 +1044,8 @@ test.describe('XSS', () => {
 	test('no xss via query param', async ({ page }) => {
 		await page.goto(`/xss/query?key=${uri_xss_payload_encoded}`);
 
-		expect(await page.textContent('#one')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
-		expect(await page.textContent('#two')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
+		await expect(page.locator('#one')).toHaveText(JSON.stringify({ key: [uri_xss_payload] }));
+		await expect(page.locator('#two')).toHaveText(JSON.stringify({ key: [uri_xss_payload] }));
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
@@ -1057,7 +1056,7 @@ test.describe('XSS', () => {
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
-		expect(await page.textContent('h1')).toBe(
+		await expect(page.locator('h1')).toHaveText(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
 	});
@@ -1075,23 +1074,18 @@ test.describe('$app/server', () => {
 	test('can read a file', async ({ page }) => {
 		await page.goto('/read-file');
 
-		const auto = await page.textContent('[data-testid="auto"]');
-		const url = await page.textContent('[data-testid="url"]');
-		const styles = await page.textContent('[data-testid="styles"]');
-		const local_glob = await page.textContent('[data-testid="local_glob"]');
-		const external_glob = await page.textContent('[data-testid="external_glob"]');
-		const svg = await page.innerHTML('[data-testid="svg"]');
-
 		// the emoji is there to check that base64 decoding works correctly
-		expect(auto?.trim()).toBe('Imported without ?url 😎');
-		expect(url?.trim()).toBe('Imported with ?url 😎');
-		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
-		expect(external_glob?.trim()).toBe(
+		await expect(page.locator('[data-testid="auto"]')).toHaveText('Imported without ?url 😎');
+		await expect(page.locator('[data-testid="url"]')).toHaveText('Imported with ?url 😎');
+		await expect(page.locator('[data-testid="local_glob"]')).toHaveText('Imported with ?url via glob 😎');
+		await expect(page.locator('[data-testid="external_glob"]')).toHaveText(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
+
+		const svg = await page.innerHTML('[data-testid="svg"]');
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
 
 		// check that paths in .css files are relative
-		expect(styles).toContain('url(.');
+		await expect(page.locator('[data-testid="styles"]')).toContainText('url(.');
 	});
 });
