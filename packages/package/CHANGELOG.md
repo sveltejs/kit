@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.7
+### Patch Changes
+
+
+- chore(deps): update dependency chokidar to v5 ([#14986](https://github.com/sveltejs/kit/pull/14986))
+
 ## 2.5.6
 ### Patch Changes
 
