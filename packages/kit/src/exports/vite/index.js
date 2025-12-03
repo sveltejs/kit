@@ -192,8 +192,8 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
+	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
+	const is_rolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -341,6 +341,26 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
+			if(is_rolldown && new_config.optimizeDeps) {
+				delete new_config.optimizeDeps.esbuildOptions; // vite 8 logs a warning when esbuildOptions is used
+				if(kit.experimental.remoteFunctions) {
+					const id_filter = new RegExp(
+						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+					);
+					//@ts-ignore rolldownOptions only exists in vite8
+					new_config.optimizeDeps.rolldownOptions = {
+						plugins:[{
+							name: 'vite-plugin-sveltekit-setup:optimize',
+							load: {
+								filter: { id: id_filter },
+								handler() {
+									return '' // treat .remote.js files as empty for the purposes of prebundling
+								}
+							}
+						}]
+					}
+				}
+			}
 
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
@@ -911,7 +931,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(isRolldown
+									(is_rolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
