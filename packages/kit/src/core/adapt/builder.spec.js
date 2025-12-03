@@ -75,18 +75,18 @@ test('compress files', async () => {
 
 test('instrument generates facade with posix paths', () => {
 	const fixtureDir = join(__dirname, 'fixtures/instrument');
-	const tempDir = join(__dirname, 'output/instrument-test');
+	const dest = join(__dirname, 'output');
 
-	rmSync(tempDir, { recursive: true, force: true });
-	mkdirSync(join(tempDir, 'server'), { recursive: true });
-	copyFileSync(join(fixtureDir, 'index.js'), join(tempDir, 'index.js'));
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(join(dest, 'server'), { recursive: true });
+	copyFileSync(join(fixtureDir, 'index.js'), join(dest, 'index.js'));
 	copyFileSync(
 		join(fixtureDir, 'server/instrumentation.server.js'),
-		join(tempDir, 'server/instrumentation.server.js')
+		join(dest, 'server/instrumentation.server.js')
 	);
 
-	const entrypoint = join(tempDir, 'index.js');
-	const instrumentation = join(tempDir, 'server', 'instrumentation.server.js');
+	const entrypoint = join(dest, 'index.js');
+	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
 
 	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({ route_data: [] });
@@ -107,5 +107,5 @@ test('instrument generates facade with posix paths', () => {
 	expect(facade).not.toContain('\\');
 
 	// Cleanup
-	rmSync(tempDir, { recursive: true, force: true });
+	rmSync(dest, { recursive: true, force: true });
 });
