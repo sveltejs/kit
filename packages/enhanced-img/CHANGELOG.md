@@ -1,5 +1,17 @@
 # @sveltejs/enhanced-img
 
+## 0.9.2
+### Patch Changes
+
+
+- chore: remove duplicate caching layer ([#14988](https://github.com/sveltejs/kit/pull/14988))
+
+## 0.9.1
+### Patch Changes
+
+
+- fix: update vite-imagetools for caching fixes to avoid crashes ([#14976](https://github.com/sveltejs/kit/pull/14976))
+
 ## 0.9.0
 ### Minor Changes
 

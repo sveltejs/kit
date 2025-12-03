@@ -1659,7 +1659,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/basic');
 
 		if (javaScriptEnabled) {
 			// TODO remove the `if` — once async SSR lands these assertions should always succeed
@@ -1682,7 +1682,7 @@ test.describe('remote functions', () => {
 		}
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
-		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+		await expect(page.locator('[data-unscoped] input[name="message"]')).toHaveValue('');
 	});
 
 	test('form submitters work', async ({ page }) => {
@@ -1694,7 +1694,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/live-update');
 
 		await page.fill('input', 'hello');
 
@@ -1716,7 +1716,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form reports validation issues', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/validation-issues');
 
 		await page.fill('input', 'invalid');
 		await page.getByText('set message').click();
@@ -1725,7 +1725,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form handles unexpected error', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/unexpected-error');
 
 		await page.fill('input', 'unexpected error');
 		await page.getByText('set message').click();
@@ -1736,7 +1736,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form handles expected error', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/expected-error');
 
 		await page.fill('input', 'expected error');
 		await page.getByText('set message').click();
@@ -1745,7 +1745,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form redirects', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/redirect');
 
 		await page.fill('input', 'redirect');
 		await page.getByText('set message').click();
@@ -1754,7 +1754,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form.buttonProps works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/button-props');
 
 		await page.fill('[data-unscoped] input', 'backwards');
 		await page.getByText('set reverse message').click();
@@ -1772,8 +1772,8 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form scoping works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+	test('form scoping with key works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/form-scoped');
 
 		await page.getByText('set scoped message').click();
 
@@ -1786,12 +1786,14 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
-		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello (from: scoped)');
-		await expect(page.locator('[data-scoped] input')).toHaveValue('hello');
+		await expect(page.getByText('scoped.result')).toHaveText(
+			'scoped.result: hello (from: scoped:form-scoped)'
+		);
+		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('hello');
 	});
 
 	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/enhanced');
 
 		await page.fill('[data-enhanced] input', 'hello');
 
@@ -1808,13 +1810,13 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
-			await expect(page.locator('[data-enhanced] input')).toHaveValue('hello');
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
 		} else {
-			await expect(page.locator('[data-enhanced] input')).toHaveValue('');
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
-			'enhanced.result: hello (from: enhanced)'
+			'enhanced.result: hello (from: enhanced:enhanced)'
 		);
 	});
 
