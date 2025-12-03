@@ -28,7 +28,7 @@ test.describe('Filesystem updates', () => {
 				await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 				await page.goto(`/new-route/${route}`);
 
-				expect(await page.textContent('h1')).toBe(content);
+				await expect(page.locator('h1')).toHaveText(content);
 			} finally {
 				fs.rmSync(dir, { recursive: true });
 			}
@@ -45,10 +45,10 @@ test.describe('Filesystem updates', () => {
 			// we write to the file, to trigger HMR invalidation
 			fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
 			await page.goto('/double-mount');
-			expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+			await expect(page.locator('h1')).toHaveText(`mounted: ${mounted}`);
 			await page.click('button');
 			await page.waitForTimeout(100);
-			expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+			await expect(page.locator('h1')).toHaveText(`mounted: ${mounted}`);
 		} finally {
 			fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
 		}

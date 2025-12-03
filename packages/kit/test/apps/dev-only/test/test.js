@@ -16,8 +16,8 @@ test.describe.serial('Illegal imports', () => {
 		await page.goto('/illegal-imports/env/dynamic-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $env/dynamic/private into code that runs in the browser, as this could leak sensitive information.
+		await expect(page.locator('.message-body'))
+			.toHaveText(`Cannot import $env/dynamic/private into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/env/dynamic-private/+page.svelte imports
   $env/dynamic/private
@@ -29,8 +29,8 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/env/static-private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $env/static/private into code that runs in the browser, as this could leak sensitive information.
+		await expect(page.locator('.message-body'))
+			.toHaveText(`Cannot import $env/static/private into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/env/static-private/+page.svelte imports
   $env/static/private
@@ -42,8 +42,8 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/server-only-modules/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into code that runs in the browser, as this could leak sensitive information.
+		await expect(page.locator('.message-body'))
+			.toHaveText(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-modules/static-import/+page.svelte imports
   src/routes/illegal-imports/server-only-modules/static-import/foo.js imports
@@ -56,8 +56,8 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/server-only-modules/static-import-2', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $app/server into code that runs in the browser, as this could leak sensitive information.
+		await expect(page.locator('.message-body'))
+			.toHaveText(`Cannot import $app/server into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-modules/static-import-2/+page.svelte imports
   $app/server
@@ -69,8 +69,8 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/server-only-folder/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $lib/server/blah/private.js into code that runs in the browser, as this could leak sensitive information.
+		await expect(page.locator('.message-body'))
+			.toHaveText(`Cannot import $lib/server/blah/private.js into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-folder/static-import/+page.svelte imports
   $lib/server/blah/private.js

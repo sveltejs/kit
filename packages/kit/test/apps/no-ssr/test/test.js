@@ -7,14 +7,14 @@ test.describe.configure({ mode: 'parallel' });
 
 test('navigating to a non-existent route renders the default error page', async ({ page }) => {
 	await page.goto('/non-existent-route');
-	expect(await page.textContent('h1')).toBe('404');
+	await expect(page.locator('h1')).toHaveText('404');
 });
 
 test('navigating to a non-existent route redirects if redirect in the root layout', async ({
 	page
 }) => {
 	await page.goto('/redirect');
-	expect(await page.textContent('h1')).toBe('home');
+	await expect(page.locator('h1')).toHaveText('home');
 });
 
 test('universal pages/layouts are not executed on the server', async ({ page }) => {
