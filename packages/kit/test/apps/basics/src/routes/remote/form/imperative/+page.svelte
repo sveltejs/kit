@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { set_message } from '../form.remote.js';
+	import { set_message } from '../[test_name]/form.remote.js';
 	import * as v from 'valibot';
 
 	const schema = v.object({
+		test_name: v.string(),
 		message: v.picklist(
 			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
 			'message is invalid'
@@ -14,6 +15,7 @@
 	<label>
 		<span>Message</span>
 		<input {...set_message.fields.message.as('text')} />
+		<input {...set_message.fields.test_name.as('hidden', 'imperative')} />
 	</label>
 
 	<p id="issue">
