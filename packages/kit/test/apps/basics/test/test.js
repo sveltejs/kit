@@ -601,7 +601,9 @@ test.describe('Load', () => {
 		await page.goto('/load/fetch-abort-signal');
 
 		await expect(page.locator('.aborted-immediately')).toHaveText('Aborted immediately: true');
-		await expect(page.locator('.aborted-during-request')).toHaveText('Aborted during request: true');
+		await expect(page.locator('.aborted-during-request')).toHaveText(
+			'Aborted during request: true'
+		);
 		await expect(page.locator('.successful-data')).toContainText('"message":"success"');
 	});
 

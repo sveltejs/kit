@@ -141,7 +141,9 @@ test.describe('Shadowed pages', () => {
 	test('Endpoint receives consistent URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shadowed/same-render-entry');
 		await clicknav('[href="/shadowed/same-render?param1=value1"]');
-		await expect(page.locator('h1')).toHaveText(`URL: ${baseURL}/shadowed/same-render?param1=value1`);
+		await expect(page.locator('h1')).toHaveText(
+			`URL: ${baseURL}/shadowed/same-render?param1=value1`
+		);
 	});
 
 	test('Works with missing get handler', async ({ page, clicknav }) => {
@@ -946,7 +948,9 @@ test.describe('Routing', () => {
 	test('shows "Not Found" in 404 case', async ({ page }) => {
 		await page.goto('/404-fallback');
 		await expect(page.locator('h1')).toHaveText('404');
-		await expect(page.locator('p')).toHaveText('This is your custom error page saying: "Not Found"');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "Not Found"'
+		);
 	});
 
 	if (process.platform !== 'win32') {
@@ -1077,7 +1081,9 @@ test.describe('$app/server', () => {
 		// the emoji is there to check that base64 decoding works correctly
 		await expect(page.locator('[data-testid="auto"]')).toHaveText('Imported without ?url 😎');
 		await expect(page.locator('[data-testid="url"]')).toHaveText('Imported with ?url 😎');
-		await expect(page.locator('[data-testid="local_glob"]')).toHaveText('Imported with ?url via glob 😎');
+		await expect(page.locator('[data-testid="local_glob"]')).toHaveText(
+			'Imported with ?url via glob 😎'
+		);
 		await expect(page.locator('[data-testid="external_glob"]')).toHaveText(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
